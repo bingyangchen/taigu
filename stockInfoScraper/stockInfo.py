@@ -1,4 +1,3 @@
-import time
 import datetime
 from requests import get
 import json
@@ -12,6 +11,7 @@ class StockInfoView:
         # info of multiple stocks, single day
         # self.endPoint1 = "https://www.twse.com.tw/exchangeReport/MI_INDEX"
         self.endPoint12 = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch="
+
         # info of single stock, multiple days
         # self.endPoint2 = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210809&stockNo=2330"
         self.result = []
@@ -19,40 +19,76 @@ class StockInfoView:
     def fetchAndStore(self, sidList, date):
         try:
             allData = []
+            res = []
+            queryStr = ""
             for each in sidList:
-                # fetch
-                try:
-                    res = get(self.endPoint12 + "tse_" + each + ".tw")
-                    res = json.loads(pq(res.text).text())["msgArray"][0]
-                except:
-                    try:
-                        res = get(self.endPoint12 + "otc_" + each + ".tw")
-                        res = json.loads(pq(res.text).text())["msgArray"][0]
-                    except:
-                        print("failed to fetch %s" % each)
-                        continue
+                queryStr += ("tse_" + each + ".tw|")
+                queryStr += ("otc_" + each + ".tw|")
+            try:
+                res = get(self.endPoint12 + queryStr)
+                res = json.loads(pq(res.text).text())["msgArray"]
+            except:
+                print("failed to fetch")
+                return
+            for each in res:
                 # arrange the data format
                 dataRow = {}
                 try:
                     dataRow["date"] = date
-                    dataRow["sid"] = res["ch"].split('.')[0]
-                    dataRow["name"] = res["n"]
-                    dataRow["trade-type"] = res["ex"]
-                    dataRow["quantity"] = res["v"]
-                    dataRow["open"] = str(round(float(res["o"]), 2))
+                    dataRow["sid"] = each["ch"].split('.')[0]
+                    dataRow["name"] = each["n"]
+                    dataRow["trade-type"] = each["ex"]
+                    dataRow["quantity"] = each["v"]
+                    dataRow["open"] = str(round(float(each["o"]), 2))
                     try:  # 收漲停時，z 會是 "-"，所以改看最高價
-                        dataRow["close"] = str(round(float(res["z"]), 2))
+                        dataRow["close"] = str(round(float(each["z"]), 2))
                     except:
-                        dataRow["close"] = str(round(float(res["h"]), 2))
-                    dataRow["highest"] = str(round(float(res["h"]), 2))
-                    dataRow["lowest"] = str(round(float(res["l"]), 2))
+                        dataRow["close"] = str(round(float(each["h"]), 2))
+                    dataRow["highest"] = str(round(float(each["h"]), 2))
+                    dataRow["lowest"] = str(round(float(each["l"]), 2))
                     dataRow["fluct-price"] = str(
-                        round((float(dataRow["close"])-float(res["y"])), 2))
+                        round((float(dataRow["close"])-float(each["y"])), 2))
                     dataRow["fluct-rate"] = str(
-                        round((float(dataRow["close"])-float(res["y"]))/float(res["y"]), 4))
+                        round((float(dataRow["close"])-float(each["y"]))/float(each["y"]), 4))
                 except:
                     continue
                 allData.append(dataRow)
+
+            # for each in sidList:
+            #     # fetch
+            #     try:
+            #         res = get(self.endPoint12 + "tse_" + each + ".tw")
+            #         res = json.loads(pq(res.text).text())["msgArray"][0]
+            #     except:
+            #         try:
+            #             res = get(self.endPoint12 + "otc_" + each + ".tw")
+            #             res = json.loads(pq(res.text).text())["msgArray"][0]
+            #         except:
+            #             print("failed to fetch %s" % each)
+            #             continue
+            #     # arrange the data format
+            #     dataRow = {}
+            #     try:
+            #         dataRow["date"] = date
+            #         dataRow["sid"] = res["ch"].split('.')[0]
+            #         dataRow["name"] = res["n"]
+            #         dataRow["trade-type"] = res["ex"]
+            #         dataRow["quantity"] = res["v"]
+            #         dataRow["open"] = str(round(float(res["o"]), 2))
+            #         try:  # 收漲停時，z 會是 "-"，所以改看最高價
+            #             dataRow["close"] = str(round(float(res["z"]), 2))
+            #         except:
+            #             dataRow["close"] = str(round(float(res["h"]), 2))
+            #         dataRow["highest"] = str(round(float(res["h"]), 2))
+            #         dataRow["lowest"] = str(round(float(res["l"]), 2))
+            #         dataRow["fluct-price"] = str(
+            #             round((float(dataRow["close"])-float(res["y"])), 2))
+            #         dataRow["fluct-rate"] = str(
+            #             round((float(dataRow["close"])-float(res["y"]))/float(res["y"]), 4))
+            #     except:
+            #         continue
+            #     allData.append(dataRow)
+
             # store
             for each in allData:
                 q = StockInfo.objects.filter(sid=each["sid"])
