@@ -1,5 +1,5 @@
-from .models import TradePlan
-
+from .models import TradePlan, TradeRecord
+from django.db.models import Sum
 
 class TradePlanView:
     def __init__(self):
@@ -12,6 +12,10 @@ class TradePlanView:
 
     def readPlan(self, sidList):
         dictResultList = []
+        if sidList == []:
+            autoSidQuery = TradeRecord.objects.values('sid').annotate(sum=Sum('dealQuantity')).filter(sum__gt=0).values('sid')
+            for each in autoSidQuery:
+                sidList.append(each["sid"])
         for each in sidList:
             temp = TradePlan.objects.filter(sid=each)
             for each in temp:

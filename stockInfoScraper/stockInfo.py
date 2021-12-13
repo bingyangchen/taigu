@@ -1,5 +1,4 @@
 import datetime
-from enum import auto
 from requests import get
 import json
 from pyquery import PyQuery as pq

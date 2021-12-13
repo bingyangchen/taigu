@@ -1,5 +1,5 @@
-from .models import StockMemo
-
+from .models import StockMemo, TradeRecord
+from django.db.models import Sum
 
 class StockMemoView:
     def __init__(self):
@@ -12,6 +12,10 @@ class StockMemoView:
 
     def readMemo(self, sidList):
         dictResultList = []
+        if sidList == []:
+            autoSidQuery = TradeRecord.objects.values('sid').annotate(sum=Sum('dealQuantity')).filter(sum__gt=0).values('sid')
+            for each in autoSidQuery:
+                sidList.append(each["sid"])
         for each in sidList:
             temp = StockMemo.objects.filter(sid=each)
             for each in temp:
