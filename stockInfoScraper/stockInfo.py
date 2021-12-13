@@ -1,8 +1,10 @@
 import datetime
+from enum import auto
 from requests import get
 import json
 from pyquery import PyQuery as pq
-from .models import StockInfo
+from .models import StockInfo, TradeRecord
+from django.db.models import Sum
 import pytz
 
 
@@ -94,6 +96,12 @@ class StockInfoView:
                 date, "%Y%m%d")-datetime.timedelta(days=1)
             date = date.strftime("%Y%m%d")
         date = int(date)
+        
+        if sidList == []:
+            autoSidQuery = TradeRecord.objects.values('sid').annotate(sum=Sum('dealQuantity')).filter(sum__gt=0).values('sid')
+            for each in autoSidQuery:
+                sidList.append(each["sid"])
+                
         try:
             needToFetchSidList = []
             noNeedToFetchSidList = []

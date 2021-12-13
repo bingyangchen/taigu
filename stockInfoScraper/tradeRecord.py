@@ -31,7 +31,7 @@ class TradeRecordView:
                 result.union(TradeRecord.objects.filter(dealTime=each))
             for each in sidList:
                 result.union(TradeRecord.objects.filter(sid=each))
-        result = result.order_by("dealTime").reverse()
+        result = result.order_by("dealTime", "id").reverse()
         dictResultList = []
         for each in result:
             dictResultList.append({
