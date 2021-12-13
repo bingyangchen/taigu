@@ -5,7 +5,7 @@ class TradeRecord(models.Model):
     dealTime = models.BigIntegerField()
     sid = models.CharField(max_length=32)
     companyName = models.CharField(max_length=32)
-    dealPrice = models.FloatField()
+    dealPrice = models.DecimalField(max_digits=7, decimal_places=2)
     dealQuantity = models.BigIntegerField()
     handlingFee = models.BigIntegerField()
 
@@ -23,12 +23,12 @@ class StockInfo(models.Model):
     companyName = models.CharField(max_length=32)
     tradeType = models.CharField(max_length=32)
     quantity = models.BigIntegerField()
-    openPrice = models.FloatField()
-    closePrice = models.FloatField()
-    highestPrice = models.FloatField()
-    lowestPrice = models.FloatField()
-    fluctPrice = models.FloatField()
-    fluctRate = models.FloatField()
+    openPrice = models.DecimalField(max_digits=7, decimal_places=2)
+    closePrice = models.DecimalField(max_digits=7, decimal_places=2)
+    highestPrice = models.DecimalField(max_digits=7, decimal_places=2)
+    lowestPrice = models.DecimalField(max_digits=7, decimal_places=2)
+    fluctPrice = models.DecimalField(max_digits=7, decimal_places=2)
+    fluctRate = models.DecimalField(max_digits=7, decimal_places=2)
 
 
 class StockMemo(models.Model):
@@ -41,5 +41,5 @@ class StockMemo(models.Model):
 class TradePlan(models.Model):
     sid = models.CharField(max_length=32)
     planType = models.CharField(max_length=32)
-    targetPrice = models.FloatField()
+    targetPrice = models.DecimalField(max_digits=7, decimal_places=2)
     targetQuantity = models.BigIntegerField()
