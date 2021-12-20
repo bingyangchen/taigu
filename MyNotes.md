@@ -18,9 +18,9 @@
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'Investment',
+            'NAME': 'investment',
             'USER': 'postgres',
-            'PASSWORD': '22512908',
+            'PASSWORD': '0000',
             'HOST': 'localhost',
             'PORT': '5432'
         }
@@ -44,12 +44,29 @@ sqlite3 的檔案在此專案中（db.sqlite3），PostgreSQL 則沒有檔案，
 
 若 server 架在本機，則在有 manage.py 該層執行:
 
-    python manage.py makemigrations
-    python manage.py migrate
+    py manage.py makemigrations
+    py manage.py migrate
 
 若 server 架在 Heroku，則執行:
 
-    heroku run python manage.py makemigrations
+    py manage.py makemigrations
+    git add .
+    git commin -m "..."
+    git push heroku master
     heroku run python manage.py migrate
 
 ---
+
+## Backup Heroku PostgreSQL database
+
+Step 1
+
+    heroku pg:backups:capture
+
+Step 2
+
+    heroku pg:backups:download
+
+Step 3
+
+    pg_restore --verbose --clean --no-acl --no-owner -h localhost -U myuser -d mydb latest.dump
