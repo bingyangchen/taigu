@@ -97,6 +97,7 @@ class StockInfoView:
         date = int(date)
         
         if sidList == []:
+            # SELECT sid from TradeRecord GROUP BY sid HAVING SUM(dealQuantity) > 0
             autoSidQuery = TradeRecord.objects.values('sid').annotate(sum=Sum('dealQuantity')).filter(sum__gt=0).values('sid')
             for each in autoSidQuery:
                 sidList.append(each["sid"])
