@@ -58,33 +58,48 @@ class StockInfoView:
                 allData.append(dataRow)
             # store
             for each in allData:
-                q = StockInfo.objects.filter(sid=each["sid"])
-                if len(q) != 0:
-                    q = q.get()
-                    q.date = each["date"]
-                    q.companyName = each["name"]
-                    q.tradeType = each["trade-type"]
-                    q.quantity = each["quantity"]
-                    q.openPrice = each["open"]
-                    q.closePrice = each["close"]
-                    q.highestPrice = each["highest"]
-                    q.lowestPrice = each["lowest"]
-                    q.fluctPrice = each["fluct-price"]
-                    q.fluctRate = each["fluct-rate"]
-                    q.save()
-                else:
-                    s = StockInfo(date=each["date"],
-                                  sid=each["sid"],
-                                  companyName=each["name"],
-                                  tradeType=each["trade-type"],
-                                  quantity=each["quantity"],
-                                  openPrice=each["open"],
-                                  closePrice=each["close"],
-                                  highestPrice=each["highest"],
-                                  lowestPrice=each["lowest"],
-                                  fluctPrice=each["fluct-price"],
-                                  fluctRate=each["fluct-rate"])
-                    s.save()
+                StockInfo.objects.update_or_create(
+                    sid=each["sid"],
+                    defaults={
+                        'date': each["date"],
+                        'companyName': each["name"],
+                        'tradeType': each["trade-type"],
+                        'quantity': each["quantity"],
+                        'openPrice': each["open"],
+                        'closePrice': each["close"],
+                        'highestPrice': each["highest"],
+                        'lowestPrice': each["lowest"],
+                        'fluctPrice': each["fluct-price"],
+                        'fluctRate': each["fluct-rate"]
+                    }
+                )
+                # q = StockInfo.objects.filter(sid=each["sid"])
+                # if len(q) != 0:
+                #     q = q.get()
+                #     q.date = each["date"]
+                #     q.companyName = each["name"]
+                #     q.tradeType = each["trade-type"]
+                #     q.quantity = each["quantity"]
+                #     q.openPrice = each["open"]
+                #     q.closePrice = each["close"]
+                #     q.highestPrice = each["highest"]
+                #     q.lowestPrice = each["lowest"]
+                #     q.fluctPrice = each["fluct-price"]
+                #     q.fluctRate = each["fluct-rate"]
+                #     q.save()
+                # else:
+                #     s = StockInfo(date=each["date"],
+                #                   sid=each["sid"],
+                #                   companyName=each["name"],
+                #                   tradeType=each["trade-type"],
+                #                   quantity=each["quantity"],
+                #                   openPrice=each["open"],
+                #                   closePrice=each["close"],
+                #                   highestPrice=each["highest"],
+                #                   lowestPrice=each["lowest"],
+                #                   fluctPrice=each["fluct-price"],
+                #                   fluctRate=each["fluct-rate"])
+                #     s.save()
             self.prepareResult(sidList, date)
         except Exception as e:
             raise e
