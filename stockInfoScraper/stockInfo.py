@@ -11,7 +11,7 @@ class StockInfoView:
     def __init__(self):
         # info of multiple stocks, single day
         # self.endPoint1 = "https://www.twse.com.tw/exchangeReport/MI_INDEX"
-        self.endPoint12 = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch="
+        self.endPoint = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch="
 
         # info of single stock, multiple days
         # self.endPoint2 = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210809&stockNo=2330"
@@ -28,13 +28,14 @@ class StockInfoView:
                 queryStr += ("tse_" + each + ".tw|")
                 queryStr += ("otc_" + each + ".tw|")
             try:
-                res = get(self.endPoint12 + queryStr)
+                res = get(self.endPoint + queryStr)
                 res = json.loads(pq(res.text).text())["msgArray"]
             except:
                 print("failed to fetch")
                 return
+            
+            # arrange the data format
             for each in res:
-                # arrange the data format
                 dataRow = {}
                 try:
                     dataRow["date"] = date
@@ -56,6 +57,7 @@ class StockInfoView:
                 except:
                     continue
                 allData.append(dataRow)
+                
             # store
             for each in allData:
                 StockInfo.objects.update_or_create(
@@ -73,34 +75,25 @@ class StockInfoView:
                         'fluctRate': each["fluct-rate"]
                     }
                 )
-                # q = StockInfo.objects.filter(sid=each["sid"])
-                # if len(q) != 0:
-                #     q = q.get()
-                #     q.date = each["date"]
-                #     q.companyName = each["name"]
-                #     q.tradeType = each["trade-type"]
-                #     q.quantity = each["quantity"]
-                #     q.openPrice = each["open"]
-                #     q.closePrice = each["close"]
-                #     q.highestPrice = each["highest"]
-                #     q.lowestPrice = each["lowest"]
-                #     q.fluctPrice = each["fluct-price"]
-                #     q.fluctRate = each["fluct-rate"]
-                #     q.save()
-                # else:
-                #     s = StockInfo(date=each["date"],
-                #                   sid=each["sid"],
-                #                   companyName=each["name"],
-                #                   tradeType=each["trade-type"],
-                #                   quantity=each["quantity"],
-                #                   openPrice=each["open"],
-                #                   closePrice=each["close"],
-                #                   highestPrice=each["highest"],
-                #                   lowestPrice=each["lowest"],
-                #                   fluctPrice=each["fluct-price"],
-                #                   fluctRate=each["fluct-rate"])
-                #     s.save()
-            self.prepareResult(sidList, date)
+                
+            # prepare result
+            for eachSid in sidList:
+                q = StockInfo.objects.get(sid=eachSid)
+                self.result.append(
+                    {
+                        "date": q.date,
+                        "sid": q.sid,
+                        "name": q.companyName,
+                        "trade-type": q.tradeType,
+                        "quantity": q.quantity,
+                        "open": q.openPrice,
+                        "close": q.closePrice,
+                        "highest": q.highestPrice,
+                        "lowest": q.lowestPrice,
+                        "fluct-price": q.fluctPrice,
+                        "fluct-rate": q.fluctRate
+                    }
+                )
         except Exception as e:
             raise e
 
@@ -122,7 +115,6 @@ class StockInfoView:
 
         try:
             needToFetchSidList = []
-            noNeedToFetchSidList = []
             for eachSid in sidList:
                 q = StockInfo.objects.filter(sid=eachSid)
                 if len(q) != 0:
@@ -130,29 +122,23 @@ class StockInfoView:
                     if int(q.date) != date:
                         needToFetchSidList.append(eachSid)
                     else:
-                        noNeedToFetchSidList.append(eachSid)
+                        self.result.append(
+                            {
+                                "date": q.date,
+                                "sid": q.sid,
+                                "name": q.companyName,
+                                "trade-type": q.tradeType,
+                                "quantity": q.quantity,
+                                "open": q.openPrice,
+                                "close": q.closePrice,
+                                "highest": q.highestPrice,
+                                "lowest": q.lowestPrice,
+                                "fluct-price": q.fluctPrice,
+                                "fluct-rate": q.fluctRate
+                            }
+                        )
                 else:
                     needToFetchSidList.append(eachSid)
-            self.prepareResult(noNeedToFetchSidList, date)
             self.fetchAndStore(needToFetchSidList, date)
         except Exception as e:
             raise e
-
-    def prepareResult(self, sidList, date):
-        for eachSid in sidList:
-            q = StockInfo.objects.filter(sid=eachSid)
-            if len(q) != 0:
-                q = q.get()
-                self.result.append({"date": q.date,
-                                    "sid": q.sid,
-                                    "name": q.companyName,
-                                    "trade-type": q.tradeType,
-                                    "quantity": q.quantity,
-                                    "open": q.openPrice,
-                                    "close": q.closePrice,
-                                    "highest": q.highestPrice,
-                                    "lowest": q.lowestPrice,
-                                    "fluct-price": q.fluctPrice,
-                                    "fluct-rate": q.fluctRate})
-            else:
-                self.fetchAndStore([eachSid], date)
