@@ -16,16 +16,15 @@ class TradePlanView:
             autoSidQuery = TradeRecord.objects.values('sid').annotate(sum=Sum('dealQuantity')).filter(sum__gt=0).values('sid')
             for each in autoSidQuery:
                 sidList.append(each["sid"])
-        for each in sidList:
-            temp = TradePlan.objects.filter(sid=each)
-            for each in temp:
-                dictResultList.append({
-                    "id": each.id,
-                    "sid": each.sid,
-                    "plan-type": each.planType,
-                    "target-price": each.targetPrice,
-                    "target-quantity": each.targetQuantity
-                })
+        q = TradePlan.objects.filter(sid__in=sidList)
+        for each in q:
+            dictResultList.append({
+                "id": each.id,
+                "sid": each.sid,
+                "plan-type": each.planType,
+                "target-price": each.targetPrice,
+                "target-quantity": each.targetQuantity
+            })
         return dictResultList
 
     def updatePlan(self, ID, planType, targetPrice, targetQuantity):

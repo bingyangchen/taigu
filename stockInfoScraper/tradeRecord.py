@@ -21,16 +21,11 @@ class TradeRecordView:
         if dealTimeList != [] or sidList != []:    # specific dealTimes, specific sids
             if dealTimeList != [] and sidList != []:
                 result = TradeRecord.objects.filter(
-                    dealTime=dealTimeList[0]).filter(sid=sidList[0])
+                    dealTime__in=dealTimeList).filter(sid__in=sidList)
             elif dealTimeList == []:
-                result = TradeRecord.objects.filter(sid=sidList[0])
+                result = TradeRecord.objects.filter(sid__in=sidList)
             else:
-                result = TradeRecord.objects.filter(
-                    dealTime=dealTimeList[0])
-            for each in dealTimeList:
-                result.union(TradeRecord.objects.filter(dealTime=each))
-            for each in sidList:
-                result.union(TradeRecord.objects.filter(sid=each))
+                result = TradeRecord.objects.filter(dealTime__in=dealTimeList)
         result = result.order_by("dealTime", "id").reverse()
         dictResultList = []
         for each in result:

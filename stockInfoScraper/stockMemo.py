@@ -16,16 +16,15 @@ class StockMemoView:
             autoSidQuery = TradeRecord.objects.values('sid').annotate(sum=Sum('dealQuantity')).filter(sum__gt=0).values('sid')
             for each in autoSidQuery:
                 sidList.append(each["sid"])
-        for each in sidList:
-            temp = StockMemo.objects.filter(sid=each)
-            for each in temp:
-                dictResultList.append({
-                    "id": each.id,
-                    "sid": each.sid,
-                    "main-goods-or-services": each.mainGoodsOrServices,
-                    "strategy-used": each.strategyUsed,
-                    "my-note": each.myNote
-                })
+        q = StockMemo.objects.filter(sid__in=sidList)
+        for each in q:
+            dictResultList.append({
+                "id": each.id,
+                "sid": each.sid,
+                "main-goods-or-services": each.mainGoodsOrServices,
+                "strategy-used": each.strategyUsed,
+                "my-note": each.myNote
+            })
         return dictResultList
 
     def updateMemo(self, ID, mainGoodsOrServices, strategyUsed, myNote):

@@ -19,16 +19,11 @@ class CashDividendRecordView:
         if dealTimeList != [] or sidList != []:    # specific dealTimes, specific sids
             if dealTimeList != [] and sidList != []:
                 result = CashDividendRecord.objects.filter(
-                    dealTime=dealTimeList[0]).filter(sid=sidList[0])
+                    dealTime__in=dealTimeList).filter(sid__in=sidList)
             elif dealTimeList == []:
-                result = CashDividendRecord.objects.filter(sid=sidList[0])
+                result = CashDividendRecord.objects.filter(sid__in=sidList)
             else:
-                result = CashDividendRecord.objects.filter(
-                    dealTime=dealTimeList[0])
-            for each in dealTimeList:
-                result.union(CashDividendRecord.objects.filter(dealTime=each))
-            for each in sidList:
-                result.union(CashDividendRecord.objects.filter(sid=each))
+                result = CashDividendRecord.objects.filter(dealTime__in=dealTimeList)
         result = result.order_by("dealTime").reverse()
         dictResultList = []
         for each in result:
