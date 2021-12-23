@@ -33,7 +33,7 @@ class StockInfoView:
             except:
                 print("failed to fetch")
                 return
-            
+
             # arrange the data format
             for each in res:
                 dataRow = {}
@@ -57,7 +57,7 @@ class StockInfoView:
                 except:
                     continue
                 allData.append(dataRow)
-                
+
             # store
             for each in allData:
                 StockInfo.objects.update_or_create(
@@ -75,23 +75,23 @@ class StockInfoView:
                         'fluctRate': each["fluct-rate"]
                     }
                 )
-                
+
             # prepare result
-            for eachSid in sidList:
-                q = StockInfo.objects.get(sid=eachSid)
+            q = StockInfo.objects.filter(sid__in=sidList)
+            for each in q:
                 self.result.append(
                     {
-                        "date": q.date,
-                        "sid": q.sid,
-                        "name": q.companyName,
-                        "trade-type": q.tradeType,
-                        "quantity": q.quantity,
-                        "open": q.openPrice,
-                        "close": q.closePrice,
-                        "highest": q.highestPrice,
-                        "lowest": q.lowestPrice,
-                        "fluct-price": q.fluctPrice,
-                        "fluct-rate": q.fluctRate
+                        "date": each.date,
+                        "sid": each.sid,
+                        "name": each.companyName,
+                        "trade-type": each.tradeType,
+                        "quantity": each.quantity,
+                        "open": each.openPrice,
+                        "close": each.closePrice,
+                        "highest": each.highestPrice,
+                        "lowest": each.lowestPrice,
+                        "fluct-price": each.fluctPrice,
+                        "fluct-rate": each.fluctRate
                     }
                 )
         except Exception as e:
