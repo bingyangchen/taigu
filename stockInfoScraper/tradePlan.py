@@ -28,11 +28,11 @@ class TradePlanView:
         return dictResultList
 
     def updatePlan(self, ID, planType, targetPrice, targetQuantity):
-        target = TradePlan.objects.get(id=ID)
-        target.planType = planType
-        target.targetPrice = targetPrice
-        target.targetQuantity = targetQuantity
-        target.save()
+        TradePlan.objects.filter(id=ID).update(
+            planType = planType,
+            targetPrice = targetPrice,
+            targetQuantity = targetQuantity
+        )
 
     def deletePlan(self, ID):
         target = TradePlan.objects.get(id=ID)

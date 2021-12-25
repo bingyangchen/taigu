@@ -28,11 +28,11 @@ class StockMemoView:
         return dictResultList
 
     def updateMemo(self, ID, mainGoodsOrServices, strategyUsed, myNote):
-        target = StockMemo.objects.get(id=ID)
-        target.mainGoodsOrServices = mainGoodsOrServices
-        target.strategyUsed = strategyUsed
-        target.myNote = myNote
-        target.save()
+        StockMemo.objects.filter(id=ID).update(
+            mainGoodsOrServices = mainGoodsOrServices,
+            strategyUsed = strategyUsed,
+            myNote = myNote
+        )
 
     def deleteMemo(self, ID):
         target = StockMemo.objects.get(id=ID)

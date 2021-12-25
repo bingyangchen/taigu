@@ -40,20 +40,20 @@ class StockInfoView:
                 try:
                     dataRow["date"] = date
                     dataRow["sid"] = each["ch"].split('.')[0]
-                    dataRow["name"] = each["n"]
-                    dataRow["trade-type"] = each["ex"]
+                    dataRow["companyName"] = each["n"]
+                    dataRow["tradeType"] = each["ex"]
                     dataRow["quantity"] = each["v"]
-                    dataRow["open"] = str(round(float(each["o"]), 2))
+                    dataRow["openPrice"] = str(round(float(each["o"]), 2))
                     try:  # 收漲停時，z 會是 "-"，所以改看最高價
-                        dataRow["close"] = str(round(float(each["z"]), 2))
+                        dataRow["closePrice"] = str(round(float(each["z"]), 2))
                     except:
-                        dataRow["close"] = str(round(float(each["h"]), 2))
-                    dataRow["highest"] = str(round(float(each["h"]), 2))
-                    dataRow["lowest"] = str(round(float(each["l"]), 2))
-                    dataRow["fluct-price"] = str(
-                        round((float(dataRow["close"])-float(each["y"])), 2))
-                    dataRow["fluct-rate"] = str(
-                        round((float(dataRow["close"])-float(each["y"]))/float(each["y"]), 4))
+                        dataRow["closePrice"] = str(round(float(each["h"]), 2))
+                    dataRow["highestPrice"] = str(round(float(each["h"]), 2))
+                    dataRow["lowestPrice"] = str(round(float(each["l"]), 2))
+                    dataRow["fluctPrice"] = str(
+                        round((float(dataRow["closePrice"])-float(each["y"])), 2))
+                    dataRow["fluctRate"] = str(
+                        round((float(dataRow["closePrice"])-float(each["y"]))/float(each["y"]), 4))
                 except:
                     continue
                 allData.append(dataRow)
@@ -62,18 +62,7 @@ class StockInfoView:
             for each in allData:
                 StockInfo.objects.update_or_create(
                     sid=each["sid"],
-                    defaults={
-                        'date': each["date"],
-                        'companyName': each["name"],
-                        'tradeType': each["trade-type"],
-                        'quantity': each["quantity"],
-                        'openPrice': each["open"],
-                        'closePrice': each["close"],
-                        'highestPrice': each["highest"],
-                        'lowestPrice': each["lowest"],
-                        'fluctPrice': each["fluct-price"],
-                        'fluctRate': each["fluct-rate"]
-                    }
+                    defaults=each
                 )
 
             # prepare result
@@ -117,7 +106,7 @@ class StockInfoView:
             needToFetchSidList = []
             for eachSid in sidList:
                 q = StockInfo.objects.filter(sid=eachSid)
-                if len(q) != 0:
+                if q:
                     q = q.get()
                     if int(q.date) != date:
                         needToFetchSidList.append(eachSid)

@@ -41,14 +41,14 @@ class TradeRecordView:
         return dictResultList
 
     def updateTradeLog(self, ID, dealTime, sid, dealPrice, dealQuantity, handlingFee):
-        target = TradeRecord.objects.get(id=ID)
-        target.dealTime = int(dealTime)
-        target.sid = sid
-        target.companyName = self.getCompanyName(sid)
-        target.dealPrice = float(dealPrice)
-        target.dealQuantity = int(dealQuantity)
-        target.handlingFee = int(handlingFee)
-        target.save()
+        TradeRecord.objects.filter(id=ID).update(
+            dealTime = int(dealTime),
+            sid = sid,
+            companyName = self.getCompanyName(sid),
+            dealPrice = float(dealPrice),
+            dealQuantity = int(dealQuantity),
+            handlingFee = int(handlingFee)
+        )
 
     def deleteTradeLog(self, ID):
         target = TradeRecord.objects.get(id=ID)

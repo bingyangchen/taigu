@@ -37,12 +37,12 @@ class CashDividendRecordView:
         return dictResultList
 
     def updateCashDividendLog(self, ID, dealTime, sid, cashDividend):
-        target = CashDividendRecord.objects.get(id=ID)
-        target.dealTime = int(dealTime)
-        target.sid = sid
-        target.companyName = self.getCompanyName(sid)
-        target.cashDividend = int(cashDividend)
-        target.save()
+        CashDividendRecord.objects.filter(id=ID).update(
+            dealTime = int(dealTime),
+            sid = sid,
+            companyName = self.getCompanyName(sid),
+            cashDividend = int(cashDividend)
+        )
 
     def deleteCashDividendLog(self, ID):
         target = CashDividendRecord.objects.get(id=ID)
