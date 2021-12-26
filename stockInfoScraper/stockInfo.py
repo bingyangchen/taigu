@@ -108,7 +108,7 @@ class StockInfoView:
                 q = StockInfo.objects.filter(sid=eachSid)
                 if q:
                     q = q.get()
-                    if int(q.date) != date:
+                    if int(q.date) != date or not q.sid or not q.companyName or not q.tradeType:
                         needToFetchSidList.append(eachSid)
                     else:
                         self.result.append(
