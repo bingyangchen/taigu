@@ -1,4 +1,4 @@
-from django.shortcuts import render
+# from django.shortcuts import render
 # from django.http.response import HttpResponse
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -69,9 +69,9 @@ def tradeCRUD(request):
             result = {"success-message": "deletion-success"}
         else:
             result = {"error-message": "Mode Not Exsist"}
-        result = json.dumps(result)
     else:
         result = {"error-message": "Only POST methods are available."}
+    result = json.dumps(result)
     response = HttpResponse(result)
     response["Access-Control-Allow-Origin"] = "*"
     return response
@@ -110,9 +110,9 @@ def dividendCRUD(request):
             result = {"success-message": "deletion-success"}
         else:
             result = {"error-message": "Mode Not Exist"}
-        result = json.dumps(result)
     else:
         result = {"error-message": "Only POST methods are available."}
+    result = json.dumps(result)
     response = HttpResponse(result)
     response["Access-Control-Allow-Origin"] = "*"
     return response
@@ -153,9 +153,9 @@ def memoCRUD(request):
                 result = {"success-message": "deletion-success"}
         else:
             result = {"error-message": "Mode %s Not Exist" % mode}
-        result = json.dumps(result)
     else:
         result = {"error-message": "Only POST methods are available."}
+    result = json.dumps(result)
     response = HttpResponse(result)
     response["Access-Control-Allow-Origin"] = "*"
     return response
@@ -196,9 +196,9 @@ def planCRUD(request):
                 result = {"success-message": "deletion-success"}
         else:
             result = {"error-message": "Mode %s Not Exist" % mode}
-        result = json.dumps(result)
     else:
         result = {"error-message": "Only POST methods are available."}
+    result = json.dumps(result)
     response = HttpResponse(result)
     response["Access-Control-Allow-Origin"] = "*"
     return response
