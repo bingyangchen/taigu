@@ -1,8 +1,5 @@
-# from django.shortcuts import render
-# from django.http.response import HttpResponse
-from django.http import HttpResponse
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import json
 from .stockInfo import StockInfoView
 from .tradeRecord import TradeRecordView
 from .cashDividendRecord import CashDividendRecordView
@@ -17,16 +14,15 @@ def fetchStockInfo(request):
         date = request.GET.get("date")
         sidList = request.GET.get("sid-list", default=[])
         sidList = sidList.split(",") if len(sidList) > 0 else sidList
-        result = None
         try:
             if date != None:
                 s.stocksSingleDay(date=date, sidList=sidList)
             else:
                 s.stocksSingleDay(sidList=sidList)
-            result = json.dumps({"data": s.result})
+            result = {"data": s.result}
         except Exception as e:
-            result = json.dumps({"Error Message from views": str(e)})
-        response = HttpResponse(result)
+            result = {"Error Message from views": str(e)}
+        response = JsonResponse(result)
         response["Access-Control-Allow-Origin"] = "*"
         return response
 
@@ -42,7 +38,6 @@ def tradeCRUD(request):
         dealPrice = request.POST.get("deal-price")
         dealQuantity = request.POST.get("deal-quantity")
         handlingFee = request.POST.get("handling-fee")
-        result = None
         if mode == "create":
             if dealTime == None or sid == None or dealPrice == None or dealQuantity == None or handlingFee == None:
                 result = {"error-message": "Data not sufficient."}
@@ -74,8 +69,7 @@ def tradeCRUD(request):
             result = {"error-message": "Mode Not Exsist"}
     else:
         result = {"error-message": "Only POST methods are available."}
-    result = json.dumps(result)
-    response = HttpResponse(result)
+    response = JsonResponse(result)
     response["Access-Control-Allow-Origin"] = "*"
     return response
 
@@ -89,7 +83,6 @@ def dividendCRUD(request):
         dealTime = request.POST.get("deal-time")
         sid = request.POST.get("sid")
         cashDividend = request.POST.get("cash-dividend")
-        result = None
         if mode == "create":
             if dealTime == None or sid == None or cashDividend == None:
                 result = {"error-message": "Data not sufficient."}
@@ -119,8 +112,7 @@ def dividendCRUD(request):
             result = {"error-message": "Mode Not Exist"}
     else:
         result = {"error-message": "Only POST methods are available."}
-    result = json.dumps(result)
-    response = HttpResponse(result)
+    response = JsonResponse(result)
     response["Access-Control-Allow-Origin"] = "*"
     return response
 
@@ -135,7 +127,6 @@ def memoCRUD(request):
         mainGoodsOrServices = request.POST.get("main-goods-or-services")
         strategyUsed = request.POST.get("strategy-used")
         myNote = request.POST.get("my-note")
-        result = None
         if mode == "create":
             if sid == None:
                 result = {"error-message": "Data not sufficient."}
@@ -162,8 +153,7 @@ def memoCRUD(request):
             result = {"error-message": "Mode %s Not Exist" % mode}
     else:
         result = {"error-message": "Only POST methods are available."}
-    result = json.dumps(result)
-    response = HttpResponse(result)
+    response = JsonResponse(result)
     response["Access-Control-Allow-Origin"] = "*"
     return response
 
@@ -178,7 +168,6 @@ def planCRUD(request):
         planType = request.POST.get("plan-type")
         targetPrice = request.POST.get("target-price")
         targetQuantity = request.POST.get("target-quantity")
-        result = None
         if mode == "create":
             if sid == None:
                 result = {"error-message": "Data not sufficient."}
@@ -205,7 +194,6 @@ def planCRUD(request):
             result = {"error-message": "Mode %s Not Exist" % mode}
     else:
         result = {"error-message": "Only POST methods are available."}
-    result = json.dumps(result)
-    response = HttpResponse(result)
+    response = JsonResponse(result)
     response["Access-Control-Allow-Origin"] = "*"
     return response
