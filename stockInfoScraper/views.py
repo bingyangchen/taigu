@@ -14,10 +14,9 @@ from .tradePlan import TradePlanView
 def fetchStockInfo(request):
     if request.method == 'GET':
         s = StockInfoView()
-        date = str(request.GET.get("date")) if request.GET.get(
-            "date") != None else None
-        sidList = str(request.GET.get("sid-list")).split(
-            ",") if request.GET.get("sid-list") != None else []
+        date = request.GET.get("date")
+        sidList = request.GET.get("sid-list", default=[])
+        sidList = sidList.split(",") if len(sidList) > 0 else sidList
         result = None
         try:
             if date != None:
@@ -36,37 +35,41 @@ def fetchStockInfo(request):
 def tradeCRUD(request):
     if request.method == "POST":
         s = TradeRecordView()
-        mode = str(request.POST.get("mode"))
-        ID = str(request.POST.get("id"))
-        dealTime = str(request.POST.get("deal-time"))
-        sid = str(request.POST.get("sid"))
-        dealPrice = str(request.POST.get("deal-price"))
-        dealQuantity = str(request.POST.get("deal-quantity"))
-        handlingFee = str(request.POST.get("handling-fee"))
+        mode = request.POST.get("mode")
+        ID = request.POST.get("id")
+        dealTime = request.POST.get("deal-time")
+        sid = request.POST.get("sid")
+        dealPrice = request.POST.get("deal-price")
+        dealQuantity = request.POST.get("deal-quantity")
+        handlingFee = request.POST.get("handling-fee")
         result = None
         if mode == "create":
-            if dealTime == "" or sid == "" or dealPrice == "" or dealQuantity == "" or handlingFee == "":
+            if dealTime == None or sid == None or dealPrice == None or dealQuantity == None or handlingFee == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.createTradeLog(dealTime, sid, dealPrice,
                                  dealQuantity, handlingFee)
                 result = {"success-message": "creation-success"}
         elif mode == "read":
-            dealTimeList = str(request.POST.get("deal-time-list")).split(
-                ",") if request.POST.get("deal-time-list") != None else []
-            sidList = str(request.POST.get("sid-list")).split(
-                ",") if request.POST.get("sid-list") != None else []
+            dealTimeList = request.POST.get("deal-time-list", default=[])
+            dealTimeList = dealTimeList.split(
+                ",") if len(dealTimeList) > 0 else dealTimeList
+            sidList = request.POST.get("sid-list", default=[])
+            sidList = sidList.split(",") if len(sidList) > 0 else sidList
             result = {"data": s.readTradeLog(dealTimeList, sidList)}
         elif mode == "update":
-            if ID == "" or dealTime == "" or sid == "" or dealPrice == "" or dealQuantity == "" or handlingFee == "":
+            if ID == None or dealTime == None or sid == None or dealPrice == None or dealQuantity == None or handlingFee == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.updateTradeLog(ID, dealTime, sid, dealPrice,
                                  dealQuantity, handlingFee)
                 result = {"success-message": "update-success"}
         elif mode == "delete":
-            s.deleteTradeLog(ID)
-            result = {"success-message": "deletion-success"}
+            if ID == None:
+                result = {"error-message": "Data not sufficient."}
+            else:
+                s.deleteTradeLog(ID)
+                result = {"success-message": "deletion-success"}
         else:
             result = {"error-message": "Mode Not Exsist"}
     else:
@@ -81,33 +84,37 @@ def tradeCRUD(request):
 def dividendCRUD(request):
     if request.method == "POST":
         s = CashDividendRecordView()
-        mode = str(request.POST.get("mode"))
-        ID = str(request.POST.get("id"))
-        dealTime = str(request.POST.get("deal-time"))
-        sid = str(request.POST.get("sid"))
-        cashDividend = str(request.POST.get("cash-dividend"))
+        mode = request.POST.get("mode")
+        ID = request.POST.get("id")
+        dealTime = request.POST.get("deal-time")
+        sid = request.POST.get("sid")
+        cashDividend = request.POST.get("cash-dividend")
         result = None
         if mode == "create":
-            if dealTime == "" or sid == "" or cashDividend == "":
+            if dealTime == None or sid == None or cashDividend == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.createCashDividendLog(dealTime, sid, cashDividend)
                 result = {"success-message": "creation-success"}
         elif mode == "read":
-            dealTimeList = str(request.POST.get("deal-time-list")).split(
-                ",") if request.POST.get("deal-time-list") != None else []
-            sidList = str(request.POST.get("sid-list")).split(
-                ",") if request.POST.get("sid-list") != None else []
+            dealTimeList = request.POST.get("deal-time-list", default=[])
+            dealTimeList = dealTimeList.split(
+                ",") if len(dealTimeList) > 0 else dealTimeList
+            sidList = request.POST.get("sid-list", default=[])
+            sidList = sidList.split(",") if len(sidList) > 0 else sidList
             result = {"data": s.readCashDividendLog(dealTimeList, sidList)}
         elif mode == "update":
-            if ID == "" or dealTime == "" or sid == "" or cashDividend == "":
+            if ID == None or dealTime == None or sid == None or cashDividend == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.updateCashDividendLog(ID, dealTime, sid, cashDividend)
                 result = {"success-message": "update-success"}
         elif mode == "delete":
-            s.deleteCashDividendLog(ID)
-            result = {"success-message": "deletion-success"}
+            if ID == None:
+                result = {"error-message": "Data not sufficient."}
+            else:
+                s.deleteCashDividendLog(ID)
+                result = {"success-message": "deletion-success"}
         else:
             result = {"error-message": "Mode Not Exist"}
     else:
@@ -122,31 +129,31 @@ def dividendCRUD(request):
 def memoCRUD(request):
     if request.method == "POST":
         s = StockMemoView()
-        mode = str(request.POST.get("mode"))
-        ID = str(request.POST.get("id"))
-        sid = str(request.POST.get("sid"))
-        mainGoodsOrServices = str(request.POST.get("main-goods-or-services"))
-        strategyUsed = str(request.POST.get("strategy-used"))
-        myNote = str(request.POST.get("my-note"))
+        mode = request.POST.get("mode")
+        ID = request.POST.get("id")
+        sid = request.POST.get("sid")
+        mainGoodsOrServices = request.POST.get("main-goods-or-services")
+        strategyUsed = request.POST.get("strategy-used")
+        myNote = request.POST.get("my-note")
         result = None
         if mode == "create":
-            if sid == "":
+            if sid == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.createMemo(sid, mainGoodsOrServices, strategyUsed, myNote)
                 result = {"success-message": "creation-success"}
         elif mode == "read":
-            sidList = str(request.POST.get("sid-list")).split(
-                ",") if request.POST.get("sid-list") != None else []
+            sidList = request.POST.get("sid-list", default=[])
+            sidList = sidList.split(",") if len(sidList) > 0 else sidList
             result = {"data": s.readMemo(sidList)}
         elif mode == "update":
-            if ID == "":
+            if ID == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.updateMemo(ID, mainGoodsOrServices, strategyUsed, myNote)
                 result = {"success-message": "update-success"}
         elif mode == "delete":
-            if ID == "":
+            if ID == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.deleteMemo(ID)
@@ -165,31 +172,31 @@ def memoCRUD(request):
 def planCRUD(request):
     if request.method == "POST":
         s = TradePlanView()
-        mode = str(request.POST.get("mode"))
-        ID = str(request.POST.get("id"))
-        sid = str(request.POST.get("sid"))
-        planType = str(request.POST.get("plan-type"))
-        targetPrice = str(request.POST.get("target-price"))
-        targetQuantity = str(request.POST.get("target-quantity"))
+        mode = request.POST.get("mode")
+        ID = request.POST.get("id")
+        sid = request.POST.get("sid")
+        planType = request.POST.get("plan-type")
+        targetPrice = request.POST.get("target-price")
+        targetQuantity = request.POST.get("target-quantity")
         result = None
         if mode == "create":
-            if sid == "":
+            if sid == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.createPlan(sid, planType, targetPrice, targetQuantity)
                 result = {"success-message": "creation-success"}
         elif mode == "read":
-            sidList = str(request.POST.get("sid-list")).split(
-                ",") if request.POST.get("sid-list") != None else []
+            sidList = request.POST.get("sid-list", default=[])
+            sidList = sidList.split(",") if len(sidList) > 0 else sidList
             result = {"data": s.readPlan(sidList)}
         elif mode == "update":
-            if ID == "":
+            if ID == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.updatePlan(ID, planType, targetPrice, targetQuantity)
                 result = {"success-message": "update-success"}
         elif mode == "delete":
-            if ID == "":
+            if ID == None:
                 result = {"error-message": "Data not sufficient."}
             else:
                 s.deletePlan(ID)
