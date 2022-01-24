@@ -9,7 +9,7 @@ from .tradePlan import TradePlanView
 
 @csrf_exempt
 def fetchStockInfo(request):
-    if request.method == 'GET':
+    if request.method == "GET":
         s = StockInfoView()
         date = request.GET.get("date")
         sidList = request.GET.get("sid-list", default=[])
@@ -39,25 +39,39 @@ def tradeCRUD(request):
         dealQuantity = request.POST.get("deal-quantity")
         handlingFee = request.POST.get("handling-fee")
         if mode == "create":
-            if dealTime == None or sid == None or dealPrice == None or dealQuantity == None or handlingFee == None:
+            if (
+                dealTime == None
+                or sid == None
+                or dealPrice == None
+                or dealQuantity == None
+                or handlingFee == None
+            ):
                 result = {"error-message": "Data not sufficient."}
             else:
-                s.createTradeLog(dealTime, sid, dealPrice,
-                                 dealQuantity, handlingFee)
+                s.createTradeLog(dealTime, sid, dealPrice, dealQuantity, handlingFee)
                 result = {"success-message": "creation-success"}
         elif mode == "read":
             dealTimeList = request.POST.get("deal-time-list", default=[])
-            dealTimeList = dealTimeList.split(
-                ",") if len(dealTimeList) > 0 else dealTimeList
+            dealTimeList = (
+                dealTimeList.split(",") if len(dealTimeList) > 0 else dealTimeList
+            )
             sidList = request.POST.get("sid-list", default=[])
             sidList = sidList.split(",") if len(sidList) > 0 else sidList
             result = {"data": s.readTradeLog(dealTimeList, sidList)}
         elif mode == "update":
-            if ID == None or dealTime == None or sid == None or dealPrice == None or dealQuantity == None or handlingFee == None:
+            if (
+                ID == None
+                or dealTime == None
+                or sid == None
+                or dealPrice == None
+                or dealQuantity == None
+                or handlingFee == None
+            ):
                 result = {"error-message": "Data not sufficient."}
             else:
-                s.updateTradeLog(ID, dealTime, sid, dealPrice,
-                                 dealQuantity, handlingFee)
+                s.updateTradeLog(
+                    ID, dealTime, sid, dealPrice, dealQuantity, handlingFee
+                )
                 result = {"success-message": "update-success"}
         elif mode == "delete":
             if ID == None:
@@ -91,8 +105,9 @@ def dividendCRUD(request):
                 result = {"success-message": "creation-success"}
         elif mode == "read":
             dealTimeList = request.POST.get("deal-time-list", default=[])
-            dealTimeList = dealTimeList.split(
-                ",") if len(dealTimeList) > 0 else dealTimeList
+            dealTimeList = (
+                dealTimeList.split(",") if len(dealTimeList) > 0 else dealTimeList
+            )
             sidList = request.POST.get("sid-list", default=[])
             sidList = sidList.split(",") if len(sidList) > 0 else sidList
             result = {"data": s.readCashDividendLog(dealTimeList, sidList)}

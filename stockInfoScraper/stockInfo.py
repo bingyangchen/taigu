@@ -25,8 +25,8 @@ class StockInfoView:
             res = []
             queryStr = ""
             for each in sidList:
-                queryStr += ("tse_" + each + ".tw|")
-                queryStr += ("otc_" + each + ".tw|")
+                queryStr += "tse_" + each + ".tw|"
+                queryStr += "otc_" + each + ".tw|"
             try:
                 res = get(self.endPoint + queryStr)
                 res = json.loads(pq(res.text).text())["msgArray"]
@@ -39,7 +39,7 @@ class StockInfoView:
                 dataRow = {}
                 try:
                     dataRow["date"] = date
-                    dataRow["sid"] = each["ch"].split('.')[0]
+                    dataRow["sid"] = each["ch"].split(".")[0]
                     dataRow["companyName"] = each["n"]
                     dataRow["tradeType"] = each["ex"]
                     dataRow["quantity"] = each["v"]
@@ -51,19 +51,22 @@ class StockInfoView:
                     dataRow["highestPrice"] = str(round(float(each["h"]), 2))
                     dataRow["lowestPrice"] = str(round(float(each["l"]), 2))
                     dataRow["fluctPrice"] = str(
-                        round((float(dataRow["closePrice"])-float(each["y"])), 2))
+                        round((float(dataRow["closePrice"]) - float(each["y"])), 2)
+                    )
                     dataRow["fluctRate"] = str(
-                        round((float(dataRow["closePrice"])-float(each["y"]))/float(each["y"]), 4))
+                        round(
+                            (float(dataRow["closePrice"]) - float(each["y"]))
+                            / float(each["y"]),
+                            4,
+                        )
+                    )
                 except:
                     continue
                 allData.append(dataRow)
 
             # store
             for each in allData:
-                StockInfo.objects.update_or_create(
-                    sid=each["sid"],
-                    defaults=each
-                )
+                StockInfo.objects.update_or_create(sid=each["sid"], defaults=each)
 
             # prepare result
             q = StockInfo.objects.filter(sid__in=sidList)
@@ -80,25 +83,39 @@ class StockInfoView:
                         "highest": each.highestPrice,
                         "lowest": each.lowestPrice,
                         "fluct-price": each.fluctPrice,
-                        "fluct-rate": each.fluctRate
+                        "fluct-rate": each.fluctRate,
                     }
                 )
         except Exception as e:
             raise e
 
-    def stocksSingleDay(self, date=(datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)).strftime("%Y%m%d"), sidList=[]):
-        currentHour = int((datetime.datetime.now(pytz.utc) +
-                           datetime.timedelta(hours=8)).strftime("%H"))
+    def stocksSingleDay(
+        self,
+        date=(datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)).strftime(
+            "%Y%m%d"
+        ),
+        sidList=[],
+    ):
+        currentHour = int(
+            (datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)).strftime(
+                "%H"
+            )
+        )
         if currentHour < 14:
-            date = datetime.datetime.strptime(
-                date, "%Y%m%d")-datetime.timedelta(days=1)
+            date = datetime.datetime.strptime(date, "%Y%m%d") - datetime.timedelta(
+                days=1
+            )
             date = date.strftime("%Y%m%d")
         date = int(date)
 
         if sidList == []:
             # SELECT sid from TradeRecord GROUP BY sid HAVING SUM(dealQuantity) > 0
-            autoSidQuery = TradeRecord.objects.values('sid').annotate(
-                sum=Sum('dealQuantity')).filter(sum__gt=0).values('sid')
+            autoSidQuery = (
+                TradeRecord.objects.values("sid")
+                .annotate(sum=Sum("dealQuantity"))
+                .filter(sum__gt=0)
+                .values("sid")
+            )
             for each in autoSidQuery:
                 sidList.append(each["sid"])
 
@@ -108,7 +125,12 @@ class StockInfoView:
                 q = StockInfo.objects.filter(sid=eachSid)
                 if q:
                     q = q.get()
-                    if int(q.date) != date or not q.sid or not q.companyName or not q.tradeType:
+                    if (
+                        int(q.date) != date
+                        or not q.sid
+                        or not q.companyName
+                        or not q.tradeType
+                    ):
                         needToFetchSidList.append(eachSid)
                     else:
                         self.result.append(
@@ -123,7 +145,7 @@ class StockInfoView:
                                 "highest": q.highestPrice,
                                 "lowest": q.lowestPrice,
                                 "fluct-price": q.fluctPrice,
-                                "fluct-rate": q.fluctRate
+                                "fluct-rate": q.fluctRate,
                             }
                         )
                 else:
