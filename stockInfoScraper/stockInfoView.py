@@ -131,7 +131,8 @@ class StockInfoView:
         if currentHour < 14:
             date = datetime.datetime.strptime(date, "%Y%m%d") - datetime.timedelta(
                 days=1
-            ).strftime("%Y%m%d")
+            )
+            date = date.strftime("%Y%m%d")
         date = int(date)
 
         if sidList == []:
