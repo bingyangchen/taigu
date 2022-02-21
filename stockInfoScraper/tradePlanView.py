@@ -1,3 +1,4 @@
+from .utils import getCompanyName
 from .models import trade_plan, company
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -50,7 +51,9 @@ class TradePlanView:
         pass
 
     def createPlan(self, sid, planType, targetPrice, targetQuantity):
-        c = company.objects.get(stock_id=sid)
+        c, created = company.objects.get_or_create(
+            stock_id=sid, defaults={"name": getCompanyName(sid)}
+        )
         plan = trade_plan.objects.create(
             company=c,
             plan_type=planType,

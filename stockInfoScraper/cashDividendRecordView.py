@@ -1,5 +1,4 @@
-from requests import post
-from pyquery import PyQuery
+from .utils import getCompanyName
 from .models import cash_dividend_record, company
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -56,7 +55,7 @@ class CashDividendRecordView:
 
     def createCashDividendLog(self, dealTime, sid, cashDividend):
         c, created = company.objects.get_or_create(
-            stock_id=sid, defaults={"name": self.getCompanyName(sid)}
+            stock_id=sid, defaults={"name": getCompanyName(sid)}
         )
         cdr = cash_dividend_record.objects.create(
             company=c,
@@ -94,7 +93,7 @@ class CashDividendRecordView:
 
     def updateCashDividendLog(self, ID, dealTime, sid, cashDividend):
         c, created = company.objects.get_or_create(
-            stock_id=sid, defaults={"name": self.getCompanyName(sid)}
+            stock_id=sid, defaults={"name": getCompanyName(sid)}
         )
         cash_dividend_record.objects.filter(id=ID).update(
             company=c,
@@ -105,9 +104,3 @@ class CashDividendRecordView:
     def deleteCashDividendLog(self, ID):
         target = cash_dividend_record.objects.get(id=ID)
         target.delete()
-
-    def getCompanyName(self, sid):
-        res = post("https://isin.twse.com.tw/isin/single_main.jsp?owncode=%s" % sid)
-        doc = PyQuery(res.text)
-        returnedCompanyName = doc.find("tr:nth-child(2)>td:nth-child(4)").text()
-        return returnedCompanyName

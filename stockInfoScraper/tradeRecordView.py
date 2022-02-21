@@ -1,5 +1,4 @@
-from requests import post
-from pyquery import PyQuery
+from .utils import getCompanyName
 from .models import trade_record, company
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -73,7 +72,7 @@ class TradeRecordView:
 
     def createTradeLog(self, dealTime, sid, dealPrice, dealQuantity, handlingFee):
         c, created = company.objects.get_or_create(
-            stock_id=sid, defaults={"name": self.getCompanyName(sid)}
+            stock_id=sid, defaults={"name": getCompanyName(sid)}
         )
         tr = trade_record.objects.create(
             company=c,
@@ -113,7 +112,7 @@ class TradeRecordView:
 
     def updateTradeLog(self, ID, dealTime, sid, dealPrice, dealQuantity, handlingFee):
         c, created = company.objects.get_or_create(
-            stock_id=sid, defaults={"name": self.getCompanyName(sid)}
+            stock_id=sid, defaults={"name": getCompanyName(sid)}
         )
         trade_record.objects.filter(id=ID).update(
             company=c,
@@ -126,9 +125,3 @@ class TradeRecordView:
     def deleteTradeLog(self, ID):
         target = trade_record.objects.get(id=ID)
         target.delete()
-
-    def getCompanyName(self, sid):
-        res = post("https://isin.twse.com.tw/isin/single_main.jsp?owncode=%s" % sid)
-        doc = PyQuery(res.text)
-        returnedCompanyName = doc.find("tr:nth-child(2)>td:nth-child(4)").text()
-        return returnedCompanyName
