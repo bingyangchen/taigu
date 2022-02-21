@@ -1,34 +1,14 @@
 from django.contrib import admin
-from .models import TradeRecord, StockInfo, CashDividendRecord, StockMemo, TradePlan
+from .models import (
+    trade_record,
+    stock_info,
+    cash_dividend_record,
+    stock_memo,
+    trade_plan,
+)
 
-
-class TradeRecordAdmin(admin.ModelAdmin):
-    list_display = ("id", "dealTime", "sid", "companyName",
-                    "dealPrice", "dealQuantity", "handlingFee")
-
-
-class CashDividendRecordAdmin(admin.ModelAdmin):
-    list_display = ("id", "dealTime", "sid", "companyName", "cashDividend")
-
-
-class StockInfoAdmin(admin.ModelAdmin):
-    list_display = ("id", "date", "sid", "companyName",
-                    "tradeType", "quantity", "openPrice",
-                    "closePrice", "highestPrice", "lowestPrice",
-                    "fluctPrice", "fluctRate")
-
-
-class StockMemoAdmin(admin.ModelAdmin):
-    list_display = ("id", "sid", "mainGoodsOrServices",
-                    "strategyUsed", "myNote")
-
-
-class TradePlanAdmin(admin.ModelAdmin):
-    list_display = ("id", "sid", "planType", "targetPrice", "targetQuantity")
-
-
-admin.site.register(TradeRecord, TradeRecordAdmin)
-admin.site.register(CashDividendRecord, CashDividendRecordAdmin)
-admin.site.register(StockInfo, StockInfoAdmin)
-admin.site.register(StockMemo, StockMemoAdmin)
-admin.site.register(TradePlan, TradePlanAdmin)
+admin.site.register(trade_record)
+admin.site.register(stock_info)
+admin.site.register(cash_dividend_record)
+admin.site.register(stock_memo)
+admin.site.register(trade_plan)

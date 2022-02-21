@@ -1,10 +1,16 @@
 from django.urls import path
-from . import views
+from . import (
+    stockInfoView,
+    tradeRecordView,
+    cashDividendRecordView,
+    stockMemoView,
+    tradePlanView,
+)
 
 urlpatterns = [
-    path('fetch-stock-info', views.fetchStockInfo, name="fetchStockInfo"),
-    path('trade', views.tradeCRUD, name="tradeCRUD"),
-    path('dividend', views.dividendCRUD, name="dividendCRUD"),
-    path('memo', views.memoCRUD, name="memoCRUD"),
-    path('plan', views.planCRUD, name="planCRUD")
+    path("fetch-stock-info", stockInfoView.fetchStockInfo),
+    path("trade", tradeRecordView.tradeCRUD),
+    path("dividend", cashDividendRecordView.dividendCRUD),
+    path("memo", stockMemoView.memoCRUD),
+    path("plan", tradePlanView.planCRUD),
 ]
