@@ -378,11 +378,10 @@ CREATE TABLE public."stockInfoScraper_cash_dividend_record" (
 ALTER TABLE public."stockInfoScraper_cash_dividend_record" OWNER TO postgres;
 
 --
--- Name: stockInfoScraper_cashdividendrecord_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: stockInfoScraper_cash_dividend_record_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public."stockInfoScraper_cashdividendrecord_id_seq"
-    AS integer
+CREATE SEQUENCE public."stockInfoScraper_cash_dividend_record_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -390,13 +389,13 @@ CREATE SEQUENCE public."stockInfoScraper_cashdividendrecord_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."stockInfoScraper_cashdividendrecord_id_seq" OWNER TO postgres;
+ALTER TABLE public."stockInfoScraper_cash_dividend_record_id_seq" OWNER TO postgres;
 
 --
--- Name: stockInfoScraper_cashdividendrecord_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: stockInfoScraper_cash_dividend_record_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public."stockInfoScraper_cashdividendrecord_id_seq" OWNED BY public."stockInfoScraper_cash_dividend_record".id;
+ALTER SEQUENCE public."stockInfoScraper_cash_dividend_record_id_seq" OWNED BY public."stockInfoScraper_cash_dividend_record".id;
 
 
 --
@@ -433,6 +432,27 @@ CREATE TABLE public."stockInfoScraper_stock_info" (
 ALTER TABLE public."stockInfoScraper_stock_info" OWNER TO postgres;
 
 --
+-- Name: stockInfoScraper_stock_info_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public."stockInfoScraper_stock_info_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."stockInfoScraper_stock_info_id_seq" OWNER TO postgres;
+
+--
+-- Name: stockInfoScraper_stock_info_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public."stockInfoScraper_stock_info_id_seq" OWNED BY public."stockInfoScraper_stock_info".id;
+
+
+--
 -- Name: stockInfoScraper_stock_memo; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -448,11 +468,10 @@ CREATE TABLE public."stockInfoScraper_stock_memo" (
 ALTER TABLE public."stockInfoScraper_stock_memo" OWNER TO postgres;
 
 --
--- Name: stockInfoScraper_stockinfo_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: stockInfoScraper_stock_memo_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public."stockInfoScraper_stockinfo_id_seq"
-    AS integer
+CREATE SEQUENCE public."stockInfoScraper_stock_memo_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -460,35 +479,13 @@ CREATE SEQUENCE public."stockInfoScraper_stockinfo_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."stockInfoScraper_stockinfo_id_seq" OWNER TO postgres;
+ALTER TABLE public."stockInfoScraper_stock_memo_id_seq" OWNER TO postgres;
 
 --
--- Name: stockInfoScraper_stockinfo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: stockInfoScraper_stock_memo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public."stockInfoScraper_stockinfo_id_seq" OWNED BY public."stockInfoScraper_stock_info".id;
-
-
---
--- Name: stockInfoScraper_stockmemo_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."stockInfoScraper_stockmemo_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."stockInfoScraper_stockmemo_id_seq" OWNER TO postgres;
-
---
--- Name: stockInfoScraper_stockmemo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."stockInfoScraper_stockmemo_id_seq" OWNED BY public."stockInfoScraper_stock_memo".id;
+ALTER SEQUENCE public."stockInfoScraper_stock_memo_id_seq" OWNED BY public."stockInfoScraper_stock_memo".id;
 
 
 --
@@ -507,6 +504,27 @@ CREATE TABLE public."stockInfoScraper_trade_plan" (
 ALTER TABLE public."stockInfoScraper_trade_plan" OWNER TO postgres;
 
 --
+-- Name: stockInfoScraper_trade_plan_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public."stockInfoScraper_trade_plan_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."stockInfoScraper_trade_plan_id_seq" OWNER TO postgres;
+
+--
+-- Name: stockInfoScraper_trade_plan_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public."stockInfoScraper_trade_plan_id_seq" OWNED BY public."stockInfoScraper_trade_plan".id;
+
+
+--
 -- Name: stockInfoScraper_trade_record; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -523,11 +541,10 @@ CREATE TABLE public."stockInfoScraper_trade_record" (
 ALTER TABLE public."stockInfoScraper_trade_record" OWNER TO postgres;
 
 --
--- Name: stockInfoScraper_tradeplan_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: stockInfoScraper_trade_record_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public."stockInfoScraper_tradeplan_id_seq"
-    AS integer
+CREATE SEQUENCE public."stockInfoScraper_trade_record_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -535,35 +552,13 @@ CREATE SEQUENCE public."stockInfoScraper_tradeplan_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."stockInfoScraper_tradeplan_id_seq" OWNER TO postgres;
+ALTER TABLE public."stockInfoScraper_trade_record_id_seq" OWNER TO postgres;
 
 --
--- Name: stockInfoScraper_tradeplan_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: stockInfoScraper_trade_record_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public."stockInfoScraper_tradeplan_id_seq" OWNED BY public."stockInfoScraper_trade_plan".id;
-
-
---
--- Name: stockInfoScraper_traderecord_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."stockInfoScraper_traderecord_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."stockInfoScraper_traderecord_id_seq" OWNER TO postgres;
-
---
--- Name: stockInfoScraper_traderecord_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."stockInfoScraper_traderecord_id_seq" OWNED BY public."stockInfoScraper_trade_record".id;
+ALTER SEQUENCE public."stockInfoScraper_trade_record_id_seq" OWNED BY public."stockInfoScraper_trade_record".id;
 
 
 --
@@ -588,7 +583,6 @@ ALTER TABLE public."stockInfoScraper_user" OWNER TO postgres;
 --
 
 CREATE SEQUENCE public."stockInfoScraper_user_id_seq"
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -672,35 +666,35 @@ ALTER TABLE ONLY public.django_migrations ALTER COLUMN id SET DEFAULT nextval('p
 -- Name: stockInfoScraper_cash_dividend_record id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."stockInfoScraper_cash_dividend_record" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_cashdividendrecord_id_seq"'::regclass);
+ALTER TABLE ONLY public."stockInfoScraper_cash_dividend_record" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_cash_dividend_record_id_seq"'::regclass);
 
 
 --
 -- Name: stockInfoScraper_stock_info id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."stockInfoScraper_stock_info" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_stockinfo_id_seq"'::regclass);
+ALTER TABLE ONLY public."stockInfoScraper_stock_info" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_stock_info_id_seq"'::regclass);
 
 
 --
 -- Name: stockInfoScraper_stock_memo id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."stockInfoScraper_stock_memo" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_stockmemo_id_seq"'::regclass);
+ALTER TABLE ONLY public."stockInfoScraper_stock_memo" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_stock_memo_id_seq"'::regclass);
 
 
 --
 -- Name: stockInfoScraper_trade_plan id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."stockInfoScraper_trade_plan" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_tradeplan_id_seq"'::regclass);
+ALTER TABLE ONLY public."stockInfoScraper_trade_plan" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_trade_plan_id_seq"'::regclass);
 
 
 --
 -- Name: stockInfoScraper_trade_record id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."stockInfoScraper_trade_record" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_traderecord_id_seq"'::regclass);
+ALTER TABLE ONLY public."stockInfoScraper_trade_record" ALTER COLUMN id SET DEFAULT nextval('public."stockInfoScraper_trade_record_id_seq"'::regclass);
 
 
 --
@@ -918,31 +912,6 @@ nkvxho7cwjuvtgzlec051qtpxwz95o35	MTg0NmU1NWY2ZmQ0YTY1ZmFlNTk0MDRjZDhlNjJhZWVmNTN
 
 
 --
--- Data for Name: stockInfoScraper_cash_dividend_record; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."stockInfoScraper_cash_dividend_record" (id, deal_time, cash_dividend, company_id) FROM stdin;
-1	20210415	107	2330
-2	20210715	165	2330
-3	20210723	27	2301
-4	20210729	175	2454
-5	20210729	125	4938
-6	20210730	260	3105
-7	20210812	331	2308
-8	20210819	744	2382
-9	20210820	478	2317
-10	20210820	56	6271
-11	20210825	11	0050
-12	20210825	60	2204
-13	20210831	95	2402
-14	20210910	12	2301
-18	20211007	18	2379
-21	20220210	54	6488
-22	20220217	16	0050
-\.
-
-
---
 -- Data for Name: stockInfoScraper_company; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -1055,6 +1024,31 @@ COPY public."stockInfoScraper_company" (stock_id, name) FROM stdin;
 4966	譜瑞-KY
 3044	健鼎
 2420	新巨
+\.
+
+
+--
+-- Data for Name: stockInfoScraper_cash_dividend_record; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."stockInfoScraper_cash_dividend_record" (id, deal_time, cash_dividend, company_id) FROM stdin;
+1	20210415	107	2330
+2	20210715	165	2330
+3	20210723	27	2301
+4	20210729	175	2454
+5	20210729	125	4938
+6	20210730	260	3105
+7	20210812	331	2308
+8	20210819	744	2382
+9	20210820	478	2317
+10	20210820	56	6271
+11	20210825	11	0050
+12	20210825	60	2204
+13	20210831	95	2402
+14	20210910	12	2301
+18	20211007	18	2379
+21	20220210	54	6488
+22	20220217	16	0050
 \.
 
 
@@ -2336,42 +2330,42 @@ SELECT pg_catalog.setval('public.django_content_type_id_seq', 13, true);
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 33, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 34, true);
 
 
 --
--- Name: stockInfoScraper_cashdividendrecord_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: stockInfoScraper_cash_dividend_record_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."stockInfoScraper_cashdividendrecord_id_seq"', 22, true);
-
-
---
--- Name: stockInfoScraper_stockinfo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public."stockInfoScraper_stockinfo_id_seq"', 108, true);
+SELECT pg_catalog.setval('public."stockInfoScraper_cash_dividend_record_id_seq"', 22, true);
 
 
 --
--- Name: stockInfoScraper_stockmemo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: stockInfoScraper_stock_info_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."stockInfoScraper_stockmemo_id_seq"', 113, true);
-
-
---
--- Name: stockInfoScraper_tradeplan_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public."stockInfoScraper_tradeplan_id_seq"', 644, true);
+SELECT pg_catalog.setval('public."stockInfoScraper_stock_info_id_seq"', 108, true);
 
 
 --
--- Name: stockInfoScraper_traderecord_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: stockInfoScraper_stock_memo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."stockInfoScraper_traderecord_id_seq"', 1126, true);
+SELECT pg_catalog.setval('public."stockInfoScraper_stock_memo_id_seq"', 113, true);
+
+
+--
+-- Name: stockInfoScraper_trade_plan_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public."stockInfoScraper_trade_plan_id_seq"', 644, true);
+
+
+--
+-- Name: stockInfoScraper_trade_record_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public."stockInfoScraper_trade_record_id_seq"', 1126, true);
 
 
 --

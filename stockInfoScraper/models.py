@@ -6,7 +6,7 @@ class user(models.Model):
     last_name = models.CharField(max_length=64)
     email = models.EmailField(max_length=256, unique=True)
     is_email_verified = models.BooleanField(default=False)
-    password = models.CharField(max_length=32)
+    password = models.CharField(max_length=64)
     login_token = models.CharField(max_length=512, unique=True, blank=True, null=True)
 
     def __str__(self):
