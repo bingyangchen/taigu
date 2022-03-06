@@ -1,4 +1,0 @@
-git add .
-git commit -m "update"
-git push heroku master
-heroku run python manage.py migrate
