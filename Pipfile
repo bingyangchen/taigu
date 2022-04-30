@@ -12,6 +12,7 @@ dj-static = "*"
 requests = "*"
 pyquery = "*"
 black = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
