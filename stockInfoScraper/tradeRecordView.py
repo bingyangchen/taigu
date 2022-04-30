@@ -1,67 +1,65 @@
-from .utils import getCompanyName
-from .models import trade_record, company
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+from .utils import getCompanyName
+from .models import trade_record, company
 from .my_decorators import cors_exempt
 
 
 @csrf_exempt
 @cors_exempt
+@require_POST
 def tradeCRUD(request):
-    if request.method == "POST":
-        s = TradeRecordView()
-        mode = request.POST.get("mode")
-        ID = request.POST.get("id")
-        dealTime = request.POST.get("deal-time")
-        sid = request.POST.get("sid")
-        dealPrice = request.POST.get("deal-price")
-        dealQuantity = request.POST.get("deal-quantity")
-        handlingFee = request.POST.get("handling-fee")
-        if mode == "create":
-            if (
-                dealTime == None
-                or sid == None
-                or dealPrice == None
-                or dealQuantity == None
-                or handlingFee == None
-            ):
-                result = {"error-message": "Data not sufficient."}
-            else:
-                s.createTradeLog(dealTime, sid, dealPrice, dealQuantity, handlingFee)
-                result = {"success-message": "creation-success"}
-        elif mode == "read":
-            dealTimeList = request.POST.get("deal-time-list", default=[])
-            dealTimeList = (
-                dealTimeList.split(",") if len(dealTimeList) > 0 else dealTimeList
-            )
-            sidList = request.POST.get("sid-list", default=[])
-            sidList = sidList.split(",") if len(sidList) > 0 else sidList
-            result = {"data": s.readTradeLog(dealTimeList, sidList)}
-        elif mode == "update":
-            if (
-                ID == None
-                or dealTime == None
-                or sid == None
-                or dealPrice == None
-                or dealQuantity == None
-                or handlingFee == None
-            ):
-                result = {"error-message": "Data not sufficient."}
-            else:
-                s.updateTradeLog(
-                    ID, dealTime, sid, dealPrice, dealQuantity, handlingFee
-                )
-                result = {"success-message": "update-success"}
-        elif mode == "delete":
-            if ID == None:
-                result = {"error-message": "Data not sufficient."}
-            else:
-                s.deleteTradeLog(ID)
-                result = {"success-message": "deletion-success"}
+    s = TradeRecordView()
+    mode = request.POST.get("mode")
+    ID = request.POST.get("id")
+    dealTime = request.POST.get("deal-time")
+    sid = request.POST.get("sid")
+    dealPrice = request.POST.get("deal-price")
+    dealQuantity = request.POST.get("deal-quantity")
+    handlingFee = request.POST.get("handling-fee")
+    if mode == "create":
+        if (
+            dealTime == None
+            or sid == None
+            or dealPrice == None
+            or dealQuantity == None
+            or handlingFee == None
+        ):
+            result = {"error-message": "Data not sufficient."}
         else:
-            result = {"error-message": "Mode Not Exsist"}
+            s.createTradeLog(dealTime, sid, dealPrice, dealQuantity, handlingFee)
+            result = {"success-message": "creation-success"}
+    elif mode == "read":
+        dealTimeList = request.POST.get("deal-time-list", default=[])
+        dealTimeList = (
+            dealTimeList.split(",") if len(dealTimeList) > 0 else dealTimeList
+        )
+        sidList = request.POST.get("sid-list", default=[])
+        sidList = sidList.split(",") if len(sidList) > 0 else sidList
+        result = {"data": s.readTradeLog(dealTimeList, sidList)}
+    elif mode == "update":
+        if (
+            ID == None
+            or dealTime == None
+            or sid == None
+            or dealPrice == None
+            or dealQuantity == None
+            or handlingFee == None
+        ):
+            result = {"error-message": "Data not sufficient."}
+        else:
+            s.updateTradeLog(ID, dealTime, sid, dealPrice, dealQuantity, handlingFee)
+            result = {"success-message": "update-success"}
+    elif mode == "delete":
+        if ID == None:
+            result = {"error-message": "Data not sufficient."}
+        else:
+            s.deleteTradeLog(ID)
+            result = {"success-message": "deletion-success"}
     else:
-        result = {"error-message": "Only POST methods are available."}
+        result = {"error-message": "Mode Not Exsist"}
     response = JsonResponse(result)
     return response
 

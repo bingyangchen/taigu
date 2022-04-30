@@ -2,32 +2,35 @@ import datetime
 from requests import get
 import json
 from pyquery import PyQuery
-from .models import company, stock_info, trade_record
+import pytz
+
 from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-import pytz
+from django.views.decorators.http import require_GET
+
+from .models import company, stock_info, trade_record
 from .my_decorators import cors_exempt
 
 
 @csrf_exempt
 @cors_exempt
+@require_GET
 def fetchStockInfo(request):
-    if request.method == "GET":
-        s = StockInfoView()
-        date = request.GET.get("date")
-        sidList = request.GET.get("sid-list", default=[])
-        sidList = sidList.split(",") if len(sidList) > 0 else sidList
-        try:
-            if date != None:
-                s.stocksSingleDay(date=date, sidList=sidList)
-            else:
-                s.stocksSingleDay(sidList=sidList)
-            result = {"data": s.result}
-        except Exception as e:
-            result = {"Error Message from views": str(e)}
-        response = JsonResponse(result)
-        return response
+    s = StockInfoView()
+    date = request.GET.get("date")
+    sidList = request.GET.get("sid-list", default=[])
+    sidList = sidList.split(",") if len(sidList) > 0 else sidList
+    try:
+        if date != None:
+            s.stocksSingleDay(date=date, sidList=sidList)
+        else:
+            s.stocksSingleDay(sidList=sidList)
+        result = {"data": s.result}
+    except Exception as e:
+        result = {"Error Message from views": str(e)}
+    response = JsonResponse(result)
+    return response
 
 
 class StockInfoView:

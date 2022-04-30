@@ -1,47 +1,47 @@
-from .models import stock_memo, trade_record, company
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+from .models import stock_memo, trade_record, company
 from .my_decorators import cors_exempt
 
 
 @csrf_exempt
 @cors_exempt
+@require_POST
 def memoCRUD(request):
-    if request.method == "POST":
-        s = StockMemoView()
-        mode = request.POST.get("mode")
-        ID = request.POST.get("id")
-        sid = request.POST.get("sid")
-        mainGoodsOrServices = request.POST.get("main-goods-or-services")
-        strategyUsed = request.POST.get("strategy-used")
-        myNote = request.POST.get("my-note")
-        if mode == "create":
-            if sid == None:
-                result = {"error-message": "Data not sufficient."}
-            else:
-                s.createMemo(sid, mainGoodsOrServices, strategyUsed, myNote)
-                result = {"success-message": "creation-success"}
-        elif mode == "read":
-            sidList = request.POST.get("sid-list", default=[])
-            sidList = sidList.split(",") if len(sidList) > 0 else sidList
-            result = {"data": s.readMemo(sidList)}
-        elif mode == "update":
-            if ID == None:
-                result = {"error-message": "Data not sufficient."}
-            else:
-                s.updateMemo(ID, mainGoodsOrServices, strategyUsed, myNote)
-                result = {"success-message": "update-success"}
-        elif mode == "delete":
-            if ID == None:
-                result = {"error-message": "Data not sufficient."}
-            else:
-                s.deleteMemo(ID)
-                result = {"success-message": "deletion-success"}
+    s = StockMemoView()
+    mode = request.POST.get("mode")
+    ID = request.POST.get("id")
+    sid = request.POST.get("sid")
+    mainGoodsOrServices = request.POST.get("main-goods-or-services")
+    strategyUsed = request.POST.get("strategy-used")
+    myNote = request.POST.get("my-note")
+    if mode == "create":
+        if sid == None:
+            result = {"error-message": "Data not sufficient."}
         else:
-            result = {"error-message": "Mode %s Not Exist" % mode}
+            s.createMemo(sid, mainGoodsOrServices, strategyUsed, myNote)
+            result = {"success-message": "creation-success"}
+    elif mode == "read":
+        sidList = request.POST.get("sid-list", default=[])
+        sidList = sidList.split(",") if len(sidList) > 0 else sidList
+        result = {"data": s.readMemo(sidList)}
+    elif mode == "update":
+        if ID == None:
+            result = {"error-message": "Data not sufficient."}
+        else:
+            s.updateMemo(ID, mainGoodsOrServices, strategyUsed, myNote)
+            result = {"success-message": "update-success"}
+    elif mode == "delete":
+        if ID == None:
+            result = {"error-message": "Data not sufficient."}
+        else:
+            s.deleteMemo(ID)
+            result = {"success-message": "deletion-success"}
     else:
-        result = {"error-message": "Only POST methods are available."}
+        result = {"error-message": "Mode %s Not Exist" % mode}
     response = JsonResponse(result)
     return response
 
