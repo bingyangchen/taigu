@@ -7,7 +7,7 @@ from django.conf import settings
 from rest_framework.authtoken.models import Token
 
 from .models import user as User
-from .utils import validate_registration_info
+from .utils import validate_registration_info, validate_update_info
 from ..decorators import require_login, cors_exempt
 
 
@@ -86,6 +86,7 @@ def check_login(request):
         "status": "succeeded",
         "is-login": True,
         "user-info": {
+            "id": request.user.pk,
             "username": request.user.username,
             "email": request.user.email,
             "avatar-url": (settings.MEDIA_URL + str(request.user.avatar))
@@ -99,6 +100,7 @@ def check_login(request):
     "status": "succeeded" | "failed"
     "is-login": boolean,
     "user-info": {
+        "id": string,
         "username": string,
         "email": string,
         "avatar-url": string
@@ -127,4 +129,34 @@ def logout(request):
 @cors_exempt
 @require_POST
 def update(request):
-    pass
+    """
+    "id": string,
+    "username": string | None,
+    "email": string | None,
+    "password": string | None
+    """
+    res = {"status": "failed", "error-message": ""}
+    try:
+        id = request.POST.get("id")
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        validate_update_info(id=id, username=username, email=email, password=password)
+
+        request.user.username = username if username else request.user.username
+        request.user.email = email if email else request.user.email
+        request.user.password = password if password else request.user.password
+        request.user.save()
+
+        res["status"] = "succeeded"
+        return JsonResponse(res)
+    except Exception as e:
+        try:
+            res["error-message"] = str(list(e)[0])
+        except:
+            res["error-message"] = str(e)
+        return HttpResponseNotFound(JsonResponse(res))
+    """
+    "status": "succeeded" | "failed",
+    "error-message": string,
+    """
