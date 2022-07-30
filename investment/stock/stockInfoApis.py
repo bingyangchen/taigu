@@ -10,11 +10,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 from .models import company, stock_info, trade_record
-from ..decorators import cors_exempt, require_login
+from ..decorators import require_login
 
 
 @csrf_exempt
-@cors_exempt
 @require_GET
 @require_login
 def fetch(request):

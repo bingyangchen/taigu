@@ -6,11 +6,10 @@ from django.views.decorators.http import require_POST
 
 from .utils import getCompanyName
 from .models import trade_plan, company
-from ..decorators import cors_exempt, require_login
+from ..decorators import require_login
 
 
 @csrf_exempt
-@cors_exempt
 @require_POST
 @require_login
 def crud(request):

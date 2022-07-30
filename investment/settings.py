@@ -4,7 +4,10 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = True
+
 ALLOWED_HOSTS = ["*"]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 INSTALLED_APPS = [
     # Django modules
@@ -17,12 +20,14 @@ INSTALLED_APPS = [
     # 3rd-party packages
     "rest_framework",
     "rest_framework.authtoken",
+    "corsheaders",
     # Local Apps
     "investment.account",
     "investment.stock",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",

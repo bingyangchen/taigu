@@ -8,11 +8,10 @@ from rest_framework.authtoken.models import Token
 
 from .models import user as User
 from .utils import validate_registration_info, validate_update_info
-from ..decorators import require_login, cors_exempt
+from ..decorators import require_login
 
 
 @csrf_exempt
-@cors_exempt
 @require_POST
 def register(request):
     """
@@ -44,7 +43,6 @@ def register(request):
 
 
 @csrf_exempt
-@cors_exempt
 @require_POST
 def login(request):
     """
@@ -76,7 +74,6 @@ def login(request):
 
 
 @csrf_exempt
-@cors_exempt
 @require_POST
 @require_login
 def check_login(request):
@@ -109,7 +106,6 @@ def check_login(request):
 
 
 @csrf_exempt
-@cors_exempt
 @require_POST
 def logout(request):
     """ """
@@ -126,7 +122,6 @@ def logout(request):
 
 
 @csrf_exempt
-@cors_exempt
 @require_POST
 def update(request):
     """

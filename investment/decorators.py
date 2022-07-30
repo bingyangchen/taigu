@@ -20,6 +20,8 @@ def require_login(func):
     return wrap
 
 
+# This decorator is now not used for the reason that there's a third-party
+# package called django-cors-headers solving the CORS problems.
 def cors_exempt(func):
     def wrap(request, **args):
         res = func(request, **args)
