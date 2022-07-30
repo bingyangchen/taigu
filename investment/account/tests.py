@@ -1,5 +1,4 @@
 from django.test import TestCase
-import datetime
 
 # Run the following command:
 # `python manage.py test investment.account.tests`

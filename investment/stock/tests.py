@@ -1,6 +1,5 @@
 from django.test import TestCase
 import datetime
-import time
 import pytz
 
 # Run the following command:
