@@ -1,17 +1,26 @@
 #!/bin/bash
+
 if [[ -z $1 ]]; then
     echo Please provide the commit message.
 else
+    # Prepare the requirements.txt file
     pipenv lock --requirements > requirements.txt
-    # Remember to switch to the corresponding username and email for this repo
+
+    # Switch to the corresponding username and email for this repo
     git config user.name "Jamison Chen"
     git config user.email "106208004@g.nccu.edu.tw"
+
+    # Make git commit
     git add .
     git commit -m "$1"
-    # Remember to switch to the corresponding ssh key for this repo
+
+    # Switch to the corresponding ssh key for this repo
     ssh-add -D
     ssh-add ~/.ssh/id_rsa
+
+    # Push to GitHub
     git push origin master
-    # push and deploy on Heroku
-    git push heroku master
+
+    # Push and deploy on Heroku
+    # git push heroku master
 fi
