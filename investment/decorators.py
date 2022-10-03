@@ -1,20 +1,15 @@
-from django.http import JsonResponse, HttpResponseNotFound
+from django.http import JsonResponse, HttpResponse
 
 
 def require_login(func):
     def wrap(request, *arg, **args):
-        try:
-            if request.user:
-                return func(request, *arg, **args)
-            else:
-                res = {
-                    "error-message": "Please log in.",
-                    "is-login": False,
-                    "status": "failed",
-                }
-                return JsonResponse(res)
-        except Exception as e:
-            return HttpResponseNotFound(str(e))
+        if request.user:
+            return func(request, *arg, **args)
+        else:
+            return HttpResponse(
+                JsonResponse({"error": "Please log in."}),
+                status=401,
+            )
 
     wrap.__name__ = func.__name__
     return wrap

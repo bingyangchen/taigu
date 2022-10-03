@@ -10,13 +10,13 @@ class MyBackend(BaseBackend):
     def authenticate(self, request, token=None, email=None, password=None):
         if token:
             try:
-                t = Token.objects.get(pk=token)
+                t: Token = Token.objects.get(pk=token)
                 return User.objects.get(pk=t.user_id)
             except Token.DoesNotExist or User.DoesNotExist:
                 return None
         elif email and password:
             try:
-                user = User.objects.get(email=email)
+                user: User = User.objects.get(email=email)
                 if check_password(password, user.password):
                     return user
                 else:

@@ -49,7 +49,7 @@ def login(request):
     "email": string,
     "password": string
     """
-    res = {"status": "failed", "error-message": ""}
+    res = {"success": False, "error": None}
     if (email := request.POST.get("email")) and (
         password := request.POST.get("password")
     ):
@@ -57,20 +57,16 @@ def login(request):
             user = authenticate(request, email=email, password=password)
             request.user = user
             token = Token.objects.get_or_create(user=user)[0].key
-            res["status"] = "succeeded"
+            res["success"] = True
             res = JsonResponse(res)
             res.headers["new-token"] = token
             return res
         except Exception as e:
-            res["error-message"] = str(e)
+            res["error"] = str(e)
             return HttpResponseNotFound(JsonResponse(res))
     else:
-        res["error-message"] = "Info not sufficient."
+        res["error"] = "Info not sufficient."
         return HttpResponseNotFound(JsonResponse(res))
-    """
-    "status": string,
-    "error-message": string,
-    """
 
 
 @csrf_exempt
@@ -79,46 +75,31 @@ def login(request):
 def check_login(request):
     """ """
     res = {
-        "error-message": "",
-        "status": "succeeded",
-        "is-login": True,
-        "user-info": {
+        "error": None,
+        "success": True,
+        "data": {
             "id": request.user.pk,
             "username": request.user.username,
             "email": request.user.email,
-            "avatar-url": (settings.MEDIA_URL + str(request.user.avatar))
+            "avatar_url": (settings.MEDIA_URL + str(request.user.avatar))
             if request.user.avatar
-            else "",
+            else None,
         },
     }
     return JsonResponse(res)
-    """
-    "error-message": string,
-    "status": "succeeded" | "failed"
-    "is-login": boolean,
-    "user-info": {
-        "id": string,
-        "username": string,
-        "email": string,
-        "avatar-url": string
-    } | None,
-    """
 
 
 @csrf_exempt
 @require_POST
 def logout(request):
     """ """
-    res = {"status": ""}
+    res = {"success": False}
     Token.objects.filter(user=request.user).delete()
-    res["status"] = "succeeded"
+    res["success"] = True
     res = JsonResponse(res)
     res.headers["is-log-out"] = "yes"
     res.delete_cookie("token", samesite=settings.CSRF_COOKIE_SAMESITE)
     return res
-    """
-    "status": "succeeded" | "failed"
-    """
 
 
 @csrf_exempt
