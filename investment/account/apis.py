@@ -7,7 +7,7 @@ from django.conf import settings
 from rest_framework.authtoken.models import Token
 
 from .models import user as User
-from .utils import validate_registration_info, validate_update_info
+from .utils import validate_registration_info, update_user
 from ..decorators import require_login
 
 
@@ -19,27 +19,24 @@ def register(request):
     "email": string,
     "password": string
     """
-    res = {"status": "failed", "error-message": ""}
+    res = {"success": False, "error": None}
     try:
-        validate_registration_info(request)
         username = request.POST.get("username")
         email = request.POST.get("email")
         password = request.POST.get("password")
 
+        validate_registration_info(username, email, password)
+
         User.objects.create_user(email, password, username=username)
 
-        res["status"] = "succeeded"
+        res["success"] = True
         return JsonResponse(res)
     except Exception as e:
         try:
-            res["error-message"] = str(list(e)[0])
+            res["error"] = str(list(e)[0])
         except:
-            res["error-message"] = str(e)
+            res["error"] = str(e)
         return HttpResponseNotFound(JsonResponse(res))
-    """
-    "status": "succeeded" | "failed",
-    "error-message": string,
-    """
 
 
 @csrf_exempt
@@ -109,30 +106,30 @@ def update(request):
     "id": string,
     "username": string | None,
     "email": string | None,
-    "password": string | None
+    "old_password": string | None
+    "new_password": string | None
     """
-    res = {"status": "failed", "error-message": ""}
+    res = {"success": False, "error": None}
     try:
         id = request.POST.get("id")
         username = request.POST.get("username")
         email = request.POST.get("email")
-        password = request.POST.get("password")
-        validate_update_info(id=id, username=username, email=email, password=password)
+        old_password = request.POST.get("old_password")
+        new_password = request.POST.get("new_password")
 
-        request.user.username = username if username else request.user.username
-        request.user.email = email if email else request.user.email
-        request.user.password = password if password else request.user.password
-        request.user.save()
+        update_user(
+            id=id,
+            username=username,
+            email=email,
+            old_password=old_password,
+            new_password=new_password,
+        )
 
-        res["status"] = "succeeded"
+        res["success"] = True
         return JsonResponse(res)
     except Exception as e:
         try:
-            res["error-message"] = str(list(e)[0])
+            res["error"] = str(list(e)[0])
         except:
-            res["error-message"] = str(e)
+            res["error"] = str(e)
         return HttpResponseNotFound(JsonResponse(res))
-    """
-    "status": "succeeded" | "failed",
-    "error-message": string,
-    """

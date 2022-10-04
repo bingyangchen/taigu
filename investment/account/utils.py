@@ -1,14 +1,11 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
+from django.contrib.auth.hashers import check_password
 
 from .models import user as User
 
 
-def validate_registration_info(request):
-    username = request.POST.get("username")
-    email = request.POST.get("email")
-    password = request.POST.get("password")
-
+def validate_registration_info(username: str, email: str, password: str):
     validate_email(email)
     validate_password(password)
 
@@ -18,16 +15,17 @@ def validate_registration_info(request):
         raise Exception("Duplicated email.")
 
 
-def validate_update_info(**kwargs):
+def update_user(**kwargs):
     id = kwargs.get("id")
     username = kwargs.get("username")
     email = kwargs.get("email")
-    password = kwargs.get("password")
+    old_password = kwargs.get("old_password")
+    new_password = kwargs.get("new_password")
 
     if id == None:
         raise Exception("Please provide id.")
     else:
-        u = User.objects.get(pk=id)
+        u: User = User.objects.get(pk=id)
         if username:
             u.username = username
         if email:
@@ -35,7 +33,11 @@ def validate_update_info(**kwargs):
                 raise Exception("Duplicated email.")
             validate_email(email)
             u.email = email
-        if password:
-            validate_password(password)
-            u.password = password
+        if new_password and old_password:
+            if check_password(old_password, u.password):
+                validate_password(new_password)
+                u.set_password(new_password)
+            else:
+                raise Exception("Wrong old password.")
         u.save()
+        return u
