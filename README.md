@@ -14,6 +14,7 @@
 python manage.py makemigrations
 git add .
 git commin -m "..."
-git push heroku master
+git push origin master
+# wait util the new app was built successfully
 heroku run python manage.py migrate
 ```

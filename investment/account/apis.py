@@ -15,9 +15,9 @@ from ..decorators import require_login
 @require_POST
 def register(request):
     """
-    "username": string,
-    "email": string,
-    "password": string
+    "username": str,
+    "email": str,
+    "password": str
     """
     res = {"success": False, "error": None}
     try:
@@ -43,8 +43,8 @@ def register(request):
 @require_POST
 def login(request):
     """
-    "email": string,
-    "password": string
+    "email": str,
+    "password": str
     """
     res = {"success": False, "error": None}
     if (email := request.POST.get("email")) and (
@@ -78,9 +78,7 @@ def check_login(request):
             "id": request.user.pk,
             "username": request.user.username,
             "email": request.user.email,
-            "avatar_url": (settings.MEDIA_URL + str(request.user.avatar))
-            if request.user.avatar
-            else None,
+            "avatar_url": request.user.avatar_url or None,
         },
     }
     return JsonResponse(res)
@@ -103,17 +101,19 @@ def logout(request):
 @require_POST
 def update(request):
     """
-    "id": string,
-    "username": string | None,
-    "email": string | None,
-    "old_password": string | None
-    "new_password": string | None
+    "id": str,
+    "username": str | None,
+    "email": str | None,
+    "avatar_url": str | None
+    "old_password": str | None
+    "new_password": str | None
     """
     res = {"success": False, "error": None}
     try:
         id = request.POST.get("id")
         username = request.POST.get("username")
         email = request.POST.get("email")
+        avatar_url = request.POST.get("avatar_url")
         old_password = request.POST.get("old_password")
         new_password = request.POST.get("new_password")
 
@@ -121,6 +121,7 @@ def update(request):
             id=id,
             username=username,
             email=email,
+            avatar_url=avatar_url,
             old_password=old_password,
             new_password=new_password,
         )

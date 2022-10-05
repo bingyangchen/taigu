@@ -19,6 +19,7 @@ def update_user(**kwargs):
     id = kwargs.get("id")
     username = kwargs.get("username")
     email = kwargs.get("email")
+    avatar_url = kwargs.get("avatar_url")
     old_password = kwargs.get("old_password")
     new_password = kwargs.get("new_password")
 
@@ -33,6 +34,8 @@ def update_user(**kwargs):
                 raise Exception("Duplicated email.")
             validate_email(email)
             u.email = email
+        if avatar_url:
+            u.avatar_url = avatar_url
         if new_password and old_password:
             if check_password(old_password, u.password):
                 validate_password(new_password)
