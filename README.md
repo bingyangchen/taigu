@@ -6,7 +6,7 @@
 
 此檔案僅在使用雲端 server（如：Heroku）時會用到，詳情請參考: _<https://ithelp.ithome.com.tw/articles/10212659?sc=rss.qu>_
 
-## 有更動到 model.py 時
+## 有更動到 model 時
 
 針對架在 Heroku 的 server，需執行：
 

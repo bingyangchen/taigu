@@ -34,8 +34,11 @@ class user(AbstractUser):
     username = models.CharField(max_length=64, unique=False)
     first_name = None  # remove this default column of AbstracUser
     last_name = None  # remove this default column of AbstracUser
-    avatar = models.ImageField(upload_to=user_avatar_path, blank=True, null=True)
+    avatar_url = models.CharField(max_length=2048, blank=True, null=True)
     is_active = models.BooleanField(default=True)
+
+    # Deprecated
+    avatar = models.ImageField(upload_to=user_avatar_path, blank=True, null=True)
 
     objects = UserManager()
 
