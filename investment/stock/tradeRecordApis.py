@@ -1,5 +1,6 @@
 import json
 import datetime
+from typing import List
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -19,13 +20,13 @@ def crud(request):
 
     mode = request.POST.get("mode")
     _id = request.POST.get("id")
-    dealTime = request.POST.get("deal-time")
+    dealTime = request.POST.get("deal_time")
     sid = request.POST.get("sid")
-    dealPrice = request.POST.get("deal-price")
-    dealQuantity = request.POST.get("deal-quantity")
-    handlingFee = request.POST.get("handling-fee")
+    dealPrice = request.POST.get("deal_price")
+    dealQuantity = request.POST.get("deal_quantity")
+    handlingFee = request.POST.get("handling_fee")
 
-    res = {"error-message": "", "status": "failed", "data": []}
+    res = {"error": "", "success": False, "data": []}
     if mode == "create":
         if (
             dealTime == None
@@ -34,7 +35,7 @@ def crud(request):
             or dealQuantity == None
             or handlingFee == None
         ):
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             dealTime = datetime.datetime.strptime(dealTime, "%Y-%m-%d").date()
             helper.create(
@@ -45,15 +46,15 @@ def crud(request):
                 int(dealQuantity),
                 int(handlingFee),
             )
-            res["status"] = "succeeded"
+            res["success"] = True
     elif mode == "read":
         dealTimeList = [
             datetime.datetime.strptime(each, "%Y-%m-%d").date()
-            for each in json.loads(request.POST.get("deal-time-list", "[]"))
+            for each in json.loads(request.POST.get("deal_time_list", "[]"))
         ]
-        sidList = json.loads(request.POST.get("sid-list", "[]"))
+        sidList = json.loads(request.POST.get("sid_list", "[]"))
         res["data"] = helper.read(request.user, dealTimeList, sidList)
-        res["status"] = "succeeded"
+        res["success"] = True
     elif mode == "update":
         if (
             _id == None
@@ -63,7 +64,7 @@ def crud(request):
             or dealQuantity == None
             or handlingFee == None
         ):
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             dealTime = datetime.datetime.strptime(dealTime, "%Y-%m-%d").date()
             helper.update(
@@ -74,15 +75,15 @@ def crud(request):
                 int(dealQuantity),
                 int(handlingFee),
             )
-            res["status"] = "succeeded"
+            res["success"] = True
     elif mode == "delete":
         if _id == None:
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             helper.delete(_id)
-            res["status"] = "succeeded"
+            res["success"] = True
     else:
-        res["error-message"] = "Mode Not Exsist"
+        res["error"] = "Mode Not Exsist"
 
     return JsonResponse(res)
 
@@ -112,7 +113,7 @@ class Helper:
             handling_fee=int(handlingFee),
         )
 
-    def read(self, user: User, dealTimeList, sidList):
+    def read(self, user: User, dealTimeList, sidList) -> List:
         if dealTimeList != [] or sidList != []:
             if dealTimeList != [] and sidList != []:
                 result = user.trade_records.filter(deal_time__in=dealTimeList).filter(
@@ -130,12 +131,12 @@ class Helper:
             dictResultList.append(
                 {
                     "id": each.pk,
-                    "deal-time": each.deal_time,
+                    "deal_time": each.deal_time,
                     "sid": each.company.pk,
-                    "company-name": each.company.name,
-                    "deal-price": each.deal_price,
-                    "deal-quantity": each.deal_quantity,
-                    "handling-fee": each.handling_fee,
+                    "company_name": each.company.name,
+                    "deal_price": each.deal_price,
+                    "deal_quantity": each.deal_quantity,
+                    "handling_fee": each.handling_fee,
                 }
             )
         return dictResultList

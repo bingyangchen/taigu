@@ -1,4 +1,6 @@
-from django.http import JsonResponse, HttpResponseNotFound
+import json
+
+from django.http import JsonResponse, HttpRequest, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth import authenticate
@@ -36,7 +38,7 @@ def register(request):
             res["error"] = str(list(e)[0])
         except:
             res["error"] = str(e)
-        return HttpResponseNotFound(JsonResponse(res))
+        return HttpResponseNotAllowed(JsonResponse(res))
 
 
 @csrf_exempt
@@ -60,10 +62,10 @@ def login(request):
             return res
         except Exception as e:
             res["error"] = str(e)
-            return HttpResponseNotFound(JsonResponse(res))
+            return HttpResponseNotAllowed(JsonResponse(res))
     else:
         res["error"] = "Info not sufficient."
-        return HttpResponseNotFound(JsonResponse(res))
+        return HttpResponseNotAllowed(JsonResponse(res))
 
 
 @csrf_exempt
@@ -99,7 +101,7 @@ def logout(request):
 
 @csrf_exempt
 @require_POST
-def update(request):
+def update(request: HttpRequest):
     """
     "id": str,
     "username": str | None,
@@ -108,16 +110,18 @@ def update(request):
     "old_password": str | None
     "new_password": str | None
     """
-    res = {"success": False, "error": None}
+    res = {"success": False, "error": None, "data": {}}
     try:
-        id = request.POST.get("id")
-        username = request.POST.get("username")
-        email = request.POST.get("email")
-        avatar_url = request.POST.get("avatar_url")
-        old_password = request.POST.get("old_password")
-        new_password = request.POST.get("new_password")
+        data_posted = json.loads(request.body)
 
-        update_user(
+        id = data_posted.get("id")
+        username = data_posted.get("username")
+        email = data_posted.get("email")
+        avatar_url = data_posted.get("avatar_url")
+        old_password = data_posted.get("old_password")
+        new_password = data_posted.get("new_password")
+
+        u = update_user(
             id=id,
             username=username,
             email=email,
@@ -127,10 +131,16 @@ def update(request):
         )
 
         res["success"] = True
+        res["data"] = {
+            "id": u.pk,
+            "username": u.username,
+            "email": u.email,
+            "avatar_url": u.avatar_url or None,
+        }
         return JsonResponse(res)
     except Exception as e:
         try:
             res["error"] = str(list(e)[0])
         except:
             res["error"] = str(e)
-        return HttpResponseNotFound(JsonResponse(res))
+        return HttpResponseNotAllowed(JsonResponse(res))

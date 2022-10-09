@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from investment.account.models import user as User
 from .utils import getCompanyName
 from .models import cash_dividend_record, company
 from ..decorators import require_login
@@ -18,37 +19,37 @@ def crud(request):
 
     mode = request.POST.get("mode")
     _id = request.POST.get("id")
-    dealTime = request.POST.get("deal-time")
+    dealTime = request.POST.get("deal_time")
     sid = request.POST.get("sid")
-    cashDividend = request.POST.get("cash-dividend")
+    cashDividend = request.POST.get("cash_dividend")
 
-    res = {"error-message": "", "status": "failed", "data": []}
+    res = {"error": "", "success": False, "data": []}
 
     if mode == "create":
         if dealTime == None or sid == None or cashDividend == None:
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             helper.create(request.user, str(dealTime), str(sid), int(cashDividend))
-            res["status"] = "succeeded"
+            res["success"] = True
     elif mode == "read":
-        dealTimeList = json.loads(request.POST.get("deal-time-list", "[]"))
-        sidList = json.loads(request.POST.get("sid-list", "[]"))
+        dealTimeList = json.loads(request.POST.get("deal_time_list", "[]"))
+        sidList = json.loads(request.POST.get("sid_list", "[]"))
         res["data"] = helper.read(request.user, dealTimeList, sidList)
-        res["status"] = "succeeded"
+        res["success"] = True
     elif mode == "update":
         if _id == None or dealTime == None or sid == None or cashDividend == None:
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             helper.update(_id, str(dealTime), str(sid), int(cashDividend))
-            res["status"] = "succeeded"
+            res["success"] = True
     elif mode == "delete":
         if _id == None:
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             helper.delete(_id)
-            res["status"] = "succeeded"
+            res["success"] = True
     else:
-        res["error-message"] = "Mode {} Not Exist".format(mode)
+        res["error"] = f"Mode {mode} Not Exist"
 
     return JsonResponse(res)
 
@@ -57,7 +58,7 @@ class Helper:
     def __init__(self):
         pass
 
-    def create(self, user, dealTime: str, sid: str, cashDividend: int):
+    def create(self, user: User, dealTime: str, sid: str, cashDividend: int):
         c, created = company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
@@ -68,7 +69,7 @@ class Helper:
             cash_dividend=cashDividend,
         )
 
-    def read(self, user, dealTimeList, sidList):
+    def read(self, user: User, dealTimeList, sidList):
         if dealTimeList != [] or sidList != []:
             if dealTimeList != [] and sidList != []:
                 query = user.cash_dividend_records.filter(
@@ -87,10 +88,10 @@ class Helper:
             result.append(
                 {
                     "id": each.pk,
-                    "deal-time": each.deal_time,
+                    "deal_time": each.deal_time,
                     "sid": each.company.pk,
-                    "company-name": each.company.name,
-                    "cash-dividend": each.cash_dividend,
+                    "company_name": each.company.name,
+                    "cash_dividend": each.cash_dividend,
                 }
             )
         return result

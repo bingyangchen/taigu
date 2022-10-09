@@ -23,7 +23,7 @@ def fetch(request):
     sidList = request.GET.get("sid-list", [])
     sidList = sidList.split(",") if len(sidList) > 0 else sidList
 
-    res = {"error-message": "", "status": "failed", "data": []}
+    res = {"error": "", "success": False, "data": []}
     try:
         if date:
             helper.stocksSingleDay(
@@ -33,9 +33,9 @@ def fetch(request):
         else:
             helper.stocksSingleDay(sidList=sidList)
         res["data"] = helper.result
-        res["status"] = "succeeded"
+        res["success"] = True
     except Exception as e:
-        res["error-message"] = str(e)
+        res["error"] = str(e)
     return JsonResponse(res)
 
 
@@ -66,14 +66,14 @@ class Helper:
 
         if sidList == []:
             # SELECT sid from trade_record GROUP BY sid HAVING SUM(deal_quantity) > 0
-            autoSidQuery = (
-                trade_record.objects.values("company__pk")
-                .annotate(sum=Sum("deal_quantity"))
-                .filter(sum__gt=0)
-                .values("company__pk")
-            )
-            for each in autoSidQuery:
-                sidList.append(each["company__pk"])
+            # autoSidQuery = (
+            #     trade_record.objects.values("company__pk")
+            #     .annotate(sum=Sum("deal_quantity"))
+            #     .filter(sum__gt=0)
+            #     .values("company__pk")
+            # )
+            for c in company.objects.all():
+                sidList.append(c.pk)
 
         needToFetchSidList = []
         for eachSid in sidList:
@@ -93,14 +93,14 @@ class Helper:
                             "date": info.date,
                             "sid": info.company.pk,
                             "name": info.company.name,
-                            "trade-type": info.trade_type,
+                            "trade_type": info.trade_type,
                             "quantity": info.quantity,
                             "open": info.open_price,
                             "close": info.close_price,
                             "highest": info.highest_price,
                             "lowest": info.lowest_price,
-                            "fluct-price": info.fluct_price,
-                            "fluct-rate": info.fluct_rate,
+                            "fluct_price": info.fluct_price,
+                            "fluct_rate": info.fluct_rate,
                         }
                     )
             else:
@@ -108,17 +108,17 @@ class Helper:
         self.fetchAndStore(needToFetchSidList, date)
 
     def fetchAndStore(self, sidList, date: datetime.date):
-        if sidList == []:
+        if len(sidList) == 0:
             return
         allData = []
-        res = []
         queryStr = ""
-        for each in sidList:
+
+        # 70 sid per request
+        for each in sidList[:70]:
             queryStr += "tse_" + each + ".tw|"
             queryStr += "otc_" + each + ".tw|"
-
         res = get(self.endPoint + queryStr)
-        res = json.loads(PyQuery(res.text).text())["msgArray"]
+        res = json.loads(PyQuery(res.text).text())["msgArray"] or []
 
         # arrange the data format
         for each in res:
@@ -157,19 +157,22 @@ class Helper:
             stock_info.objects.update_or_create(company=each["company"], defaults=each)
 
         # prepare result
-        for each in stock_info.objects.filter(company__pk__in=sidList):
+        for each in stock_info.objects.filter(company__pk__in=sidList[:70]):
             self.result.append(
                 {
                     "date": each.date,
                     "sid": each.company.pk,
                     "name": each.company.name,
-                    "trade-type": each.trade_type,
+                    "trade_type": each.trade_type,
                     "quantity": each.quantity,
                     "open": each.open_price,
                     "close": each.close_price,
                     "highest": each.highest_price,
                     "lowest": each.lowest_price,
-                    "fluct-price": each.fluct_price,
-                    "fluct-rate": each.fluct_rate,
+                    "fluct_price": each.fluct_price,
+                    "fluct_rate": each.fluct_rate,
                 }
             )
+
+        # Process the rest sids
+        self.fetchAndStore(sidList[70:], date)
