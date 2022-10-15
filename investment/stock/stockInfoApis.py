@@ -4,12 +4,11 @@ import json
 from pyquery import PyQuery
 import pytz
 
-from django.db.models import Sum
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
-from .models import company, stock_info, trade_record
+from .models import company, stock_info
 from ..decorators import require_login
 
 

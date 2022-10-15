@@ -26,7 +26,7 @@ def crud(request):
     dealQuantity = request.POST.get("deal_quantity")
     handlingFee = request.POST.get("handling_fee")
 
-    res = {"error": "", "success": False, "data": []}
+    res = {"error": "", "success": False, "data": None}
     if mode == "create":
         if (
             dealTime == None
@@ -38,7 +38,7 @@ def crud(request):
             res["error"] = "Data not sufficient."
         else:
             dealTime = datetime.datetime.strptime(dealTime, "%Y-%m-%d").date()
-            helper.create(
+            res["data"] = helper.create(
                 request.user,
                 dealTime,
                 str(sid),
@@ -67,7 +67,7 @@ def crud(request):
             res["error"] = "Data not sufficient."
         else:
             dealTime = datetime.datetime.strptime(dealTime, "%Y-%m-%d").date()
-            helper.update(
+            res["data"] = helper.update(
                 _id,
                 dealTime,
                 str(sid),
@@ -104,7 +104,7 @@ class Helper:
         c, created = company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        trade_record.objects.create(
+        r = trade_record.objects.create(
             owner=user,
             company=c,
             deal_time=dealTime,
@@ -112,6 +112,15 @@ class Helper:
             deal_quantity=int(dealQuantity),
             handling_fee=int(handlingFee),
         )
+        return {
+            "id": r.pk,
+            "deal_time": r.deal_time,
+            "sid": r.company.pk,
+            "company_name": r.company.name,
+            "deal_price": r.deal_price,
+            "deal_quantity": r.deal_quantity,
+            "handling_fee": r.handling_fee,
+        }
 
     def read(self, user: User, dealTimeList, sidList) -> List:
         if dealTimeList != [] or sidList != []:
@@ -153,13 +162,22 @@ class Helper:
         c, created = company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        trade_record.objects.filter(pk=_id).update(
-            company=c,
-            deal_time=dealTime,
-            deal_price=float(dealPrice),
-            deal_quantity=int(dealQuantity),
-            handling_fee=int(handlingFee),
-        )
+        r = trade_record.objects.get(pk=_id)
+        r.company = c
+        r.deal_time = dealTime
+        r.deal_price = float(dealPrice)
+        r.deal_quantity = int(dealQuantity)
+        r.handling_fee = int(handlingFee)
+        r.save()
+        return {
+            "id": r.pk,
+            "deal_time": r.deal_time,
+            "sid": r.company.pk,
+            "company_name": r.company.name,
+            "deal_price": r.deal_price,
+            "deal_quantity": r.deal_quantity,
+            "handling_fee": r.handling_fee,
+        }
 
     def delete(self, _id):
         trade_record.objects.get(pk=_id).delete()
