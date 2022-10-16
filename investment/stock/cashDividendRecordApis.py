@@ -23,13 +23,15 @@ def crud(request):
     sid = request.POST.get("sid")
     cashDividend = request.POST.get("cash_dividend")
 
-    res = {"error": "", "success": False, "data": []}
+    res = {"error": "", "success": False, "data": None}
 
     if mode == "create":
         if dealTime == None or sid == None or cashDividend == None:
             res["error"] = "Data not sufficient."
         else:
-            helper.create(request.user, str(dealTime), str(sid), int(cashDividend))
+            res["data"] = helper.create(
+                request.user, str(dealTime), str(sid), int(cashDividend)
+            )
             res["success"] = True
     elif mode == "read":
         dealTimeList = json.loads(request.POST.get("deal_time_list", "[]"))
@@ -40,7 +42,7 @@ def crud(request):
         if _id == None or dealTime == None or sid == None or cashDividend == None:
             res["error"] = "Data not sufficient."
         else:
-            helper.update(_id, str(dealTime), str(sid), int(cashDividend))
+            res["data"] = helper.update(_id, str(dealTime), str(sid), int(cashDividend))
             res["success"] = True
     elif mode == "delete":
         if _id == None:
@@ -62,12 +64,19 @@ class Helper:
         c, created = company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        cash_dividend_record.objects.create(
+        r = cash_dividend_record.objects.create(
             owner=user,
             company=c,
             deal_time=datetime.strptime(dealTime, "%Y-%m-%d").date(),
             cash_dividend=cashDividend,
         )
+        return {
+            "id": r.pk,
+            "deal_time": r.deal_time,
+            "sid": r.company.pk,
+            "company_name": r.company.name,
+            "cash_dividend": r.cash_dividend,
+        }
 
     def read(self, user: User, dealTimeList, sidList):
         if dealTimeList != [] or sidList != []:
@@ -100,11 +109,18 @@ class Helper:
         c, created = company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        cash_dividend_record.objects.filter(pk=_id).update(
-            company=c,
-            deal_time=datetime.strptime(dealTime, "%Y-%m-%d").date(),
-            cash_dividend=cashDividend,
-        )
+        r = cash_dividend_record.objects.get(pk=_id)
+        r.company = c
+        r.deal_time = datetime.strptime(dealTime, "%Y-%m-%d").date()
+        r.cash_dividend = cashDividend
+        r.save()
+        return {
+            "id": r.pk,
+            "deal_time": r.deal_time,
+            "sid": r.company.pk,
+            "company_name": r.company.name,
+            "cash_dividend": r.cash_dividend,
+        }
 
     def delete(self, _id):
         cash_dividend_record.objects.get(pk=_id).delete()
