@@ -1,12 +1,18 @@
 from django.contrib.auth import authenticate
 from django.conf import settings
+from django.http import HttpResponseBadRequest, JsonResponse, HttpRequest
+
 from ..account.models import user as User
 
 
 def check_login_status_middleware(get_response):
-    def middleware(request):
+    def middleware(request: HttpRequest):
         token = None
-        if user := authenticate(request, token=request.COOKIES.get("token")):
+        try:
+            user = authenticate(request, token=request.COOKIES.get("token"))
+        except Exception as e:
+            HttpResponseBadRequest(JsonResponse({"error": str(e)}))
+        if user:
             token = request.COOKIES.get("token")
         request.user = user
 

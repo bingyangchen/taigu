@@ -1,6 +1,6 @@
 import json
 
-from django.http import JsonResponse, HttpRequest, HttpResponseNotAllowed
+from django.http import JsonResponse, HttpRequest, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth import authenticate
@@ -38,7 +38,7 @@ def register(request):
             res["error"] = str(list(e)[0])
         except:
             res["error"] = str(e)
-        return HttpResponseNotAllowed(JsonResponse(res))
+        return HttpResponseBadRequest(JsonResponse(res))
 
 
 @csrf_exempt
@@ -53,6 +53,7 @@ def login(request):
         password := request.POST.get("password")
     ):
         try:
+            print(0)
             user = authenticate(request, email=email, password=password)
             request.user = user
             token = Token.objects.get_or_create(user=user)[0].key
@@ -61,11 +62,12 @@ def login(request):
             res.headers["new-token"] = token
             return res
         except Exception as e:
+            print(1)
             res["error"] = str(e)
-            return HttpResponseNotAllowed(JsonResponse(res))
+            return HttpResponseBadRequest(JsonResponse(res))
     else:
         res["error"] = "Info not sufficient."
-        return HttpResponseNotAllowed(JsonResponse(res))
+        return HttpResponseBadRequest(JsonResponse(res))
 
 
 @csrf_exempt
@@ -143,4 +145,4 @@ def update(request: HttpRequest):
             res["error"] = str(list(e)[0])
         except:
             res["error"] = str(e)
-        return HttpResponseNotAllowed(JsonResponse(res))
+        return HttpResponseBadRequest(JsonResponse(res))

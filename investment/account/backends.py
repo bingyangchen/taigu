@@ -20,7 +20,7 @@ class MyBackend(BaseBackend):
                 if check_password(password, user.password):
                     return user
                 else:
-                    raise Exception("wrong-password")
+                    raise Exception("Login Failed")
             except User.DoesNotExist:
-                raise Exception("user-not-found")
+                raise Exception("Login Failed")
         return None
