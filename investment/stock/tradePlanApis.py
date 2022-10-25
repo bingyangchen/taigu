@@ -1,58 +1,72 @@
 import json
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .utils import getCompanyName
-from .models import trade_plan, company
+from .models import trade_plan as TradePlan, company as Company
+from ..account.models import user as User
 from ..decorators import require_login
 
 
 @csrf_exempt
 @require_POST
 @require_login
-def crud(request):
+def crud(request: HttpRequest):
     helper = Helper()
 
     mode = request.POST.get("mode")
     _id = request.POST.get("id")
-    planType = request.POST.get("plan-type")
-    targetPrice = request.POST.get("target-price")
-    targetQuantity = request.POST.get("target-quantity")
+    sid = request.POST.get("sid")
+    planType = request.POST.get("plan_type")
+    targetPrice = request.POST.get("target_price")
+    targetQuantity = request.POST.get("target_quantity")
 
-    res = {"error-message": "", "status": "failed", "data": []}
+    res = {"error": "", "success": False, "data": []}
     if mode == "create":
-        sid = request.POST.get("sid")
-        if sid == None:
-            res["error-message"] = "Data not sufficient."
+        if (
+            sid == None
+            or planType == None
+            or targetPrice == None
+            or targetQuantity == None
+        ):
+            res["error"] = "Data not sufficient."
         else:
-            helper.create(
+            res["data"] = helper.create(
                 request.user,
                 str(sid),
                 str(planType),
                 float(targetPrice),
                 int(targetQuantity),
             )
-            res["status"] = "succeeded"
+            res["success"] = True
     elif mode == "read":
         sidList = json.loads(request.POST.get("sid-list", "[]"))
         res["data"] = helper.read(request.user, sidList)
-        res["status"] = "succeeded"
+        res["success"] = True
     elif mode == "update":
-        if _id == None:
-            res["error-message"] = "Data not sufficient."
+        if (
+            _id == None
+            or sid == None
+            or planType == None
+            or targetPrice == None
+            or targetQuantity == None
+        ):
+            res["error"] = "Data not sufficient."
         else:
-            helper.update(_id, str(planType), float(targetPrice), int(targetQuantity))
-            res["status"] = "succeeded"
+            res["data"] = helper.update(
+                _id, str(planType), float(targetPrice), int(targetQuantity)
+            )
+            res["success"] = True
     elif mode == "delete":
         if _id == None:
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             helper.delete(_id)
-            res["status"] = "succeeded"
+            res["success"] = True
     else:
-        res["error-message"] = "Mode {} Not Exist".format(mode)
+        res["error"] = "Mode {} Not Exist".format(mode)
 
     return JsonResponse(res)
 
@@ -62,18 +76,31 @@ class Helper:
         pass
 
     def create(
-        self, user, sid: str, planType: str, targetPrice: float, targetQuantity: int
+        self,
+        user: User,
+        sid: str,
+        planType: str,
+        targetPrice: float,
+        targetQuantity: int,
     ):
-        c, created = company.objects.get_or_create(
+        c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        trade_plan.objects.create(
+        p: TradePlan = TradePlan.objects.create(
             owner=user,
             company=c,
             plan_type=planType,
             target_price=targetPrice,
             target_quantity=targetQuantity,
         )
+        return {
+            "id": p.pk,
+            "sid": p.company.pk,
+            "company_name": p.company.name,
+            "plan_type": p.plan_type,
+            "target_price": p.target_price,
+            "target_quantity": p.target_quantity,
+        }
 
     def read(self, user, sidList):
         result = []
@@ -81,23 +108,34 @@ class Helper:
             query = user.trade_plans.all()
         else:
             query = user.trade_plans.filter(company__pk__in=sidList)
+
         for each in query:
             result.append(
                 {
                     "id": each.pk,
                     "sid": each.company.pk,
-                    "company-name": each.company.name,
-                    "plan-type": each.plan_type,
-                    "target-price": each.target_price,
-                    "target-quantity": each.target_quantity,
+                    "company_name": each.company.name,
+                    "plan_type": each.plan_type,
+                    "target_price": each.target_price,
+                    "target_quantity": each.target_quantity,
                 }
             )
         return result
 
     def update(self, _id, planType: str, targetPrice: float, targetQuantity: int):
-        trade_plan.objects.filter(pk=_id).update(
-            plan_type=planType, target_price=targetPrice, target_quantity=targetQuantity
-        )
+        p: TradePlan = TradePlan.objects.get(pk=_id)
+        p.plan_type = planType
+        p.target_price = targetPrice
+        p.target_quantity = targetQuantity
+        p.save()
+        return {
+            "id": p.pk,
+            "sid": p.company.pk,
+            "company_name": p.company.name,
+            "plan_type": p.plan_type,
+            "target_price": p.target_price,
+            "target_quantity": p.target_quantity,
+        }
 
     def delete(self, _id):
-        trade_plan.objects.get(pk=_id).delete()
+        TradePlan.objects.get(pk=_id).delete()

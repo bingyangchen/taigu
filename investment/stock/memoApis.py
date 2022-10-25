@@ -1,7 +1,7 @@
 import json
 
 from django.db.models import Sum
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -13,7 +13,7 @@ from ..decorators import require_login
 @csrf_exempt
 @require_POST
 @require_login
-def crud(request):
+def crud(request: HttpRequest):
     helper = Helper()
 
     mode = request.POST.get("mode")
@@ -23,34 +23,34 @@ def crud(request):
     strategy = request.POST.get("strategy")
     note = request.POST.get("note")
 
-    res = {"error-message": "", "status": "failed", "data": []}
+    res = {"error": "", "success": False, "data": []}
 
     if mode == "create":
         if sid == None:
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             helper.create(
                 request.user, str(sid), str(business), str(strategy), str(note)
             )
-            res["status"] = "succeeded"
+            res["success"] = True
     elif mode == "read":
         sidList = json.loads(request.POST.get("sid-list", "[]"))
         res["data"] = helper.read(request.user, sidList)
-        res["status"] = "succeeded"
+        res["success"] = True
     elif mode == "update":
         if _id == None:
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             helper.update(_id, str(business), str(strategy), str(note))
-            res["status"] = "succeeded"
+            res["success"] = True
     elif mode == "delete":
         if _id == None:
-            res["error-message"] = "Data not sufficient."
+            res["error"] = "Data not sufficient."
         else:
             helper.delete(_id)
-            res["status"] = "succeeded"
+            res["success"] = True
     else:
-        res["error-message"] = "Mode {} Not Exist".format(mode)
+        res["error"] = "Mode {} Not Exist".format(mode)
 
     return JsonResponse(res)
 
