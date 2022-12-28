@@ -56,7 +56,7 @@ def crud(request: HttpRequest):
             res["error"] = "Data not sufficient."
         else:
             res["data"] = helper.update(
-                _id, str(planType), float(targetPrice), int(targetQuantity)
+                _id, str(sid), str(planType), float(targetPrice), int(targetQuantity)
             )
             res["success"] = True
     elif mode == "delete":
@@ -122,8 +122,19 @@ class Helper:
             )
         return result
 
-    def update(self, _id, planType: str, targetPrice: float, targetQuantity: int):
+    def update(
+        self,
+        _id: str,
+        sid: str,
+        planType: str,
+        targetPrice: float,
+        targetQuantity: int,
+    ):
+        c, created = Company.objects.get_or_create(
+            pk=sid, defaults={"name": getCompanyName(sid)}
+        )
         p: TradePlan = TradePlan.objects.get(pk=_id)
+        p.company = c
         p.plan_type = planType
         p.target_price = targetPrice
         p.target_quantity = targetQuantity

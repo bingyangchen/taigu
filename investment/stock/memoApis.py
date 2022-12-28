@@ -5,7 +5,9 @@ from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .models import stock_memo, company
+from investment.account.models import user as User
+
+from .models import stock_memo as StockMemo, company as Company
 from .utils import getCompanyName
 from ..decorators import require_login
 
@@ -29,7 +31,7 @@ def crud(request: HttpRequest):
         if sid == None:
             res["error"] = "Data not sufficient."
         else:
-            helper.create(
+            res["data"] = helper.create(
                 request.user, str(sid), str(business), str(strategy), str(note)
             )
             res["success"] = True
@@ -41,7 +43,7 @@ def crud(request: HttpRequest):
         if _id == None:
             res["error"] = "Data not sufficient."
         else:
-            helper.update(_id, str(business), str(strategy), str(note))
+            res["data"] = helper.update(_id, str(business), str(strategy), str(note))
             res["success"] = True
     elif mode == "delete":
         if _id == None:
@@ -59,31 +61,45 @@ class Helper:
     def __init__(self):
         pass
 
-    def create(self, user, sid: str, business: str, strategy: str, note: str):
-        c, created = company.objects.get_or_create(
+    def create(
+        self,
+        user: User,
+        sid: str,
+        business: str,
+        strategy: str,
+        note: str,
+    ):
+        c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        stock_memo.objects.create(
-            owner=user, company=c, business=business, strategy=strategy, note=note
+        m: StockMemo = StockMemo.objects.create(
+            owner=user,
+            company=c,
+            business=business,
+            strategy=strategy,
+            note=note,
         )
+        return {
+            "id": m.pk,
+            "sid": m.company.pk,
+            "company_name": m.company.name,
+            "business": m.business,
+            "strategy": m.strategy,
+            "note": m.note,
+        }
 
-    def read(self, user, sidList):
+    def read(self, user: User, sidList):
         result = []
-        if sidList == []:
-            autoSidQuery = (
-                user.trade_records.values("company__pk")
-                .annotate(sum=Sum("deal_quantity"))
-                .filter(sum__gt=0)
-                .values("company__pk")
-            )
-            for each in autoSidQuery:
-                sidList.append(each["company__pk"])
-        query = user.stock_memos.filter(company__pk__in=sidList)
+        if sidList != []:
+            query = user.stock_memos.filter(company__pk__in=sidList)
+        else:
+            query = user.stock_memos.all()
         for each in query:
             result.append(
                 {
                     "id": each.pk,
                     "sid": each.company.pk,
+                    "company_name": each.company.name,
                     "business": each.business,
                     "strategy": each.strategy,
                     "note": each.note,
@@ -91,12 +107,20 @@ class Helper:
             )
         return result
 
-    def update(self, _id, business: str, strategy: str, note: str):
-        stock_memo.objects.filter(pk=_id).update(
-            business=business,
-            strategy=strategy,
-            note=note,
-        )
+    def update(self, _id: str, business: str, strategy: str, note: str):
+        m: StockMemo = StockMemo.objects.get(pk=_id)
+        m.business = business
+        m.strategy = strategy
+        m.note = note
+        m.save()
+        return {
+            "id": m.pk,
+            "sid": m.company.pk,
+            "company_name": m.company.name,
+            "business": m.business,
+            "strategy": m.strategy,
+            "note": m.note,
+        }
 
     def delete(self, _id):
-        stock_memo.objects.get(pk=_id).delete()
+        StockMemo.objects.get(pk=_id).delete()

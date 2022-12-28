@@ -5,7 +5,7 @@
 #    pipenv lock --requirements
 #
 
--i https://pypi.org/simple/
+-i https://pypi.org/simple
 asgiref==3.5.2; python_version >= '3.7'
 black==22.6.0
 certifi==2022.9.24; python_version >= '3.6'
