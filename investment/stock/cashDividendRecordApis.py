@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 
 from investment.account.models import user as User
 from .utils import getCompanyName
-from .models import cash_dividend_record, company
+from .models import cash_dividend_record as CashDividendRecord, company as Company
 from ..decorators import require_login
 
 
@@ -61,10 +61,10 @@ class Helper:
         pass
 
     def create(self, user: User, dealTime: str, sid: str, cashDividend: int):
-        c, created = company.objects.get_or_create(
+        c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        r = cash_dividend_record.objects.create(
+        r = CashDividendRecord.objects.create(
             owner=user,
             company=c,
             deal_time=datetime.strptime(dealTime, "%Y-%m-%d").date(),
@@ -106,10 +106,10 @@ class Helper:
         return result
 
     def update(self, _id, dealTime: str, sid: str, cashDividend: int):
-        c, created = company.objects.get_or_create(
+        c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        r = cash_dividend_record.objects.get(pk=_id)
+        r = CashDividendRecord.objects.get(pk=_id)
         r.company = c
         r.deal_time = datetime.strptime(dealTime, "%Y-%m-%d").date()
         r.cash_dividend = cashDividend
@@ -123,4 +123,4 @@ class Helper:
         }
 
     def delete(self, _id):
-        cash_dividend_record.objects.get(pk=_id).delete()
+        CashDividendRecord.objects.get(pk=_id).delete()

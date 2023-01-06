@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
-from .models import company, stock_info
+from .models import company as Company, stock_info as StockInfo
 from ..decorators import require_login
 
 
@@ -71,12 +71,12 @@ class Helper:
             #     .filter(sum__gt=0)
             #     .values("company__pk")
             # )
-            for c in company.objects.all():
+            for c in Company.objects.all():
                 sidList.append(c.pk)
 
         needToFetchSidList = []
         for eachSid in sidList:
-            query = stock_info.objects.filter(company__pk=eachSid)
+            query = StockInfo.objects.filter(company__pk=eachSid)
             if len(query) == 1:
                 info = query.get()
                 if (
@@ -123,7 +123,7 @@ class Helper:
         for each in res:
             dataRow = {}
             try:
-                c, created = company.objects.update_or_create(
+                c, created = Company.objects.update_or_create(
                     pk=each["ch"].split(".")[0], defaults={"name": each["n"]}
                 )
                 dataRow["company"] = c
@@ -153,10 +153,10 @@ class Helper:
 
         # store into database
         for each in allData:
-            stock_info.objects.update_or_create(company=each["company"], defaults=each)
+            StockInfo.objects.update_or_create(company=each["company"], defaults=each)
 
         # prepare result
-        for each in stock_info.objects.filter(company__pk__in=sidList[:70]):
+        for each in StockInfo.objects.filter(company__pk__in=sidList[:70]):
             self.result.append(
                 {
                     "date": each.date,

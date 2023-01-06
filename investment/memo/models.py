@@ -10,9 +10,9 @@ class stock_memo(CreateUpdateDateModel):
         user, on_delete=models.CASCADE, related_name="stock_memos"
     )
     company = models.OneToOneField(company, on_delete=models.PROTECT)
-    business = models.CharField(max_length=2048)
-    strategy = models.CharField(max_length=128)
-    note = models.CharField(max_length=4096)
+    business = models.TextField(default="")
+    strategy = models.TextField(default="")
+    note = models.TextField(default="")
 
     def __str__(self):
         return f"{self.owner.username}_{self.company.pk}"

@@ -13,7 +13,7 @@ from investment.stock.utils import getCompanyName
 @csrf_exempt
 @require_POST
 @require_login
-def create_stock_memo(request: HttpRequest):
+def update_or_create_stock_memo(request: HttpRequest):
     sid = request.POST.get("sid")
     business = request.POST.get("business")
     strategy = request.POST.get("strategy")
@@ -27,13 +27,23 @@ def create_stock_memo(request: HttpRequest):
         c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        m: StockMemo = StockMemo.objects.create(
-            owner=request.user,
-            company=c,
-            business=business,
-            strategy=strategy,
-            note=note,
-        )
+        m = StockMemo.objects.filter(owner=request.user, company=c).first()
+        if m:
+            if business != None:
+                m.business = business
+            if strategy != None:
+                m.strategy = strategy
+            if note != None:
+                m.note = note
+            m.save()
+        else:
+            m: StockMemo = StockMemo.objects.create(
+                owner=request.user,
+                company=c,
+                business=business or "",
+                strategy=strategy or "",
+                note=note or "",
+            )
         res["data"] = {
             "id": m.pk,
             "sid": m.company.pk,
@@ -72,39 +82,6 @@ def read_stock_memo(request: HttpRequest):
             }
         )
     res["success"] = True
-
-    return JsonResponse(res)
-
-
-@csrf_exempt
-@require_POST
-@require_login
-def update_stock_memo(request: HttpRequest):
-    stock_memo_id = request.POST.get("id")
-    business = request.POST.get("business")
-    strategy = request.POST.get("strategy")
-    note = request.POST.get("note")
-
-    res = {"success": False, "data": None}
-
-    if stock_memo_id == None:
-        res["error"] = "Data not sufficient."
-    else:
-        m: StockMemo = StockMemo.objects.get(pk=stock_memo_id)
-        m.business = business
-        m.strategy = strategy
-        m.note = note
-        m.save()
-
-        res["data"] = {
-            "id": m.pk,
-            "sid": m.company.pk,
-            "company_name": m.company.name,
-            "business": m.business,
-            "strategy": m.strategy,
-            "note": m.note,
-        }
-        res["success"] = True
 
     return JsonResponse(res)
 
