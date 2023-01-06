@@ -22,8 +22,10 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     # Local Apps
+    "investment.core",
     "investment.account",
     "investment.stock",
+    "investment.memo",
 ]
 
 MIDDLEWARE = [
@@ -117,4 +119,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_AGE = 86400
+CSRF_COOKIE_AGE = 172800
