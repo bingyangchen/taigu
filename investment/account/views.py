@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth import authenticate
 from django.conf import settings
+from django.contrib.auth.hashers import check_password
 
 from rest_framework.authtoken.models import Token
 
@@ -16,12 +17,7 @@ from ..decorators import require_login
 @csrf_exempt
 @require_POST
 def register(request):
-    """
-    "username": str,
-    "email": str,
-    "password": str
-    """
-    res = {"success": False, "error": None}
+    res = {"success": False}
     try:
         username = request.POST.get("username")
         email = request.POST.get("email")
@@ -44,16 +40,11 @@ def register(request):
 @csrf_exempt
 @require_POST
 def login(request):
-    """
-    "email": str,
-    "password": str
-    """
     res = {"success": False, "error": None}
     if (email := request.POST.get("email")) and (
         password := request.POST.get("password")
     ):
         try:
-            print(0)
             user = authenticate(request, email=email, password=password)
             request.user = user
             token = Token.objects.get_or_create(user=user)[0].key
@@ -62,7 +53,6 @@ def login(request):
             res.headers["new-token"] = token
             return res
         except Exception as e:
-            print(1)
             res["error"] = str(e)
             return HttpResponseBadRequest(JsonResponse(res))
     else:
@@ -74,7 +64,6 @@ def login(request):
 @require_POST
 @require_login
 def check_login(request):
-    """ """
     res = {
         "error": None,
         "success": True,
@@ -90,8 +79,8 @@ def check_login(request):
 
 @csrf_exempt
 @require_POST
+@require_login
 def logout(request):
-    """ """
     res = {"success": False}
     Token.objects.filter(user=request.user).delete()
     res["success"] = True
@@ -103,15 +92,8 @@ def logout(request):
 
 @csrf_exempt
 @require_POST
+@require_login
 def update(request: HttpRequest):
-    """
-    "id": str,
-    "username": str | None,
-    "email": str | None,
-    "avatar_url": str | None
-    "old_password": str | None
-    "new_password": str | None
-    """
     res = {"success": False, "error": None, "data": {}}
     try:
         data_posted = json.loads(request.body)
@@ -145,4 +127,26 @@ def update(request: HttpRequest):
             res["error"] = str(list(e)[0])
         except:
             res["error"] = str(e)
+        return HttpResponseBadRequest(JsonResponse(res))
+
+
+@csrf_exempt
+@require_POST
+@require_login
+def delete(request: HttpRequest):
+    data_posted = json.loads(request.body)
+    password = data_posted.get("password")
+
+    res = {"success": False}
+
+    if check_password(password, request.user.password):
+        Token.objects.filter(user=request.user).delete()
+        request.user.delete()
+        res["success"] = True
+        res = JsonResponse(res)
+        res.headers["is-log-out"] = "yes"
+        res.delete_cookie("token", samesite=settings.CSRF_COOKIE_SAMESITE)
+        return res
+    else:
+        res["error"] = "Wrong Password"
         return HttpResponseBadRequest(JsonResponse(res))

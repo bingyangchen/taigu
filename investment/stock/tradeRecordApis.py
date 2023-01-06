@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .utils import getCompanyName
-from .models import trade_record, company
+from .models import trade_record as TradeRecord, company as Company
 from ..account.models import user as User
 from ..decorators import require_login
 
@@ -101,10 +101,10 @@ class Helper:
         dealQuantity: int,
         handlingFee: int,
     ):
-        c, created = company.objects.get_or_create(
+        c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        r = trade_record.objects.create(
+        r = TradeRecord.objects.create(
             owner=user,
             company=c,
             deal_time=dealTime,
@@ -159,10 +159,10 @@ class Helper:
         dealQuantity: int,
         handlingFee: int,
     ):
-        c, created = company.objects.get_or_create(
+        c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
-        r = trade_record.objects.get(pk=_id)
+        r = TradeRecord.objects.get(pk=_id)
         r.company = c
         r.deal_time = dealTime
         r.deal_price = float(dealPrice)
@@ -180,4 +180,4 @@ class Helper:
         }
 
     def delete(self, _id):
-        trade_record.objects.get(pk=_id).delete()
+        TradeRecord.objects.get(pk=_id).delete()

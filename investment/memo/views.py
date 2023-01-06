@@ -89,23 +89,6 @@ def read_stock_memo(request: HttpRequest):
 @csrf_exempt
 @require_POST
 @require_login
-def delete_stock_memo(request: HttpRequest):
-    stock_memo_id = request.POST.get("id")
-
-    res = {"success": False}
-
-    if stock_memo_id == None:
-        res["error"] = "Data not sufficient."
-    else:
-        StockMemo.objects.get(pk=stock_memo_id).delete()
-        res["success"] = True
-
-    return JsonResponse(res)
-
-
-@csrf_exempt
-@require_POST
-@require_login
 def create_trade_plan(request: HttpRequest):
     sid = request.POST.get("sid")
     planType = request.POST.get("plan_type")
