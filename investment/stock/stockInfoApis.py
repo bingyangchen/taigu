@@ -22,7 +22,7 @@ def fetch(request):
     sidList = request.GET.get("sid-list", [])
     sidList = sidList.split(",") if len(sidList) > 0 else sidList
 
-    res = {"error": "", "success": False, "data": []}
+    res = {"success": False, "data": []}
     try:
         if date:
             helper.stocksSingleDay(
@@ -44,7 +44,7 @@ class Helper:
         # self.endPoint1 = "https://www.twse.com.tw/exchangeReport/MI_INDEX"
         self.endPoint = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch="
 
-        # info of single stock, multiple days
+        # info of single stock, multiple days (OTC stocks is not available)
         # self.endPoint2 = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210809&stockNo=2330"
         self.result = []
 
@@ -76,30 +76,24 @@ class Helper:
 
         needToFetchSidList = []
         for eachSid in sidList:
-            query = StockInfo.objects.filter(company__pk=eachSid)
-            if len(query) == 1:
-                info = query.get()
-                if (
-                    info.date != date
-                    or not info.company.pk
-                    or not info.company.name
-                    or not info.trade_type
-                ):
+            si = StockInfo.objects.filter(company__pk=eachSid).first()
+            if si:
+                if si.date != date or not si.company.name or not si.trade_type:
                     needToFetchSidList.append(eachSid)
                 else:
                     self.result.append(
                         {
-                            "date": info.date,
-                            "sid": info.company.pk,
-                            "name": info.company.name,
-                            "trade_type": info.trade_type,
-                            "quantity": info.quantity,
-                            "open": info.open_price,
-                            "close": info.close_price,
-                            "highest": info.highest_price,
-                            "lowest": info.lowest_price,
-                            "fluct_price": info.fluct_price,
-                            "fluct_rate": info.fluct_rate,
+                            "date": si.date,
+                            "sid": si.company.pk,
+                            "name": si.company.name,
+                            "trade_type": si.trade_type,
+                            "quantity": si.quantity,
+                            "open": si.open_price,
+                            "close": si.close_price,
+                            "highest": si.highest_price,
+                            "lowest": si.lowest_price,
+                            "fluct_price": si.fluct_price,
+                            "fluct_rate": si.fluct_rate,
                         }
                     )
             else:

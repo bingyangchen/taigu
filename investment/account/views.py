@@ -4,7 +4,6 @@ from django.http import JsonResponse, HttpRequest, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth import authenticate
-from django.conf import settings
 from django.contrib.auth.hashers import check_password
 
 from rest_framework.authtoken.models import Token
@@ -86,7 +85,7 @@ def logout(request):
     res["success"] = True
     res = JsonResponse(res)
     res.headers["is-log-out"] = "yes"
-    res.delete_cookie("token", samesite=settings.CSRF_COOKIE_SAMESITE)
+    res.delete_cookie("token", samesite="None")
     return res
 
 
@@ -145,7 +144,7 @@ def delete(request: HttpRequest):
         res["success"] = True
         res = JsonResponse(res)
         res.headers["is-log-out"] = "yes"
-        res.delete_cookie("token", samesite=settings.CSRF_COOKIE_SAMESITE)
+        res.delete_cookie("token", samesite="None")
         return res
     else:
         res["error"] = "Wrong Password"

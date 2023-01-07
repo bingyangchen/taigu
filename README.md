@@ -1,20 +1,15 @@
-# 防呆手冊
+# Investment Backend
 
 ---
 
-## `production_settings.py` 什麼時候會用到？
+## Auto Deploy
 
-此檔案僅在使用雲端 server（如：Heroku）時會用到，詳情請參考: _<https://ithelp.ithome.com.tw/articles/10212659?sc=rss.qu>_
+此專案的 remote repository 為 GitHub，同時利用了 Heroku 的自動部署機制，在每一次 push 新版本至 GitHub 的 master branch 後，會自動觸發 Heroku 至 GitHub 取得該版本程式碼並進行 build 與 depoly。
 
-## 有更動到 model 時
+## 有更動到 model 時，雲端資料庫也須執行 migrate
 
-針對架在 Heroku 的 server，需執行：
+Wait util the new app was built and deployed successfully.
 
 ```sh
-python manage.py makemigrations
-git add .
-git commin -m "..."
-git push origin master
-# wait util the new app was built successfully
-heroku run python manage.py migrate
+heroku run python manage.py migrate -a investment-backend
 ```

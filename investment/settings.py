@@ -9,6 +9,16 @@ ALLOWED_HOSTS = ["*"]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+ROOT_URLCONF = "investment.urls"
+WSGI_APPLICATION = "investment.wsgi.application"
+AUTH_USER_MODEL = "account.user"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_AGE = 172800
+
 INSTALLED_APPS = [
     # Django modules
     "django.contrib.admin",
@@ -41,8 +51,6 @@ MIDDLEWARE = [
     "investment.account.middleware.check_login_status_middleware",
 ]
 
-ROOT_URLCONF = "investment.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -58,8 +66,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = "investment.wsgi.application"
 
 DATABASES = {
     "default": {
@@ -92,31 +98,19 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = "account.user"
-
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ]
 }
 
-
-# Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Taipei"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "/static/"
-
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-CSRF_COOKIE_SAMESITE = "None"
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_AGE = 172800

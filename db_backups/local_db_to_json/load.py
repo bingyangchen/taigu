@@ -34,9 +34,7 @@ def dump_stock_info():
 
 
 def dump_stock_memo():
-    data = post(
-        url="http://127.0.0.1:8000/api/stock/memo", data={"mode": "read"}
-    ).json()["data"]
+    data = post(url="http://127.0.0.1:8000/api/memo/stock-memo/read").json()["data"]
 
     for each in data:
         del each["id"]
@@ -46,15 +44,10 @@ def dump_stock_memo():
 
 
 def dump_trade_plan():
-    data = post(
-        url="http://127.0.0.1:8000/api/stock/plan", data={"mode": "read"}
-    ).json()["data"]
+    data = post(url="http://127.0.0.1:8000/api/memo/trade-plan/read").json()["data"]
 
     for each in data:
         del each["id"]
 
     with open("./db_backups/local_db_to_json/trade_plan.json", "w") as fObj:
         fObj.write(json.dumps(data, indent=4))
-
-
-dump_trade_plan()
