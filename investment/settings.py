@@ -11,7 +11,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "investment.urls"
 WSGI_APPLICATION = "investment.wsgi.application"
-AUTH_USER_MODEL = "account.user"
+AUTH_USER_MODEL = "account.User"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CSRF_COOKIE_SAMESITE = "None"
@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "investment.account",
     "investment.stock",
     "investment.memo",
+    "investment.record",
 ]
 
 MIDDLEWARE = [

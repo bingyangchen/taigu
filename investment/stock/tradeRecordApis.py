@@ -7,8 +7,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .utils import getCompanyName
-from .models import trade_record as TradeRecord, company as Company
-from ..account.models import user as User
+from .models import TradeRecord, Company
+from ..account.models import User
 from ..decorators import require_login
 
 

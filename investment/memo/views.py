@@ -5,8 +5,8 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpRequest
 
 from ..decorators import require_login
-from investment.stock.models import company as Company
-from .models import stock_memo as StockMemo, trade_plan as TradePlan
+from investment.stock.models import Company
+from .models import StockMemo, TradePlan
 from investment.stock.utils import getCompanyName
 
 

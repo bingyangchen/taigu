@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import check_password
 
 from rest_framework.authtoken.models import Token
 
-from ..account.models import user as User
+from ..account.models import User
 
 
 class MyBackend(BaseBackend):

@@ -5,9 +5,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from investment.account.models import user as User
+from investment.account.models import User
 from .utils import getCompanyName
-from .models import cash_dividend_record as CashDividendRecord, company as Company
+from .models import CashDividendRecord, Company
 from ..decorators import require_login
 
 

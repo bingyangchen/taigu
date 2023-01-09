@@ -1,19 +1,22 @@
 from django.db import models
 
-from investment.account.models import user
+from investment.account.models import User
 from investment.core.models import CreateUpdateDateModel
 
 
-class company(models.Model):
+class Company(models.Model):
     stock_id = models.CharField(max_length=32, primary_key=True)
     name = models.CharField(max_length=32, unique=True)
+
+    class Meta:
+        db_table = "company"
 
     def __str__(self):
         return f"{self.name}({self.stock_id})"
 
 
-class stock_info(CreateUpdateDateModel):
-    company = models.OneToOneField(company, on_delete=models.PROTECT)
+class StockInfo(CreateUpdateDateModel):
+    company = models.OneToOneField(Company, on_delete=models.PROTECT)
     date = models.DateField()
     trade_type = models.CharField(max_length=32)
     quantity = models.BigIntegerField()
@@ -24,31 +27,40 @@ class stock_info(CreateUpdateDateModel):
     fluct_price = models.FloatField()
     fluct_rate = models.FloatField()
 
+    class Meta:
+        db_table = "stock_info"
+
     def __str__(self):
         return f"{self.date}_{self.company.stock_id}"
 
 
-class trade_record(CreateUpdateDateModel):
+class TradeRecord(CreateUpdateDateModel):
     owner = models.ForeignKey(
-        user, on_delete=models.CASCADE, related_name="trade_records"
+        User, on_delete=models.CASCADE, related_name="trade_records"
     )
-    company = models.ForeignKey(company, on_delete=models.PROTECT)
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
     deal_time = models.DateField()
     deal_price = models.FloatField()
     deal_quantity = models.BigIntegerField()
     handling_fee = models.BigIntegerField()
 
+    class Meta:
+        db_table = "trade_record"
+
     def __str__(self):
         return f"{self.owner.username}_{self.deal_time}_{self.company.pk}"
 
 
-class cash_dividend_record(CreateUpdateDateModel):
+class CashDividendRecord(CreateUpdateDateModel):
     owner = models.ForeignKey(
-        user, on_delete=models.CASCADE, related_name="cash_dividend_records"
+        User, on_delete=models.CASCADE, related_name="cash_dividend_records"
     )
-    company = models.ForeignKey(company, on_delete=models.PROTECT)
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
     deal_time = models.DateField()
     cash_dividend = models.BigIntegerField()
+
+    class Meta:
+        db_table = "cash_dividend_record"
 
     def __str__(self):
         return f"{self.owner.username}_{self.deal_time}_{self.company.pk}"

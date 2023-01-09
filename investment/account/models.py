@@ -28,7 +28,7 @@ def user_avatar_path(instance, filename):
     return "user_avatars/{}".format(str(instance.id) + extension)
 
 
-class user(AbstractUser):
+class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=256, unique=True)
     username = models.CharField(max_length=64, unique=False)
@@ -45,6 +45,9 @@ class user(AbstractUser):
     # Implementation of AbstractUser
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
+
+    class Meta:
+        db_table = "user"
 
     def __str__(self):
         return self.username

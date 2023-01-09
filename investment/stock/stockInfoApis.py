@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
-from .models import company as Company, stock_info as StockInfo
+from .models import Company, StockInfo
 from ..decorators import require_login
 
 

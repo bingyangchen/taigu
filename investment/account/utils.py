@@ -2,7 +2,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
 from django.contrib.auth.hashers import check_password
 
-from .models import user as User
+from .models import User
 
 
 def validate_registration_info(username: str, email: str, password: str):

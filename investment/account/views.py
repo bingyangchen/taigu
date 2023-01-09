@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import check_password
 
 from rest_framework.authtoken.models import Token
 
-from .models import user as User
+from .models import User
 from .utils import validate_registration_info, update_user
 from ..decorators import require_login
 
