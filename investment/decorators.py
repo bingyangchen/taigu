@@ -23,6 +23,7 @@ def cors_exempt(func):
         res["Access-Control-Allow-Credentials"] = "true"
         res["Access-Control-Allow-Methods"] = "*"
         res["Access-Control-Allow-Origin"] = request.headers.get("Origin")
+        res["Vary"] = "Origin"
         return res
 
     wrap.__name__ = func.__name__
