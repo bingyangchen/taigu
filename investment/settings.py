@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     "investment.account",
     "investment.stock",
     "investment.memo",
-    "investment.record",
 ]
 
 MIDDLEWARE = [
