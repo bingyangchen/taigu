@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 
 from .utils import getCompanyName
 from .models import TradeRecord, Company
-from ..account.models import User
+from investment.account.models import User
 from ..decorators import require_login
 
 
@@ -26,7 +26,7 @@ def crud(request):
     dealQuantity = request.POST.get("deal_quantity")
     handlingFee = request.POST.get("handling_fee")
 
-    res = {"error": "", "success": False, "data": None}
+    res = {"success": False, "data": None}
     if mode == "create":
         if (
             dealTime == None

@@ -38,8 +38,8 @@ def register(request):
 
 @csrf_exempt
 @require_POST
-def login(request):
-    res = {"success": False, "error": None}
+def login(request: HttpRequest):
+    res = {"success": False}
     if (email := request.POST.get("email")) and (
         password := request.POST.get("password")
     ):
@@ -62,9 +62,8 @@ def login(request):
 @csrf_exempt
 @require_POST
 @require_login
-def check_login(request):
+def check_login(request: HttpRequest):
     res = {
-        "error": None,
         "success": True,
         "data": {
             "id": request.user.pk,
@@ -79,7 +78,7 @@ def check_login(request):
 @csrf_exempt
 @require_POST
 @require_login
-def logout(request):
+def logout(request: HttpRequest):
     res = {"success": False}
     Token.objects.filter(user=request.user).delete()
     res["success"] = True
@@ -93,7 +92,7 @@ def logout(request):
 @require_POST
 @require_login
 def update(request: HttpRequest):
-    res = {"success": False, "error": None, "data": {}}
+    res = {"success": False, "data": None}
     try:
         data_posted = json.loads(request.body)
 
@@ -105,7 +104,7 @@ def update(request: HttpRequest):
         new_password = data_posted.get("new_password")
 
         u = update_user(
-            id=id,
+            id=id or request.user.pk,
             username=username,
             email=email,
             avatar_url=avatar_url,

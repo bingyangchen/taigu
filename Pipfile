@@ -16,6 +16,7 @@ python-dotenv = "==0.20.0"
 djangorestframework = "==3.13.1"
 pillow = "==9.3.0"
 django-cors-headers = "==3.13.0"
+django-csp = "==3.7"
 
 [dev-packages]
 
