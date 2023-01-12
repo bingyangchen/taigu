@@ -1,7 +1,5 @@
-import json
-
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse, HttpRequest
 
 from ..decorators import require_login
@@ -58,15 +56,16 @@ def update_or_create_stock_memo(request: HttpRequest):
 
 
 @csrf_exempt
-@require_POST
+@require_GET
 @require_login
 def read_stock_memo(request: HttpRequest):
-    sidList = json.loads(request.POST.get("sid-list", "[]"))
+    sid_list = request.GET.get("sid-list", [])
 
     res = {"success": False, "data": []}
 
-    if sidList != []:
-        query = request.user.stock_memos.filter(company__pk__in=sidList)
+    if sid_list != []:
+        sid_list = sid_list.strip(",").split(",")
+        query = request.user.stock_memos.filter(company__pk__in=sid_list)
     else:
         query = request.user.stock_memos.all()
 
@@ -124,15 +123,16 @@ def create_trade_plan(request: HttpRequest):
 
 
 @csrf_exempt
-@require_POST
+@require_GET
 @require_login
 def read_trade_plan(request: HttpRequest):
-    sidList = json.loads(request.POST.get("sid-list", "[]"))
+    sid_list = request.GET.get("sid-list", [])
 
     res = {"success": False, "data": []}
 
-    if sidList != []:
-        query = request.user.trade_plans.filter(company__pk__in=sidList)
+    if sid_list != []:
+        sid_list = sid_list.strip(",").split(",")
+        query = request.user.trade_plans.filter(company__pk__in=sid_list)
     else:
         query = request.user.trade_plans.all()
 
