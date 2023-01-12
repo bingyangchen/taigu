@@ -1,6 +1,6 @@
 import json
 
-from django.http import JsonResponse, HttpRequest, HttpResponseBadRequest
+from django.http import JsonResponse, HttpRequest, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth import authenticate
@@ -60,9 +60,9 @@ def login(request: HttpRequest):
 
 
 @csrf_exempt
-@require_POST
+@require_GET
 @require_login
-def check_login(request: HttpRequest):
+def me(request: HttpRequest):
     res = {
         "success": True,
         "data": {
@@ -129,22 +129,23 @@ def update(request: HttpRequest):
 
 
 @csrf_exempt
-@require_POST
 @require_login
 def delete(request: HttpRequest):
-    data_posted = json.loads(request.body)
-    password = data_posted.get("password")
-
     res = {"success": False}
-
-    if check_password(password, request.user.password):
-        Token.objects.filter(user=request.user).delete()
-        request.user.delete()
-        res["success"] = True
-        res = JsonResponse(res)
-        res.headers["is-log-out"] = "yes"
-        res.delete_cookie("token", samesite="None")
-        return res
+    if request.method == "DELETE":
+        data_posted = json.loads(request.body)
+        password = data_posted.get("password")
+        if check_password(password, request.user.password):
+            Token.objects.filter(user=request.user).delete()
+            request.user.delete()
+            res["success"] = True
+            res = JsonResponse(res)
+            res.headers["is-log-out"] = "yes"
+            res.delete_cookie("token", samesite="None")
+            return res
+        else:
+            res["error"] = "Wrong Password"
+            return HttpResponseBadRequest(JsonResponse(res))
     else:
-        res["error"] = "Wrong Password"
-        return HttpResponseBadRequest(JsonResponse(res))
+        res["error"] = "DELETE method is required for this endpoint."
+        return HttpResponse(JsonResponse(res), status=405)
