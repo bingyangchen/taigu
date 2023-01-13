@@ -23,7 +23,6 @@ def register(request):
         password = request.POST.get("password")
 
         validate_registration_info(username, email, password)
-
         User.objects.create_user(email, password, username=username)
 
         res["success"] = True

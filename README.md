@@ -8,7 +8,7 @@
 
 ## 有更動到 model 時，雲端資料庫也須執行 migrate
 
-Wait util the new app was built and deployed successfully.
+>此動作必須在最新版本的程式碼於 Heroku 上建置且部署完成後才能執行。
 
 ```sh
 heroku run python manage.py migrate -a investment-backend
