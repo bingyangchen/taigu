@@ -1,6 +1,6 @@
 import json
 
-from django.http import JsonResponse, HttpRequest, HttpResponseBadRequest, HttpResponse
+from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth import authenticate
@@ -32,7 +32,7 @@ def register(request):
             res["error"] = str(list(e)[0])
         except:
             res["error"] = str(e)
-        return HttpResponseBadRequest(JsonResponse(res))
+        return JsonResponse(res, status=400)
 
 
 @csrf_exempt
@@ -52,15 +52,15 @@ def login(request: HttpRequest):
             return res
         except Exception as e:
             res["error"] = str(e)
-            return HttpResponseBadRequest(JsonResponse(res))
+            return JsonResponse(res, status=400)
     else:
         res["error"] = "Info not sufficient."
-        return HttpResponseBadRequest(JsonResponse(res))
+        return JsonResponse(res, status=400)
 
 
 @csrf_exempt
 @require_GET
-@require_login
+# @require_login
 def me(request: HttpRequest):
     res = {
         "success": True,
@@ -124,7 +124,7 @@ def update(request: HttpRequest):
             res["error"] = str(list(e)[0])
         except:
             res["error"] = str(e)
-        return HttpResponseBadRequest(JsonResponse(res))
+        return JsonResponse(res, status=400)
 
 
 @csrf_exempt
@@ -144,7 +144,7 @@ def delete(request: HttpRequest):
             return res
         else:
             res["error"] = "Wrong Password"
-            return HttpResponseBadRequest(JsonResponse(res))
+            return JsonResponse(res, status=400)
     else:
         res["error"] = "DELETE method is required for this endpoint."
-        return HttpResponse(JsonResponse(res), status=405)
+        return JsonResponse(res, status=405)
