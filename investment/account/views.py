@@ -60,7 +60,7 @@ def login(request: HttpRequest):
 
 @csrf_exempt
 @require_GET
-# @require_login
+@require_login
 def me(request: HttpRequest):
     res = {
         "success": True,
