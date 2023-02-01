@@ -82,7 +82,7 @@ class Helper:
 
         needToFetchSidList = []
         for c in companies:
-            if si := c.stock_info:
+            if si := StockInfo.objects.filter(company__pk=c.pk).first():
                 if si.date != date:
                     needToFetchSidList.append(c.pk)
                 else:
