@@ -13,3 +13,9 @@
 ```sh
 heroku run python manage.py migrate -a investment-backend
 ```
+
+## 開啟 PostgreSQL CLI
+
+```sh
+heroku run python manage.py dbshell
+```

@@ -1,21 +1,22 @@
 import datetime
-from requests import get
+import requests
 import json
 from pyquery import PyQuery
 import pytz
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 from .models import Company, StockInfo
+from investment.account.models import User
 from ..decorators import require_login
 
 
 @csrf_exempt
 @require_GET
 @require_login
-def fetch(request):
+def info(request: HttpRequest):
     helper = Helper()
 
     date = request.GET.get("date")
@@ -26,11 +27,12 @@ def fetch(request):
     try:
         if date:
             helper.stocksSingleDay(
+                user=request.user,
                 date=datetime.datetime.strptime(date, "%Y-%m-%d").date(),
                 sidList=sidList,
             )
         else:
-            helper.stocksSingleDay(sidList=sidList)
+            helper.stocksSingleDay(user=request.user, sidList=sidList)
         res["data"] = helper.result
         res["success"] = True
     except Exception as e:
@@ -50,6 +52,7 @@ class Helper:
 
     def stocksSingleDay(
         self,
+        user: User,
         date: datetime.date = (
             datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)
         ).date(),
@@ -63,29 +66,31 @@ class Helper:
         if currentHour < 14:
             date -= datetime.timedelta(days=1)
 
-        if sidList == []:
-            # SELECT sid from trade_record GROUP BY sid HAVING SUM(deal_quantity) > 0
-            # autoSidQuery = (
-            #     trade_record.objects.values("company__pk")
-            #     .annotate(sum=Sum("deal_quantity"))
-            #     .filter(sum__gt=0)
-            #     .values("company__pk")
-            # )
-            for c in Company.objects.all():
-                sidList.append(c.pk)
+        companies = (
+            Company.objects.all()
+            if sidList == []
+            else Company.objects.filter(pk__in=sidList)
+        )
+
+        # SELECT sid from trade_record GROUP BY sid HAVING SUM(deal_quantity) > 0
+        # autoSidQuery = (
+        #     trade_record.objects.values("company__pk")
+        #     .annotate(sum=Sum("deal_quantity"))
+        #     .filter(sum__gt=0)
+        #     .values("company__pk")
+        # )
 
         needToFetchSidList = []
-        for eachSid in sidList:
-            si = StockInfo.objects.filter(company__pk=eachSid).first()
-            if si:
-                if si.date != date or not si.company.name or not si.trade_type:
-                    needToFetchSidList.append(eachSid)
+        for c in companies:
+            if si := c.stock_info:
+                if si.date != date:
+                    needToFetchSidList.append(c.pk)
                 else:
                     self.result.append(
                         {
                             "date": si.date,
-                            "sid": si.company.pk,
-                            "name": si.company.name,
+                            "sid": c.pk,
+                            "name": c.name,
                             "trade_type": si.trade_type,
                             "quantity": si.quantity,
                             "open": si.open_price,
@@ -97,23 +102,27 @@ class Helper:
                         }
                     )
             else:
-                needToFetchSidList.append(eachSid)
-        self.fetchAndStore(needToFetchSidList, date)
+                needToFetchSidList.append(c.pk)
+
+        if len(needToFetchSidList) > 0:
+            self.fetchAndStore(needToFetchSidList, date)
 
     def fetchAndStore(self, sidList, date: datetime.date):
         if len(sidList) == 0:
             return
-        allData = []
-        queryStr = ""
 
-        # 70 sid per request
-        for each in sidList[:70]:
-            queryStr += "tse_" + each + ".tw|"
-            queryStr += "otc_" + each + ".tw|"
-        res = get(self.endPoint + queryStr)
+        allData = []
+
+        # 70 sids per request
+        sidsToSolved = sidList[:70]
+        queryString = ""
+        for sid in sidsToSolved:
+            queryString += f"tse_{sid}.tw|otc_{sid}.tw|"
+
+        res = requests.get(self.endPoint + queryString)
         res = json.loads(PyQuery(res.text).text())["msgArray"] or []
 
-        # arrange the data format
+        # Arrange the data fetched
         for each in res:
             dataRow = {}
             try:
@@ -150,7 +159,7 @@ class Helper:
             StockInfo.objects.update_or_create(company=each["company"], defaults=each)
 
         # prepare result
-        for each in StockInfo.objects.filter(company__pk__in=sidList[:70]):
+        for each in StockInfo.objects.filter(company__pk__in=sidsToSolved):
             self.result.append(
                 {
                     "date": each.date,

@@ -2,11 +2,11 @@ import json
 import datetime
 from typing import List
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .utils import getCompanyName
+from .utils import getCompanyName, validateStockId, UnknownStockIdError
 from .models import TradeRecord, Company
 from investment.account.models import User
 from ..decorators import require_login
@@ -15,7 +15,7 @@ from ..decorators import require_login
 @csrf_exempt
 @require_POST
 @require_login
-def crud(request):
+def crud(request: HttpRequest):
     helper = Helper()
 
     mode = request.POST.get("mode")
@@ -37,16 +37,18 @@ def crud(request):
         ):
             res["error"] = "Data not sufficient."
         else:
-            dealTime = datetime.datetime.strptime(dealTime, "%Y-%m-%d").date()
-            res["data"] = helper.create(
-                request.user,
-                dealTime,
-                str(sid),
-                float(dealPrice),
-                int(dealQuantity),
-                int(handlingFee),
-            )
-            res["success"] = True
+            try:
+                res["data"] = helper.create(
+                    request.user,
+                    datetime.datetime.strptime(dealTime, "%Y-%m-%d").date(),
+                    str(sid),
+                    float(dealPrice),
+                    int(dealQuantity),
+                    int(handlingFee),
+                )
+                res["success"] = True
+            except UnknownStockIdError as e:
+                res["error"] = str(e)
     elif mode == "read":
         dealTimeList = [
             datetime.datetime.strptime(each, "%Y-%m-%d").date()
@@ -66,16 +68,18 @@ def crud(request):
         ):
             res["error"] = "Data not sufficient."
         else:
-            dealTime = datetime.datetime.strptime(dealTime, "%Y-%m-%d").date()
-            res["data"] = helper.update(
-                _id,
-                dealTime,
-                str(sid),
-                float(dealPrice),
-                int(dealQuantity),
-                int(handlingFee),
-            )
-            res["success"] = True
+            try:
+                res["data"] = helper.update(
+                    _id,
+                    datetime.datetime.strptime(dealTime, "%Y-%m-%d").date(),
+                    str(sid),
+                    float(dealPrice),
+                    int(dealQuantity),
+                    int(handlingFee),
+                )
+                res["success"] = True
+            except UnknownStockIdError as e:
+                res["error"] = str(e)
     elif mode == "delete":
         if _id == None:
             res["error"] = "Data not sufficient."
@@ -101,6 +105,7 @@ class Helper:
         dealQuantity: int,
         handlingFee: int,
     ):
+        validateStockId(sid)
         c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
@@ -159,6 +164,7 @@ class Helper:
         dealQuantity: int,
         handlingFee: int,
     ):
+        validateStockId(sid)
         c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )

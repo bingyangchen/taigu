@@ -5,7 +5,7 @@ from django.http import JsonResponse, HttpRequest
 from ..decorators import require_login
 from investment.stock.models import Company
 from .models import StockMemo, TradePlan
-from investment.stock.utils import getCompanyName
+from investment.stock.utils import getCompanyName, validateStockId, UnknownStockIdError
 
 
 @csrf_exempt
@@ -22,35 +22,39 @@ def update_or_create_stock_memo(request: HttpRequest):
     if sid == None:
         res["error"] = "Data not sufficient."
     else:
-        c, created = Company.objects.get_or_create(
-            pk=sid, defaults={"name": getCompanyName(sid)}
-        )
-        m = StockMemo.objects.filter(owner=request.user, company=c).first()
-        if m:
-            if business != None:
-                m.business = business
-            if strategy != None:
-                m.strategy = strategy
-            if note != None:
-                m.note = note
-            m.save()
-        else:
-            m: StockMemo = StockMemo.objects.create(
-                owner=request.user,
-                company=c,
-                business=business or "",
-                strategy=strategy or "",
-                note=note or "",
+        try:
+            validateStockId(sid)
+            c, created = Company.objects.get_or_create(
+                pk=sid, defaults={"name": getCompanyName(sid)}
             )
-        res["data"] = {
-            "id": m.pk,
-            "sid": m.company.pk,
-            "company_name": m.company.name,
-            "business": m.business,
-            "strategy": m.strategy,
-            "note": m.note,
-        }
-        res["success"] = True
+            m = StockMemo.objects.filter(owner=request.user, company=c).first()
+            if m:
+                if business != None:
+                    m.business = business
+                if strategy != None:
+                    m.strategy = strategy
+                if note != None:
+                    m.note = note
+                m.save()
+            else:
+                m: StockMemo = StockMemo.objects.create(
+                    owner=request.user,
+                    company=c,
+                    business=business or "",
+                    strategy=strategy or "",
+                    note=note or "",
+                )
+            res["data"] = {
+                "id": m.pk,
+                "sid": m.company.pk,
+                "company_name": m.company.name,
+                "business": m.business,
+                "strategy": m.strategy,
+                "note": m.note,
+            }
+            res["success"] = True
+        except UnknownStockIdError as e:
+            res["error"] = str(e)
 
     return JsonResponse(res)
 
@@ -99,25 +103,29 @@ def create_trade_plan(request: HttpRequest):
     if sid == None or planType == None or targetPrice == None or targetQuantity == None:
         res["error"] = "Data not sufficient."
     else:
-        c, created = Company.objects.get_or_create(
-            pk=sid, defaults={"name": getCompanyName(sid)}
-        )
-        p: TradePlan = TradePlan.objects.create(
-            owner=request.user,
-            company=c,
-            plan_type=planType,
-            target_price=targetPrice,
-            target_quantity=targetQuantity,
-        )
-        res["data"] = {
-            "id": p.pk,
-            "sid": p.company.pk,
-            "company_name": p.company.name,
-            "plan_type": p.plan_type,
-            "target_price": p.target_price,
-            "target_quantity": p.target_quantity,
-        }
-        res["success"] = True
+        try:
+            validateStockId(sid)
+            c, created = Company.objects.get_or_create(
+                pk=sid, defaults={"name": getCompanyName(sid)}
+            )
+            p: TradePlan = TradePlan.objects.create(
+                owner=request.user,
+                company=c,
+                plan_type=planType,
+                target_price=targetPrice,
+                target_quantity=targetQuantity,
+            )
+            res["data"] = {
+                "id": p.pk,
+                "sid": p.company.pk,
+                "company_name": p.company.name,
+                "plan_type": p.plan_type,
+                "target_price": p.target_price,
+                "target_quantity": p.target_quantity,
+            }
+            res["success"] = True
+        except UnknownStockIdError as e:
+            res["error"] = str(e)
 
     return JsonResponse(res)
 
@@ -173,25 +181,29 @@ def update_trade_plan(request: HttpRequest):
     ):
         res["error"] = "Data not sufficient."
     else:
-        c, created = Company.objects.get_or_create(
-            pk=sid, defaults={"name": getCompanyName(sid)}
-        )
-        p: TradePlan = TradePlan.objects.get(pk=trade_plan_id)
-        p.company = c
-        p.plan_type = planType
-        p.target_price = targetPrice
-        p.target_quantity = targetQuantity
-        p.save()
+        try:
+            validateStockId(sid)
+            c, created = Company.objects.get_or_create(
+                pk=sid, defaults={"name": getCompanyName(sid)}
+            )
+            p: TradePlan = TradePlan.objects.get(pk=trade_plan_id)
+            p.company = c
+            p.plan_type = planType
+            p.target_price = targetPrice
+            p.target_quantity = targetQuantity
+            p.save()
 
-        res["data"] = {
-            "id": p.pk,
-            "sid": p.company.pk,
-            "company_name": p.company.name,
-            "plan_type": p.plan_type,
-            "target_price": p.target_price,
-            "target_quantity": p.target_quantity,
-        }
-        res["success"] = True
+            res["data"] = {
+                "id": p.pk,
+                "sid": p.company.pk,
+                "company_name": p.company.name,
+                "plan_type": p.plan_type,
+                "target_price": p.target_price,
+                "target_quantity": p.target_quantity,
+            }
+            res["success"] = True
+        except UnknownStockIdError as e:
+            res["error"] = str(e)
 
     return JsonResponse(res)
 

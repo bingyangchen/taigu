@@ -6,7 +6,7 @@ from investment.core.models import CreateUpdateDateModel
 
 class Company(models.Model):
     stock_id = models.CharField(max_length=32, primary_key=True)
-    name = models.CharField(max_length=32, unique=True)
+    name = models.CharField(max_length=32, blank=False, null=False)
 
     class Meta:
         db_table = "company"
@@ -16,9 +16,11 @@ class Company(models.Model):
 
 
 class StockInfo(CreateUpdateDateModel):
-    company = models.OneToOneField(Company, on_delete=models.PROTECT)
+    company = models.OneToOneField(
+        Company, on_delete=models.CASCADE, related_name="stock_info"
+    )
     date = models.DateField()
-    trade_type = models.CharField(max_length=32)
+    trade_type = models.CharField(max_length=32, blank=False, null=False)
     quantity = models.BigIntegerField()
     open_price = models.FloatField()
     close_price = models.FloatField()
@@ -31,7 +33,7 @@ class StockInfo(CreateUpdateDateModel):
         db_table = "stock_info"
 
     def __str__(self):
-        return f"{self.date}_{self.company.stock_id}"
+        return f"{self.company.stock_id}({self.date})"
 
 
 class TradeRecord(CreateUpdateDateModel):

@@ -1,12 +1,12 @@
 from datetime import datetime
 import json
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from investment.account.models import User
-from .utils import getCompanyName
+from .utils import getCompanyName, validateStockId, UnknownStockIdError
 from .models import CashDividendRecord, Company
 from ..decorators import require_login
 
@@ -14,7 +14,7 @@ from ..decorators import require_login
 @csrf_exempt
 @require_POST
 @require_login
-def crud(request):
+def crud(request: HttpRequest):
     helper = Helper()
 
     mode = request.POST.get("mode")
@@ -23,16 +23,19 @@ def crud(request):
     sid = request.POST.get("sid")
     cashDividend = request.POST.get("cash_dividend")
 
-    res = {"error": "", "success": False, "data": None}
+    res = {"success": False, "data": None}
 
     if mode == "create":
         if dealTime == None or sid == None or cashDividend == None:
             res["error"] = "Data not sufficient."
         else:
-            res["data"] = helper.create(
-                request.user, str(dealTime), str(sid), int(cashDividend)
-            )
-            res["success"] = True
+            try:
+                res["data"] = helper.create(
+                    request.user, str(dealTime), str(sid), int(cashDividend)
+                )
+                res["success"] = True
+            except UnknownStockIdError as e:
+                res["error"] = str(e)
     elif mode == "read":
         dealTimeList = json.loads(request.POST.get("deal_time_list", "[]"))
         sidList = json.loads(request.POST.get("sid_list", "[]"))
@@ -42,8 +45,13 @@ def crud(request):
         if _id == None or dealTime == None or sid == None or cashDividend == None:
             res["error"] = "Data not sufficient."
         else:
-            res["data"] = helper.update(_id, str(dealTime), str(sid), int(cashDividend))
-            res["success"] = True
+            try:
+                res["data"] = helper.update(
+                    _id, str(dealTime), str(sid), int(cashDividend)
+                )
+                res["success"] = True
+            except UnknownStockIdError as e:
+                res["error"] = str(e)
     elif mode == "delete":
         if _id == None:
             res["error"] = "Data not sufficient."
@@ -61,6 +69,7 @@ class Helper:
         pass
 
     def create(self, user: User, dealTime: str, sid: str, cashDividend: int):
+        validateStockId(sid)
         c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )
@@ -106,6 +115,7 @@ class Helper:
         return result
 
     def update(self, _id, dealTime: str, sid: str, cashDividend: int):
+        validateStockId(sid)
         c, created = Company.objects.get_or_create(
             pk=sid, defaults={"name": getCompanyName(sid)}
         )

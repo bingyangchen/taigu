@@ -29,11 +29,13 @@ def update_user(**kwargs):
         u: User = User.objects.get(pk=id)
         if username or (username == ""):
             u.username = username
+
         if email:
             if (u2 := User.objects.filter(email=email).first()) and u2 != u:
                 raise Exception("Duplicated email.")
             validate_email(email)
             u.email = email
+
         if avatar_url:
             u.avatar_url = avatar_url
         elif avatar_url == "":
@@ -48,7 +50,7 @@ def update_user(**kwargs):
         elif old_password:
             raise Exception("Please provide new password.")
         elif new_password:
-            raise Exception("Please provide original password.")
+            raise Exception("Please provide the original password.")
 
         u.save()
         return u
