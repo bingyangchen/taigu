@@ -4,7 +4,7 @@ if [[ -z $1 ]]; then
     echo Please provide the commit message.
 else
     # Prepare the requirements.txt file
-    pipenv lock --requirements > requirements.txt
+    pipenv requirements > requirements.txt
 
     # Switch to the corresponding username and email for this repo
     git config user.name "Jamison Chen"
