@@ -35,7 +35,7 @@ def crud(request: HttpRequest):
             or dealQuantity == None
             or handlingFee == None
         ):
-            res["error"] = "Data not sufficient."
+            res["error"] = "Data not sufficient"
         else:
             try:
                 res["data"] = helper.create(
