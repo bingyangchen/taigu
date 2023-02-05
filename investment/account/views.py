@@ -93,22 +93,15 @@ def logout(request: HttpRequest):
 def update(request: HttpRequest):
     res = {"success": False, "data": None}
     try:
-        data_posted = json.loads(request.body)
+        payload = json.loads(request.body)
 
-        id = data_posted.get("id")
-        username = data_posted.get("username")
-        email = data_posted.get("email")
-        avatar_url = data_posted.get("avatar_url")
-        old_password = data_posted.get("old_password")
-        new_password = data_posted.get("new_password")
-
-        u = update_user(
-            id=id or request.user.pk,
-            username=username,
-            email=email,
-            avatar_url=avatar_url,
-            old_password=old_password,
-            new_password=new_password,
+        u: User = update_user(
+            id=payload.get("id") or request.user.pk,
+            username=payload.get("username"),
+            email=payload.get("email"),
+            avatar_url=payload.get("avatar_url"),
+            old_password=payload.get("old_password"),
+            new_password=payload.get("new_password"),
         )
 
         res["success"] = True
@@ -132,8 +125,7 @@ def update(request: HttpRequest):
 def delete(request: HttpRequest):
     res = {"success": False}
     if request.method == "DELETE":
-        data_posted = json.loads(request.body)
-        password = data_posted.get("password")
+        password = json.loads(request.body).get("password")
         if check_password(password, request.user.password):
             Token.objects.filter(user=request.user).delete()
             request.user.delete()

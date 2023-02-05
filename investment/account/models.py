@@ -32,12 +32,14 @@ class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=256, unique=True)
     username = models.CharField(max_length=64, unique=False)
-    first_name = None  # remove this default column of AbstracUser
-    last_name = None  # remove this default column of AbstracUser
     avatar_url = models.CharField(max_length=2048, blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
-    # Deprecated
+    # Remove default attributes of AbstracUser
+    first_name = None
+    last_name = None
+
+    # Deprecated attributes
     avatar = models.ImageField(upload_to=user_avatar_path, blank=True, null=True)
 
     objects = UserManager()

@@ -15,7 +15,7 @@ def validate_registration_info(username: str, email: str, password: str):
         raise Exception("Duplicated email.")
 
 
-def update_user(**kwargs):
+def update_user(**kwargs) -> User:
     id = kwargs.get("id")
     username = kwargs.get("username")
     email = kwargs.get("email")
@@ -24,7 +24,7 @@ def update_user(**kwargs):
     new_password = kwargs.get("new_password")
 
     if id == None:
-        raise Exception("Please provide id.")
+        raise Exception("Please provide user id.")
     else:
         u: User = User.objects.get(pk=id)
         if username or (username == ""):

@@ -8,9 +8,9 @@ from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
-from .models import Company, StockInfo
 from investment.account.models import User
-from ..decorators import require_login
+from ..models import Company, StockInfo
+from ...decorators import require_login
 
 
 @csrf_exempt

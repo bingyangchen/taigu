@@ -6,10 +6,10 @@ from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .utils import getCompanyName, validateStockId, UnknownStockIdError
-from .models import TradeRecord, Company
 from investment.account.models import User
-from ..decorators import require_login
+from ..utils import getCompanyName, validateStockId, UnknownStockIdError
+from ..models import TradeRecord, Company
+from ...decorators import require_login
 
 
 @csrf_exempt
