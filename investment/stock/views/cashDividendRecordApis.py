@@ -53,36 +53,37 @@ def create_or_list_cash_dividend_record(request: HttpRequest):
 
         if (deal_time_list != []) or (sid_list != []):
             if (deal_time_list != []) and (sid_list != []):
-                query = request.user.cash_dividend_records.filter(
+                queryset = request.user.cash_dividend_records.filter(
                     deal_time__in=deal_time_list
                 ).filter(company__pk__in=sid_list)
             elif deal_time_list == []:
-                query = request.user.cash_dividend_records.filter(
+                queryset = request.user.cash_dividend_records.filter(
                     company__pk__in=sid_list
                 )
             else:
-                query = request.user.cash_dividend_records.filter(
+                queryset = request.user.cash_dividend_records.filter(
                     deal_time__in=deal_time_list
                 )
         else:
-            query = request.user.cash_dividend_records.all()
+            queryset = request.user.cash_dividend_records.all()
 
-        query = query.order_by("-deal_time")
+        queryset = queryset.order_by("-deal_time")
 
         result = []
-        for each in query:
+        for cdr in queryset:
             result.append(
                 {
-                    "id": each.pk,
-                    "deal_time": each.deal_time,
-                    "sid": each.company.pk,
-                    "company_name": each.company.name,
-                    "cash_dividend": each.cash_dividend,
+                    "id": cdr.pk,
+                    "deal_time": cdr.deal_time,
+                    "sid": cdr.company.pk,
+                    "company_name": cdr.company.name,
+                    "cash_dividend": cdr.cash_dividend,
                 }
             )
         res["data"] = result
         res["success"] = True
-
+    else:
+        res["error"] = "Method Not Allowed"
     return JsonResponse(res)
 
 
@@ -94,15 +95,14 @@ def update_or_delete_cash_dividend_record(request: HttpRequest, id):
 
     if request.method == "POST":
         payload = json.loads(request.body)
+
         deal_time = payload.get("deal_time")
         sid = payload.get("sid")
         cash_dividend = payload.get("cash_dividend")
         if (not deal_time) or (not sid) or (cash_dividend == None):
             res["error"] = "Data not sufficient."
         else:
-            deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
             sid = str(sid)
-            cash_dividend = int(cash_dividend)
             try:
                 validateStockId(sid)
                 c, created = Company.objects.get_or_create(
@@ -110,8 +110,8 @@ def update_or_delete_cash_dividend_record(request: HttpRequest, id):
                 )
                 cdr = CashDividendRecord.objects.get(pk=id)
                 cdr.company = c
-                cdr.deal_time = deal_time
-                cdr.cash_dividend = cash_dividend
+                cdr.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
+                cdr.cash_dividend = int(cash_dividend)
                 cdr.save()
                 res["data"] = {
                     "id": cdr.pk,
@@ -126,5 +126,6 @@ def update_or_delete_cash_dividend_record(request: HttpRequest, id):
     elif request.method == "DELETE":
         CashDividendRecord.objects.get(pk=id).delete()
         res["success"] = True
-
+    else:
+        res["error"] = "Method Not Allowed"
     return JsonResponse(res)

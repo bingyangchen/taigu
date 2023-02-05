@@ -1,189 +1,156 @@
 import json
-import datetime
-from typing import List
+from datetime import datetime
 
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
 
-from investment.account.models import User
 from ..utils import getCompanyName, validateStockId, UnknownStockIdError
 from ..models import TradeRecord, Company
 from ...decorators import require_login
 
 
 @csrf_exempt
-@require_POST
 @require_login
-def crud(request: HttpRequest):
-    helper = Helper()
-
-    mode = request.POST.get("mode")
-    _id = request.POST.get("id")
-    dealTime = request.POST.get("deal_time")
-    sid = request.POST.get("sid")
-    dealPrice = request.POST.get("deal_price")
-    dealQuantity = request.POST.get("deal_quantity")
-    handlingFee = request.POST.get("handling_fee")
-
+def create_or_list_trade_record(request: HttpRequest):
     res = {"success": False, "data": None}
-    if mode == "create":
+    if request.method == "POST":
+        payload = json.loads(request.body)
+
+        deal_time = payload.get("deal_time")
+        sid = payload.get("sid")
+        deal_price = payload.get("deal_price")
+        deal_quantity = payload.get("deal_quantity")
+        handling_fee = payload.get("handling_fee")
+
         if (
-            dealTime == None
-            or sid == None
-            or dealPrice == None
-            or dealQuantity == None
-            or handlingFee == None
+            (not deal_time)
+            or (not sid)
+            or deal_price == None
+            or deal_quantity == None
+            or handling_fee == None
         ):
             res["error"] = "Data not sufficient"
         else:
+            sid = str(sid)
             try:
-                res["data"] = helper.create(
-                    request.user,
-                    datetime.datetime.strptime(dealTime, "%Y-%m-%d").date(),
-                    str(sid),
-                    float(dealPrice),
-                    int(dealQuantity),
-                    int(handlingFee),
+                validateStockId(sid)
+                c, created = Company.objects.get_or_create(
+                    pk=sid, defaults={"name": getCompanyName(sid)}
                 )
+                r = TradeRecord.objects.create(
+                    owner=request.user,
+                    company=c,
+                    deal_time=datetime.strptime(str(deal_time), "%Y-%m-%d").date(),
+                    deal_price=float(deal_price),
+                    deal_quantity=int(deal_quantity),
+                    handling_fee=int(handling_fee),
+                )
+                res["data"] = {
+                    "id": r.pk,
+                    "deal_time": r.deal_time,
+                    "sid": r.company.pk,
+                    "company_name": r.company.name,
+                    "deal_price": r.deal_price,
+                    "deal_quantity": r.deal_quantity,
+                    "handling_fee": r.handling_fee,
+                }
                 res["success"] = True
             except UnknownStockIdError as e:
                 res["error"] = str(e)
-    elif mode == "read":
-        dealTimeList = [
-            datetime.datetime.strptime(each, "%Y-%m-%d").date()
-            for each in json.loads(request.POST.get("deal_time_list", "[]"))
+    elif request.method == "GET":
+        deal_time_list = [
+            datetime.strptime(d, "%Y-%m-%d").date()
+            for d in json.loads(request.GET.get("deal_time_list", "[]"))
         ]
-        sidList = json.loads(request.POST.get("sid_list", "[]"))
-        res["data"] = helper.read(request.user, dealTimeList, sidList)
-        res["success"] = True
-    elif mode == "update":
-        if (
-            _id == None
-            or dealTime == None
-            or sid == None
-            or dealPrice == None
-            or dealQuantity == None
-            or handlingFee == None
-        ):
-            res["error"] = "Data not sufficient."
-        else:
-            try:
-                res["data"] = helper.update(
-                    _id,
-                    datetime.datetime.strptime(dealTime, "%Y-%m-%d").date(),
-                    str(sid),
-                    float(dealPrice),
-                    int(dealQuantity),
-                    int(handlingFee),
-                )
-                res["success"] = True
-            except UnknownStockIdError as e:
-                res["error"] = str(e)
-    elif mode == "delete":
-        if _id == None:
-            res["error"] = "Data not sufficient."
-        else:
-            helper.delete(_id)
-            res["success"] = True
-    else:
-        res["error"] = "Mode Not Exsist"
+        sid_list = json.loads(request.GET.get("sid_list", "[]"))
 
+        if deal_time_list != [] or sid_list != []:
+            if deal_time_list != [] and sid_list != []:
+                queryset = request.user.trade_records.filter(
+                    deal_time__in=deal_time_list
+                ).filter(company__pk__in=sid_list)
+            elif deal_time_list == []:
+                queryset = request.user.trade_records.filter(company__pk__in=sid_list)
+            else:
+                queryset = request.user.trade_records.filter(
+                    deal_time__in=deal_time_list
+                )
+        else:
+            queryset = request.user.trade_records.all()
+
+        queryset = queryset.order_by("-deal_time", "-created_at")
+
+        result = []
+        for tr in queryset:
+            result.append(
+                {
+                    "id": tr.pk,
+                    "deal_time": tr.deal_time,
+                    "sid": tr.company.pk,
+                    "company_name": tr.company.name,
+                    "deal_price": tr.deal_price,
+                    "deal_quantity": tr.deal_quantity,
+                    "handling_fee": tr.handling_fee,
+                }
+            )
+        res["data"] = result
+        res["success"] = True
+    else:
+        res["error"] = "Method Not Allowed"
     return JsonResponse(res)
 
 
-class Helper:
-    def __init__(self):
-        pass
+@csrf_exempt
+@require_login
+def update_or_delete_trade_record(request: HttpRequest, id):
+    res = {"success": False, "data": None}
+    id = int(id)
 
-    def create(
-        self,
-        user: User,
-        dealTime: datetime.date,
-        sid: str,
-        dealPrice: float,
-        dealQuantity: int,
-        handlingFee: int,
-    ):
-        validateStockId(sid)
-        c, created = Company.objects.get_or_create(
-            pk=sid, defaults={"name": getCompanyName(sid)}
-        )
-        r = TradeRecord.objects.create(
-            owner=user,
-            company=c,
-            deal_time=dealTime,
-            deal_price=float(dealPrice),
-            deal_quantity=int(dealQuantity),
-            handling_fee=int(handlingFee),
-        )
-        return {
-            "id": r.pk,
-            "deal_time": r.deal_time,
-            "sid": r.company.pk,
-            "company_name": r.company.name,
-            "deal_price": r.deal_price,
-            "deal_quantity": r.deal_quantity,
-            "handling_fee": r.handling_fee,
-        }
+    if request.method == "POST":
+        payload = json.loads(request.body)
 
-    def read(self, user: User, dealTimeList, sidList) -> List:
-        if dealTimeList != [] or sidList != []:
-            if dealTimeList != [] and sidList != []:
-                result = user.trade_records.filter(deal_time__in=dealTimeList).filter(
-                    company__pk__in=sidList
-                )
-            elif dealTimeList == []:
-                result = user.trade_records.filter(company__pk__in=sidList)
-            else:
-                result = user.trade_records.filter(deal_time__in=dealTimeList)
+        deal_time = payload.get("deal_time")
+        sid = payload.get("sid")
+        deal_price = payload.get("deal_price")
+        deal_quantity = payload.get("deal_quantity")
+        handling_fee = payload.get("handling_fee")
+        if (
+            (not deal_time)
+            or (not sid)
+            or deal_price == None
+            or deal_quantity == None
+            or handling_fee == None
+        ):
+            res["error"] = "Data not sufficient."
         else:
-            result = user.trade_records.all()
-        result = result.order_by("-deal_time", "-created_at")
-        dictResultList = []
-        for each in result:
-            dictResultList.append(
-                {
-                    "id": each.pk,
-                    "deal_time": each.deal_time,
-                    "sid": each.company.pk,
-                    "company_name": each.company.name,
-                    "deal_price": each.deal_price,
-                    "deal_quantity": each.deal_quantity,
-                    "handling_fee": each.handling_fee,
+            sid = str(sid)
+            try:
+                validateStockId(sid)
+                c, created = Company.objects.get_or_create(
+                    pk=sid, defaults={"name": getCompanyName(sid)}
+                )
+                tr = TradeRecord.objects.get(pk=id)
+                tr.company = c
+                tr.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
+                tr.deal_price = float(deal_price)
+                tr.deal_quantity = int(deal_quantity)
+                tr.handling_fee = int(handling_fee)
+                tr.save()
+                res["data"] = {
+                    "id": tr.pk,
+                    "deal_time": tr.deal_time,
+                    "sid": tr.company.pk,
+                    "company_name": tr.company.name,
+                    "deal_price": tr.deal_price,
+                    "deal_quantity": tr.deal_quantity,
+                    "handling_fee": tr.handling_fee,
                 }
-            )
-        return dictResultList
-
-    def update(
-        self,
-        _id,
-        dealTime: datetime.date,
-        sid: str,
-        dealPrice: float,
-        dealQuantity: int,
-        handlingFee: int,
-    ):
-        validateStockId(sid)
-        c, created = Company.objects.get_or_create(
-            pk=sid, defaults={"name": getCompanyName(sid)}
-        )
-        r = TradeRecord.objects.get(pk=_id)
-        r.company = c
-        r.deal_time = dealTime
-        r.deal_price = float(dealPrice)
-        r.deal_quantity = int(dealQuantity)
-        r.handling_fee = int(handlingFee)
-        r.save()
-        return {
-            "id": r.pk,
-            "deal_time": r.deal_time,
-            "sid": r.company.pk,
-            "company_name": r.company.name,
-            "deal_price": r.deal_price,
-            "deal_quantity": r.deal_quantity,
-            "handling_fee": r.handling_fee,
-        }
-
-    def delete(self, _id):
-        TradeRecord.objects.get(pk=_id).delete()
+                res["success"] = True
+            except UnknownStockIdError as e:
+                res["error"] = str(e)
+    elif request.method == "DELETE":
+        TradeRecord.objects.get(pk=id).delete()
+        res["success"] = True
+    else:
+        res["error"] = "Method Not Allowed"
+    return JsonResponse(res)
