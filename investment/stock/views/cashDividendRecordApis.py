@@ -99,6 +99,7 @@ def update_or_delete_cash_dividend_record(request: HttpRequest, id):
         deal_time = payload.get("deal_time")
         sid = payload.get("sid")
         cash_dividend = payload.get("cash_dividend")
+
         if (not deal_time) or (not sid) or (cash_dividend == None):
             res["error"] = "Data not sufficient."
         else:
