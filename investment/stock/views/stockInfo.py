@@ -79,44 +79,43 @@ class Helper:
         #     .values("company__pk")
         # )
 
-        sid_list_need_fetching = []
+        companies_need_fetching = []
         for c in companies:
             if si := StockInfo.objects.filter(company__pk=c.pk).first():
                 if si.date != date:
-                    sid_list_need_fetching.append(c.pk)
+                    companies_need_fetching.append(
+                        {"sid": c.pk, "trade_type": si.trade_type}
+                    )
                 else:
                     self.result.append(
                         {
-                            "date": si.date,
                             "sid": c.pk,
                             "name": c.name,
-                            "trade_type": si.trade_type,
                             "quantity": si.quantity,
-                            "open": si.open_price,
                             "close": si.close_price,
-                            "highest": si.highest_price,
-                            "lowest": si.lowest_price,
                             "fluct_price": si.fluct_price,
                             "fluct_rate": si.fluct_rate,
                         }
                     )
             else:
-                sid_list_need_fetching.append(c.pk)
+                companies_need_fetching.append({"sid": c.pk, "trade_type": None})
 
-        if len(sid_list_need_fetching) > 0:
-            self.fetch_and_store(sid_list_need_fetching, date)
+        self.fetch_and_store(companies_need_fetching, date)
 
-    def fetch_and_store(self, sid_list, date: datetime.date):
-        if len(sid_list) == 0:
+    def fetch_and_store(self, companies_need_fetching, date: datetime.date):
+        if len(companies_need_fetching) == 0:
             return
 
         all_data = []
 
-        # 70 sids per request
-        sids_to_solved = sid_list[:70]
+        # 100 sids per request
+        to_solved = companies_need_fetching[:100]
         query_string = ""
-        for sid in sids_to_solved:
-            query_string += f"tse_{sid}.tw|otc_{sid}.tw|"
+        for each in to_solved:
+            if trade_type := each["trade_type"]:
+                query_string += f"{trade_type}_{each['sid']}.tw|"
+            else:
+                query_string += f"tse_{each['sid']}.tw|otc_{each['sid']}.tw|"
 
         res = requests.get(self.endpoint + query_string)
         res = json.loads(PyQuery(res.text).text())["msgArray"] or []
@@ -133,9 +132,10 @@ class Helper:
                 row["trade_type"] = each["ex"]
                 row["quantity"] = each["v"]
                 row["open_price"] = str(round(float(each["o"]), 2))
-                try:  # 收漲停時，z 會是 "-"，所以改看最高價
+                try:
                     row["close_price"] = str(round(float(each["z"]), 2))
                 except:
+                    # 收漲停或尚未收盤時，z 會是 "-"，所以改看最高價
                     row["close_price"] = str(round(float(each["h"]), 2))
                 row["highest_price"] = str(round(float(each["h"]), 2))
                 row["lowest_price"] = str(round(float(each["l"]), 2))
@@ -158,22 +158,19 @@ class Helper:
             StockInfo.objects.update_or_create(company=each["company"], defaults=each)
 
         # Prepare the result
-        for each in StockInfo.objects.filter(company__pk__in=sids_to_solved):
+        for each in StockInfo.objects.filter(
+            company__pk__in=list(map(lambda x: x["sid"], to_solved))
+        ):
             self.result.append(
                 {
-                    "date": each.date,
                     "sid": each.company.pk,
                     "name": each.company.name,
-                    "trade_type": each.trade_type,
                     "quantity": each.quantity,
-                    "open": each.open_price,
                     "close": each.close_price,
-                    "highest": each.highest_price,
-                    "lowest": each.lowest_price,
                     "fluct_price": each.fluct_price,
                     "fluct_rate": each.fluct_rate,
                 }
             )
 
         # Process the rest sids
-        self.fetch_and_store(sid_list[70:], date)
+        self.fetch_and_store(companies_need_fetching[100:], date)
