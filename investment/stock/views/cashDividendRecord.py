@@ -4,32 +4,31 @@ import json
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 
-from ..utils import getCompanyName, validateStockId, UnknownStockIdError
+from ..utils import get_company_name, validate_stock_id, UnknownStockIdError
 from ..models import CashDividendRecord, Company
 from ...decorators import require_login
 
 
 @csrf_exempt
 @require_login
-def create_or_list_cash_dividend_record(request: HttpRequest):
+def create_or_list(request: HttpRequest):
     res = {"success": False, "data": None}
     if request.method == "POST":
         payload = json.loads(request.body)
-
-        deal_time = payload.get("deal_time")
-        sid = payload.get("sid")
-        cash_dividend = payload.get("cash_dividend")
-
-        if (not deal_time) or (not sid) or (cash_dividend == None):
-            res["error"] = "Data not sufficient."
+        if (
+            (not (deal_time := payload.get("deal_time")))
+            or (not (sid := payload.get("sid")))
+            or ((cash_dividend := payload.get("cash_dividend")) == None)
+        ):
+            res["error"] = "Data Not Sufficient"
         else:
             deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
             sid = str(sid)
             cash_dividend = int(cash_dividend)
             try:
-                validateStockId(sid)
+                validate_stock_id(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": getCompanyName(sid)}
+                    pk=sid, defaults={"name": get_company_name(sid)}
                 )
                 cdr = CashDividendRecord.objects.create(
                     owner=request.user,
@@ -89,25 +88,24 @@ def create_or_list_cash_dividend_record(request: HttpRequest):
 
 @csrf_exempt
 @require_login
-def update_or_delete_cash_dividend_record(request: HttpRequest, id):
+def update_or_delete(request: HttpRequest, id):
     res = {"success": False, "data": None}
     id = int(id)
 
     if request.method == "POST":
         payload = json.loads(request.body)
-
-        deal_time = payload.get("deal_time")
-        sid = payload.get("sid")
-        cash_dividend = payload.get("cash_dividend")
-
-        if (not deal_time) or (not sid) or (cash_dividend == None):
-            res["error"] = "Data not sufficient."
+        if (
+            (not (deal_time := payload.get("deal_time")))
+            or (not (sid := payload.get("sid")))
+            or ((cash_dividend := payload.get("cash_dividend")) == None)
+        ):
+            res["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             try:
-                validateStockId(sid)
+                validate_stock_id(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": getCompanyName(sid)}
+                    pk=sid, defaults={"name": get_company_name(sid)}
                 )
                 cdr = CashDividendRecord.objects.get(pk=id)
                 cdr.company = c

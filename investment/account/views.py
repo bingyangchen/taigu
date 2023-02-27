@@ -54,7 +54,7 @@ def login(request: HttpRequest):
             res["error"] = str(e)
             return JsonResponse(res, status=400)
     else:
-        res["error"] = "Info not sufficient."
+        res["error"] = "Data Not Sufficient"
         return JsonResponse(res, status=400)
 
 
@@ -138,5 +138,5 @@ def delete(request: HttpRequest):
             res["error"] = "Wrong Password"
             return JsonResponse(res, status=400)
     else:
-        res["error"] = "DELETE method is required for this endpoint."
+        res["error"] = "DELETE Method Required"
         return JsonResponse(res, status=405)

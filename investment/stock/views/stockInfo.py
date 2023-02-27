@@ -19,20 +19,19 @@ from ...decorators import require_login
 def info(request: HttpRequest):
     helper = Helper()
 
-    date = request.GET.get("date")
-    sidList = request.GET.get("sid-list", [])
-    sidList = sidList.split(",") if len(sidList) > 0 else sidList
+    sid_list = request.GET.get("sid-list", [])
+    sid_list = sid_list.split(",") if len(sid_list) > 0 else sid_list
 
     res = {"success": False, "data": []}
     try:
-        if date:
-            helper.stocksSingleDay(
+        if date := request.GET.get("date"):
+            helper.get_info(
                 user=request.user,
                 date=datetime.datetime.strptime(date, "%Y-%m-%d").date(),
-                sidList=sidList,
+                sid_list=sid_list,
             )
         else:
-            helper.stocksSingleDay(user=request.user, sidList=sidList)
+            helper.get_info(user=request.user, sid_list=sid_list)
         res["data"] = helper.result
         res["success"] = True
     except Exception as e:
@@ -44,32 +43,32 @@ class Helper:
     def __init__(self):
         # info of multiple stocks, single day
         # self.endPoint1 = "https://www.twse.com.tw/exchangeReport/MI_INDEX"
-        self.endPoint = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch="
+        self.endpoint = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch="
 
         # info of single stock, multiple days (OTC stocks is not available)
         # self.endPoint2 = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210809&stockNo=2330"
         self.result = []
 
-    def stocksSingleDay(
+    def get_info(
         self,
         user: User,
         date: datetime.date = (
             datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)
         ).date(),
-        sidList=[],
+        sid_list=[],
     ):
-        currentHour = int(
+        current_hour = int(
             (datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)).strftime(
                 "%H"
             )
         )
-        if currentHour < 14:
+        if current_hour < 14:
             date -= datetime.timedelta(days=1)
 
         companies = (
             Company.objects.all()
-            if sidList == []
-            else Company.objects.filter(pk__in=sidList)
+            if sid_list == []
+            else Company.objects.filter(pk__in=sid_list)
         )
 
         # SELECT sid from trade_record GROUP BY sid HAVING SUM(deal_quantity) > 0
@@ -80,11 +79,11 @@ class Helper:
         #     .values("company__pk")
         # )
 
-        needToFetchSidList = []
+        sid_list_need_fetching = []
         for c in companies:
             if si := StockInfo.objects.filter(company__pk=c.pk).first():
                 if si.date != date:
-                    needToFetchSidList.append(c.pk)
+                    sid_list_need_fetching.append(c.pk)
                 else:
                     self.result.append(
                         {
@@ -102,64 +101,64 @@ class Helper:
                         }
                     )
             else:
-                needToFetchSidList.append(c.pk)
+                sid_list_need_fetching.append(c.pk)
 
-        if len(needToFetchSidList) > 0:
-            self.fetchAndStore(needToFetchSidList, date)
+        if len(sid_list_need_fetching) > 0:
+            self.fetch_and_store(sid_list_need_fetching, date)
 
-    def fetchAndStore(self, sidList, date: datetime.date):
-        if len(sidList) == 0:
+    def fetch_and_store(self, sid_list, date: datetime.date):
+        if len(sid_list) == 0:
             return
 
-        allData = []
+        all_data = []
 
         # 70 sids per request
-        sidsToSolved = sidList[:70]
-        queryString = ""
-        for sid in sidsToSolved:
-            queryString += f"tse_{sid}.tw|otc_{sid}.tw|"
+        sids_to_solved = sid_list[:70]
+        query_string = ""
+        for sid in sids_to_solved:
+            query_string += f"tse_{sid}.tw|otc_{sid}.tw|"
 
-        res = requests.get(self.endPoint + queryString)
+        res = requests.get(self.endpoint + query_string)
         res = json.loads(PyQuery(res.text).text())["msgArray"] or []
 
         # Arrange the data fetched
         for each in res:
-            dataRow = {}
+            row = {}
             try:
                 c, created = Company.objects.update_or_create(
                     pk=each["ch"].split(".")[0], defaults={"name": each["n"]}
                 )
-                dataRow["company"] = c
-                dataRow["date"] = date
-                dataRow["trade_type"] = each["ex"]
-                dataRow["quantity"] = each["v"]
-                dataRow["open_price"] = str(round(float(each["o"]), 2))
+                row["company"] = c
+                row["date"] = date
+                row["trade_type"] = each["ex"]
+                row["quantity"] = each["v"]
+                row["open_price"] = str(round(float(each["o"]), 2))
                 try:  # 收漲停時，z 會是 "-"，所以改看最高價
-                    dataRow["close_price"] = str(round(float(each["z"]), 2))
+                    row["close_price"] = str(round(float(each["z"]), 2))
                 except:
-                    dataRow["close_price"] = str(round(float(each["h"]), 2))
-                dataRow["highest_price"] = str(round(float(each["h"]), 2))
-                dataRow["lowest_price"] = str(round(float(each["l"]), 2))
-                dataRow["fluct_price"] = str(
-                    round((float(dataRow["close_price"]) - float(each["y"])), 2)
+                    row["close_price"] = str(round(float(each["h"]), 2))
+                row["highest_price"] = str(round(float(each["h"]), 2))
+                row["lowest_price"] = str(round(float(each["l"]), 2))
+                row["fluct_price"] = str(
+                    round((float(row["close_price"]) - float(each["y"])), 2)
                 )
-                dataRow["fluct_rate"] = str(
+                row["fluct_rate"] = str(
                     round(
-                        (float(dataRow["close_price"]) - float(each["y"]))
+                        (float(row["close_price"]) - float(each["y"]))
                         / float(each["y"]),
                         4,
                     )
                 )
             except:
                 continue
-            allData.append(dataRow)
+            all_data.append(row)
 
-        # store into database
-        for each in allData:
+        # Store to database
+        for each in all_data:
             StockInfo.objects.update_or_create(company=each["company"], defaults=each)
 
-        # prepare result
-        for each in StockInfo.objects.filter(company__pk__in=sidsToSolved):
+        # Prepare the result
+        for each in StockInfo.objects.filter(company__pk__in=sids_to_solved):
             self.result.append(
                 {
                     "date": each.date,
@@ -177,4 +176,4 @@ class Helper:
             )
 
         # Process the rest sids
-        self.fetchAndStore(sidList[70:], date)
+        self.fetch_and_store(sid_list[70:], date)

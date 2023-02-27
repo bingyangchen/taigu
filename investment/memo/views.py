@@ -5,7 +5,11 @@ from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse, HttpRequest
 
 from investment.stock.models import Company
-from investment.stock.utils import getCompanyName, validateStockId, UnknownStockIdError
+from investment.stock.utils import (
+    get_company_name,
+    validate_stock_id,
+    UnknownStockIdError,
+)
 from .models import StockMemo, TradePlan
 from ..decorators import require_login
 
@@ -23,9 +27,9 @@ def update_or_create_stock_memo(request: HttpRequest, sid):
     note = payload.get("note")
 
     try:
-        validateStockId(sid)
+        validate_stock_id(sid)
         c, created = Company.objects.get_or_create(
-            pk=sid, defaults={"name": getCompanyName(sid)}
+            pk=sid, defaults={"name": get_company_name(sid)}
         )
         m = StockMemo.objects.filter(owner=request.user, company=c).first()
         if m:
@@ -37,7 +41,7 @@ def update_or_create_stock_memo(request: HttpRequest, sid):
                 m.note = note
             m.save()
         else:
-            m: StockMemo = StockMemo.objects.create(
+            m = StockMemo.objects.create(
                 owner=request.user,
                 company=c,
                 business=business or "",
@@ -94,26 +98,20 @@ def create_or_list_trade_plan(request: HttpRequest):
     res = {"success": False, "data": None}
     if request.method == "POST":
         payload = json.loads(request.body)
-
-        sid = payload.get("sid")
-        plan_type = payload.get("plan_type")
-        target_price = payload.get("target_price")
-        target_quantity = payload.get("target_quantity")
-
         if (
-            (not sid)
-            or (not plan_type)
-            or (target_price == None)
-            or (target_quantity == None)
+            (not (sid := payload.get("sid")))
+            or (not (plan_type := payload.get("plan_type")))
+            or ((target_price := payload.get("target_price")) == None)
+            or ((target_quantity := payload.get("target_quantity")) == None)
         ):
-            res["error"] = "Data not sufficient."
+            res["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
-                validateStockId(sid)
+                validate_stock_id(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": getCompanyName(sid)}
+                    pk=sid, defaults={"name": get_company_name(sid)}
                 )
                 p: TradePlan = TradePlan.objects.create(
                     owner=request.user,
@@ -169,26 +167,20 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
 
     if request.method == "POST":
         payload = json.loads(request.body)
-
-        sid = payload.get("sid")
-        plan_type = payload.get("plan_type")
-        target_price = payload.get("target_price")
-        target_quantity = payload.get("target_quantity")
-
         if (
-            (not sid)
-            or (not plan_type)
-            or (target_price == None)
-            or (target_quantity == None)
+            (not (sid := payload.get("sid")))
+            or (not (plan_type := payload.get("plan_type")))
+            or ((target_price := payload.get("target_price")) == None)
+            or ((target_quantity := payload.get("target_quantity")) == None)
         ):
-            res["error"] = "Data not sufficient."
+            res["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
-                validateStockId(sid)
+                validate_stock_id(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": getCompanyName(sid)}
+                    pk=sid, defaults={"name": get_company_name(sid)}
                 )
                 p: TradePlan = TradePlan.objects.get(pk=id)
                 p.company = c

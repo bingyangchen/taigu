@@ -10,9 +10,9 @@ def validate_registration_info(username: str, email: str, password: str):
     validate_password(password)
 
     if not (username and email and password):
-        raise Exception("Please complete the form.")
+        raise Exception("Data Not Sufficient")
     elif User.objects.filter(email=email).first():
-        raise Exception("Duplicated email.")
+        raise Exception("Duplicated Email")
 
 
 def update_user(**kwargs) -> User:
@@ -24,7 +24,7 @@ def update_user(**kwargs) -> User:
     new_password = kwargs.get("new_password")
 
     if id == None:
-        raise Exception("Please provide user id.")
+        raise Exception("Unknown User")
     else:
         u: User = User.objects.get(pk=id)
         if username or (username == ""):
@@ -32,7 +32,7 @@ def update_user(**kwargs) -> User:
 
         if email:
             if (u2 := User.objects.filter(email=email).first()) and u2 != u:
-                raise Exception("Duplicated email.")
+                raise Exception("Duplicated Email")
             validate_email(email)
             u.email = email
 
@@ -46,11 +46,9 @@ def update_user(**kwargs) -> User:
                 validate_password(new_password)
                 u.set_password(new_password)
             else:
-                raise Exception("The original password is wrong.")
-        elif old_password:
-            raise Exception("Please provide new password.")
-        elif new_password:
-            raise Exception("Please provide the original password.")
+                raise Exception("Wrong Password")
+        elif old_password or new_password:
+            raise Exception("Data Not Sufficient")
 
         u.save()
         return u

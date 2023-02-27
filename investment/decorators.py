@@ -6,7 +6,7 @@ def require_login(func):
         if request.user:
             return func(request, *arg, **args)
         else:
-            return JsonResponse({"error": "Please log in."}, status=401)
+            return JsonResponse({"error": "Login Required"}, status=401)
 
     wrap.__name__ = func.__name__
     return wrap

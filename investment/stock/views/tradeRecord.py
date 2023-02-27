@@ -4,40 +4,33 @@ from datetime import datetime
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 
-from ..utils import getCompanyName, validateStockId, UnknownStockIdError
+from ..utils import get_company_name, validate_stock_id, UnknownStockIdError
 from ..models import TradeRecord, Company
 from ...decorators import require_login
 
 
 @csrf_exempt
 @require_login
-def create_or_list_trade_record(request: HttpRequest):
+def create_or_list(request: HttpRequest):
     res = {"success": False, "data": None}
     if request.method == "POST":
         payload = json.loads(request.body)
-
-        deal_time = payload.get("deal_time")
-        sid = payload.get("sid")
-        deal_price = payload.get("deal_price")
-        deal_quantity = payload.get("deal_quantity")
-        handling_fee = payload.get("handling_fee")
-
         if (
-            (not deal_time)
-            or (not sid)
-            or deal_price == None
-            or deal_quantity == None
-            or handling_fee == None
+            (not (deal_time := payload.get("deal_time")))
+            or (not (sid := payload.get("sid")))
+            or ((deal_price := payload.get("deal_price")) == None)
+            or ((deal_quantity := payload.get("deal_quantity")) == None)
+            or ((handling_fee := payload.get("handling_fee")) == None)
         ):
-            res["error"] = "Data not sufficient"
+            res["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             try:
-                validateStockId(sid)
+                validate_stock_id(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": getCompanyName(sid)}
+                    pk=sid, defaults={"name": get_company_name(sid)}
                 )
-                r = TradeRecord.objects.create(
+                tr = TradeRecord.objects.create(
                     owner=request.user,
                     company=c,
                     deal_time=datetime.strptime(str(deal_time), "%Y-%m-%d").date(),
@@ -46,13 +39,13 @@ def create_or_list_trade_record(request: HttpRequest):
                     handling_fee=int(handling_fee),
                 )
                 res["data"] = {
-                    "id": r.pk,
-                    "deal_time": r.deal_time,
-                    "sid": r.company.pk,
-                    "company_name": r.company.name,
-                    "deal_price": r.deal_price,
-                    "deal_quantity": r.deal_quantity,
-                    "handling_fee": r.handling_fee,
+                    "id": tr.pk,
+                    "deal_time": tr.deal_time,
+                    "sid": tr.company.pk,
+                    "company_name": tr.company.name,
+                    "deal_price": tr.deal_price,
+                    "deal_quantity": tr.deal_quantity,
+                    "handling_fee": tr.handling_fee,
                 }
                 res["success"] = True
             except UnknownStockIdError as e:
@@ -102,32 +95,26 @@ def create_or_list_trade_record(request: HttpRequest):
 
 @csrf_exempt
 @require_login
-def update_or_delete_trade_record(request: HttpRequest, id):
+def update_or_delete(request: HttpRequest, id):
     res = {"success": False, "data": None}
     id = int(id)
 
     if request.method == "POST":
         payload = json.loads(request.body)
-
-        deal_time = payload.get("deal_time")
-        sid = payload.get("sid")
-        deal_price = payload.get("deal_price")
-        deal_quantity = payload.get("deal_quantity")
-        handling_fee = payload.get("handling_fee")
         if (
-            (not deal_time)
-            or (not sid)
-            or deal_price == None
-            or deal_quantity == None
-            or handling_fee == None
+            (not (deal_time := payload.get("deal_time")))
+            or (not (sid := payload.get("sid")))
+            or ((deal_price := payload.get("deal_price")) == None)
+            or ((deal_quantity := payload.get("deal_quantity")) == None)
+            or ((handling_fee := payload.get("handling_fee")) == None)
         ):
-            res["error"] = "Data not sufficient."
+            res["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             try:
-                validateStockId(sid)
+                validate_stock_id(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": getCompanyName(sid)}
+                    pk=sid, defaults={"name": get_company_name(sid)}
                 )
                 tr = TradeRecord.objects.get(pk=id)
                 tr.company = c
