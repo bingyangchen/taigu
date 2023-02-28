@@ -17,11 +17,11 @@ heroku run python manage.py migrate -a investment-backend
 ## 開啟雲端 PostgreSQL CLI
 
 ```sh
-heroku run python manage.py dbshell
+heroku run python manage.py dbshell -a investment-backend
 ```
 
 ## 開啟雲端 Django CLI
 
 ```sh
-heroku run python manage.py shell
+heroku run python manage.py shell -a investment-backend
 ```
