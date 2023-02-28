@@ -4,7 +4,7 @@ from datetime import datetime
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 
-from ..utils import get_company_name, validate_stock_id, UnknownStockIdError
+from ..utils import get_company_info, validate_stock_id, UnknownStockIdError
 from ..models import TradeRecord, Company
 from ...decorators import require_login
 
@@ -27,8 +27,13 @@ def create_or_list(request: HttpRequest):
             sid = str(sid)
             try:
                 validate_stock_id(sid)
+                company_info = get_company_info(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": get_company_name(sid)}
+                    pk=sid,
+                    defaults={
+                        "name": company_info["name"],
+                        "trade_type": company_info["trade_type"],
+                    },
                 )
                 tr = TradeRecord.objects.create(
                     owner=request.user,
@@ -113,8 +118,13 @@ def update_or_delete(request: HttpRequest, id):
             sid = str(sid)
             try:
                 validate_stock_id(sid)
+                company_info = get_company_info(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": get_company_name(sid)}
+                    pk=sid,
+                    defaults={
+                        "name": company_info["name"],
+                        "trade_type": company_info["trade_type"],
+                    },
                 )
                 tr = TradeRecord.objects.get(pk=id)
                 tr.company = c

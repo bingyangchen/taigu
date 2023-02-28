@@ -2,11 +2,13 @@ from django.db import models
 
 from investment.account.models import User
 from investment.core.models import CreateUpdateDateModel
+from . import Frequency, TradeType
 
 
 class Company(models.Model):
     stock_id = models.CharField(max_length=32, primary_key=True)
     name = models.CharField(max_length=32, blank=False, null=False)
+    trade_type = models.CharField(max_length=4, choices=TradeType.CHOICES, null=True)
 
     class Meta:
         db_table = "company"
@@ -20,20 +22,35 @@ class StockInfo(CreateUpdateDateModel):
         Company, on_delete=models.CASCADE, related_name="stock_info"
     )
     date = models.DateField()
-    trade_type = models.CharField(max_length=32, blank=False, null=False)
     quantity = models.BigIntegerField()
-    open_price = models.FloatField()
     close_price = models.FloatField()
-    highest_price = models.FloatField()
-    lowest_price = models.FloatField()
     fluct_price = models.FloatField()
-    fluct_rate = models.FloatField()
 
     class Meta:
         db_table = "stock_info"
 
     def __str__(self):
-        return f"{self.company.stock_id}({self.date})"
+        return f"{self.company.pk}({self.date})"
+
+
+class History(models.Model):
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name="history"
+    )
+    frequency = models.CharField(
+        max_length=8, choices=Frequency.CHOICES, null=False, default=Frequency.DAILY
+    )
+    date = models.DateField()
+    quantity = models.BigIntegerField()
+    close_price = models.FloatField()
+    fluct_price = models.FloatField()
+
+    class Meta:
+        db_table = "history"
+        unique_together = [["company", "frequency", "date"]]
+
+    def __str__(self):
+        return f"{self.company.pk}({self.date}-{self.frequency})"
 
 
 class TradeRecord(CreateUpdateDateModel):

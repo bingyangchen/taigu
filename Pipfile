@@ -17,6 +17,7 @@ djangorestframework = "==3.13.1"
 pillow = "==9.3.0"
 django-cors-headers = "==3.13.0"
 django-csp = "==3.7"
+django-apscheduler = "==0.6.2"
 
 [dev-packages]
 

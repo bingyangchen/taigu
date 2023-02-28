@@ -6,7 +6,7 @@ from django.http import JsonResponse, HttpRequest
 
 from investment.stock.models import Company
 from investment.stock.utils import (
-    get_company_name,
+    get_company_info,
     validate_stock_id,
     UnknownStockIdError,
 )
@@ -28,8 +28,13 @@ def update_or_create_stock_memo(request: HttpRequest, sid):
 
     try:
         validate_stock_id(sid)
+        company_info = get_company_info(sid)
         c, created = Company.objects.get_or_create(
-            pk=sid, defaults={"name": get_company_name(sid)}
+            pk=sid,
+            defaults={
+                "name": company_info["name"],
+                "trade_type": company_info["trade_type"],
+            },
         )
         m = StockMemo.objects.filter(owner=request.user, company=c).first()
         if m:
@@ -110,8 +115,13 @@ def create_or_list_trade_plan(request: HttpRequest):
             target_quantity = int(target_quantity)
             try:
                 validate_stock_id(sid)
+                company_info = get_company_info(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": get_company_name(sid)}
+                    pk=sid,
+                    defaults={
+                        "name": company_info["name"],
+                        "trade_type": company_info["trade_type"],
+                    },
                 )
                 p: TradePlan = TradePlan.objects.create(
                     owner=request.user,
@@ -179,8 +189,13 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
             target_quantity = int(target_quantity)
             try:
                 validate_stock_id(sid)
+                company_info = get_company_info(sid)
                 c, created = Company.objects.get_or_create(
-                    pk=sid, defaults={"name": get_company_name(sid)}
+                    pk=sid,
+                    defaults={
+                        "name": company_info["name"],
+                        "trade_type": company_info["trade_type"],
+                    },
                 )
                 p: TradePlan = TradePlan.objects.get(pk=id)
                 p.company = c
