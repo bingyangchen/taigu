@@ -19,7 +19,7 @@ class Company(models.Model):
 
 class StockInfo(CreateUpdateDateModel):
     company = models.OneToOneField(
-        Company, on_delete=models.CASCADE, related_name="stock_info"
+        Company, on_delete=models.CASCADE, related_name="stock_info", db_index=True
     )
     date = models.DateField()
     quantity = models.BigIntegerField()
@@ -35,10 +35,14 @@ class StockInfo(CreateUpdateDateModel):
 
 class History(models.Model):
     company = models.ForeignKey(
-        Company, on_delete=models.CASCADE, related_name="history"
+        Company, on_delete=models.CASCADE, related_name="history", db_index=True
     )
     frequency = models.CharField(
-        max_length=8, choices=Frequency.CHOICES, null=False, default=Frequency.DAILY
+        max_length=8,
+        choices=Frequency.CHOICES,
+        null=False,
+        default=Frequency.DAILY,
+        db_index=True,
     )
     date = models.DateField()
     quantity = models.BigIntegerField()
@@ -55,7 +59,7 @@ class History(models.Model):
 
 class TradeRecord(CreateUpdateDateModel):
     owner = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="trade_records"
+        User, on_delete=models.CASCADE, related_name="trade_records", db_index=True
     )
     company = models.ForeignKey(Company, on_delete=models.PROTECT)
     deal_time = models.DateField()
@@ -72,7 +76,10 @@ class TradeRecord(CreateUpdateDateModel):
 
 class CashDividendRecord(CreateUpdateDateModel):
     owner = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="cash_dividend_records"
+        User,
+        on_delete=models.CASCADE,
+        related_name="cash_dividend_records",
+        db_index=True,
     )
     company = models.ForeignKey(Company, on_delete=models.PROTECT)
     deal_time = models.DateField()

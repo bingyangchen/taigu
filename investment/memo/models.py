@@ -7,7 +7,7 @@ from investment.stock.models import Company
 
 class StockMemo(CreateUpdateDateModel):
     owner = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="stock_memos"
+        User, on_delete=models.CASCADE, related_name="stock_memos", db_index=True
     )
     company = models.OneToOneField(Company, on_delete=models.PROTECT)
     business = models.TextField(default="")
@@ -23,7 +23,7 @@ class StockMemo(CreateUpdateDateModel):
 
 class TradePlan(CreateUpdateDateModel):
     owner = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="trade_plans"
+        User, on_delete=models.CASCADE, related_name="trade_plans", db_index=True
     )
     company = models.ForeignKey(Company, on_delete=models.PROTECT)
     plan_type = models.CharField(max_length=32)

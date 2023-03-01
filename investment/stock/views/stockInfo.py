@@ -2,7 +2,8 @@ from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
-from ..models import StockInfo
+from .. import Frequency
+from ..models import StockInfo, History
 from ...decorators import require_login
 
 
@@ -43,14 +44,12 @@ def all_companies_single_day(request: HttpRequest):
 @require_GET
 @require_login
 def single_company_multiple_days(request: HttpRequest, sid):
+    sid = str(sid)
     res = {"success": False, "data": []}
     try:
-        frequency = request.GET.get("frequency", "DAILY")
+        frequency = request.GET.get("frequency", Frequency.DAILY)
         count = int(request.GET.get("count", "60"))
-        # helper.get_single_stock_info(
-        #     user=request.user, sid=str(sid), frequency=frequency, count=count
-        # )
-        # res["data"] = helper.result
+        # History.objects.filter(company__pk=sid, frequency=frequency)
         res["success"] = True
     except Exception as e:
         res["error"] = str(e)
