@@ -43,7 +43,7 @@ def fetch_and_store_real_time_info():
     queryset = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )
-    all = list(map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", queryset))[:5]
+    all = list(map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", queryset))
     while len(all) > 0:
         ex_ch = "|".join(all[:150])
         url = f"https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch={ex_ch}"
@@ -72,7 +72,7 @@ def fetch_and_store_real_time_info():
                     if price:
                         si.close_price = price
                         if old_price:
-                            si.fluct_price = price - old_price
+                            si.fluct_price = round(price - old_price, 2)
                     si.save()
                 else:
                     StockInfo.objects.create(
@@ -80,7 +80,9 @@ def fetch_and_store_real_time_info():
                         date=date,
                         quantity=quantity,
                         close_price=price,
-                        fluct_price=(price - old_price) if (price and old_price) else 0,
+                        fluct_price=round(price - old_price, 2)
+                        if (price and old_price)
+                        else 0,
                     )
         except Exception as e:
             print(str(e))
