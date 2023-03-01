@@ -2,6 +2,7 @@ import requests
 from pyquery import PyQuery
 import datetime
 import pytz
+from dateutil.relativedelta import relativedelta
 
 from django.conf import settings
 from django_apscheduler.jobstores import DjangoJobStore
@@ -9,8 +10,8 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.models import DjangoJobExecution
 
-from . import TradeType, InfoEndpoint
-from .models import Company, StockInfo
+from . import TradeType, InfoEndpoint, Frequency
+from .models import Company, StockInfo, History
 
 
 class UnknownStockIdError(Exception):
@@ -191,3 +192,66 @@ def fetch_stock_info_periodically():
         replace_existing=True,
     )
     scheduler.start()
+
+
+def fetch_and_store_historical_info(company: Company, frequency: str):
+    data_collected = []
+
+    date = (datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)).date()
+    current_hour = int(
+        (datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)).strftime("%H")
+    )
+    if current_hour < 14:
+        date -= datetime.timedelta(days=1)
+
+    if company.trade_type == "tse":
+        if (frequency == Frequency.DAILY) or (frequency == Frequency.MONTHLY):
+            num_to_collect = 50
+            while len(data_collected) < num_to_collect:
+                try:
+                    res = requests.get(
+                        f"{InfoEndpoint.endpoints['multiple_days']['tse']['daily' if frequency == Frequency.DAILY else 'monthly']}&date={date.strftime('%Y%m%d')}&stockNo={company.pk}"
+                    ).json()
+                    if "data" not in res:
+                        break
+                    new_data = res["data"]
+                    for row in new_data:
+                        d = row[0].split("/")
+                        d[0] = str(int(d[0]) + 1911)
+                        d = "/".join(d)
+                        data_collected.append(
+                            {
+                                "date": datetime.datetime.strptime(
+                                    d, "%Y/%m/%d"
+                                ).date(),
+                                "quantity": int(row[1].replace(",", "")),
+                                "close_price": round(
+                                    float(row[-3].replace(",", "")), 2
+                                ),
+                            }
+                        )
+                    if frequency == Frequency.DAILY:
+                        date = (date - relativedelta(months=1)).replace(day=1)
+                    else:
+                        date = (date - relativedelta(years=1)).replace(month=12)
+                except Exception as e:
+                    raise Exception(f"Failed To Fetch Historical Data: {str(e)}")
+        else:
+            raise Exception("Unknown Frequency Found")
+    elif company.trade_type == "otc":
+        if frequency == Frequency.DAILY:
+            InfoEndpoint.endpoints["multiple_days"]["otc"]["daily"]
+        else:
+            raise Exception("Unknown Frequency Found")
+
+    if len(data_collected) > 0:
+        History.objects.filter(company=company, frequency=frequency).delete()
+        data_collected = sorted(data_collected, key=lambda x: x["date"], reverse=True)
+        for data in data_collected[:50]:
+            History.objects.create(
+                company=company,
+                frequency=frequency,
+                date=data["date"],
+                quantity=data["quantity"],
+                close_price=data["close_price"],
+            )

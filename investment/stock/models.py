@@ -33,7 +33,7 @@ class StockInfo(CreateUpdateDateModel):
         return f"{self.company.pk}({self.date})"
 
 
-class History(models.Model):
+class History(CreateUpdateDateModel):
     company = models.ForeignKey(
         Company, on_delete=models.CASCADE, related_name="history", db_index=True
     )
@@ -47,7 +47,6 @@ class History(models.Model):
     date = models.DateField()
     quantity = models.BigIntegerField()
     close_price = models.FloatField()
-    fluct_price = models.FloatField()
 
     class Meta:
         db_table = "history"

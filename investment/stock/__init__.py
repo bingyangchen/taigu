@@ -30,9 +30,11 @@ class InfoEndpoint:
         },
         "multiple_days": {
             "tse": {
-                "daily": "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20220115&stockNo=2330",
-                "monthly": "https://www.twse.com.tw/exchangeReport/FMSRFK?response=json&date=20220115&stockNo=2330",
+                "daily": "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json",
+                "monthly": "https://www.twse.com.tw/exchangeReport/FMSRFK?response=json",
             },
-            "otc": "https://www.tpex.org.tw/web/stock/aftertrading/daily_trading_info/st43_result.php?d=111/03/01&stkno=3105",
+            "otc": {
+                "daily": "https://www.tpex.org.tw/web/stock/aftertrading/daily_trading_info/st43_result.php?d=111/03/01&stkno=3105"
+            },
         },
     }
