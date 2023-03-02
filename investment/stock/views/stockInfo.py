@@ -49,7 +49,7 @@ def single_company_multiple_days(request: HttpRequest, sid):
             if (not queryset.first()) or (
                 not (
                     (
-                        queryset.latest("-updated_at").updated_at
+                        queryset.latest("-updated_at").updated_at.date()
                         == datetime.datetime.now().date()
                     )
                     or (
