@@ -56,7 +56,7 @@ def fetch_and_store_real_time_info():
                     quantity = (int(row["v"]) * 1000) if row["v"] != "-" else 0
                     old_price = round(float(row["y"]), 2) if row["y"] != "-" else 0
 
-                    # Determine Price
+                    # Determine real-time price
                     if row["z"] != "-":
                         price = round(float(row["z"]), 2)
                     elif ((asks := row["a"]) != "-") and ((bids := row["b"]) != "-"):
@@ -103,6 +103,7 @@ def fetch_and_store_latest_day_info():
     if current_hour < 14:
         date -= datetime.timedelta(days=1)
 
+    # Process TSE trade type
     try:
         res_tse = requests.get(InfoEndpoint.endpoints["single_day"]["tse"]).json()
         for each in res_tse:
@@ -131,6 +132,7 @@ def fetch_and_store_latest_day_info():
     except Exception as e:
         print(str(e))
 
+    # Process OTC trade type
     try:
         res_otc = requests.get(InfoEndpoint.endpoints["single_day"]["otc"]).json()
         for each in res_otc:
@@ -220,20 +222,23 @@ def fetch_and_store_historical_info(company: Company, frequency: str):
                         break
                     new_data = res["data"]
                     for row in new_data:
-                        d = row[0].split("/")
-                        d[0] = str(int(d[0]) + 1911)
-                        d = "/".join(d)
-                        data_collected.append(
-                            {
-                                "date": datetime.datetime.strptime(
-                                    d, "%Y/%m/%d"
-                                ).date(),
-                                "quantity": int(row[1].replace(",", "")),
-                                "close_price": round(
-                                    float(row[-3].replace(",", "")), 2
-                                ),
-                            }
-                        )
+                        try:
+                            d = row[0].split("/")
+                            d[0] = str(int(d[0]) + 1911)
+                            d = "/".join(d)
+                            data_collected.append(
+                                {
+                                    "date": datetime.datetime.strptime(
+                                        d, "%Y/%m/%d"
+                                    ).date(),
+                                    "quantity": int(row[1].replace(",", "")),
+                                    "close_price": round(
+                                        float(row[-3].replace(",", "")), 2
+                                    ),
+                                }
+                            )
+                        except:
+                            continue
                     if frequency == Frequency.DAILY:
                         date = (date - relativedelta(months=1)).replace(day=1)
                     else:
@@ -244,7 +249,9 @@ def fetch_and_store_historical_info(company: Company, frequency: str):
             raise Exception("Unknown Frequency Found")
     elif company.trade_type == "otc":
         if frequency == Frequency.DAILY:
-            InfoEndpoint.endpoints["multiple_days"]["otc"]["daily"]
+            # TODO
+            # InfoEndpoint.endpoints["multiple_days"]["otc"]["daily"]
+            ...
         else:
             raise Exception("Unknown Frequency Found")
 
