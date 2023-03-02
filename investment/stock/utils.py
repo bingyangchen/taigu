@@ -51,40 +51,44 @@ def fetch_and_store_real_time_info():
         try:
             r = requests.get(url).json()
             for row in r["msgArray"]:
-                date = datetime.datetime.strptime(row["d"], "%Y%m%d").date()
-                quantity = (int(row["v"]) * 1000) if row["v"] != "-" else 0
-                old_price = round(float(row["y"]), 2) if row["y"] != "-" else 0
+                try:
+                    date = datetime.datetime.strptime(row["d"], "%Y%m%d").date()
+                    quantity = (int(row["v"]) * 1000) if row["v"] != "-" else 0
+                    old_price = round(float(row["y"]), 2) if row["y"] != "-" else 0
 
-                # Determine Price
-                if row["z"] != "-":
-                    price = round(float(row["z"]), 2)
-                elif ((asks := row["a"]) != "-") and ((bids := row["b"]) != "-"):
-                    price = round(
-                        (float(asks.split("_")[0]) + float(bids.split("_")[0])) / 2, 2
-                    )
-                elif old_price:
-                    price = old_price
-                else:
-                    price = None
+                    # Determine Price
+                    if row["z"] != "-":
+                        price = round(float(row["z"]), 2)
+                    elif ((asks := row["a"]) != "-") and ((bids := row["b"]) != "-"):
+                        price = round(
+                            (float(asks.split("_")[0]) + float(bids.split("_")[0])) / 2,
+                            2,
+                        )
+                    elif old_price:
+                        price = old_price
+                    else:
+                        price = None
 
-                if si := StockInfo.objects.filter(company__pk=row["c"]).first():
-                    si.date = date
-                    si.quantity = quantity
-                    if price:
-                        si.close_price = price
-                        if old_price:
-                            si.fluct_price = round(price - old_price, 2)
-                    si.save()
-                else:
-                    StockInfo.objects.create(
-                        company=Company.objects.get(pk=row["c"]),
-                        date=date,
-                        quantity=quantity,
-                        close_price=price,
-                        fluct_price=round(price - old_price, 2)
-                        if (price and old_price)
-                        else 0,
-                    )
+                    if si := StockInfo.objects.filter(company__pk=row["c"]).first():
+                        si.date = date
+                        si.quantity = quantity
+                        if price:
+                            si.close_price = price
+                            if old_price:
+                                si.fluct_price = round(price - old_price, 2)
+                        si.save()
+                    else:
+                        StockInfo.objects.create(
+                            company=Company.objects.get(pk=row["c"]),
+                            date=date,
+                            quantity=quantity,
+                            close_price=price,
+                            fluct_price=round(price - old_price, 2)
+                            if (price and old_price)
+                            else 0,
+                        )
+                except:
+                    continue
         except Exception as e:
             print(str(e))
         all = all[150:]
