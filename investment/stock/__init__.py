@@ -34,7 +34,7 @@ class InfoEndpoint:
                 "monthly": "https://www.twse.com.tw/exchangeReport/FMSRFK?response=json",
             },
             "otc": {
-                "daily": "https://www.tpex.org.tw/web/stock/aftertrading/daily_trading_info/st43_result.php?d=111/03/01&stkno=3105"
+                "daily": "https://www.tpex.org.tw/web/stock/aftertrading/daily_trading_info/st43_result.php"
             },
         },
     }

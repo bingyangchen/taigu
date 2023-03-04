@@ -3,11 +3,11 @@ from pyquery import PyQuery
 import datetime
 import pytz
 from dateutil.relativedelta import relativedelta
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from django.conf import settings
 from django_apscheduler.jobstores import DjangoJobStore
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.models import DjangoJobExecution
 
 from . import TradeType, InfoEndpoint, Frequency
@@ -249,9 +249,40 @@ def fetch_and_store_historical_info(company: Company, frequency: str):
             raise Exception("Unknown Frequency Found")
     elif company.trade_type == "otc":
         if frequency == Frequency.DAILY:
-            # TODO
-            # InfoEndpoint.endpoints["multiple_days"]["otc"]["daily"]
-            ...
+            num_to_collect = 50
+            while len(data_collected) < num_to_collect:
+                try:
+                    dd = date.strftime("%Y/%m/%d")
+                    dd = dd.split("/")
+                    dd[0] = str(int(dd[0]) - 1911)
+                    dd = "/".join(dd)
+                    res = requests.get(
+                        f"{InfoEndpoint.endpoints['multiple_days']['otc']['daily']}?d={dd}&stkno={company.pk}"
+                    ).json()
+                    if "aaData" not in res:
+                        break
+                    new_data = res["aaData"]
+                    for row in new_data:
+                        try:
+                            d = row[0].split("/")
+                            d[0] = str(int(d[0]) + 1911)
+                            d = "/".join(d)
+                            data_collected.append(
+                                {
+                                    "date": datetime.datetime.strptime(
+                                        d, "%Y/%m/%d"
+                                    ).date(),
+                                    "quantity": int(row[1].replace(",", "")) * 1000,
+                                    "close_price": round(
+                                        float(row[-3].replace(",", "")), 2
+                                    ),
+                                }
+                            )
+                        except:
+                            continue
+                    date = (date - relativedelta(months=1)).replace(day=1)
+                except Exception as e:
+                    raise Exception(f"Failed To Fetch Historical Data: {str(e)}")
         else:
             raise Exception("Unknown Frequency Found")
 
