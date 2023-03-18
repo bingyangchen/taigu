@@ -8,31 +8,59 @@
 
 * [Python 3.10](https://www.python.org/downloads/release/python-3109/)
 
-### 初始化資料庫
+* [pipenv](https://pypi.org/project/pipenv/)
 
-* **Step1: Create Database If not Exist**
+* [PostgreSQL 14+](https://adamtheautomator.com/install-postgresql-on-mac/)
 
-    ```sh
-    psql -tc "SELECT 1 FROM pg_database WHERE datname = 'investment'" | grep -q 1 || psql -c "CREATE DATABASE investment"
+### Step1: Build the Virtual Environment
+
+```bash
+pipenv install
+```
+
+### Step2: Prepare the `.env` file
+
+```bash
+bash create_env_file.sh
+```
+
+### Step3: Database Initialization (Optional)
+
+* **3-1: Create Superuser Named `postgres` If not Exist**
+
+    ```bash
+    psql -c "CREATE USER postgres SUPERUSER;"
     ```
 
-  Here's what each part of the command does:
+* **3-2: Create Database Named `investment` If not Exist**
+
+    ```bash
+    psql -tc "SELECT 1 FROM pg_database WHERE datname = 'investment'" | grep -q 1 || psql -c "CREATE DATABASE investment OWNER postgres"
+    ```
+
+    Here's what each part of the command does:
 
   * `psql`: This is the command-line tool for interacting with a PostgreSQL database.
 
-  * `-tc "SELECT 1 FROM pg_database WHERE datname = 'sql_practice'"`: This is a flag that tells psql to run a SQL query and return the result as a single value. The query checks if a database named sql_practice already exists in the PostgreSQL server.
+  * `-tc "SELECT 1 FROM pg_database WHERE datname = 'investment'"`: This is a flag that tells psql to run a SQL query and return the result as a single value. The query checks if a database named `investment` already exists in the PostgreSQL server.
 
   * `|`: This is a pipe character that takes the output from the previous command and pipes it as input to the next command.
 
   * `grep -q 1`: This is a command that searches for the number 1 in the output of the previous psql command. The -q option tells grep to suppress any output to the console and only set the exit status.
 
-  * `||`: This is a logical OR operator that executes the next command only if the previous command fails, which in this case means that the database sql_practice was not found.
+  * `||`: This is a logical OR operator that executes the next command only if the previous command fails, which in this case means that the database `investment` was not found.
 
-  * `psql -c "CREATE DATABASE sql_practice"`: This is another psql command that creates a new database named sql_practice.
+  * `psql -c "CREATE DATABASE investment OWNER postgres"`: This is another psql command that creates a new database named `investment`.
 
-* **Step2: Migrate Database**
+* **3-3: Apply the Dump File**
 
-    ```sh
+    ```bash
+    pg_restore -U postgres -d investment ./db_backups/heroku_postgresql_latest
+    ```
+
+* **3-4: Migrate Database**
+
+    ```bash
     python manage.py migrate
     ```
 
@@ -40,13 +68,13 @@
 
 * **開啟 PostgreSQL CLI**
 
-    ```sh
+    ```bash
     python manage.py dbshell
     ```
 
 * **開啟 Django Shell**
 
-    ```sh
+    ```bash
     python manage.py shell
     ```
 
@@ -56,7 +84,7 @@
 
 每次觸發 Heroku 的部署流程時，Heroku 都會檢查 `requirements.txt` 的內容是否有更動，有的話就會重新 install 所有套件。
 
-```sh
+```bash
 # 以 pipenv 開發環境為例
 pipenv lock --requirements > requirements.txt
 ```
@@ -71,18 +99,18 @@ pipenv lock --requirements > requirements.txt
 
     此動作必須在雲端 server 取得最新版本的程式碼後才能執行。
 
-    ```sh
+    ```bash
     heroku run python manage.py migrate -a investment-backend
     ```
 
 * **開啟雲端 PostgreSQL CLI**
 
-    ```sh
+    ```bash
     heroku run python manage.py dbshell -a investment-backend
     ```
 
 * **開啟雲端 Django CLI**
 
-    ```sh
+    ```bash
     heroku run python manage.py shell -a investment-backend
     ```
