@@ -1,16 +1,15 @@
 import json
 
-from django.http import JsonResponse, HttpRequest
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
-
+from django.http import HttpRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 from rest_framework.authtoken.models import Token
 
-from .models import User
-from .utils import validate_registration_info, update_user
 from ..decorators import require_login
+from .models import User
+from .utils import update_user, validate_registration_info
 
 
 @csrf_exempt

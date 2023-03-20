@@ -1,6 +1,6 @@
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
-from django.contrib.auth.hashers import check_password
 
 from .models import User
 

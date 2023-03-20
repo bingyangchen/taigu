@@ -1,12 +1,12 @@
 import json
 from datetime import datetime
 
-from django.http import JsonResponse, HttpRequest
+from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from ..utils import get_company_info, validate_stock_id, UnknownStockIdError
-from ..models import TradeRecord, Company
 from ...decorators import require_login
+from ..models import Company, TradeRecord
+from ..utils import UnknownStockIdError, get_company_info, validate_stock_id
 
 
 @csrf_exempt

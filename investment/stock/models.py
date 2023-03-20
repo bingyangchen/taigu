@@ -2,6 +2,7 @@ from django.db import models
 
 from investment.account.models import User
 from investment.core.models import CreateUpdateDateModel
+
 from . import Frequency, TradeType
 
 

@@ -1,14 +1,14 @@
 import datetime
-import pytz
 
-from django.http import JsonResponse, HttpRequest
+import pytz
+from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
-from .. import Frequency
-from ..models import StockInfo, History, Company
-from ..utils import fetch_and_store_historical_info
 from ...decorators import require_login
+from .. import Frequency
+from ..models import Company, History, StockInfo
+from ..utils import fetch_and_store_historical_info
 
 
 @csrf_exempt

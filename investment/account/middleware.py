@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate
-from django.http import HttpResponseBadRequest, JsonResponse, HttpRequest
+from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
 
 
 def check_login_status_middleware(get_response):

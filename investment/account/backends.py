@@ -1,6 +1,5 @@
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.hashers import check_password
-
 from rest_framework.authtoken.models import Token
 
 from .models import User

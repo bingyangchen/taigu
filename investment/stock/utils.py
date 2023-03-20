@@ -1,17 +1,17 @@
-import requests
-from pyquery import PyQuery
 import datetime
-import pytz
-from dateutil.relativedelta import relativedelta
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.schedulers.background import BackgroundScheduler
 
+import pytz
+import requests
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
+from pyquery import PyQuery
 
-from . import TradeType, InfoEndpoint, Frequency
-from .models import Company, StockInfo, History
+from . import Frequency, InfoEndpoint, TradeType
+from .models import Company, History, StockInfo
 
 
 class UnknownStockIdError(Exception):
