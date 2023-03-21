@@ -26,13 +26,13 @@ bash create_env_file.sh
 
 ### Step3: Database Initialization (Optional)
 
-* **3-1: Create Superuser Named `postgres` If not Exist**
+* **3-1: Create a Superuser Named `postgres` If not Exist**
 
     ```bash
     psql -c "CREATE USER postgres SUPERUSER;"
     ```
 
-* **3-2: Create Database Named `investment` If not Exist**
+* **3-2: Create a Database Named `investment` If not Exist**
 
     ```bash
     psql -tc "SELECT 1 FROM pg_database WHERE datname = 'investment'" | grep -q 1 || psql -c "CREATE DATABASE investment OWNER postgres"
@@ -48,9 +48,9 @@ bash create_env_file.sh
 
   * `grep -q 1`: This is a command that searches for the number 1 in the output of the previous psql command. The -q option tells grep to suppress any output to the console and only set the exit status.
 
-  * `||`: This is a logical OR operator that executes the next command only if the previous command fails, which in this case means that the database `investment` was not found.
+  * `||`: This is a logical "OR" operator that executes the next command only if the previous command fails, which in this case means that the database `investment` was not found.
 
-  * `psql -c "CREATE DATABASE investment OWNER postgres"`: This is another psql command that creates a new database named `investment`.
+  * `psql -c "CREATE DATABASE investment OWNER postgres"`: This is another psql command that creates a new database named `investment` and set its owner to `postgres`.
 
 * **3-3: Apply the Dump File**
 
@@ -58,7 +58,7 @@ bash create_env_file.sh
     pg_restore -U postgres -d investment ./db_backups/heroku_postgresql_latest
     ```
 
-* **3-4: Migrate Database**
+* **3-4: Migrate the Database**
 
     ```bash
     python manage.py migrate
@@ -72,11 +72,13 @@ bash create_env_file.sh
     python manage.py dbshell
     ```
 
-* **開啟 Django Shell**
+* **開啟 Django 互動模式**
 
     ```bash
     python manage.py shell
     ```
+
+    使用 `exit()` 離開。
 
 ## 如何部署在 Heroku
 
@@ -85,15 +87,15 @@ bash create_env_file.sh
 每次觸發 Heroku 的部署流程時，Heroku 都會檢查 `requirements.txt` 的內容是否有更動，有的話就會重新 install 所有套件。
 
 ```bash
-# 以 pipenv 開發環境為例
-pipenv lock --requirements > requirements.txt
+# 使用 pipenv 指令，根據 Pipfile.lock 產生 requirements.txt
+pipenv requirements > requirements.txt
 ```
 
 ### Auto Deploy
 
 此專案的 remote repository 為 GitHub，同時利用了 Heroku 的自動部署機制。每一次 push 新版本至 GitHub 的 master branch 後，Github 會使用 Webhook 通知 Heroku 來獲取新版本程式碼並進行 build 與 depoly。
 
-### 產品端常用指令
+### 正式環境常用指令
 
 * **有更動到 model 時，雲端資料庫也須執行 migrate**
 
