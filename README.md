@@ -66,19 +66,17 @@ bash create_env_file.sh
 
 ### 開發端常用指令
 
-* **開啟 PostgreSQL CLI**
+* `python manage.py runserver` 啟動在 Local 開發用的 Server 並配置一個 Terminal
 
-    ```bash
-    python manage.py dbshell
-    ```
+    `Ctrl` + `C` 停止 server。
 
-* **開啟 Django 互動模式**
+* `python manage.py dbshell` 開啟 PostgreSQL CLI
 
-    ```bash
-    python manage.py shell
-    ```
+    `\q` 離開 PostgreSQL CLI。
 
-    使用 `exit()` 離開。
+* `python manage.py shell` 開啟 Django 互動模式
+
+    `exit()` 離開。
 
 ## 如何部署在 Heroku
 
