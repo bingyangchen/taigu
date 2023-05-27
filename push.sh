@@ -7,8 +7,8 @@ else
     pipenv requirements >requirements.txt
 
     # Switch to the corresponding username and email for this repo
-    # git config user.name "Jamison Chen"
-    # git config user.email "106208004@g.nccu.edu.tw"
+    # git config --local user.name "Jamison Chen"
+    # git config --local user.email "106208004@g.nccu.edu.tw"
 
     # Make git commit
     git add .
