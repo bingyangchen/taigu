@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ...decorators import require_login
 from ..models import Company, TradeRecord
-from ..utils import UnknownStockIdError, get_company_info, validate_stock_id
+from ..utils import UnknownStockIdError, fetch_company_info
 
 
 @csrf_exempt
@@ -26,8 +26,7 @@ def create_or_list(request: HttpRequest):
         else:
             sid = str(sid)
             try:
-                validate_stock_id(sid)
-                company_info = get_company_info(sid)
+                company_info = fetch_company_info(sid)
                 c, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={
@@ -117,8 +116,7 @@ def update_or_delete(request: HttpRequest, id):
         else:
             sid = str(sid)
             try:
-                validate_stock_id(sid)
-                company_info = get_company_info(sid)
+                company_info = fetch_company_info(sid)
                 c, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={

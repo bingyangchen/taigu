@@ -6,6 +6,6 @@ class StockConfig(AppConfig):
     name = "investment.stock"
 
     def ready(self):
-        from .utils import fetch_stock_info_periodically
+        from .utils import set_up_cron_jobs
 
-        fetch_stock_info_periodically()
+        set_up_cron_jobs()

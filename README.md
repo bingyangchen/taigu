@@ -95,6 +95,8 @@ pipenv requirements > requirements.txt
 
 ### 正式環境常用指令
 
+>這裡使用的是 Herku CLI，因此需要先[安裝](https://devcenter.heroku.com/articles/heroku-cli)，安裝完後須登入 (`heroku login`)。
+
 * **有更動到 model 時，雲端資料庫也須執行 migrate**
 
     此動作必須在雲端 server 取得最新版本的程式碼後才能執行。

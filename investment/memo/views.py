@@ -5,11 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from investment.stock.models import Company
-from investment.stock.utils import (
-    UnknownStockIdError,
-    get_company_info,
-    validate_stock_id,
-)
+from investment.stock.utils import UnknownStockIdError, fetch_company_info
 
 from ..decorators import require_login
 from .models import StockMemo, TradePlan
@@ -28,8 +24,7 @@ def update_or_create_stock_memo(request: HttpRequest, sid):
     note = payload.get("note")
 
     try:
-        validate_stock_id(sid)
-        company_info = get_company_info(sid)
+        company_info = fetch_company_info(sid)
         c, created = Company.objects.get_or_create(
             pk=sid,
             defaults={
@@ -115,8 +110,7 @@ def create_or_list_trade_plan(request: HttpRequest):
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
-                validate_stock_id(sid)
-                company_info = get_company_info(sid)
+                company_info = fetch_company_info(sid)
                 c, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={
@@ -189,8 +183,7 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
-                validate_stock_id(sid)
-                company_info = get_company_info(sid)
+                company_info = fetch_company_info(sid)
                 c, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={
