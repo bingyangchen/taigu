@@ -1,8 +1,8 @@
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from ..models import User
-from ..views import *
+from ..views import login, logout, me, register
 
 
 class TestViews(TestCase):
