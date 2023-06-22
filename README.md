@@ -102,17 +102,17 @@ pipenv requirements > requirements.txt
     此動作必須在雲端 server 取得最新版本的程式碼後才能執行。
 
     ```bash
-    heroku run python manage.py migrate -a investment-backend
+    heroku run python manage.py migrate -a trade-smartly-backend
     ```
 
 * **開啟雲端 PostgreSQL CLI**
 
     ```bash
-    heroku run python manage.py dbshell -a investment-backend
+    heroku run python manage.py dbshell -a trade-smartly-backend
     ```
 
 * **開啟雲端 Django CLI**
 
     ```bash
-    heroku run python manage.py shell -a investment-backend
+    heroku run python manage.py shell -a trade-smartly-backend
     ```
