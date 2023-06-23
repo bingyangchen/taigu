@@ -1,27 +1,14 @@
-from django.http import JsonResponse
+from typing import Callable
+
+from django.http import HttpRequest, JsonResponse
 
 
-def require_login(func):
-    def wrap(request, *arg, **args):
+def require_login(func: Callable) -> Callable:
+    def wrap(request: HttpRequest, *arg, **args):
         if request.user:
             return func(request, *arg, **args)
         else:
             return JsonResponse({"error": "Login Required"}, status=401)
-
-    wrap.__name__ = func.__name__
-    return wrap
-
-
-# This decorator is now not used for the reason that there's a third-party
-# package called django-cors-headers solving the CORS problems.
-def cors_exempt(func):
-    def wrap(request, **args):
-        res = func(request, **args)
-        res["Access-Control-Allow-Credentials"] = "true"
-        res["Access-Control-Allow-Methods"] = "*"
-        res["Access-Control-Allow-Origin"] = request.headers.get("Origin")
-        res["Vary"] = "Origin"
-        return res
 
     wrap.__name__ = func.__name__
     return wrap

@@ -6,12 +6,17 @@ from .models import User
 
 
 class MyBackend(BaseBackend):
-    def authenticate(self, request, token=None, email=None, password=None):
+    def authenticate(
+        self,
+        request,
+        token: str | None = None,
+        email: str | None = None,
+        password: str | None = None,
+    ) -> User | None:
         if token:
             try:
-                t: Token = Token.objects.get(pk=token)
-                return User.objects.get(pk=t.user_id)
-            except Token.DoesNotExist or User.DoesNotExist:
+                return Token.objects.get(pk=token).user
+            except Token.DoesNotExist:
                 return None
         elif email and password:
             try:
@@ -21,5 +26,5 @@ class MyBackend(BaseBackend):
                 else:
                     raise Exception("Wrong Password")
             except User.DoesNotExist:
-                raise Exception("User Not Exists")
+                raise User.DoesNotExist("User Does Not Exist")
         return None

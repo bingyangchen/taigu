@@ -52,7 +52,7 @@ def fetch_and_store_real_time_info() -> None:
         query = "|".join(all[:batch_size])
         url = f"{InfoEndpoint.endpoints['single_day']['real_time']}{query}"
         try:
-            r = requests.get(url).json()
+            r = requests.get(url, timeout=7).json()
             for row in r["msgArray"]:
                 try:
                     # parse row data
@@ -113,7 +113,7 @@ def fetch_and_store_real_time_info() -> None:
                 except Exception:
                     continue
         except Exception as e:
-            print(str(e))
+            print(e)
 
         all = all[batch_size:]
 
@@ -216,10 +216,10 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
         interval = "1mo"
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"  # noqa: E501
     }
     response = requests.get(
-        f"{InfoEndpoint.endpoints['multiple_days']}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start_datetime.timestamp())}&period2={int(end_datetime.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",
+        f"{InfoEndpoint.endpoints['multiple_days']}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start_datetime.timestamp())}&period2={int(end_datetime.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
         headers=headers,
     )
     data = StringIO(response.text)
@@ -273,7 +273,7 @@ def set_up_cron_jobs() -> None:
     )
     scheduler.add_job(
         fetch_and_store_real_time_info,
-        trigger=CronTrigger.from_crontab("0/3 9-14 * * MON-FRI"),
+        trigger=CronTrigger.from_crontab("0/2 9-14 * * MON-FRI"),
         id="fetch_and_store_real_time_info",
         max_instances=1,
         replace_existing=True,

@@ -29,7 +29,7 @@ def register(request):
     except Exception as e:
         try:
             res["error"] = str(list(e)[0])
-        except:
+        except Exception:
             res["error"] = str(e)
         return JsonResponse(res, status=400)
 
@@ -114,7 +114,7 @@ def update(request: HttpRequest):
     except Exception as e:
         try:
             res["error"] = str(list(e)[0])
-        except:
+        except Exception:
             res["error"] = str(e)
         return JsonResponse(res, status=400)
 
@@ -122,20 +122,22 @@ def update(request: HttpRequest):
 @csrf_exempt
 @require_login
 def delete(request: HttpRequest):
-    res = {"success": False}
+    response = {"success": False}
     if request.method == "DELETE":
         password = json.loads(request.body).get("password")
         if check_password(password, request.user.password):
+            # TODO: Delete all data related to this user:
+            # ...
             Token.objects.filter(user=request.user).delete()
             request.user.delete()
-            res["success"] = True
-            res = JsonResponse(res)
-            res.headers["is-log-out"] = "yes"
-            res.delete_cookie("token", samesite="None")
-            return res
+            response["success"] = True
+            response = JsonResponse(response)
+            response.headers["is-log-out"] = "yes"
+            response.delete_cookie("token", samesite="None")
+            return response
         else:
-            res["error"] = "Wrong Password"
-            return JsonResponse(res, status=400)
+            response["error"] = "Wrong Password"
+            return JsonResponse(response, status=400)
     else:
-        res["error"] = "DELETE Method Required"
-        return JsonResponse(res, status=405)
+        response["error"] = "DELETE Method Required"
+        return JsonResponse(response, status=405)

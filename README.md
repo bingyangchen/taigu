@@ -15,7 +15,7 @@
 ### Step1: Build the Virtual Environment
 
 ```bash
-pipenv install
+pipenv install --dev
 ```
 
 ### Step2: Prepare the `.env` file
