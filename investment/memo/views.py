@@ -1,7 +1,6 @@
 import json
 
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from investment.stock.models import Company
@@ -11,7 +10,6 @@ from ..decorators import require_login
 from .models import StockMemo, TradePlan
 
 
-@csrf_exempt
 @require_POST
 @require_login
 def update_or_create_stock_memo(request: HttpRequest, sid):
@@ -63,7 +61,6 @@ def update_or_create_stock_memo(request: HttpRequest, sid):
     return JsonResponse(res)
 
 
-@csrf_exempt
 @require_GET
 @require_login
 def list_stock_memo(request: HttpRequest):
@@ -93,7 +90,6 @@ def list_stock_memo(request: HttpRequest):
     return JsonResponse(res)
 
 
-@csrf_exempt
 @require_login
 def create_or_list_trade_plan(request: HttpRequest):
     res = {"success": False, "data": None}
@@ -164,7 +160,6 @@ def create_or_list_trade_plan(request: HttpRequest):
     return JsonResponse(res)
 
 
-@csrf_exempt
 @require_login
 def update_or_delete_trade_plan(request: HttpRequest, id):
     res = {"success": False, "data": None}

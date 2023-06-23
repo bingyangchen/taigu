@@ -1,5 +1,4 @@
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 from ...decorators import require_login
@@ -7,7 +6,6 @@ from .. import Frequency
 from ..models import Company, History, StockInfo
 
 
-@csrf_exempt
 @require_GET
 @require_login
 def multiple_companies_single_day(request: HttpRequest):
@@ -32,7 +30,6 @@ def multiple_companies_single_day(request: HttpRequest):
     return JsonResponse(res)
 
 
-@csrf_exempt
 @require_GET
 @require_login
 def single_company_multiple_days(request: HttpRequest, sid: str):

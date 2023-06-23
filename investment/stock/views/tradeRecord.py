@@ -2,14 +2,12 @@ import json
 from datetime import datetime
 
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 from ...decorators import require_login
 from ..models import Company, TradeRecord
 from ..utils import UnknownStockIdError, fetch_company_info
 
 
-@csrf_exempt
 @require_login
 def create_or_list(request: HttpRequest):
     res = {"success": False, "data": None}
@@ -97,7 +95,6 @@ def create_or_list(request: HttpRequest):
     return JsonResponse(res)
 
 
-@csrf_exempt
 @require_login
 def update_or_delete(request: HttpRequest, id):
     res = {"success": False, "data": None}

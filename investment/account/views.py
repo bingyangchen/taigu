@@ -3,7 +3,6 @@ import json
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 from rest_framework.authtoken.models import Token
 
@@ -12,7 +11,6 @@ from .models import User
 from .utils import update_user, validate_registration_info
 
 
-@csrf_exempt
 @require_POST
 def register(request):
     res = {"success": False}
@@ -34,7 +32,6 @@ def register(request):
         return JsonResponse(res, status=400)
 
 
-@csrf_exempt
 @require_POST
 def login(request: HttpRequest):
     res = {"success": False}
@@ -57,7 +54,6 @@ def login(request: HttpRequest):
         return JsonResponse(res, status=400)
 
 
-@csrf_exempt
 @require_GET
 @require_login
 def me(request: HttpRequest):
@@ -73,7 +69,6 @@ def me(request: HttpRequest):
     return JsonResponse(res)
 
 
-@csrf_exempt
 @require_GET
 @require_login
 def logout(request: HttpRequest):
@@ -86,7 +81,6 @@ def logout(request: HttpRequest):
     return res
 
 
-@csrf_exempt
 @require_POST
 @require_login
 def update(request: HttpRequest):
@@ -119,7 +113,6 @@ def update(request: HttpRequest):
         return JsonResponse(res, status=400)
 
 
-@csrf_exempt
 @require_login
 def delete(request: HttpRequest):
     response = {"success": False}
