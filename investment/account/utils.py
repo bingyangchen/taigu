@@ -5,7 +5,9 @@ from django.core.validators import validate_email
 from .models import User
 
 
-def validate_registration_info(username: str, email: str, password: str):
+def validate_registration_info(
+    username: str | None, email: str | None, password: str | None
+):
     validate_email(email)
     validate_password(password)
 
@@ -23,32 +25,32 @@ def update_user(**kwargs) -> User:
     old_password = kwargs.get("old_password")
     new_password = kwargs.get("new_password")
 
-    if id == None:
+    if id is None:
         raise Exception("Unknown User")
     else:
-        u: User = User.objects.get(pk=id)
+        user: User = User.objects.get(pk=id)
         if username or (username == ""):
-            u.username = username
+            user.username = username
 
         if email:
-            if (u2 := User.objects.filter(email=email).first()) and u2 != u:
+            if (u2 := User.objects.filter(email=email).first()) and u2 != user:
                 raise Exception("Duplicated Email")
             validate_email(email)
-            u.email = email
+            user.email = email
 
         if avatar_url:
-            u.avatar_url = avatar_url
+            user.avatar_url = avatar_url
         elif avatar_url == "":
-            u.avatar_url = None
+            user.avatar_url = None
 
         if new_password and old_password:
-            if check_password(old_password, u.password):
+            if check_password(old_password, user.password):
                 validate_password(new_password)
-                u.set_password(new_password)
+                user.set_password(new_password)
             else:
                 raise Exception("Wrong Password")
         elif old_password or new_password:
             raise Exception("Data Not Sufficient")
 
-        u.save()
-        return u
+        user.save()
+        return user

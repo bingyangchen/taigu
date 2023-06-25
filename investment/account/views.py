@@ -12,7 +12,7 @@ from .utils import update_user, validate_registration_info
 
 
 @require_POST
-def register(request):
+def register(request: HttpRequest):
     res = {"success": False}
     try:
         username = request.POST.get("username")
@@ -88,7 +88,7 @@ def update(request: HttpRequest):
     try:
         payload = json.loads(request.body)
 
-        u: User = update_user(
+        user = update_user(
             id=payload.get("id") or request.user.pk,
             username=payload.get("username"),
             email=payload.get("email"),
@@ -99,10 +99,10 @@ def update(request: HttpRequest):
 
         res["success"] = True
         res["data"] = {
-            "id": u.pk,
-            "username": u.username,
-            "email": u.email,
-            "avatar_url": u.avatar_url or None,
+            "id": user.pk,
+            "username": user.username,
+            "email": user.email,
+            "avatar_url": user.avatar_url or None,
         }
         return JsonResponse(res)
     except Exception as e:
@@ -119,8 +119,6 @@ def delete(request: HttpRequest):
     if request.method == "DELETE":
         password = json.loads(request.body).get("password")
         if check_password(password, request.user.password):
-            # TODO: Delete all data related to this user:
-            # ...
             Token.objects.filter(user=request.user).delete()
             request.user.delete()
             response["success"] = True
