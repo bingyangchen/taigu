@@ -3,20 +3,19 @@ import json
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
+from investment.core.decorators import require_login
 from investment.stock.models import Company
 from investment.stock.utils import UnknownStockIdError, fetch_company_info
 
-from ..decorators import require_login
 from .models import StockMemo, TradePlan
 
 
 @require_POST
 @require_login
-def update_or_create_stock_memo(request: HttpRequest, sid):
+def update_or_create_stock_memo(request: HttpRequest, sid: str):
     res = {"success": False, "data": None}
 
     payload = json.loads(request.body)
-    sid = str(sid)
     business = payload.get("business")
     strategy = payload.get("strategy")
     note = payload.get("note")
@@ -32,11 +31,11 @@ def update_or_create_stock_memo(request: HttpRequest, sid):
         )
         m = StockMemo.objects.filter(owner=request.user, company=c).first()
         if m:
-            if business != None:
+            if business is not None:
                 m.business = business
-            if strategy != None:
+            if strategy is not None:
                 m.strategy = strategy
-            if note != None:
+            if note is not None:
                 m.note = note
             m.save()
         else:
@@ -98,8 +97,8 @@ def create_or_list_trade_plan(request: HttpRequest):
         if (
             (not (sid := payload.get("sid")))
             or (not (plan_type := payload.get("plan_type")))
-            or ((target_price := payload.get("target_price")) == None)
-            or ((target_quantity := payload.get("target_quantity")) == None)
+            or ((target_price := payload.get("target_price")) is None)
+            or ((target_quantity := payload.get("target_quantity")) is None)
         ):
             res["error"] = "Data Not Sufficient"
         else:
@@ -170,8 +169,8 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
         if (
             (not (sid := payload.get("sid")))
             or (not (plan_type := payload.get("plan_type")))
-            or ((target_price := payload.get("target_price")) == None)
-            or ((target_quantity := payload.get("target_quantity")) == None)
+            or ((target_price := payload.get("target_price")) is None)
+            or ((target_quantity := payload.get("target_quantity")) is None)
         ):
             res["error"] = "Data Not Sufficient"
         else:

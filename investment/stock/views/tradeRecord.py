@@ -3,7 +3,8 @@ from datetime import datetime
 
 from django.http import HttpRequest, JsonResponse
 
-from ...decorators import require_login
+from investment.core.decorators import require_login
+
 from ..models import Company, TradeRecord
 from ..utils import UnknownStockIdError, fetch_company_info
 
@@ -16,9 +17,9 @@ def create_or_list(request: HttpRequest):
         if (
             (not (deal_time := payload.get("deal_time")))
             or (not (sid := payload.get("sid")))
-            or ((deal_price := payload.get("deal_price")) == None)
-            or ((deal_quantity := payload.get("deal_quantity")) == None)
-            or ((handling_fee := payload.get("handling_fee")) == None)
+            or ((deal_price := payload.get("deal_price")) is None)
+            or ((deal_quantity := payload.get("deal_quantity")) is None)
+            or ((handling_fee := payload.get("handling_fee")) is None)
         ):
             res["error"] = "Data Not Sufficient"
         else:
@@ -105,9 +106,9 @@ def update_or_delete(request: HttpRequest, id):
         if (
             (not (deal_time := payload.get("deal_time")))
             or (not (sid := payload.get("sid")))
-            or ((deal_price := payload.get("deal_price")) == None)
-            or ((deal_quantity := payload.get("deal_quantity")) == None)
-            or ((handling_fee := payload.get("handling_fee")) == None)
+            or ((deal_price := payload.get("deal_price")) is None)
+            or ((deal_quantity := payload.get("deal_quantity")) is None)
+            or ((handling_fee := payload.get("handling_fee")) is None)
         ):
             res["error"] = "Data Not Sufficient"
         else:

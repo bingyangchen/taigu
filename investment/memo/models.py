@@ -34,4 +34,4 @@ class TradePlan(CreateUpdateDateModel):
         db_table = "trade_plan"
 
     def __str__(self):
-        return f"{self.owner.username}_{self.company.pk}_${self.target_price}_{self.plan_type}_{self.target_quantity}"
+        return f"{self.owner.username}_{self.company.pk}_${self.target_price}_{self.plan_type}_{self.target_quantity}"  # noqa 1501

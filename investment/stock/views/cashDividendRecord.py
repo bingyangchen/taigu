@@ -3,7 +3,8 @@ from datetime import datetime
 
 from django.http import HttpRequest, JsonResponse
 
-from ...decorators import require_login
+from investment.core.decorators import require_login
+
 from ..models import CashDividendRecord, Company
 from ..utils import UnknownStockIdError, fetch_company_info
 
@@ -98,7 +99,7 @@ def update_or_delete(request: HttpRequest, id):
         if (
             (not (deal_time := payload.get("deal_time")))
             or (not (sid := payload.get("sid")))
-            or ((cash_dividend := payload.get("cash_dividend")) == None)
+            or ((cash_dividend := payload.get("cash_dividend")) is None)
         ):
             res["error"] = "Data Not Sufficient"
         else:

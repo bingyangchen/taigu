@@ -8,12 +8,13 @@ from .models import User
 def validate_registration_info(
     username: str | None, email: str | None, password: str | None
 ):
+    if not (username and email and password):
+        raise Exception("Data Not Sufficient")
+
     validate_email(email)
     validate_password(password)
 
-    if not (username and email and password):
-        raise Exception("Data Not Sufficient")
-    elif User.objects.filter(email=email).first():
+    if User.objects.filter(email=email).first():
         raise Exception("Duplicated Email")
 
 
