@@ -78,6 +78,10 @@ sh create_env_file.sh
 
     `exit()` 離開。
 
+- `pytest` 跑測試
+
+    本專案使用 `pytest` 取代 Django 內建的測試套件，所以不是使用 `python manage.py test` 這個指令。
+
 ## 如何部署在 Heroku？
 
 ### 前置作業：準備好 `requirements.txt`
