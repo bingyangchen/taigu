@@ -21,7 +21,6 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
     # 3rd-party packages
     "rest_framework",
     "rest_framework.authtoken",
@@ -107,9 +106,9 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-STATIC_URL = "/static/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-MEDIA_URL = "/media/"
+# STATIC_ROOT = os.path.join(BASE_DIR, "static")
+# STATIC_URL = "/static/"
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# MEDIA_URL = "/media/"
 
 APSCHEDULER_RUN_NOW_TIMEOUT = 240
