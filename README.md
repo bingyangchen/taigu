@@ -99,7 +99,13 @@ pipenv requirements > requirements.txt
 
 ### 正式環境常用指令
 
->這裡使用的是 Heroku CLI，因此需要先在 local [安裝](https://devcenter.heroku.com/articles/heroku-cli)，安裝完後須登入 (在 local 使用 `heroku login` 指令)。
+>這裡使用的是 Heroku CLI，因此需要先在 local [安裝](https://devcenter.heroku.com/articles/heroku-cli)。
+
+- **登入 Heroku**
+
+    ```bash
+    heroku login
+    ```
 
 - **有更動到 model 時，production database 也須要 migrate**
 

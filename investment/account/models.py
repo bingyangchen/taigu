@@ -1,4 +1,3 @@
-import os
 import uuid
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
@@ -23,11 +22,6 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, True, True, **extra_fields)
 
 
-def user_avatar_path(instance, filename):
-    base, extension = os.path.splitext(filename)
-    return "user_avatars/{}".format(str(instance.id) + extension)
-
-
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=256, unique=True)
@@ -38,9 +32,6 @@ class User(AbstractUser):
     # Remove default attributes of AbstracUser
     first_name = None
     last_name = None
-
-    # Deprecated attributes
-    avatar = models.ImageField(upload_to=user_avatar_path, blank=True, null=True)
 
     objects = UserManager()
 
