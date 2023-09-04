@@ -1,17 +1,17 @@
+from typing import Callable
+
 from django.contrib.auth import authenticate
-from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse
 
 
-def check_login_status_middleware(get_response):
-    def middleware(request: HttpRequest):
+def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
+    def middleware(request: HttpRequest) -> HttpResponse:
         try:
             user = authenticate(request, token=request.COOKIES.get("token"))
         except Exception as e:
             return HttpResponseBadRequest(JsonResponse({"error": str(e)}))
 
-        token: str | None = None
-        if user:
-            token = request.COOKIES.get("token")
+        token = request.COOKIES.get("token") if user else None
         request.user = user
 
         response = get_response(request)

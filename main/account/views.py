@@ -2,6 +2,7 @@ import json
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
+from django.core.exceptions import ValidationError
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 from rest_framework.authtoken.models import Token
@@ -26,9 +27,9 @@ def register(request: HttpRequest):
         response["success"] = True
         return JsonResponse(response)
     except Exception as e:
-        try:
-            response["error"] = str(list(e)[0])
-        except Exception:
+        if isinstance(e, ValidationError):
+            response["error"] = e.messages[0]
+        else:
             response["error"] = str(e)
         return JsonResponse(response, status=400)
 
@@ -74,20 +75,19 @@ def me(request: HttpRequest):
 @require_GET
 @require_login
 def logout(request: HttpRequest):
-    response = {"success": False}
+    response: dict = {"success": False}
     Token.objects.filter(user=request.user).delete()
     response["success"] = True
-
-    response = JsonResponse(response)
-    response.headers["is-log-out"] = "yes"
-    response.delete_cookie("token", samesite="None")
-    return response
+    http_response = JsonResponse(response)
+    http_response.headers["is-log-out"] = "yes"
+    http_response.delete_cookie("token", samesite="None")
+    return http_response
 
 
 @require_POST
 @require_login
 def update(request: HttpRequest):
-    response = {"success": False, "data": None}
+    response: dict = {"success": False, "data": None}
     try:
         payload = json.loads(request.body)
 
@@ -109,9 +109,9 @@ def update(request: HttpRequest):
         }
         return JsonResponse(response)
     except Exception as e:
-        try:
-            response["error"] = str(list(e)[0])
-        except Exception:
+        if isinstance(e, ValidationError):
+            response["error"] = e.messages[0]
+        else:
             response["error"] = str(e)
         return JsonResponse(response, status=400)
 
@@ -125,7 +125,6 @@ def delete(request: HttpRequest):
             Token.objects.filter(user=request.user).delete()
             request.user.delete()
             response["success"] = True
-
             http_response = JsonResponse(response)
             http_response.headers["is-log-out"] = "yes"
             http_response.delete_cookie("token", samesite="None")

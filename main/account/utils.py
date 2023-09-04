@@ -2,6 +2,12 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
 
+from main.exceptions import (
+    DataNotSufficientError,
+    DuplicatedEmailError,
+    WrongPasswordError,
+)
+
 from .models import User
 
 
@@ -9,13 +15,14 @@ def validate_registration_info(
     username: str | None, email: str | None, password: str | None
 ):
     if not (username and email and password):
-        raise Exception("Data Not Sufficient")
+        raise DataNotSufficientError
 
     validate_email(email)
-    validate_password(password)
 
     if User.objects.filter(email=email).first():
-        raise Exception("Duplicated Email")
+        raise DuplicatedEmailError
+
+    validate_password(password)
 
 
 def update_user(**kwargs) -> User:
@@ -27,7 +34,7 @@ def update_user(**kwargs) -> User:
     new_password = kwargs.get("new_password")
 
     if id is None:
-        raise Exception("Unknown User")
+        raise User.DoesNotExist("User Does Not Exist")
     else:
         user: User = User.objects.get(pk=id)
         if username or (username == ""):
@@ -35,7 +42,7 @@ def update_user(**kwargs) -> User:
 
         if email:
             if (u2 := User.objects.filter(email=email).first()) and u2 != user:
-                raise Exception("Duplicated Email")
+                raise DuplicatedEmailError
             validate_email(email)
             user.email = email
 
@@ -49,9 +56,9 @@ def update_user(**kwargs) -> User:
                 validate_password(new_password)
                 user.set_password(new_password)
             else:
-                raise Exception("Wrong Password")
+                raise WrongPasswordError
         elif old_password or new_password:
-            raise Exception("Data Not Sufficient")
+            raise DataNotSufficientError
 
         user.save()
         return user

@@ -2,6 +2,8 @@ from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.hashers import check_password
 from rest_framework.authtoken.models import Token
 
+from main.exceptions import WrongPasswordError
+
 from .models import User
 
 
@@ -24,7 +26,7 @@ class MyBackend(BaseBackend):
                 if check_password(password, user.password):
                     return user
                 else:
-                    raise Exception("Wrong Password")
+                    raise WrongPasswordError
             except User.DoesNotExist:
                 raise User.DoesNotExist("User Does Not Exist")
         return None
