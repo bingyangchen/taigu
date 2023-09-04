@@ -1,7 +1,7 @@
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
 
-from investment.core.decorators import require_login
+from main.core.decorators import require_login
 
 from .. import Frequency
 from ..models import Company, History, StockInfo

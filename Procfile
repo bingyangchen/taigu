@@ -1,1 +1,1 @@
-web: gunicorn --pythonpath investment investment.wsgi
+web: gunicorn main.wsgi

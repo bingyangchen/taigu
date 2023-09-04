@@ -1,8 +1,8 @@
 from django.db import models
 
-from investment.account.models import User
-from investment.core.models import CreateUpdateDateModel
-from investment.stock.models import Company
+from main.account.models import User
+from main.core.models import CreateUpdateDateModel
+from main.stock.models import Company
 
 
 class StockMemo(CreateUpdateDateModel):

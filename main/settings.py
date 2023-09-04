@@ -9,8 +9,8 @@ ALLOWED_HOSTS = []
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^https?://(localhost|127\.0\.0\.1):300[0-9]$"]
 CORS_ALLOW_CREDENTIALS = True
 
-ROOT_URLCONF = "investment.urls"
-WSGI_APPLICATION = "investment.wsgi.application"
+ROOT_URLCONF = "main.urls"
+WSGI_APPLICATION = "main.wsgi.application"
 AUTH_USER_MODEL = "account.User"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -27,10 +27,10 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_apscheduler",
     # Local Apps
-    "investment.core",
-    "investment.account",
-    "investment.stock",
-    "investment.memo",
+    "main.core",
+    "main.account",
+    "main.stock",
+    "main.memo",
 ]
 
 MIDDLEWARE = [
@@ -44,7 +44,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "csp.middleware.CSPMiddleware",
     # My middlware
-    "investment.account.middleware.check_login_status_middleware",
+    "main.account.middleware.check_login_status_middleware",
 ]
 
 TEMPLATES = [
@@ -75,7 +75,7 @@ DATABASES = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    "investment.account.backends.MyBackend",
+    "main.account.backends.MyBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from django.http import HttpRequest, JsonResponse
 
-from investment.core.decorators import require_login
+from main.core.decorators import require_login
 
 from ..models import Company, TradeRecord
 from ..utils import UnknownStockIdError, fetch_company_info

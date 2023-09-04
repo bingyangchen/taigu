@@ -6,7 +6,7 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 from rest_framework.authtoken.models import Token
 
-from investment.core.decorators import require_login
+from main.core.decorators import require_login
 
 from .models import User
 from .utils import update_user, validate_registration_info

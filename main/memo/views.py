@@ -3,9 +3,9 @@ import json
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
-from investment.core.decorators import require_login
-from investment.stock.models import Company
-from investment.stock.utils import UnknownStockIdError, fetch_company_info
+from main.core.decorators import require_login
+from main.stock.models import Company
+from main.stock.utils import UnknownStockIdError, fetch_company_info
 
 from .models import StockMemo, TradePlan
 
