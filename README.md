@@ -5,26 +5,23 @@
 ### 開發環境要求
 
 - [Git 2.35 +](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-
 - [Python 3.10](https://www.python.org/downloads/release/python-3109/)
-
 - [pipenv](https://pypi.org/project/pipenv/)
-
 - [PostgreSQL 14 +](https://adamtheautomator.com/install-postgresql-on-mac/)
 
-### Step1: Build the Virtual Environment
+### Step1: 建置 pipenv 虛擬環境
 
 ```bash
 pipenv install --dev
 ```
 
-### Step2: Prepare the `.env` file
+### Step2: 建立並設定 .env 檔
 
 ```bash
 sh create_env_file.sh
 ```
 
-### Step3: Database Initialization (Optional)
+### Step3: 初始化資料庫 (Optional)
 
 - **3-1: Create a Superuser Named `postgres` If not Exist**
 
@@ -37,20 +34,6 @@ sh create_env_file.sh
     ```bash
     psql -tc "SELECT 1 FROM pg_database WHERE datname = 'investment'" | grep -q 1 || psql -c "CREATE DATABASE investment OWNER postgres"
     ```
-
-    Here's what each part of the command does:
-
-  - `psql`: This is the command-line tool for interacting with a PostgreSQL database.
-
-  - `-tc "SELECT 1 FROM pg_database WHERE datname = 'investment'"`: This is a flag that tells psql to run a SQL query and return the result as a single value. The query checks if a database named `investment` already exists in the PostgreSQL server.
-
-  - `|`: This is a pipe character that takes the output from the previous command and pipes it as input to the next command.
-
-  - `grep -q 1`: This is a command that searches for the number 1 in the output of the previous psql command. The -q option tells grep to suppress any output to the console and only set the exit status.
-
-  - `||`: This is a logical "OR" operator that executes the next command only if the previous command fails, which in this case means that the database `investment` was not found.
-
-  - `psql -c "CREATE DATABASE investment OWNER postgres"`: This is another psql command that creates a new database named `investment` and set its owner to `postgres`.
 
 - **3-3: Apply the Dump File**
 
@@ -66,21 +49,29 @@ sh create_env_file.sh
 
 ### 開發環境常用指令
 
-- `python manage.py runserver` 啟動在 local 開發用的 server 並配置一個 terminal
+- `python manage.py runserver`
+
+    啟動在 dev server 並配置一個 terminal。
 
     `Ctrl` + `C` 停止 server。
 
-- `python manage.py dbshell` 開啟 PostgreSQL CLI
+- `python manage.py dbshell`
 
-    `\q` 離開 PostgreSQL CLI。
+    開啟 DB 的 CLI，本專案使用的 db 是 PostgreSQL，所以開啟的是 psql。
 
-- `python manage.py shell` 開啟 Django 互動模式
+    輸入 `\q` 離開 psql。
 
-    `exit()` 離開。
+- `python manage.py shell`
+
+    開啟 Python interpreter 並設定好環境變數。
+
+    輸入 `exit()` 離開互動模式。
 
 - `pytest` 跑測試
 
     本專案使用 `pytest` 取代 Django 內建的測試套件，所以不是使用 `python manage.py test` 這個指令。
+
+    關於 Pytest 指令的其它使用方式，請見 [Pytest 官方文件](https://docs.pytest.org/en/latest/index.html)。
 
 ## 如何部署在 Heroku？
 
@@ -99,7 +90,7 @@ pipenv requirements > requirements.txt
 
 ### 正式環境常用指令
 
->這裡使用的是 Heroku CLI，因此需要先在 local [安裝](https://devcenter.heroku.com/articles/heroku-cli)。
+>這裡使用的是 Heroku CLI，須先在 local [安裝 Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)。
 
 - **登入 Heroku**
 
