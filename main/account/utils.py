@@ -13,7 +13,7 @@ from .models import User
 
 def validate_registration_info(
     username: str | None, email: str | None, password: str | None
-):
+) -> None:
     if not (username and email and password):
         raise DataNotSufficientError
 
@@ -34,7 +34,7 @@ def update_user(**kwargs) -> User:
     new_password = kwargs.get("new_password")
 
     if id is None:
-        raise User.DoesNotExist("User Does Not Exist")
+        raise DataNotSufficientError
     else:
         user: User = User.objects.get(pk=id)
         if username or (username == ""):

@@ -23,10 +23,10 @@ class MyBackend(BaseBackend):
         elif email and password:
             try:
                 user: User = User.objects.get(email=email)
-                if check_password(password, user.password):
-                    return user
-                else:
-                    raise WrongPasswordError
             except User.DoesNotExist:
                 raise User.DoesNotExist("User Does Not Exist")
+            if check_password(password, user.password):
+                return user
+            else:
+                raise WrongPasswordError
         return None
