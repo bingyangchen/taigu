@@ -5,8 +5,9 @@ from django.http import HttpRequest, JsonResponse
 
 from main.core.decorators import require_login
 
+from .. import UnknownStockIdError
 from ..models import CashDividendRecord, Company
-from ..utils import UnknownStockIdError, fetch_company_info
+from ..utils import fetch_company_info
 
 
 @require_login
@@ -28,10 +29,7 @@ def create_or_list(request: HttpRequest):
                 company_info = fetch_company_info(sid)
                 c, created = Company.objects.get_or_create(
                     pk=sid,
-                    defaults={
-                        "name": company_info["name"],
-                        "trade_type": company_info["trade_type"],
-                    },
+                    defaults={**company_info},
                 )
                 cdr = CashDividendRecord.objects.create(
                     owner=request.user,
@@ -108,10 +106,7 @@ def update_or_delete(request: HttpRequest, id):
                 company_info = fetch_company_info(sid)
                 c, created = Company.objects.get_or_create(
                     pk=sid,
-                    defaults={
-                        "name": company_info["name"],
-                        "trade_type": company_info["trade_type"],
-                    },
+                    defaults={**company_info},
                 )
                 cdr = CashDividendRecord.objects.get(pk=id)
                 cdr.company = c

@@ -4,8 +4,9 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
 from main.core.decorators import require_login
+from main.stock import UnknownStockIdError
 from main.stock.models import Company
-from main.stock.utils import UnknownStockIdError, fetch_company_info
+from main.stock.utils import fetch_company_info
 
 from .models import StockMemo, TradePlan
 
@@ -24,10 +25,7 @@ def update_or_create_stock_memo(request: HttpRequest, sid: str):
         company_info = fetch_company_info(sid)
         c, created = Company.objects.get_or_create(
             pk=sid,
-            defaults={
-                "name": company_info["name"],
-                "trade_type": company_info["trade_type"],
-            },
+            defaults={**company_info},
         )
         m = StockMemo.objects.filter(owner=request.user, company=c).first()
         if m:
@@ -108,12 +106,9 @@ def create_or_list_trade_plan(request: HttpRequest):
                 company_info = fetch_company_info(sid)
                 c, created = Company.objects.get_or_create(
                     pk=sid,
-                    defaults={
-                        "name": company_info["name"],
-                        "trade_type": company_info["trade_type"],
-                    },
+                    defaults={**company_info},
                 )
-                p: TradePlan = TradePlan.objects.create(
+                p = TradePlan.objects.create(
                     owner=request.user,
                     company=c,
                     plan_type=plan_type,
@@ -180,12 +175,9 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
                 company_info = fetch_company_info(sid)
                 c, created = Company.objects.get_or_create(
                     pk=sid,
-                    defaults={
-                        "name": company_info["name"],
-                        "trade_type": company_info["trade_type"],
-                    },
+                    defaults={**company_info},
                 )
-                p: TradePlan = TradePlan.objects.get(pk=id)
+                p = TradePlan.objects.get(pk=id)
                 p.company = c
                 p.plan_type = plan_type
                 p.target_price = target_price

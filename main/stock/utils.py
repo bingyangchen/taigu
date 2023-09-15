@@ -13,29 +13,21 @@ from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 from pyquery import PyQuery
 
-from . import Frequency, InfoEndpoint, TradeType
+from . import Frequency, InfoEndpoint, TradeType, UnknownStockIdError
 from .models import Company, History, StockInfo
-
-
-class UnknownStockIdError(Exception):
-    pass
 
 
 def fetch_company_info(sid: str) -> dict:
     response = requests.post(
         f"https://isin.twse.com.tw/isin/single_main.jsp?owncode={sid}"
     )
-    doc = PyQuery(response.text)
-    name = doc.find("tr:nth-child(2)>td:nth-child(4)").text()
-    trade_type = doc.find("tr:nth-child(2)>td:nth-child(5)").text()
+    document = PyQuery(response.text)
+    name = document.find("tr:nth-child(2)>td:nth-child(4)").text()
+    trade_type = document.find("tr:nth-child(2)>td:nth-child(5)").text()
     if name:
         return {
-            "name": name,
-            "trade_type": (
-                TradeType.TSE
-                if trade_type == "上市"
-                else (TradeType.OTC if trade_type == "上櫃" else None)
-            ),
+            "name": str(name),
+            "trade_type": TradeType.TRADE_TYPE_ZH_ENG_MAP.get(str(trade_type)),
         }
     else:
         raise UnknownStockIdError("Unknown Stock ID")
@@ -50,7 +42,7 @@ def fetch_and_store_real_time_info() -> None:
     while len(all) > 0:
         start_timestamp = datetime.datetime.now()
         query = "|".join(all[:batch_size])
-        url = f"{InfoEndpoint.endpoints['single_day']['real_time']}{query}"
+        url = f"{InfoEndpoint.single_day['real_time']}{query}"
         try:
             r = requests.get(url, timeout=7).json()
             for row in r["msgArray"]:
@@ -128,7 +120,7 @@ def fetch_and_store_latest_day_info() -> None:
     # Process TSE trade type
     try:
         tse_response: list[dict[str, str]] = requests.get(
-            InfoEndpoint.endpoints["single_day"][TradeType.TSE]
+            InfoEndpoint.single_day[TradeType.TSE]
         ).json()
         for row in tse_response:
             try:
@@ -159,7 +151,7 @@ def fetch_and_store_latest_day_info() -> None:
     # Process OTC trade type
     try:
         otc_response: list[dict[str, str]] = requests.get(
-            InfoEndpoint.endpoints["single_day"][TradeType.OTC]
+            InfoEndpoint.single_day[TradeType.OTC]
         ).json()
         for row in otc_response:
             try:
@@ -219,7 +211,7 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"  # noqa: E501
     }
     response = requests.get(
-        f"{InfoEndpoint.endpoints['multiple_days']}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start_datetime.timestamp())}&period2={int(end_datetime.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
+        f"{InfoEndpoint.multiple_days}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start_datetime.timestamp())}&period2={int(end_datetime.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
         headers=headers,
     )
     data = StringIO(response.text)
@@ -245,7 +237,7 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
             )
 
 
-def update_all_stocks_history():
+def update_all_stocks_history() -> None:
     for company in Company.objects.filter(trade_type__isnull=False):
         start_timestamp = datetime.datetime.now()
         try:
