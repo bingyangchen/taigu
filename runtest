@@ -1,0 +1,8 @@
+# Load all environment variables from .env file
+set -o allexport
+source .env set
+set +o allexport
+
+# Pass all arguments and options to pytest
+args_and_opts="$@"
+pytest $args_and_opts

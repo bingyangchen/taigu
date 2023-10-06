@@ -18,7 +18,7 @@ pipenv install --dev
 ### Step2: 建立並設定 .env 檔
 
 ```bash
-sh create_env_file.sh
+./create_env_file
 ```
 
 ### Step3: 初始化資料庫 (Optional)
@@ -67,11 +67,11 @@ sh create_env_file.sh
 
     輸入 `exit()` 離開互動模式。
 
-- `pytest` 跑測試
+- `./runtest` 跑測試
 
     本專案使用 `pytest` 取代 Django 內建的測試套件，所以不是使用 `python manage.py test` 這個指令。
 
-    關於 Pytest 指令的其它使用方式，請見 [Pytest 官方文件](https://docs.pytest.org/en/latest/index.html)。
+    關於 Pytest 的詳細使用方式，請見 [Pytest 官方文件](https://docs.pytest.org/en/latest/index.html)。
 
 ## 如何部署在 Heroku？
 
