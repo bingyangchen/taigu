@@ -1,8 +1,13 @@
+#!/usr/bin/env bash
+source $(pipenv --venv)/bin/activate
+
 # Load all environment variables from .env file
 set -o allexport
 source .env set
-set +o allexport
 
 # Pass all arguments and options to pytest
 args_and_opts="$@"
 pytest $args_and_opts
+
+set +o allexport
+exit
