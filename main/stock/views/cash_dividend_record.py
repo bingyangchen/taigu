@@ -12,84 +12,82 @@ from ..utils import fetch_company_info
 
 @require_login
 def create_or_list(request: HttpRequest):
-    res = {"success": False, "data": None}
+    result = {"success": False, "data": None}
     if request.method == "POST":
         payload = json.loads(request.body)
         if (
             (not (deal_time := payload.get("deal_time")))
             or (not (sid := payload.get("sid")))
-            or ((cash_dividend := payload.get("cash_dividend")) == None)
+            or ((cash_dividend := payload.get("cash_dividend")) is None)
         ):
-            res["error"] = "Data Not Sufficient"
+            result["error"] = "Data Not Sufficient"
         else:
             deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
             sid = str(sid)
             cash_dividend = int(cash_dividend)
             try:
                 company_info = fetch_company_info(sid)
-                c, created = Company.objects.get_or_create(
+                company, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={**company_info},
                 )
-                cdr = CashDividendRecord.objects.create(
+                record = CashDividendRecord.objects.create(
                     owner=request.user,
-                    company=c,
+                    company=company,
                     deal_time=deal_time,
                     cash_dividend=cash_dividend,
                 )
-                res["data"] = {
-                    "id": cdr.pk,
-                    "deal_time": cdr.deal_time,
-                    "sid": cdr.company.pk,
-                    "company_name": cdr.company.name,
-                    "cash_dividend": cdr.cash_dividend,
+                result["data"] = {
+                    "id": record.pk,
+                    "deal_time": record.deal_time,
+                    "sid": record.company.pk,
+                    "company_name": record.company.name,
+                    "cash_dividend": record.cash_dividend,
                 }
-                res["success"] = True
+                result["success"] = True
             except UnknownStockIdError as e:
-                res["error"] = str(e)
+                result["error"] = str(e)
     elif request.method == "GET":
-        deal_time_list = json.loads(request.GET.get("deal_time_list", "[]"))
-        sid_list = json.loads(request.GET.get("sid_list", "[]"))
+        deal_times = json.loads(request.GET.get("deal_times", "[]"))
+        sids = json.loads(request.GET.get("sids", "[]"))
 
-        if (deal_time_list != []) or (sid_list != []):
-            if (deal_time_list != []) and (sid_list != []):
-                queryset = request.user.cash_dividend_records.filter(
-                    deal_time__in=deal_time_list
-                ).filter(company__pk__in=sid_list)
-            elif deal_time_list == []:
-                queryset = request.user.cash_dividend_records.filter(
-                    company__pk__in=sid_list
+        if deal_times or sids:
+            if deal_times and sids:
+                query_set = request.user.cash_dividend_records.filter(
+                    deal_time__in=deal_times
+                ).filter(company__pk__in=sids)
+            elif not deal_times:
+                query_set = request.user.cash_dividend_records.filter(
+                    company__pk__in=sids
                 )
             else:
-                queryset = request.user.cash_dividend_records.filter(
-                    deal_time__in=deal_time_list
+                query_set = request.user.cash_dividend_records.filter(
+                    deal_time__in=deal_times
                 )
         else:
-            queryset = request.user.cash_dividend_records.all()
+            query_set = request.user.cash_dividend_records.all()
 
-        queryset = queryset.order_by("-deal_time")
+        query_set = query_set.order_by("-deal_time")
 
-        result = []
-        for cdr in queryset:
-            result.append(
-                {
-                    "id": cdr.pk,
-                    "deal_time": cdr.deal_time,
-                    "sid": cdr.company.pk,
-                    "company_name": cdr.company.name,
-                    "cash_dividend": cdr.cash_dividend,
-                }
-            )
-        res["data"] = result
-        res["success"] = True
+        result["data"] = [
+            {
+                "id": record.pk,
+                "deal_time": record.deal_time,
+                "sid": record.company.pk,
+                "company_name": record.company.name,
+                "cash_dividend": record.cash_dividend,
+            }
+            for record in query_set
+        ]
+        result["success"] = True
     else:
-        res["error"] = "Method Not Allowed"
-    return JsonResponse(res)
+        result["error"] = "Method Not Allowed"
+    return JsonResponse(result)
 
 
 @require_login
 def update_or_delete(request: HttpRequest, id):
-    res = {"success": False, "data": None}
+    result = {"success": False, "data": None}
     id = int(id)
 
     if request.method == "POST":
@@ -99,33 +97,33 @@ def update_or_delete(request: HttpRequest, id):
             or (not (sid := payload.get("sid")))
             or ((cash_dividend := payload.get("cash_dividend")) is None)
         ):
-            res["error"] = "Data Not Sufficient"
+            result["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             try:
                 company_info = fetch_company_info(sid)
-                c, created = Company.objects.get_or_create(
+                company, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={**company_info},
                 )
-                cdr = CashDividendRecord.objects.get(pk=id)
-                cdr.company = c
-                cdr.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
-                cdr.cash_dividend = int(cash_dividend)
-                cdr.save()
-                res["data"] = {
-                    "id": cdr.pk,
-                    "deal_time": cdr.deal_time,
-                    "sid": cdr.company.pk,
-                    "company_name": cdr.company.name,
-                    "cash_dividend": cdr.cash_dividend,
+                record = CashDividendRecord.objects.get(pk=id)
+                record.company = company
+                record.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
+                record.cash_dividend = int(cash_dividend)
+                record.save()
+                result["data"] = {
+                    "id": record.pk,
+                    "deal_time": record.deal_time,
+                    "sid": record.company.pk,
+                    "company_name": record.company.name,
+                    "cash_dividend": record.cash_dividend,
                 }
-                res["success"] = True
+                result["success"] = True
             except UnknownStockIdError as e:
-                res["error"] = str(e)
+                result["error"] = str(e)
     elif request.method == "DELETE":
         CashDividendRecord.objects.get(pk=id).delete()
-        res["success"] = True
+        result["success"] = True
     else:
-        res["error"] = "Method Not Allowed"
-    return JsonResponse(res)
+        result["error"] = "Method Not Allowed"
+    return JsonResponse(result)

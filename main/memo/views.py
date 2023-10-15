@@ -14,7 +14,7 @@ from .models import StockMemo, TradePlan
 @require_POST
 @require_login
 def update_or_create_stock_memo(request: HttpRequest, sid: str):
-    res = {"success": False, "data": None}
+    result = {"success": False, "data": None}
 
     payload = json.loads(request.body)
     business = payload.get("business")
@@ -23,73 +23,69 @@ def update_or_create_stock_memo(request: HttpRequest, sid: str):
 
     try:
         company_info = fetch_company_info(sid)
-        c, created = Company.objects.get_or_create(
+        company, created = Company.objects.get_or_create(
             pk=sid,
             defaults={**company_info},
         )
-        m = StockMemo.objects.filter(owner=request.user, company=c).first()
-        if m:
+        memo = StockMemo.objects.filter(owner=request.user, company=company).first()
+        if memo:
             if business is not None:
-                m.business = business
+                memo.business = business
             if strategy is not None:
-                m.strategy = strategy
+                memo.strategy = strategy
             if note is not None:
-                m.note = note
-            m.save()
+                memo.note = note
+            memo.save()
         else:
-            m = StockMemo.objects.create(
+            memo = StockMemo.objects.create(
                 owner=request.user,
-                company=c,
+                company=company,
                 business=business or "",
                 strategy=strategy or "",
                 note=note or "",
             )
-        res["data"] = {
-            "id": m.pk,
-            "sid": m.company.pk,
-            "company_name": m.company.name,
-            "business": m.business,
-            "strategy": m.strategy,
-            "note": m.note,
+        result["data"] = {
+            "id": memo.pk,
+            "sid": memo.company.pk,
+            "company_name": memo.company.name,
+            "business": memo.business,
+            "strategy": memo.strategy,
+            "note": memo.note,
         }
-        res["success"] = True
+        result["success"] = True
     except UnknownStockIdError as e:
-        res["error"] = str(e)
-    return JsonResponse(res)
+        result["error"] = str(e)
+    return JsonResponse(result)
 
 
 @require_GET
 @require_login
 def list_stock_memo(request: HttpRequest):
-    sid_list = request.GET.get("sid-list", [])
-    res = {"success": False, "data": None}
-
-    if sid_list != []:
-        sid_list = sid_list.strip(",").split(",")
-        queryset = request.user.stock_memos.filter(company__pk__in=sid_list)
+    result = {"success": False, "data": None}
+    sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
+    if sids:
+        query_set = request.user.stock_memos.filter(company__pk__in=sids)
     else:
-        queryset = request.user.stock_memos.all()
+        query_set = request.user.stock_memos.all()
 
-    result = []
-    for each in queryset:
-        result.append(
-            {
-                "id": each.pk,
-                "sid": each.company.pk,
-                "company_name": each.company.name,
-                "business": each.business,
-                "strategy": each.strategy,
-                "note": each.note,
-            }
-        )
-    res["data"] = result
-    res["success"] = True
-    return JsonResponse(res)
+    result["data"] = [
+        {
+            "id": memo.pk,
+            "sid": memo.company.pk,
+            "company_name": memo.company.name,
+            "business": memo.business,
+            "strategy": memo.strategy,
+            "note": memo.note,
+        }
+        for memo in query_set
+    ]
+    result["success"] = True
+    return JsonResponse(result)
 
 
 @require_login
 def create_or_list_trade_plan(request: HttpRequest):
-    res = {"success": False, "data": None}
+    result = {"success": False, "data": None}
     if request.method == "POST":
         payload = json.loads(request.body)
         if (
@@ -98,65 +94,61 @@ def create_or_list_trade_plan(request: HttpRequest):
             or ((target_price := payload.get("target_price")) is None)
             or ((target_quantity := payload.get("target_quantity")) is None)
         ):
-            res["error"] = "Data Not Sufficient"
+            result["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
                 company_info = fetch_company_info(sid)
-                c, created = Company.objects.get_or_create(
+                company, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={**company_info},
                 )
-                p = TradePlan.objects.create(
+                plan = TradePlan.objects.create(
                     owner=request.user,
-                    company=c,
+                    company=company,
                     plan_type=plan_type,
                     target_price=target_price,
                     target_quantity=target_quantity,
                 )
-                res["data"] = {
-                    "id": p.pk,
-                    "sid": p.company.pk,
-                    "company_name": p.company.name,
-                    "plan_type": p.plan_type,
-                    "target_price": p.target_price,
-                    "target_quantity": p.target_quantity,
+                result["data"] = {
+                    "id": plan.pk,
+                    "sid": plan.company.pk,
+                    "company_name": plan.company.name,
+                    "plan_type": plan.plan_type,
+                    "target_price": plan.target_price,
+                    "target_quantity": plan.target_quantity,
                 }
-                res["success"] = True
+                result["success"] = True
             except UnknownStockIdError as e:
-                res["error"] = str(e)
+                result["error"] = str(e)
     elif request.method == "GET":
-        sid_list = request.GET.get("sid-list", [])
-
-        if sid_list != []:
-            sid_list = sid_list.strip(",").split(",")
-            queryset = request.user.trade_plans.filter(company__pk__in=sid_list)
+        sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
+        if sids:
+            query_set = request.user.trade_plans.filter(company__pk__in=sids)
         else:
-            queryset = request.user.trade_plans.all()
+            query_set = request.user.trade_plans.all()
 
-        result = []
-        for each in queryset:
-            result.append(
-                {
-                    "id": each.pk,
-                    "sid": each.company.pk,
-                    "company_name": each.company.name,
-                    "plan_type": each.plan_type,
-                    "target_price": each.target_price,
-                    "target_quantity": each.target_quantity,
-                }
-            )
-        res["data"] = result
-        res["success"] = True
+        result["data"] = [
+            {
+                "id": plan.pk,
+                "sid": plan.company.pk,
+                "company_name": plan.company.name,
+                "plan_type": plan.plan_type,
+                "target_price": plan.target_price,
+                "target_quantity": plan.target_quantity,
+            }
+            for plan in query_set
+        ]
+        result["success"] = True
     else:
-        res["error"] = "Method Not Allowed"
-    return JsonResponse(res)
+        result["error"] = "Method Not Allowed"
+    return JsonResponse(result)
 
 
 @require_login
 def update_or_delete_trade_plan(request: HttpRequest, id):
-    res = {"success": False, "data": None}
+    result = {"success": False, "data": None}
     id = int(id)
 
     if request.method == "POST":
@@ -167,37 +159,37 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
             or ((target_price := payload.get("target_price")) is None)
             or ((target_quantity := payload.get("target_quantity")) is None)
         ):
-            res["error"] = "Data Not Sufficient"
+            result["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
                 company_info = fetch_company_info(sid)
-                c, created = Company.objects.get_or_create(
+                company, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={**company_info},
                 )
-                p = TradePlan.objects.get(pk=id)
-                p.company = c
-                p.plan_type = plan_type
-                p.target_price = target_price
-                p.target_quantity = target_quantity
-                p.save()
+                plan = TradePlan.objects.get(pk=id)
+                plan.company = company
+                plan.plan_type = plan_type
+                plan.target_price = target_price
+                plan.target_quantity = target_quantity
+                plan.save()
 
-                res["data"] = {
-                    "id": p.pk,
-                    "sid": p.company.pk,
-                    "company_name": p.company.name,
-                    "plan_type": p.plan_type,
-                    "target_price": p.target_price,
-                    "target_quantity": p.target_quantity,
+                result["data"] = {
+                    "id": plan.pk,
+                    "sid": plan.company.pk,
+                    "company_name": plan.company.name,
+                    "plan_type": plan.plan_type,
+                    "target_price": plan.target_price,
+                    "target_quantity": plan.target_quantity,
                 }
-                res["success"] = True
+                result["success"] = True
             except UnknownStockIdError as e:
-                res["error"] = str(e)
+                result["error"] = str(e)
     elif request.method == "DELETE":
         TradePlan.objects.get(pk=id).delete()
-        res["success"] = True
+        result["success"] = True
     else:
-        res["error"] = "Method Not Allowed"
-    return JsonResponse(res)
+        result["error"] = "Method Not Allowed"
+    return JsonResponse(result)

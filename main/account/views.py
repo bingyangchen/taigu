@@ -15,7 +15,7 @@ from .utils import update_user, validate_registration_info
 
 @require_POST
 def register(request: HttpRequest):
-    response: dict = {"success": False}
+    result: dict = {"success": False}
     try:
         username = request.POST.get("username")
         email = request.POST.get("email")
@@ -24,19 +24,19 @@ def register(request: HttpRequest):
         validate_registration_info(username, email, password)
         User.objects.create_user(email, password, username=username)
 
-        response["success"] = True
-        return JsonResponse(response)
+        result["success"] = True
+        return JsonResponse(result)
     except Exception as e:
         if isinstance(e, ValidationError):
-            response["error"] = e.messages[0]
+            result["error"] = e.messages[0]
         else:
-            response["error"] = str(e)
-        return JsonResponse(response, status=400)
+            result["error"] = str(e)
+        return JsonResponse(result, status=400)
 
 
 @require_POST
 def login(request: HttpRequest):
-    response: dict = {"success": False}
+    result: dict = {"success": False}
     if (email := request.POST.get("email")) and (
         password := request.POST.get("password")
     ):
@@ -44,23 +44,23 @@ def login(request: HttpRequest):
             user = authenticate(request, email=email, password=password)
             request.user = user
             token = Token.objects.get_or_create(user=user)[0].key
-            response["success"] = True
+            result["success"] = True
 
-            http_response = JsonResponse(response)
+            http_response = JsonResponse(result)
             http_response.headers["new-token"] = token
             return http_response
         except Exception as e:
-            response["error"] = str(e)
-            return JsonResponse(response, status=400)
+            result["error"] = str(e)
+            return JsonResponse(result, status=400)
     else:
-        response["error"] = "Data Not Sufficient"
-        return JsonResponse(response, status=400)
+        result["error"] = "Data Not Sufficient"
+        return JsonResponse(result, status=400)
 
 
 @require_GET
 @require_login
 def me(request: HttpRequest):
-    response = {
+    result = {
         "success": True,
         "data": {
             "id": request.user.pk,
@@ -69,16 +69,16 @@ def me(request: HttpRequest):
             "avatar_url": request.user.avatar_url or None,
         },
     }
-    return JsonResponse(response)
+    return JsonResponse(result)
 
 
 @require_GET
 @require_login
 def logout(request: HttpRequest):
-    response: dict = {"success": False}
+    result = {"success": False}
     Token.objects.filter(user=request.user).delete()
-    response["success"] = True
-    http_response = JsonResponse(response)
+    result["success"] = True
+    http_response = JsonResponse(result)
     http_response.headers["is-log-out"] = "yes"
     http_response.delete_cookie("token", samesite="None")
     return http_response
@@ -87,7 +87,7 @@ def logout(request: HttpRequest):
 @require_POST
 @require_login
 def update(request: HttpRequest):
-    response: dict = {"success": False, "data": None}
+    result: dict = {"success": False, "data": None}
     try:
         payload = json.loads(request.body)
 
@@ -100,38 +100,38 @@ def update(request: HttpRequest):
             new_password=payload.get("new_password"),
         )
 
-        response["success"] = True
-        response["data"] = {
+        result["success"] = True
+        result["data"] = {
             "id": user.pk,
             "username": user.username,
             "email": user.email,
             "avatar_url": user.avatar_url or None,
         }
-        return JsonResponse(response)
+        return JsonResponse(result)
     except Exception as e:
         if isinstance(e, ValidationError):
-            response["error"] = e.messages[0]
+            result["error"] = e.messages[0]
         else:
-            response["error"] = str(e)
-        return JsonResponse(response, status=400)
+            result["error"] = str(e)
+        return JsonResponse(result, status=400)
 
 
 @require_login
 def delete(request: HttpRequest):
-    response: dict = {"success": False}
+    result: dict = {"success": False}
     if request.method == "DELETE":
         password = json.loads(request.body).get("password")
         if check_password(password, request.user.password):
             Token.objects.filter(user=request.user).delete()
             request.user.delete()
-            response["success"] = True
-            http_response = JsonResponse(response)
+            result["success"] = True
+            http_response = JsonResponse(result)
             http_response.headers["is-log-out"] = "yes"
             http_response.delete_cookie("token", samesite="None")
             return http_response
         else:
-            response["error"] = "Wrong Password"
-            return JsonResponse(response, status=400)
+            result["error"] = "Wrong Password"
+            return JsonResponse(result, status=400)
     else:
-        response["error"] = "DELETE Method Required"
-        return JsonResponse(response, status=405)
+        result["error"] = "DELETE Method Required"
+        return JsonResponse(result, status=405)

@@ -34,10 +34,10 @@ def fetch_company_info(sid: str) -> dict:
 
 
 def fetch_and_store_real_time_info() -> None:
-    queryset = Company.objects.filter(trade_type__isnull=False).values(
+    query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )
-    all = list(map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", queryset))
+    all = list(map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set))
     batch_size = 150
     while len(all) > 0:
         start_timestamp = datetime.datetime.now()

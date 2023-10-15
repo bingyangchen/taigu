@@ -12,7 +12,7 @@ from ..utils import fetch_company_info
 
 @require_login
 def create_or_list(request: HttpRequest):
-    res = {"success": False, "data": None}
+    result = {"success": False, "data": None}
     if request.method == "POST":
         payload = json.loads(request.body)
         if (
@@ -22,81 +22,77 @@ def create_or_list(request: HttpRequest):
             or ((deal_quantity := payload.get("deal_quantity")) is None)
             or ((handling_fee := payload.get("handling_fee")) is None)
         ):
-            res["error"] = "Data Not Sufficient"
+            result["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             try:
                 company_info = fetch_company_info(sid)
-                c, created = Company.objects.get_or_create(
+                company, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={**company_info},
                 )
-                tr = TradeRecord.objects.create(
+                record = TradeRecord.objects.create(
                     owner=request.user,
-                    company=c,
+                    company=company,
                     deal_time=datetime.strptime(str(deal_time), "%Y-%m-%d").date(),
                     deal_price=float(deal_price),
                     deal_quantity=int(deal_quantity),
                     handling_fee=int(handling_fee),
                 )
-                res["data"] = {
-                    "id": tr.pk,
-                    "deal_time": tr.deal_time,
-                    "sid": tr.company.pk,
-                    "company_name": tr.company.name,
-                    "deal_price": tr.deal_price,
-                    "deal_quantity": tr.deal_quantity,
-                    "handling_fee": tr.handling_fee,
+                result["data"] = {
+                    "id": record.pk,
+                    "deal_time": record.deal_time,
+                    "sid": record.company.pk,
+                    "company_name": record.company.name,
+                    "deal_price": record.deal_price,
+                    "deal_quantity": record.deal_quantity,
+                    "handling_fee": record.handling_fee,
                 }
-                res["success"] = True
+                result["success"] = True
             except UnknownStockIdError as e:
-                res["error"] = str(e)
+                result["error"] = str(e)
     elif request.method == "GET":
-        deal_time_list = [
+        deal_times = [
             datetime.strptime(d, "%Y-%m-%d").date()
-            for d in json.loads(request.GET.get("deal_time_list", "[]"))
+            for d in json.loads(request.GET.get("deal_times", "[]"))
         ]
-        sid_list = json.loads(request.GET.get("sid_list", "[]"))
+        sids = json.loads(request.GET.get("sids", "[]"))
 
-        if deal_time_list != [] or sid_list != []:
-            if deal_time_list != [] and sid_list != []:
-                queryset = request.user.trade_records.filter(
-                    deal_time__in=deal_time_list
-                ).filter(company__pk__in=sid_list)
-            elif deal_time_list == []:
-                queryset = request.user.trade_records.filter(company__pk__in=sid_list)
+        if deal_times or sids:
+            if deal_times and sids:
+                query_set = request.user.trade_records.filter(
+                    deal_time__in=deal_times
+                ).filter(company__pk__in=sids)
+            elif not deal_times:
+                query_set = request.user.trade_records.filter(company__pk__in=sids)
             else:
-                queryset = request.user.trade_records.filter(
-                    deal_time__in=deal_time_list
-                )
+                query_set = request.user.trade_records.filter(deal_time__in=deal_times)
         else:
-            queryset = request.user.trade_records.all()
+            query_set = request.user.trade_records.all()
 
-        queryset = queryset.order_by("-deal_time", "-created_at")
+        query_set = query_set.order_by("-deal_time", "-created_at")
 
-        result = []
-        for tr in queryset:
-            result.append(
-                {
-                    "id": tr.pk,
-                    "deal_time": tr.deal_time,
-                    "sid": tr.company.pk,
-                    "company_name": tr.company.name,
-                    "deal_price": tr.deal_price,
-                    "deal_quantity": tr.deal_quantity,
-                    "handling_fee": tr.handling_fee,
-                }
-            )
-        res["data"] = result
-        res["success"] = True
+        result["data"] = [
+            {
+                "id": record.pk,
+                "deal_time": record.deal_time,
+                "sid": record.company.pk,
+                "company_name": record.company.name,
+                "deal_price": record.deal_price,
+                "deal_quantity": record.deal_quantity,
+                "handling_fee": record.handling_fee,
+            }
+            for record in query_set
+        ]
+        result["success"] = True
     else:
-        res["error"] = "Method Not Allowed"
-    return JsonResponse(res)
+        result["error"] = "Method Not Allowed"
+    return JsonResponse(result)
 
 
 @require_login
 def update_or_delete(request: HttpRequest, id):
-    res = {"success": False, "data": None}
+    result = {"success": False, "data": None}
     id = int(id)
 
     if request.method == "POST":
@@ -108,37 +104,37 @@ def update_or_delete(request: HttpRequest, id):
             or ((deal_quantity := payload.get("deal_quantity")) is None)
             or ((handling_fee := payload.get("handling_fee")) is None)
         ):
-            res["error"] = "Data Not Sufficient"
+            result["error"] = "Data Not Sufficient"
         else:
             sid = str(sid)
             try:
                 company_info = fetch_company_info(sid)
-                c, created = Company.objects.get_or_create(
+                company, created = Company.objects.get_or_create(
                     pk=sid,
                     defaults={**company_info},
                 )
-                tr = TradeRecord.objects.get(pk=id)
-                tr.company = c
-                tr.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
-                tr.deal_price = float(deal_price)
-                tr.deal_quantity = int(deal_quantity)
-                tr.handling_fee = int(handling_fee)
-                tr.save()
-                res["data"] = {
-                    "id": tr.pk,
-                    "deal_time": tr.deal_time,
-                    "sid": tr.company.pk,
-                    "company_name": tr.company.name,
-                    "deal_price": tr.deal_price,
-                    "deal_quantity": tr.deal_quantity,
-                    "handling_fee": tr.handling_fee,
+                record = TradeRecord.objects.get(pk=id)
+                record.company = company
+                record.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
+                record.deal_price = float(deal_price)
+                record.deal_quantity = int(deal_quantity)
+                record.handling_fee = int(handling_fee)
+                record.save()
+                result["data"] = {
+                    "id": record.pk,
+                    "deal_time": record.deal_time,
+                    "sid": record.company.pk,
+                    "company_name": record.company.name,
+                    "deal_price": record.deal_price,
+                    "deal_quantity": record.deal_quantity,
+                    "handling_fee": record.handling_fee,
                 }
-                res["success"] = True
+                result["success"] = True
             except UnknownStockIdError as e:
-                res["error"] = str(e)
+                result["error"] = str(e)
     elif request.method == "DELETE":
         TradeRecord.objects.get(pk=id).delete()
-        res["success"] = True
+        result["success"] = True
     else:
-        res["error"] = "Method Not Allowed"
-    return JsonResponse(res)
+        result["error"] = "Method Not Allowed"
+    return JsonResponse(result)
