@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
+
+# Activate virtual Python environment
 source $(pipenv --venv)/bin/activate
 
 # Load all environment variables from .env file
 set -o allexport
 source .env set
 
-# Pass all arguments and options to pytest
+# Pass all arguments and options to `pytest`
 args_and_opts="$@"
 pytest $args_and_opts
 
