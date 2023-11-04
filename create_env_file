@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 cat <<EOF >.env
-DB_NAME=investment
+DB_NAME=trade_smartly
 DB_USER=postgres
 DB_PASSWORD=0000
 DB_HOST=localhost

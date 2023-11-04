@@ -29,16 +29,16 @@ pipenv install --dev
     psql -c "CREATE USER postgres SUPERUSER;"
     ```
 
-- **3-2: Create a Database Named `investment` If not Exist**
+- **3-2: Create a Database Named `trade_smartly` If not Exist**
 
     ```bash
-    psql -tc "SELECT 1 FROM pg_database WHERE datname = 'investment'" | grep -q 1 || psql -c "CREATE DATABASE investment OWNER postgres"
+    psql -tc "SELECT 1 FROM pg_database WHERE datname = 'trade_smartly'" | grep -q 1 || psql -c "CREATE DATABASE trade_smartly OWNER postgres"
     ```
 
 - **3-3: Apply the Dump File**
 
     ```bash
-    pg_restore -U postgres -d investment ./db_backups/heroku_postgresql_latest
+    pg_restore -U postgres -d trade_smartly ./db_backups/heroku_postgresql_latest
     ```
 
 - **3-4: Migrate the Database**
