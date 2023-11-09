@@ -1,5 +1,6 @@
 import csv
 import datetime
+from contextlib import suppress
 from io import StringIO
 from time import sleep
 
@@ -40,7 +41,7 @@ def fetch_and_store_real_time_info() -> None:
     all = list(map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set))
     batch_size = 150
     while len(all) > 0:
-        start_timestamp = datetime.datetime.now()
+        start = datetime.datetime.now()
         query = "|".join(all[:batch_size])
         url = f"{InfoEndpoint.single_day['real_time']}{query}"
         try:
@@ -110,7 +111,7 @@ def fetch_and_store_real_time_info() -> None:
         all = all[batch_size:]
 
         # deal with rate limit (3 requests per 5 seconds)
-        sleep(max(0, 1.8 - (datetime.datetime.now() - start_timestamp).total_seconds()))
+        sleep(max(0, 1.8 - (datetime.datetime.now() - start).total_seconds()))
     print("All Realtime Stock Info Updated")
 
 
@@ -197,21 +198,21 @@ def fetch_and_store_latest_day_info() -> None:
 
 
 def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
-    end_datetime = datetime.datetime.now()
-    start_datetime = end_datetime - relativedelta(days=80)
+    end = datetime.datetime.now()
+    start = end - relativedelta(days=80)
     interval = "1d"
     if frequency == Frequency.WEEKLY:
-        start_datetime = end_datetime - relativedelta(weeks=55)
+        start = end - relativedelta(weeks=55)
         interval = "1wk"
     elif frequency == Frequency.MONTHLY:
-        start_datetime = end_datetime - relativedelta(months=55)
+        start = end - relativedelta(months=55)
         interval = "1mo"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"  # noqa: E501
     }
     response = requests.get(
-        f"{InfoEndpoint.multiple_days}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start_datetime.timestamp())}&period2={int(end_datetime.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
+        f"{InfoEndpoint.multiple_days}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start.timestamp())}&period2={int(end.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
         headers=headers,
     )
     data = StringIO(response.text)
@@ -239,16 +240,14 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
 
 def update_all_stocks_history() -> None:
     for company in Company.objects.filter(trade_type__isnull=False):
-        start_timestamp = datetime.datetime.now()
-        try:
+        start = datetime.datetime.now()
+        with suppress(Exception):
             fetch_and_store_historical_info_yahoo(
                 company=company, frequency=Frequency.DAILY
             )
-        except Exception:
-            ...
 
         # deal with rate limit (3000 per hour)
-        sleep(max(0, 2 - (datetime.datetime.now() - start_timestamp).total_seconds()))
+        sleep(max(0, 2 - (datetime.datetime.now() - start).total_seconds()))
 
 
 def set_up_cron_jobs() -> None:
