@@ -17,6 +17,8 @@ from pyquery import PyQuery
 from . import Frequency, InfoEndpoint, TradeType, UnknownStockIdError
 from .models import Company, History, StockInfo
 
+has_thread_running = False
+
 
 def fetch_company_info(sid: str) -> dict:
     response = requests.post(
@@ -35,6 +37,11 @@ def fetch_company_info(sid: str) -> dict:
 
 
 def fetch_and_store_real_time_info() -> None:
+    global has_thread_running
+    if has_thread_running:
+        return
+    print("Start Fetching Realtime Stock Info")
+    has_thread_running = True
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )
@@ -45,7 +52,7 @@ def fetch_and_store_real_time_info() -> None:
         query = "|".join(all[:batch_size])
         url = f"{InfoEndpoint.single_day['real_time']}{query}"
         try:
-            r = requests.get(url, timeout=7).json()
+            r = requests.get(url, timeout=10).json()
             for row in r["msgArray"]:
                 try:
                     # parse row data
@@ -112,6 +119,7 @@ def fetch_and_store_real_time_info() -> None:
 
         # deal with rate limit (3 requests per 5 seconds)
         sleep(max(0, 1.8 - (datetime.datetime.now() - start).total_seconds()))
+    has_thread_running = False
     print("All Realtime Stock Info Updated")
 
 
