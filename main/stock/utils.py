@@ -52,8 +52,9 @@ def fetch_and_store_real_time_info() -> None:
         query = "|".join(all[:batch_size])
         url = f"{InfoEndpoint.single_day['real_time']}{query}"
         try:
-            r = requests.get(url, timeout=10).json()
-            for row in r["msgArray"]:
+            response = requests.get(url, timeout=10)
+            json_data = response.json()
+            for row in json_data["msgArray"]:
                 try:
                     # parse row data
                     company_id = row["c"]
@@ -113,6 +114,10 @@ def fetch_and_store_real_time_info() -> None:
                 except Exception:
                     continue
         except Exception as e:
+            try:
+                print(response.text)
+            except Exception:
+                ...
             print(e)
 
         all = all[batch_size:]
