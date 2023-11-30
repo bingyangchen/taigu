@@ -254,6 +254,10 @@ def update_all_stocks_history() -> None:
         sleep(max(0, 2 - (datetime.datetime.now() - start).total_seconds()))
 
 
+def log() -> None:
+    print("|", end="")
+
+
 def set_up_cron_jobs() -> None:
     DjangoJobExecution.objects.delete_old_job_executions(0)
     scheduler = BackgroundScheduler(timezone=settings.TIME_ZONE)
@@ -277,6 +281,13 @@ def set_up_cron_jobs() -> None:
         update_all_stocks_history,
         trigger=CronTrigger.from_crontab("0 1 * * MON-FRI"),
         id="update_all_stocks_history",
+        max_instances=1,
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        log,
+        trigger=CronTrigger.from_crontab("* * * * *"),
+        id="log",
         max_instances=1,
         replace_existing=True,
     )
