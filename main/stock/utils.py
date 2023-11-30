@@ -107,15 +107,15 @@ def fetch_and_store_real_time_info() -> None:
                     )
                 except Exception:
                     continue
+            print("One batch succeeded.")
         except Exception as e:
-            print("One batch failed:")
-            print(url)
+            print("One batch failed.")
             print(e)
         finally:
             all = all[batch_size:]
 
             # deal with rate limit (3 requests per 5 seconds)
-            sleep(max(0, 1.8 - (datetime.datetime.now() - start).total_seconds()))
+            sleep(max(0, 3.5 - (datetime.datetime.now() - start).total_seconds()))
     print("All Realtime Stock Info Updated!")
 
 
@@ -268,7 +268,7 @@ def set_up_cron_jobs() -> None:
     )
     scheduler.add_job(
         fetch_and_store_real_time_info,
-        trigger=CronTrigger.from_crontab("0/2 9-14 * * MON-FRI"),
+        trigger=CronTrigger.from_crontab("0/1 9-14 * * MON-FRI"),
         id="fetch_and_store_real_time_info",
         max_instances=1,
         replace_existing=True,
