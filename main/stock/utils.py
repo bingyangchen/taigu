@@ -115,7 +115,8 @@ def fetch_and_store_real_time_info() -> None:
                     continue
         except Exception as e:
             try:
-                print(response.text)
+                print(response.status_code)
+                print(response.text[:80])
             except Exception:
                 ...
             print(e)
