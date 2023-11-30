@@ -17,8 +17,6 @@ from pyquery import PyQuery
 from . import Frequency, InfoEndpoint, TradeType, UnknownStockIdError
 from .models import Company, History, StockInfo
 
-has_thread_running = False
-
 
 def fetch_company_info(sid: str) -> dict:
     response = requests.post(
@@ -37,20 +35,16 @@ def fetch_company_info(sid: str) -> dict:
 
 
 def fetch_and_store_real_time_info() -> None:
-    global has_thread_running
-    if has_thread_running:
-        return
-    print("Start Fetching Realtime Stock Info")
-    has_thread_running = True
+    print("Start Fetching Realtime Stock Info...")
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )
     all = list(map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set))
     batch_size = 150
+    print(f"Expected request count: {len(all) / batch_size}")
     while len(all) > 0:
         start = datetime.datetime.now()
-        query = "|".join(all[:batch_size])
-        url = f"{InfoEndpoint.single_day['real_time']}{query}"
+        url = f"{InfoEndpoint.single_day['real_time']}{'|'.join(all[:batch_size])}"
         try:
             response = requests.get(url, timeout=10)
             json_data = response.json()
@@ -114,21 +108,15 @@ def fetch_and_store_real_time_info() -> None:
                 except Exception:
                     continue
         except Exception as e:
-            try:
-                print(response.status_code)
-                print(len(response.text))
-                print(response)
-                print(response.content)
-            except Exception:
-                ...
+            print("One batch failed:")
+            print(url)
             print(e)
+        finally:
+            all = all[batch_size:]
 
-        all = all[batch_size:]
-
-        # deal with rate limit (3 requests per 5 seconds)
-        sleep(max(0, 1.8 - (datetime.datetime.now() - start).total_seconds()))
-    has_thread_running = False
-    print("All Realtime Stock Info Updated")
+            # deal with rate limit (3 requests per 5 seconds)
+            sleep(max(0, 1.8 - (datetime.datetime.now() - start).total_seconds()))
+    print("All Realtime Stock Info Updated!")
 
 
 def fetch_and_store_latest_day_info() -> None:
