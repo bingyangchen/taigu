@@ -10,7 +10,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django_apscheduler import util
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 from pyquery import PyQuery
@@ -35,7 +34,6 @@ def fetch_company_info(sid: str) -> dict:
         raise UnknownStockIdError("Unknown Stock ID")
 
 
-@util.close_old_connections
 def fetch_and_store_real_time_info() -> None:
     print("Start Fetching Realtime Stock Info...")
     query_set = Company.objects.filter(trade_type__isnull=False).values(
@@ -121,7 +119,6 @@ def fetch_and_store_real_time_info() -> None:
     print("All Realtime Stock Info Updated!")
 
 
-@util.close_old_connections
 def fetch_and_store_latest_day_info() -> None:
     date = (datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)).date()
 
@@ -245,7 +242,6 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
             )
 
 
-@util.close_old_connections
 def update_all_stocks_history() -> None:
     for company in Company.objects.filter(trade_type__isnull=False):
         start = datetime.datetime.now()
