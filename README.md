@@ -35,7 +35,7 @@ pipenv install --dev
     psql -tc "SELECT 1 FROM pg_database WHERE datname = 'trade_smartly'" | grep -q 1 || psql -c "CREATE DATABASE trade_smartly OWNER postgres"
     ```
 
-- **3-3: Apply the Dump File**
+- **3-3: Apply the Database Dump File**
 
     ```bash
     pg_restore -U postgres -d trade_smartly ./db_backups/heroku_postgresql_latest
@@ -49,29 +49,27 @@ pipenv install --dev
 
 ### 開發環境常用指令
 
-- `python manage.py runserver`
+- `python manage.py runserver 8001`
+  - 啟動 pseudo server，並配置一個 terminal
+  - `Ctrl` + `C` 停止 pseudo server
 
-    啟動在 dev server 並配置一個 terminal。
-
-    `Ctrl` + `C` 停止 server。
+- `gunicorn main.wsgi --workers=1 -b=127.0.0.1:8001`
+  - 啟動 Gunicorn web server，並配置一個 terminal
+  - `Ctrl` + `C` 停止 Gunicorn web server
 
 - `python manage.py dbshell`
-
-    開啟 DB 的 CLI，本專案使用的 db 是 PostgreSQL，所以開啟的是 psql。
-
-    輸入 `\q` 離開 psql。
+  - 開啟 DB 的 CLI
+  - 本專案使用的是 PostgreSQL，所以開啟的是 psql
+  - 輸入 `\q` 離開 psql
 
 - `python manage.py shell`
+  - 開啟 Python interpreter 並設定好環境變數
+  - 輸入 `exit()` 離開互動模式
 
-    開啟 Python interpreter 並設定好環境變數。
-
-    輸入 `exit()` 離開互動模式。
-
-- `./runtest` 跑測試
-
-    本專案使用 `pytest` 取代 Django 內建的測試套件，所以不是使用 `python manage.py test` 這個指令。
-
-    關於 Pytest 的詳細使用方式，請見 [Pytest 官方文件](https://docs.pytest.org/en/latest/index.html)。
+- `./runtest`
+  - 跑測試
+  - 本專案使用 `pytest` 取代 Django 內建的測試套件，所以不是使用 `python manage.py test` 這個指令
+  - 關於 Pytest 的詳細使用方式，請見 [Pytest 官方文件](https://docs.pytest.org/en/latest/index.html)
 
 ## 如何部署在 Heroku？
 
