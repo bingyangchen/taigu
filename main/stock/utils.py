@@ -20,9 +20,7 @@ from .models import Company, History, StockInfo
 
 
 def fetch_company_info(sid: str) -> dict:
-    response = requests.post(
-        f"https://isin.twse.com.tw/isin/single_main.jsp?owncode={sid}"
-    )
+    response = requests.post(f"{InfoEndpoint.company}{sid}")
     document = PyQuery(response.text)
     name = document.find("tr:nth-child(2)>td:nth-child(4)").text()
     trade_type = document.find("tr:nth-child(2)>td:nth-child(5)").text()
@@ -122,10 +120,10 @@ def fetch_and_store_real_time_info() -> None:
 
 
 @util.close_old_connections
-def fetch_and_store_latest_day_info() -> None:
+def fetch_and_store_today_info() -> None:
     date = (datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)).date()
 
-    # Process TSE trade type
+    # Process TSE stocks
     try:
         tse_response: list[dict[str, str]] = requests.get(
             InfoEndpoint.single_day[TradeType.TSE]
@@ -156,7 +154,7 @@ def fetch_and_store_latest_day_info() -> None:
     except Exception as e:
         print(str(e))
 
-    # Process OTC trade type
+    # Process OTC stocks
     try:
         otc_response: list[dict[str, str]] = requests.get(
             InfoEndpoint.single_day[TradeType.OTC]
@@ -201,7 +199,7 @@ def fetch_and_store_latest_day_info() -> None:
                 continue
     except Exception as e:
         print(str(e))
-    print("Stock Info of Latest Day Updated")
+    print("Stock info is up to date!")
 
 
 def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
@@ -264,9 +262,9 @@ def set_up_cron_jobs() -> None:
     scheduler.add_jobstore(DjangoJobStore(), "default")
     scheduler.remove_all_jobs()
     scheduler.add_job(
-        fetch_and_store_latest_day_info,
+        fetch_and_store_today_info,
         trigger=CronTrigger.from_crontab("4 14 * * MON-FRI"),
-        id="fetch_and_store_latest_day_info",
+        id="fetch_and_store_today_info",
         max_instances=1,
         replace_existing=True,
     )

@@ -22,6 +22,7 @@ class TradeType:
 
 
 class InfoEndpoint:
+    company = "https://isin.twse.com.tw/isin/single_main.jsp?owncode="
     single_day = {
         TradeType.TSE: "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
         TradeType.OTC: "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes",
