@@ -1,8 +1,37 @@
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
 
-from .. import Frequency
-from ..models import Company, History, StockInfo
+from .. import Frequency, TradeType
+from ..models import Company, History, MarketIndexPerMinute, StockInfo
+
+
+@require_GET
+def latest_market_index(request: HttpRequest):
+    result = {"success": False, "data": {}}
+    try:
+        all_data = MarketIndexPerMinute.objects.all()
+        result["data"]["tse"] = {
+            row.number: {
+                "date": row.date,
+                "price": row.price,
+                "fluct_price": row.fluct_price,
+            }
+            for row in all_data
+            if row.market == TradeType.TSE
+        }
+        result["data"]["otc"] = {
+            row.number: {
+                "date": row.date,
+                "price": row.price,
+                "fluct_price": row.fluct_price,
+            }
+            for row in all_data
+            if row.market == TradeType.OTC
+        }
+        result["success"] = True
+    except Exception as e:
+        result["error"] = str(e)
+    return JsonResponse(result)
 
 
 @require_GET
