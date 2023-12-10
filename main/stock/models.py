@@ -34,6 +34,20 @@ class StockInfo(CreateUpdateDateModel):
         return f"{self.company.pk}({self.date})"
 
 
+class MarketIndexPerMinute(CreateUpdateDateModel):
+    market = models.CharField(
+        max_length=4, choices=TradeType.CHOICES, null=False, db_index=True
+    )
+    date = models.DateField(null=False, db_index=True)
+    number = models.PositiveSmallIntegerField(null=False, db_index=True)
+    price = models.FloatField(null=False)
+    fluct_price = models.FloatField(null=False)
+
+    class Meta:
+        db_table = "market_index_per_minute"
+        unique_together = [["market", "date", "number"]]
+
+
 class History(CreateUpdateDateModel):
     company = models.ForeignKey(
         Company, on_delete=models.CASCADE, related_name="history", db_index=True

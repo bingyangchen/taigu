@@ -1,6 +1,6 @@
 import csv
-import datetime
 from contextlib import suppress
+from datetime import datetime, timedelta
 from io import StringIO
 from time import sleep
 
@@ -16,7 +16,7 @@ from django_apscheduler.models import DjangoJobExecution
 from pyquery import PyQuery
 
 from . import Frequency, InfoEndpoint, TradeType, UnknownStockIdError
-from .models import Company, History, StockInfo
+from .models import Company, History, MarketIndexPerMinute, StockInfo
 
 
 def fetch_company_info(sid: str) -> dict:
@@ -34,8 +34,8 @@ def fetch_company_info(sid: str) -> dict:
 
 
 @util.close_old_connections
-def fetch_and_store_real_time_info() -> None:
-    print("Start Fetching Realtime Stock Info...")
+def fetch_and_store_realtime_stock_info() -> None:
+    print("Start Fetching Realtime Stock Info")
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )
@@ -43,8 +43,8 @@ def fetch_and_store_real_time_info() -> None:
     batch_size = 150
     print(f"Expected request count: {len(all) / batch_size}")
     while len(all) > 0:
-        start = datetime.datetime.now()
-        url = f"{InfoEndpoint.single_day['real_time']}{'|'.join(all[:batch_size])}"
+        start = datetime.now()
+        url = f"{InfoEndpoint.realtime['stock']}{'|'.join(all[:batch_size])}"
         try:
             response = requests.get(url, timeout=10)
             json_data = response.json()
@@ -52,7 +52,7 @@ def fetch_and_store_real_time_info() -> None:
                 try:
                     # parse row data
                     company_id = row["c"]
-                    date = datetime.datetime.strptime(row["d"], "%Y%m%d").date()
+                    date = datetime.strptime(row["d"], "%Y%m%d").date()
                     quantity = (int(row["v"]) * 1000) if row["v"] != "-" else 0
                     yesterday_price = (
                         round(float(row["y"]), 2) if row["y"] != "-" else 0.0
@@ -105,7 +105,8 @@ def fetch_and_store_real_time_info() -> None:
                             "fluct_price": round(price - yesterday_price, 2),
                         },
                     )
-                except Exception:
+                except Exception as e:
+                    print(e)
                     continue
             print(".", end="")
         except Exception as e:
@@ -115,13 +116,78 @@ def fetch_and_store_real_time_info() -> None:
             all = all[batch_size:]
 
             # deal with rate limit (3 requests per 5 seconds)
-            sleep(max(0, 2 - (datetime.datetime.now() - start).total_seconds()))
-    print("All Realtime Stock Info Updated!")
+            sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
+    print("\nAll Realtime Stock Info Updated!")
 
 
 @util.close_old_connections
-def fetch_and_store_today_info() -> None:
-    date = (datetime.datetime.now(pytz.utc) + datetime.timedelta(hours=8)).date()
+def fetch_and_store_market_per_minute_info() -> None:
+    sleep(10)  # Wait for market to fully open
+    now = (datetime.now(pytz.utc) + timedelta(hours=8)).time()
+    minutes_after_opening = (now.hour - 9) * 60 + now.minute
+
+    # Do nothing during 13:30 ~ 13:58
+    if 269 < minutes_after_opening < 298:
+        return
+
+    # Convert the last few minutes to 270
+    if minutes_after_opening >= 298:
+        minutes_after_opening = 270
+
+    # TSE
+    try:
+        tse_response = requests.get(InfoEndpoint.realtime[TradeType.TSE]).json()
+        latest_day_info = max(tse_response, key=lambda x: int(x["Date"]))
+        date_in_data = datetime.strptime(
+            str(19110000 + int(latest_day_info["Date"])), "%Y%m%d"
+        ).date()
+
+        # Delete data that are not belong to the latest day
+        MarketIndexPerMinute.objects.filter(market=TradeType.TSE).exclude(
+            date=date_in_data
+        ).delete()
+
+        MarketIndexPerMinute.objects.get_or_create(
+            market=TradeType.TSE,
+            date=date_in_data,
+            number=minutes_after_opening,
+            defaults={
+                "price": round(float(latest_day_info["TAIEX"]), 2),
+                "fluct_price": round(float(latest_day_info["Change"]), 2),
+            },
+        )
+    except Exception as e:
+        print(e)
+
+    # OTC
+    try:
+        otc_response = requests.get(InfoEndpoint.realtime[TradeType.OTC]).json()[0]
+        date_in_data = datetime.strptime(
+            str(19110000 + int(otc_response["Date"])), "%Y%m%d"
+        ).date()
+
+        # Delete data that are not belong to the latest day
+        MarketIndexPerMinute.objects.filter(market=TradeType.OTC).exclude(
+            date=date_in_data
+        ).delete()
+
+        MarketIndexPerMinute.objects.get_or_create(
+            market=TradeType.OTC,
+            date=date_in_data,
+            number=minutes_after_opening,
+            defaults={
+                "price": round(float(otc_response["CloseIndex"]), 2),
+                "fluct_price": round(float(otc_response["IndexChange"]), 2),
+            },
+        )
+    except Exception as e:
+        print(e)
+    print("Realtime Market Index Updated!")
+
+
+@util.close_old_connections
+def fetch_and_store_close_info_today() -> None:
+    date = (datetime.now(pytz.utc) + timedelta(hours=8)).date()
 
     # Process TSE stocks
     try:
@@ -149,10 +215,11 @@ def fetch_and_store_today_info() -> None:
                         "fluct_price": round(float(row["Change"] or 0.0), 2),
                     },
                 )
-            except Exception:
+            except Exception as e:
+                print(e)
                 continue
     except Exception as e:
-        print(str(e))
+        print(e)
 
     # Process OTC stocks
     try:
@@ -195,15 +262,16 @@ def fetch_and_store_today_info() -> None:
                         ),
                     },
                 )
-            except Exception:
+            except Exception as e:
+                print(e)
                 continue
     except Exception as e:
-        print(str(e))
+        print(e)
     print("Stock info is up to date!")
 
 
 def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
-    end = datetime.datetime.now()
+    end = datetime.now()
     start = end - relativedelta(days=80)
     interval = "1d"
     if frequency == Frequency.WEEKLY:
@@ -237,7 +305,7 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
             History.objects.create(
                 company=company,
                 frequency=frequency,
-                date=datetime.datetime.strptime(row[0], "%Y-%m-%d").date(),
+                date=datetime.strptime(row[0], "%Y-%m-%d").date(),
                 quantity=quantity,
                 close_price=close_price,
             )
@@ -246,14 +314,14 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
 @util.close_old_connections
 def update_all_stocks_history() -> None:
     for company in Company.objects.filter(trade_type__isnull=False):
-        start = datetime.datetime.now()
+        start = datetime.now()
         with suppress(Exception):
             fetch_and_store_historical_info_yahoo(
                 company=company, frequency=Frequency.DAILY
             )
 
         # deal with rate limit (3000 per hour)
-        sleep(max(0, 2 - (datetime.datetime.now() - start).total_seconds()))
+        sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
 
 
 def set_up_cron_jobs() -> None:
@@ -262,16 +330,23 @@ def set_up_cron_jobs() -> None:
     scheduler.add_jobstore(DjangoJobStore(), "default")
     scheduler.remove_all_jobs()
     scheduler.add_job(
-        fetch_and_store_today_info,
-        trigger=CronTrigger.from_crontab("4 14 * * MON-FRI"),
-        id="fetch_and_store_today_info",
+        fetch_and_store_realtime_stock_info,
+        trigger=CronTrigger.from_crontab("* 9-14 * * MON-FRI"),
+        id="fetch_and_store_realtime_stock_info",
         max_instances=1,
         replace_existing=True,
     )
     scheduler.add_job(
-        fetch_and_store_real_time_info,
+        fetch_and_store_market_per_minute_info,
         trigger=CronTrigger.from_crontab("* 9-14 * * MON-FRI"),
-        id="fetch_and_store_real_time_info",
+        id="fetch_and_store_market_per_minute_info",
+        max_instances=1,
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        fetch_and_store_close_info_today,
+        trigger=CronTrigger.from_crontab("4 14 * * MON-FRI"),
+        id="fetch_and_store_close_info_today",
         max_instances=1,
         replace_existing=True,
     )
