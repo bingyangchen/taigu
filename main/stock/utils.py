@@ -57,29 +57,39 @@ def fetch_and_store_realtime_stock_info() -> None:
                     # parse row data
                     company_id = row["c"]
                     date = datetime.strptime(row["d"], "%Y%m%d").date()
-                    quantity = (int(row["v"]) * 1000) if row["v"] != "-" else 0
+                    quantity = (
+                        (int(row["v"]) * 1000)
+                        if row.get("v") is not None and row["v"] != "-"
+                        else 0
+                    )
                     yesterday_price = (
-                        round(float(row["y"]), 2) if row["y"] != "-" else 0.0
+                        round(float(row["y"]), 2)
+                        if row.get("y") is not None and row["y"] != "-"
+                        else 0.0
                     )
                     current_dealt_price = (
-                        round(float(row["z"]), 2) if row["z"] != "-" else None
+                        round(float(row["z"]), 2)
+                        if row.get("z") is not None and row["z"] != "-"
+                        else None
                     )
                     lowest_ask_price = (
                         round(float(row["a"].split("_")[0]), 2)
-                        if row["a"] != "-"
+                        if row.get("a") is not None and row["a"] != "-"
                         else None
                     )
                     highest_bid_price = (
                         round(float(row["b"].split("_")[0]), 2)
-                        if row["b"] != "-"
+                        if row.get("b") is not None and row["b"] != "-"
                         else None
                     )
                     price_upper_bound = (
-                        round(float(row["u"]), 2) if row["u"] != "-" else None
+                        round(float(row["u"]), 2)
+                        if row.get("u") is not None and row["u"] != "-"
+                        else None
                     )
                     price_lower_bound = (
                         round(float(row["w"]), 2)
-                        if row.get("w") and (row["w"] != "-")
+                        if row.get("w") is not None and row["w"] != "-"
                         else None
                     )
 
