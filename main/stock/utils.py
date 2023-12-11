@@ -1,8 +1,9 @@
 import csv
 from contextlib import suppress
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from io import StringIO
 from time import sleep
+from typing import Literal
 
 import pytz
 import requests
@@ -36,10 +37,13 @@ def fetch_company_info(sid: str) -> dict:
 @util.close_old_connections
 def fetch_and_store_realtime_stock_info() -> None:
     print("Start Fetching Realtime Stock Info")
+    market_indices = ["t00", "o00"]
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )
-    all = list(map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set))
+    all = [f"tse_{market_indices[0]}.tw", f"otc_{market_indices[1]}.tw"] + list(
+        map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set)
+    )
     batch_size = 150
     print(f"Expected request count: {len(all) / batch_size}")
     while len(all) > 0:
@@ -95,16 +99,25 @@ def fetch_and_store_realtime_stock_info() -> None:
                     elif yesterday_price:
                         price = yesterday_price
 
-                    # create or update stock info
-                    StockInfo.objects.update_or_create(
-                        company=Company.objects.get(pk=company_id),
-                        defaults={
-                            "date": date,
-                            "quantity": quantity,
-                            "close_price": price,
-                            "fluct_price": round(price - yesterday_price, 2),
-                        },
-                    )
+                    fluct_price = round(price - yesterday_price, 2)
+                    if company_id in market_indices:
+                        store_market_per_minute_info(
+                            id=company_id,
+                            date=date,
+                            price=price,
+                            fluct_price=fluct_price,
+                        )
+                    else:
+                        # create or update stock info
+                        StockInfo.objects.update_or_create(
+                            company=Company.objects.get(pk=company_id),
+                            defaults={
+                                "date": date,
+                                "quantity": quantity,
+                                "close_price": price,
+                                "fluct_price": fluct_price,
+                            },
+                        )
                 except Exception as e:
                     print(e)
                     continue
@@ -120,9 +133,9 @@ def fetch_and_store_realtime_stock_info() -> None:
     print("\nAll Realtime Stock Info Updated!")
 
 
-@util.close_old_connections
-def fetch_and_store_market_per_minute_info() -> None:
-    sleep(10)  # Wait for market to fully open
+def store_market_per_minute_info(
+    id: Literal["t00", "o00"], date: date, price: float, fluct_price: float
+) -> None:
     now = (datetime.now(pytz.utc) + timedelta(hours=8)).time()
     minutes_after_opening = (now.hour - 9) * 60 + now.minute
 
@@ -134,55 +147,19 @@ def fetch_and_store_market_per_minute_info() -> None:
     if minutes_after_opening >= 298:
         minutes_after_opening = 270
 
-    # TSE
+    market = TradeType.TSE if id == "t00" else TradeType.OTC
     try:
-        tse_response = requests.get(InfoEndpoint.realtime[TradeType.TSE]).json()
-        latest_day_info = max(tse_response, key=lambda x: int(x["Date"]))
-        date_in_data = datetime.strptime(
-            str(19110000 + int(latest_day_info["Date"])), "%Y%m%d"
-        ).date()
-
         # Delete data that are not belong to the latest day
-        MarketIndexPerMinute.objects.filter(market=TradeType.TSE).exclude(
-            date=date_in_data
-        ).delete()
+        MarketIndexPerMinute.objects.filter(market=market).exclude(date=date).delete()
 
         MarketIndexPerMinute.objects.get_or_create(
-            market=TradeType.TSE,
-            date=date_in_data,
+            market=market,
+            date=date,
             number=minutes_after_opening,
-            defaults={
-                "price": round(float(latest_day_info["TAIEX"]), 2),
-                "fluct_price": round(float(latest_day_info["Change"]), 2),
-            },
+            defaults={"price": price, "fluct_price": fluct_price},
         )
     except Exception as e:
         print(e)
-
-    # OTC
-    try:
-        otc_response = requests.get(InfoEndpoint.realtime[TradeType.OTC]).json()[0]
-        date_in_data = datetime.strptime(
-            str(19110000 + int(otc_response["Date"])), "%Y%m%d"
-        ).date()
-
-        # Delete data that are not belong to the latest day
-        MarketIndexPerMinute.objects.filter(market=TradeType.OTC).exclude(
-            date=date_in_data
-        ).delete()
-
-        MarketIndexPerMinute.objects.get_or_create(
-            market=TradeType.OTC,
-            date=date_in_data,
-            number=minutes_after_opening,
-            defaults={
-                "price": round(float(otc_response["CloseIndex"]), 2),
-                "fluct_price": round(float(otc_response["IndexChange"]), 2),
-            },
-        )
-    except Exception as e:
-        print(e)
-    print("Realtime Market Index Updated!")
 
 
 @util.close_old_connections
@@ -333,13 +310,6 @@ def set_up_cron_jobs() -> None:
         fetch_and_store_realtime_stock_info,
         trigger=CronTrigger.from_crontab("* 9-14 * * MON-FRI"),
         id="fetch_and_store_realtime_stock_info",
-        max_instances=1,
-        replace_existing=True,
-    )
-    scheduler.add_job(
-        fetch_and_store_market_per_minute_info,
-        trigger=CronTrigger.from_crontab("* 9-14 * * MON-FRI"),
-        id="fetch_and_store_market_per_minute_info",
         max_instances=1,
         replace_existing=True,
     )
