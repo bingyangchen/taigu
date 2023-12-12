@@ -58,7 +58,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                     company_id = row["c"]
                     date = datetime.strptime(row["d"], "%Y%m%d").date()
                     quantity = (
-                        (int(row["v"]) * 1000)
+                        int(row["v"]) * 1000
                         if row.get("v") is not None and row["v"] != "-"
                         else 0
                     )
@@ -118,7 +118,6 @@ def fetch_and_store_realtime_stock_info() -> None:
                             fluct_price=fluct_price,
                         )
                     else:
-                        # create or update stock info
                         StockInfo.objects.update_or_create(
                             company=Company.objects.get(pk=company_id),
                             defaults={
@@ -158,18 +157,16 @@ def store_market_per_minute_info(
         minutes_after_opening = 270
 
     market = TradeType.TSE if id == "t00" else TradeType.OTC
-    try:
-        # Delete data that are not belong to the latest day
-        MarketIndexPerMinute.objects.filter(market=market).exclude(date=date).delete()
 
-        MarketIndexPerMinute.objects.get_or_create(
-            market=market,
-            date=date,
-            number=minutes_after_opening,
-            defaults={"price": price, "fluct_price": fluct_price},
-        )
-    except Exception as e:
-        print(e)
+    # Delete data that are not belong to the latest day
+    MarketIndexPerMinute.objects.filter(market=market).exclude(date=date).delete()
+
+    MarketIndexPerMinute.objects.get_or_create(
+        market=market,
+        date=date,
+        number=minutes_after_opening,
+        defaults={"price": price, "fluct_price": fluct_price},
+    )
 
 
 @util.close_old_connections
