@@ -14,24 +14,9 @@ from django.conf import settings
 from django_apscheduler import util
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
-from pyquery import PyQuery
 
-from . import Frequency, InfoEndpoint, TradeType, UnknownStockIdError
+from . import Frequency, InfoEndpoint, TradeType
 from .models import Company, History, MarketIndexPerMinute, StockInfo
-
-
-def fetch_company_info(sid: str) -> dict:
-    response = requests.post(f"{InfoEndpoint.company}{sid}")
-    document = PyQuery(response.text)
-    name = document.find("tr:nth-child(2)>td:nth-child(4)").text()
-    trade_type = document.find("tr:nth-child(2)>td:nth-child(5)").text()
-    if name:
-        return {
-            "name": str(name),
-            "trade_type": TradeType.TRADE_TYPE_ZH_ENG_MAP.get(str(trade_type)),
-        }
-    else:
-        raise UnknownStockIdError("Unknown Stock ID")
 
 
 @util.close_old_connections

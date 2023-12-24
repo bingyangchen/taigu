@@ -1,3 +1,6 @@
+from collections.abc import MutableMapping
+from typing import Any
+
 from django.db import models
 
 from main.account.models import User
@@ -6,10 +9,46 @@ from main.core.models import CreateUpdateDateModel
 from . import Frequency, TradeType
 
 
+class CompanyManager(models.Manager):
+    def get_or_create(
+        self, defaults: MutableMapping[str, Any] | None = None, **kwargs: Any
+    ) -> tuple[Any, bool]:
+        pk = kwargs.get("pk") or kwargs.get("stock_id")
+        if pk is None:
+            raise Exception("stock_id (pk) should be provided.")
+        try:
+            return (self.get(pk=pk), False)
+        except self.model.DoesNotExist:
+            defaults = (
+                CompanyManager.fetch_company_info(pk) if defaults is None else defaults
+            )
+            return (super().create(pk=pk, **defaults), True)
+
+    @classmethod
+    def fetch_company_info(cls, sid: str) -> dict:
+        import requests
+        from pyquery import PyQuery
+
+        from . import InfoEndpoint, UnknownStockIdError
+
+        response = requests.post(f"{InfoEndpoint.company}{sid}")
+        document = PyQuery(response.text)
+        name = document.find("tr:nth-child(2)>td:nth-child(4)").text()
+        trade_type = document.find("tr:nth-child(2)>td:nth-child(5)").text()
+        if name:
+            return {
+                "name": str(name),
+                "trade_type": TradeType.TRADE_TYPE_ZH_ENG_MAP.get(str(trade_type)),
+            }
+        else:
+            raise UnknownStockIdError("Unknown Stock ID")
+
+
 class Company(models.Model):
     stock_id = models.CharField(max_length=32, primary_key=True)
     name = models.CharField(max_length=32, blank=False, null=False)
     trade_type = models.CharField(max_length=4, choices=TradeType.CHOICES, null=True)
+    objects = CompanyManager()
 
     class Meta:
         db_table = "company"

@@ -6,9 +6,8 @@ from django.views.decorators.http import require_GET, require_POST
 from main.core.decorators import require_login
 from main.stock import UnknownStockIdError
 from main.stock.models import Company
-from main.stock.utils import fetch_company_info
 
-from .models import StockMemo, TradePlan
+from .models import Favorite, StockMemo, TradePlan
 
 
 @require_POST
@@ -22,11 +21,7 @@ def update_or_create_stock_memo(request: HttpRequest, sid: str):
     note = payload.get("note")
 
     try:
-        company_info = fetch_company_info(sid)
-        company, created = Company.objects.get_or_create(
-            pk=sid,
-            defaults={**company_info},
-        )
+        company, created = Company.objects.get_or_create(pk=sid)
         memo = StockMemo.objects.filter(owner=request.user, company=company).first()
         if memo:
             if business is not None:
@@ -99,11 +94,7 @@ def create_or_list_trade_plan(request: HttpRequest):
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
-                company_info = fetch_company_info(sid)
-                company, created = Company.objects.get_or_create(
-                    pk=sid,
-                    defaults={**company_info},
-                )
+                company, created = Company.objects.get_or_create(pk=sid)
                 plan = TradePlan.objects.create(
                     owner=request.user,
                     company=company,
@@ -164,11 +155,7 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
-                company_info = fetch_company_info(sid)
-                company, created = Company.objects.get_or_create(
-                    pk=sid,
-                    defaults={**company_info},
-                )
+                company, created = Company.objects.get_or_create(pk=sid)
                 plan = TradePlan.objects.get(pk=id)
                 plan.company = company
                 plan.plan_type = plan_type
@@ -192,4 +179,38 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
         result["success"] = True
     else:
         result["error"] = "Method Not Allowed"
+    return JsonResponse(result)
+
+
+@require_login
+def create_or_delete_favorite(request: HttpRequest, sid: str):
+    result = {"success": False, "data": None}
+    try:
+        company, created = Company.objects.get_or_create(pk=sid)
+        if request.method == "POST":
+            Favorite.objects.get_or_create(owner=request.user, company=company)
+            result = {"success": True, "data": sid}
+        elif request.method == "DELETE":
+            if favorite := Favorite.objects.filter(
+                owner=request.user, company=company
+            ).first():
+                favorite.delete()
+            result = {"success": True, "data": sid}
+        else:
+            result["error"] = "Method Not Allowed"
+    except Exception as e:
+        result["error"] = str(e)
+    return JsonResponse(result)
+
+
+@require_GET
+@require_login
+def list_favorites(request: HttpRequest):
+    result = {"success": False, "data": None}
+    try:
+        query_set = Favorite.objects.filter(owner=request.user)
+        result["data"] = [favorite.company.pk for favorite in query_set]
+        result["success"] = True
+    except Exception as e:
+        result["error"] = str(e)
     return JsonResponse(result)

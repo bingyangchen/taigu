@@ -7,7 +7,6 @@ from main.core.decorators import require_login
 
 from .. import UnknownStockIdError
 from ..models import CashDividendRecord, Company
-from ..utils import fetch_company_info
 
 
 @require_login
@@ -26,11 +25,7 @@ def create_or_list(request: HttpRequest):
             sid = str(sid)
             cash_dividend = int(cash_dividend)
             try:
-                company_info = fetch_company_info(sid)
-                company, created = Company.objects.get_or_create(
-                    pk=sid,
-                    defaults={**company_info},
-                )
+                company, created = Company.objects.get_or_create(pk=sid)
                 record = CashDividendRecord.objects.create(
                     owner=request.user,
                     company=company,
@@ -101,11 +96,7 @@ def update_or_delete(request: HttpRequest, id):
         else:
             sid = str(sid)
             try:
-                company_info = fetch_company_info(sid)
-                company, created = Company.objects.get_or_create(
-                    pk=sid,
-                    defaults={**company_info},
-                )
+                company, created = Company.objects.get_or_create(pk=sid)
                 record = CashDividendRecord.objects.get(pk=id)
                 record.company = company
                 record.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()

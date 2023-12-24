@@ -35,3 +35,19 @@ class TradePlan(CreateUpdateDateModel):
 
     def __str__(self):
         return f"{self.owner.username}_{self.company.pk}_${self.target_price}_{self.plan_type}_{self.target_quantity}"  # noqa 1501
+
+
+class Favorite(CreateUpdateDateModel):
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="favorites", db_index=True
+    )
+    company = models.ForeignKey(
+        Company, on_delete=models.PROTECT, related_name="followers", db_index=True
+    )
+
+    class Meta:
+        db_table = "favorite"
+        unique_together = [["owner", "company"]]
+
+    def __str__(self):
+        return f"{self.owner.username}_{self.company.pk}"
