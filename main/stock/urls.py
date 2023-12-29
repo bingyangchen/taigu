@@ -11,6 +11,7 @@ urlpatterns = [
         r"^single_company_multiple_days/(?P<sid>\w+)[/]?$",
         stock_info.single_company_multiple_days,
     ),
+    re_path(r"^search[/]?$", stock_info.search),
     re_path(r"^trade-records[/]?$", trade_record.create_or_list),
     re_path(r"^trade-records/(?P<id>\w+)[/]?$", trade_record.update_or_delete),
     re_path(r"^cash-dividends[/]?$", cash_dividend_record.create_or_list),
