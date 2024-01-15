@@ -5,9 +5,6 @@ if [[ -z $1 ]]; then
 else
     pipenv requirements >requirements.txt
 
-    # git config --local user.name "Jamison Chen"
-    # git config --local user.email "106208004@g.nccu.edu.tw"
-
     git add -A
     git commit -m "$1"
     git push -u origin master

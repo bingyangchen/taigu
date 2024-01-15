@@ -17,6 +17,10 @@ django-csp = "==3.7"
 django-apscheduler = "==0.6.2"
 python-dateutil = "==2.8.2"
 pytest-django = "==4.5.2"
+google-api-python-client = "*"
+google-auth = "*"
+google-auth-oauthlib = "*"
+google-auth-httplib2 = "*"
 
 [dev-packages]
 black = "*"
