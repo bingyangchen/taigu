@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Any
 
 import google_auth_oauthlib.flow
 from django.core.exceptions import ValidationError
@@ -28,7 +29,7 @@ GOOGLE_AUTH_FLOW = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
 
 
 def google_login(request: HttpRequest):
-    result: dict = {"success": False}
+    result: dict[str, Any] = {"success": False}
     if (request.method == "GET") and (redirect_uri := request.GET.get("redirect_uri")):
         try:
             GOOGLE_AUTH_FLOW.redirect_uri = redirect_uri
