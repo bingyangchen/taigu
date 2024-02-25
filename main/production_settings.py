@@ -1,9 +1,6 @@
-import dj_database_url
-
 from .settings import *  # noqa: F403
 
-DATABASES = {"default": dj_database_url.config()}
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 ALLOWED_HOSTS = [
     "trade-smartly-backend-51d59e0a00fc.herokuapp.com",  # Heroku
     "ec2-18-141-180-28.ap-southeast-1.compute.amazonaws.com",  # AWS EC2
