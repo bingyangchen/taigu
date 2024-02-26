@@ -1,10 +1,10 @@
-# Investment Backend
+# TradeSmartly Backend
 
-## 如何在本機開發
+## 本機開發
 
 ### 開發環境要求
 
-- [Git 2.35 +](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- [Git 2.34 +](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 - [Python 3.10](https://www.python.org/downloads/release/python-3109/)
 - [pipenv](https://pypi.org/project/pipenv/)
 - [PostgreSQL 14 +](https://adamtheautomator.com/install-postgresql-on-mac/)
@@ -32,7 +32,7 @@ pipenv install --dev
 - **3-2: Create a Database Named `trade_smartly` If not Exist**
 
     ```bash
-    psql -tc "SELECT 1 FROM pg_database WHERE datname = 'trade_smartly'" | grep -q 1 || psql -c "CREATE DATABASE trade_smartly OWNER postgres"
+    sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = 'trade_smartly'" | grep -q 1 || psql -c "CREATE DATABASE trade_smartly OWNER postgres"
     ```
 
 - **3-3: Apply the Database Dump File**
@@ -44,7 +44,9 @@ pipenv install --dev
 - **3-4: Migrate the Database**
 
     ```bash
+    pipenv shell
     python manage.py migrate
+    exit
     ```
 
 ### 開發環境常用指令
@@ -53,9 +55,13 @@ pipenv install --dev
   - 啟動 pseudo server，並配置一個 terminal
   - `Ctrl` + `C` 停止 pseudo server
 
-- `gunicorn main.wsgi --workers=1 -b=127.0.0.1:8001`
+- `gunicorn`
   - 啟動 Gunicorn web server，並配置一個 terminal
-  - `Ctrl` + `C` 停止 Gunicorn web server
+  - 鍵盤 `Ctrl` + `C` 停止
+
+- `gunicorn --daemon`
+  - 啟動 Gunicorn web server，並丟到背景執行
+  - 輸入指令 `pkill -f gunicorn` 停止
 
 - `python manage.py dbshell`
   - 開啟 DB 的 CLI
@@ -71,7 +77,7 @@ pipenv install --dev
   - 本專案使用 `pytest` 取代 Django 內建的測試套件，所以不是使用 `python manage.py test` 這個指令
   - 關於 Pytest 的詳細使用方式，請見 [Pytest 官方文件](https://docs.pytest.org/en/latest/index.html)
 
-## 如何部署在 Heroku？
+## 部署正式環境在 Heroku
 
 ### 前置作業：準備好 `requirements.txt`
 
@@ -84,9 +90,9 @@ pipenv requirements > requirements.txt
 
 ### CICD
 
-此專案的 remote repository 放在 GitHub，當 push 新 commits 到 remote master branch 時，會發送 webhook 至 Heroku 觸發 build 與 deploy 流程。
+此專案的 remote repository 放在 GitHub，當 push 新 commits 到 remote master branch 時，會發送 webhook 至 Heroku 觸發 pull, build 與 deploy 流程。
 
-### 正式環境常用指令
+### Heroku 常用指令
 
 >這裡使用的是 Heroku CLI，須先在 local [安裝 Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)。
 
@@ -115,3 +121,110 @@ pipenv requirements > requirements.txt
     ```bash
     heroku run python manage.py shell -a trade-smartly-backend
     ```
+
+## 部署正式環境在 AWS EC2
+
+### 首次部署
+
+- Step1: 安裝 Git
+  - 版本須大於 2.34
+- Step2: 產生一對 SSH key pair 並將公鑰交給 GitHub
+- Step3: Clone repo from GitHub
+  - 放置在 `~` 底下即可
+- Step4: 安裝 PostgreSQL
+  - 版本須大於 14
+- Step5: 建立一個名為 `trade_smartly` 的 database
+
+  ```bash
+  sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = 'trade_smartly'" | grep -q 1 || psql -c "CREATE DATABASE trade_smartly OWNER postgres"
+  ```
+
+- Step6: Dump data into database
+
+  ```bash
+  pg_restore -U postgres -d trade_smartly ~/trade_smartly_backend/db_backups/heroku_postgresql_latest
+  ```
+
+- Step7: 安裝 pyenv
+- Step8: 使用 pyenv 安裝 Python 3.10.10
+  - 安裝完後將 global 使用的 Python 版本切換成這個版本
+- Step9: 進入本專案的 root directory
+  - Step9-1: 參考 `create_env_file` 的內容建立 `.env`
+  - Step9-2: 使用 pip 安裝所有 Python packages for production：
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+  - Step9-3: 在背景啟動 Gunicorn 並 bind 到 `127.0.0.1:8000`
+
+    ```bash
+    gunicorn --daemon
+    ```
+
+- Step10: 安裝 Nginx
+  - Step10-1: 安裝 Nginx
+  - Step10-2: 於 /etc/nginx/sites-available/ 下新增 server block configuration file
+    - File 取名為 trade_smartly
+
+      ```nginx
+      location /api/ {
+          include proxy_params;
+          proxy_pass http://127.0.0.1:8000;
+      }
+      ```
+
+  - Step10-3: 將 /etc/nginx/sites-enable/ 下的 default link 刪掉，並新增 trade_smartly link
+  - Step10-4: Test config files & restart Nginx server
+
+- Step11: 使用 certbot 申請 SSL/TLS 憑證
+  - Step11-1: 安裝必要套件
+  - Step11-2: 申請憑證
+
+### CI/CD 常用指令
+
+- **Prepare new requirements.txt file**
+
+  在 local 完成一個 feature 或修完一個 bug 後，要 push 前要記得做這個動作：
+
+  ```bash
+  pipenv requirements >requirements.txt
+  ```
+
+- **SSH into EC2 instance**
+
+  ```bash
+  ssh -i <PATH/TO/PRIVATE_KEY> ubuntu@ec2-18-141-180-28.ap-southeast-1.compute.amazonaws.com
+  ```
+
+- **Pull the latest code of `master` branch from GitHub**
+
+  ```bash
+  cd ~/trade-smartly-backend
+  git checkout master
+  git pull origin master
+  ```
+
+- **Install dependencies**
+
+  原則上每次 pull 新版本或 revert 回舊版本時都要做：
+
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+- **Gracefully restart Gunicorn mannually**
+
+  原則上**不需要**做這個動作，因為起 Gunicorn 時已經有下 `--reload` option，但若發現某些預期之外的檔案改動時沒有觸發 reload，就必須手動 reload：
+
+  ```bash
+  pkill -HUP -f "gunicorn --daemon"
+  ```
+
+- **Test and gracefully restart Nginx**
+
+  當有改 Nginx 設定檔時，會需要做這個動作：
+
+  ```bash
+  sudo nginx -t && sudo nginx -s reload
+  ```
