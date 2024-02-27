@@ -3,6 +3,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
+
+# IMPORTANT: Use `DEBUG` to determine whether we are in the development env or in
+# the production env.
 DEBUG = True
 
 ALLOWED_HOSTS = []
