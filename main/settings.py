@@ -105,10 +105,3 @@ TIME_ZONE = "Asia/Taipei"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-
-# STATIC_ROOT = os.path.join(BASE_DIR, "static")
-# STATIC_URL = "/static/"
-# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-# MEDIA_URL = "/media/"
-
-APSCHEDULER_RUN_NOW_TIMEOUT = 240

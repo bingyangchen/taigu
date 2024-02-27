@@ -105,7 +105,7 @@ def logout(request: HttpRequest):
     result["success"] = True
     http_response = JsonResponse(result)
     http_response.headers["is-log-out"] = "yes"
-    http_response.delete_cookie("token", samesite="None")
+    http_response.delete_cookie("token", samesite="Strict")
     return http_response
 
 
@@ -146,7 +146,7 @@ def update(request: HttpRequest):
 #         result["success"] = True
 #         http_response = JsonResponse(result)
 #         http_response.headers["is-log-out"] = "yes"
-#         http_response.delete_cookie("token", samesite="None")
+#         http_response.delete_cookie("token", samesite="Strict")
 #         return http_response
 #     else:
 #         result["error"] = "DELETE Method Required"

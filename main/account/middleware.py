@@ -17,7 +17,7 @@ def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
         response = get_response(request)
 
         if response.status_code == 401:
-            response.delete_cookie("token", samesite="None")
+            response.delete_cookie("token", samesite="Strict")
         else:
             token = token or response.get("new-token")
             if (response.get("is-log-out") != "yes") and token:
@@ -27,7 +27,7 @@ def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
                     max_age=172800,
                     secure=True,
                     httponly=True,
-                    samesite="None",
+                    samesite="Strict",
                 )
             else:
                 del response.headers["is-log-out"]
