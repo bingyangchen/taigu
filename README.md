@@ -156,7 +156,7 @@ pipenv requirements > requirements.txt
     pip install -r requirements.txt
     ```
 
-  - Step9-3: 在背景啟動 Gunicorn 並 bind 到 `127.0.0.1:8000`
+  - Step9-3: 在背景啟動 Gunicorn
 
     ```bash
     gunicorn --daemon
