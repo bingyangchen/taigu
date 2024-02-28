@@ -26,7 +26,7 @@ python ~/trade-smartly-backend/scripts/prod/transform_crontab.py
 echo succeeded!
 
 echo "Update the real crontab."
-crontab ~/trade-smartly-backend/main/crontab/crontab
+crontab ~/trade-smartly-backend/crontab
 echo succeeded!
 
 ## Undo the transform
