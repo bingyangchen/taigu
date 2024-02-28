@@ -64,8 +64,9 @@ pipenv install --dev
   - 開啟 Python interpreter 並設定好環境變數
   - 輸入 `exit()` 離開互動模式
 
-- `./runtest`
+- `bash scripts/localdev/runpytest.sh`
   - 跑測試
+  - 須在本專案的根目錄執行這個指令
   - 本專案使用 `pytest` 取代 Django 內建的測試套件，所以不是使用 `python manage.py test` 這個指令
   - 關於 Pytest 的詳細使用方式，請見 [Pytest 官方文件](https://docs.pytest.org/en/latest/index.html)
 
@@ -207,10 +208,17 @@ pipenv requirements > requirements.txt
 
 - **更新 Crontab**
 
-  當 crontab 這個檔案的內容有變動時就必須執行這個指令：
+  當 crontab 這個檔案的內容有變動時就必須執行以下指令：
 
   ```bash
-  crontab ~/trade-smartly-backend/crontab
+  # Transform the content of the crontab file of this project
+  python ~/trade-smartly-backend/scripts/prod/transform_crontab.py
+
+  # Update the real crontab
+  crontab ~/trade-smartly-backend/main/crontab/crontab
+
+  # Undo the transform
+  git reset HEAD --hard
   ```
 
 - **Gracefully restart Gunicorn mannually**

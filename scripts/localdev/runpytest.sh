@@ -7,9 +7,6 @@ source $(pipenv --venv)/bin/activate
 set -o allexport
 source .env set
 
-# Pass all arguments and options to `pytest`
-args_and_opts="$@"
-pytest $args_and_opts
+pytest ../../
 
-set +o allexport
-exit
+deactivate
