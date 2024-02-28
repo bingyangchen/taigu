@@ -207,10 +207,10 @@ pipenv requirements > requirements.txt
 
 - **Install dependencies**
 
-  原則上每次 pull 新版本或 revert 回舊版本時都要做：
+  每次 requirements.txt 有變動時都要做，須注意的是，`pip install` 執行完後若真的有安裝或移除套件，Gunicorn 就會被 kill 掉，所以要馬上重啟：
 
   ```bash
-  pip install -r requirements.txt
+  pip install -r requirements.txt && gunicorn --daemon
   ```
 
 - **Gracefully restart Gunicorn mannually**
