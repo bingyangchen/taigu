@@ -7,21 +7,14 @@ from typing import Literal
 
 import pytz
 import requests
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
 from dateutil.relativedelta import relativedelta
-from django.conf import settings
-from django_apscheduler import util
-from django_apscheduler.jobstores import DjangoJobStore
-from django_apscheduler.models import DjangoJobExecution
 
 from . import Frequency, InfoEndpoint, TradeType
 from .models import Company, History, MarketIndexPerMinute, StockInfo
 
 
-@util.close_old_connections
 def fetch_and_store_realtime_stock_info() -> None:
-    print("Start Fetching Realtime Stock Info")
+    print(f"[{datetime.now()}] Start fetching realtime sotck info...")
     market_indices = ["t00", "o00"]
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
@@ -125,7 +118,7 @@ def fetch_and_store_realtime_stock_info() -> None:
 
             # deal with rate limit (3 requests per 5 seconds)
             sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
-    print("\nAll Realtime Stock Info Updated!")
+    print(f"\n[{datetime.now()}] All realtime stock info updated!")
 
 
 def store_market_per_minute_info(
@@ -155,7 +148,6 @@ def store_market_per_minute_info(
     )
 
 
-@util.close_old_connections
 def fetch_and_store_close_info_today() -> None:
     date_ = (datetime.now(pytz.utc) + timedelta(hours=8)).date()
 
@@ -237,7 +229,7 @@ def fetch_and_store_close_info_today() -> None:
                 continue
     except Exception as e:
         print(e)
-    print("Stock info is up to date!")
+    print(f"Stock info of {datetime.today().date()} is up to date!")
 
 
 def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
@@ -284,8 +276,8 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
                 )
 
 
-@util.close_old_connections
 def update_all_stocks_history() -> None:
+    print(f"[{datetime.now()}] Start fetching historical price for all stocks...")
     for company in Company.objects.filter(trade_type__isnull=False):
         start = datetime.now()
         with suppress(Exception):
@@ -295,32 +287,4 @@ def update_all_stocks_history() -> None:
 
         # deal with rate limit (3000 per hour)
         sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
-
-
-def set_up_cron_jobs() -> None:
-    DjangoJobExecution.objects.delete_old_job_executions(0)
-    scheduler = BackgroundScheduler(timezone=settings.TIME_ZONE)
-    scheduler.add_jobstore(DjangoJobStore(), "default")
-    scheduler.remove_all_jobs()
-    scheduler.add_job(
-        fetch_and_store_realtime_stock_info,
-        trigger=CronTrigger.from_crontab("* 9-14 * * MON-FRI"),
-        id="fetch_and_store_realtime_stock_info",
-        max_instances=1,
-        replace_existing=True,
-    )
-    scheduler.add_job(
-        fetch_and_store_close_info_today,
-        trigger=CronTrigger.from_crontab("4 14 * * MON-FRI"),
-        id="fetch_and_store_close_info_today",
-        max_instances=1,
-        replace_existing=True,
-    )
-    scheduler.add_job(
-        update_all_stocks_history,
-        trigger=CronTrigger.from_crontab("0 1 * * TUE-SAT"),
-        id="update_all_stocks_history",
-        max_instances=1,
-        replace_existing=True,
-    )
-    scheduler.start()
+    print(f"[{datetime.now()}] All historical price updated!")

@@ -16,17 +16,21 @@ if git diff HEAD^ HEAD -- "$requirements" | grep -qE '^\+|^\-'; then
     if [ $gunicorn_process_count -eq 1 ]; then
         # Why -eq 1? This is because the command that count the process itself is a proccess that will be counted.
         gunicorn --daemon
+        echo "Gunicorn restarted!"
     fi
 fi
 
 # Crontab
-## Transform the content of the crontab file of this project
+echo "Transforming the content of the crontab file of this project."
 python ~/trade-smartly-backend/scripts/prod/transform_crontab.py
+echo succeeded!
 
-## Update the real crontab
+echo "Update the real crontab."
 crontab ~/trade-smartly-backend/main/crontab/crontab
+echo succeeded!
 
 ## Undo the transform
 git reset HEAD --hard
+echo "The deploy process is completed!"
 
 set +e

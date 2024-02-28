@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "django_apscheduler",
     # Local Apps
     "main.core",
+    "main.crontab",
     "main.account",
     "main.stock",
     "main.memo",

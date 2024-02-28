@@ -1,8 +1,0 @@
-# Only put python command here.
-# Only execute the python file that is under this directory.
-# Use relative path to specify the file.
-
-* 9-14 * * 1-5 python fetch_and_store_realtime_stock_info.py 2>&1 | tee -a ~/cron_log.txt
-4 14 * * 1-5 python fetch_and_store_close_info_today.py 2>&1 | tee -a ~/cron_log.txt
-0 1 * * 2-6 python update_all_stocks_history.py 2>&1 | tee -a ~/cron_log.txt
-* * * * * python just_for_test.py 2>&1 | tee -a ~/cron_log.txt
