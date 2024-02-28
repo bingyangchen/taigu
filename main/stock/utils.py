@@ -41,7 +41,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                 try:
                     # parse row data
                     company_id = row["c"]
-                    date = datetime.strptime(row["d"], "%Y%m%d").date()
+                    date_ = datetime.strptime(row["d"], "%Y%m%d").date()
                     quantity = (
                         int(row["v"]) * 1000
                         if row.get("v") is not None and row["v"] != "-"
@@ -95,23 +95,24 @@ def fetch_and_store_realtime_stock_info() -> None:
                         price = yesterday_price
 
                     fluct_price = round(price - yesterday_price, 2)
-                    if company_id in market_indices:
-                        store_market_per_minute_info(
-                            id=company_id,
-                            date=date,
-                            price=price,
-                            fluct_price=fluct_price,
-                        )
-                    else:
-                        StockInfo.objects.update_or_create(
-                            company=Company.objects.get(pk=company_id),
-                            defaults={
-                                "date": date,
-                                "quantity": quantity,
-                                "close_price": price,
-                                "fluct_price": fluct_price,
-                            },
-                        )
+                    if date.today() == date_:  # do nothing if market is not opened
+                        if company_id in market_indices:
+                            store_market_per_minute_info(
+                                id=company_id,
+                                date_=date_,
+                                price=price,
+                                fluct_price=fluct_price,
+                            )
+                        else:
+                            StockInfo.objects.update_or_create(
+                                company=Company.objects.get(pk=company_id),
+                                defaults={
+                                    "date": date_,
+                                    "quantity": quantity,
+                                    "close_price": price,
+                                    "fluct_price": fluct_price,
+                                },
+                            )
                 except Exception as e:
                     print(e)
                     continue
@@ -128,7 +129,7 @@ def fetch_and_store_realtime_stock_info() -> None:
 
 
 def store_market_per_minute_info(
-    id: Literal["t00", "o00"], date: date, price: float, fluct_price: float
+    id: Literal["t00", "o00"], date_: date, price: float, fluct_price: float
 ) -> None:
     now = (datetime.now(pytz.utc) + timedelta(hours=8)).time()
     minutes_after_opening = (now.hour - 9) * 60 + now.minute
@@ -144,11 +145,11 @@ def store_market_per_minute_info(
     market = TradeType.TSE if id == "t00" else TradeType.OTC
 
     # Delete data that are not belong to the latest day
-    MarketIndexPerMinute.objects.filter(market=market).exclude(date=date).delete()
+    MarketIndexPerMinute.objects.filter(market=market).exclude(date=date_).delete()
 
     MarketIndexPerMinute.objects.get_or_create(
         market=market,
-        date=date,
+        date=date_,
         number=minutes_after_opening,
         defaults={"price": price, "fluct_price": fluct_price},
     )
@@ -156,7 +157,7 @@ def store_market_per_minute_info(
 
 @util.close_old_connections
 def fetch_and_store_close_info_today() -> None:
-    date = (datetime.now(pytz.utc) + timedelta(hours=8)).date()
+    date_ = (datetime.now(pytz.utc) + timedelta(hours=8)).date()
 
     # Process TSE stocks
     try:
@@ -175,7 +176,7 @@ def fetch_and_store_close_info_today() -> None:
                 StockInfo.objects.update_or_create(
                     company=company,
                     defaults={
-                        "date": date,
+                        "date": date_,
                         "quantity": int(row["TradeVolume"] or 0),
                         "close_price": round(
                             float(row["ClosingPrice"] or row["HighestPrice"] or 0.0),
@@ -207,7 +208,7 @@ def fetch_and_store_close_info_today() -> None:
                 StockInfo.objects.update_or_create(
                     company=company,
                     defaults={
-                        "date": date,
+                        "date": date_,
                         "quantity": int(
                             row["TradingShares"]
                             if row["TradingShares"].find("--") == -1
@@ -260,24 +261,27 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
     data = StringIO(response.text)
     csv_reader = csv.reader(data)
     History.objects.filter(company=company, frequency=frequency).delete()
+    previous_quantity = None
+    previous_close_price = None
     for row in csv_reader:
         # ['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']
-        if "Date" not in row:
+        if "Date" not in row:  # skip the header row
             try:
                 quantity = int(row[-1])
             except Exception:
-                quantity = 0
+                quantity = previous_quantity
             try:
                 close_price = round(float(row[4]), 2)
             except Exception:
-                close_price = 0.0
-            History.objects.create(
-                company=company,
-                frequency=frequency,
-                date=datetime.strptime(row[0], "%Y-%m-%d").date(),
-                quantity=quantity,
-                close_price=close_price,
-            )
+                close_price = previous_close_price
+            if quantity is not None and close_price is not None:
+                History.objects.create(
+                    company=company,
+                    frequency=frequency,
+                    date=datetime.strptime(row[0], "%Y-%m-%d").date(),
+                    quantity=quantity,
+                    close_price=close_price,
+                )
 
 
 @util.close_old_connections
@@ -314,7 +318,7 @@ def set_up_cron_jobs() -> None:
     )
     scheduler.add_job(
         update_all_stocks_history,
-        trigger=CronTrigger.from_crontab("0 1 * * MON-FRI"),
+        trigger=CronTrigger.from_crontab("0 1 * * TUE-SAT"),
         id="update_all_stocks_history",
         max_instances=1,
         replace_existing=True,
