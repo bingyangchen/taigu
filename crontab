@@ -1,7 +1,6 @@
 # Only put python command here.
 # Only run Django command here.
 
-* 9-14 * * 1-5 python manage.py fetch_and_store_realtime_stock_info 2>&1 | tee -a ~/cron_log.txt
+* 9-13 * * 1-5 python manage.py fetch_and_store_realtime_stock_info 2>&1 | tee -a ~/cron_log.txt
 4 14 * * 1-5 python manage.py fetch_and_store_close_info_today 2>&1 | tee -a ~/cron_log.txt
 0 1 * * 2-6 python manage.py update_all_stocks_history 2>&1 | tee -a ~/cron_log.txt
-* 9-23 * * * python manage.py just_for_test 2>&1 | tee -a ~/cron_log.txt
