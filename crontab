@@ -1,0 +1,4 @@
+* 9-14 * * 1-5 python -m main.cron.fetch_and_store_realtime_stock_info 2>&1 | tee -a ~/cron_log.txt
+4 14 * * 1-5 python -m main.cron.fetch_and_store_close_info_today 2>&1 | tee -a ~/cron_log.txt
+0 1 * * 2-6 python -m main.cron.update_all_stocks_history 2>&1 | tee -a ~/cron_log.txt
+* * * * * python -m main.cron.just_for_test 2>&1 | tee -a ~/cron_log.txt

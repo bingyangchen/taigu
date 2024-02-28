@@ -51,17 +51,9 @@ pipenv install --dev
 
 ### 開發環境常用指令
 
-- `python manage.py runserver 8001`
+- `python manage.py runserver`
   - 啟動 pseudo server，並配置一個 terminal
   - `Ctrl` + `C` 停止 pseudo server
-
-- `gunicorn`
-  - 啟動 Gunicorn web server，並配置一個 terminal
-  - 鍵盤 `Ctrl` + `C` 停止
-
-- `gunicorn --daemon`
-  - 啟動 Gunicorn web server，並丟到背景執行
-  - 輸入指令 `pkill -f gunicorn` 停止
 
 - `python manage.py dbshell`
   - 開啟 DB 的 CLI
@@ -210,7 +202,15 @@ pipenv requirements > requirements.txt
   每次 requirements.txt 有變動時都要做，須注意的是，`pip install` 執行完後若真的有安裝或移除套件，Gunicorn 就會被 kill 掉，所以要馬上重啟：
 
   ```bash
-  pip install -r requirements.txt && gunicorn --daemon
+  pip install -r ~/trade-smartly-backend/requirements.txt && gunicorn --daemon
+  ```
+
+- **更新 Crontab**
+
+  當 crontab 這個檔案的內容有變動時就必須執行這個指令：
+
+  ```bash
+  crontab ~/trade-smartly-backend/crontab
   ```
 
 - **Gracefully restart Gunicorn mannually**
