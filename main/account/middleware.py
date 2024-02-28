@@ -1,8 +1,9 @@
 from typing import Callable
 
-from django.conf import settings
 from django.contrib.auth import authenticate
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse
+
+from main.core import env
 
 
 def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
@@ -19,7 +20,7 @@ def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
 
         if response.status_code == 401:
             response.delete_cookie(
-                "token", samesite="Strict" if not settings.DEBUG else "None"
+                "token", samesite="Strict" if env.is_production else "None"
             )
         else:
             token = token or response.get("new-token")
@@ -30,7 +31,7 @@ def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
                     max_age=172800,
                     secure=True,
                     httponly=True,
-                    samesite="Strict" if not settings.DEBUG else "None",
+                    samesite="Strict" if env.is_production else "None",
                 )
             else:
                 del response.headers["is-log-out"]

@@ -3,7 +3,6 @@ import os
 from typing import Any
 
 import google_auth_oauthlib.flow
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
@@ -11,6 +10,7 @@ from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2 import id_token
 from rest_framework.authtoken.models import Token
 
+from main.core import env
 from main.core.decorators import require_login
 
 from . import OAuthOrganization
@@ -107,7 +107,7 @@ def logout(request: HttpRequest):
     http_response = JsonResponse(result)
     http_response.headers["is-log-out"] = "yes"
     http_response.delete_cookie(
-        "token", samesite="Strict" if not settings.DEBUG else "None"
+        "token", samesite="Strict" if env.is_production else "None"
     )
     return http_response
 
@@ -150,7 +150,7 @@ def update(request: HttpRequest):
 #         http_response = JsonResponse(result)
 #         http_response.headers["is-log-out"] = "yes"
 #         http_response.delete_cookie(
-#             "token", samesite="Strict" if not settings.DEBUG else "None"
+#             "token", samesite="Strict" if env.is_production else "None"
 #         )
 #         return http_response
 #     else:
