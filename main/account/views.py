@@ -3,6 +3,7 @@ import os
 from typing import Any
 
 import google_auth_oauthlib.flow
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
@@ -18,7 +19,7 @@ from .models import User
 
 GOOGLE_AUTH_FLOW = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
     os.path.join(
-        os.getcwd(),
+        settings.BASE_DIR,
         "client_secret_85674097625-iqmtaroea8456oeh3461j2g8esb426ts.apps.googleusercontent.com.json",
     ),
     scopes=[
