@@ -29,6 +29,10 @@ echo "Update the timezone of the system to Asia/Taipei"
 sudo timedatectl set-timezone Asia/Taipei
 echo succeeded!
 
+echo "Restart cron"
+sudo systemctl restart cron
+echo succeeded!
+
 echo "Update the real crontab."
 crontab ~/trade-smartly-backend/crontab
 echo succeeded!
