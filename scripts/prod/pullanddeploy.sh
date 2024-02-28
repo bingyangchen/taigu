@@ -25,6 +25,10 @@ echo "Transforming the content of the crontab file of this project."
 python ~/trade-smartly-backend/scripts/prod/transform_crontab.py
 echo succeeded!
 
+echo "Update the timezone of the system to Asia/Taipei"
+sudo timedatectl set-timezone Asia/Taipei
+echo succeeded!
+
 echo "Update the real crontab."
 crontab ~/trade-smartly-backend/crontab
 echo succeeded!

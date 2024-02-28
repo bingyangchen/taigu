@@ -36,7 +36,7 @@ if __name__ == "__main__":
     with open(CRONTAB_FILE_PATH) as file:
         for line in file:
             line = line.strip()
-            if line.startswith("#") or line.startswith("CRON_TZ=") or not line:
+            if line.startswith("#") or not line:
                 result.append(line)
             else:
                 schedule, python_command = split_crontab(line)
