@@ -149,6 +149,7 @@ def store_market_per_minute_info(
 
 
 def fetch_and_store_close_info_today() -> None:
+    print(f"[{datetime.now()}] Start fetching sotck market close info today...")
     date_ = (datetime.now(pytz.utc) + timedelta(hours=8)).date()
 
     # Process TSE stocks
@@ -203,22 +204,23 @@ def fetch_and_store_close_info_today() -> None:
                         "date": date_,
                         "quantity": int(
                             row["TradingShares"]
-                            if row["TradingShares"].find("--") == -1
+                            if "--" not in row["TradingShares"]
                             else 0
                         ),
                         "close_price": round(
                             float(
                                 row["Close"]
-                                if row["Close"].find("--") == -1
-                                else (
-                                    row["High"] if row["High"].find("--") == -1 else 0
-                                )
+                                if "--" not in row["Close"]
+                                else (row["High"] if "--" not in row["High"] else 0)
                             ),
                             2,
                         ),
                         "fluct_price": round(
                             float(
-                                row["Change"] if row["Change"].find("--") == -1 else 0
+                                row["Change"]
+                                if "--" not in row["Change"]
+                                and "除息" not in row["Change"]
+                                else 0
                             ),
                             2,
                         ),
@@ -229,7 +231,8 @@ def fetch_and_store_close_info_today() -> None:
                 continue
     except Exception as e:
         print(e)
-    print(f"Stock info of {datetime.today().date()} is up to date!")
+    end = datetime.now()
+    print(f"[{end}] Stock market close info of {end.date()} is up to date!")
 
 
 def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
