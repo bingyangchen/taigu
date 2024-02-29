@@ -17,9 +17,7 @@ pipenv install --dev
 
 ### Step2: 建立並設定 .env 檔
 
-```bash
-./create_env_file
-```
+請參考 env.example 的內容。
 
 ### Step3: 初始化資料庫 (Optional)
 
@@ -142,7 +140,7 @@ pipenv requirements > requirements.txt
 - Step8: 使用 pyenv 安裝 Python 3.10.10
   - 安裝完後將 global 使用的 Python 版本切換成這個版本
 - Step9: 進入本專案的 root directory
-  - Step9-1: 參考 `create_env_file` 的內容建立 `.env`
+  - Step9-1: 參考 `env.example` 的內容建立 `.env`
   - Step9-2: 使用 pip 安裝所有 Python packages for production：
 
     ```bash
