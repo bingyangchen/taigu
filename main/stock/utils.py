@@ -51,12 +51,26 @@ def fetch_and_store_realtime_stock_info() -> None:
                         else None
                     )
                     lowest_ask_price = (
-                        round(float(row["a"].split("_")[0]), 2)
+                        round(
+                            min(
+                                float(price_str)
+                                for price_str in row["a"].split("_")
+                                if price_str
+                            ),
+                            2,
+                        )
                         if row.get("a") is not None and row["a"] != "-"
                         else None
                     )
                     highest_bid_price = (
-                        round(float(row["b"].split("_")[0]), 2)
+                        round(
+                            max(
+                                float(price_str)
+                                for price_str in row["b"].split("_")
+                                if price_str
+                            ),
+                            2,
+                        )
                         if row.get("b") is not None and row["b"] != "-"
                         else None
                     )
