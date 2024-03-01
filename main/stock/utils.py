@@ -1,4 +1,5 @@
 import csv
+import math
 from contextlib import suppress
 from datetime import date, datetime, timedelta
 from io import StringIO
@@ -14,7 +15,9 @@ from .models import Company, History, MarketIndexPerMinute, StockInfo
 
 
 def fetch_and_store_realtime_stock_info() -> None:
-    print(f"[{datetime.now()}] Start fetching realtime sotck info...")
+    print(
+        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching realtime sotck info!"
+    )
     market_indices = ["t00", "o00"]
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
@@ -23,7 +26,7 @@ def fetch_and_store_realtime_stock_info() -> None:
         map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set)
     )
     batch_size = 145
-    print(f"Expected request count: {round(len(all) / batch_size, 1)}")
+    print(f"Expected request count: {math.ceil(len(all) / batch_size)}")
     while len(all) > 0:
         start = datetime.now()
         url = f"{InfoEndpoint.realtime['stock']}{'|'.join(all[:batch_size])}"
@@ -125,14 +128,15 @@ def fetch_and_store_realtime_stock_info() -> None:
                     continue
             print(".", end="")
         except Exception as e:
-            print("x")
             print(e)
         finally:
             all = all[batch_size:]
 
             # deal with rate limit (3 requests per 5 seconds)
-            sleep(max(0, 2.5 - (datetime.now() - start).total_seconds()))
-    print(f"\n[{datetime.now()}] All realtime stock info updated!")
+            sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
+    print(
+        f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] All realtime stock info updated!"
+    )
 
 
 def store_market_per_minute_info(
@@ -163,7 +167,9 @@ def store_market_per_minute_info(
 
 
 def fetch_and_store_close_info_today() -> None:
-    print(f"[{datetime.now()}] Start fetching sotck market close info today...")
+    print(
+        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching sotck market close info today!"
+    )
     date_ = (datetime.now(pytz.utc) + timedelta(hours=8)).date()
 
     # Process TSE stocks
@@ -294,7 +300,9 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
 
 
 def update_all_stocks_history() -> None:
-    print(f"[{datetime.now()}] Start fetching historical price for all stocks...")
+    print(
+        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching historical price for all stocks!"
+    )
     for company in Company.objects.filter(trade_type__isnull=False):
         start = datetime.now()
         with suppress(Exception):
@@ -304,4 +312,6 @@ def update_all_stocks_history() -> None:
 
         # deal with rate limit (3000 per hour)
         sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
-    print(f"[{datetime.now()}] All historical price updated!")
+    print(
+        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] All historical price updated!"
+    )
