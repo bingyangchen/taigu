@@ -37,5 +37,4 @@ class InfoEndpoint:
     multiple_days = "https://query1.finance.yahoo.com/v7/finance/download/"
 
 
-class UnknownStockIdError(Exception):
-    ...
+class UnknownStockIdError(Exception): ...
