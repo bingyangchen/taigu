@@ -23,12 +23,12 @@ def fetch_and_store_realtime_stock_info() -> None:
         map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set)
     )
     batch_size = 145
-    print(f"Expected request count: {len(all) / batch_size}")
+    print(f"Expected request count: {round(len(all) / batch_size, 1)}")
     while len(all) > 0:
         start = datetime.now()
         url = f"{InfoEndpoint.realtime['stock']}{'|'.join(all[:batch_size])}"
         try:
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=4)
             json_data = response.json()
             for row in json_data["msgArray"]:
                 try:
