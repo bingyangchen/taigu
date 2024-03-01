@@ -22,7 +22,7 @@ def fetch_and_store_realtime_stock_info() -> None:
     all = [f"tse_{market_indices[0]}.tw", f"otc_{market_indices[1]}.tw"] + list(
         map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set)
     )
-    batch_size = 150
+    batch_size = 145
     print(f"Expected request count: {len(all) / batch_size}")
     while len(all) > 0:
         start = datetime.now()
@@ -131,7 +131,7 @@ def fetch_and_store_realtime_stock_info() -> None:
             all = all[batch_size:]
 
             # deal with rate limit (3 requests per 5 seconds)
-            sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
+            sleep(max(0, 2.5 - (datetime.now() - start).total_seconds()))
     print(f"\n[{datetime.now()}] All realtime stock info updated!")
 
 
