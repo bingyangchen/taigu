@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Define color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+RESET='\033[0m' # Reset color to default
+
 set -e
 
 # Pull code
@@ -39,6 +46,7 @@ echo succeeded!
 
 ## Undo the transform
 git reset HEAD --hard
-echo "The deploy process is completed!"
+
+echo -e "${GREEN}THE DEPLOY PROCESS IS COMPLETED!${RESET}"
 
 set +e
