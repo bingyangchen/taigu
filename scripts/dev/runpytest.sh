@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# You should run this script at the root directory of this project.
+
 # Activate virtual Python environment
 source $(pipenv --venv)/bin/activate
 
@@ -7,6 +9,6 @@ source $(pipenv --venv)/bin/activate
 set -o allexport
 source .env set
 
-pytest ../../
+pytest
 
 deactivate
