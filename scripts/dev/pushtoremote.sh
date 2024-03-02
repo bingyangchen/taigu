@@ -21,7 +21,7 @@ if [[ -z $1 ]]; then
 fi
 
 # Run pytest
-bash ./scripts/localdev/runpytest.sh
+bash ./scripts/dev/runpytest.sh
 
 # Update the dependency info
 pipenv requirements >requirements.txt

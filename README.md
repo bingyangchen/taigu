@@ -62,7 +62,7 @@ pipenv install --dev
   - 開啟 Python interpreter 並設定好環境變數
   - 輸入 `exit()` 離開互動模式
 
-- `bash scripts/localdev/runpytest.sh`
+- `bash scripts/dev/runpytest.sh`
   - 跑測試
   - 須在本專案的根目錄執行這個指令
   - 本專案使用 `pytest` 取代 Django 內建的測試套件，所以不是使用 `python manage.py test` 這個指令
