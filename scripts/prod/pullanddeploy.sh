@@ -5,7 +5,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
-RESET='\033[0m' # Reset color to default
+RESET='\033[0m'
 
 set -e
 
@@ -28,25 +28,25 @@ if git diff HEAD^ HEAD -- "$requirements" | grep -qE '^\+|^\-'; then
 fi
 
 # Crontab
-echo "Transforming the content of the crontab file of this project."
+echo "Transforming the content of the crontab file of this project..."
 python ~/trade-smartly-backend/scripts/prod/transform_crontab.py
-echo succeeded!
+echo -e "${GREEN}succeeded!${RESET}"
 
-echo "Update the timezone of the system to Asia/Taipei"
+echo "Updating the timezone of the system to Asia/Taipei..."
 sudo timedatectl set-timezone Asia/Taipei
-echo succeeded!
+echo -e "${GREEN}succeeded!${RESET}"
 
-echo "Restart cron"
+echo "Restarting cron service..."
 sudo systemctl restart cron
-echo succeeded!
+echo -e "${GREEN}succeeded!${RESET}"
 
-echo "Update the real crontab."
+echo "Updating the real crontab..."
 crontab ~/trade-smartly-backend/crontab
-echo succeeded!
+echo -e "${GREEN}succeeded!${RESET}"
 
 ## Undo the transform
 git reset HEAD --hard
 
-echo -e "${GREEN}THE DEPLOY PROCESS IS COMPLETED!${RESET}"
+echo -e "${YELLOW}THE DEPLOY PROCESS IS COMPLETED!${RESET}"
 
 set +e
