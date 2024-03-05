@@ -9,7 +9,7 @@ from typing import Literal
 import pytz
 import requests
 from dateutil.relativedelta import relativedelta
-from requests import ConnectTimeout, ReadTimeout
+from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
 from . import Frequency, InfoEndpoint, TradeType
 from .models import Company, History, MarketIndexPerMinute, StockInfo
@@ -130,8 +130,10 @@ def fetch_and_store_realtime_stock_info() -> None:
             print(".", end="")
         except ReadTimeout:
             print("R", end="")
-        except ConnectionError:
+        except ConnectTimeout:
             print("C", end="")
+        except JSONDecodeError:
+            print("J", end="")
         except Exception as e:
             print(e)
         finally:
