@@ -23,7 +23,7 @@ if git diff HEAD^ HEAD -- "$requirements" | grep -qE '^\+|^\-'; then
     if [ $gunicorn_process_count -eq 1 ]; then
         # Why -eq 1? This is because the command that count the process itself is a proccess that will be counted.
         gunicorn --daemon
-        echo "Gunicorn restarted!"
+        echo -e "${GREEN}Gunicorn restarted!${RESET}"
     fi
 fi
 
