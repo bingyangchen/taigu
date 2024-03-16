@@ -10,7 +10,7 @@ RESET='\033[0m'
 set -e
 
 if [ ! -e "manage.py" ]; then
-    echo "Error: You should run this command under the root directory of this project."
+    echo "${RED}Error: You should run this command under the root directory of this project.${RESET}"
     exit 1
 fi
 
@@ -33,19 +33,19 @@ if git diff HEAD^ HEAD -- "$requirements" | grep -qE '^\+|^\-'; then
 fi
 
 # Crontab
-echo "Transforming the content of the crontab file of this project..."
+echo -n "Transforming the content of the crontab file of this project..."
 python ~/trade-smartly-backend/scripts/prod/transform_crontab.py
 echo -e "${GREEN}succeeded!${RESET}"
 
-echo "Updating the timezone of the system to Asia/Taipei..."
+echo -n "Updating the timezone of the system to Asia/Taipei..."
 sudo timedatectl set-timezone Asia/Taipei
 echo -e "${GREEN}succeeded!${RESET}"
 
-echo "Restarting cron service..."
+echo -n "Restarting cron service..."
 sudo systemctl restart cron
 echo -e "${GREEN}succeeded!${RESET}"
 
-echo "Updating the real crontab..."
+echo -n "Updating the real crontab..."
 crontab ~/trade-smartly-backend/crontab
 echo -e "${GREEN}succeeded!${RESET}"
 
