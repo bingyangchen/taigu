@@ -2,11 +2,10 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-# IMPORTANT: Use `DEBUG` to determine whether we are in the development env or in
-# the production env.
-DEBUG = True
+DEBUG = True  # NOTE: We use this variable to determine whether we are in the development environment or in the production one.
 
 ALLOWED_HOSTS = []
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^https?://(localhost|127\.0\.0\.1):300[0-9]$"]
@@ -25,8 +24,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     # 3rd-party packages
-    "rest_framework",
-    "rest_framework.authtoken",
     "corsheaders",
     # Local Apps
     "main.core",
@@ -81,27 +78,14 @@ AUTHENTICATION_BACKENDS = [
     "main.account.backends.MyBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
-
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa: E501
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
-
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
-    ]
-}
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Taipei"
