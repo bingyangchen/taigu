@@ -9,12 +9,17 @@ RESET='\033[0m'
 
 set -e
 
+if [ ! -e "manage.py" ]; then
+    echo "Error: You should run this command under the root directory of this project."
+    exit 1
+fi
+
 # Pull code
 git checkout master
 git pull origin master
 
 # Install the latest dependencies if necessary
-requirements="~/trade-smartly-backend/requirements.txt"
+requirements="./requirements.txt"
 if git diff HEAD^ HEAD -- "$requirements" | grep -qE '^\+|^\-'; then
     pip install -r "$requirements"
 
