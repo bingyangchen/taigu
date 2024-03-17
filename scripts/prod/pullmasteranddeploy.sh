@@ -10,7 +10,7 @@ RESET='\033[0m'
 set -e
 
 if [ ! -e "manage.py" ]; then
-    echo -e "${RED}You should run this command under the root directory of this project.${RESET}"
+    printf "${RED}You should run this command under the root directory of this project.${RESET}\n"
     exit 1
 fi
 
@@ -28,30 +28,30 @@ if git diff HEAD^ HEAD -- "$requirements" | grep -qE '^\+|^\-'; then
     if [ $gunicorn_process_count -eq 1 ]; then
         # Why -eq 1? This is because the command that count the process itself is a proccess that will be counted.
         gunicorn --daemon
-        echo -e "${GREEN}Gunicorn restarted!${RESET}"
+        printf "${GREEN}Gunicorn restarted!${RESET}\n"
     fi
 fi
 
 # Crontab
-echo -n "Transforming the content of the crontab file of this project..."
+printf "Transforming the content of the crontab file of this project..."
 python ~/trade-smartly-backend/scripts/prod/transform_crontab.py
-echo -e "${GREEN}succeeded!${RESET}"
+printf "${GREEN}succeeded!${RESET}\n"
 
-echo -n "Updating the timezone of the system to Asia/Taipei..."
+printf "Updating the timezone of the system to Asia/Taipei..."
 sudo timedatectl set-timezone Asia/Taipei
-echo -e "${GREEN}succeeded!${RESET}"
+printf "${GREEN}succeeded!${RESET}\n"
 
-echo -n "Restarting cron service..."
+printf "Restarting cron service..."
 sudo systemctl restart cron
-echo -e "${GREEN}succeeded!${RESET}"
+printf "${GREEN}succeeded!${RESET}\n"
 
-echo -n "Updating the real crontab..."
+printf "Updating the real crontab..."
 crontab ~/trade-smartly-backend/crontab
-echo -e "${GREEN}succeeded!${RESET}"
+printf "${GREEN}succeeded!${RESET}\n"
 
 ## Undo the transform
 git reset HEAD --hard
 
-echo -e "${YELLOW}THE DEPLOY PROCESS IS COMPLETED!${RESET}"
+printf "${YELLOW}THE DEPLOY PROCESS IS COMPLETED!${RESET}\n"
 
 set +e
