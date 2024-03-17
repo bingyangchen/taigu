@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 
-# You should run this script at the root directory of this project.
+# Define color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+RESET='\033[0m'
+
+if [ ! -e "manage.py" ]; then
+    echo -e "${RED}Error: You should run this command under the root directory of this project.${RESET}"
+    exit 1
+fi
 
 # Activate virtual Python environment
 source $(pipenv --venv)/bin/activate
