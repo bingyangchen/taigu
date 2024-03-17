@@ -10,13 +10,13 @@ BLUE='\033[0;34m'
 RESET='\033[0m'
 
 if [ ! -e "manage.py" ]; then
-    echo -e "${RED}Error: You should run this command under the root directory of this project. Aborting.${RESET}"
+    echo -e "${RED}You should run this command under the root directory of this project. Aborting.${RESET}"
     exit 1
 fi
 
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$current_branch" != "master" ]; then
-    echo -e "${RED}Error: You're not on the correct branch. Aborting.${RESET}"
+    echo -e "${RED}You're not on the correct branch. Aborting.${RESET}"
     exit 1
 fi
 

@@ -8,7 +8,7 @@ BLUE='\033[0;34m'
 RESET='\033[0m'
 
 if [ ! -e "manage.py" ]; then
-    echo -e "${RED}Error: You should run this command under the root directory of this project.${RESET}"
+    echo -e "${RED}You should run this command under the root directory of this project.${RESET}"
     exit 1
 fi
 
