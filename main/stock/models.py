@@ -15,7 +15,7 @@ class CompanyManager(models.Manager):
     ) -> tuple[Any, bool]:
         pk = kwargs.get("pk") or kwargs.get("stock_id")
         if pk is None:
-            raise Exception("stock_id (pk) should be provided.")
+            raise TypeError("missing 1 required argument: 'stock_id' ('pk')")
         try:
             return (self.get(pk=pk), False)
         except self.model.DoesNotExist:
@@ -66,7 +66,7 @@ class StockInfo(CreateUpdateDateModel):
     close_price = models.FloatField()
     fluct_price = models.FloatField()
 
-    class Meta:
+    class Meta:  # type: ignore
         db_table = "stock_info"
 
     def __str__(self):
@@ -82,7 +82,7 @@ class MarketIndexPerMinute(CreateUpdateDateModel):
     price = models.FloatField(null=False)
     fluct_price = models.FloatField(null=False)
 
-    class Meta:
+    class Meta:  # type: ignore
         db_table = "market_index_per_minute"
         unique_together = [["market", "date", "number"]]
 
@@ -102,7 +102,7 @@ class History(CreateUpdateDateModel):
     quantity = models.BigIntegerField()
     close_price = models.FloatField()
 
-    class Meta:
+    class Meta:  # type: ignore
         db_table = "history"
         unique_together = [["company", "frequency", "date"]]
 
@@ -120,7 +120,7 @@ class TradeRecord(CreateUpdateDateModel):
     deal_quantity = models.BigIntegerField()
     handling_fee = models.BigIntegerField()
 
-    class Meta:
+    class Meta:  # type: ignore
         db_table = "trade_record"
 
     def __str__(self):
@@ -138,7 +138,7 @@ class CashDividendRecord(CreateUpdateDateModel):
     deal_time = models.DateField()
     cash_dividend = models.BigIntegerField()
 
-    class Meta:
+    class Meta:  # type: ignore
         db_table = "cash_dividend_record"
 
     def __str__(self):
