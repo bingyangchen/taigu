@@ -1,5 +1,4 @@
-# Only python commands are accepted.
-# Only Django commands (commands of format `python manage.py xxx`) are accepted.
+# If the command is a python command, only Django commands (commands of format `python manage.py xxx`) are accepted.
 # You are suggested to redirect both the stdout and stderr to a log file.
 
 * 9-13 * * 1-5 python manage.py fetch_and_store_realtime_stock_info 2>&1 | tee -a ~/cron_log.txt

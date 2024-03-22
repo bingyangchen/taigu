@@ -2,7 +2,6 @@
 
 set -e
 
-# Define color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -30,11 +29,10 @@ pipenv requirements >requirements.txt
 
 # Commit requirements.txt if needed
 if [[ -n $(git status -s) ]]; then
-    git add -A
-    git commit -m "update requirements.txt"
+    git commit -am "update requirements.txt"
 fi
 
-git push origin "$current_branch" # tests will be run via the pre-push hook
+git push origin "$current_branch" # Tests will be run via the pre-push hook. (See /.git/hooks/pre-push)
 
 printf "${GREEN}SUCCESS!${RESET}\n"
 

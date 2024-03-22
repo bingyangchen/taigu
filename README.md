@@ -234,3 +234,35 @@ pipenv requirements > requirements.txt
   ```bash
   sudo nginx -t && sudo nginx -s reload
   ```
+
+## 檔案／目錄用途說明
+
+- `/.git/hooks/pre-push`：Push 任何 branch 到 remote repo 前都會觸發這個 script，主要是在跑測試
+- `/main/`：應用程式主要程式碼都在這個目錄底下，這裡不展開說明
+- `/scripts/`：開發人員手動執行的指令
+  - `/dev/`：在 local 開發時會用到的指令
+    - `pushtoremotemaster.sh`：「安全地」將新版程式碼推上 master branch
+    - `runpytest.sh`：跑測試（git pre-push hook 也會跑這個 script）
+  - `/prod/`：在正式環境會用到的指令
+    - `pullmasteranddeploy.sh`
+      1. Pull 最新版的 master branch
+      2. 安裝第三方 Python 套件，必要時重啟 Gunicorn
+      3. 設置 crontab
+    - `transform_crontab.py`
+      1. 將 /crontab 中的所有 commands 的 program name 改成正式環境的 program 的絕對路徑
+      2. 將 /crontab 中的所有 commands 的 file path 改成絕對路徑
+- `.env`
+- `.gitignore`
+- `client_secret_xxx.json`：Google OAuth 會用到的設定檔
+- `crontab`
+  - Cron jobs 只會在正式環境執行
+  - 部署時，這份檔案裡面的每個指令都會先被 /scripts/prod/transform_crontab.py 修改，才會被設定進系統
+- `env.example`：條列每個環境的 .env 檔中必要的 key names
+- `gunicorn.conf.py`：Gunicorn 的設定檔，執行 `gunicorn` 指令時會吃到這裡的設定
+- `Makefile`：指令的集散地，讓開發人員要手動執行 scripts 時可以不用寫出完整的 path
+- `manage.py`：負責執行 Django 指令
+- `Pipfile`：開發環境（若是使用 pipenv）的套件管理檔案
+- `Pipfile.lock`：開發環境（若是使用 pipenv）的套件管理檔案
+- `pytest.ini`：pytest 的設定檔，執行 `pytest` 指令時會吃到這裡的設定
+- `README.md`
+- `requirements.txt`：正式環境的套件管理檔案
