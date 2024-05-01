@@ -35,6 +35,10 @@ class InfoEndpoint:
         TradeType.OTC: "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes",
     }
     multiple_days = "https://query1.finance.yahoo.com/v7/finance/download/"
+    material_fact = {
+        TradeType.TSE: "https://openapi.twse.com.tw/v1/opendata/t187ap04_L",
+        TradeType.OTC: "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap04_O",
+    }
 
 
 class UnknownStockIdError(Exception): ...

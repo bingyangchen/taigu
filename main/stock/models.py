@@ -110,6 +110,23 @@ class History(CreateUpdateDateModel):
         return f"{self.company.pk}({self.date}-{self.frequency})"
 
 
+class MaterialFact(CreateUpdateDateModel):
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name="material_facts", db_index=True
+    )
+    date = models.DateField(null=False)
+    timestamp = models.PositiveIntegerField(null=False)
+    title = models.TextField(null=False, default="")
+    description = models.TextField(null=False, default="")
+
+    class Meta:  # type: ignore
+        db_table = "material_fact"
+        unique_together = [["company", "date", "timestamp"]]
+
+    def __str__(self):
+        return f"{self.company.pk}({self.date} {self.timestamp})"
+
+
 class TradeRecord(CreateUpdateDateModel):
     owner = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="trade_records", db_index=True

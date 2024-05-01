@@ -1,18 +1,17 @@
 import csv
 import math
 from contextlib import suppress
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from io import StringIO
 from time import sleep
 from typing import Literal
 
-import pytz
 import requests
 from dateutil.relativedelta import relativedelta
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
 from . import Frequency, InfoEndpoint, TradeType
-from .models import Company, History, MarketIndexPerMinute, StockInfo
+from .models import Company, History, MarketIndexPerMinute, MaterialFact, StockInfo
 
 
 def fetch_and_store_realtime_stock_info() -> None:
@@ -32,8 +31,7 @@ def fetch_and_store_realtime_stock_info() -> None:
         start = datetime.now()
         url = f"{InfoEndpoint.realtime['stock']}{'|'.join(all[:batch_size])}"
         try:
-            response = requests.get(url, timeout=4)
-            json_data = response.json()
+            json_data = requests.get(url, timeout=4).json()
             for row in json_data["msgArray"]:
                 try:
                     # parse row data
@@ -125,7 +123,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                                 },
                             )
                 except Exception as e:
-                    print(e)
+                    print(f"\n[{type(e)}] {e}")
                     continue
             print(".", end="")
         except ReadTimeout:
@@ -135,12 +133,12 @@ def fetch_and_store_realtime_stock_info() -> None:
         except JSONDecodeError:
             print("J", end="")
         except Exception as e:
-            print(e)
+            print(f"\n[{type(e)}] {e}")
         finally:
             all = all[batch_size:]
-
-            # deal with rate limit (3 requests per 5 seconds)
-            sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
+            sleep(
+                max(0, 2 - (datetime.now() - start).total_seconds())
+            )  # Rate limit: 3 requests per 5 seconds
     print(
         f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] All realtime stock info updated!"
     )
@@ -149,7 +147,7 @@ def fetch_and_store_realtime_stock_info() -> None:
 def store_market_per_minute_info(
     id: Literal["t00", "o00"], date_: date, price: float, fluct_price: float
 ) -> None:
-    now = (datetime.now(pytz.utc) + timedelta(hours=8)).time()
+    now = (datetime.now(timezone.utc) + timedelta(hours=8)).time()
     minutes_after_opening = (now.hour - 9) * 60 + now.minute
 
     # Do nothing during 13:30 ~ 13:58
@@ -174,10 +172,11 @@ def store_market_per_minute_info(
 
 
 def fetch_and_store_close_info_today() -> None:
+    """This function is currently not used."""
     print(
         f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching sotck market close info today!"
     )
-    date_ = (datetime.now(pytz.utc) + timedelta(hours=8)).date()
+    date_ = (datetime.now(timezone.utc) + timedelta(hours=8)).date()
 
     # Process TSE stocks
     try:
@@ -259,7 +258,9 @@ def fetch_and_store_close_info_today() -> None:
     except Exception as e:
         print(e)
     end = datetime.now()
-    print(f"[{end}] Stock market close info of {end.date()} is up to date!")
+    print(
+        f"[{end.strftime('%Y-%m-%d %H:%M:%S')}] Stock market close info of {end.date()} is up to date!"
+    )
 
 
 def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
@@ -322,3 +323,118 @@ def update_all_stocks_history() -> None:
     print(
         f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] All historical price updated!"
     )
+
+
+def update_material_facts() -> None:
+    print(
+        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching material facts."
+    )
+
+    # TSE
+    try:
+        tse_response: list[dict[str, str]] = requests.get(
+            InfoEndpoint.material_fact[TradeType.TSE]
+        ).json()
+
+        # Fill the data of missed companies
+        stock_id_name_map = {row["公司代號"]: row["公司名稱"] for row in tse_response}
+        stock_id_set = {row["公司代號"] for row in tse_response}
+        Company.objects.bulk_create(
+            [
+                Company(
+                    pk=stock_id,
+                    name=stock_id_name_map[stock_id],
+                    trade_type=TradeType.TSE,
+                )
+                for stock_id in (
+                    stock_id_set
+                    - {
+                        row["pk"]
+                        for row in Company.objects.filter(pk__in=stock_id_set).values(
+                            "pk"
+                        )
+                    }
+                )
+            ]
+        )
+
+        MaterialFact.objects.bulk_create(
+            [
+                MaterialFact(
+                    company_id=row["公司代號"],
+                    date=roc_date_string_to_date(row["發言日期"]),
+                    timestamp=int(row["發言時間"]),
+                    title=row["主旨 "],  # the extra space here is not a typo
+                    description=row["說明"],
+                )
+                for row in tse_response
+            ],
+            update_conflicts=True,
+            update_fields=["title", "description"],
+            unique_fields=["company_id", "date", "timestamp"],
+        )
+    except Exception as e:
+        print(f"[{type(e)}] {e}")
+
+    # OTC
+    try:
+        otc_response: list[dict[str, str]] = requests.get(
+            InfoEndpoint.material_fact[TradeType.OTC]
+        ).json()
+
+        # Fill the data of missed companies
+        stock_id_name_map = {
+            row["SecuritiesCompanyCode"]: row["CompanyName"] for row in otc_response
+        }
+        stock_id_set = {row["SecuritiesCompanyCode"] for row in otc_response}
+        Company.objects.bulk_create(
+            [
+                Company(
+                    pk=stock_id,
+                    name=stock_id_name_map[stock_id],
+                    trade_type=TradeType.OTC,
+                )
+                for stock_id in (
+                    stock_id_set
+                    - {
+                        row["pk"]
+                        for row in Company.objects.filter(pk__in=stock_id_set).values(
+                            "pk"
+                        )
+                    }
+                )
+            ]
+        )
+
+        MaterialFact.objects.bulk_create(
+            [
+                MaterialFact(
+                    company_id=row["SecuritiesCompanyCode"],
+                    date=roc_date_string_to_date(row["發言日期"]),
+                    timestamp=int(row["發言時間"]),
+                    title=row["主旨"],
+                    description=row["說明"],
+                )
+                for row in otc_response
+            ],
+            update_conflicts=True,
+            update_fields=["title", "description"],
+            unique_fields=["company_id", "date", "timestamp"],
+        )
+    except Exception as e:
+        print(f"[{type(e)}] {e}")
+
+    # Delete data that is too old
+    MaterialFact.objects.filter(
+        date__lt=(datetime.now(timezone.utc) + timedelta(hours=8)).date()
+        - timedelta(days=30)
+    ).delete()
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Material facts updated!")
+
+
+def roc_date_string_to_date(roc_date_string: str) -> date:
+    return datetime(
+        int(roc_date_string[:3]) + 1911,
+        int(roc_date_string[3:5]),
+        int(roc_date_string[5:]),
+    ).date()

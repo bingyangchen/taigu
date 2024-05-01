@@ -14,7 +14,7 @@ class StockMemo(CreateUpdateDateModel):
     strategy = models.TextField(default="")
     note = models.TextField(default="")
 
-    class Meta:
+    class Meta:  # type: ignore
         db_table = "stock_memo"
 
     def __str__(self):
@@ -30,7 +30,7 @@ class TradePlan(CreateUpdateDateModel):
     target_price = models.FloatField()
     target_quantity = models.BigIntegerField()
 
-    class Meta:
+    class Meta:  # type: ignore
         db_table = "trade_plan"
 
     def __str__(self):
@@ -45,7 +45,7 @@ class Favorite(CreateUpdateDateModel):
         Company, on_delete=models.PROTECT, related_name="followers", db_index=True
     )
 
-    class Meta:
+    class Meta:  # type: ignore
         db_table = "favorite"
         unique_together = [["owner", "company"]]
 
