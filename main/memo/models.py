@@ -10,8 +10,6 @@ class StockMemo(CreateUpdateDateModel):
         User, on_delete=models.CASCADE, related_name="stock_memos", db_index=True
     )
     company = models.OneToOneField(Company, on_delete=models.PROTECT)
-    business = models.TextField(default="")
-    strategy = models.TextField(default="")
     note = models.TextField(default="")
 
     class Meta:  # type: ignore

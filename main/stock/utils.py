@@ -192,10 +192,7 @@ def fetch_and_store_close_info_today() -> None:
         ).json()
         for row in tse_response:
             try:
-                company, created = Company.objects.update_or_create(
-                    pk=row["Code"],
-                    defaults={"name": row["Name"], "trade_type": TradeType.TSE},
-                )
+                company, created = Company.objects.get_or_create(pk=row["Code"])
                 StockInfo.objects.update_or_create(
                     company=company,
                     defaults={
@@ -221,9 +218,8 @@ def fetch_and_store_close_info_today() -> None:
         ).json()
         for row in otc_response:
             try:
-                company, created = Company.objects.update_or_create(
-                    pk=row["SecuritiesCompanyCode"],
-                    defaults={"name": row["CompanyName"], "trade_type": TradeType.OTC},
+                company, created = Company.objects.get_or_create(
+                    pk=row["SecuritiesCompanyCode"]
                 )
                 StockInfo.objects.update_or_create(
                     company=company,
@@ -347,26 +343,15 @@ def update_material_facts() -> None:
         ).json()
 
         # Fill the data of missed companies
-        stock_id_name_map = {row["公司代號"]: row["公司名稱"] for row in tse_response}
         stock_id_set = {row["公司代號"] for row in tse_response}
-        Company.objects.bulk_create(
-            [
-                Company(
-                    pk=stock_id,
-                    name=stock_id_name_map[stock_id],
-                    trade_type=TradeType.TSE,
-                )
-                for stock_id in (
-                    stock_id_set
-                    - {
-                        row["pk"]
-                        for row in Company.objects.filter(pk__in=stock_id_set).values(
-                            "pk"
-                        )
-                    }
-                )
-            ]
-        )
+        for stock_id in stock_id_set - {
+            row["pk"]
+            for row in Company.objects.filter(pk__in=stock_id_set).values("pk")
+        }:
+            # Do not use bulk_create because only get_or_create will automatically
+            # fetch company info.
+            Company.objects.get_or_create(pk=stock_id)
+            sleep(0.5)
 
         MaterialFact.objects.bulk_create(
             [
@@ -393,28 +378,15 @@ def update_material_facts() -> None:
         ).json()
 
         # Fill the data of missed companies
-        stock_id_name_map = {
-            row["SecuritiesCompanyCode"]: row["CompanyName"] for row in otc_response
-        }
         stock_id_set = {row["SecuritiesCompanyCode"] for row in otc_response}
-        Company.objects.bulk_create(
-            [
-                Company(
-                    pk=stock_id,
-                    name=stock_id_name_map[stock_id],
-                    trade_type=TradeType.OTC,
-                )
-                for stock_id in (
-                    stock_id_set
-                    - {
-                        row["pk"]
-                        for row in Company.objects.filter(pk__in=stock_id_set).values(
-                            "pk"
-                        )
-                    }
-                )
-            ]
-        )
+        for stock_id in stock_id_set - {
+            row["pk"]
+            for row in Company.objects.filter(pk__in=stock_id_set).values("pk")
+        }:
+            # Do not use bulk_create because only get_or_create will automatically
+            # fetch company info.
+            Company.objects.get_or_create(pk=stock_id)
+            sleep(0.5)
 
         MaterialFact.objects.bulk_create(
             [

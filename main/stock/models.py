@@ -31,14 +31,33 @@ class CompanyManager(models.Manager):
 
         from . import InfoEndpoint, UnknownStockIdError
 
-        response = requests.post(f"{InfoEndpoint.company}{sid}")
-        document = PyQuery(response.text)
+        r1 = requests.post(f"{InfoEndpoint.company}{sid}")
+        document = PyQuery(r1.text)
         name = document.find("tr:nth-child(2)>td:nth-child(4)").text()
         trade_type = document.find("tr:nth-child(2)>td:nth-child(5)").text()
         if name:
+            r2 = requests.post(
+                InfoEndpoint.company_business,
+                data={  # please refer to 公開資訊觀測站
+                    "co_id": sid,
+                    "queryName": "co_id",
+                    "inpuType": "co_id",
+                    "TYPEK": "all",
+                    "encodeURIComponent": 1,
+                    "firstin": True,
+                    "step": 1,
+                    "off": 1,
+                },
+            )
+            business = (
+                PyQuery(r2.text)("tr")
+                .filter(lambda _, this: PyQuery(this)("th").text() == "主要經營業務")
+                .text()
+            )
             return {
                 "name": str(name),
                 "trade_type": TradeType.TRADE_TYPE_ZH_ENG_MAP.get(str(trade_type)),
+                "business": str(business),
             }
         else:
             raise UnknownStockIdError("Unknown Stock ID")
@@ -48,6 +67,7 @@ class Company(models.Model):
     stock_id = models.CharField(max_length=32, primary_key=True)
     name = models.CharField(max_length=32, blank=False, null=False)
     trade_type = models.CharField(max_length=4, choices=TradeType.CHOICES, null=True)
+    business = models.TextField(default="")
     objects = CompanyManager()
 
     class Meta:

@@ -14,37 +14,16 @@ from .models import Favorite, StockMemo, TradePlan
 @require_login
 def update_or_create_stock_memo(request: HttpRequest, sid: str):
     result = {"success": False, "data": None}
-
-    payload = json.loads(request.body)
-    business = payload.get("business")
-    strategy = payload.get("strategy")
-    note = payload.get("note")
-
+    note = json.loads(request.body)["note"] or ""
     try:
         company, created = Company.objects.get_or_create(pk=sid)
-        memo = StockMemo.objects.filter(owner=request.user, company=company).first()
-        if memo:
-            if business is not None:
-                memo.business = business
-            if strategy is not None:
-                memo.strategy = strategy
-            if note is not None:
-                memo.note = note
-            memo.save()
-        else:
-            memo = StockMemo.objects.create(
-                owner=request.user,
-                company=company,
-                business=business or "",
-                strategy=strategy or "",
-                note=note or "",
-            )
+        memo, created = StockMemo.objects.update_or_create(
+            owner=request.user, company=company, defaults={"note": note}
+        )
         result["data"] = {
             "id": memo.pk,
             "sid": memo.company.pk,
             "company_name": memo.company.name,
-            "business": memo.business,
-            "strategy": memo.strategy,
             "note": memo.note,
         }
         result["success"] = True
@@ -68,8 +47,7 @@ def list_stock_memo(request: HttpRequest):
             "id": memo.pk,
             "sid": memo.company.pk,
             "company_name": memo.company.name,
-            "business": memo.business,
-            "strategy": memo.strategy,
+            "business": memo.company.business,
             "note": memo.note,
         }
         for memo in query_set
