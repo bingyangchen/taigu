@@ -45,7 +45,6 @@ def create_or_list(request: HttpRequest):
     elif request.method == "GET":
         deal_times = json.loads(request.GET.get("deal_times", "[]"))
         sids = json.loads(request.GET.get("sids", "[]"))
-
         if deal_times or sids:
             if deal_times and sids:
                 query_set = request.user.cash_dividend_records.filter(
@@ -61,9 +60,7 @@ def create_or_list(request: HttpRequest):
                 )
         else:
             query_set = request.user.cash_dividend_records.all()
-
-        query_set = query_set.order_by("-deal_time")
-
+        query_set = query_set.select_related("company").order_by("-deal_time")
         result["data"] = [
             {
                 "id": record.pk,
@@ -84,7 +81,6 @@ def create_or_list(request: HttpRequest):
 def update_or_delete(request: HttpRequest, id):
     result = {"success": False, "data": None}
     id = int(id)
-
     if request.method == "POST":
         payload = json.loads(request.body)
         if (

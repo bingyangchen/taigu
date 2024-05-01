@@ -3,21 +3,14 @@ class Frequency:
     WEEKLY = "WEEKLY"
     MONTHLY = "MONTHLY"
     ALL = [DAILY, WEEKLY, MONTHLY]
-    CHOICES = [
-        (DAILY, DAILY),
-        (WEEKLY, WEEKLY),
-        (MONTHLY, MONTHLY),
-    ]
+    CHOICES = [(DAILY, DAILY), (WEEKLY, WEEKLY), (MONTHLY, MONTHLY)]
 
 
 class TradeType:
     TSE = "tse"
     OTC = "otc"
     ALL = [TSE, OTC]
-    CHOICES = [
-        (TSE, TSE),
-        (OTC, OTC),
-    ]
+    CHOICES = [(TSE, TSE), (OTC, OTC)]
     TRADE_TYPE_ZH_ENG_MAP = {"上市": TSE, "上櫃": OTC}
 
 

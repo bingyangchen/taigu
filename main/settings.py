@@ -92,3 +92,23 @@ TIME_ZONE = "Asia/Taipei"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
+
+
+## Uncomment the following block to see the SQL log in console
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "handlers": {
+#         "console": {
+#             "level": "DEBUG",
+#             "class": "logging.StreamHandler",
+#         },
+#     },
+#     "loggers": {
+#         "django.db.backends": {
+#             "handlers": ["console"],
+#             "level": "DEBUG",
+#             "propagate": False,
+#         },
+#     },
+# }

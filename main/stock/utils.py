@@ -32,6 +32,7 @@ def fetch_and_store_realtime_stock_info() -> None:
         url = f"{InfoEndpoint.realtime['stock']}{'|'.join(all[:batch_size])}"
         try:
             json_data = requests.get(url, timeout=4).json()
+            to_update_batch = []
             for row in json_data["msgArray"]:
                 try:
                     # parse row data
@@ -113,18 +114,24 @@ def fetch_and_store_realtime_stock_info() -> None:
                                 fluct_price=fluct_price,
                             )
                         else:
-                            StockInfo.objects.update_or_create(
-                                company=Company.objects.get(pk=company_id),
-                                defaults={
-                                    "date": date_,
-                                    "quantity": quantity,
-                                    "close_price": price,
-                                    "fluct_price": fluct_price,
-                                },
+                            to_update_batch.append(
+                                StockInfo(
+                                    company_id=company_id,
+                                    date=date_,
+                                    quantity=quantity,
+                                    close_price=price,
+                                    fluct_price=fluct_price,
+                                )
                             )
                 except Exception as e:
                     print(f"\n[{type(e)}] {e}")
                     continue
+            StockInfo.objects.bulk_create(
+                to_update_batch,
+                update_conflicts=True,
+                update_fields=["date", "quantity", "close_price", "fluct_price"],
+                unique_fields=["company_id"],
+            )
             print(".", end="")
         except ReadTimeout:
             print("R", end="")
@@ -187,10 +194,7 @@ def fetch_and_store_close_info_today() -> None:
             try:
                 company, created = Company.objects.update_or_create(
                     pk=row["Code"],
-                    defaults={
-                        "name": row["Name"],
-                        "trade_type": TradeType.TSE,
-                    },
+                    defaults={"name": row["Name"], "trade_type": TradeType.TSE},
                 )
                 StockInfo.objects.update_or_create(
                     company=company,
@@ -219,10 +223,7 @@ def fetch_and_store_close_info_today() -> None:
             try:
                 company, created = Company.objects.update_or_create(
                     pk=row["SecuritiesCompanyCode"],
-                    defaults={
-                        "name": row["CompanyName"],
-                        "trade_type": TradeType.OTC,
-                    },
+                    defaults={"name": row["CompanyName"], "trade_type": TradeType.OTC},
                 )
                 StockInfo.objects.update_or_create(
                     company=company,
@@ -286,6 +287,7 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
     History.objects.filter(company=company, frequency=frequency).delete()
     previous_quantity = None
     previous_close_price = None
+    to_create_batch = []
     for row in csv_reader:
         # ['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']
         if "Date" not in row:  # skip the header row
@@ -298,13 +300,21 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
             except Exception:
                 close_price = previous_close_price
             if quantity is not None and close_price is not None:
-                History.objects.create(
-                    company=company,
-                    frequency=frequency,
-                    date=datetime.strptime(row[0], "%Y-%m-%d").date(),
-                    quantity=quantity,
-                    close_price=close_price,
+                to_create_batch.append(
+                    History(
+                        company_id=company.pk,
+                        frequency=frequency,
+                        date=datetime.strptime(row[0], "%Y-%m-%d").date(),
+                        quantity=quantity,
+                        close_price=close_price,
+                    )
                 )
+    History.objects.bulk_create(
+        to_create_batch,
+        update_conflicts=True,
+        update_fields=["quantity", "close_price"],
+        unique_fields=["company_id", "frequency", "date"],
+    )
 
 
 def update_all_stocks_history() -> None:

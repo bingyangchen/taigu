@@ -62,7 +62,7 @@ def list_stock_memo(request: HttpRequest):
         query_set = request.user.stock_memos.filter(company__pk__in=sids)
     else:
         query_set = request.user.stock_memos.all()
-
+    query_set = query_set.select_related("company")
     result["data"] = [
         {
             "id": memo.pk,
@@ -119,7 +119,7 @@ def create_or_list_trade_plan(request: HttpRequest):
             query_set = request.user.trade_plans.filter(company__pk__in=sids)
         else:
             query_set = request.user.trade_plans.all()
-
+        query_set = query_set.select_related("company")
         result["data"] = [
             {
                 "id": plan.pk,
@@ -208,7 +208,9 @@ def create_or_delete_favorite(request: HttpRequest, sid: str):
 def list_favorites(request: HttpRequest):
     result = {"success": False, "data": None}
     try:
-        query_set = Favorite.objects.filter(owner=request.user)
+        query_set = Favorite.objects.filter(owner=request.user).select_related(
+            "company"
+        )
         result["data"] = [favorite.company.pk for favorite in query_set]
         result["success"] = True
     except Exception as e:

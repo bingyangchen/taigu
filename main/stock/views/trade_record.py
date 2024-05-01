@@ -52,7 +52,6 @@ def create_or_list(request: HttpRequest):
             for d in json.loads(request.GET.get("deal_times", "[]"))
         ]
         sids = json.loads(request.GET.get("sids", "[]"))
-
         if deal_times or sids:
             if deal_times and sids:
                 query_set = request.user.trade_records.filter(
@@ -64,9 +63,9 @@ def create_or_list(request: HttpRequest):
                 query_set = request.user.trade_records.filter(deal_time__in=deal_times)
         else:
             query_set = request.user.trade_records.all()
-
-        query_set = query_set.order_by("-deal_time", "-created_at")
-
+        query_set = query_set.select_related("company").order_by(
+            "-deal_time", "-created_at"
+        )
         result["data"] = [
             {
                 "id": record.pk,
@@ -89,7 +88,6 @@ def create_or_list(request: HttpRequest):
 def update_or_delete(request: HttpRequest, id):
     result = {"success": False, "data": None}
     id = int(id)
-
     if request.method == "POST":
         payload = json.loads(request.body)
         if (
