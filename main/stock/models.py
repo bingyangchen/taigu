@@ -51,7 +51,9 @@ class CompanyManager(models.Manager):
             )
             business = (
                 PyQuery(r2.text)("tr")
-                .filter(lambda _, this: PyQuery(this)("th").text() == "主要經營業務")
+                .filter(lambda _, this: PyQuery(this)("th").text() == "主要經營業務")(
+                    "td"
+                )
                 .text()
             )
             return {

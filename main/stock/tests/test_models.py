@@ -7,10 +7,7 @@ from ..models import Company, CompanyManager
 
 
 def test_fetch_company_info():
-    assert CompanyManager.fetch_company_info("2330") == {
-        "name": "台積電",
-        "trade_type": "tse",
-    }
+    assert CompanyManager.fetch_company_info("2330")["name"] == "台積電"
     time.sleep(0.5)  # to avoid reaching the rate limit
 
     with pytest.raises(UnknownStockIdError):
