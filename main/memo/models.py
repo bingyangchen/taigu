@@ -9,11 +9,14 @@ class StockMemo(CreateUpdateDateModel):
     owner = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="stock_memos", db_index=True
     )
-    company = models.OneToOneField(Company, on_delete=models.PROTECT)
+    company = models.ForeignKey(
+        Company, on_delete=models.PROTECT, related_name="memos", db_index=True
+    )
     note = models.TextField(default="")
 
     class Meta:  # type: ignore
         db_table = "stock_memo"
+        unique_together = [["owner", "company"]]
 
     def __str__(self):
         return f"{self.owner.username}_{self.company.pk}"
