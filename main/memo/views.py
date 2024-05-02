@@ -21,9 +21,9 @@ def update_or_create_stock_memo(request: HttpRequest, sid: str):
             owner=request.user, company=company, defaults={"note": note}
         )
         result["data"] = {
-            "id": memo.pk,
             "sid": memo.company.pk,
             "company_name": memo.company.name,
+            "business": company.business,
             "note": memo.note,
         }
         result["success"] = True
@@ -34,24 +34,28 @@ def update_or_create_stock_memo(request: HttpRequest, sid: str):
 
 @require_GET
 @require_login
-def list_stock_memo(request: HttpRequest):
-    result = {"success": False, "data": None}
-    sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
-    if sids:
-        query_set = request.user.stock_memos.filter(company__pk__in=sids)
+def list_company_info(request: HttpRequest):
+    result = {"success": False, "data": []}
+    if sids := [
+        sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid
+    ]:
+        company_query_set = Company.objects.filter(pk__in=sids)
+        memo_query_set = request.user.stock_memos.filter(company__pk__in=sids)
     else:
-        query_set = request.user.stock_memos.all()
-    query_set = query_set.select_related("company")
-    result["data"] = [
-        {
-            "id": memo.pk,
-            "sid": memo.company.pk,
-            "company_name": memo.company.name,
-            "business": memo.company.business,
-            "note": memo.note,
-        }
-        for memo in query_set
-    ]
+        company_query_set = Company.objects.all()
+        memo_query_set = request.user.stock_memos.all()
+    stock_id_memo_map = {
+        memo.company.pk: memo.note for memo in memo_query_set.select_related("company")
+    }
+    for company in company_query_set:
+        result["data"].append(
+            {
+                "sid": company.pk,
+                "company_name": company.name,
+                "business": company.business,
+                "note": stock_id_memo_map.get(company.pk, ""),
+            }
+        )
     result["success"] = True
     return JsonResponse(result)
 
@@ -92,8 +96,9 @@ def create_or_list_trade_plan(request: HttpRequest):
             except UnknownStockIdError as e:
                 result["error"] = str(e)
     elif request.method == "GET":
-        sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
-        if sids:
+        if sids := [
+            sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid
+        ]:
             query_set = request.user.trade_plans.filter(company__pk__in=sids)
         else:
             query_set = request.user.trade_plans.all()
