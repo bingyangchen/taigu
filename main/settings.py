@@ -7,7 +7,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = True  # NOTE: We use this variable to determine whether we are in the development environment or in the production one.
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [".localhost", "127.0.0.1", "[::1]"]
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^https?://(localhost|127\.0\.0\.1):300[0-9]$"]
 CORS_ALLOW_CREDENTIALS = True
 
