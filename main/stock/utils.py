@@ -31,7 +31,7 @@ def fetch_and_store_realtime_stock_info() -> None:
         start = datetime.now()
         url = f"{InfoEndpoint.realtime['stock']}{'|'.join(all[:batch_size])}"
         try:
-            json_data = requests.get(url, timeout=4).json()
+            json_data = requests.get(url, timeout=4, verify=False).json()
             to_update_batch = []
             for row in json_data["msgArray"]:
                 try:
