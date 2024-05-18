@@ -138,6 +138,7 @@ class MaterialFact(CreateUpdateDateModel):
     )
     date = models.DateField(null=False)
     timestamp = models.PositiveIntegerField(null=False)
+    date_time = models.DateTimeField(null=True)
     title = models.TextField(null=False, default="")
     description = models.TextField(null=False, default="")
 
@@ -146,7 +147,7 @@ class MaterialFact(CreateUpdateDateModel):
         unique_together = [["company", "date", "timestamp"]]
 
     def __str__(self):
-        return f"{self.company.pk}({self.date} {self.timestamp})"
+        return f"{self.company.pk}({self.date_time})"
 
 
 class TradeRecord(CreateUpdateDateModel):
