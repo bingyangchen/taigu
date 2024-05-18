@@ -3,7 +3,7 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
 
 from .. import Frequency, TradeType
-from ..models import Company, History, MarketIndexPerMinute, MaterialFact, StockInfo
+from ..models import Company, History, MarketIndexPerMinute, StockInfo
 
 
 @require_GET
@@ -90,21 +90,6 @@ def search(request: HttpRequest):
                         "fluct_price": info.fluct_price,
                     }
                 )
-        result["success"] = True
-    except Exception as e:
-        result["error"] = str(e)
-    return JsonResponse(result)
-
-
-@require_GET
-def get_material_facts(request: HttpRequest, sid: str):
-    result = {"success": False, "data": []}
-    try:
-        result["data"] = [
-            {"date_time": m.date_time, "title": m.title, "description": m.description}
-            for m in MaterialFact.objects.filter(company=Company.objects.get(pk=sid))
-        ]
-        result["data"].sort(key=lambda x: x["date_time"], reverse=True)
         result["success"] = True
     except Exception as e:
         result["error"] = str(e)

@@ -36,14 +36,14 @@ def update_or_create_stock_memo(request: HttpRequest, sid: str):
 @require_login
 def list_company_info(request: HttpRequest):
     result = {"success": False, "data": []}
-    if sids := [
-        sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid
-    ]:
-        company_query_set = Company.objects.filter(pk__in=sids)
-        memo_query_set = request.user.stock_memos.filter(company__pk__in=sids)
-    else:
-        company_query_set = Company.objects.all()
-        memo_query_set = request.user.stock_memos.all()
+    sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
+    if not sids:
+        result["error"] = "Argument sids is required."
+        return JsonResponse(result)
+    company_query_set = Company.objects.prefetch_related("material_facts").filter(
+        pk__in=sids
+    )
+    memo_query_set = request.user.stock_memos.filter(company__pk__in=sids)
     stock_id_memo_map = {
         memo.company.pk: memo.note for memo in memo_query_set.select_related("company")
     }
@@ -54,6 +54,18 @@ def list_company_info(request: HttpRequest):
                 "company_name": company.name,
                 "business": company.business,
                 "note": stock_id_memo_map.get(company.pk, ""),
+                "material_facts": sorted(
+                    [
+                        {
+                            "date_time": m.date_time,
+                            "title": m.title,
+                            "description": m.description,
+                        }
+                        for m in company.material_facts.all()
+                    ],
+                    key=lambda x: x["date_time"],
+                    reverse=True,
+                ),
             }
         )
     result["success"] = True
