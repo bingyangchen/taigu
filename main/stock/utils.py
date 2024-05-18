@@ -1,7 +1,7 @@
 import csv
 import math
 from contextlib import suppress
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from io import StringIO
 from time import sleep
 from typing import Literal
@@ -357,8 +357,15 @@ def update_material_facts() -> None:
             [
                 MaterialFact(
                     company_id=row["公司代號"],
-                    date=roc_date_string_to_date(row["發言日期"]),
-                    timestamp=int(row["發言時間"]),
+                    date_time=datetime.combine(
+                        roc_date_string_to_date(row["發言日期"]),
+                        time(
+                            int(row["發言時間"][-6:-4] or 0),
+                            int(row["發言時間"][-4:-2] or 0),
+                            int(row["發言時間"][-2:] or 0),
+                        ),
+                        tzinfo=timezone(timedelta(hours=8)),
+                    ),
                     title=row["主旨 "],  # the extra space here is not a typo
                     description=row["說明"],
                 )
@@ -366,7 +373,7 @@ def update_material_facts() -> None:
             ],
             update_conflicts=True,
             update_fields=["title", "description"],
-            unique_fields=["company_id", "date", "timestamp"],
+            unique_fields=["company_id", "date_time"],
         )
     except Exception as e:
         print(f"[{type(e)}] {e}")
@@ -392,8 +399,15 @@ def update_material_facts() -> None:
             [
                 MaterialFact(
                     company_id=row["SecuritiesCompanyCode"],
-                    date=roc_date_string_to_date(row["發言日期"]),
-                    timestamp=int(row["發言時間"]),
+                    date_time=datetime.combine(
+                        roc_date_string_to_date(row["發言日期"]),
+                        time(
+                            int(row["發言時間"][-6:-4] or 0),
+                            int(row["發言時間"][-4:-2] or 0),
+                            int(row["發言時間"][-2:] or 0),
+                        ),
+                        tzinfo=timezone(timedelta(hours=8)),
+                    ),
                     title=row["主旨"],
                     description=row["說明"],
                 )
@@ -401,14 +415,14 @@ def update_material_facts() -> None:
             ],
             update_conflicts=True,
             update_fields=["title", "description"],
-            unique_fields=["company_id", "date", "timestamp"],
+            unique_fields=["company_id", "date_time"],
         )
     except Exception as e:
         print(f"[{type(e)}] {e}")
 
     # Delete data that is too old
     MaterialFact.objects.filter(
-        date__lt=(datetime.now(timezone.utc) + timedelta(hours=8)).date()
+        date_time__lt=(datetime.now(timezone.utc) + timedelta(hours=8))
         - timedelta(days=30)
     ).delete()
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Material facts updated!")
