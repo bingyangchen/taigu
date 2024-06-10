@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from main.stock.utils import update_all_stocks_history
+from main.stock.services import update_all_stocks_history
 
 
 class Command(BaseCommand):

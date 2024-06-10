@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from main.stock.utils import fetch_and_store_close_info_today
+from main.stock.services import fetch_and_store_close_info_today
 
 
 class Command(BaseCommand):
