@@ -36,7 +36,7 @@ pipenv install --dev
 - **3-3: Apply the Database Dump File**
 
     ```bash
-    pg_restore -U postgres -d trade_smartly ./db_backups/heroku_postgresql_latest
+    pg_restore -U postgres -d trade_smartly <PATH/TO/BACKUP/FILE>
     ```
 
 - **3-4: Migrate the Database**
@@ -133,7 +133,7 @@ pipenv requirements > requirements.txt
 - Step6: Dump data into database
 
   ```bash
-  pg_restore -U postgres -d trade_smartly ~/trade_smartly_backend/db_backups/heroku_postgresql_latest
+  pg_restore -U postgres -d trade_smartly <PATH/TO/BACKUP/FILE>
   ```
 
 - Step7: 安裝 pyenv
