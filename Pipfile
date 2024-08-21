@@ -19,6 +19,7 @@ google-auth = "==2.32.0"
 google-auth-oauthlib = "==1.2.1"
 google-auth-httplib2 = "==0.2.0"
 python-jose = {extras = ["cryptography"], version = "==3.3.0"}
+redis = "==5.0.8"
 
 [dev-packages]
 black = "*"
