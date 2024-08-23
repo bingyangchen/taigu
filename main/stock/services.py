@@ -18,7 +18,7 @@ def fetch_and_store_realtime_stock_info() -> None:
     print(
         f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching realtime sotck info!"
     )
-    market_indices = ["t00", "o00"]
+    market_indices = ("t00", "o00")
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )

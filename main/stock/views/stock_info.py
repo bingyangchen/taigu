@@ -3,6 +3,10 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
 
 from .. import Frequency, TradeType
+from ..cache import (
+    TimeSeriesStockInfo,
+    TimeSeriesStockInfoCacheManager,
+)
 from ..models import Company, History, MarketIndexPerMinute, StockInfo
 
 
@@ -10,25 +14,22 @@ from ..models import Company, History, MarketIndexPerMinute, StockInfo
 def latest_market_index(request: HttpRequest):
     result = {"success": False, "data": {}}
     try:
-        all_data = MarketIndexPerMinute.objects.all()
-        result["data"]["tse"] = {
-            row.number: {
-                "date": row.date,
-                "price": row.price,
-                "fluct_price": row.fluct_price,
-            }
-            for row in all_data
-            if row.market == TradeType.TSE
-        }
-        result["data"]["otc"] = {
-            row.number: {
-                "date": row.date,
-                "price": row.price,
-                "fluct_price": row.fluct_price,
-            }
-            for row in all_data
-            if row.market == TradeType.OTC
-        }
+        for market in (TradeType.TSE, TradeType.OTC):
+            cache_manager = TimeSeriesStockInfoCacheManager(market)
+            cache_result = cache_manager.get()
+            if cache_result is not None:
+                data = cache_result.model_dump()["data"]
+            else:
+                data = {
+                    row.number: {
+                        "date": row.date,
+                        "price": row.price,
+                        "fluct_price": row.fluct_price,
+                    }
+                    for row in MarketIndexPerMinute.objects.filter(market=market)
+                }
+                cache_manager.set(TimeSeriesStockInfo(data=data), 180)
+            result["data"][market] = data
         result["success"] = True
     except Exception as e:
         result["error"] = str(e)
