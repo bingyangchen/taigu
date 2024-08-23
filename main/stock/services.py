@@ -11,6 +11,11 @@ from dateutil.relativedelta import relativedelta
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
 from . import Frequency, InfoEndpoint, TradeType
+from .cache import (
+    TimeSeriesStockInfo,
+    TimeSeriesStockInfoCacheManager,
+    TimeSeriesStockInfoPointData,
+)
 from .models import Company, History, MarketIndexPerMinute, MaterialFact, StockInfo
 
 
@@ -168,7 +173,22 @@ def store_market_per_minute_info(
     market = TradeType.TSE if id == "t00" else TradeType.OTC
 
     # Delete data that are not belong to the latest day
-    MarketIndexPerMinute.objects.filter(market=market).exclude(date=date_).delete()
+    delete_count, _ = (
+        MarketIndexPerMinute.objects.filter(market=market).exclude(date=date_).delete()
+    )
+
+    cache_manager = TimeSeriesStockInfoCacheManager(market)
+    current_data_to_cache = {
+        minutes_after_opening: TimeSeriesStockInfoPointData(
+            date=date_, price=price, fluct_price=fluct_price
+        )
+    }
+    if delete_count == 0 and (cache_data := cache_manager.get()) is not None:
+        cache_data = cache_data.model_dump()["data"]
+        cache_data.update(current_data_to_cache)
+        cache_manager.set(TimeSeriesStockInfo(data=cache_data), 180)
+    else:
+        cache_manager.set(TimeSeriesStockInfo(data=current_data_to_cache), 180)
 
     MarketIndexPerMinute.objects.get_or_create(
         market=market,

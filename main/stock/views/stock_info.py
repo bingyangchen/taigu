@@ -11,7 +11,7 @@ from ..models import Company, History, MarketIndexPerMinute, StockInfo
 
 
 @require_GET
-def latest_market_index(request: HttpRequest):
+def market_index(request: HttpRequest):
     result = {"success": False, "data": {}}
     try:
         for market in (TradeType.TSE, TradeType.OTC):
@@ -37,7 +37,7 @@ def latest_market_index(request: HttpRequest):
 
 
 @require_GET
-def multiple_companies_single_day(request: HttpRequest):
+def current_stock_info(request: HttpRequest):
     result = {"success": False, "data": []}
     try:
         sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
@@ -60,7 +60,7 @@ def multiple_companies_single_day(request: HttpRequest):
 
 
 @require_GET
-def single_company_multiple_days(request: HttpRequest, sid: str):
+def historical_prices(request: HttpRequest, sid: str):
     result = {"success": False, "data": []}
     try:
         for h in History.objects.filter(

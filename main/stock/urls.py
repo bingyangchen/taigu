@@ -3,13 +3,11 @@ from django.urls import re_path
 from .views import cash_dividend_record, stock_info, trade_record
 
 urlpatterns = [
-    re_path(r"^latest_market_index[/]?$", stock_info.latest_market_index),
+    re_path(r"^market-index[/]?$", stock_info.market_index),
+    re_path(r"^current-stock-info[/]?$", stock_info.current_stock_info),
     re_path(
-        r"^multiple_companies_single_day[/]?$", stock_info.multiple_companies_single_day
-    ),
-    re_path(
-        r"^single_company_multiple_days/(?P<sid>\w+)[/]?$",
-        stock_info.single_company_multiple_days,
+        r"^historical-prices/(?P<sid>\w+)[/]?$",
+        stock_info.historical_prices,
     ),
     re_path(r"^search[/]?$", stock_info.search),
     re_path(r"^trade-records[/]?$", trade_record.create_or_list),
