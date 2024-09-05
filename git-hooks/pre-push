@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# Define color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+RESET='\033[0m'
+
+set -e
+
+# Check if the user is in the project root directory
+if [ ! -e "manage.py" ]; then
+    printf "${RED}You should run git push under the root directory of this project.${RESET}\n"
+    exit 1
+fi
+
+# Run pytest
+bash ./scripts/dev/runpytest.sh
+
+set +e

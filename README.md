@@ -1,6 +1,6 @@
 # TradeSmartly Backend
 
-## 本機開發
+## 開發環境建置
 
 ### 開發環境要求
 
@@ -9,37 +9,49 @@
 - [pipenv](https://pypi.org/project/pipenv/)
 - [PostgreSQL 14 +](https://adamtheautomator.com/install-postgresql-on-mac/)
 
-### Step1: 建置 pipenv 虛擬環境
+### Step0: Clone this Repo
+
+```bash
+git clone git@github.com:trade-smartly/trade-smartly-backend.git
+```
+
+### Step1: Install Git Hooks
+
+```bash
+make install-git-hooks
+```
+
+### Step2: Build pipenv virtual environment
 
 ```bash
 pipenv install --dev
 ```
 
-### Step2: 建立並設定 .env 檔
+### Step3: Create .env file
 
-請參考 env.example 的內容。
+.env 的格式請參考 env.example 的內容。
 
-### Step3: 初始化資料庫 (Optional)
+### Step4: Initialize Database (Optional)
 
-- **3-1: Create a Superuser Named `postgres` If not Exist**
+- **4-1: Create a superuser named `postgres`**
 
     ```bash
     psql -c "CREATE USER postgres SUPERUSER;"
     ```
 
-- **3-2: Create a Database Named `trade_smartly` If not Exist**
+- **4-2: Create a database named `trade_smartly`**
 
     ```bash
     sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = 'trade_smartly'" | grep -q 1 || psql -c "CREATE DATABASE trade_smartly OWNER postgres"
     ```
 
-- **3-3: Apply the Database Dump File**
+- **4-3: Import database backup file into database**
 
     ```bash
     pg_restore -U postgres -d trade_smartly <PATH/TO/BACKUP/FILE>
     ```
 
-- **3-4: Migrate the Database**
+- **4-4: Run Django's migrate command**
 
     ```bash
     pipenv shell
@@ -242,7 +254,7 @@ pipenv requirements > requirements.txt
 - `/scripts/`：開發人員手動執行的指令
   - `/dev/`：在 local 開發時會用到的指令
     - `pushtoremotemaster.sh`：「安全地」將新版程式碼推上 master branch
-    - `runpytest.sh`：跑測試（git pre-push hook 也會跑這個 script）
+    - `runpytest.sh`：跑測試（執行 git push 時，pre-push hook 會自動跑這個 script）
   - `/prod/`：在正式環境會用到的指令
     - `pullmasteranddeploy.sh`
       1. Pull 最新版的 master branch
