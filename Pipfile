@@ -24,6 +24,7 @@ pydantic = "==2.8.2"
 
 [dev-packages]
 black = "*"
+ipykernel = "*"
 
 [requires]
 python_version = "3.10.10"
