@@ -1,6 +1,5 @@
 import csv
 import math
-from contextlib import suppress
 from datetime import date, datetime, time, timedelta, timezone
 from io import StringIO
 from time import sleep
@@ -112,7 +111,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                     fluct_price = round(price - yesterday_price, 2)
                     if date.today() == date_:  # do nothing if market is not opened
                         if company_id in market_indices:
-                            store_market_per_minute_info(
+                            _store_market_per_minute_info(
                                 id=company_id,
                                 date_=date_,
                                 price=price,
@@ -156,7 +155,7 @@ def fetch_and_store_realtime_stock_info() -> None:
     )
 
 
-def store_market_per_minute_info(
+def _store_market_per_minute_info(
     id: Literal["t00", "o00"], date_: date, price: float, fluct_price: float
 ) -> None:
     now = (datetime.now(timezone.utc) + timedelta(hours=8)).time()
@@ -280,7 +279,8 @@ def fetch_and_store_close_info_today() -> None:
     )
 
 
-def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
+def _fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
+    """This function is currently not used."""
     end = datetime.now()
     start = end - relativedelta(days=80)
     interval = "1d"
@@ -334,21 +334,25 @@ def fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> N
 
 
 def update_all_stocks_history() -> None:
-    print(
-        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching historical price for all stocks!"
+    to_create_batch = [
+        History(
+            company_id=stock_info.company.pk,
+            frequency=Frequency.DAILY,
+            date=stock_info.date,
+            quantity=stock_info.quantity,
+            close_price=stock_info.close_price,
+        )
+        for stock_info in StockInfo.objects.filter(date=date.today()).select_related(
+            "company"
+        )
+    ]
+    History.objects.bulk_create(
+        to_create_batch,
+        update_conflicts=True,
+        update_fields=["quantity", "close_price"],
+        unique_fields=["company_id", "frequency", "date"],
     )
-    for company in Company.objects.filter(trade_type__isnull=False):
-        start = datetime.now()
-        with suppress(Exception):
-            fetch_and_store_historical_info_yahoo(
-                company=company, frequency=Frequency.DAILY
-            )
-
-        # deal with rate limit (3000 per hour)
-        sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
-    print(
-        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] All historical price updated!"
-    )
+    History.objects.filter(date__lt=date.today() - timedelta(days=80)).delete()
 
 
 def update_material_facts() -> None:
