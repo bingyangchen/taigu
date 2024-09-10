@@ -83,7 +83,7 @@ class StockInfo(CreateUpdateDateModel):
     company = models.OneToOneField(
         Company, on_delete=models.CASCADE, related_name="stock_info", db_index=True
     )
-    date = models.DateField()
+    date = models.DateField(db_index=True)
     quantity = models.BigIntegerField()
     close_price = models.FloatField()
     fluct_price = models.FloatField()
@@ -120,7 +120,7 @@ class History(CreateUpdateDateModel):
         default=Frequency.DAILY,
         db_index=True,
     )
-    date = models.DateField()
+    date = models.DateField(db_index=True)
     quantity = models.BigIntegerField()
     close_price = models.FloatField()
 
