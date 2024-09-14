@@ -17,3 +17,8 @@ run-pytest:
 .PHONY: pull-master-and-deploy
 pull-master-and-deploy:
 	$(SHELL) ./scripts/prod/pullmasteranddeploy.sh
+
+# Reboot the server (for production)
+.PHONY: reboot
+reboot:
+	$(SHELL) ./scripts/prod/reboot.sh

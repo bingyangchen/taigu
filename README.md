@@ -197,7 +197,7 @@ pipenv requirements > requirements.txt
 - **SSH into EC2 instance**
 
   ```bash
-  ssh -i <PATH/TO/PRIVATE_KEY> ubuntu@ec2-18-141-180-28.ap-southeast-1.compute.amazonaws.com
+  ssh -i <PATH/TO/PRIVATE_KEY> ubuntu@ec2-13-215-190-116.ap-southeast-1.compute.amazonaws.com
   ```
 
 - **Pull the latest code of `master` branch from GitHub**
@@ -246,6 +246,15 @@ pipenv requirements > requirements.txt
   ```bash
   sudo nginx -t && sudo nginx -s reload
   ```
+
+### 常用的 make 指令
+
+- `make pull-master-and-deploy`
+  - 將 master branch 的最新版程式碼拉下來，並部署到正式環境
+  - 使用時機：新版本程式碼要上線時
+- `make reboot`
+  - 重啟 web service
+  - 使用時機：原則上不會用到
 
 ## 檔案／目錄用途說明
 
