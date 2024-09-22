@@ -11,7 +11,7 @@ set -e
 
 # Check if the user is in the project root directory
 if [ ! -e "manage.py" ]; then
-    printf "${RED}You should run git push under the root directory of this project.${RESET}\n"
+    printf "${RED}You should run git merge under the root directory of this project.${RESET}\n"
     exit 1
 fi
 
