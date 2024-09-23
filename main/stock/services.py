@@ -360,89 +360,50 @@ def update_material_facts() -> None:
         f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching material facts."
     )
 
-    # TSE
-    try:
-        tse_response: list[dict[str, str]] = requests.get(
-            InfoEndpoint.material_fact[TradeType.TSE]
-        ).json()
+    for trade_type in [TradeType.TSE, TradeType.OTC]:
+        try:
+            response: list[dict[str, str]] = requests.get(
+                InfoEndpoint.material_fact[trade_type]
+            ).json()
 
-        # Fill the data of missed companies
-        stock_id_set = {row["公司代號"] for row in tse_response}
-        for stock_id in stock_id_set - {
-            row["pk"]
-            for row in Company.objects.filter(pk__in=stock_id_set).values("pk")
-        }:
-            # Do not use bulk_create because only get_or_create will automatically
-            # fetch company info.
-            Company.objects.get_or_create(pk=stock_id)
-            sleep(0.5)
+            # Fill the data of missed companies
+            stock_id_key = (
+                "公司代號" if trade_type == TradeType.TSE else "SecuritiesCompanyCode"
+            )
+            stock_id_set = {row[stock_id_key] for row in response}
+            for stock_id in stock_id_set - {
+                row["pk"]
+                for row in Company.objects.filter(pk__in=stock_id_set).values("pk")
+            }:
+                # Do not use bulk_create because only get_or_create will automatically
+                # fetch company info.
+                Company.objects.get_or_create(pk=stock_id)
+                sleep(0.5)
 
-        MaterialFact.objects.bulk_create(
-            [
-                MaterialFact(
-                    company_id=row["公司代號"],
-                    date_time=datetime.combine(
-                        roc_date_string_to_date(row["發言日期"]),
-                        time(
-                            int(row["發言時間"][-6:-4] or 0),
-                            int(row["發言時間"][-4:-2] or 0),
-                            int(row["發言時間"][-2:] or 0),
+            MaterialFact.objects.bulk_create(
+                [
+                    MaterialFact(
+                        company_id=row[stock_id_key],
+                        date_time=datetime.combine(
+                            roc_date_string_to_date(row["發言日期"]),
+                            time(
+                                int(row["發言時間"][-6:-4] or 0),
+                                int(row["發言時間"][-4:-2] or 0),
+                                int(row["發言時間"][-2:] or 0),
+                            ),
+                            tzinfo=timezone(timedelta(hours=8)),
                         ),
-                        tzinfo=timezone(timedelta(hours=8)),
-                    ),
-                    title=row["主旨 "],  # the extra space here is not a typo
-                    description=row["說明"],
-                )
-                for row in tse_response
-            ],
-            update_conflicts=True,
-            update_fields=["title", "description"],
-            unique_fields=["company_id", "date_time"],
-        )
-    except Exception as e:
-        print(f"[{type(e)}] {e}")
-
-    # OTC
-    try:
-        otc_response: list[dict[str, str]] = requests.get(
-            InfoEndpoint.material_fact[TradeType.OTC]
-        ).json()
-
-        # Fill the data of missed companies
-        stock_id_set = {row["SecuritiesCompanyCode"] for row in otc_response}
-        for stock_id in stock_id_set - {
-            row["pk"]
-            for row in Company.objects.filter(pk__in=stock_id_set).values("pk")
-        }:
-            # Do not use bulk_create because only get_or_create will automatically
-            # fetch company info.
-            Company.objects.get_or_create(pk=stock_id)
-            sleep(0.5)
-
-        MaterialFact.objects.bulk_create(
-            [
-                MaterialFact(
-                    company_id=row["SecuritiesCompanyCode"],
-                    date_time=datetime.combine(
-                        roc_date_string_to_date(row["發言日期"]),
-                        time(
-                            int(row["發言時間"][-6:-4] or 0),
-                            int(row["發言時間"][-4:-2] or 0),
-                            int(row["發言時間"][-2:] or 0),
-                        ),
-                        tzinfo=timezone(timedelta(hours=8)),
-                    ),
-                    title=row["主旨"],
-                    description=row["說明"],
-                )
-                for row in otc_response
-            ],
-            update_conflicts=True,
-            update_fields=["title", "description"],
-            unique_fields=["company_id", "date_time"],
-        )
-    except Exception as e:
-        print(f"[{type(e)}] {e}")
+                        title=row["主旨 " if trade_type == TradeType.TSE else "主旨"],
+                        description=row["說明"],
+                    )
+                    for row in response
+                ],
+                update_conflicts=True,
+                update_fields=["title", "description"],
+                unique_fields=["company_id", "date_time"],
+            )
+        except Exception as e:
+            print(f"[{trade_type}] [{type(e)}] {e}")
 
     # Delete data that is too old
     MaterialFact.objects.filter(
