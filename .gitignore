@@ -545,3 +545,5 @@ MigrationBackup/
 FodyWeavers.xsd
 
 .DS_Store
+dev-cert.crt
+dev-cert.key

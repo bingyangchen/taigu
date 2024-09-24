@@ -61,7 +61,7 @@ pipenv install --dev
 
 ### 開發環境常用指令
 
-- `python manage.py runserver`
+- `python manage.py runserver_plus 0.0.0.0:8000 --cert-file dev-cert.crt`
   - 啟動 pseudo server，並配置一個 terminal
   - `Ctrl` + `C` 停止 pseudo server
 - `python manage.py dbshell`

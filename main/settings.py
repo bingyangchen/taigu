@@ -7,8 +7,11 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = True  # NOTE: We use this variable to determine whether we are in the development environment or in the production one.
 
-ALLOWED_HOSTS = [".localhost", "127.0.0.1", "[::1]"]
-CORS_ALLOWED_ORIGIN_REGEXES = [r"^https?://(localhost|127\.0\.0\.1):300[0-9]$"]
+ALLOWED_HOSTS = ["*"]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://(localhost|127\.0\.0\.1):300[0-9]$",
+    r"^https?://192\.168\.\d{1,3}\.\d{1,3}:300[0-9]$",
+]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "main.urls"
@@ -25,6 +28,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     # 3rd-party packages
     "corsheaders",
+    "django_extensions",  # NOTE: This is only for dev environment, in production_settings.py, we remove it
     # Local Apps
     "main.core",
     "main.crontab",
@@ -100,6 +104,8 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+# In dev environment, Werkzeug need this even though we don't use it
+STATIC_URL = "/static/"
 
 ## Uncomment the following block to see the SQL log in console
 # LOGGING = {
