@@ -6,6 +6,7 @@ from time import sleep
 from typing import Literal
 
 import requests
+import urllib3
 from dateutil.relativedelta import relativedelta
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
@@ -16,6 +17,8 @@ from .cache import (
     TimeSeriesStockInfoPointData,
 )
 from .models import Company, History, MarketIndexPerMinute, MaterialFact, StockInfo
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def fetch_and_store_realtime_stock_info() -> None:
@@ -41,6 +44,8 @@ def fetch_and_store_realtime_stock_info() -> None:
                 try:
                     # parse row data
                     company_id = row["c"]
+                    if not company_id:
+                        continue
                     date_ = datetime.strptime(row["d"], "%Y%m%d").date()
                     quantity = (
                         int(row["v"]) * 1000
@@ -128,7 +133,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                                 )
                             )
                 except Exception as e:
-                    print(f"\n[{type(e)}] {e}")
+                    print(f"\n<{type(e).__name__}> {e} {row}")
                     continue
             StockInfo.objects.bulk_create(
                 to_update_batch,
@@ -144,7 +149,7 @@ def fetch_and_store_realtime_stock_info() -> None:
         except JSONDecodeError:
             print("J", end="")
         except Exception as e:
-            print(f"\n[{type(e)}] {e}")
+            print(f"\n<{type(e).__name__}> {e} {url}")
         finally:
             all = all[batch_size:]
             sleep(
