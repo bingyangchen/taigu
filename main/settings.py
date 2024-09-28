@@ -10,7 +10,7 @@ DEBUG = True  # NOTE: We use this variable to determine whether we are in the de
 ALLOWED_HOSTS = ["*"]
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://(localhost|127\.0\.0\.1):300[0-9]$",
-    r"^https?://192\.168\.\d{1,3}\.\d{1,3}:300[0-9]$",
+    r"^https://dev\.trade-smartly\.com:300[0-9]$",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
