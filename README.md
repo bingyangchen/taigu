@@ -8,6 +8,7 @@
 - [Python 3.10](https://www.python.org/downloads/release/python-3109/)
 - [pipenv](https://pypi.org/project/pipenv/)
 - [PostgreSQL 14 +](https://adamtheautomator.com/install-postgresql-on-mac/)
+- [Redis](https://redis.io/)
 
 ### Step0: Clone this Repo
 
