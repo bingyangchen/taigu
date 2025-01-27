@@ -43,7 +43,7 @@ def list_company_info(request: HttpRequest):
     company_query_set = Company.objects.prefetch_related("material_facts").filter(
         pk__in=sids
     )
-    memo_query_set = request.user.stock_memos.filter(company__pk__in=sids)
+    memo_query_set = request.user.stock_memos.filter(company__pk__in=sids)  # type: ignore
     stock_id_memo_map = {
         memo.company.pk: memo.note for memo in memo_query_set.select_related("company")
     }
@@ -61,7 +61,7 @@ def list_company_info(request: HttpRequest):
                             "title": m.title,
                             "description": m.description,
                         }
-                        for m in company.material_facts.all()
+                        for m in company.material_facts.all()  # type: ignore
                     ],
                     key=lambda x: x["date_time"],
                     reverse=True,
@@ -111,9 +111,9 @@ def create_or_list_trade_plan(request: HttpRequest):
         if sids := [
             sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid
         ]:
-            query_set = request.user.trade_plans.filter(company__pk__in=sids)
+            query_set = request.user.trade_plans.filter(company__pk__in=sids)  # type: ignore
         else:
-            query_set = request.user.trade_plans.all()
+            query_set = request.user.trade_plans.all()  # type: ignore
         query_set = query_set.select_related("company")
         result["data"] = [
             {

@@ -47,19 +47,19 @@ def create_or_list(request: HttpRequest):
         sids = json.loads(request.GET.get("sids", "[]"))
         if deal_times or sids:
             if deal_times and sids:
-                query_set = request.user.cash_dividend_records.filter(
+                query_set = request.user.cash_dividend_records.filter(  # type: ignore
                     deal_time__in=deal_times
                 ).filter(company__pk__in=sids)
             elif not deal_times:
-                query_set = request.user.cash_dividend_records.filter(
+                query_set = request.user.cash_dividend_records.filter(  # type: ignore
                     company__pk__in=sids
                 )
             else:
-                query_set = request.user.cash_dividend_records.filter(
+                query_set = request.user.cash_dividend_records.filter(  # type: ignore
                     deal_time__in=deal_times
                 )
         else:
-            query_set = request.user.cash_dividend_records.all()
+            query_set = request.user.cash_dividend_records.all()  # type: ignore
         query_set = query_set.select_related("company").order_by("-deal_time")
         result["data"] = [
             {

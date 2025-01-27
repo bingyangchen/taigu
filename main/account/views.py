@@ -122,7 +122,8 @@ def me(request: HttpRequest):
 def logout(request: HttpRequest):
     http_response = JsonResponse({"success": True}, headers={"is-log-out": "yes"})
     http_response.delete_cookie(
-        AUTH_COOKIE_NAME, samesite="Strict" if env.is_production else "None"  # type: ignore
+        AUTH_COOKIE_NAME,
+        samesite="Strict" if env.is_production else "None",  # type: ignore
     )
     return http_response
 
