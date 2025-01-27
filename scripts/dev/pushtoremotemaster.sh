@@ -35,5 +35,3 @@ fi
 git push origin "$current_branch" # Tests will be run via the pre-push hook. (See /.git/hooks/pre-push)
 
 printf "${GREEN}SUCCESS!${RESET}\n"
-
-set +e

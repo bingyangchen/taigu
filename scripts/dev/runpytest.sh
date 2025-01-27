@@ -24,5 +24,3 @@ source .env set
 pytest
 
 deactivate
-
-set +e

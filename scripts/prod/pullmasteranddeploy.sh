@@ -53,5 +53,3 @@ printf "${GREEN}succeeded!${RESET}\n"
 git reset HEAD --hard
 
 printf "${YELLOW}THE DEPLOY PROCESS IS COMPLETED!${RESET}\n"
-
-set +e

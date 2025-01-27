@@ -11,5 +11,3 @@ sudo nginx -t
 sudo nginx -s reload
 
 printf "${GREEN}Done.${RESET}\n"
-
-set +e

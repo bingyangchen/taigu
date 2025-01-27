@@ -17,5 +17,3 @@ fi
 
 # Update git hooks
 bash ./scripts/dev/installgithooks.sh
-
-set +e

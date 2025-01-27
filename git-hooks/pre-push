@@ -17,5 +17,3 @@ fi
 
 # Run pytest
 bash ./scripts/dev/runpytest.sh
-
-set +e
