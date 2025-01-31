@@ -1,0 +1,43 @@
+@use "../../global_variables" as _;
+
+.main {
+    position: sticky;
+    top: -1 * _.$show-header-border-boundary;
+    display: block;
+    height: _.$header-height + _.$show-header-border-boundary;
+    z-index: 2;
+    backface-visibility: hidden;
+    &::before,
+    &::after {
+        content: "";
+        position: sticky;
+        display: block;
+        height: _.$show-header-border-boundary;
+    }
+    &::before {
+        top: _.$header-height - _.$show-header-border-boundary;
+        box-shadow: 0 0 2px 2px _.$transparent-black;
+    }
+    &::after {
+        top: 0;
+        background: _.$white;
+        z-index: 3;
+    }
+    & > .main_inner {
+        position: sticky;
+        top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: _.$header-height;
+        width: 100%;
+        margin-top: -1 * _.$show-header-border-boundary;
+        padding: 0 12px;
+        background-color: _.$white;
+        z-index: 4;
+        .user_avatar {
+            width: 35px;
+            border-radius: 100px;
+        }
+    }
+}

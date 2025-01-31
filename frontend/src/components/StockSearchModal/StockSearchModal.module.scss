@@ -1,0 +1,67 @@
+@use "../../global_variables" as _;
+
+.modal_inner {
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    max-height: 85vh;
+    width: 100%;
+    border-radius: 10px;
+    background-color: _.$noisy-white;
+    & > :first-child:not(:last-child) {
+        border-bottom: 1px solid _.$light-gray;
+    }
+    & > .result {
+        height: 100%;
+        padding: 5px;
+        overflow: auto;
+        & > .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            @media (hover: hover) {
+                &:hover {
+                    background-color: _.$transparent-black;
+                }
+            }
+            & > .company {
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                & > .sid {
+                    font-size: 0.7 * _.$base-font-size;
+                    color: _.$gray;
+                }
+                & > .name {
+                    font-size: 0.9 * _.$base-font-size;
+                }
+            }
+            & > .price {
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                min-width: max-content;
+                & > .price {
+                    text-align: right;
+                    font-weight: bold;
+                }
+                & > .price_fluct {
+                    text-align: right;
+                    font-size: 0.7 * _.$base-font-size;
+                }
+            }
+            &.red {
+                .price {
+                    color: _.$red;
+                }
+            }
+            &.green {
+                .price {
+                    color: _.$green;
+                }
+            }
+        }
+    }
+}

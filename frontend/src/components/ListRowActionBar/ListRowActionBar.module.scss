@@ -1,0 +1,17 @@
+@use "../../global_variables" as _;
+
+.main {
+    display: flex;
+    align-items: center;
+}
+
+.tab_for_mobile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 15px;
+    margin: 5px 0;
+    &.dangerous {
+        color: _.$red;
+    }
+}

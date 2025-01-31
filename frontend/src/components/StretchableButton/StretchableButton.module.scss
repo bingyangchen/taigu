@@ -1,0 +1,127 @@
+@use "../../global_variables" as _;
+
+.main {
+    $side-length: 60px;
+    position: fixed;
+    bottom: _.$footer-height + 15px;
+    right: 30px;
+    border: 0.1px solid _.$light-gray;
+    border-radius: 100px;
+    height: $side-length;
+    width: $side-length;
+    background-color: _.$white;
+    box-shadow: 0 6px 12px -10px _.$black;
+    z-index: 4;
+    transition-duration: 200ms;
+    &.active {
+        & > .button_container {
+            gap: 15px;
+            height: max-content;
+            width: max-content;
+            padding-bottom: $side-length + 15px;
+            opacity: 1;
+            & > .button {
+                height: 0.95 * $side-length;
+                width: 0.95 * $side-length;
+                display: flex;
+            }
+        }
+        & + .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            background-color: _.$semi-transparent-black;
+            z-index: 3;
+        }
+    }
+    @media (hover: hover) {
+        &:hover {
+            box-shadow: 0 10px 30px -15px _.$black;
+        }
+    }
+    & > .button_image {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 5px;
+        height: 0.85 * $side-length;
+        width: 0.85 * $side-length;
+        border-radius: 100px;
+        z-index: 1;
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+    }
+    & > .button_container {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        transition-duration: 200ms;
+        z-index: 2;
+        opacity: 0;
+        transform: translate(-50%, 0);
+        & > .button {
+            position: relative;
+            height: 0;
+            width: 0;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            border-radius: 100px;
+            border: 0.1px solid _.$light-gray;
+            background-color: _.$noisy-white;
+            color: _.$deep-gray;
+            box-shadow: 0 0 20px -10px _.$black;
+            overflow: hidden;
+            cursor: pointer;
+            & > .hint_text {
+                position: absolute;
+                top: 50%;
+                left: 0;
+                transform: translate(-110%, -50%);
+                opacity: 0;
+                width: max-content;
+                padding: 3px 10px;
+                background-color: _.$deep-gray;
+                color: _.$white;
+                letter-spacing: 1px;
+                font-size: 0.8 * _.$base-font-size;
+                border-radius: 5px;
+            }
+            @media (hover: hover) {
+                &:hover {
+                    overflow: visible;
+                    & > .hint_text {
+                        opacity: 1;
+                        transition-delay: 200ms;
+                        transition-duration: 200ms;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.background {
+    animation: 300ms fadein ease;
+    display: none;
+}
+
+@keyframes fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

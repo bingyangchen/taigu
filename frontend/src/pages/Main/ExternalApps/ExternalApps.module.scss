@@ -1,0 +1,79 @@
+@use "../../../global_variables" as _;
+
+.main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 100%;
+    width: 100%;
+    padding: 10px 30px;
+    @media (max-width: _.$width-780) {
+        padding: 0 20px;
+    }
+    & > .title {
+        color: _.$black;
+        font-weight: normal;
+        font-size: 1.2 * _.$base-font-size;
+        @media (max-width: _.$width-780) {
+            font-size: 1.1 * _.$base-font-size;
+            margin: 10px 0;
+        }
+    }
+    & > .app_list {
+        padding: 10px 0;
+        & > .app {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 8px;
+            border-radius: 8px;
+            width: min(100%, 350px);
+            max-width: 100%;
+            transition-duration: 300ms;
+            & > .number {
+                font-size: 0.9 * _.$base-font-size;
+                padding: 10px;
+            }
+            & > .inner {
+                display: flex;
+                gap: 16px;
+                & > img {
+                    width: 60px;
+                    aspect-ratio: 1;
+                    object-fit: contain;
+                    padding: 5px;
+                    border-radius: 20%;
+                    border: 1px solid _.$noisy-white;
+                    box-shadow: 0 1px 3px -2px _.$black;
+                    background-color: _.$white;
+                }
+                & > .right {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                    padding: 2px 0;
+                    & > .app_name {
+                        font-size: 0.95 * _.$base-font-size;
+                        color: _.$black;
+                    }
+                    & > .star {
+                        display: flex;
+                        align-items: center;
+                        gap: 3px;
+                        font-size: 0.8 * _.$base-font-size;
+                        letter-spacing: 0;
+                    }
+                }
+            }
+            @media (hover: hover) {
+                &:hover {
+                    background-color: _.$transparent-black;
+                }
+            }
+            &:active {
+                background-color: _.$transparent-black;
+            }
+        }
+    }
+}

@@ -1,0 +1,44 @@
+@use "../../../global_variables" as _;
+
+.main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100vh;
+    padding: 0 15px 10px;
+    & > .search_input_container {
+        padding: 10px 5px;
+    }
+    .record_list {
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+        font-size: 0.85 * _.$base-font-size;
+        background-color: _.$transparent-white;
+        border-radius: 20px;
+        box-shadow: 0 0 5px 1px _.$transparent-black;
+        overflow: auto;
+    }
+    .show_more_button_outer {
+        margin: 15px 0 50px 0;
+        display: flex;
+        justify-content: center;
+    }
+}
+
+@media screen and (max-width: _.$width-780) {
+    .main {
+        height: calc(
+            100vh - _.$header-height - _.$footer-height -
+                _.$show-header-border-boundary
+        );
+        padding: 0;
+        & > .search_input_container {
+            padding: 0 10px 10px;
+        }
+        .record_list {
+            border-radius: 0;
+        }
+    }
+}

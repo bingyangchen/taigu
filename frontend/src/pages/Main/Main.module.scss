@@ -1,0 +1,24 @@
+@use "../../global_variables" as _;
+
+.main {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    & > .body {
+        position: relative;
+        display: flex;
+        min-height: 100%;
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: _.$width-780) {
+    .main {
+        & > .body {
+            min-height: calc(
+                100% - _.$header-height - _.$footer-height -
+                    _.$show-header-border-boundary
+            );
+        }
+    }
+}

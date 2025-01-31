@@ -1,0 +1,29 @@
+@use "../../global_variables" as _;
+
+.tab {
+    height: 65px;
+    padding: 0 20px;
+    color: _.$gray;
+    font-size: 0.9 * _.$base-font-size;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-radius: 10px;
+    cursor: default;
+    transition-duration: 150ms;
+    &.active {
+        color: _.$blue;
+        background-color: _.$transparent-blue;
+    }
+    @media (hover: hover) {
+        &:not(.active):hover {
+            background-color: _.$transparent-black;
+        }
+    }
+    & > .icon_outer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+    }
+}
