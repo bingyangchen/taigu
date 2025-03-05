@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Define color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -15,5 +14,4 @@ if [ ! -e "manage.py" ]; then
     exit 1
 fi
 
-# Run pytest
 bash ./scripts/dev/runpytest.sh

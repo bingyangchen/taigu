@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Define color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -15,5 +14,6 @@ if [ ! -e "manage.py" ]; then
     exit 1
 fi
 
-# Update git hooks
+echo "Updating git hooks..."
 bash ./scripts/dev/installgithooks.sh
+printf "${GREEN}Git hooks updated successfully.${RESET}\n"
