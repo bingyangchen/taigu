@@ -1,3 +1,15 @@
+.PHONY: build-dev
+build-dev:
+	$(SHELL) ./scripts/dev/build.sh
+
+.PHONY: start-dev
+start-dev:
+	$(SHELL) ./scripts/dev/start.sh
+
+.PHONY: stop-dev
+stop-dev:
+	$(SHELL) ./scripts/dev/stop.sh
+
 # Install/update all git hooks (for development, run this only once when you clone this repo)
 .PHONY: install-git-hooks
 install-git-hooks:

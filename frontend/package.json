@@ -35,7 +35,7 @@
     "workbox-streams": "^6.5.4"
   },
   "scripts": {
-    "dev": "HTTPS=true SSL_CRT_FILE=../dev-cert.pem SSL_KEY_FILE=../dev-key.pem HOST=0.0.0.0 PORT=3000 react-scripts start",
+    "dev": "HOST=0.0.0.0 PORT=3000 react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "build-and-push": "bash ./build-and-push.sh",
     "test": "react-scripts test",

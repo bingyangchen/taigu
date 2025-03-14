@@ -70,18 +70,18 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "trade_smartly",
+        "NAME": os.environ.get("DB_NAME"),
         "USER": os.environ.get("DB_USER"),
         "PASSWORD": os.environ.get("DB_PASSWORD"),
         "HOST": os.environ.get("DB_HOST"),
-        "PORT": "5432",
+        "PORT": os.environ.get("DB_PORT"),
     }
 }
 
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379",
+        "LOCATION": f"redis://{os.environ.get('REDIS_HOST')}:{os.environ.get('REDIS_PORT')}",
     }
 }
 
@@ -103,9 +103,6 @@ TIME_ZONE = "Asia/Taipei"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-
-# In dev environment, Werkzeug need this even though we don't use it
-STATIC_URL = "/static/"
 
 ## Uncomment the following block to see the SQL log in console
 # LOGGING = {

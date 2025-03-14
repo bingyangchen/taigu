@@ -1,0 +1,23 @@
+{
+  "name": "Frontend",
+  "dockerComposeFile": "../compose.devcontainer.yaml",
+  "service": "frontend",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "files.insertFinalNewline": true,
+        "files.trimFinalNewlines": true,
+        "files.trimTrailingWhitespace": true,
+        "defaultFormatter": "esbenp.prettier-vscode",
+        "prettier.tabWidth": 2,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+      },
+      "extensions": [
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
