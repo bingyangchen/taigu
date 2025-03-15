@@ -13,8 +13,7 @@ export default class Nav {
             // 192.168.0.0/16 are considered localhost for IPv4.
             window.location.hostname.match(
                 /^192\.168(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){2}$/
-            ) ||
-            window.location.hostname === "dev.trade-smartly.com"
+            )
     );
     public static get isAt404Page(): boolean {
         const pathRegexString = `^${Env.frontendRootPath.replace(

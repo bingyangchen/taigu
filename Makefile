@@ -8,7 +8,7 @@ build-%:
 		echo "Error: '$*' is not a valid environment. Must be one of: $(ENVS)"; \
 		exit 1; \
 	fi
-	$(SHELL) ./scripts/$*/build.sh
+	$(SHELL) ./scripts/build.sh $*
 
 # start-dev | start-prod
 .PHONY: start-%
@@ -17,7 +17,7 @@ start-%:
 		echo "Error: '$*' is not a valid environment. Must be one of: $(ENVS)"; \
 		exit 1; \
 	fi
-	$(SHELL) ./scripts/$*/start.sh
+	$(SHELL) ./scripts/start.sh $*
 
 # stop-dev | stop-prod
 .PHONY: stop-%
@@ -26,7 +26,7 @@ stop-%:
 		echo "Error: '$*' is not a valid environment. Must be one of: $(ENVS)"; \
 		exit 1; \
 	fi
-	$(SHELL) ./scripts/$*/stop.sh
+	$(SHELL) ./scripts/stop.sh $*
 
 .PHONY: start-dev
 start-dev:
