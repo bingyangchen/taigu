@@ -10,6 +10,10 @@ start:
 stop:
 	$(SHELL) ./scripts/stop.sh
 
+.PHONY: restart
+restart:
+	$(SHELL) ./scripts/restart.sh
+
 # api-server-shell | frontend-shell | reverse-proxy-shell | db-shell | redis-shell
 .PHONY: %-shell
 %-shell:
