@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 
-file_name="compose.$1.yaml"
+set -e
+source ./scripts/common.sh
+
+load_env
+file_name="compose.$ENV.yaml"
 docker compose -f $file_name up -d

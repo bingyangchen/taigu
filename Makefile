@@ -1,40 +1,19 @@
-ENVS := dev prod
-SERVICES := api-server frontend reverse-proxy postgres redis
+.PHONY: build
+build:
+	$(SHELL) ./scripts/build.sh
 
-# build-dev | build-prod
-.PHONY: build-%
-build-%:
-	@if ! echo "$(ENVS)" | grep -w "$*" > /dev/null; then \
-		echo "Error: '$*' is not a valid environment. Must be one of: $(ENVS)"; \
-		exit 1; \
-	fi
-	$(SHELL) ./scripts/build.sh $*
+.PHONY: start
+start:
+	$(SHELL) ./scripts/start.sh
 
-# start-dev | start-prod
-.PHONY: start-%
-start-%:
-	@if ! echo "$(ENVS)" | grep -w "$*" > /dev/null; then \
-		echo "Error: '$*' is not a valid environment. Must be one of: $(ENVS)"; \
-		exit 1; \
-	fi
-	$(SHELL) ./scripts/start.sh $*
+.PHONY: stop
+stop:
+	$(SHELL) ./scripts/stop.sh
 
-# stop-dev | stop-prod
-.PHONY: stop-%
-stop-%:
-	@if ! echo "$(ENVS)" | grep -w "$*" > /dev/null; then \
-		echo "Error: '$*' is not a valid environment. Must be one of: $(ENVS)"; \
-		exit 1; \
-	fi
-	$(SHELL) ./scripts/stop.sh $*
-
-.PHONY: start-dev
-start-dev:
-	$(SHELL) ./scripts/dev/start.sh
-
-.PHONY: stop-dev
-stop-dev:
-	$(SHELL) ./scripts/dev/stop.sh
+# api-server-shell | frontend-shell | reverse-proxy-shell | db-shell | redis-shell
+.PHONY: %-shell
+%-shell:
+	$(SHELL) ./scripts/enter-shell.sh $*
 
 # Install/update all git hooks (for development, run this only once when you clone this repo)
 .PHONY: install-git-hooks

@@ -16,7 +16,7 @@ services:
             - "8000:8000"
         depends_on:
             - redis
-            - postgres
+            - db
         restart: unless-stopped
     frontend:
         build:
@@ -60,23 +60,21 @@ services:
         volumes:
             - redis_data:/data
         restart: unless-stopped
-    postgres:
+    db:
         image: postgres:16.8
         ports:
             - "5432:5432"
         volumes:
-            # - ./backup.sql:/app/backup.sql
-            - postgres_data:/var/lib/postgresql/data
+            # - ./backup.sql:/app/backup.sql # for the first time, we can use this to get some pre-existing data
+            - db_data:/var/lib/postgresql/data
             - ./scripts/dev/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh # This will be executed when the container starts
         environment:
             - PGUSER=postgres
             - POSTGRES_PASSWORD=postgres
-            - POSTGRES_DB=postgres
+            - POSTGRES_DB=postgres # for default, the application doesn't use this
         restart: unless-stopped
 
 volumes:
-    ssl_certificates:
-    ssl_challenge:
     redis_data:
-    postgres_data:
+    db_data:
     frontend_node_modules:
