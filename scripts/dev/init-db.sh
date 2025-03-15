@@ -2,19 +2,14 @@
 
 set -e
 
-create_db_if_not_exists() {
-    local db_name="$1"
-    echo "Checking if database $db_name exists..."
+echo "Checking if database $APP_DB exists..."
 
-    if psql -lqt | cut -d \| -f 1 | grep -qw "$db_name"; then
-        echo "Database $db_name already exists."
-    else
-        echo "Creating database $db_name..."
-        psql -c "CREATE DATABASE $db_name;"
-        echo "Database $db_name created successfully."
-    fi
-}
+if psql -lqt | cut -d \| -f 1 | grep -qw "$APP_DB"; then
+    printf "\033[0;33mDatabase $APP_DB already exists.\033[0m\n"
+else
+    echo "Creating database $APP_DB..."
+    psql -c "CREATE DATABASE $APP_DB;"
+    printf "\033[0;32mDatabase $APP_DB created successfully.\033[0m\n"
+fi
 
-create_db_if_not_exists "trade_smartly"
-
-echo "Database initialization completed."
+printf "\033[0;32mDatabase initialization completed.\033[0m\n"
