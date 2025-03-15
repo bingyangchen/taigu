@@ -8,7 +8,7 @@ services:
                 - trade-smartly-api-server:dev
         volumes:
             - ./api-server:/app:cached
-        command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+        command: ["gunicorn"]
         env_file: .env
         expose:
             - "8000"

@@ -13,7 +13,6 @@ dependencies = [
     "gunicorn (==22.0.0)",
     "requests (==2.32.2)",
     "pyquery (==1.4.3)",
-    "python-dotenv (==0.20.0)",
     "django-cors-headers (==4.0.0)",
     "django-csp (==3.8)",
     "python-dateutil (==2.8.2)",

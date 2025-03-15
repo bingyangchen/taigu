@@ -35,7 +35,7 @@ RUN pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt --force-reinstall --no-warn-script-location
 COPY . .
 EXPOSE 8000
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["gunicorn"]
 
 ########################################################################################
 

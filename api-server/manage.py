@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 import sys
 
-import dotenv
-
 
 def main():
-    dotenv.load_dotenv()
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
