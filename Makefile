@@ -1,6 +1,32 @@
-.PHONY: build-dev
-build-dev:
-	$(SHELL) ./scripts/dev/build.sh
+ENVS := dev prod
+SERVICES := api-server frontend reverse-proxy postgres redis
+
+# build-dev | build-prod
+.PHONY: build-%
+build-%:
+	@if ! echo "$(ENVS)" | grep -w "$*" > /dev/null; then \
+		echo "Error: '$*' is not a valid environment. Must be one of: $(ENVS)"; \
+		exit 1; \
+	fi
+	$(SHELL) ./scripts/$*/build.sh
+
+# start-dev | start-prod
+.PHONY: start-%
+start-%:
+	@if ! echo "$(ENVS)" | grep -w "$*" > /dev/null; then \
+		echo "Error: '$*' is not a valid environment. Must be one of: $(ENVS)"; \
+		exit 1; \
+	fi
+	$(SHELL) ./scripts/$*/start.sh
+
+# stop-dev | stop-prod
+.PHONY: stop-%
+stop-%:
+	@if ! echo "$(ENVS)" | grep -w "$*" > /dev/null; then \
+		echo "Error: '$*' is not a valid environment. Must be one of: $(ENVS)"; \
+		exit 1; \
+	fi
+	$(SHELL) ./scripts/$*/stop.sh
 
 .PHONY: start-dev
 start-dev:

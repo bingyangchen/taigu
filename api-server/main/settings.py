@@ -8,10 +8,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = True  # NOTE: We use this variable to determine whether we are in the development environment or in the production one.
 
 ALLOWED_HOSTS = ["*"]
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https?://(localhost|127\.0\.0\.1):300[0-9]$",
-    r"^https://dev\.trade-smartly\.com:300[0-9]$",
-]
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^https?://(localhost|127\.0\.0\.1):300[0-9]$"]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "main.urls"
@@ -28,7 +25,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     # 3rd-party packages
     "corsheaders",
-    "django_extensions",  # NOTE: This is only for dev environment, in production_settings.py, we remove it
     # Local Apps
     "main.core",
     "main.crontab",

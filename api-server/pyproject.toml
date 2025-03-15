@@ -36,7 +36,6 @@ build-backend = "poetry.core.masonry.api"
 ruff = "^0.9.9"
 ipykernel = "^6.29.5"
 pyopenssl = "^25.0.0"
-django-extensions = "^3.2.3"
 poetry = "2.0"
 
 [tool.pytest.ini_options]
