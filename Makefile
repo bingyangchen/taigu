@@ -22,7 +22,7 @@ restart:
 # Install/update all git hooks (for development, run this only once when you clone this repo)
 .PHONY: install-git-hooks
 install-git-hooks:
-	$(SHELL) ./scripts/dev/installgithooks.sh
+	$(SHELL) ./scripts/dev/install-git-hooks.sh
 
 # Push code to remote master branch (for development)
 .PHONY: push-to-remote-master

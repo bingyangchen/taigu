@@ -9,6 +9,13 @@ RESET='\033[0m'
 
 SERVICES=(api-server frontend reverse-proxy db redis)
 
+check_triggered_by_make() {
+    if [ -z "$MAKELEVEL" ]; then
+        printf "${YELLOW}This script can only be run from a Makefile.${RESET}\n"
+        exit 1
+    fi
+}
+
 load_env() {
     if [ -f .env ]; then
         export $(cat .env | grep -v '^#' | xargs)

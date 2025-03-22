@@ -2,6 +2,11 @@
 
 set -e
 
+if [ -z "$APP_DB" ]; then
+    printf "\033[0;31mAPP_DB is not set. Please set the APP_DB environment variable.\033[0m\n"
+    exit 1
+fi
+
 echo "Checking if database $APP_DB exists..."
 
 if psql -lqt | cut -d \| -f 1 | grep -qw "$APP_DB"; then
