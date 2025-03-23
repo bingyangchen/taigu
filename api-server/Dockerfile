@@ -22,27 +22,25 @@ RUN poetry export --without dev --without-hashes --no-interaction --no-ansi \
 
 ########################################################################################
 
-FROM python_base AS base
-WORKDIR /app
-ENV PYTHONPATH=/app
-
-########################################################################################
-
-FROM base AS dev_final
+FROM python_base AS dev_final
 RUN apt-get update && apt-get install -y git && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=dev_dependencies requirements.txt .
 RUN pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt --force-reinstall --no-warn-script-location
+WORKDIR /app
 COPY . .
+ENV PYTHONPATH=/app
 EXPOSE 8000
 CMD ["gunicorn"]
 
 ########################################################################################
 
-FROM base AS prod_final
+FROM python_base AS prod_final
 COPY --from=production_dependencies requirements.txt .
 RUN pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt --force-reinstall --no-warn-script-location
+WORKDIR /app
 COPY . .
+ENV PYTHONPATH=/app
 EXPOSE 8000
-CMD ["echo", "Please use Docker Compose to run the production server."]
+CMD ["gunicorn"]
