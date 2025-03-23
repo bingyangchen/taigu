@@ -26,7 +26,7 @@ services:
             tags:
                 - trade-smartly-frontend:dev
         volumes:
-            - frontend_node_modules:/app/node_modules  # This also prevents node_modules/ from being synced back to the code base
+            - frontend_node_modules:/app/node_modules # This also prevents node_modules/ from being synced back to the code base
             - ./frontend:/app:cached
         command: ["npm", "run", "dev"]
         expose:
@@ -73,6 +73,20 @@ services:
             - POSTGRES_PASSWORD=postgres
             - POSTGRES_DB=postgres # for default, the application doesn't use this
             - APP_DB=trade_smartly
+        restart: unless-stopped
+    scheduler:
+        build:
+            context: ./api-server
+            dockerfile: Dockerfile
+            target: dev_final
+            tags:
+                - trade-smartly-scheduler:dev
+        volumes:
+            - ./api-server/scheduler.py:/app/scheduler.py:ro
+        command: ["python", "-u", "scheduler.py"]
+        depends_on:
+            - redis
+            - db
         restart: unless-stopped
 
 volumes:
