@@ -24,22 +24,7 @@ restart:
 install-git-hooks:
 	$(SHELL) ./scripts/dev/install-git-hooks.sh
 
-# Push code to remote master branch (for development)
-.PHONY: push-to-remote-master
-push-to-remote-master:
-	$(SHELL) ./scripts/dev/pushtoremotemaster.sh
-
-# Run pytest (for development)
-.PHONY: run-pytest
-run-pytest:
-	$(SHELL) ./scripts/dev/runpytest.sh
-
-# Pull code from remote master branch and deploy (for production)
-.PHONY: pull-master-and-deploy
-pull-master-and-deploy:
-	$(SHELL) ./scripts/prod/pullmasteranddeploy.sh
-
-# Reboot the server (for production)
-.PHONY: reboot
-reboot:
-	$(SHELL) ./scripts/prod/reboot.sh
+# Generate a self-signed certificate for development
+.PHONY: cert
+cert:
+	$(SHELL) ./scripts/dev/cert.sh
