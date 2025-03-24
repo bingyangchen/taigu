@@ -3,23 +3,23 @@ import os
 from datetime import datetime, timedelta
 from typing import Any
 
-import google_auth_oauthlib.flow
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2 import id_token
+from google_auth_oauthlib import flow as google_oauth_flow
 from jose import jwt
 from jose.constants import ALGORITHMS
 
-from main.core import env
 from main.core.decorators import require_login
+from main.env import env
 
 from . import AUTH_COOKIE_NAME, OAuthOrganization
 from .models import User
 
-GOOGLE_AUTH_FLOW = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
     os.path.join(
         settings.BASE_DIR,
         "client_secret_85674097625-iqmtaroea8456oeh3461j2g8esb426ts.apps.googleusercontent.com.json",
@@ -91,7 +91,7 @@ def google_login(request: HttpRequest):
                 max_age=172800,
                 secure=True,
                 httponly=True,
-                samesite="Strict" if env.is_production else "None",
+                samesite="Strict" if env.ENV == "production" else "None",
             )
             return http_response
         except Exception as e:
@@ -123,7 +123,7 @@ def logout(request: HttpRequest):
     http_response = JsonResponse({"success": True}, headers={"is-log-out": "yes"})
     http_response.delete_cookie(
         AUTH_COOKIE_NAME,
-        samesite="Strict" if env.is_production else "None",  # type: ignore
+        samesite="Strict" if env.ENV == "production" else "None",  # type: ignore
     )
     return http_response
 
@@ -164,7 +164,7 @@ def update(request: HttpRequest):
 #         result["success"] = True
 #         http_response = JsonResponse(result, headers={"is-log-out": "yes"})
 #         http_response.delete_cookie(
-#             AUTH_COOKIE_NAME, samesite="Strict" if env.is_production else "None"
+#             AUTH_COOKIE_NAME, samesite="Strict" if env.ENV == "production" else "None"
 #         )
 #         return http_response
 #     else:

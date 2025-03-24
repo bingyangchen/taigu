@@ -25,6 +25,16 @@ install-git-hooks:
 	$(SHELL) ./scripts/dev/install-git-hooks.sh
 
 # Generate a self-signed certificate for development
-.PHONY: cert
-cert:
+.PHONY: dev-cert
+dev-cert:
 	$(SHELL) ./scripts/dev/cert.sh
+
+# Generate a certificate for production
+.PHONY: prod-cert
+prod-cert:
+	$(SHELL) ./scripts/prod/cert.sh
+
+# Start the reverse proxy (currently Nginx) on the production server
+.PHONY: start-reverse-proxy-on-host
+start-reverse-proxy-on-host:
+	$(SHELL) ./scripts/prod/start-reverse-proxy-on-host.sh

@@ -3,7 +3,7 @@ from typing import Callable
 from django.contrib.auth import authenticate
 from django.http import HttpRequest, HttpResponse
 
-from main.core import env
+from main.env import env
 
 from . import AUTH_COOKIE_NAME
 
@@ -18,7 +18,8 @@ def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
 
         if response.status_code == 401:
             response.delete_cookie(
-                AUTH_COOKIE_NAME, samesite="Strict" if env.is_production else "None"  # type: ignore
+                AUTH_COOKIE_NAME,
+                samesite="Strict" if env.ENV == "production" else "None",  # type: ignore
             )
         elif response.get("is-log-out") != "yes" and response.get("is-log-in") != "yes":
             if token:
@@ -29,11 +30,12 @@ def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
                     max_age=172800,
                     secure=True,
                     httponly=True,
-                    samesite="Strict" if env.is_production else "None",
+                    samesite="Strict" if env.ENV == "production" else "None",  # type: ignore
                 )
             else:
                 response.delete_cookie(
-                    AUTH_COOKIE_NAME, samesite="Strict" if env.is_production else "None"  # type: ignore
+                    AUTH_COOKIE_NAME,
+                    samesite="Strict" if env.ENV == "production" else "None",  # type: ignore
                 )
         # Delete all the custome headers that may appear (KeyError won't be raised)
         del response["is-log-out"]
