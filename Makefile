@@ -1,8 +1,8 @@
-SHELL := /usr/bin/bash
+SHELL := /usr/bin/env bash
 
-.PHONY: build
-build:
-	$(SHELL) ./scripts/build.sh
+.PHONY: build-%
+build-%:
+	$(SHELL) ./scripts/build.sh $*
 
 .PHONY: start
 start:
@@ -21,6 +21,10 @@ restart:
 shell-%:
 	$(SHELL) ./scripts/enter-shell.sh $*
 
+.PHONY: test-%
+test-%:
+	$(SHELL) ./scripts/dev/runpytest.sh
+
 # Install/update all git hooks (for development, run this only once when you clone this repo)
 .PHONY: install-git-hooks
 install-git-hooks:
@@ -35,3 +39,11 @@ dev-cert:
 .PHONY: prod-cert
 prod-cert:
 	$(SHELL) ./scripts/prod/cert.sh
+
+.PHONY: push-local-images-%
+push-local-images-%:
+	$(SHELL) ./scripts/dev/push-local-images.sh $*
+
+.PHONY: pull-remote-images-%
+pull-remote-images-%:
+	$(SHELL) ./scripts/prod/pull-remote-images.sh $*

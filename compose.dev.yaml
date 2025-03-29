@@ -5,7 +5,7 @@ services:
             dockerfile: Dockerfile
             target: dev_final
             tags:
-                - trade-smartly-api-server:dev
+                - tradesmartly/api-server:dev
         volumes:
             - ./api-server:/app:cached
         command: ["gunicorn"]
@@ -27,7 +27,7 @@ services:
             dockerfile: Dockerfile
             target: dev_final
             tags:
-                - trade-smartly-frontend:dev
+                - tradesmartly/frontend:dev
         volumes:
             - frontend_node_modules:/app/node_modules # This also prevents node_modules/ from being synced back to the code base
             - ./frontend:/app:cached
@@ -94,7 +94,7 @@ services:
             dockerfile: Dockerfile
             target: dev_final
             tags:
-                - trade-smartly-scheduler:dev
+                - tradesmartly/scheduler:dev
         volumes:
             - ./api-server/scheduler.py:/app/scheduler.py:ro
         command: ["python", "-u", "scheduler.py"]
