@@ -7,5 +7,4 @@ source "$(dirname "$(realpath "$0")")/../common.sh"
 #       pre-push hook.
 
 check_env dev
-clear_screen
 docker compose -f compose.dev.yaml --progress quiet run -T --rm api-server pytest
