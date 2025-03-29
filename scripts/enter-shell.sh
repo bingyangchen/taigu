@@ -5,7 +5,7 @@ source "$(dirname "$(realpath "$0")")/common.sh"
 
 check_triggered_by_make
 validate_service $1
-load_env
+load_env_vars
 clear_screen
 if [ "$1" = "db" ] || [ "$1" = "redis" ]; then
     # NOTE: For db and redis, a newly created container would not be able to connect to

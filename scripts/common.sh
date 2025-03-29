@@ -16,11 +16,19 @@ check_triggered_by_make() {
     fi
 }
 
-load_env() {
+load_env_vars() {
     if [ -f .env ]; then
         export $(cat .env | grep -v '^#' | xargs)
     else
         printf "${RED}Error: .env file not found${RESET}\n"
+        exit 1
+    fi
+}
+
+check_env() {
+    load_env_vars
+    if [ "$ENV" != "$1" ]; then
+        printf "${RED}This is a $1-only script, aborting...${RESET}\n"
         exit 1
     fi
 }

@@ -4,6 +4,7 @@ set -e
 source "$(dirname "$(realpath "$0")")/../common.sh"
 
 check_triggered_by_make
+check_env prod
 
 if ! command -v certbot &>/dev/null; then
     sudo apt-get update
