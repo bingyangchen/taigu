@@ -1,11 +1,6 @@
 services:
     api-server:
-        build:
-            context: ./api-server
-            dockerfile: Dockerfile
-            target: prod_final
-            tags:
-                - tradesmartly/api-server:prod
+        image: tradesmartly/api-server:prod
         command: ["gunicorn"]
         env_file: .env
         expose:
@@ -20,12 +15,7 @@ services:
             max-size: "2m"
             max-file: "1"
     frontend:
-        build:
-            context: ./frontend
-            dockerfile: Dockerfile
-            target: prod_final
-            tags:
-                - tradesmartly/frontend:prod
+        image: tradesmartly/frontend:prod
         command: ["serve", "-s", "build", "-l", "3000"]
         expose:
             - "3000"
@@ -85,12 +75,7 @@ services:
             max-size: "2m"
             max-file: "1"
     scheduler:
-        build:
-            context: ./api-server
-            dockerfile: Dockerfile
-            target: prod_final
-            tags:
-                - tradesmartly/scheduler:prod
+        image: tradesmartly/scheduler:prod
         volumes:
             - ./api-server/scheduler.py:/app/scheduler.py:ro
         command: ["python", "-u", "scheduler.py"]

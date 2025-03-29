@@ -11,5 +11,18 @@ if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
     exit 1
 fi
 
-file_name="compose.$1.yaml"
-docker compose -f $file_name build
+arch=$(uname -m)
+
+for service in api-server frontend scheduler; do
+    if [ "$service" == "scheduler" ]; then
+        cd ./api-server
+    else
+        cd ./$service
+    fi
+    if [ "$1" == "prod" ]; then
+        docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final -f ./Dockerfile --platform linux/x86_64 .
+    else
+        docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final -f ./Dockerfile --platform linux/$arch .
+    fi
+    cd ..
+done
