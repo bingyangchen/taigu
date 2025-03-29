@@ -21,24 +21,18 @@ restart:
 shell-%:
 	$(SHELL) ./scripts/enter-shell.sh $*
 
-.PHONY: test-%
-test-%:
-	$(SHELL) ./scripts/dev/runpytest.sh
+.PHONY: test
+test:
+	$(SHELL) ./scripts/dev/run-pytest.sh
 
 # Install/update all git hooks (for development, run this only once when you clone this repo)
 .PHONY: install-git-hooks
 install-git-hooks:
 	$(SHELL) ./scripts/dev/install-git-hooks.sh
 
-# Generate a self-signed certificate for development
-.PHONY: dev-cert
-dev-cert:
-	$(SHELL) ./scripts/dev/cert.sh
-
-# Generate a certificate for production
-.PHONY: prod-cert
-prod-cert:
-	$(SHELL) ./scripts/prod/cert.sh
+.PHONY: cert-%
+cert-%:
+	$(SHELL) ./scripts/$*/cert.sh
 
 .PHONY: push-local-images-%
 push-local-images-%:
@@ -47,3 +41,7 @@ push-local-images-%:
 .PHONY: pull-remote-images-%
 pull-remote-images-%:
 	$(SHELL) ./scripts/prod/pull-remote-images.sh $*
+
+.PHONY: deploy
+deploy:
+	$(SHELL) ./scripts/prod/deploy.sh
