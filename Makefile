@@ -1,3 +1,5 @@
+SHELL := /usr/bin/bash
+
 .PHONY: build
 build:
 	$(SHELL) ./scripts/build.sh
