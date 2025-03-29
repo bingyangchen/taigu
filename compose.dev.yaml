@@ -41,6 +41,9 @@ services:
             - ./reverse-proxy/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
             - ./reverse-proxy/dev-cert.pem:/etc/ssl/certs/trade-smartly.com/cert.pem:ro
             - ./reverse-proxy/dev-key.pem:/etc/ssl/certs/trade-smartly.com/key.pem:ro
+        depends_on:
+            - api-server
+            - frontend
         command: ["nginx", "-g", "daemon off;"]
         restart: unless-stopped
         logging:

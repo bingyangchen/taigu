@@ -38,6 +38,9 @@ services:
             - /etc/letsencrypt/options-ssl-nginx.conf:/etc/letsencrypt/options-ssl-nginx.conf:ro
             - /etc/letsencrypt/ssl-dhparams.pem:/etc/letsencrypt/ssl-dhparams.pem:ro
         command: ["nginx", "-g", "daemon off;"]
+        depends_on:
+            - api-server
+            - frontend
         restart: unless-stopped
         logging:
           driver: "json-file"
