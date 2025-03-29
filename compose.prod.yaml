@@ -81,6 +81,7 @@ services:
         volumes:
             - ./api-server/scheduler.py:/app/scheduler.py:ro
         command: ["python", "-u", "scheduler.py"]
+        env_file: .env
         depends_on:
             - redis
             - db
