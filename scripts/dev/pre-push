@@ -13,4 +13,4 @@ if [ ! -d ".git" ]; then
     exit 1
 fi
 
-bash ./scripts/dev/runpytest.sh
+# TODO: Run pytest

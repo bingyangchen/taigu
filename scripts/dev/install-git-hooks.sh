@@ -9,6 +9,7 @@ source "$(dirname "$(realpath "$0")")/../common.sh"
 check_env dev
 printf "${BLUE}Installing git hooks... ${RESET}"
 
+find .git/hooks -type f ! -name '*.sample' -delete
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 cp -R "$SCRIPT_DIR"/git-hooks/* .git/hooks/
 chmod +x .git/hooks/*

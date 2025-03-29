@@ -15,4 +15,4 @@ fi
 
 printf "${BLUE}Updating git hooks...${RESET}\n"
 bash ./scripts/dev/install-git-hooks.sh
-printf "${GREEN}Git hooks updated!${RESET}\n"
+printf "${GREEN} ✔ Git hooks updated${RESET}\n"
