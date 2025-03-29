@@ -33,8 +33,3 @@ dev-cert:
 .PHONY: prod-cert
 prod-cert:
 	$(SHELL) ./scripts/prod/cert.sh
-
-# Start the reverse proxy (currently Nginx) on the production server
-.PHONY: start-reverse-proxy-on-host
-start-reverse-proxy-on-host:
-	$(SHELL) ./scripts/prod/start-reverse-proxy-on-host.sh
