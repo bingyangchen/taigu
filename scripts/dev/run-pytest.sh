@@ -8,4 +8,4 @@ source "$(dirname "$(realpath "$0")")/../common.sh"
 
 check_env dev
 clear_screen
-docker compose -f compose.dev.yaml --progress quiet run --rm api-server pytest
+docker compose -f compose.dev.yaml --progress quiet run -T --rm api-server pytest
