@@ -1,3 +1,8 @@
+"""
+This file is not part of API Server.
+It is a scheduler for the whole project (We don't use Cronjob).
+"""
+
 import logging
 import signal
 import subprocess
@@ -17,12 +22,7 @@ scheduler = None
 shutdown_event = threading.Event()
 
 
-def cleanup_threads(signum, frame):
-    logger.info("Shutting down gracefully...")
-    shutdown_event.set()
-    if scheduler:
-        scheduler.shutdown(wait=True)
-    sys.exit(0)
+###################################### Define Jobs #####################################
 
 
 def fetch_and_store_realtime_stock_info():
@@ -46,6 +46,17 @@ def update_material_facts():
         subprocess.run(["python", "manage.py", "update_material_facts"], check=True)
     except Exception as e:
         logger.error(f"Error in update_material_facts: {e}")
+
+
+########################################################################################
+
+
+def cleanup_threads(signum, frame):
+    logger.info("Shutting down gracefully...")
+    shutdown_event.set()
+    if scheduler:
+        scheduler.shutdown(wait=True)
+    sys.exit(0)
 
 
 if __name__ == "__main__":

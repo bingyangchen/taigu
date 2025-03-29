@@ -14,9 +14,9 @@ stop:
 restart:
 	$(SHELL) ./scripts/restart.sh
 
-# api-server-shell | frontend-shell | reverse-proxy-shell | db-shell | redis-shell
-.PHONY: %-shell
-%-shell:
+# shell-api-server | shell-frontend | shell-reverse-proxy | shell-db | shell-redis
+.PHONY: shell-%
+shell-%:
 	$(SHELL) ./scripts/enter-shell.sh $*
 
 # Install/update all git hooks (for development, run this only once when you clone this repo)
