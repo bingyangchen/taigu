@@ -4,6 +4,6 @@ set -e
 
 branch_name=$(git symbolic-ref --short HEAD)
 if [ "$branch_name" = "main" ]; then
-    printf "\033[0;33mYou cannot commit directly to the main branch.\033[0m\n"
+    printf "\033[0;33mYou cannot commit directly to the main branch. Please commit to a feature branch.\033[0m\n"
     exit 1
 fi

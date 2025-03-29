@@ -3,12 +3,12 @@
   "short_name": "TradeSmartly",
   "icons": [
     {
-      "src": "logo192.png",
+      "src": "logo-s.png",
       "type": "image/png",
       "sizes": "192x192 128x128 96x96 72x72 64x64 32x32 24x24 16x16"
     },
     {
-      "src": "logo512.png",
+      "src": "logo-l.png",
       "type": "image/png",
       "sizes": "512x512 256x256"
     }
