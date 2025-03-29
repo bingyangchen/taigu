@@ -29,6 +29,7 @@ services:
             max-file: "1"
     reverse-proxy:
         image: nginx:1.27.4
+        user: root
         ports:
             - "80:80"
             - "443:443"
