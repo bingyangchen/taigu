@@ -13,7 +13,7 @@ fi
 
 git switch main
 git pull origin main
-make pull-remote-images-prod
+make pull-images-prod
 make restart
 
 printf "${GREEN} ✔ Build and restart completed${RESET}\n"
