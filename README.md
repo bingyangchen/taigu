@@ -151,7 +151,7 @@ cp example.env .env
 make cert-prod
 sudo usermod -aG docker $USER
 newgrp docker
-make pull-remote-images-prod
+make pull-images-prod
 sudo timedatectl set-timezone Asia/Taipei
 make start
 
