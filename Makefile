@@ -1,5 +1,6 @@
 SHELL := /usr/bin/env bash
 
+# build-dev | build-prod
 .PHONY: build-%
 build-%:
 	$(SHELL) ./scripts/build.sh $*
@@ -16,7 +17,7 @@ stop:
 restart:
 	$(SHELL) ./scripts/restart.sh
 
-# shell-api-server | shell-frontend | shell-reverse-proxy | shell-db | shell-redis
+# shell-api-server | shell-frontend | shell-reverse-proxy | shell-db | shell-redis | shell-scheduler
 .PHONY: shell-%
 shell-%:
 	$(SHELL) ./scripts/enter-shell.sh $*
@@ -25,22 +26,24 @@ shell-%:
 test:
 	$(SHELL) ./scripts/dev/run-pytest.sh
 
-# Install/update all git hooks (for development, run this only once when you clone this repo)
 .PHONY: install-git-hooks
 install-git-hooks:
 	$(SHELL) ./scripts/dev/install-git-hooks.sh
 
+# cert-dev | cert-prod
 .PHONY: cert-%
 cert-%:
 	$(SHELL) ./scripts/$*/cert.sh
 
-.PHONY: push-local-images-%
-push-local-images-%:
-	$(SHELL) ./scripts/dev/push-local-images.sh $*
+# push-images-dev | push-images-prod
+.PHONY: push-images-%
+push-images-%:
+	$(SHELL) ./scripts/dev/push-images.sh $*
 
-.PHONY: pull-remote-images-%
-pull-remote-images-%:
-	$(SHELL) ./scripts/prod/pull-remote-images.sh $*
+# pull-images-dev | pull-images-prod
+.PHONY: pull-images-%
+pull-images-%:
+	$(SHELL) ./scripts/prod/pull-images.sh $*
 
 .PHONY: deploy
 deploy:
