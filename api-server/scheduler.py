@@ -73,19 +73,20 @@ if __name__ == "__main__":
         timezone=ZoneInfo("Asia/Taipei"),
     )
 
+    # NOTE: In the day_of_week field, 0 = Monday, 6 = Sunday
     scheduler.add_job(
         fetch_and_store_realtime_stock_info,
-        CronTrigger.from_crontab("* 9-13 * * 1-5"),
+        CronTrigger.from_crontab("* 9-13 * * mon-fri"),
         name="fetch_realtime_stock_info",
     )
     scheduler.add_job(
         update_all_stocks_history,
-        CronTrigger.from_crontab("0 15 * * 1-5"),
+        CronTrigger.from_crontab("0 15 * * mon-fri"),
         name="update_stock_history",
     )
     scheduler.add_job(
         update_material_facts,
-        CronTrigger.from_crontab("0 * * * 1-5"),
+        CronTrigger.from_crontab("0 * * * mon-fri"),
         name="update_material_facts",
     )
 
