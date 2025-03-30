@@ -7,7 +7,7 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 RESET='\033[0m'
 
-SERVICES=(api-server frontend reverse-proxy db redis)
+SERVICES=(api-server frontend reverse-proxy db redis scheduler)
 
 check_triggered_by_make() {
     if [ -z "$MAKELEVEL" ]; then
@@ -40,7 +40,7 @@ clear_screen() {
 validate_service() {
     local service=$1
     if ! echo "${SERVICES[@]}" | grep -w "$service" >/dev/null; then
-        printf "${RED}Error: '$service' is not a valid service. Must be one of: ${SERVICES[@]}${RESET}\n"
+        printf "${RED}Error: '$service' is not a valid service.\nMust be one of: ${SERVICES[*]}${RESET}\n"
         exit 1
     fi
 }
