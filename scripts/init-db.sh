@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# This script is used to initialize the database. It will be executed in the container.
 set -e
 
 if [ -z "$APP_DB" ]; then
