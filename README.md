@@ -27,7 +27,7 @@ architecture-beta
 ### Branches
 
 ```mermaid
-%%{init: { 'theme': 'base', 'gitGraph': {'showBranches': false}} }%%
+%%{init: { 'theme': 'base', 'gitGraph': {'showCommitLabel': false}} }%%
 gitGraph
    commit
    commit
