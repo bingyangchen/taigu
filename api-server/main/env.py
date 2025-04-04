@@ -1,4 +1,7 @@
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 
 class EnvironmentVariableManager:
@@ -15,9 +18,14 @@ class EnvironmentVariableManager:
         self.__validate_env_vars()
 
     def __validate_env_vars(self) -> None:
+        missed_vars = []
         for var_name, value in vars(self).items():
             if value is None:
-                raise ValueError(f"Environment variable {var_name} is not set.")
+                missed_vars.append(var_name)
+        for var_name in missed_vars:
+            logger.error(f"Environment variable {var_name} is not set.")
+        if len(missed_vars) > 0:
+            raise RuntimeError("Some environment variables are not set.")
 
 
 env = EnvironmentVariableManager()

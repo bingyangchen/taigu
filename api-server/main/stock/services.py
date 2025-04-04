@@ -1,4 +1,5 @@
 import csv
+import logging
 import math
 from datetime import date, datetime, time, timedelta, timezone
 from io import StringIO
@@ -18,13 +19,12 @@ from .cache import (
 )
 from .models import Company, History, MarketIndexPerMinute, MaterialFact, StockInfo
 
+logger = logging.getLogger(__name__)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def fetch_and_store_realtime_stock_info() -> None:
-    print(
-        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching realtime sotck info!"
-    )
+    logger.debug("Start fetching realtime sotck info.")
     market_indices = ("t00", "o00")
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
@@ -33,7 +33,7 @@ def fetch_and_store_realtime_stock_info() -> None:
         map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set)
     )
     batch_size = 145
-    print(f"Expected request count: {math.ceil(len(all) / batch_size)}")
+    logger.debug(f"Expected request count: {math.ceil(len(all) / batch_size)}")
     while len(all) > 0:
         start = datetime.now()
         url = f"{InfoEndpoint.realtime['stock']}{'|'.join(all[:batch_size])}"
@@ -133,7 +133,8 @@ def fetch_and_store_realtime_stock_info() -> None:
                                 )
                             )
                 except Exception as e:
-                    print(f"\n<{type(e).__name__}> {e} {row}")
+                    logger.error(f"<{type(e).__name__}>: {e}")
+                    logger.error(f"Row: {row}")
                     continue
             StockInfo.objects.bulk_create(
                 to_update_batch,
@@ -141,23 +142,21 @@ def fetch_and_store_realtime_stock_info() -> None:
                 update_fields=["date", "quantity", "close_price", "fluct_price"],
                 unique_fields=["company_id"],
             )
-            print(".", end="")
         except ReadTimeout:
-            print("R", end="")
+            logger.warning("ReadTimeout")
         except ConnectTimeout:
-            print("C", end="")
+            logger.warning("ConnectTimeout")
         except JSONDecodeError:
-            print("J", end="")
+            logger.warning("JSONDecodeError")
         except Exception as e:
-            print(f"\n<{type(e).__name__}> {e} {url}")
+            logger.error(f"<{type(e).__name__}>: {e}")
+            logger.error(f"URL: {url}")
         finally:
             all = all[batch_size:]
             sleep(
                 max(0, 2 - (datetime.now() - start).total_seconds())
             )  # Rate limit: 3 requests per 5 seconds
-    print(
-        f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] All realtime stock info updated!"
-    )
+    logger.debug("All realtime stock info updated!")
 
 
 def _store_market_per_minute_info(
@@ -204,9 +203,7 @@ def _store_market_per_minute_info(
 
 def fetch_and_store_close_info_today() -> None:
     """This function is currently not used."""
-    print(
-        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching sotck market close info today!"
-    )
+    logger.debug("Start fetching sotck market close info today.")
     date_ = (datetime.now(timezone.utc) + timedelta(hours=8)).date()
 
     # Process TSE stocks
@@ -230,10 +227,11 @@ def fetch_and_store_close_info_today() -> None:
                     },
                 )
             except Exception as e:
-                print(e)
+                logger.error(f"<{type(e).__name__}>: {e}")
+                logger.error(f"Row: {row}")
                 continue
     except Exception as e:
-        print(e)
+        logger.error(f"<{type(e).__name__}>: {e}")
 
     # Process OTC stocks
     try:
@@ -274,14 +272,12 @@ def fetch_and_store_close_info_today() -> None:
                     },
                 )
             except Exception as e:
-                print(e)
+                logger.error(f"<{type(e).__name__}>: {e}")
+                logger.error(f"Row: {row}")
                 continue
     except Exception as e:
-        print(e)
-    end = datetime.now()
-    print(
-        f"[{end.strftime('%Y-%m-%d %H:%M:%S')}] Stock market close info of {end.date()} is up to date!"
-    )
+        logger.error(f"<{type(e).__name__}>: {e}")
+    logger.debug(f"Stock market close info of {datetime.now().date()} is up to date!")
 
 
 def _fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
@@ -361,10 +357,7 @@ def update_all_stocks_history() -> None:
 
 
 def update_material_facts() -> None:
-    print(
-        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start fetching material facts."
-    )
-
+    logger.debug("Start fetching material facts.")
     for trade_type in [TradeType.TSE, TradeType.OTC]:
         try:
             response: list[dict[str, str]] = requests.get(
@@ -408,14 +401,14 @@ def update_material_facts() -> None:
                 unique_fields=["company_id", "date_time"],
             )
         except Exception as e:
-            print(f"[{trade_type}] [{type(e)}] {e}")
+            logger.error(f"<{type(e).__name__}>: {e}")
 
     # Delete data that is too old
     MaterialFact.objects.filter(
         date_time__lt=(datetime.now(timezone.utc) + timedelta(hours=8))
         - timedelta(days=30)
     ).delete()
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Material facts updated!")
+    logger.debug("Material facts updated!")
 
 
 def roc_date_string_to_date(roc_date_string: str) -> date:

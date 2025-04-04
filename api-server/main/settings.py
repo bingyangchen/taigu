@@ -1,6 +1,12 @@
+import logging
 from pathlib import Path
 
 from main.env import env
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="[%(asctime)s] %(levelname)s: %(funcName)s => %(message)s",
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env.SECRET_KEY
