@@ -24,7 +24,7 @@ class EnvironmentVariableManager:
                 missed_vars.append(var_name)
         for var_name in missed_vars:
             logger.error(f"Environment variable {var_name} is not set.")
-        if len(missed_vars) > 0:
+        if missed_vars:
             raise RuntimeError("Some environment variables are not set.")
 
 

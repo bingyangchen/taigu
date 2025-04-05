@@ -1,12 +1,15 @@
+import re
 from collections.abc import MutableMapping
 from typing import Any
 
+import requests
 from django.db import models
+from pyquery import PyQuery
 
 from main.account.models import User
 from main.core.models import CreateUpdateDateModel
 
-from . import Frequency, TradeType
+from . import Frequency, ThirdPartyApi, TradeType, UnknownStockIdError
 
 
 class CompanyManager(models.Manager):
@@ -26,19 +29,16 @@ class CompanyManager(models.Manager):
 
     @classmethod
     def fetch_company_info(cls, sid: str) -> dict:
-        import requests
-        from pyquery import PyQuery
-
-        from . import InfoEndpoint, UnknownStockIdError
-
-        r1 = requests.post(f"{InfoEndpoint.company}{sid}")
-        document = PyQuery(r1.text)
-        name = document.find("tr:nth-child(2)>td:nth-child(4)").text()
-        trade_type = document.find("tr:nth-child(2)>td:nth-child(5)").text()
-        if name:
-            r2 = requests.post(
-                InfoEndpoint.company_business,
-                data={  # please refer to 公開資訊觀測站
+        basic_info_response = requests.post(f"{ThirdPartyApi.company_info}{sid}")
+        basic_info_document = PyQuery(basic_info_response.text)
+        company_name = basic_info_document.find(
+            "tr:nth-child(2)>td:nth-child(4)"
+        ).text()
+        trade_type = basic_info_document.find("tr:nth-child(2)>td:nth-child(5)").text()
+        if company_name:
+            business_response = requests.post(
+                ThirdPartyApi.company_business,
+                data={  # please refer to https://mopsov.twse.com.tw/mops/web/t05st03
                     "co_id": sid,
                     "queryName": "co_id",
                     "inpuType": "co_id",
@@ -50,16 +50,16 @@ class CompanyManager(models.Manager):
                 },
             )
             business = (
-                PyQuery(r2.text)("tr")
+                PyQuery(business_response.text)("tr")
                 .filter(lambda _, this: PyQuery(this)("th").text() == "主要經營業務")(
                     "td"
                 )
                 .text()
             )
             return {
-                "name": str(name),
+                "name": str(company_name),
                 "trade_type": TradeType.TRADE_TYPE_ZH_ENG_MAP.get(str(trade_type)),
-                "business": str(business),
+                "business": re.sub(r"\s+", "", str(business)),
             }
         else:
             raise UnknownStockIdError("Unknown Stock ID")

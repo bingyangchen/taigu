@@ -22,6 +22,10 @@ restart:
 shell-%:
 	$(SHELL) ./scripts/enter-shell.sh $*
 
+.PHONY: ipython
+ipython:
+	$(SHELL) ./scripts/ipython.sh
+
 .PHONY: test
 test:
 	$(SHELL) ./scripts/dev/run-pytest.sh

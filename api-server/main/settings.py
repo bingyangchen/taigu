@@ -13,7 +13,6 @@ SECRET_KEY = env.SECRET_KEY
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-CORS_ALLOWED_ORIGIN_REGEXES = [r"^https?://(localhost|127\.0\.0\.1):300[0-9]$"]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "main.urls"

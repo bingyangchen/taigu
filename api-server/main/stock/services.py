@@ -11,7 +11,7 @@ import urllib3
 from dateutil.relativedelta import relativedelta
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
-from . import Frequency, InfoEndpoint, TradeType
+from . import Frequency, ThirdPartyApi, TradeType
 from .cache import (
     TimeSeriesStockInfo,
     TimeSeriesStockInfoCacheManager,
@@ -36,7 +36,7 @@ def fetch_and_store_realtime_stock_info() -> None:
     logger.debug(f"Expected request count: {math.ceil(len(all) / batch_size)}")
     while len(all) > 0:
         start = datetime.now()
-        url = f"{InfoEndpoint.realtime['stock']}{'|'.join(all[:batch_size])}"
+        url = f"{ThirdPartyApi.realtime['stock']}{'|'.join(all[:batch_size])}"
         try:
             json_data = requests.get(url, timeout=4, verify=False).json()
             to_update_batch = []
@@ -153,9 +153,9 @@ def fetch_and_store_realtime_stock_info() -> None:
             logger.error(f"URL: {url}")
         finally:
             all = all[batch_size:]
-            sleep(
-                max(0, 2 - (datetime.now() - start).total_seconds())
-            )  # Rate limit: 3 requests per 5 seconds
+
+            # API rate limit: 3 requests per 5 seconds
+            sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
     logger.debug("All realtime stock info updated!")
 
 
@@ -209,7 +209,7 @@ def fetch_and_store_close_info_today() -> None:
     # Process TSE stocks
     try:
         tse_response: list[dict[str, str]] = requests.get(
-            InfoEndpoint.single_day[TradeType.TSE]
+            ThirdPartyApi.single_day[TradeType.TSE]
         ).json()
         for row in tse_response:
             try:
@@ -236,7 +236,7 @@ def fetch_and_store_close_info_today() -> None:
     # Process OTC stocks
     try:
         otc_response: list[dict[str, str]] = requests.get(
-            InfoEndpoint.single_day[TradeType.OTC]
+            ThirdPartyApi.single_day[TradeType.OTC]
         ).json()
         for row in otc_response:
             try:
@@ -280,7 +280,9 @@ def fetch_and_store_close_info_today() -> None:
     logger.debug(f"Stock market close info of {datetime.now().date()} is up to date!")
 
 
-def _fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> None:
+def _fetch_and_store_historical_info_from_yahoo(
+    company: Company, frequency: str
+) -> None:
     """This function is currently not used."""
     end = datetime.now()
     start = end - relativedelta(days=80)
@@ -296,7 +298,7 @@ def _fetch_and_store_historical_info_yahoo(company: Company, frequency: str) -> 
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"  # noqa: E501
     }
     response = requests.get(
-        f"{InfoEndpoint.multiple_days}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start.timestamp())}&period2={int(end.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
+        f"{ThirdPartyApi.multiple_days}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start.timestamp())}&period2={int(end.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
         headers=headers,
     )
     data = StringIO(response.text)
@@ -361,7 +363,7 @@ def update_material_facts() -> None:
     for trade_type in [TradeType.TSE, TradeType.OTC]:
         try:
             response: list[dict[str, str]] = requests.get(
-                InfoEndpoint.material_fact[trade_type]
+                ThirdPartyApi.material_fact[trade_type]
             ).json()
 
             # Fill the data of missed companies
