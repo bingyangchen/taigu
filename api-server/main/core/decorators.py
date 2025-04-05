@@ -10,7 +10,7 @@ def require_login(func: Callable) -> Callable:
         if isinstance(request.user, User) and request.user.is_authenticated:
             return func(request, *arg, **args)
         else:
-            return JsonResponse({"error": "Login Required"}, status=401)
+            return JsonResponse({"message": "Login Required"}, status=401)
 
     wrap.__name__ = func.__name__
     return wrap
