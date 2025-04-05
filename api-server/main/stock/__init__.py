@@ -14,9 +14,9 @@ class TradeType:
     TRADE_TYPE_ZH_ENG_MAP = {"上市": TSE, "上櫃": OTC}
 
 
-class InfoEndpoint:
-    company = "https://isin.twse.com.tw/isin/single_main.jsp?owncode="
-    company_business = "https://mops.twse.com.tw/mops/web/ajax_t05st03"
+class ThirdPartyApi:
+    company_info = "https://isin.twse.com.tw/isin/single_main.jsp?owncode="
+    company_business = "https://mopsov.twse.com.tw/mops/web/ajax_t05st03"
     realtime = {
         # Realtime Stock Info (Rate limit: 3 requests per 5 seconds)
         "stock": "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=",
