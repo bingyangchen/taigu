@@ -11,7 +11,6 @@ from ..models import Company, TradeRecord
 
 @require_login
 def create_or_list(request: HttpRequest):
-    result = {"success": False, "data": None}
     if request.method == "POST":
         payload = json.loads(request.body)
         if (
@@ -21,7 +20,7 @@ def create_or_list(request: HttpRequest):
             or ((deal_quantity := payload.get("deal_quantity")) is None)
             or ((handling_fee := payload.get("handling_fee")) is None)
         ):
-            result["error"] = "Data Not Sufficient"
+            return JsonResponse({"message": "Data Not Sufficient"}, status=400)
         else:
             sid = str(sid)
             try:
@@ -34,18 +33,19 @@ def create_or_list(request: HttpRequest):
                     deal_quantity=int(deal_quantity),
                     handling_fee=int(handling_fee),
                 )
-                result["data"] = {
-                    "id": record.pk,
-                    "deal_time": record.deal_time,
-                    "sid": record.company.pk,
-                    "company_name": record.company.name,
-                    "deal_price": record.deal_price,
-                    "deal_quantity": record.deal_quantity,
-                    "handling_fee": record.handling_fee,
-                }
-                result["success"] = True
+                return JsonResponse(
+                    {
+                        "id": record.pk,
+                        "deal_time": record.deal_time,
+                        "sid": record.company.pk,
+                        "company_name": record.company.name,
+                        "deal_price": record.deal_price,
+                        "deal_quantity": record.deal_quantity,
+                        "handling_fee": record.handling_fee,
+                    }
+                )
             except UnknownStockIdError as e:
-                result["error"] = str(e)
+                return JsonResponse({"message": str(e)}, status=400)
     elif request.method == "GET":
         deal_times = [
             datetime.strptime(d, "%Y-%m-%d").date()
@@ -66,27 +66,28 @@ def create_or_list(request: HttpRequest):
         query_set = query_set.select_related("company").order_by(
             "-deal_time", "-created_at"
         )
-        result["data"] = [
+        return JsonResponse(
             {
-                "id": record.pk,
-                "deal_time": record.deal_time,
-                "sid": record.company.pk,
-                "company_name": record.company.name,
-                "deal_price": record.deal_price,
-                "deal_quantity": record.deal_quantity,
-                "handling_fee": record.handling_fee,
+                "data": [
+                    {
+                        "id": record.pk,
+                        "deal_time": record.deal_time,
+                        "sid": record.company.pk,
+                        "company_name": record.company.name,
+                        "deal_price": record.deal_price,
+                        "deal_quantity": record.deal_quantity,
+                        "handling_fee": record.handling_fee,
+                    }
+                    for record in query_set
+                ]
             }
-            for record in query_set
-        ]
-        result["success"] = True
+        )
     else:
-        result["error"] = "Method Not Allowed"
-    return JsonResponse(result)
+        return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
 @require_login
 def update_or_delete(request: HttpRequest, id):
-    result = {"success": False, "data": None}
     id = int(id)
     if request.method == "POST":
         payload = json.loads(request.body)
@@ -97,7 +98,7 @@ def update_or_delete(request: HttpRequest, id):
             or ((deal_quantity := payload.get("deal_quantity")) is None)
             or ((handling_fee := payload.get("handling_fee")) is None)
         ):
-            result["error"] = "Data Not Sufficient"
+            return JsonResponse({"message": "Data Not Sufficient"}, status=400)
         else:
             sid = str(sid)
             try:
@@ -109,21 +110,21 @@ def update_or_delete(request: HttpRequest, id):
                 record.deal_quantity = int(deal_quantity)
                 record.handling_fee = int(handling_fee)
                 record.save()
-                result["data"] = {
-                    "id": record.pk,
-                    "deal_time": record.deal_time,
-                    "sid": record.company.pk,
-                    "company_name": record.company.name,
-                    "deal_price": record.deal_price,
-                    "deal_quantity": record.deal_quantity,
-                    "handling_fee": record.handling_fee,
-                }
-                result["success"] = True
+                return JsonResponse(
+                    {
+                        "id": record.pk,
+                        "deal_time": record.deal_time,
+                        "sid": record.company.pk,
+                        "company_name": record.company.name,
+                        "deal_price": record.deal_price,
+                        "deal_quantity": record.deal_quantity,
+                        "handling_fee": record.handling_fee,
+                    }
+                )
             except UnknownStockIdError as e:
-                result["error"] = str(e)
+                return JsonResponse({"message": str(e)}, status=400)
     elif request.method == "DELETE":
         TradeRecord.objects.get(pk=id).delete()
-        result["success"] = True
+        return JsonResponse({})
     else:
-        result["error"] = "Method Not Allowed"
-    return JsonResponse(result)
+        return JsonResponse({"message": "Method Not Allowed"}, status=405)

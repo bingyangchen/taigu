@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
@@ -9,37 +10,36 @@ from main.stock.models import Company
 
 from .models import Favorite, StockMemo, TradePlan
 
+logger = logging.getLogger(__name__)
+
 
 @require_POST
 @require_login
 def update_or_create_stock_memo(request: HttpRequest, sid: str):
-    result = {"success": False, "data": None}
-    note = json.loads(request.body)["note"] or ""
     try:
+        note = json.loads(request.body)["note"] or ""
         company, created = Company.objects.get_or_create(pk=sid)
         memo, created = StockMemo.objects.update_or_create(
             owner=request.user, company=company, defaults={"note": note}
         )
-        result["data"] = {
-            "sid": memo.company.pk,
-            "company_name": memo.company.name,
-            "business": company.business,
-            "note": memo.note,
-        }
-        result["success"] = True
+        return JsonResponse(
+            {
+                "sid": memo.company.pk,
+                "company_name": memo.company.name,
+                "business": company.business,
+                "note": memo.note,
+            }
+        )
     except UnknownStockIdError as e:
-        result["error"] = str(e)
-    return JsonResponse(result)
+        return JsonResponse({"message": str(e)}, status=400)
 
 
 @require_GET
 @require_login
 def list_company_info(request: HttpRequest):
-    result = {"success": False, "data": []}
     sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
     if not sids:
-        result["error"] = "Argument sids is required."
-        return JsonResponse(result)
+        return JsonResponse({"message": "sids is required."}, status=400)
     company_query_set = Company.objects.prefetch_related("material_facts").filter(
         pk__in=sids
     )
@@ -47,34 +47,31 @@ def list_company_info(request: HttpRequest):
     stock_id_memo_map = {
         memo.company.pk: memo.note for memo in memo_query_set.select_related("company")
     }
+    result = {}
     for company in company_query_set:
-        result["data"].append(
-            {
-                "sid": company.pk,
-                "company_name": company.name,
-                "business": company.business,
-                "note": stock_id_memo_map.get(company.pk, ""),
-                "material_facts": sorted(
-                    [
-                        {
-                            "date_time": m.date_time,
-                            "title": m.title,
-                            "description": m.description,
-                        }
-                        for m in company.material_facts.all()  # type: ignore
-                    ],
-                    key=lambda x: x["date_time"],
-                    reverse=True,
-                ),
-            }
-        )
-    result["success"] = True
+        result[company.pk] = {
+            "sid": company.pk,
+            "company_name": company.name,
+            "business": company.business,
+            "note": stock_id_memo_map.get(company.pk, ""),
+            "material_facts": sorted(
+                [
+                    {
+                        "date_time": m.date_time,
+                        "title": m.title,
+                        "description": m.description,
+                    }
+                    for m in company.material_facts.all()  # type: ignore
+                ],
+                key=lambda x: x["date_time"],
+                reverse=True,
+            ),
+        }
     return JsonResponse(result)
 
 
 @require_login
 def create_or_list_trade_plan(request: HttpRequest):
-    result = {"success": False, "data": None}
     if request.method == "POST":
         payload = json.loads(request.body)
         if (
@@ -83,7 +80,7 @@ def create_or_list_trade_plan(request: HttpRequest):
             or ((target_price := payload.get("target_price")) is None)
             or ((target_quantity := payload.get("target_quantity")) is None)
         ):
-            result["error"] = "Data Not Sufficient"
+            return JsonResponse({"message": "Data Not Sufficient"}, status=400)
         else:
             sid = str(sid)
             target_quantity = int(target_quantity)
@@ -96,17 +93,18 @@ def create_or_list_trade_plan(request: HttpRequest):
                     target_price=target_price,
                     target_quantity=target_quantity,
                 )
-                result["data"] = {
-                    "id": plan.pk,
-                    "sid": plan.company.pk,
-                    "company_name": plan.company.name,
-                    "plan_type": plan.plan_type,
-                    "target_price": plan.target_price,
-                    "target_quantity": plan.target_quantity,
-                }
-                result["success"] = True
+                return JsonResponse(
+                    {
+                        "id": plan.pk,
+                        "sid": plan.company.pk,
+                        "company_name": plan.company.name,
+                        "plan_type": plan.plan_type,
+                        "target_price": plan.target_price,
+                        "target_quantity": plan.target_quantity,
+                    }
+                )
             except UnknownStockIdError as e:
-                result["error"] = str(e)
+                return JsonResponse({"message": str(e)}, status=400)
     elif request.method == "GET":
         if sids := [
             sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid
@@ -115,28 +113,28 @@ def create_or_list_trade_plan(request: HttpRequest):
         else:
             query_set = request.user.trade_plans.all()  # type: ignore
         query_set = query_set.select_related("company")
-        result["data"] = [
+        return JsonResponse(
             {
-                "id": plan.pk,
-                "sid": plan.company.pk,
-                "company_name": plan.company.name,
-                "plan_type": plan.plan_type,
-                "target_price": plan.target_price,
-                "target_quantity": plan.target_quantity,
+                "data": [
+                    {
+                        "id": plan.pk,
+                        "sid": plan.company.pk,
+                        "company_name": plan.company.name,
+                        "plan_type": plan.plan_type,
+                        "target_price": plan.target_price,
+                        "target_quantity": plan.target_quantity,
+                    }
+                    for plan in query_set
+                ]
             }
-            for plan in query_set
-        ]
-        result["success"] = True
+        )
     else:
-        result["error"] = "Method Not Allowed"
-    return JsonResponse(result)
+        return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
 @require_login
 def update_or_delete_trade_plan(request: HttpRequest, id):
-    result = {"success": False, "data": None}
     id = int(id)
-
     if request.method == "POST":
         payload = json.loads(request.body)
         if (
@@ -145,7 +143,7 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
             or ((target_price := payload.get("target_price")) is None)
             or ((target_quantity := payload.get("target_quantity")) is None)
         ):
-            result["error"] = "Data Not Sufficient"
+            return JsonResponse({"message": "Data Not Sufficient"}, status=400)
         else:
             sid = str(sid)
             target_quantity = int(target_quantity)
@@ -157,57 +155,55 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
                 plan.target_price = target_price
                 plan.target_quantity = target_quantity
                 plan.save()
-
-                result["data"] = {
-                    "id": plan.pk,
-                    "sid": plan.company.pk,
-                    "company_name": plan.company.name,
-                    "plan_type": plan.plan_type,
-                    "target_price": plan.target_price,
-                    "target_quantity": plan.target_quantity,
-                }
-                result["success"] = True
+                return JsonResponse(
+                    {
+                        "id": plan.pk,
+                        "sid": plan.company.pk,
+                        "company_name": plan.company.name,
+                        "plan_type": plan.plan_type,
+                        "target_price": plan.target_price,
+                        "target_quantity": plan.target_quantity,
+                    }
+                )
             except UnknownStockIdError as e:
-                result["error"] = str(e)
+                return JsonResponse({"message": str(e)}, status=400)
     elif request.method == "DELETE":
         TradePlan.objects.get(pk=id).delete()
-        result["success"] = True
+        return JsonResponse({})
     else:
-        result["error"] = "Method Not Allowed"
-    return JsonResponse(result)
+        return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
 @require_login
 def create_or_delete_favorite(request: HttpRequest, sid: str):
-    result = {"success": False, "data": None}
     try:
+        result = {"sid": None}
         company, created = Company.objects.get_or_create(pk=sid)
         if request.method == "POST":
             Favorite.objects.get_or_create(owner=request.user, company=company)
-            result = {"success": True, "data": sid}
+            result["sid"] = sid
         elif request.method == "DELETE":
             if favorite := Favorite.objects.filter(
                 owner=request.user, company=company
             ).first():
                 favorite.delete()
-            result = {"success": True, "data": sid}
+            result["sid"] = sid
         else:
-            result["error"] = "Method Not Allowed"
+            return JsonResponse({"message": "Method Not Allowed"}, status=405)
+        return JsonResponse(result)
     except Exception as e:
-        result["error"] = str(e)
-    return JsonResponse(result)
+        logger.error(f"Error in memo/create_or_delete_favorite: {e}")
+        return JsonResponse({"message": "Internal Server Error"}, status=500)
 
 
 @require_GET
 @require_login
 def list_favorites(request: HttpRequest):
-    result = {"success": False, "data": None}
     try:
         query_set = Favorite.objects.filter(owner=request.user).select_related(
             "company"
         )
-        result["data"] = [favorite.company.pk for favorite in query_set]
-        result["success"] = True
+        return JsonResponse({"data": [favorite.company.pk for favorite in query_set]})
     except Exception as e:
-        result["error"] = str(e)
-    return JsonResponse(result)
+        logger.error(f"Error in memo/list_favorites: {e}")
+        return JsonResponse({"message": "Internal Server Error"}, status=500)

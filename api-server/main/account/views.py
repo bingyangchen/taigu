@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from datetime import datetime, timedelta
 from typing import Any
@@ -19,6 +20,8 @@ from main.env import env
 from . import AUTH_COOKIE_NAME, OAuthOrganization
 from .models import User
 
+logger = logging.getLogger(__name__)
+
 GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
     os.path.join(
         settings.BASE_DIR,
@@ -33,7 +36,7 @@ GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
 
 
 def google_login(request: HttpRequest):
-    result: dict[str, Any] = {"success": False}
+    result: dict[str, Any] = {}
     if (request.method == "GET") and (redirect_uri := request.GET.get("redirect_uri")):
         try:
             GOOGLE_AUTH_FLOW.redirect_uri = redirect_uri
@@ -41,12 +44,10 @@ def google_login(request: HttpRequest):
                 result["authorization_url"],
                 result["state"],
             ) = GOOGLE_AUTH_FLOW.authorization_url(include_granted_scopes="true")
-            result["success"] = True
-            http_response = JsonResponse(result)
-            return http_response
+            return JsonResponse(result)
         except Exception as e:
-            result["error"] = str(e)
-            return JsonResponse(result, status=400)
+            logger.error(f"Error in account/google_login [GET]: {e}")
+            return JsonResponse({"message": "Internal Server Error"}, status=500)
     elif (
         (request.method == "POST")
         and (code := request.POST.get("code"))
@@ -83,7 +84,6 @@ def google_login(request: HttpRequest):
                 key=settings.SECRET_KEY,
                 algorithm=ALGORITHMS.HS256,
             )
-            result["success"] = True
             http_response = JsonResponse(result, headers={"is-log-in": "yes"})
             http_response.set_cookie(
                 AUTH_COOKIE_NAME,
@@ -95,32 +95,29 @@ def google_login(request: HttpRequest):
             )
             return http_response
         except Exception as e:
-            result["error"] = str(e)
-            return JsonResponse(result, status=400)
+            logger.error(f"Error in account/google_login [POST]: {e}")
+            return JsonResponse({"message": "Internal Server Error"}, status=500)
     else:
-        result["error"] = "Data Not Sufficient"
-        return JsonResponse(result, status=400)
+        return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
 
 @require_GET
 @require_login
 def me(request: HttpRequest):
-    result = {
-        "success": True,
-        "data": {
+    return JsonResponse(
+        {
             "id": request.user.pk,
             "username": request.user.username,  # type: ignore
             "email": request.user.email,  # type: ignore
             "avatar_url": request.user.avatar_url or None,  # type: ignore
-        },
-    }
-    return JsonResponse(result)
+        }
+    )
 
 
 @require_GET
 @require_login
 def logout(request: HttpRequest):
-    http_response = JsonResponse({"success": True}, headers={"is-log-out": "yes"})
+    http_response = JsonResponse({}, headers={"is-log-out": "yes"})
     http_response.delete_cookie(
         AUTH_COOKIE_NAME,
         samesite="Strict" if env.ENV == "production" else "None",  # type: ignore
@@ -131,7 +128,6 @@ def logout(request: HttpRequest):
 @require_POST
 @require_login
 def update(request: HttpRequest):
-    result: dict = {"success": False, "data": None}
     try:
         payload = json.loads(request.body)
         user: User = request.user  # type: ignore
@@ -142,31 +138,30 @@ def update(request: HttpRequest):
         elif avatar_url == "":
             user.avatar_url = None
         user.save()
-
-        result["success"] = True
-        result["data"] = {
-            "id": user.pk,
-            "username": user.username,
-            "email": user.email,
-            "avatar_url": user.avatar_url or None,
-        }
-        return JsonResponse(result)
+        return JsonResponse(
+            {
+                "id": user.pk,
+                "username": user.username,
+                "email": user.email,
+                "avatar_url": user.avatar_url or None,
+            }
+        )
     except Exception as e:
-        result["error"] = e.messages[0] if isinstance(e, ValidationError) else str(e)
-        return JsonResponse(result, status=400)
+        if isinstance(e, ValidationError):
+            return JsonResponse({"message": e.messages[0]}, status=400)
+        else:
+            logger.error(f"Error in account/update: {e}")
+            return JsonResponse({"message": "Internal Server Error"}, status=500)
 
 
 # @require_login
 # def delete(request: HttpRequest):
-#     result: dict = {"success": False}
 #     if request.method == "DELETE":
 #         request.user.delete()
-#         result["success"] = True
-#         http_response = JsonResponse(result, headers={"is-log-out": "yes"})
+#         http_response = JsonResponse({}, headers={"is-log-out": "yes"})
 #         http_response.delete_cookie(
 #             AUTH_COOKIE_NAME, samesite="Strict" if env.ENV == "production" else "None"
 #         )
 #         return http_response
 #     else:
-#         result["error"] = "DELETE Method Required"
-#         return JsonResponse(result, status=405)
+#         return JsonResponse({"message": "DELETE Method Required"}, status=405)

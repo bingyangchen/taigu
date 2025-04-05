@@ -131,6 +131,16 @@ make stop
 - **Step 7:** SSH into the EC2 instance, pull the latest code and images.
 - **Step 8:** Restart all Docker containers. You're done!
 
+### Add/Remove a Dependency
+
+Let's dive deeper into the details of **Step 2** of the development workflow when you need to add or remove a dependency:
+
+- **Step 2-1:** Enter the shell of the API server container.
+- **Step 2-2:** Install/Remove the dependency: `poetry add {DEPENDENCY} --lock` or `poetry remove {DEPENDENCY} --lock`
+  - Note: The `--lock` flag prevents the download of the dependency, only version check will be performed.
+- **Step 2-3:** Exit the shell and build the images for development.
+- **Step 2-4:** Restart all Docker containers.
+
 ## Production
 
 ### Prerequisites

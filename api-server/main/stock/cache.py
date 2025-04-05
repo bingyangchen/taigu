@@ -25,7 +25,7 @@ class TimeSeriesStockInfoCacheManager(BaseCacheManager[TimeSeriesStockInfo]):
     def __init__(self, stock_id: str):
         super().__init__(stock_id)
 
-    def gen_cache_key(self) -> str:
+    def _gen_cache_key(self) -> str:
         return f"time_series_stock_info:{self.identifier}"
 
     def set(self, value: TimeSeriesStockInfo, timeout: int) -> None:
