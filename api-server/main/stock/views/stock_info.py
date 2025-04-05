@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
@@ -8,6 +10,8 @@ from ..cache import (
     TimeSeriesStockInfoCacheManager,
 )
 from ..models import Company, History, MarketIndexPerMinute, StockInfo
+
+logger = logging.getLogger(__name__)
 
 
 @require_GET
@@ -32,7 +36,8 @@ def market_index(request: HttpRequest):
             result[market] = data
         return JsonResponse(result)
     except Exception as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        logger.error(f"Error in stock/market_index: {e}")
+        return JsonResponse({"message": "Internal Server Error"}, status=500)
 
 
 @require_GET
@@ -52,7 +57,8 @@ def current_stock_info(request: HttpRequest):
             }
         return JsonResponse(result)
     except Exception as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        logger.error(f"Error in stock/current_stock_info: {e}")
+        return JsonResponse({"message": "Internal Server Error"}, status=500)
 
 
 @require_GET
@@ -66,7 +72,8 @@ def historical_prices(request: HttpRequest, sid: str):
             result["data"].append({"date": h.date, "price": h.close_price})
         return JsonResponse(result)
     except Exception as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        logger.error(f"Error in stock/historical_prices: {e}")
+        return JsonResponse({"message": "Internal Server Error"}, status=500)
 
 
 @require_GET
@@ -88,4 +95,5 @@ def search(request: HttpRequest):
                 )
         return JsonResponse(result)
     except Exception as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        logger.error(f"Error in stock/search: {e}")
+        return JsonResponse({"message": "Internal Server Error"}, status=500)

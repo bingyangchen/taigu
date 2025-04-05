@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
@@ -8,6 +9,8 @@ from main.stock import UnknownStockIdError
 from main.stock.models import Company
 
 from .models import Favorite, StockMemo, TradePlan
+
+logger = logging.getLogger(__name__)
 
 
 @require_POST
@@ -189,7 +192,8 @@ def create_or_delete_favorite(request: HttpRequest, sid: str):
             return JsonResponse({"message": "Method Not Allowed"}, status=405)
         return JsonResponse(result)
     except Exception as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        logger.error(f"Error in memo/create_or_delete_favorite: {e}")
+        return JsonResponse({"message": "Internal Server Error"}, status=500)
 
 
 @require_GET
@@ -201,4 +205,5 @@ def list_favorites(request: HttpRequest):
         )
         return JsonResponse({"data": [favorite.company.pk for favorite in query_set]})
     except Exception as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        logger.error(f"Error in memo/list_favorites: {e}")
+        return JsonResponse({"message": "Internal Server Error"}, status=500)

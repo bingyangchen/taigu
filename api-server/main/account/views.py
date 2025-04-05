@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from datetime import datetime, timedelta
 from typing import Any
@@ -18,6 +19,8 @@ from main.env import env
 
 from . import AUTH_COOKIE_NAME, OAuthOrganization
 from .models import User
+
+logger = logging.getLogger(__name__)
 
 GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
     os.path.join(
@@ -43,7 +46,8 @@ def google_login(request: HttpRequest):
             ) = GOOGLE_AUTH_FLOW.authorization_url(include_granted_scopes="true")
             return JsonResponse(result)
         except Exception as e:
-            return JsonResponse({"message": str(e)}, status=400)
+            logger.error(f"Error in account/google_login [GET]: {e}")
+            return JsonResponse({"message": "Internal Server Error"}, status=500)
     elif (
         (request.method == "POST")
         and (code := request.POST.get("code"))
@@ -91,7 +95,8 @@ def google_login(request: HttpRequest):
             )
             return http_response
         except Exception as e:
-            return JsonResponse({"message": str(e)}, status=400)
+            logger.error(f"Error in account/google_login [POST]: {e}")
+            return JsonResponse({"message": "Internal Server Error"}, status=500)
     else:
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
@@ -142,9 +147,11 @@ def update(request: HttpRequest):
             }
         )
     except Exception as e:
-        return JsonResponse(
-            e.messages[0] if isinstance(e, ValidationError) else str(e), status=400
-        )
+        if isinstance(e, ValidationError):
+            return JsonResponse({"message": e.messages[0]}, status=400)
+        else:
+            logger.error(f"Error in account/update: {e}")
+            return JsonResponse({"message": "Internal Server Error"}, status=500)
 
 
 # @require_login
