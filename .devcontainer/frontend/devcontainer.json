@@ -4,6 +4,7 @@
   "service": "frontend",
   "workspaceFolder": "/app",
   "shutdownAction": "stopCompose",
+  "postStartCommand": "cd /app/frontend && npm install",
   "customizations": {
     "vscode": {
       "settings": {

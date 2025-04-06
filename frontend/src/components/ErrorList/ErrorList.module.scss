@@ -1,51 +1,60 @@
 @use "../../global_variables" as _;
 
 .main {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    height: fit-content;
-    max-width: 250px;
-    font-weight: bold;
-    color: _.$noisy-white;
-    font-size: 0.9 * _.$base-font-size;
-    z-index: 6;
-    user-select: none;
-    & > .box {
-        display: flex;
-        align-items: center;
-        transform: translateX(110%);
-        animation: flyinout 5s ease;
-        border-radius: 5px;
-        background-color: _.$red;
-        padding: 5px 5px 5px 10px;
-        margin-left: auto;
-        box-shadow: 0 3px 8px 0 _.$transparent-black;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: max-content;
+  max-width: 100%;
+  z-index: 6;
+  user-select: none;
+  & > .toast_outer {
+    padding: 16px;
+    animation: leftflyinout 5s ease;
+    width: 420px;
+    & > .toast {
+      position: relative;
+      border-radius: 5px;
+      background-color: _.$red;
+      padding: 16px 24px 16px 16px;
+      font-weight: bold;
+      letter-spacing: 0.5 * _.$base-letter-spacing;
+      color: _.$noisy-white;
+      font-size: 0.85 * _.$base-font-size;
+      & > .close_button {
+        position: absolute;
+        right: 4px;
+        top: 4px;
+        @media screen and (max-width: _.$width-512) {
+          transform: scale(1.5);
+          transform-origin: top right;
+        }
+      }
     }
-    @keyframes flyinout {
-        from {
-            transform: translateX(110%);
-        }
-        6% {
-            transform: translateX(0);
-        }
-        94% {
-            transform: translateX(0);
-        }
-        to {
-            transform: translateX(110%);
-        }
+    &:not(:last-child) {
+      padding-bottom: 0;
     }
+    @media screen and (max-width: _.$width-512) {
+      width: 100vw;
+    }
+  }
+  @media screen and (max-width: _.$width-512) {
+    width: 100vw;
+    top: 0;
+  }
 }
 
-@media screen and (max-width: _.$width-780) {
-    .main {
-        & > .box {
-            gap: 10px;
-            padding: 8px 10px 10px 15px;
-        }
-    }
+@keyframes leftflyinout {
+  from {
+    transform: translateX(-110%);
+  }
+  6% {
+    transform: translateX(0);
+  }
+  94% {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-110%);
+  }
 }
