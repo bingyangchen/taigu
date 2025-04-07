@@ -4,7 +4,7 @@ import styles from "./Login.module.scss";
 import React from "react";
 import { connect } from "react-redux";
 
-import { Button, ErrorList, FullLogo } from "../../components";
+import { Button, FullLogo, ToastList } from "../../components";
 import { loginWithGoogle } from "../../redux/slices/AccountSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
@@ -68,7 +68,7 @@ class Login extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <ErrorList />
+        <ToastList />
         <div className={styles.left}>
           <img src={this.state.coverImage} alt="cover" />
         </div>
