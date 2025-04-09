@@ -18,10 +18,7 @@ const initialState: MemoState = {
 export const fetchCompanyInfo = createAsyncThunk(
   "memo/fetchCompanyInfo",
   async (sid: string): Promise<CompanyInfo | undefined> => {
-    const response = await Api.sendRequest(
-      `memo/company-info?sids=${sid}`,
-      "get"
-    );
+    const response = await Api.sendRequest(`memo/company-info?sids=${sid}`, "get");
     return response[sid];
   }
 );
@@ -73,14 +70,13 @@ export const memoSlice = createSlice({
   reducers: {
     refreshAllCompanyInfoWithNonCacheResponse(
       state,
-      action: PayloadAction<CompanyInfo[]>
+      action: PayloadAction<{ [sid: string]: CompanyInfo }>
     ) {
-      for (const i of action.payload) state.sidCompanyInfoMap[i.sid] = i;
+      for (const [sid, companyInfo] of Object.entries(action.payload)) {
+        state.sidCompanyInfoMap[sid] = companyInfo;
+      }
     },
-    refreshFavoritesWithNonCacheResponse(
-      state,
-      action: PayloadAction<string[]>
-    ) {
+    refreshFavoritesWithNonCacheResponse(state, action: PayloadAction<string[]>) {
       state.favorites = [...action.payload];
     },
     fakeAddToFavorites(state, action: PayloadAction<string>) {

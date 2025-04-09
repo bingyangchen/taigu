@@ -44,11 +44,9 @@ class Settings extends React.Component<Props, State> {
     // Conditionally navigate back one more time
     if (prevProps.router.location.key !== this.props.router.location.key) {
       if (
-        prevProps.router.location.pathname ===
-          this.props.router.location.pathname &&
+        prevProps.router.location.pathname === this.props.router.location.pathname &&
         prevProps.router.location.hash === this.props.router.location.hash &&
-        prevProps.router.location.search ===
-          this.props.router.location.search &&
+        prevProps.router.location.search === this.props.router.location.search &&
         prevProps.router.location.state === this.props.router.location.state
       ) {
         this.setState(
@@ -86,9 +84,8 @@ class Settings extends React.Component<Props, State> {
     }>
   ): Promise<void> => {
     if (e.data.authorized) {
-      const data = e.data.data.data;
       if (/account\/me[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshAccountInfoWithNonCacheResponse(data));
+        this.props.dispatch(refreshAccountInfoWithNonCacheResponse(e.data.data));
       }
     } else {
       Nav.goToWelcomePage(

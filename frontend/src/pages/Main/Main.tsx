@@ -12,12 +12,7 @@ import {
   NavBarForMain,
   ToastList,
 } from "../../components";
-import {
-  IconClockHistory,
-  IconHome,
-  IconLightbulb,
-  IconMarket,
-} from "../../icons";
+import { IconClockHistory, IconHome, IconLightbulb, IconMarket } from "../../icons";
 import {
   fetchAccountInfo,
   refreshAccountInfoWithNonCacheResponse,
@@ -142,9 +137,7 @@ class Main extends React.Component<Props, State> {
     prevState: Readonly<State>,
     snapshot?: any
   ): void {
-    if (
-      prevProps.router.location.pathname !== this.props.router.location.pathname
-    ) {
+    if (prevProps.router.location.pathname !== this.props.router.location.pathname) {
       this.mainRef.current!.scrollTo(0, 0);
       this.props.dispatch(fetchAccountInfo());
     }
@@ -152,11 +145,9 @@ class Main extends React.Component<Props, State> {
     // Conditionally navigate back one more time
     if (prevProps.router.location.key !== this.props.router.location.key) {
       if (
-        prevProps.router.location.pathname ===
-          this.props.router.location.pathname &&
+        prevProps.router.location.pathname === this.props.router.location.pathname &&
         prevProps.router.location.hash === this.props.router.location.hash &&
-        prevProps.router.location.search ===
-          this.props.router.location.search &&
+        prevProps.router.location.search === this.props.router.location.search &&
         prevProps.router.location.state === this.props.router.location.state
       ) {
         this.setState(
@@ -190,9 +181,7 @@ class Main extends React.Component<Props, State> {
             avatarUrl={this.props.avatar_url || imgPersonFill}
             username={this.props.username}
             subpages={this.subpages}
-            isActiveInShortScreen={
-              Util.isMobile && this.state.isFunctionBarActive
-            }
+            isActiveInShortScreen={Util.isMobile && this.state.isFunctionBarActive}
             hide={this.hideMainFunctionBar}
           />
           <Outlet />
@@ -218,26 +207,25 @@ class Main extends React.Component<Props, State> {
     }>
   ): Promise<void> => {
     if (e.data.authorized) {
-      const data = e.data.data.data;
       if (/account\/me[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshAccountInfoWithNonCacheResponse(data));
+        this.props.dispatch(refreshAccountInfoWithNonCacheResponse(e.data.data));
       } else if (/stock\/trade-records[/]?$/gs.test(e.data.url)) {
         await this.props
-          .dispatch(refreshTradeRecordsWithNonCacheResponse(data))
+          .dispatch(refreshTradeRecordsWithNonCacheResponse(e.data.data.data))
           .unwrap();
         this.fetchNecessaryStockInfo();
       } else if (/stock\/cash-dividends[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(
-          refreshCashDividendRecordsWithNonCacheResponse(data)
+          refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data)
         );
       } else if (/stock\/market-index[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshMarketIndexWithNonCacheResponse(data));
+        this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
       } else if (/memo\/trade-plans[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshTradePlansWithNonCacheResponse(data));
+        this.props.dispatch(refreshTradePlansWithNonCacheResponse(e.data.data.data));
       } else if (/memo\/company-info[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(data));
+        this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
       } else if (/memo\/favorites[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshFavoritesWithNonCacheResponse(data));
+        this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
       }
     } else {
       Nav.goToWelcomePage(
