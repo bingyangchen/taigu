@@ -1,4 +1,4 @@
-import { pushError } from "../redux/slices/ErrorSlice";
+import { pushToast } from "../redux/slices/ToastSlice";
 import { store } from "../redux/store";
 import Env from "./env";
 import Nav from "./nav";
@@ -30,7 +30,7 @@ export default class Api {
       return await Api.handleResponse(response);
     } catch (error) {
       store.dispatch(
-        pushError({
+        pushToast({
           message:
             error instanceof Error
               ? error.message

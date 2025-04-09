@@ -1,4 +1,4 @@
-import styles from "./ErrorList.module.scss";
+import styles from "./ToastList.module.scss";
 
 import React from "react";
 import ReactDOM from "react-dom";
@@ -6,12 +6,12 @@ import { connect } from "react-redux";
 
 import { RoundButton } from "..";
 import { IconXLarge } from "../../icons";
-import { removeError } from "../../redux/slices/ErrorSlice";
+import { removeToast } from "../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 
 function mapStateToProps(rootState: RootState) {
-  const { errors } = rootState.error;
-  return { errors };
+  const { toasts } = rootState.toast;
+  return { toasts };
 }
 
 interface Props extends ReturnType<typeof mapStateToProps> {
@@ -20,19 +20,19 @@ interface Props extends ReturnType<typeof mapStateToProps> {
 
 interface State {}
 
-class ErrorList extends React.Component<Props, State> {
+class ToastList extends React.Component<Props, State> {
   public state: State;
-  private errorRoot: HTMLElement;
+  private toastRoot: HTMLElement;
   public constructor(props: Props) {
     super(props);
     this.state = {};
-    this.errorRoot = document.getElementById("error-root")!;
+    this.toastRoot = document.getElementById("toast-root")!;
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
     return ReactDOM.createPortal(
       <div className={styles.main}>
-        {this.props.errors.map((each, idx) => {
+        {this.props.toasts.map((each, idx) => {
           return (
             <div key={idx} className={styles.toast_outer}>
               <div className={styles.toast}>
@@ -48,12 +48,12 @@ class ErrorList extends React.Component<Props, State> {
           );
         })}
       </div>,
-      this.errorRoot
+      this.toastRoot
     );
   }
   private handleClickRemoveMessage = (idx: number): void => {
-    this.props.dispatch(removeError(idx));
+    this.props.dispatch(removeToast(idx));
   };
 }
 
-export default connect(mapStateToProps)(ErrorList);
+export default connect(mapStateToProps)(ToastList);

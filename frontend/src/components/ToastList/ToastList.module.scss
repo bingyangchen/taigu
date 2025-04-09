@@ -21,6 +21,17 @@
       letter-spacing: 0.5 * _.$base-letter-spacing;
       color: _.$noisy-white;
       font-size: 0.85 * _.$base-font-size;
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        width: 100%;
+        background-color: _.$transparent-white;
+        animation: countdown 4.8s linear;
+        transform-origin: left;
+      }
       & > .close_button {
         position: absolute;
         right: 4px;
@@ -56,5 +67,14 @@
   }
   to {
     transform: translateX(-110%);
+  }
+}
+
+@keyframes countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
   }
 }

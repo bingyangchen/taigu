@@ -9,7 +9,6 @@ export { default as ColorBackground } from "./ColorBackground/ColorBackground";
 export { default as ComplexCashInvestedLineChart } from "./ComplexCashInvestedLineChart/ComplexCashInvestedLineChart";
 export { default as DetailCard } from "./DetailCard/DetailCard";
 export { default as DollarSign } from "./DollarSign/DollarSign";
-export { default as ErrorList } from "./ErrorList/ErrorList";
 export { default as Footer } from "./Footer/Footer";
 export { default as Form } from "./Form/Form";
 export { default as FormForSigning } from "./FormForSigning/FormForSigning"; // not used
@@ -35,6 +34,7 @@ export { default as SimpleCashInvestedLineChart } from "./SimpleCashInvestedLine
 export { default as StockMemoModal } from "./StockMemoModal/StockMemoModal";
 export { default as StockSearchModal } from "./StockSearchModal/StockSearchModal";
 export { default as StretchableButton } from "./StretchableButton/StretchableButton";
+export { default as ToastList } from "./ToastList/ToastList";
 export { default as TradePlanModal } from "./TradePlanModal/TradePlanModal";
 export { default as TradeRecordModal } from "./TradeRecordModal/TradeRecordModal";
 export { default as TradeVolumeBarChart } from "./TradeVolumeBarChart/TradeVolumeBarChart";
