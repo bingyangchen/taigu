@@ -1,7 +1,7 @@
 {
   "name": "API Server",
   "runArgs": [
-    "--name=trade-smartly-api-server"
+    "--name=trade-smartly-devcontainer-api-server"
   ],
   "dockerFile": "../../api-server/Dockerfile",
   "build": {

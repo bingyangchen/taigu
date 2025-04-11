@@ -1,7 +1,7 @@
 {
   "name": "Frontend",
   "runArgs": [
-    "--name=trade-smartly-frontend"
+    "--name=trade-smartly-devcontainer-frontend"
   ],
   "dockerFile": "../../frontend/Dockerfile",
   "build": {
