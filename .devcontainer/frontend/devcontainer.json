@@ -1,10 +1,18 @@
 {
   "name": "Frontend",
-  "dockerComposeFile": "../compose.devcontainer.yaml",
-  "service": "frontend",
-  "workspaceFolder": "/app/frontend",
-  "shutdownAction": "stopCompose",
-  "postStartCommand": "cd /app/frontend && npm install",
+  "runArgs": [
+    "--name=trade-smartly-frontend"
+  ],
+  "dockerFile": "../../frontend/Dockerfile",
+  "build": {
+    "target": "dev_final"
+  },
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopContainer",
+  "postStartCommand": "npm install",
+  "mounts": [
+    "source=${localWorkspaceFolder}/frontend,target=/app,type=bind,consistency=cached"
+  ],
   "customizations": {
     "vscode": {
       "settings": {
