@@ -2,7 +2,7 @@
   "name": "Frontend",
   "dockerComposeFile": "../compose.devcontainer.yaml",
   "service": "frontend",
-  "workspaceFolder": "/app",
+  "workspaceFolder": "/app/frontend",
   "shutdownAction": "stopCompose",
   "postStartCommand": "cd /app/frontend && npm install",
   "customizations": {
