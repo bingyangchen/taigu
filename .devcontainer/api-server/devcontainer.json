@@ -3,15 +3,12 @@
   "runArgs": [
     "--name=trade-smartly-devcontainer-api-server"
   ],
-  "dockerFile": "../../api-server/Dockerfile",
-  "build": {
-    "target": "dev_final"
-  },
+  "image": "tradesmartly/api-server:dev",
   "workspaceFolder": "/app",
-  "shutdownAction": "stopContainer",
   "mounts": [
     "source=${localWorkspaceFolder}/api-server,target=/app,type=bind,consistency=cached"
   ],
+  "shutdownAction": "stopContainer",
   "customizations": {
     "vscode": {
       "settings": {
@@ -22,7 +19,10 @@
         "files.insertFinalNewline": true,
         "files.trimFinalNewlines": true,
         "files.trimTrailingWhitespace": true,
-        "python.defaultInterpreterPath": "/usr/local/bin/python"
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "editor.rulers": [
+          88
+        ]
       },
       "extensions": [
         "ms-python.python",
