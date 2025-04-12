@@ -1,10 +1,15 @@
 {
   "name": "Frontend",
-  "dockerComposeFile": "../compose.devcontainer.yaml",
-  "service": "frontend",
+  "runArgs": [
+    "--name=trade-smartly-devcontainer-frontend"
+  ],
+  "image": "tradesmartly/frontend:dev",
   "workspaceFolder": "/app",
-  "shutdownAction": "stopCompose",
-  "postStartCommand": "cd /app/frontend && npm install",
+  "mounts": [
+    "source=${localWorkspaceFolder}/frontend,target=/app,type=bind,consistency=cached"
+  ],
+  "shutdownAction": "stopContainer",
+  "postCreateCommand": "npm install",
   "customizations": {
     "vscode": {
       "settings": {
@@ -15,7 +20,10 @@
         "prettier.tabWidth": 2,
         "prettier.printWidth": 88,
         "editor.tabSize": 2,
-        "editor.insertSpaces": true
+        "editor.insertSpaces": true,
+        "editor.rulers": [
+          88
+        ]
       },
       "extensions": [
         "esbenp.prettier-vscode"
