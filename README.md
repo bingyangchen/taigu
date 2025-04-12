@@ -1,10 +1,12 @@
 # TradeSmartly
 
-![GitHub contributors](https://img.shields.io/github/contributors/bingyangchen/trade-smartly?style=flat-square&logo=github&logoColor=white&label=Contributors&color=2ea44f) ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/bingyangchen/trade-smartly/main?style=flat-square&label=Total%20Commits&color=0969da) ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/bingyangchen/trade-smartly/main?style=flat-square&label=Weekly%20Commits&color=ffd43b) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/bingyangchen/trade-smartly/main?style=flat-square&label=Last%20Commit&color=cf222e) ![GitHub code search count](https://img.shields.io/github/search?query=trade-smartly&label=Search&style=flat-square&color=6f42c1) ![Docker Pulls](https://img.shields.io/docker/pulls/tradesmartly/api-server?style=flat-square&color=0db7ed)
+<div align="center" style="margin-bottom: 20px;">
+  <img src="https://raw.githubusercontent.com/bingyangchen/trade-smartly/refs/heads/main/frontend/src/assets/logo.png" alt="TradeSmartly Logo" width="100" style="border-radius: 25%;box-shadow: 0 0 25px -5px #0008;">
+</div>
 
-<img src="https://raw.githubusercontent.com/bingyangchen/trade-smartly/refs/heads/main/frontend/public/logo-s.png" alt="TradeSmartly Logo" width="100">
+![GitHub contributors](https://img.shields.io/github/contributors/bingyangchen/trade-smartly?style=flat-square&logo=github&logoColor=white&label=Contributors&color=2ea44f) ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/bingyangchen/trade-smartly/main?style=flat-square&label=Total%20Commits&color=0969da) ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/bingyangchen/trade-smartly/main?style=flat-square&label=Weekly%20Commits&color=ffd43b) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/bingyangchen/trade-smartly/main?style=flat-square&label=Last%20Commit&color=cf222e) ![GitHub code search count](https://img.shields.io/github/search?query=trade-smartly&label=Search&style=flat-square&color=6f42c1) ![Docker Pulls](https://img.shields.io/docker/pulls/tradesmartly/api-server?style=flat-square&color=0db7ed&label=Docker%20Pulls)
 
-## Overview
+## 🔍 Overview
 
 ### Architecture
 
@@ -42,12 +44,12 @@ gitGraph
    switch main
    merge feature/xxx
    commit
-   branch bug_fix/xxx
-   switch bug_fix/xxx
+   branch fix/xxx
+   switch fix/xxx
    commit
    commit
    switch main
-   merge bug_fix/xxx
+   merge fix/xxx
    commit
 ```
 
@@ -65,7 +67,7 @@ gitGraph
 - Scheduler
   - Programming Language: Python
 
-## Development
+## 🧑🏻‍💻 Development
 
 ### Prerequisites
 
@@ -77,46 +79,46 @@ gitGraph
 
 ### Setup
 
-#### Step 0: Clone the repository
+- Step 0: Clone the repository
 
-```bash
-git clone git@github.com:bingyangchen/trade-smartly.git
-cd trade-smartly
-```
+  ```bash
+  git clone git@github.com:bingyangchen/trade-smartly.git
+  cd trade-smartly
+  ```
 
-#### Step 1: Create .env file
+- Step 1: Create .env file
 
-```bash
-cp example.env .env
-```
+  ```bash
+  cp example.env .env
+  ```
 
-Fill in the values for the environment variables.
+  Fill in the values for the environment variables.
 
-#### Step 2: Build the images for development
+- Step 2: Build the images for development
 
-```bash
-make build-dev
-```
+  ```bash
+  make build-dev
+  ```
 
-#### Step 3: Install Git hooks
+- Step 3: Install Git hooks
 
-```bash
-make install-git-hooks
-```
+  ```bash
+  make install-git-hooks
+  ```
 
-This command will add some essential scripts into the .git/hooks/ directory.
+  This command will add some essential scripts into the .git/hooks/ directory.
 
-#### Step 4: Generate SSL certificates and keys for development
+- Step 4: Generate SSL certificates and keys for development
 
-```bash
-make cert-dev
-```
+  ```bash
+  make cert-dev
+  ```
 
-### Run the Development Server
+- Step 5: Run the Development Server
 
-```bash
-make start
-```
+  ```bash
+  make start
+  ```
 
 ### Stop the Development Server
 
@@ -154,7 +156,7 @@ Let's dive deeper into the details of **Step 2** of the development workflow whe
 - **Step 2-3:** Exit the shell and build the images for development.
 - **Step 2-4:** Restart all Docker containers.
 
-## Production
+## 🚀 Production
 
 ### Prerequisites
 
