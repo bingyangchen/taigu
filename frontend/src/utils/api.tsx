@@ -29,14 +29,16 @@ export default class Api {
       const response = await fetch(`${Env.backendUrl}${endpoint}`, options);
       return await Api.handleResponse(response);
     } catch (error) {
-      store.dispatch(
-        pushToast({
-          message:
-            error instanceof Error
-              ? error.message
-              : "Error when sending request",
-        })
-      );
+      if (method !== "get") {
+        store.dispatch(
+          pushToast({
+            message:
+              error instanceof Error
+                ? error.message
+                : "Error when sending request",
+          })
+        );
+      }
       throw error;
     }
   }
