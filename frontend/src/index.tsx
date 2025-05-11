@@ -10,21 +10,21 @@ import myRouter from "./router";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
 const root = ReactDOM.createRoot(
-    document.getElementById("root") as HTMLElement
+  document.getElementById("root") as HTMLElement
 );
 
 root.render(
-    // <React.StrictMode>
-    <Provider store={store}>
-        <RouterProvider router={myRouter} />
-    </Provider>
-    // </React.StrictMode>
+  // <React.StrictMode>
+  <Provider store={store}>
+    <RouterProvider router={myRouter} />
+  </Provider>
+  // </React.StrictMode>
 );
 
 declare const navigator: Navigator & Record<"virtualKeyboard", any>;
 
 if ("virtualKeyboard" in navigator) {
-    navigator.virtualKeyboard.overlaysContent = true;
+  navigator.virtualKeyboard.overlaysContent = true;
 }
 
 // If you want your app to work offline and load faster, you can change

@@ -32,123 +32,121 @@ precacheAndRoute(self.__WB_MANIFEST);
 // https://developers.google.com/web/fundamentals/architecture/app-shell
 const fileExtensionRegexp = new RegExp("/[^/?]+\\.[^/]+$");
 registerRoute(
-    // Return false to exempt requests from being fulfilled by index.html.
-    ({ request, url }: { request: Request; url: URL }) => {
-        // If this isn't a navigation, skip.
-        if (request.mode !== "navigate") {
-            return false;
-        }
+  // Return false to exempt requests from being fulfilled by index.html.
+  ({ request, url }: { request: Request; url: URL }) => {
+    // If this isn't a navigation, skip.
+    if (request.mode !== "navigate") {
+      return false;
+    }
 
-        // If this is a URL that starts with /_, skip.
-        if (url.pathname.startsWith("/_")) {
-            return false;
-        }
+    // If this is a URL that starts with /_, skip.
+    if (url.pathname.startsWith("/_")) {
+      return false;
+    }
 
-        // If this looks like a URL for a resource, because it contains
-        // a file extension, skip.
-        if (url.pathname.match(fileExtensionRegexp)) {
-            return false;
-        }
+    // If this looks like a URL for a resource, because it contains
+    // a file extension, skip.
+    if (url.pathname.match(fileExtensionRegexp)) {
+      return false;
+    }
 
-        // Return true to signal that we want to use the handler.
-        return true;
-    },
-    createHandlerBoundToURL(process.env.PUBLIC_URL + "/index.html")
+    // Return true to signal that we want to use the handler.
+    return true;
+  },
+  createHandlerBoundToURL(process.env.PUBLIC_URL + "/index.html")
 );
 
 // An example runtime caching route for requests that aren't handled by the precache.
 registerRoute(
-    // Add in any other file extensions or routing criteria as needed.
-    ({ url }) =>
-        url.origin === self.location.origin &&
-        (url.pathname.endsWith(".png") ||
-            url.pathname.endsWith(".jpg") ||
-            url.pathname.endsWith(".svg") ||
-            url.pathname.endsWith(".webp") ||
-            url.pathname.endsWith(".mp4")),
+  // Add in any other file extensions or routing criteria as needed.
+  ({ url }) =>
+    url.origin === self.location.origin &&
+    (url.pathname.endsWith(".png") ||
+      url.pathname.endsWith(".jpg") ||
+      url.pathname.endsWith(".svg") ||
+      url.pathname.endsWith(".webp") ||
+      url.pathname.endsWith(".mp4")),
 
-    // Customize this strategy as needed, e.g., by changing to CacheFirst.
-    new StaleWhileRevalidate({
-        cacheName: "images",
-        plugins: [
-            // Ensure that once this runtime cache reaches a maximum size the
-            // least-recently used images are removed.
-            new ExpirationPlugin({ maxEntries: 50 }),
-        ],
-    })
+  // Customize this strategy as needed, e.g., by changing to CacheFirst.
+  new StaleWhileRevalidate({
+    cacheName: "images",
+    plugins: [
+      // Ensure that once this runtime cache reaches a maximum size the
+      // least-recently used images are removed.
+      new ExpirationPlugin({ maxEntries: 50 }),
+    ],
+  })
 );
 
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
 self.addEventListener("message", (event) => {
-    if (event.data && event.data.type === "SKIP_WAITING") {
-        self.skipWaiting();
-    }
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 // Any other custom service worker logic can go here.
 
 self.addEventListener("install", (event) => {
-    // Forces the waiting service worker to become the active service worker
-    self.skipWaiting();
+  // Forces the waiting service worker to become the active service worker
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-    // Claims all clients immediately, which makes the new service worker active
-    event.waitUntil(self.clients.claim());
-    // NOTE: `window` is not defined in service worker
+  // Claims all clients immediately, which makes the new service worker active
+  event.waitUntil(self.clients.claim());
+  // NOTE: `window` is not defined in service worker
 });
 
 const channel = new BroadcastChannel("trade-smartly");
 self.addEventListener("fetch", (event) => {
-    const { request } = event;
-    const requestUrl = request.url;
-    const method = request.method.toLowerCase();
+  const { request } = event;
+  const requestUrl = request.url;
+  const method = request.method.toLowerCase();
 
-    // Filter request
-    if (/^http/gs.test(requestUrl)) {
-        if (
-            (/account\/me[/]?$/gs.test(requestUrl) ||
-                /stock\/trade-records[/]?$/gs.test(requestUrl) ||
-                /stock\/cash-dividends[/]?$/gs.test(requestUrl) ||
-                /stock\/market-index[/]?$/gs.test(requestUrl) ||
-                /memo\/trade-plans[/]?$/gs.test(requestUrl) ||
-                /memo\/company-info[/]?$/gs.test(requestUrl) ||
-                /memo\/favorites[/]?$/gs.test(requestUrl)) &&
-            method === "get"
-        ) {
-            event.respondWith(
-                caches.open("trade-smartly").then((cache) => {
-                    return cache.match(request).then((cacheResponse) => {
-                        const fetchPromise = fetch(request).then(
-                            (networkResponse) => {
-                                if (networkResponse.status < 400) {
-                                    cache.put(request, networkResponse.clone());
-                                    networkResponse.json().then((data) => {
-                                        channel.postMessage({
-                                            authorized: true,
-                                            url: requestUrl,
-                                            data,
-                                        });
-                                    });
-                                } else if (networkResponse.status === 401) {
-                                    // Same logic as src/utils/api.tsx
-                                    caches.delete("trade-smartly");
-                                    channel.postMessage({ authorized: false });
-                                }
-                                return networkResponse;
-                            }
-                        );
-                        return cacheResponse || fetchPromise;
-                    });
-                })
-            );
-        } else if (
-            (/account\/logout[/]?$/gs.test(requestUrl) && method === "get") ||
-            (/account\/delete[/]?$/gs.test(requestUrl) && method === "delete")
-        ) {
-            caches.delete("trade-smartly");
-        }
+  // Filter request
+  if (/^http/gs.test(requestUrl)) {
+    if (
+      (/account\/me[/]?$/gs.test(requestUrl) ||
+        /stock\/trade-records[/]?$/gs.test(requestUrl) ||
+        /stock\/cash-dividends[/]?$/gs.test(requestUrl) ||
+        /stock\/market-index[/]?$/gs.test(requestUrl) ||
+        /memo\/trade-plans[/]?$/gs.test(requestUrl) ||
+        /memo\/company-info[/]?$/gs.test(requestUrl) ||
+        /memo\/favorites[/]?$/gs.test(requestUrl)) &&
+      method === "get"
+    ) {
+      event.respondWith(
+        caches.open("trade-smartly").then((cache) => {
+          return cache.match(request).then(async (cacheResponse) => {
+            const fetchPromise = fetch(request).then((networkResponse) => {
+              if (networkResponse.status < 400) {
+                cache.put(request, networkResponse.clone());
+                networkResponse.json().then((data) => {
+                  channel.postMessage({
+                    authorized: true,
+                    url: requestUrl,
+                    data,
+                  });
+                });
+              } else if (networkResponse.status === 401) {
+                // Same logic as src/utils/api.tsx
+                caches.delete("trade-smartly");
+                channel.postMessage({ authorized: false });
+              }
+              return networkResponse;
+            });
+            return cacheResponse || (await fetchPromise);
+          });
+        })
+      );
+    } else if (
+      (/account\/logout[/]?$/gs.test(requestUrl) && method === "get") ||
+      (/account\/delete[/]?$/gs.test(requestUrl) && method === "delete")
+    ) {
+      caches.delete("trade-smartly");
     }
-    return;
+  }
+  return;
 });
