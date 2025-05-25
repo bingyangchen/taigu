@@ -91,7 +91,7 @@ def google_login(request: HttpRequest):
                 max_age=172800,
                 secure=True,
                 httponly=True,
-                samesite="Strict" if env.ENV == "production" else "None",
+                samesite="Strict",
             )
             return http_response
         except Exception as e:
@@ -118,10 +118,7 @@ def me(request: HttpRequest):
 @require_login
 def logout(request: HttpRequest):
     http_response = JsonResponse({}, headers={"is-log-out": "yes"})
-    http_response.delete_cookie(
-        AUTH_COOKIE_NAME,
-        samesite="Strict" if env.ENV == "production" else "None",  # type: ignore
-    )
+    http_response.delete_cookie(AUTH_COOKIE_NAME)
     return http_response
 
 
@@ -160,7 +157,7 @@ def update(request: HttpRequest):
 #         request.user.delete()
 #         http_response = JsonResponse({}, headers={"is-log-out": "yes"})
 #         http_response.delete_cookie(
-#             AUTH_COOKIE_NAME, samesite="Strict" if env.ENV == "production" else "None"
+#             AUTH_COOKIE_NAME, samesite="Strict"
 #         )
 #         return http_response
 #     else:
