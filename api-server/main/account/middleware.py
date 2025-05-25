@@ -17,10 +17,7 @@ def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
         response = get_response(request)
 
         if response.status_code == 401:
-            response.delete_cookie(
-                AUTH_COOKIE_NAME,
-                samesite="Strict" if env.ENV == "production" else "None",  # type: ignore
-            )
+            response.delete_cookie(AUTH_COOKIE_NAME)
         elif response.get("is-log-out") != "yes" and response.get("is-log-in") != "yes":
             if token:
                 # refresh the max_age of the auth cookie everytime
@@ -30,13 +27,10 @@ def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
                     max_age=172800,
                     secure=True,
                     httponly=True,
-                    samesite="Strict" if env.ENV == "production" else "None",  # type: ignore
+                    samesite="Strict",
                 )
             else:
-                response.delete_cookie(
-                    AUTH_COOKIE_NAME,
-                    samesite="Strict" if env.ENV == "production" else "None",  # type: ignore
-                )
+                response.delete_cookie(AUTH_COOKIE_NAME)
         # Delete all the custome headers that may appear (KeyError won't be raised)
         del response["is-log-out"]
         del response["is-log-in"]
