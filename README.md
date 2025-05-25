@@ -128,7 +128,7 @@ make stop
 
 ### The Development Workflow
 
-- **Step 1:** Create a branch from `main`, naming it `feature/xxx` or `hot_fix/xxx`.
+- **Step 1:** Create a branch from `main`, naming it `feature/xxx` or `hotfix/xxx`.
 - **Step 2:** Complete your work, then commit and push your changes.
 - **Step 3:** Open a pull request on GitHub and obtain approval for your PR.
 - **Step 4:** Merge your branch into `main`.
