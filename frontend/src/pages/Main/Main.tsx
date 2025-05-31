@@ -60,7 +60,6 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {
   isLoading: boolean;
-  isFunctionBarActive: boolean;
   prevLocationPathname: string | null;
 }
 
@@ -74,12 +73,32 @@ class Main extends React.Component<Props, State> {
     super(props);
     this.state = {
       isLoading: true,
-      isFunctionBarActive: false,
       prevLocationPathname: null,
     };
     this.channel = new BroadcastChannel(Env.broadcastChannelName);
     this.channel.addEventListener("message", this.handleNonCacheResponse);
     this.mainRef = React.createRef();
+    this.subpages = [];
+    this.fetchAllStockInfoTimer = null;
+  }
+  public async componentDidMount(): Promise<void> {
+    oncontextmenu = (e) => e.preventDefault();
+    this.mainRef.current!.addEventListener("scroll", this.handleScroll);
+    // if ("Notification" in window) Notification.requestPermission();
+
+    // Fetch data
+    try {
+      await Promise.all([
+        this.props.dispatch(fetchAccountInfo()).unwrap(),
+        this.props.dispatch(fetchAllTradeRecords()).unwrap(),
+        this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
+        this.props.dispatch(fetchAllFavorites()).unwrap(),
+        this.props.dispatch(fetchAllTradePlans()).unwrap(),
+        this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
+      ]);
+      await this.fetchNecessaryStockInfo();
+    } catch (e) {}
+
     this.subpages = [
       {
         icon: <IconHome sideLength="100%" />,
@@ -101,31 +120,18 @@ class Main extends React.Component<Props, State> {
         name: "買賣計畫",
         path: `${Env.frontendRootPath}plans`,
       },
-      // {
-      //     icon: <IconAppAdd sideLength="90%" />,
-      //     name: "輔助工具",
-      //     path: `${Env.frontendRootPath}tools`,
-      // },
+      {
+        icon: (
+          <img
+            src={this.props.avatar_url || imgPersonFill}
+            alt=""
+            className={styles.user_avatar}
+          />
+        ),
+        name: "設定",
+        path: `${Env.frontendRootPath}settings`,
+      },
     ];
-    this.fetchAllStockInfoTimer = null;
-  }
-  public async componentDidMount(): Promise<void> {
-    oncontextmenu = (e) => e.preventDefault();
-    this.mainRef.current!.addEventListener("scroll", this.handleScroll);
-    // if ("Notification" in window) Notification.requestPermission();
-
-    // Fetch data
-    try {
-      await Promise.all([
-        this.props.dispatch(fetchAccountInfo()).unwrap(),
-        this.props.dispatch(fetchAllTradeRecords()).unwrap(),
-        this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
-        this.props.dispatch(fetchAllFavorites()).unwrap(),
-        this.props.dispatch(fetchAllTradePlans()).unwrap(),
-        this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
-      ]);
-      await this.fetchNecessaryStockInfo();
-    } catch (e) {}
 
     this.fetchAllStockInfoTimer = setInterval(() => {
       this.fetchNecessaryStockInfo();
@@ -170,32 +176,21 @@ class Main extends React.Component<Props, State> {
       <main className={styles.main} ref={this.mainRef}>
         <ToastList />
         {this.state.isLoading && <LoadingScreen />}
-        {Util.isMobile && (
-          <HeaderForMain
-            avatarUrl={this.props.avatar_url || imgPersonFill}
-            handleClickAvatar={this.showMainFunctionBar}
-          />
-        )}
+        {Util.isMobile && <HeaderForMain />}
         <div className={styles.body}>
-          <NavBarForMain
-            avatarUrl={this.props.avatar_url || imgPersonFill}
-            username={this.props.username}
-            subpages={this.subpages}
-            isActiveInShortScreen={Util.isMobile && this.state.isFunctionBarActive}
-            hide={this.hideMainFunctionBar}
-          />
+          {!Util.isMobile && (
+            <NavBarForMain
+              avatarUrl={this.props.avatar_url || imgPersonFill}
+              username={this.props.username}
+              subpages={Util.isMobile ? this.subpages : this.subpages.slice(0, 4)}
+            />
+          )}
           <Outlet />
         </div>
-        {Util.isMobile && <Footer subpages={this.subpages.slice(0, 4)} />}
+        {Util.isMobile && <Footer subpages={this.subpages} />}
       </main>
     );
   }
-  private showMainFunctionBar = (): void => {
-    this.setState({ isFunctionBarActive: true });
-  };
-  private hideMainFunctionBar = (): void => {
-    this.setState({ isFunctionBarActive: false });
-  };
   private handleScroll = (): void => {
     this.props.dispatch(updateScrollTop(this.mainRef.current!.scrollTop));
   };

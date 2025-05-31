@@ -1,31 +1,27 @@
 @use "../../global_variables" as _;
 
 .main {
-    display: flex;
-    flex-direction: column;
-    width: min(100%, 720px);
-    height: fit-content;
-    border: 1px solid _.$light-gray;
-    border-radius: 8px;
-    overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 720px);
+  height: fit-content;
+  border: 1px solid _.$light-gray;
+  border-radius: 8px;
+  overflow-x: hidden;
+  @media (max-width: _.$width-780) {
+    border: none;
+  }
+  & > .title {
+    font-size: 0.8 * _.$base-font-size;
+    font-weight: normal;
+    padding: 0 18px;
+    margin: 16px 0 10px;
+    color: _.$gray;
     @media (max-width: _.$width-780) {
-        border: none;
+      padding: 0 10px;
     }
-    & > .title {
-        font-size: 1.2 * _.$base-font-size;
-        font-weight: normal;
-        padding: 0 18px;
-        margin: 25px 0 15px;
-        color: _.$black;
-        @media (max-width: _.$width-780) {
-            font-size: _.$base-font-size;
-            padding: 0 10px;
-            margin: 20px 0 15px;
-        }
+    @media (max-width: _.$width-512) {
+      display: none;
     }
-    & > .description {
-        font-size: 0.9 * _.$base-font-size;
-        padding: 0 18px;
-        color: _.$gray;
-    }
+  }
 }

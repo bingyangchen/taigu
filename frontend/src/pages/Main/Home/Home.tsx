@@ -5,7 +5,6 @@ import Chart from "react-google-charts";
 import { connect } from "react-redux";
 
 import {
-  ColorBackground,
   DollarSign,
   MarketIndexLineChart,
   PercentSign,
@@ -112,7 +111,6 @@ class Home extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <ColorBackground />
         <StretchableButton />
         <div className={styles.left}>
           <div className={styles.upper}>
@@ -124,11 +122,7 @@ class Home extends React.Component<Props, State> {
               <div className={styles.chart_container}>
                 {this.state.tseIndexLineChart}
               </div>
-              <div
-                className={`${styles.price} ${this.getIndexPriceExtraClass(
-                  "tse"
-                )}`}
-              >
+              <div className={`${styles.price} ${this.getIndexPriceExtraClass("tse")}`}>
                 <div className={styles.price}>
                   {this.latestTsePriceInfo?.price ?? 0}
                 </div>
@@ -148,11 +142,7 @@ class Home extends React.Component<Props, State> {
               <div className={styles.chart_container}>
                 {this.state.otcIndexLineChart}
               </div>
-              <div
-                className={`${styles.price} ${this.getIndexPriceExtraClass(
-                  "otc"
-                )}`}
-              >
+              <div className={`${styles.price} ${this.getIndexPriceExtraClass("otc")}`}>
                 <div className={styles.price}>
                   {this.latestOtcPriceInfo?.price ?? 0}
                 </div>
@@ -170,9 +160,7 @@ class Home extends React.Component<Props, State> {
               <div className={styles.title}>投入金額</div>
               <div className={styles.cash_invested}>
                 <DollarSign />
-                {Math.round(
-                  this.state.animatedTotalCashInvested
-                ).toLocaleString()}
+                {Math.round(this.state.animatedTotalCashInvested).toLocaleString()}
               </div>
             </div>
             <div className={styles.body}>
@@ -231,9 +219,7 @@ class Home extends React.Component<Props, State> {
             <div className={styles.row}>
               <span>報酬率</span>
               <span>
-                {this.props.tradeRecords.length > 0
-                  ? this.rateOfReturn.toFixed(2)
-                  : 0}
+                {this.props.tradeRecords.length > 0 ? this.rateOfReturn.toFixed(2) : 0}
                 <PercentSign />
               </span>
             </div>
@@ -258,9 +244,7 @@ class Home extends React.Component<Props, State> {
   }
   private get marketValuePieChartData(): (string | number)[][] {
     const result: (string | number)[][] = [];
-    for (const [sid, marketValue] of Object.entries(
-      this.state.sidMarketValueMap
-    )) {
+    for (const [sid, marketValue] of Object.entries(this.state.sidMarketValueMap)) {
       result.push([sid, marketValue]);
     }
     result.sort((a, b) => (b[1] as number) - (a[1] as number));
@@ -268,14 +252,10 @@ class Home extends React.Component<Props, State> {
     return result;
   }
   private get tseInfoDate(): string {
-    return (
-      Object.values(this.props.tseIndexRealtimePrices)[0]?.date ?? "0000-00-00"
-    );
+    return Object.values(this.props.tseIndexRealtimePrices)[0]?.date ?? "0000-00-00";
   }
   private get otcInfoDate(): string {
-    return (
-      Object.values(this.props.otcIndexRealtimePrices)[0]?.date ?? "0000-00-00"
-    );
+    return Object.values(this.props.otcIndexRealtimePrices)[0]?.date ?? "0000-00-00";
   }
   private get latestTsePriceInfo(): IndexPriceInfo | null {
     const maxNum = Math.max(
@@ -405,10 +385,7 @@ class Home extends React.Component<Props, State> {
       });
       return {
         cashInvestedLineChart: (
-          <SimpleCashInvestedLineChart
-            data={chartData}
-            daysToShow={state.daysToShow}
-          />
+          <SimpleCashInvestedLineChart data={chartData} daysToShow={state.daysToShow} />
         ),
       };
     });
@@ -489,8 +466,7 @@ class Home extends React.Component<Props, State> {
             state.animatedTotalCashInvested +
               Math.max(
                 1,
-                (props.totalCashInvested - state.animatedTotalCashInvested) /
-                  2.5
+                (props.totalCashInvested - state.animatedTotalCashInvested) / 2.5
               ),
             props.totalCashInvested
           ),
