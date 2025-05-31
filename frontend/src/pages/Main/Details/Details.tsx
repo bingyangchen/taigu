@@ -239,13 +239,20 @@ class Details extends React.Component<Props, State> {
                   : ""
               }`}
             >
-              <div className={styles.company_name}>
-                {this.props.sidStockInfoMap[this.sid].name}
+              <div className={styles.left}>
+                <RoundButton
+                  onClick={() => this.props.router.navigate(-1)}
+                  className="p-12"
+                  hint_text="回列表"
+                >
+                  <IconChevronLeft sideLength="16" />
+                </RoundButton>
               </div>
-              <div className={styles.sid}>{this.sid}</div>
-              <div className={styles.price}>
-                <DollarSign />
-                {this.props.sidStockInfoMap[this.sid].close}
+              <div className={styles.right}>
+                <div className={styles.company_name}>
+                  {this.props.sidStockInfoMap[this.sid].name}
+                </div>
+                <div className={styles.sid}>{this.sid}</div>
               </div>
             </div>
           )}

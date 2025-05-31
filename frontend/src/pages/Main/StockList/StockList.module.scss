@@ -32,12 +32,12 @@
     justify-content: center;
     width: 100%;
     overflow: auto;
-    padding: 10px 10px 85px;
+    padding: 10px 10px 125px;
     @media (max-width: _.$width-780) {
       display: flex;
       flex-direction: column;
       gap: 0;
-      padding: 0 0 85px;
+      padding: 0 0 125px;
       border-top: 1px solid _.$noisy-white;
     }
   }
