@@ -24,5 +24,8 @@
     &.active {
       color: _.$black;
     }
+    & > .icon_inner {
+      min-width: 23px;
+    }
   }
 }
