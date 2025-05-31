@@ -26,9 +26,9 @@ import Welcome from "./pages/Welcome/Welcome";
 // layer two
 import Details from "./pages/Main/Details/Details";
 import Home from "./pages/Main/Home/Home";
+import Market from "./pages/Main/Market/Market";
 import Plans from "./pages/Main/Plans/Plans";
 import Records from "./pages/Main/Records/Records";
-import StockList from "./pages/Main/StockList/StockList";
 import DeleteAccount from "./pages/Settings/DeleteAccount/DeleteAccount";
 import Overview from "./pages/Settings/Overview/Overview";
 import UserInfo from "./pages/Settings/UserInfo/UserInfo";
@@ -48,7 +48,7 @@ const myRouter = createBrowserRouter(
       <Route path="" element={<Main />}>
         <Route path="" element={<Home />}></Route>
         <Route path="records" element={<Records />}></Route>
-        <Route path="market" element={<StockList />}></Route>
+        <Route path="market" element={<Market />}></Route>
         <Route path="market/:sid" element={<Details />} />
         <Route path="market/holding/:sid" element={<Details />} />
         <Route path="market/favorites/:sid" element={<Details />} />

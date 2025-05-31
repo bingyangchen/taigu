@@ -1,10 +1,10 @@
-import styles from "./StockList.module.scss";
+import styles from "./Market.module.scss";
 
 import React from "react";
 import { connect } from "react-redux";
 
 import { Button, DetailCard, StretchableButton } from "../../../components";
-import { changeStockListPageSubpage } from "../../../redux/slices/MainPageSlice";
+import { changeMarketPageSubpage } from "../../../redux/slices/MainPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Env from "../../../utils/env";
@@ -12,7 +12,7 @@ import Env from "../../../utils/env";
 function mapStateToProps(rootState: RootState) {
   const { stockWarehouse } = rootState.tradeRecord;
   const { favorites } = rootState.memo;
-  const { stockListPageSubpageName: activeSubpageName } = rootState.mainPage;
+  const { marketPageSubpageName: activeSubpageName } = rootState.mainPage;
   return { stockWarehouse, favorites, activeSubpageName };
 }
 
@@ -24,7 +24,7 @@ interface State {
   numberToShow: number;
 }
 
-class StockList extends React.Component<Props, State> {
+class Market extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
@@ -40,15 +40,13 @@ class StockList extends React.Component<Props, State> {
           <div className={styles.switch_button_container}>
             <Button
               className={this.getSwitchButtonClass("holding")}
-              onClick={() => this.props.dispatch(changeStockListPageSubpage("holding"))}
+              onClick={() => this.props.dispatch(changeMarketPageSubpage("holding"))}
             >
               持股
             </Button>
             <Button
               className={this.getSwitchButtonClass("favorites")}
-              onClick={() =>
-                this.props.dispatch(changeStockListPageSubpage("favorites"))
-              }
+              onClick={() => this.props.dispatch(changeMarketPageSubpage("favorites"))}
             >
               觀察
             </Button>
@@ -82,4 +80,4 @@ class StockList extends React.Component<Props, State> {
   }
 }
 
-export default connect(mapStateToProps)(withRouter(StockList));
+export default connect(mapStateToProps)(withRouter(Market));
