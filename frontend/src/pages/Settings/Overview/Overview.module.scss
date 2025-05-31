@@ -1,52 +1,80 @@
 @use "../../../global_variables" as _;
 
 .main {
+  display: flex;
+  width: 100%;
+  & > .body {
+    position: relative;
     display: flex;
-    width: 100%;
-    & > .body {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex-grow: 1;
-        padding-bottom: calc(100vh / 3);
-        scroll-behavior: smooth;
-        @media (max-width: _.$width-780) {
-            padding-bottom: 0;
-        }
-        & > .section {
-            width: min(93%, 720px);
-            padding: 20px 0;
-            @media (max-width: _.$width-780) {
-                padding: 5px 0;
-            }
-            .avatar_container {
-                position: relative;
-                width: 50px;
-                height: 50px;
-                &::before {
-                    content: "";
-                    position: absolute;
-                    bottom: -2px;
-                    right: -2px;
-                    width: 20px;
-                    aspect-ratio: 1;
-                    background-image: url("../../../assets/google.png");
-                    background-color: _.$white;
-                    background-size: cover;
-                    border-radius: 20px;
-                    border: 2px solid _.$white;
-                }
-                & > .avatar {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                    border-radius: 100px;
-                }
-            }
-            .copyright {
-                font-size: 0.75 * _.$base-font-size;
-            }
-        }
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    padding-bottom: calc(100vh / 3);
+    scroll-behavior: smooth;
+    @media (max-width: _.$width-780) {
+      padding-bottom: 0;
     }
+    & > .section {
+      width: min(93%, 720px);
+      padding: 20px 0;
+      @media (max-width: _.$width-780) {
+        padding: 0;
+      }
+      .row_inner {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-align: center;
+        color: _.$deep-gray;
+        &.user_info {
+          & > .avatar_container {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            & > .avatar {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              border-radius: 100px;
+            }
+          }
+          & > .username {
+            font-size: _.$base-font-size;
+            font-weight: 500;
+          }
+        }
+        &.email {
+          & > .email_container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 2px;
+            & > div:last-child {
+              font-size: 0.8 * _.$base-font-size;
+              color: _.$gray;
+            }
+          }
+        }
+        &.logout {
+          color: _.$red;
+        }
+      }
+    }
+    & > .logo_container {
+      width: 50px;
+      height: 50px;
+      margin-top: 20px;
+      & > .logo {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+    }
+    & > .copyright {
+      font-size: 0.75 * _.$base-font-size;
+      margin-top: 20px;
+      color: _.$gray;
+    }
+  }
 }

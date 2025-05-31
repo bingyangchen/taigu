@@ -1,46 +1,48 @@
 @use "../../global_variables" as _;
 
 .main {
+  position: sticky;
+  top: -1 * _.$show-header-border-boundary;
+  display: block;
+  height: _.$header-height + _.$show-header-border-boundary;
+  z-index: 2;
+  backface-visibility: hidden;
+  &::before,
+  &::after {
+    content: "";
     position: sticky;
-    top: -1 * _.$show-header-border-boundary;
     display: block;
-    height: _.$header-height + _.$show-header-border-boundary;
-    z-index: 2;
-    backface-visibility: hidden;
-    &::before,
-    &::after {
-        content: "";
-        position: sticky;
-        display: block;
-        height: _.$show-header-border-boundary;
+    height: _.$show-header-border-boundary;
+  }
+  &::before {
+    top: _.$header-height - _.$show-header-border-boundary;
+    box-shadow: 0 0 0 1px _.$noisy-white;
+  }
+  &::after {
+    top: 0;
+    background: _.$white;
+    z-index: 3;
+  }
+  & > .main_inner {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    height: _.$header-height;
+    width: 100%;
+    margin-top: -1 * _.$show-header-border-boundary;
+    padding: 0 12px 0 8px;
+    background-color: _.$white;
+    font-size: 1.1 * _.$base-font-size;
+    font-weight: bold;
+    color: _.$black;
+    z-index: 4;
+    & > .left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    &::before {
-        top: _.$header-height - _.$show-header-border-boundary;
-        box-shadow: 0 0 0 1px _.$noisy-white;
-    }
-    &::after {
-        top: 0;
-        background: _.$white;
-        z-index: 3;
-    }
-    & > .main_inner {
-        position: sticky;
-        top: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        height: _.$header-height;
-        width: 100%;
-        margin-top: -1 * _.$show-header-border-boundary;
-        padding: 0 12px 0 8px;
-        background-color: _.$white;
-        font-size: 1.2 * _.$base-font-size;
-        z-index: 4;
-        & > .left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-    }
+  }
 }
