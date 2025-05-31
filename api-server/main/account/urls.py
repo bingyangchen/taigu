@@ -1,6 +1,6 @@
 from django.urls import re_path
 
-from . import views
+from main.account import views
 
 urlpatterns = [
     re_path(r"^google-login[/]?$", views.google_login),

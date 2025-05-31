@@ -3,12 +3,12 @@ from typing import Callable
 from django.contrib.auth import authenticate
 from django.http import HttpRequest, HttpResponse
 
-from main.env import env
-
-from . import AUTH_COOKIE_NAME
+from main.account import AUTH_COOKIE_NAME
 
 
-def check_login_status_middleware(get_response: Callable[..., HttpResponse]):
+def check_login_status_middleware(
+    get_response: Callable[..., HttpResponse],
+) -> Callable:
     def middleware(request: HttpRequest) -> HttpResponse:
         token = request.COOKIES.get(AUTH_COOKIE_NAME)
         user = authenticate(request, token=token)  # request.user will be modified here

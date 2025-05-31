@@ -13,4 +13,4 @@ if [ ! -d ".git" ]; then
     exit 1
 fi
 
-bash ./scripts/dev/run-pytest.sh
+bash ./scripts/dev/test.sh

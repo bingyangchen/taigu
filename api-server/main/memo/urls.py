@@ -1,6 +1,6 @@
 from django.urls import re_path
 
-from . import views
+from main.memo import views
 
 urlpatterns = [
     re_path(r"^stock-memo/(?P<sid>\w+)[/]?$", views.update_or_create_stock_memo),

@@ -1,6 +1,6 @@
 from django.urls import re_path
 
-from .views import cash_dividend_record, stock_info, trade_record
+from main.stock.views import cash_dividend_record, stock_info, trade_record
 
 urlpatterns = [
     re_path(r"^market-index[/]?$", stock_info.market_index),

@@ -38,3 +38,4 @@ poetry = "2.0"
 [tool.pytest.ini_options]
 python_files = "test_*.py"
 DJANGO_SETTINGS_MODULE = "main.settings"
+addopts = "-p no:cacheprovider --cache-clear"

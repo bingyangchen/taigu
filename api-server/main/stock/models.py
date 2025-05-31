@@ -8,14 +8,15 @@ from pyquery import PyQuery
 
 from main.account.models import User
 from main.core.models import CreateUpdateDateModel
-
-from . import Frequency, ThirdPartyApi, TradeType, UnknownStockIdError
+from main.stock import Frequency, ThirdPartyApi, TradeType, UnknownStockIdError
 
 
 class CompanyManager(models.Manager):
     def get_or_create(
-        self, defaults: MutableMapping[str, Any] | None = None, **kwargs: Any
-    ) -> tuple[Any, bool]:
+        self,
+        defaults: MutableMapping[str, Any] | None = None,
+        **kwargs,  # noqa: ANN003
+    ) -> tuple["Company", bool]:
         pk = kwargs.get("pk") or kwargs.get("stock_id")
         if pk is None:
             raise TypeError("missing 1 required argument: 'stock_id' ('pk')")
@@ -75,7 +76,7 @@ class Company(models.Model):
     class Meta:
         db_table = "company"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}({self.stock_id})"
 
 
@@ -91,7 +92,7 @@ class StockInfo(CreateUpdateDateModel):
     class Meta:  # type: ignore
         db_table = "stock_info"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.company.pk}({self.date})"
 
 
@@ -128,7 +129,7 @@ class History(CreateUpdateDateModel):
         db_table = "history"
         unique_together = [["company", "frequency", "date"]]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.company.pk}({self.date}-{self.frequency})"
 
 
@@ -144,7 +145,7 @@ class MaterialFact(CreateUpdateDateModel):
         db_table = "material_fact"
         unique_together = [["company", "date_time"]]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.company.pk}({self.date_time})"
 
 
@@ -161,7 +162,7 @@ class TradeRecord(CreateUpdateDateModel):
     class Meta:  # type: ignore
         db_table = "trade_record"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.owner.username}_{self.deal_time}_{self.company.pk}"
 
 
@@ -179,5 +180,5 @@ class CashDividendRecord(CreateUpdateDateModel):
     class Meta:  # type: ignore
         db_table = "cash_dividend_record"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.owner.username}_{self.deal_time}_{self.company.pk}"

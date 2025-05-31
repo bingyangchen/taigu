@@ -11,13 +11,19 @@ import urllib3
 from dateutil.relativedelta import relativedelta
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
-from . import Frequency, ThirdPartyApi, TradeType
-from .cache import (
+from main.stock import Frequency, ThirdPartyApi, TradeType
+from main.stock.cache import (
     TimeSeriesStockInfo,
     TimeSeriesStockInfoCacheManager,
     TimeSeriesStockInfoPointData,
 )
-from .models import Company, History, MarketIndexPerMinute, MaterialFact, StockInfo
+from main.stock.models import (
+    Company,
+    History,
+    MarketIndexPerMinute,
+    MaterialFact,
+    StockInfo,
+)
 
 logger = logging.getLogger(__name__)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

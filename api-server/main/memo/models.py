@@ -18,7 +18,7 @@ class StockMemo(CreateUpdateDateModel):
         db_table = "stock_memo"
         unique_together = [["owner", "company"]]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.owner.username}_{self.company.pk}"
 
 
@@ -34,7 +34,7 @@ class TradePlan(CreateUpdateDateModel):
     class Meta:  # type: ignore
         db_table = "trade_plan"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.owner.username}_{self.company.pk}_${self.target_price}_{self.plan_type}_{self.target_quantity}"  # noqa 1501
 
 
@@ -50,5 +50,5 @@ class Favorite(CreateUpdateDateModel):
         db_table = "favorite"
         unique_together = [["owner", "company"]]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.owner.username}_{self.company.pk}"

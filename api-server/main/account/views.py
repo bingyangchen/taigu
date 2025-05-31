@@ -14,11 +14,9 @@ from google_auth_oauthlib import flow as google_oauth_flow
 from jose import jwt
 from jose.constants import ALGORITHMS
 
+from main.account import AUTH_COOKIE_NAME, OAuthOrganization
+from main.account.models import User
 from main.core.decorators import require_login
-from main.env import env
-
-from . import AUTH_COOKIE_NAME, OAuthOrganization
-from .models import User
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +33,7 @@ GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
 )
 
 
-def google_login(request: HttpRequest):
+def google_login(request: HttpRequest) -> JsonResponse:
     result: dict[str, Any] = {}
     if (request.method == "GET") and (redirect_uri := request.GET.get("redirect_uri")):
         try:
@@ -103,7 +101,7 @@ def google_login(request: HttpRequest):
 
 @require_GET
 @require_login
-def me(request: HttpRequest):
+def me(request: HttpRequest) -> JsonResponse:
     return JsonResponse(
         {
             "id": request.user.pk,
@@ -116,7 +114,7 @@ def me(request: HttpRequest):
 
 @require_GET
 @require_login
-def logout(request: HttpRequest):
+def logout(request: HttpRequest) -> JsonResponse:
     http_response = JsonResponse({}, headers={"is-log-out": "yes"})
     http_response.delete_cookie(AUTH_COOKIE_NAME)
     return http_response
@@ -124,7 +122,7 @@ def logout(request: HttpRequest):
 
 @require_POST
 @require_login
-def update(request: HttpRequest):
+def update(request: HttpRequest) -> JsonResponse:
     try:
         payload = json.loads(request.body)
         user: User = request.user  # type: ignore

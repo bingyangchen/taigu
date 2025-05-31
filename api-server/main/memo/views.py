@@ -5,17 +5,16 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
 from main.core.decorators import require_login
+from main.memo.models import Favorite, StockMemo, TradePlan
 from main.stock import UnknownStockIdError
 from main.stock.models import Company
-
-from .models import Favorite, StockMemo, TradePlan
 
 logger = logging.getLogger(__name__)
 
 
 @require_POST
 @require_login
-def update_or_create_stock_memo(request: HttpRequest, sid: str):
+def update_or_create_stock_memo(request: HttpRequest, sid: str) -> JsonResponse:
     try:
         note = json.loads(request.body)["note"] or ""
         company, created = Company.objects.get_or_create(pk=sid)
@@ -36,7 +35,7 @@ def update_or_create_stock_memo(request: HttpRequest, sid: str):
 
 @require_GET
 @require_login
-def list_company_info(request: HttpRequest):
+def list_company_info(request: HttpRequest) -> JsonResponse:
     sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
     if not sids:
         return JsonResponse({"message": "sids is required."}, status=400)
@@ -71,7 +70,7 @@ def list_company_info(request: HttpRequest):
 
 
 @require_login
-def create_or_list_trade_plan(request: HttpRequest):
+def create_or_list_trade_plan(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         payload = json.loads(request.body)
         if (
@@ -133,7 +132,7 @@ def create_or_list_trade_plan(request: HttpRequest):
 
 
 @require_login
-def update_or_delete_trade_plan(request: HttpRequest, id):
+def update_or_delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
     id = int(id)
     if request.method == "POST":
         payload = json.loads(request.body)
@@ -175,9 +174,9 @@ def update_or_delete_trade_plan(request: HttpRequest, id):
 
 
 @require_login
-def create_or_delete_favorite(request: HttpRequest, sid: str):
+def create_or_delete_favorite(request: HttpRequest, sid: str) -> JsonResponse:
     try:
-        result = {"sid": None}
+        result = {}
         company, created = Company.objects.get_or_create(pk=sid)
         if request.method == "POST":
             Favorite.objects.get_or_create(owner=request.user, company=company)
@@ -198,7 +197,7 @@ def create_or_delete_favorite(request: HttpRequest, sid: str):
 
 @require_GET
 @require_login
-def list_favorites(request: HttpRequest):
+def list_favorites(request: HttpRequest) -> JsonResponse:
     try:
         query_set = Favorite.objects.filter(owner=request.user).select_related(
             "company"

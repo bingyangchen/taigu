@@ -3,7 +3,7 @@ import uuid
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
-from . import OAuthOrganization
+from main.account import OAuthOrganization
 
 
 class UserManager(BaseUserManager):
@@ -14,8 +14,8 @@ class UserManager(BaseUserManager):
         email: str,
         is_staff: bool = False,
         is_superuser: bool = False,
-        **extra_fields
-    ):
+        **extra_fields,  # noqa: ANN003
+    ) -> "User":
         # `normalize_email` is a class method
         email = UserManager.normalize_email(email)
         user = self.model(
@@ -24,12 +24,18 @@ class UserManager(BaseUserManager):
             email=email,
             is_staff=is_staff,
             is_superuser=is_superuser,
-            **extra_fields
+            **extra_fields,
         )
         user.save()
         return user
 
-    def create_superuser(self, oauth_org, oauth_id, email, **extra_fields):
+    def create_superuser(
+        self,
+        oauth_org: str,
+        oauth_id: str,
+        email: str,
+        **extra_fields,  # noqa: ANN003
+    ) -> "User":
         return self.create_user(oauth_org, oauth_id, email, True, True, **extra_fields)
 
 
@@ -56,5 +62,5 @@ class User(AbstractUser):
         db_table = "user"
         unique_together = [["oauth_org", "oauth_id"]]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.username
