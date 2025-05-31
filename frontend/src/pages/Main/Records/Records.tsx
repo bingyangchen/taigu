@@ -41,28 +41,30 @@ class Records extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <div className={styles.switch_button_container}>
-          <Button
-            className={this.getSwitchButtonClass("trade")}
-            onClick={() => this.handleClickSwitchButton("trade")}
-          >
-            交易紀錄
-          </Button>
-          <Button
-            className={this.getSwitchButtonClass("cashDividend")}
-            onClick={() => this.handleClickSwitchButton("cashDividend")}
-          >
-            現金股利
-          </Button>
-        </div>
-        <div className={styles.search_input_container}>
-          <SearchKeywordInput
-            placeholder="輸入證券代號或名稱"
-            keyword={this.state.searchKeyword || ""}
-            onChange={(searchKeyword) =>
-              this.setState({ searchKeyword: searchKeyword })
-            }
-          />
+        <div className={styles.upper}>
+          <div className={styles.switch_button_container}>
+            <Button
+              className={this.getSwitchButtonClass("trade")}
+              onClick={() => this.handleClickSwitchButton("trade")}
+            >
+              交易紀錄
+            </Button>
+            <Button
+              className={this.getSwitchButtonClass("cashDividend")}
+              onClick={() => this.handleClickSwitchButton("cashDividend")}
+            >
+              現金股利
+            </Button>
+          </div>
+          <div className={styles.search_input_container}>
+            <SearchKeywordInput
+              placeholder="輸入證券代號或名稱"
+              keyword={this.state.searchKeyword || ""}
+              onChange={(searchKeyword) =>
+                this.setState({ searchKeyword: searchKeyword })
+              }
+            />
+          </div>
         </div>
         <div className={styles.record_list}>
           {this.filteredRecords

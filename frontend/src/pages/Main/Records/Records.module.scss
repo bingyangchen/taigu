@@ -8,32 +8,29 @@
   height: 100vh;
   padding: 0 15px 10px;
   @media (max-width: _.$width-780) {
-    height: calc(100vh - _.$header-height - _.$footer-height);
+    height: fit-content;
     padding: 0;
   }
-  & > .switch_button_container {
-    display: flex;
-    width: fit-content;
-    gap: 3px;
-    padding: 3px;
-    border-radius: 8px;
-    background-color: _.$light-gray;
-    margin: 10px auto 0;
-    // & > hr {
-    //     border: none;
-    //     border-left: 2px solid;
-    //     border-radius: 10px;
-    //     color: _.$gray;
-    //     margin: 5px 4px;
-    // }
-    @media (max-width: _.$width-780) {
-      margin-top: 0;
+  & > .upper {
+    position: sticky;
+    top: 0;
+    background-color: _.$white;
+    border-bottom: 0.5px solid _.$noisy-white;
+    z-index: 1;
+    & > .switch_button_container {
+      display: flex;
+      width: fit-content;
+      gap: 3px;
+      padding: 3px;
+      border-radius: 8px;
+      background-color: _.$light-gray;
+      margin: 10px auto 0;
     }
-  }
-  & > .search_input_container {
-    padding: 10px 5px;
-    @media (max-width: _.$width-780) {
-      padding: 10px;
+    & > .search_input_container {
+      padding: 10px 5px;
+      @media (max-width: _.$width-780) {
+        padding: 10px;
+      }
     }
   }
   & > .record_list {
@@ -46,6 +43,7 @@
     overflow: auto;
     @media (max-width: _.$width-780) {
       border-radius: 0;
+      padding-bottom: 80px;
     }
     & > .show_more_button_outer {
       margin: 15px 0 50px 0;

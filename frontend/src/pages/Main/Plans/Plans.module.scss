@@ -7,10 +7,22 @@
   flex-grow: 1;
   height: 100vh;
   padding: 0 15px 10px;
-  & > .search_input_container {
-    padding: 10px 5px;
+  @media (max-width: _.$width-780) {
+    height: fit-content;
+    padding: 0;
   }
-  .record_list {
+  & > .search_input_container {
+    position: sticky;
+    top: 0;
+    background-color: _.$white;
+    border-bottom: 0.5px solid _.$noisy-white;
+    z-index: 1;
+    padding: 10px 5px;
+    @media (max-width: _.$width-780) {
+      padding: 10px 10px;
+    }
+  }
+  & > .record_list {
     display: flex;
     flex-direction: column;
     padding: 20px 0;
@@ -19,23 +31,14 @@
     border-radius: 20px;
     box-shadow: 0 0 5px 1px _.$transparent-black;
     overflow: auto;
-  }
-  .show_more_button_outer {
-    margin: 15px 0 50px 0;
-    display: flex;
-    justify-content: center;
-  }
-}
-
-@media screen and (max-width: _.$width-780) {
-  .main {
-    height: calc(100vh - _.$header-height - _.$footer-height);
-    padding: 0;
-    & > .search_input_container {
-      padding: 0 10px 10px;
-    }
-    .record_list {
+    @media (max-width: _.$width-780) {
       border-radius: 0;
+      padding-bottom: 80px;
+    }
+    & > .show_more_button_outer {
+      margin: 15px 0 50px 0;
+      display: flex;
+      justify-content: center;
     }
   }
 }
