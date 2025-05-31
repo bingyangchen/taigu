@@ -10,7 +10,6 @@ export { default as DetailCard } from "./DetailCard/DetailCard";
 export { default as DollarSign } from "./DollarSign/DollarSign";
 export { default as Footer } from "./Footer/Footer";
 export { default as Form } from "./Form/Form";
-export { default as FormForSigning } from "./FormForSigning/FormForSigning"; // not used
 export { default as FullLogo } from "./FullLogo/FullLogo";
 export { default as HeaderForMain } from "./HeaderForMain/HeaderForMain";
 export { default as HeaderForSettings } from "./HeaderForSettings/HeaderForSettings";

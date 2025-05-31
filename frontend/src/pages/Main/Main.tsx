@@ -102,13 +102,13 @@ class Main extends React.Component<Props, State> {
     this.subpages = [
       {
         icon: <IconHome sideLength="100%" />,
-        name: "總覽",
+        name: "儀表板",
         path: Env.frontendRootPath,
       },
       {
         icon: <IconMarket sideLength="100%" />,
-        name: "持倉細況",
-        path: `${Env.frontendRootPath}stock-list`,
+        name: "市場",
+        path: `${Env.frontendRootPath}market`,
       },
       {
         icon: <IconClockHistory sideLength="95%" />,

@@ -1,51 +1,46 @@
 @use "../../global_variables" as _;
 
 .main {
-    display: flex;
-    align-items: flex-end;
-    width: fit-content;
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  & > .logo_container {
+    width: 38px;
+    height: 38px;
+    padding: 3px 3px 5px;
+    & > .logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+  & > .product_name {
+    white-space: nowrap;
+    font-family: Arial, sans-serif;
+    color: _.$black;
+    letter-spacing: 1.5 * _.$base-letter-spacing;
+    font-size: 1.1 * _.$base-font-size;
+  }
+  &.m {
     & > .logo_container {
-        width: 27.5px;
-        height: 27.5px;
-        padding: 3px;
-        & > .logo {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+      width: 45px;
+      height: 45px;
+      padding: 5px 5px 7px;
     }
     & > .product_name {
-        white-space: nowrap;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-            Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-            sans-serif;
-        color: _.$deep-gray;
-        letter-spacing: 0.8 * _.$base-letter-spacing;
-        font-size: 0.75 * _.$base-font-size;
-        margin-bottom: 2.5px;
+      letter-spacing: 1.8 * _.$base-letter-spacing;
+      font-size: 1.2 * _.$base-font-size;
     }
-    &.m {
-        & > .logo_container {
-            width: 41.25px;
-            height: 41.25px;
-            padding: 4.5px;
-        }
-        & > .product_name {
-            letter-spacing: 1.65 * _.$base-letter-spacing;
-            font-size: 1.125 * _.$base-font-size;
-            margin-bottom: 4px;
-        }
+  }
+  &.l {
+    & > .logo_container {
+      width: 55px;
+      height: 55px;
+      padding: 6px 6px 8px;
     }
-    &.l {
-        & > .logo_container {
-            width: 55px;
-            height: 55px;
-            padding: 6px;
-        }
-        & > .product_name {
-            letter-spacing: 2.7 * _.$base-letter-spacing;
-            font-size: 1.5 * _.$base-font-size;
-            margin-bottom: 4.5px;
-        }
+    & > .product_name {
+      letter-spacing: 2.7 * _.$base-letter-spacing;
+      font-size: 1.5 * _.$base-font-size;
     }
+  }
 }

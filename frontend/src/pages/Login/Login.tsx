@@ -34,9 +34,7 @@ class Login extends React.Component<Props, State> {
     // Randomly select and import a cover image
     this.setState({
       coverImage: (
-        await import(
-          `../../assets/cover00${Math.floor(Math.random() * 5) + 1}.png`
-        )
+        await import(`../../assets/cover00${Math.floor(Math.random() * 5) + 1}.png`)
       ).default,
     });
 
@@ -45,10 +43,7 @@ class Login extends React.Component<Props, State> {
       this.props.router.navigate(Env.frontendRootPath, { replace: true });
     } else if (this.props.router.search_params.get("code")) {
       const requestBody = new URLSearchParams();
-      requestBody.append(
-        "code",
-        this.props.router.search_params.get("code") as string
-      );
+      requestBody.append("code", this.props.router.search_params.get("code") as string);
       requestBody.append("redirect_uri", `${window.location.origin}/login`);
       await this.props.dispatch(loginWithGoogle(requestBody)).unwrap();
 
@@ -57,8 +52,7 @@ class Login extends React.Component<Props, State> {
       window.history.replaceState({}, "", currentUrl.href);
 
       const pathAndQueryString =
-        window.localStorage.getItem("pathAndQueryString") ||
-        Env.frontendRootPath;
+        window.localStorage.getItem("pathAndQueryString") || Env.frontendRootPath;
       window.localStorage.removeItem("pathAndQueryString");
       this.props.router.navigate(pathAndQueryString, {
         replace: true,
@@ -73,19 +67,15 @@ class Login extends React.Component<Props, State> {
           <img src={this.state.coverImage} alt="cover" />
         </div>
         <div className={styles.right}>
-          <FullLogo size="l" />
           <div className={styles.greeting}>歡迎使用</div>
+          <FullLogo size="l" />
           <Button
             className="white border l"
             disabled={this.props.isWaiting}
             waiting={this.props.isWaiting}
             onClick={this.handleClickGoogleLogin}
           >
-            <img
-              className={styles.google_icon}
-              src={google}
-              alt="google login"
-            />
+            <img className={styles.google_icon} src={google} alt="google login" />
             {!this.props.isWaiting && "使用 Google 帳戶繼續"}
           </Button>
         </div>

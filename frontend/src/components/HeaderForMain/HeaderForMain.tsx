@@ -35,7 +35,7 @@ class HeaderForMain extends React.Component<Props, State> {
     );
   }
   private get logoTextOpacity(): number {
-    if (Nav.isAtStockListPage || Nav.isAtDetailsPage) {
+    if (Nav.isAtMarketPage || Nav.isAtDetailsPage) {
       return Math.max(0, 45 - this.props.mainScrollTop) / 45;
     }
     return 1;
