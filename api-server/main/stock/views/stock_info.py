@@ -4,18 +4,18 @@ from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
 
-from .. import Frequency, TradeType
-from ..cache import (
+from main.stock import Frequency, TradeType
+from main.stock.cache import (
     TimeSeriesStockInfo,
     TimeSeriesStockInfoCacheManager,
 )
-from ..models import Company, History, MarketIndexPerMinute, StockInfo
+from main.stock.models import Company, History, MarketIndexPerMinute, StockInfo
 
 logger = logging.getLogger(__name__)
 
 
 @require_GET
-def market_index(request: HttpRequest):
+def market_index(request: HttpRequest) -> JsonResponse:
     try:
         result = {}
         for market in (TradeType.TSE, TradeType.OTC):
@@ -41,7 +41,7 @@ def market_index(request: HttpRequest):
 
 
 @require_GET
-def current_stock_info(request: HttpRequest):
+def current_stock_info(request: HttpRequest) -> JsonResponse:
     try:
         result = {}
         sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
@@ -62,7 +62,7 @@ def current_stock_info(request: HttpRequest):
 
 
 @require_GET
-def historical_prices(request: HttpRequest, sid: str):
+def historical_prices(request: HttpRequest, sid: str) -> JsonResponse:
     try:
         result = {"data": []}
         for h in History.objects.filter(
@@ -77,7 +77,7 @@ def historical_prices(request: HttpRequest, sid: str):
 
 
 @require_GET
-def search(request: HttpRequest):
+def search(request: HttpRequest) -> JsonResponse:
     try:
         result = {"data": []}
         if keyword := request.GET.get("keyword"):

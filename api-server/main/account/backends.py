@@ -7,7 +7,7 @@ from django.http import HttpRequest
 from jose import jwt
 from jose.constants import ALGORITHMS
 
-from .models import User
+from main.account.models import User
 
 
 class MyBackend(BaseBackend):

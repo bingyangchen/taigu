@@ -6,7 +6,7 @@ from main.account.models import User
 
 
 def require_login(func: Callable) -> Callable:
-    def wrap(request: HttpRequest, *arg, **args):
+    def wrap(request: HttpRequest, *arg, **args) -> JsonResponse:  # noqa: ANN002, ANN003
         if isinstance(request.user, User) and request.user.is_authenticated:
             return func(request, *arg, **args)
         else:

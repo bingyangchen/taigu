@@ -2,11 +2,11 @@ import time
 
 import pytest
 
-from .. import UnknownStockIdError
-from ..models import Company, CompanyManager
+from main.stock import UnknownStockIdError
+from main.stock.models import Company, CompanyManager
 
 
-def test_fetch_company_info():
+def test_fetch_company_info() -> None:
     info = CompanyManager.fetch_company_info("2330")
     assert info["name"] == "台積電"
     assert info["business"] != ""
@@ -18,7 +18,7 @@ def test_fetch_company_info():
 
 
 @pytest.mark.django_db
-def test_company_class():
+def test_company_class() -> None:
     c, is_new = Company.objects.get_or_create(pk="2330")
     assert c.stock_id == "2330"
     time.sleep(0.5)  # to avoid reaching the rate limit

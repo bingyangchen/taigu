@@ -7,4 +7,5 @@ source "$(dirname "$(realpath "$0")")/../common.sh"
 #       pre-push hook.
 
 check_env dev
+docker compose -f compose.dev.yaml --progress quiet run -T --rm api-server ruff check . --config=ruff.toml --no-cache
 docker compose -f compose.dev.yaml --progress quiet run -T --rm api-server pytest

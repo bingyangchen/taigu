@@ -25,7 +25,7 @@ shutdown_event = threading.Event()
 ###################################### Define Jobs #####################################
 
 
-def fetch_and_store_realtime_stock_info():
+def fetch_and_store_realtime_stock_info() -> None:
     try:
         subprocess.run(
             ["python", "manage.py", "fetch_and_store_realtime_stock_info"], check=True
@@ -34,14 +34,14 @@ def fetch_and_store_realtime_stock_info():
         logger.error(f"Error in fetch_and_store_realtime_stock_info: {e}")
 
 
-def update_all_stocks_history():
+def update_all_stocks_history() -> None:
     try:
         subprocess.run(["python", "manage.py", "update_all_stocks_history"], check=True)
     except Exception as e:
         logger.error(f"Error in update_all_stocks_history: {e}")
 
 
-def update_material_facts():
+def update_material_facts() -> None:
     try:
         subprocess.run(["python", "manage.py", "update_material_facts"], check=True)
     except Exception as e:
@@ -51,7 +51,7 @@ def update_material_facts():
 ########################################################################################
 
 
-def cleanup_threads(signum, frame):
+def cleanup_threads(signum: int, frame) -> None:  # noqa: ANN001
     logger.info("Shutting down gracefully...")
     shutdown_event.set()
     if scheduler:

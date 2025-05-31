@@ -6,7 +6,7 @@ T = TypeVar("T")
 
 
 class BaseCacheManager(Generic[T]):
-    def __init__(self, identifier: str):
+    def __init__(self, identifier: str) -> None:
         self.identifier = identifier
 
     # NOTE: Don't use double underscore to name this method, as subclasses won't be able

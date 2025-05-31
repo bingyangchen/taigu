@@ -1,9 +1,13 @@
 SHELL := /usr/bin/env bash
+.SILENT:
 
-# build-dev | build-prod
-.PHONY: build-%
-build-%:
-	$(SHELL) ./scripts/build.sh $*
+.PHONY: build-dev
+build-dev:
+	$(SHELL) ./scripts/build.sh dev
+
+.PHONY: build-prod
+build-prod:
+	$(SHELL) ./scripts/build.sh prod
 
 .PHONY: start
 start:
@@ -17,10 +21,29 @@ stop:
 restart:
 	$(SHELL) ./scripts/restart.sh
 
-# shell-api-server | shell-frontend | shell-reverse-proxy | shell-db | shell-redis | shell-scheduler
-.PHONY: shell-%
-shell-%:
-	$(SHELL) ./scripts/enter-shell.sh $*
+.PHONY: shell-api-server
+shell-api-server:
+	$(SHELL) ./scripts/enter-shell.sh api-server
+
+.PHONY: shell-frontend
+shell-frontend:
+	$(SHELL) ./scripts/enter-shell.sh frontend
+
+.PHONY: shell-reverse-proxy
+shell-reverse-proxy:
+	$(SHELL) ./scripts/enter-shell.sh reverse-proxy
+
+.PHONY: shell-db
+shell-db:
+	$(SHELL) ./scripts/enter-shell.sh db
+
+.PHONY: shell-redis
+shell-redis:
+	$(SHELL) ./scripts/enter-shell.sh redis
+
+.PHONY: shell-scheduler
+shell-scheduler:
+	$(SHELL) ./scripts/enter-shell.sh scheduler
 
 .PHONY: ipython
 ipython:
@@ -28,26 +51,35 @@ ipython:
 
 .PHONY: test
 test:
-	$(SHELL) ./scripts/dev/run-pytest.sh
+	$(SHELL) ./scripts/dev/test.sh
 
 .PHONY: install-git-hooks
 install-git-hooks:
 	$(SHELL) ./scripts/dev/install-git-hooks.sh
 
-# cert-dev | cert-prod
-.PHONY: cert-%
-cert-%:
-	$(SHELL) ./scripts/$*/cert.sh
+.PHONY: cert-dev
+cert-dev:
+	$(SHELL) ./scripts/dev/cert.sh
 
-# push-images-dev | push-images-prod
-.PHONY: push-images-%
-push-images-%:
-	$(SHELL) ./scripts/dev/push-images.sh $*
+.PHONY: cert-prod
+cert-prod:
+	$(SHELL) ./scripts/prod/cert.sh
 
-# pull-images-dev | pull-images-prod
-.PHONY: pull-images-%
-pull-images-%:
-	$(SHELL) ./scripts/prod/pull-images.sh $*
+.PHONY: push-images-dev
+push-images-dev:
+	$(SHELL) ./scripts/dev/push-images.sh dev
+
+.PHONY: push-images-prod
+push-images-prod:
+	$(SHELL) ./scripts/dev/push-images.sh prod
+
+.PHONY: pull-images-dev
+pull-images-dev:
+	$(SHELL) ./scripts/prod/pull-images.sh dev
+
+.PHONY: pull-images-prod
+pull-images-prod:
+	$(SHELL) ./scripts/prod/pull-images.sh prod
 
 .PHONY: deploy
 deploy:

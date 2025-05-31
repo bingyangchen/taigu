@@ -1,11 +1,11 @@
 import pytest
 from django.db.utils import IntegrityError
 
-from ..models import User
+from main.account.models import User
 
 
 @pytest.mark.django_db
-def test_user_class_1():
+def test_user_class_1() -> None:
     u = User.objects.create()
     assert (
         u.oauth_org == ""

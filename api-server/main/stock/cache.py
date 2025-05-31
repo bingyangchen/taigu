@@ -22,7 +22,7 @@ class TimeSeriesStockInfo(BaseModel):
 
 
 class TimeSeriesStockInfoCacheManager(BaseCacheManager[TimeSeriesStockInfo]):
-    def __init__(self, stock_id: str):
+    def __init__(self, stock_id: str) -> None:
         super().__init__(stock_id)
 
     def _gen_cache_key(self) -> str:

@@ -4,13 +4,12 @@ from datetime import datetime
 from django.http import HttpRequest, JsonResponse
 
 from main.core.decorators import require_login
-
-from .. import UnknownStockIdError
-from ..models import CashDividendRecord, Company
+from main.stock import UnknownStockIdError
+from main.stock.models import CashDividendRecord, Company
 
 
 @require_login
-def create_or_list(request: HttpRequest):
+def create_or_list(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         payload = json.loads(request.body)
         if (
@@ -80,7 +79,7 @@ def create_or_list(request: HttpRequest):
 
 
 @require_login
-def update_or_delete(request: HttpRequest, id):
+def update_or_delete(request: HttpRequest, id: str | int) -> JsonResponse:
     id = int(id)
     if request.method == "POST":
         payload = json.loads(request.body)
