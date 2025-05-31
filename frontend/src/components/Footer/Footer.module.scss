@@ -17,15 +17,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 75px;
+    width: 100%;
     height: _.$footer-height;
-    padding: 0 26.5px;
     color: _.$deep-gray;
     &.active {
       color: _.$black;
     }
     & > .icon_inner {
-      min-width: 23px;
+      width: 23px;
     }
   }
 }
