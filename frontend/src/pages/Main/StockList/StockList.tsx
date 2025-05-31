@@ -66,7 +66,7 @@ class StockList extends React.Component<Props, State> {
                 includeWarehouseInfo={this.props.activeSubpageName === "holding"}
                 onClick={() => {
                   this.props.router.navigate(
-                    `${Env.frontendRootPath}details/${this.props.activeSubpageName}/${sid}`
+                    `${Env.frontendRootPath}market/${this.props.activeSubpageName}/${sid}`
                   );
                 }}
               />

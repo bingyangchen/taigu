@@ -92,9 +92,7 @@ class StockSearchModal extends React.Component<Props, State> {
                         }
                                                 ${
                                                   stockInfo.fluct_price !== 0
-                                                    ? Math.abs(
-                                                        stockInfo.fluct_price
-                                                      )
+                                                    ? Math.abs(stockInfo.fluct_price)
                                                     : ""
                                                 }
                                                 ${
@@ -124,28 +122,18 @@ class StockSearchModal extends React.Component<Props, State> {
     return (
       styles.row +
       " " +
-      (fluct_price > 0
-        ? styles.red
-        : fluct_price < 0
-        ? styles.green
-        : styles.gray)
+      (fluct_price > 0 ? styles.red : fluct_price < 0 ? styles.green : styles.gray)
     );
   }
   private search = async (value: string): Promise<void> => {
-    const response = await Api.sendRequest(
-      `stock/search?keyword=${value}`,
-      "get"
-    );
+    const response = await Api.sendRequest(`stock/search?keyword=${value}`, "get");
     this.setState({ searchResults: response.data });
   };
   private debouncedSearch = Util.debounce(this.search, 300);
-  private handleClickResult = async (
-    e: MouseEvent,
-    sid: string
-  ): Promise<void> => {
+  private handleClickResult = async (e: MouseEvent, sid: string): Promise<void> => {
     this.props.hideModal(e);
     setTimeout(() => {
-      this.props.router.navigate(`${Env.frontendRootPath}details/${sid}`);
+      this.props.router.navigate(`${Env.frontendRootPath}market/${sid}`);
     }, 50);
   };
 }

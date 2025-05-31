@@ -48,10 +48,10 @@ const myRouter = createBrowserRouter(
       <Route path="" element={<Main />}>
         <Route path="" element={<Home />}></Route>
         <Route path="records" element={<Records />}></Route>
-        <Route path="stock-list" element={<StockList />}></Route>
-        <Route path="details/:sid" element={<Details />} />
-        <Route path="details/holding/:sid" element={<Details />} />
-        <Route path="details/favorites/:sid" element={<Details />} />
+        <Route path="market" element={<StockList />}></Route>
+        <Route path="market/:sid" element={<Details />} />
+        <Route path="market/holding/:sid" element={<Details />} />
+        <Route path="market/favorites/:sid" element={<Details />} />
         <Route path="plans" element={<Plans />}></Route>
         {/* <Route path="tools" element={<ExternalApps />} /> */}
       </Route>

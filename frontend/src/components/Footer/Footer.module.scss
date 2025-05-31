@@ -20,8 +20,10 @@
     width: 100%;
     height: _.$footer-height;
     color: _.$deep-gray;
+    opacity: 0.8;
     &.active {
       color: _.$black;
+      opacity: 1;
     }
     & > .icon_inner {
       width: 23px;
