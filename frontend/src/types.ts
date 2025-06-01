@@ -67,8 +67,9 @@ export type CashDividendRecord = {
   cash_dividend: number;
 };
 
-export type Error = {
-  message: string;
+export type ToastMessage = {
+  type: "success" | "error";
+  text: string;
 };
 
 export type CompanyInfo = {

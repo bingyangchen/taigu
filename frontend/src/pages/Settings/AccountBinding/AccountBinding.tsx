@@ -38,17 +38,22 @@ class AccountBinding extends React.Component<Props, State> {
   public async componentDidMount(): Promise<void> {
     this.props.dispatch(updateHeaderTitle("帳號綁定"));
     if (this.props.router.search_params.get("code")) {
-      const requestBody = new URLSearchParams();
-      requestBody.append("code", this.props.router.search_params.get("code") as string);
-      requestBody.append(
-        "redirect_uri",
-        `${window.location.origin}/settings/account-binding`
-      );
-      await this.props.dispatch(changeAccountBinding(requestBody)).unwrap();
-
-      const currentUrl = new URL(window.location.href);
-      currentUrl.search = "";
-      window.history.replaceState({}, "", currentUrl.href);
+      try {
+        const requestBody = new URLSearchParams();
+        requestBody.append(
+          "code",
+          this.props.router.search_params.get("code") as string
+        );
+        requestBody.append(
+          "redirect_uri",
+          `${window.location.origin}/settings/account-binding`
+        );
+        await this.props.dispatch(changeAccountBinding(requestBody)).unwrap();
+      } finally {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.search = "";
+        window.history.replaceState({}, "", currentUrl.href);
+      }
     }
   }
   public render(): React.ReactNode {

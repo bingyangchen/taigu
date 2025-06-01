@@ -40,9 +40,7 @@ export const fetchStockInfo = createAsyncThunk(
   "stockInfo/fetchStockInfo",
   async (sids: string[]): Promise<{ [sid: string]: StockInfo }> => {
     return await Api.sendRequest(
-      `stock/current-stock-info${
-        sids.length > 0 ? `?sids=${sids.join(",")}` : ""
-      }`,
+      `stock/current-stock-info${sids.length > 0 ? `?sids=${sids.join(",")}` : ""}`,
       "get"
     );
   }
@@ -90,10 +88,7 @@ export const stockInfoSlice = createSlice({
   name: "stockInfo",
   initialState,
   reducers: {
-    refreshMarketIndexWithNonCacheResponse(
-      state,
-      action: PayloadAction<MarketIndex>
-    ) {
+    refreshMarketIndexWithNonCacheResponse(state, action: PayloadAction<MarketIndex>) {
       state.tseIndexRealtimePrices = action.payload.tse;
       state.otcIndexRealtimePrices = action.payload.otc;
     },
@@ -197,6 +192,5 @@ export const getTotalMarketValue = (
   return result;
 };
 
-export const { refreshMarketIndexWithNonCacheResponse } =
-  stockInfoSlice.actions;
+export const { refreshMarketIndexWithNonCacheResponse } = stockInfoSlice.actions;
 export default stockInfoSlice.reducer;

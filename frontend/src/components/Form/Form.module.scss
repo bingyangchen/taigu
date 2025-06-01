@@ -2,6 +2,7 @@
 
 .main {
   width: min(100%, 400px);
+  height: calc(100% - env(keyboard-inset-height));
   border: 1px solid _.$light-gray;
   border-radius: 10px;
   padding: 10px 15px;

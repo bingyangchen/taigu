@@ -82,9 +82,7 @@ export const cashDividendRecordSlice = createSlice({
       state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
         state.cashDividendRecords
       );
-      state.totalCashDividend = getTotalCashDividend(
-        state.sidTotalCashDividendMap
-      );
+      state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
     },
   },
   extraReducers: (builder) => {
@@ -99,9 +97,7 @@ export const cashDividendRecordSlice = createSlice({
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
           state.cashDividendRecords
         );
-        state.totalCashDividend = getTotalCashDividend(
-          state.sidTotalCashDividendMap
-        );
+        state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
       })
       .addCase(fetchAllCashDividendRecords.rejected, (state) => {
@@ -112,16 +108,13 @@ export const cashDividendRecordSlice = createSlice({
         state.isWaiting = true;
       })
       .addCase(createRecord.fulfilled, (state, action) => {
-        state.cashDividendRecords = [
-          action.payload,
-          ...state.cashDividendRecords,
-        ].sort((a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time));
+        state.cashDividendRecords = [action.payload, ...state.cashDividendRecords].sort(
+          (a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time)
+        );
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
           state.cashDividendRecords
         );
-        state.totalCashDividend = getTotalCashDividend(
-          state.sidTotalCashDividendMap
-        );
+        state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
       })
       .addCase(createRecord.rejected, (state) => {
@@ -140,9 +133,7 @@ export const cashDividendRecordSlice = createSlice({
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
           state.cashDividendRecords
         );
-        state.totalCashDividend = getTotalCashDividend(
-          state.sidTotalCashDividendMap
-        );
+        state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
       })
       .addCase(updateRecord.rejected, (state) => {
@@ -159,9 +150,7 @@ export const cashDividendRecordSlice = createSlice({
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
           state.cashDividendRecords
         );
-        state.totalCashDividend = getTotalCashDividend(
-          state.sidTotalCashDividendMap
-        );
+        state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
       })
       .addCase(deleteRecord.rejected, (state) => {

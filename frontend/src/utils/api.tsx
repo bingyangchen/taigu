@@ -32,10 +32,8 @@ export default class Api {
       if (method !== "get") {
         store.dispatch(
           pushToast({
-            message:
-              error instanceof Error
-                ? error.message
-                : "Error when sending request",
+            type: "error",
+            text: error instanceof Error ? error.message : "Error when sending request",
           })
         );
       }

@@ -1,9 +1,9 @@
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import type { Error } from "../../types";
+import type { ToastMessage } from "../../types";
 
 interface ToastState {
-  toasts: Error[];
+  toasts: ToastMessage[];
 }
 
 const initialState: ToastState = {
@@ -21,7 +21,7 @@ const setAutoRemoveToastTimer = createAsyncThunk(
 
 export const pushToast = createAsyncThunk(
   "toasts/pushToast",
-  (toast: Error, thunkAPI): Error => {
+  (toast: ToastMessage, thunkAPI): ToastMessage => {
     thunkAPI.dispatch(setAutoRemoveToastTimer());
     navigator.vibrate(20);
     return toast;
@@ -38,7 +38,7 @@ export const toastSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(pushToast.fulfilled, (state, action: PayloadAction<Error>) => {
+      .addCase(pushToast.fulfilled, (state, action: PayloadAction<ToastMessage>) => {
         state.toasts.push(action.payload);
       })
       .addCase(setAutoRemoveToastTimer.fulfilled, (state, action) => {

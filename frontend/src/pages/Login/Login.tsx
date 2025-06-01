@@ -42,21 +42,28 @@ class Login extends React.Component<Props, State> {
       // Go to root if already login
       this.props.router.navigate(Env.frontendRootPath, { replace: true });
     } else if (this.props.router.search_params.get("code")) {
-      const requestBody = new URLSearchParams();
-      requestBody.append("code", this.props.router.search_params.get("code") as string);
-      requestBody.append("redirect_uri", `${window.location.origin}/login`);
-      await this.props.dispatch(loginWithGoogle(requestBody)).unwrap();
+      try {
+        const requestBody = new URLSearchParams();
+        requestBody.append(
+          "code",
+          this.props.router.search_params.get("code") as string
+        );
+        requestBody.append("redirect_uri", `${window.location.origin}/login`);
+        await this.props.dispatch(loginWithGoogle(requestBody)).unwrap();
 
-      const currentUrl = new URL(window.location.href);
-      currentUrl.search = "";
-      window.history.replaceState({}, "", currentUrl.href);
+        const currentUrl = new URL(window.location.href);
+        currentUrl.search = "";
+        window.history.replaceState({}, "", currentUrl.href);
 
-      const pathAndQueryString =
-        window.localStorage.getItem("pathAndQueryString") || Env.frontendRootPath;
-      window.localStorage.removeItem("pathAndQueryString");
-      this.props.router.navigate(pathAndQueryString, {
-        replace: true,
-      });
+        const pathAndQueryString =
+          window.localStorage.getItem("pathAndQueryString") || Env.frontendRootPath;
+        window.localStorage.removeItem("pathAndQueryString");
+        this.props.router.navigate(pathAndQueryString, { replace: true });
+      } catch (error) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.search = "";
+        window.history.replaceState({}, "", currentUrl.href);
+      }
     }
   }
   public render(): React.ReactNode {
