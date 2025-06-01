@@ -12,7 +12,7 @@ import {
   NavBarForMain,
   ToastList,
 } from "../../components";
-import { IconClockHistory, IconHome, IconLightbulb, IconMarket } from "../../icons";
+import { IconBrandStrategy, IconClockHistory, IconHome, IconMarket } from "../../icons";
 import {
   fetchAccountInfo,
   refreshAccountInfoWithNonCacheResponse,
@@ -116,7 +116,7 @@ class Main extends React.Component<Props, State> {
         path: `${Env.frontendRootPath}records`,
       },
       {
-        icon: <IconLightbulb sideLength="100%" />,
+        icon: <IconBrandStrategy sideLength="95%" />,
         name: "買賣計畫",
         path: `${Env.frontendRootPath}plans`,
       },

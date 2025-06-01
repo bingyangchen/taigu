@@ -1,5 +1,6 @@
 export { default as IconAppAdd } from "./IconAppAdd";
 export { default as IconBell } from "./IconBell";
+export { default as IconBrandStrategy } from "./IconBrandStrategy";
 export { default as IconBriefcase } from "./IconBriefcase";
 export { default as IconChessKnight } from "./IconChessKnight";
 export { default as IconChevronLeft } from "./IconChevronLeft";

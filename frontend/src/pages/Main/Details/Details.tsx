@@ -16,13 +16,13 @@ import {
   StretchableButton,
 } from "../../../components";
 import {
+  IconBrandStrategy,
   IconBriefcase,
   IconChevronLeft,
   IconChevronRight,
   IconClockHistory,
   IconHeart,
   IconHeartFill,
-  IconLightbulb,
   IconMemo,
 } from "../../../icons";
 import {
@@ -409,7 +409,7 @@ class Details extends React.Component<Props, State> {
                 to={`${Env.frontendRootPath}plans?sid=${this.sid}`}
                 className={styles.cube}
               >
-                <IconLightbulb sideLength="30" color="#888" />
+                <IconBrandStrategy sideLength="30" color="#888" />
                 買賣計畫
               </Link>
               <div

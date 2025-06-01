@@ -236,10 +236,7 @@ class Overview extends React.Component<Props, State> {
   private handleClickCheckLogout = async (): Promise<void> => {
     await this.props.dispatch(logout()).unwrap();
     if (Nav.isAtLoginPage) return;
-
-    this.props.router.navigate(`${Env.frontendRootPath}login`, {
-      replace: true,
-    });
+    this.props.router.navigate(`${Env.frontendRootPath}login`, { replace: true });
 
     // Push one more state because Modal will do navigate(-1) after submitting.
     window.history.pushState({}, "", `${Env.frontendRootPath}login`);
