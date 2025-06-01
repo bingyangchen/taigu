@@ -55,6 +55,12 @@
               color: _.$gray;
             }
           }
+          & > .google_logo {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            margin-left: auto;
+          }
         }
         &.logout {
           color: _.$red;

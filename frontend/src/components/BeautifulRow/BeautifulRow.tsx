@@ -50,22 +50,24 @@ export default class BeautifulRow extends React.Component<Props, State> {
     return `${styles.main} ${this.props.onClick ? styles.reactive : ""}`;
   }
   private handleClick = (e: MouseEvent): void => {
-    const mask = e.currentTarget as HTMLElement;
-    const diameter = Math.max(mask.clientWidth, mask.clientHeight);
-    this.setState({ isRippling: true }, () => {
-      this.rippleRef.current!.style.width = `${diameter}px`;
-      this.rippleRef.current!.style.height = `${diameter}px`;
-      this.rippleRef.current!.style.left = `${
-        e.clientX - mask.getBoundingClientRect().left - diameter / 2
-      }px`;
-      this.rippleRef.current!.style.top = `${
-        e.clientY - mask.getBoundingClientRect().top - diameter / 2
-      }px`;
-    });
-    setTimeout(() => {
-      this.setState({ isRippling: false });
-      this.props.onClick?.(e);
-    }, 250);
+    if (this.props.onClick) {
+      const mask = e.currentTarget as HTMLElement;
+      const diameter = Math.max(mask.clientWidth, mask.clientHeight);
+      this.setState({ isRippling: true }, () => {
+        this.rippleRef.current!.style.width = `${diameter}px`;
+        this.rippleRef.current!.style.height = `${diameter}px`;
+        this.rippleRef.current!.style.left = `${
+          e.clientX - mask.getBoundingClientRect().left - diameter / 2
+        }px`;
+        this.rippleRef.current!.style.top = `${
+          e.clientY - mask.getBoundingClientRect().top - diameter / 2
+        }px`;
+      });
+      setTimeout(() => {
+        this.setState({ isRippling: false });
+        this.props.onClick?.(e);
+      }, 250);
+    }
   };
   private string2jsx(s: string): React.ReactNode {
     const stringList: string[] = s.split("\n");

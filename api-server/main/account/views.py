@@ -2,7 +2,6 @@ import json
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import Any
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -20,21 +19,20 @@ from main.core.decorators import require_login
 
 logger = logging.getLogger(__name__)
 
-GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
-    os.path.join(
-        settings.BASE_DIR,
-        "client_secret_85674097625-iqmtaroea8456oeh3461j2g8esb426ts.apps.googleusercontent.com.json",
-    ),
-    scopes=[
-        "openid",
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/userinfo.profile",
-    ],
-)
-
 
 def google_login(request: HttpRequest) -> JsonResponse:
-    result: dict[str, Any] = {}
+    GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
+        os.path.join(
+            settings.BASE_DIR,
+            "client_secret_85674097625-iqmtaroea8456oeh3461j2g8esb426ts.apps.googleusercontent.com.json",
+        ),
+        scopes=[
+            "openid",
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+        ],
+    )
+    result = {}
     if (request.method == "GET") and (redirect_uri := request.GET.get("redirect_uri")):
         try:
             GOOGLE_AUTH_FLOW.redirect_uri = redirect_uri
@@ -97,6 +95,84 @@ def google_login(request: HttpRequest) -> JsonResponse:
             return JsonResponse({"message": "Internal Server Error"}, status=500)
     else:
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
+
+
+@require_POST
+@require_login
+def change_google_binding(request: HttpRequest) -> JsonResponse:
+    GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
+        os.path.join(
+            settings.BASE_DIR,
+            "client_secret_85674097625-iqmtaroea8456oeh3461j2g8esb426ts.apps.googleusercontent.com.json",
+        ),
+        scopes=[
+            "openid",
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+        ],
+    )
+    result = {}
+    code, redirect_uri = request.POST.get("code"), request.POST.get("redirect_uri")
+    if not code or not redirect_uri:
+        return JsonResponse({"message": "Data Not Sufficient"}, status=400)
+
+    try:
+        GOOGLE_AUTH_FLOW.redirect_uri = redirect_uri
+        GOOGLE_AUTH_FLOW.fetch_token(code=code)
+        credentials = GOOGLE_AUTH_FLOW.credentials
+        verify_result = id_token.verify_oauth2_token(
+            credentials.id_token,  # type: ignore
+            GoogleRequest(),
+            GOOGLE_AUTH_FLOW.client_config["client_id"],
+        )
+
+        # Check if the given google account is not bound to any other account
+        if (
+            User.objects.filter(
+                oauth_org=OAuthOrganization.GOOGLE, oauth_id=verify_result["sub"]
+            ).first()
+            is not None
+        ):
+            return JsonResponse(
+                {"message": "This Google account is already bound to another account."},
+                status=400,
+            )
+
+        user: User = request.user  # type: ignore
+        user.oauth_org = OAuthOrganization.GOOGLE
+        user.oauth_id = verify_result["sub"]
+        user.email = verify_result["email"]
+        user.username = verify_result["name"]
+        user.avatar_url = verify_result["picture"]
+        user.save()
+
+        jwt_ = jwt.encode(
+            {
+                "id": str(user.id),
+                "oauth_id": user.oauth_id,
+                "iat": int(datetime.now().timestamp()),
+                "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
+            },
+            key=settings.SECRET_KEY,
+            algorithm=ALGORITHMS.HS256,
+        )
+        result["id"] = str(user.id)
+        result["email"] = user.email
+        result["username"] = user.username
+        result["avatar_url"] = user.avatar_url
+        http_response = JsonResponse(result, headers={"is-log-in": "yes"})
+        http_response.set_cookie(
+            AUTH_COOKIE_NAME,
+            value=jwt_,
+            max_age=172800,
+            secure=True,
+            httponly=True,
+            samesite="Strict",
+        )
+        return http_response
+    except Exception as e:
+        logger.error(f"Error in account/change_google_binding [POST]: {e}")
+        return JsonResponse({"message": "Internal Server Error"}, status=500)
 
 
 @require_GET

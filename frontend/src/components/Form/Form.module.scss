@@ -1,38 +1,43 @@
 @use "../../global_variables" as _;
 
 .main {
-    width: min(100%, 400px);
-    border: 1px solid _.$light-gray;
-    border-radius: 8px;
-    padding: 10px 15px;
-    & > .header {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        padding: 10px 0;
-        & > h1 {
-            font-size: 1.25 * _.$base-font-size;
-            font-weight: normal;
-            margin: 0;
-            padding: 0 8px;
-        }
+  width: min(100%, 400px);
+  border: 1px solid _.$light-gray;
+  border-radius: 10px;
+  padding: 10px 15px;
+  & > .header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 0;
+    & > h1 {
+      font-size: 1.25 * _.$base-font-size;
+      font-weight: normal;
+      margin: 0;
+      padding: 0 8px;
     }
-    & > .body {
-        display: flex;
-        flex-direction: column;
-        padding: 10px 8px;
-    }
-    & > .footer {
-        display: flex;
-        justify-content: flex-end;
-        align-items: flex-end;
-        gap: 10px;
-        padding: 30px 8px 10px;
-    }
+  }
+  & > .body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 10px 8px;
+  }
+  & > .footer {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 10px 8px;
+    background-color: _.$white;
+  }
 }
 
 @media screen and (max-width: _.$width-780) {
-    .main {
-        border: none;
-    }
+  .main {
+    border: none;
+  }
 }

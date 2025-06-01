@@ -1,116 +1,116 @@
 @use "../../global_variables" as _;
 
 .button {
-    $border-radius: 5px;
-    $transition-duration: 200ms;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 5px;
-    border: none;
+  $border-radius: 8px;
+  $transition-duration: 200ms;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 5px;
+  border: none;
+  border-radius: $border-radius;
+  padding: 5px 12.5px;
+  width: max-content;
+  min-width: max-content;
+  transition-duration: $transition-duration;
+  letter-spacing: 1.2 * _.$base-letter-spacing;
+  cursor: pointer;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     border-radius: $border-radius;
-    padding: 5px 12.5px;
-    width: max-content;
-    min-width: max-content;
-    transition-duration: $transition-duration;
-    letter-spacing: 1.2 * _.$base-letter-spacing;
-    cursor: pointer;
-    &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border-radius: $border-radius;
-        background-color: transparent;
-    }
-    @media (hover: hover) {
-        &:hover:not(:disabled):not(.waiting) {
-            &::before {
-                background-color: _.$transparent-black;
-                transition-duration: $transition-duration;
-            }
-        }
-    }
-    &:disabled {
-        cursor: not-allowed !important;
-        color: _.$light-gray !important;
-        background-color: _.$noisy-white !important;
-        &.waiting::before {
-            background: no-repeat center/20px url("../../assets/loading.svg");
-            background-color: _.$noisy-white;
-        }
-    }
-    &.transparent {
-        background-color: transparent;
-        color: _.$deep-gray;
-        &:disabled {
-            color: _.$light-gray !important;
-            background-color: transparent !important;
-        }
-    }
-    &.white {
-        background-color: _.$white;
-        color: _.$deep-gray;
-    }
-    &.black {
-        background-color: _.$black;
-        color: _.$white;
-    }
-    &.light {
+    background-color: transparent;
+  }
+  @media (hover: hover) {
+    &:hover:not(:disabled):not(.waiting) {
+      &::before {
         background-color: _.$transparent-black;
-        color: _.$deep-gray;
+        transition-duration: $transition-duration;
+      }
     }
-    &.primary_fill {
-        background-color: _.$blue;
-        color: _.$white;
+  }
+  &:disabled {
+    cursor: not-allowed !important;
+    color: _.$light-gray !important;
+    background-color: _.$noisy-white !important;
+    &.waiting::before {
+      background: no-repeat center/20px url("../../assets/loading.svg");
+      background-color: _.$noisy-white;
     }
-    &.primary {
-        background-color: _.$white;
-        color: _.$blue;
+  }
+  &.transparent {
+    background-color: transparent;
+    color: _.$deep-gray;
+    &:disabled {
+      color: _.$light-gray !important;
+      background-color: transparent !important;
     }
-    &.success_fill {
-        background-color: _.$green;
-        color: _.$white;
-    }
-    &.success {
-        background-color: _.$white;
-        color: _.$green;
-    }
-    &.dangerous_fill {
-        background-color: _.$red;
-        color: _.$white;
-    }
-    &.dangerous {
-        background-color: _.$white;
-        color: _.$red;
-    }
-    &.p8-15 {
-        padding: 8px 15px;
-    }
-    &.xl {
-        font-size: 1.2 * _.$base-font-size;
-        padding: 10px 25px;
-    }
-    &.l {
-        font-size: 0.9 * _.$base-font-size;
-        padding: 8px 20px;
-    }
-    &.s {
-        font-size: 0.8 * _.$base-font-size;
-        padding: 4px 10px;
-    }
-    &.xs {
-        font-size: 0.7 * _.$base-font-size;
-        padding: 3px 7px;
-    }
-    &.border {
-        border: 1px solid _.$light-gray;
-    }
-    &.bold {
-        font-weight: bold;
-    }
+  }
+  &.white {
+    background-color: _.$white;
+    color: _.$deep-gray;
+  }
+  &.black {
+    background-color: _.$black;
+    color: _.$white;
+  }
+  &.light {
+    background-color: _.$transparent-black;
+    color: _.$deep-gray;
+  }
+  &.primary_fill {
+    background-color: _.$blue;
+    color: _.$white;
+  }
+  &.primary {
+    background-color: _.$white;
+    color: _.$blue;
+  }
+  &.success_fill {
+    background-color: _.$green;
+    color: _.$white;
+  }
+  &.success {
+    background-color: _.$white;
+    color: _.$green;
+  }
+  &.dangerous_fill {
+    background-color: _.$red;
+    color: _.$white;
+  }
+  &.dangerous {
+    background-color: _.$white;
+    color: _.$red;
+  }
+  &.p8-15 {
+    padding: 8px 15px;
+  }
+  &.xl {
+    font-size: 1.2 * _.$base-font-size;
+    padding: 10px 25px;
+  }
+  &.l {
+    font-size: 0.9 * _.$base-font-size;
+    padding: 8px 20px;
+  }
+  &.s {
+    font-size: 0.8 * _.$base-font-size;
+    padding: 4px 10px;
+  }
+  &.xs {
+    font-size: 0.7 * _.$base-font-size;
+    padding: 3px 7px;
+  }
+  &.border {
+    border: 1px solid _.$light-gray;
+  }
+  &.bold {
+    font-weight: bold;
+  }
 }

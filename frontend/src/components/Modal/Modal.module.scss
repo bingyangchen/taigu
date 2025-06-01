@@ -1,114 +1,114 @@
 @use "../../global_variables" as _;
 
 .background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: calc(100% - env(keyboard-inset-height));
-    width: 100vw;
-    overflow: auto;
-    padding: 50px 0;
-    background-color: _.$semi-transparent-black;
-    z-index: 6;
-    user-select: none;
-    animation: 300ms fadein ease;
-    & > .main {
-        $modal-body-padding-x: 25px;
-        border-radius: 20px;
-        background-color: _.$white;
-        animation: 0.3s fadescalein ease;
-        &.compact {
-            width: min(85vw, 350px);
-        }
-        &.auto {
-            max-width: min(85vw, 720px);
-        }
-        &.full_screen {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: min(100%, 720px);
-            max-width: min(100%, 720px);
-            height: 100%;
-            overflow: auto;
-            border-radius: initial;
-            transform: translateX(-50%);
-            animation: none;
-            & > .header {
-                * {
-                    color: _.$light-gray;
-                }
-            }
-            & > .body {
-                max-height: none;
-            }
-            & > .footer {
-                position: sticky;
-                bottom: 0;
-                background-color: _.$white;
-            }
-        }
-        &.transparent {
-            background-color: transparent;
-        }
-        & > .header {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            height: 60px;
-            padding: 0 $modal-body-padding-x;
-            color: _.$gray;
-            & > .header_title {
-                display: flex;
-                align-items: center;
-                flex-grow: 1;
-            }
-        }
-        & > .body {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 512px;
-            padding: 0 $modal-body-padding-x 5px;
-            overflow: auto;
-            & > .description {
-                font-size: 0.8 * _.$base-font-size;
-                color: _.$gray;
-            }
-        }
-        & > .footer {
-            display: flex;
-            justify-content: flex-end;
-            align-items: flex-end;
-            height: fit-content;
-            padding: 15px $modal-body-padding-x;
-            gap: 15px;
-        }
-        & > .fake_footer {
-            height: 25px;
-        }
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100% - env(keyboard-inset-height));
+  width: 100vw;
+  overflow: auto;
+  padding: 50px 0;
+  background-color: _.$semi-transparent-black;
+  z-index: 6;
+  user-select: none;
+  animation: 300ms fadein ease;
+  & > .main {
+    $modal-body-padding-x: 25px;
+    border-radius: 20px;
+    background-color: _.$white;
+    animation: 0.3s fadescalein ease;
+    &.compact {
+      width: min(85vw, 350px);
     }
+    &.auto {
+      max-width: min(85vw, 720px);
+    }
+    &.full_screen {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: min(100%, 720px);
+      max-width: min(100%, 720px);
+      height: 100%;
+      overflow: auto;
+      border-radius: initial;
+      transform: translateX(-50%);
+      animation: none;
+      & > .header {
+        * {
+          color: _.$light-gray;
+        }
+      }
+      & > .body {
+        max-height: none;
+      }
+      & > .footer {
+        position: sticky;
+        bottom: 0;
+        background-color: _.$white;
+      }
+    }
+    &.transparent {
+      background-color: transparent;
+    }
+    & > .header {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      height: 60px;
+      padding: 0 $modal-body-padding-x;
+      color: _.$gray;
+      & > .header_title {
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
+      }
+    }
+    & > .body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 512px;
+      padding: 0 $modal-body-padding-x 5px;
+      overflow: auto;
+      & > .description {
+        font-size: 0.8 * _.$base-font-size;
+        color: _.$gray;
+      }
+    }
+    & > .footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      height: fit-content;
+      padding: 15px $modal-body-padding-x;
+      gap: 15px;
+    }
+    & > .fake_footer {
+      height: 25px;
+    }
+  }
 }
 
 @keyframes fadein {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadescalein {
-    from {
-        opacity: 0;
-        transform: scale(0.8);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

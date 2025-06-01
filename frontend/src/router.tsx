@@ -29,7 +29,8 @@ import Home from "./pages/Main/Home/Home";
 import Market from "./pages/Main/Market/Market";
 import Plans from "./pages/Main/Plans/Plans";
 import Records from "./pages/Main/Records/Records";
-import DeleteAccount from "./pages/Settings/DeleteAccount/DeleteAccount";
+// import DeleteAccount from "./pages/Settings/DeleteAccount/DeleteAccount";
+import AccountBinding from "./pages/Settings/AccountBinding/AccountBinding";
 import Overview from "./pages/Settings/Overview/Overview";
 import UserInfo from "./pages/Settings/UserInfo/UserInfo";
 
@@ -43,7 +44,8 @@ const myRouter = createBrowserRouter(
       <Route path={settingsPagePath} element={<Settings />}>
         <Route path="" element={<Overview />}></Route>
         <Route path="user-info" element={<UserInfo />}></Route>
-        <Route path="delete-account" element={<DeleteAccount />} />
+        <Route path="account-binding" element={<AccountBinding />}></Route>
+        {/* <Route path="delete-account" element={<DeleteAccount />} /> */}
       </Route>
       <Route path="" element={<Main />}>
         <Route path="" element={<Home />}></Route>

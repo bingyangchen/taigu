@@ -19,13 +19,11 @@
     justify-content: center;
     width: 100%;
     height: _.$footer-height;
-    color: _.$deep-gray;
-    opacity: 0.8;
-    &.active {
-      color: _.$black;
-      opacity: 1;
-    }
+    color: _.$black;
     & > .icon_inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 23px;
     }
   }
