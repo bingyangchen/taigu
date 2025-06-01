@@ -65,7 +65,7 @@ export default class BeautifulRow extends React.Component<Props, State> {
     setTimeout(() => {
       this.setState({ isRippling: false });
       this.props.onClick?.(e);
-    }, 300);
+    }, 250);
   };
   private string2jsx(s: string): React.ReactNode {
     const stringList: string[] = s.split("\n");

@@ -1,104 +1,126 @@
 @use "../../global_variables" as _;
 
 .main {
-    $card-width: min(87vw, 320px);
-    display: flex;
-    flex-direction: column;
-    height: fit-content;
-    padding: 10px 15px;
-    border-radius: 8px;
-    background-color: _.$transparent-white;
-    box-shadow: 0 3px 10px -5px _.$semi-transparent-black;
+  $card-width: min(87vw, 320px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  padding: 10px 15px;
+  border-radius: 8px;
+  background-color: _.$transparent-white;
+  box-shadow: 0 3px 10px -5px _.$semi-transparent-black;
+  width: $card-width;
+  gap: 10px;
+  transition-duration: 100ms;
+  cursor: pointer;
+  &.tall {
+    padding: 15px;
+  }
+  @media (max-width: _.$width-780) {
+    $card-width: 100%;
+    padding: 10px 25px;
+    background-color: _.$white;
+    box-shadow: none;
+    border-radius: 0;
     width: $card-width;
-    gap: 10px;
-    transition-duration: 100ms;
-    cursor: pointer;
+    border: 1px solid _.$noisy-white;
+    transition-duration: 0ms;
     &.tall {
-        padding: 15px;
+      padding: 15px 25px;
     }
-    @media (max-width: _.$width-780) {
-        $card-width: 100%;
-        padding: 10px 25px;
-        background-color: _.$white;
-        box-shadow: none;
-        border-radius: 0;
-        width: $card-width;
-        border: 1px solid _.$noisy-white;
-        transition-duration: 0ms;
-        &.tall {
-            padding: 15px 25px;
-        }
+  }
+  @media (hover: hover) {
+    &:hover {
+      background-color: _.$white;
+      box-shadow: 0 3px 20px -10px _.$semi-transparent-black;
     }
-    @media (hover: hover) {
-        &:hover {
-            background-color: _.$white;
-            box-shadow: 0 3px 20px -10px _.$semi-transparent-black;
-        }
+  }
+  & > .mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    & > .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: ripple 250ms linear;
+      background-color: _.$transparent-black;
     }
-    & > .upper {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 10px;
-        & > .company {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            width: 100px;
-            & > .name {
-                letter-spacing: 0;
-                font-weight: bold;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-            & > .sid {
-                font-size: 0.7 * _.$base-font-size;
-                color: _.$gray;
-            }
-        }
-        & > .price {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            width: 85px;
-            & > .price {
-                text-align: right;
-                font-weight: bold;
-                font-size: 1.2 * _.$base-font-size;
-            }
-            & > .price_fluct {
-                text-align: right;
-                font-size: 0.7 * _.$base-font-size;
-                letter-spacing: 0.25 * _.$base-letter-spacing;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-        }
-    }
-    & > .lower {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 15px;
+  }
+  & > .upper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    & > .company {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      width: 100px;
+      & > .name {
+        letter-spacing: 0;
+        font-weight: bold;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      & > .sid {
         font-size: 0.7 * _.$base-font-size;
-        & > div {
-            min-width: max-content;
-        }
+        color: _.$gray;
+      }
     }
-    &.red {
-        .upper {
-            .price {
-                color: _.$red;
-            }
-        }
+    & > .price {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      width: 85px;
+      & > .price {
+        text-align: right;
+        font-weight: bold;
+        font-size: 1.2 * _.$base-font-size;
+      }
+      & > .price_fluct {
+        text-align: right;
+        font-size: 0.7 * _.$base-font-size;
+        letter-spacing: 0.25 * _.$base-letter-spacing;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
-    &.green {
-        .upper {
-            .price {
-                color: _.$green;
-            }
-        }
+  }
+  & > .lower {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 15px;
+    font-size: 0.7 * _.$base-font-size;
+    & > div {
+      min-width: max-content;
     }
+  }
+  &.red {
+    .upper {
+      .price {
+        color: _.$red;
+      }
+    }
+  }
+  &.green {
+    .upper {
+      .price {
+        color: _.$green;
+      }
+    }
+  }
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(2);
+  }
 }
