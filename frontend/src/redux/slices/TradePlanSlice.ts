@@ -64,10 +64,7 @@ export const tradePlanSlice = createSlice({
   name: "tradePlan",
   initialState,
   reducers: {
-    refreshTradePlansWithNonCacheResponse(
-      state,
-      action: PayloadAction<TradePlan[]>
-    ) {
+    refreshTradePlansWithNonCacheResponse(state, action: PayloadAction<TradePlan[]>) {
       state.tradePlans = action.payload;
     },
   },

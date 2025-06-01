@@ -35,8 +35,8 @@ class ToastList extends React.Component<Props, State> {
         {this.props.toasts.map((each, idx) => {
           return (
             <div key={idx} className={styles.toast_outer}>
-              <div className={styles.toast}>
-                {each.message}
+              <div className={`${styles.toast} ${styles[each.type]}`}>
+                {each.text}
                 <RoundButton
                   onClick={() => this.handleClickRemoveMessage(idx)}
                   className={styles.close_button}

@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import type { Account, UpdateAccountInfoRequestBody } from "../../types";
 import Api from "../../utils/api";
+import { pushToast } from "./ToastSlice";
 
 interface AccountState extends Account {
   isWaiting: boolean;
@@ -37,12 +38,13 @@ export const updateAccountInfo = createAsyncThunk(
 
 export const changeAccountBinding = createAsyncThunk(
   "account/changeAccountBinding",
-  async (requestBody: URLSearchParams): Promise<Account> => {
+  async (requestBody: URLSearchParams, thunkAPI): Promise<Account> => {
     const response = await Api.sendRequest(
       "account/change-binding",
       "post",
       requestBody
     );
+    thunkAPI.dispatch(pushToast({ type: "success", text: "成功綁定" }));
     return response;
   }
 );
