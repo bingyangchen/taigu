@@ -1,3 +1,4 @@
+import googleLogo from "../../../assets/google.png";
 import logo from "../../../assets/logo.png";
 import imgPersonFill from "../../../assets/person-fill.svg";
 import styles from "./Overview.module.scss";
@@ -125,13 +126,20 @@ class Overview extends React.Component<Props, State> {
                     <div className={styles.username}>{this.props.username}</div>
                   </div>
                 </BeautifulRow>
-                <BeautifulRow>
+                <BeautifulRow
+                  onClick={() =>
+                    this.props.router.navigate(
+                      `${Env.frontendRootPath}${settingsPagePath}/account-binding`
+                    )
+                  }
+                >
                   <div className={`${styles.row_inner} ${styles.email}`}>
                     <IconEnvelope sideLength="16px" />
                     <div className={styles.email_container}>
                       <div>Email</div>
                       <div>{this.props.email}</div>
                     </div>
+                    <img src={googleLogo} alt="" className={styles.google_logo} />
                   </div>
                 </BeautifulRow>
               </BeautifulBlock>

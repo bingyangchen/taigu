@@ -35,14 +35,22 @@ export const updateAccountInfo = createAsyncThunk(
   }
 );
 
+export const changeAccountBinding = createAsyncThunk(
+  "account/changeAccountBinding",
+  async (requestBody: URLSearchParams): Promise<Account> => {
+    const response = await Api.sendRequest(
+      "account/change-binding",
+      "post",
+      requestBody
+    );
+    return response;
+  }
+);
+
 export const deleteAccount = createAsyncThunk(
   "account/deleteAccount",
   async (requestBody: { password: string }): Promise<void> => {
-    await Api.sendRequest(
-      "account/delete",
-      "delete",
-      JSON.stringify(requestBody)
-    );
+    await Api.sendRequest("account/delete", "delete", JSON.stringify(requestBody));
   }
 );
 
@@ -60,21 +68,15 @@ export const loginWithGoogle = createAsyncThunk(
   }
 );
 
-export const logout = createAsyncThunk(
-  "account/logout",
-  async (): Promise<void> => {
-    await Api.sendRequest("account/logout", "get");
-  }
-);
+export const logout = createAsyncThunk("account/logout", async (): Promise<void> => {
+  await Api.sendRequest("account/logout", "get");
+});
 
 export const accountSlice = createSlice({
   name: "account",
   initialState,
   reducers: {
-    refreshAccountInfoWithNonCacheResponse(
-      state,
-      action: PayloadAction<Account>
-    ) {
+    refreshAccountInfoWithNonCacheResponse(state, action: PayloadAction<Account>) {
       state.id = action.payload.id;
       state.email = action.payload.email;
       state.username = action.payload.username;
@@ -110,6 +112,21 @@ export const accountSlice = createSlice({
         state.isWaiting = false;
       })
       .addCase(updateAccountInfo.rejected, (state) => {
+        state.isWaiting = false;
+      })
+
+      .addCase(changeAccountBinding.pending, (state) => {
+        state.isWaiting = true;
+      })
+      .addCase(changeAccountBinding.fulfilled, (state, action) => {
+        state.id = action.payload.id;
+        state.email = action.payload.email;
+        state.username = action.payload.username;
+        state.avatar_url = action.payload.avatar_url;
+
+        state.isWaiting = false;
+      })
+      .addCase(changeAccountBinding.rejected, (state) => {
         state.isWaiting = false;
       })
 

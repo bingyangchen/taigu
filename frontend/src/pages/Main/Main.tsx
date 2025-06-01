@@ -12,7 +12,16 @@ import {
   NavBarForMain,
   ToastList,
 } from "../../components";
-import { IconBrandStrategy, IconClockHistory, IconHome, IconMarket } from "../../icons";
+import {
+  IconBrandStrategy,
+  IconBrandStrategyBold,
+  IconChartHistogram,
+  IconChartHistogramBold,
+  IconClockHistory,
+  IconClockHistoryBold,
+  IconHome,
+  IconHomeBold,
+} from "../../icons";
 import {
   fetchAccountInfo,
   refreshAccountInfoWithNonCacheResponse,
@@ -101,22 +110,26 @@ class Main extends React.Component<Props, State> {
 
     this.subpages = [
       {
-        icon: <IconHome sideLength="100%" />,
+        icon: <IconHome sideLength="98%" />,
+        icon_bold: <IconHomeBold sideLength="100%" />,
         name: "儀表板",
         path: Env.frontendRootPath,
       },
       {
-        icon: <IconMarket sideLength="100%" />,
+        icon: <IconChartHistogram sideLength="98%" />,
+        icon_bold: <IconChartHistogramBold sideLength="100%" />,
         name: "市場",
         path: `${Env.frontendRootPath}market`,
       },
       {
-        icon: <IconClockHistory sideLength="95%" />,
+        icon: <IconClockHistory sideLength="98%" />,
+        icon_bold: <IconClockHistoryBold sideLength="100%" />,
         name: "歷史紀錄",
         path: `${Env.frontendRootPath}records`,
       },
       {
         icon: <IconBrandStrategy sideLength="95%" />,
+        icon_bold: <IconBrandStrategyBold sideLength="98%" />,
         name: "買賣計畫",
         path: `${Env.frontendRootPath}plans`,
       },

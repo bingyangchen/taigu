@@ -31,7 +31,9 @@ class Footer extends React.Component<Props, State> {
               key={idx}
               className={`${styles.icon_outer} ${styles.active}`}
             >
-              <div className={styles.icon_inner}>{subpage.icon}</div>
+              <div className={styles.icon_inner}>
+                {subpage.icon_bold || subpage.icon}
+              </div>
             </div>
           ) : (
             <NavLink

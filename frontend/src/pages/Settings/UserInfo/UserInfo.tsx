@@ -1,3 +1,4 @@
+import imgPersonFill from "../../../assets/person-fill.svg";
 import styles from "./UserInfo.module.scss";
 
 import React from "react";
@@ -20,6 +21,7 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 }
 
 interface State {
+  showDefaultAvatar: boolean;
   avatarUrl: string;
   username: string;
 }
@@ -28,10 +30,10 @@ class UserInfo extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = { avatarUrl: "", username: "" };
+    this.state = { showDefaultAvatar: false, avatarUrl: "", username: "" };
   }
   public async componentDidMount(): Promise<void> {
-    this.props.dispatch(updateHeaderTitle("名字與頭貼"));
+    this.props.dispatch(updateHeaderTitle("頭貼與名字"));
     this.setState({
       avatarUrl: this.props.avatar_url || "",
       username: this.props.username,
@@ -46,13 +48,16 @@ class UserInfo extends React.Component<Props, State> {
       this.setState({ username: this.props.username });
     }
     if (prevProps.avatar_url !== this.props.avatar_url) {
-      this.setState({ avatarUrl: this.props.avatar_url || "" });
+      this.setState({
+        avatarUrl: this.props.avatar_url || "",
+        showDefaultAvatar: false,
+      });
     }
   }
   public render(): React.ReactNode {
     return (
       <Form
-        title="名字與頭貼"
+        title="頭貼與名字"
         goBackHandler={() => {
           this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
             replace: true,
@@ -81,27 +86,31 @@ class UserInfo extends React.Component<Props, State> {
           </Button>
         }
       >
+        {this.state.showDefaultAvatar ? (
+          <img className={styles.avatar_preview} src={imgPersonFill} alt="" />
+        ) : (
+          <img
+            className={styles.avatar_preview}
+            src={this.state.avatarUrl}
+            alt=""
+            onError={() => this.setState({ showDefaultAvatar: true })}
+          />
+        )}
+        <LabeledInput
+          title="頭貼 URL"
+          type="text"
+          value={this.state.avatarUrl || ""}
+          onChange={(avatarUrl: string) =>
+            this.setState({ avatarUrl: avatarUrl, showDefaultAvatar: false })
+          }
+          autoFocus
+        />
         <LabeledInput
           title="名字"
           type="text"
           value={this.state.username}
           onChange={(username: string) => this.setState({ username: username })}
-          autoFocus
         />
-        <br />
-        <LabeledInput
-          title="頭貼網址"
-          type="text"
-          value={this.state.avatarUrl || ""}
-          onChange={(avatarUrl: string) => this.setState({ avatarUrl: avatarUrl })}
-        />
-        {this.state.avatarUrl && (
-          <img
-            className={styles.avatar_preview}
-            src={this.state.avatarUrl}
-            alt="圖片網址有誤"
-          />
-        )}
       </Form>
     );
   }
