@@ -179,28 +179,27 @@ def _store_market_per_minute_info(
     if minutes_after_opening >= 298:
         minutes_after_opening = 270
 
-    market = TradeType.TSE if id == "t00" else TradeType.OTC
+    market_id = TradeType.TSE if id == "t00" else TradeType.OTC
 
     # Delete data that are not belong to the latest day
     delete_count, _ = (
-        MarketIndexPerMinute.objects.filter(market=market).exclude(date=date_).delete()
+        MarketIndexPerMinute.objects.filter(market=market_id)
+        .exclude(date=date_)
+        .delete()
     )
 
-    cache_manager = TimeSeriesStockInfoCacheManager(market)
+    cache_manager = TimeSeriesStockInfoCacheManager(market_id)
     current_data_to_cache = {
         minutes_after_opening: TimeSeriesStockInfoPointData(
             date=date_, price=price, fluct_price=fluct_price
         )
     }
     if delete_count == 0 and (cache_data := cache_manager.get()) is not None:
-        cache_data = cache_data.model_dump()["data"]
-        cache_data.update(current_data_to_cache)
-        cache_manager.set(TimeSeriesStockInfo(data=cache_data), 180)
-    else:
-        cache_manager.set(TimeSeriesStockInfo(data=current_data_to_cache), 180)
+        current_data_to_cache.update(cache_data.model_dump()["data"])
+    cache_manager.set(TimeSeriesStockInfo(data=current_data_to_cache), 180)
 
     MarketIndexPerMinute.objects.get_or_create(
-        market=market,
+        market=market_id,
         date=date_,
         number=minutes_after_opening,
         defaults={"price": price, "fluct_price": fluct_price},
