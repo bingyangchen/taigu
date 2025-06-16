@@ -47,7 +47,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "csp.middleware.CSPMiddleware",
-    # My middlware
+    # My middleware
     "main.account.middleware.check_login_status_middleware",
 ]
 
