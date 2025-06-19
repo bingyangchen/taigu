@@ -19,7 +19,7 @@ class ThirdPartyApi:
     company_business = "https://mopsov.twse.com.tw/mops/web/ajax_t05st03"
     realtime = {
         # Realtime Stock Info (Rate limit: 3 requests per 5 seconds)
-        "stock": "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=",
+        "stock": "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=",  # codespell:ignore
         # Realtime Market Index Info
         TradeType.TSE: "https://openapi.twse.com.tw/v1/exchangeReport/FMTQIK",
         TradeType.OTC: "https://www.tpex.org.tw/openapi/v1/tpex_mainborad_highlight",

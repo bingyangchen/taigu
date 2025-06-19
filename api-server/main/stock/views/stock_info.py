@@ -5,10 +5,7 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
 
 from main.stock import Frequency, TradeType
-from main.stock.cache import (
-    TimeSeriesStockInfo,
-    TimeSeriesStockInfoCacheManager,
-)
+from main.stock.cache import TimeSeriesStockInfo, TimeSeriesStockInfoCacheManager
 from main.stock.models import Company, History, MarketIndexPerMinute, StockInfo
 
 logger = logging.getLogger(__name__)
@@ -18,8 +15,8 @@ logger = logging.getLogger(__name__)
 def market_index(request: HttpRequest) -> JsonResponse:
     try:
         result = {}
-        for market in (TradeType.TSE, TradeType.OTC):
-            cache_manager = TimeSeriesStockInfoCacheManager(market)
+        for market_id in (TradeType.TSE, TradeType.OTC):
+            cache_manager = TimeSeriesStockInfoCacheManager(market_id)
             cache_result = cache_manager.get()
             if cache_result is not None:
                 data = cache_result.model_dump()["data"]
@@ -30,10 +27,10 @@ def market_index(request: HttpRequest) -> JsonResponse:
                         "price": row.price,
                         "fluct_price": row.fluct_price,
                     }
-                    for row in MarketIndexPerMinute.objects.filter(market=market)
+                    for row in MarketIndexPerMinute.objects.filter(market=market_id)
                 }
                 cache_manager.set(TimeSeriesStockInfo(data=data), 180)
-            result[market] = data
+            result[market_id] = data
         return JsonResponse(result)
     except Exception as e:
         logger.error(f"Error in stock/market_index: {e}")

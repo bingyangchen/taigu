@@ -52,7 +52,7 @@ services:
         max-size: "2m"
         max-file: "1"
   redis:
-    image: redis:6.2.17
+    image: redis:7.4.4-alpine
     ports:
       - "6380:6379"
     volumes:

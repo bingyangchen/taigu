@@ -20,7 +20,7 @@ def check_login_status_middleware(
             response.delete_cookie(AUTH_COOKIE_NAME)
         elif response.get("is-log-out") != "yes" and response.get("is-log-in") != "yes":
             if token:
-                # refresh the max_age of the auth cookie everytime
+                # refresh the max_age of the auth cookie every time
                 response.set_cookie(
                     key=AUTH_COOKIE_NAME,
                     value=token,
@@ -31,7 +31,7 @@ def check_login_status_middleware(
                 )
             else:
                 response.delete_cookie(AUTH_COOKIE_NAME)
-        # Delete all the custome headers that may appear (KeyError won't be raised)
+        # Delete all the custom headers that may appear (KeyError won't be raised)
         del response["is-log-out"]
         del response["is-log-in"]
         return response
