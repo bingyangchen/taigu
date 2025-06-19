@@ -5,10 +5,7 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
 
 from main.stock import Frequency, TradeType
-from main.stock.cache import (
-    TimeSeriesStockInfo,
-    TimeSeriesStockInfoCacheManager,
-)
+from main.stock.cache import TimeSeriesStockInfo, TimeSeriesStockInfoCacheManager
 from main.stock.models import Company, History, MarketIndexPerMinute, StockInfo
 
 logger = logging.getLogger(__name__)
