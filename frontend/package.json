@@ -1,7 +1,7 @@
 {
   "name": "trade-smartly",
   "version": "1.0.0",
-  "homepage": "https://trade-smartly.com",
+  "homepage": "https://taigu.tw",
   "private": true,
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.1",

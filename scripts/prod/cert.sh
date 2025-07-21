@@ -16,7 +16,7 @@ sudo certbot certonly \
     --non-interactive \
     --agree-tos \
     --email bryan.chen.429@gmail.com \
-    --domains trade-smartly.com \
+    --domains taigu.tw \
     --preferred-challenges http
 
 printf "${GREEN} ✔ SSL certificate acquired${RESET}\n"

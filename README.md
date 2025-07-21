@@ -161,7 +161,7 @@ Let's dive deeper into the details of **Step 2** of the development workflow whe
 ### Prerequisites
 
 - Operating System: Linux (Ubuntu >=22.04)
-- Domain name: trade-smartly.com
+- Domain name: taigu.tw
 - Git (>=2.34.0)
 - GNU Make (>=3.81.0)
 - Docker (>=27.4.0)
