@@ -1,9 +1,9 @@
 {
   "name": "API Server",
   "runArgs": [
-    "--name=trade-smartly-devcontainer-api-server"
+    "--name=taigu-devcontainer-api-server"
   ],
-  "image": "tradesmartly/api-server:dev",
+  "image": "taigutw/api-server:dev",
   "workspaceFolder": "/app",
   "mounts": [
     "source=${localWorkspaceFolder}/api-server,target=/app,type=bind,consistency=cached"

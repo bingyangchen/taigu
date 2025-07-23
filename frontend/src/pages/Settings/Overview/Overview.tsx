@@ -231,10 +231,10 @@ class Overview extends React.Component<Props, State> {
               </BeautifulBlock>
             </div>
             <div className={styles.logo_container}>
-              <img src={logo} alt="TradeSmartly" className={styles.logo} />
+              <img src={logo} alt="Taigu" className={styles.logo} />
             </div>
             <div className={styles.copyright}>
-              Copyright {new Date().getFullYear()} TradeSmartly All rights reserved.
+              Copyright {new Date().getFullYear()} Taigu All rights reserved.
             </div>
           </div>
         </div>

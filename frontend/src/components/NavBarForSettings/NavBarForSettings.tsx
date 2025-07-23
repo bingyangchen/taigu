@@ -63,7 +63,7 @@ class NavBarForSettings extends React.Component<Props, State> {
             <FullLogo size="s" />
           </div>
           <div className={styles.copyright}>
-            © TradeSmartly 2021-{new Date().getFullYear()}
+            © Taigu 2021-{new Date().getFullYear()}
           </div>
         </div>
       </div>

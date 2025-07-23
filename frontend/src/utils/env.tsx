@@ -5,6 +5,6 @@ export default class Env {
     ? `https://${window.location.hostname}/api/`
     : "https://taigu.tw/api/";
   public static frontendRootPath: string = "/";
-  public static cacheKey: string = "trade-smartly";
-  public static broadcastChannelName: string = "trade-smartly";
+  public static cacheKey: string = "taigu";
+  public static broadcastChannelName: string = "taigu";
 }
