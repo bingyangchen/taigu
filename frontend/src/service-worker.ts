@@ -99,7 +99,7 @@ self.addEventListener("activate", (event) => {
   // NOTE: `window` is not defined in service worker
 });
 
-const channel = new BroadcastChannel("trade-smartly");
+const channel = new BroadcastChannel("taigu");
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const requestUrl = request.url;
@@ -118,7 +118,7 @@ self.addEventListener("fetch", (event) => {
       method === "get"
     ) {
       event.respondWith(
-        caches.open("trade-smartly").then((cache) => {
+        caches.open("taigu").then((cache) => {
           return cache.match(request).then(async (cacheResponse) => {
             const fetchPromise = fetch(request).then((networkResponse) => {
               if (networkResponse.status < 400) {
@@ -132,7 +132,7 @@ self.addEventListener("fetch", (event) => {
                 });
               } else if (networkResponse.status === 401) {
                 // Same logic as src/utils/api.tsx
-                caches.delete("trade-smartly");
+                caches.delete("taigu");
                 channel.postMessage({ authorized: false });
               }
               return networkResponse;
@@ -145,7 +145,7 @@ self.addEventListener("fetch", (event) => {
       (/account\/logout[/]?$/gs.test(requestUrl) && method === "get") ||
       (/account\/delete[/]?$/gs.test(requestUrl) && method === "delete")
     ) {
-      caches.delete("trade-smartly");
+      caches.delete("taigu");
     }
   }
   return;

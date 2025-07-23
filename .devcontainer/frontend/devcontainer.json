@@ -1,9 +1,9 @@
 {
   "name": "Frontend",
   "runArgs": [
-    "--name=trade-smartly-devcontainer-frontend"
+    "--name=taigu-devcontainer-frontend"
   ],
-  "image": "tradesmartly/frontend:dev",
+  "image": "taigutw/frontend:dev",
   "workspaceFolder": "/app",
   "mounts": [
     "source=${localWorkspaceFolder}/frontend,target=/app,type=bind,consistency=cached"
