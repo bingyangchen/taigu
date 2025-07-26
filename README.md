@@ -186,6 +186,6 @@ make start
 docker cp ~/db-backups/backup.sql taigu-db-1:/backup.sql
 make shell-db
     # In the db container:
-    psql trade_smartly < /backup.sql
+    psql taigu < /backup.sql
     exit
 ```
