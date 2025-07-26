@@ -69,7 +69,7 @@ services:
       - PGUSER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=postgres # for default, the application doesn't use this
-      - APP_DB=trade_smartly
+      - APP_DB=taigu
     restart: unless-stopped
     logging:
       driver: "json-file"
