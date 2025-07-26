@@ -1,3 +1,4 @@
+# ruff: noqa: S101
 import time
 
 import pytest

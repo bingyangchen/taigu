@@ -63,7 +63,7 @@ services:
     expose:
       - "5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - taigu_db_data:/var/lib/postgresql/data
       - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh # This will be executed when the container starts
     environment:
       - PGUSER=postgres
@@ -94,4 +94,5 @@ services:
 
 volumes:
   redis_data:
-  db_data:
+  taigu_db_data:
+    external: true

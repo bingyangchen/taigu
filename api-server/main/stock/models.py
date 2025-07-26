@@ -30,7 +30,9 @@ class CompanyManager(models.Manager):
 
     @classmethod
     def fetch_company_info(cls, sid: str) -> dict:
-        basic_info_response = requests.post(f"{ThirdPartyApi.company_info}{sid}")
+        basic_info_response = requests.post(
+            f"{ThirdPartyApi.company_info}{sid}", timeout=5
+        )
         basic_info_document = PyQuery(basic_info_response.text)
         company_name = basic_info_document.find(
             "tr:nth-child(2)>td:nth-child(4)"
@@ -49,6 +51,7 @@ class CompanyManager(models.Manager):
                     "step": 1,
                     "off": 1,
                 },
+                timeout=8,
             )
             business = (
                 PyQuery(business_response.text)("tr")
