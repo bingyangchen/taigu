@@ -13,29 +13,26 @@
     "vscode": {
       "settings": {
         "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-          "source.organizeImports": "always"
-        },
-        "python.languageServer": "Pylance",
-        "isort.args": [
-          "--src=${workspaceFolder}",
-          "--line-length=88"
-        ],
         "[python]": {
-          "editor.defaultFormatter": "charliermarsh.ruff"
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+          }
         },
         "files.insertFinalNewline": true,
         "files.trimFinalNewlines": true,
         "files.trimTrailingWhitespace": true,
         "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.languageServer": "Pylance",
+        "ruff.organizeImports": true,
         "ruff.settings": {
           "config": "/app/api-server/ruff.toml"
         }
       },
       "extensions": [
         "ms-python.python",
-        "ms-python.isort",
         "ms-python.vscode-pylance",
+        "anysphere.cursorpyright",
         "charliermarsh.ruff"
       ]
     }

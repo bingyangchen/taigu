@@ -27,8 +27,9 @@ shutdown_event = threading.Event()
 
 def fetch_and_store_realtime_stock_info() -> None:
     try:
-        subprocess.run(
-            ["python", "manage.py", "fetch_and_store_realtime_stock_info"], check=True
+        subprocess.run(  # noqa: S603
+            ["python", "manage.py", "fetch_and_store_realtime_stock_info"],  # noqa: S607
+            check=True,
         )
     except Exception as e:
         logger.error(f"Error in fetch_and_store_realtime_stock_info: {e}")
@@ -36,14 +37,20 @@ def fetch_and_store_realtime_stock_info() -> None:
 
 def update_all_stocks_history() -> None:
     try:
-        subprocess.run(["python", "manage.py", "update_all_stocks_history"], check=True)
+        subprocess.run(  # noqa: S603
+            ["python", "manage.py", "update_all_stocks_history"],  # noqa: S607
+            check=True,
+        )
     except Exception as e:
         logger.error(f"Error in update_all_stocks_history: {e}")
 
 
 def update_material_facts() -> None:
     try:
-        subprocess.run(["python", "manage.py", "update_material_facts"], check=True)
+        subprocess.run(  # noqa: S603
+            ["python", "manage.py", "update_material_facts"],  # noqa: S607
+            check=True,
+        )
     except Exception as e:
         logger.error(f"Error in update_material_facts: {e}")
 

@@ -1,7 +1,7 @@
 import csv
 import logging
 import math
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta, timezone
 from io import StringIO
 from time import sleep
 from typing import Literal
@@ -35,16 +35,16 @@ def fetch_and_store_realtime_stock_info() -> None:
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )
-    all = [f"tse_{market_indices[0]}.tw", f"otc_{market_indices[1]}.tw"] + list(
-        map(lambda x: f"{x['trade_type']}_{x['pk']}.tw", query_set)
-    )
+    all = [f"tse_{market_indices[0]}.tw", f"otc_{market_indices[1]}.tw"] + [
+        f"{x['trade_type']}_{x['pk']}.tw" for x in query_set
+    ]
     batch_size = 145
     logger.debug(f"Expected request count: {math.ceil(len(all) / batch_size)}")
     while len(all) > 0:
         start = datetime.now()
         url = f"{ThirdPartyApi.realtime['stock']}{'|'.join(all[:batch_size])}"
         try:
-            json_data = requests.get(url, timeout=4, verify=False).json()
+            json_data = requests.get(url, timeout=4, verify=False).json()  # noqa: S501
             to_update_batch = []
             for row in json_data["msgArray"]:
                 try:
@@ -168,7 +168,7 @@ def fetch_and_store_realtime_stock_info() -> None:
 def _store_market_per_minute_info(
     id: Literal["t00", "o00"], date_: date, price: float, fluct_price: float
 ) -> None:
-    now = (datetime.now(timezone.utc) + timedelta(hours=8)).time()
+    now = (datetime.now(UTC) + timedelta(hours=8)).time()
     minutes_after_opening = (now.hour - 9) * 60 + now.minute
 
     # Do nothing during 13:30 ~ 13:58
@@ -209,12 +209,12 @@ def _store_market_per_minute_info(
 def fetch_and_store_close_info_today() -> None:
     """This function is currently not used."""
     logger.debug("Start fetching sotck market close info today.")
-    date_ = (datetime.now(timezone.utc) + timedelta(hours=8)).date()
+    date_ = (datetime.now(UTC) + timedelta(hours=8)).date()
 
     # Process TSE stocks
     try:
         tse_response: list[dict[str, str]] = requests.get(
-            ThirdPartyApi.single_day[TradeType.TSE]
+            ThirdPartyApi.single_day[TradeType.TSE], timeout=10
         ).json()
         for row in tse_response:
             try:
@@ -241,7 +241,7 @@ def fetch_and_store_close_info_today() -> None:
     # Process OTC stocks
     try:
         otc_response: list[dict[str, str]] = requests.get(
-            ThirdPartyApi.single_day[TradeType.OTC]
+            ThirdPartyApi.single_day[TradeType.OTC], timeout=10
         ).json()
         for row in otc_response:
             try:
@@ -305,6 +305,7 @@ def _fetch_and_store_historical_info_from_yahoo(
     response = requests.get(
         f"{ThirdPartyApi.multiple_days}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start.timestamp())}&period2={int(end.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
         headers=headers,
+        timeout=10,
     )
     data = StringIO(response.text)
     csv_reader = csv.reader(data)
@@ -368,7 +369,7 @@ def update_material_facts() -> None:
     for trade_type in [TradeType.TSE, TradeType.OTC]:
         try:
             response: list[dict[str, str]] = requests.get(
-                ThirdPartyApi.material_fact[trade_type]
+                ThirdPartyApi.material_fact[trade_type], timeout=10
             ).json()
 
             # Fill the data of missed companies
@@ -412,8 +413,7 @@ def update_material_facts() -> None:
 
     # Delete data that is too old
     MaterialFact.objects.filter(
-        date_time__lt=(datetime.now(timezone.utc) + timedelta(hours=8))
-        - timedelta(days=30)
+        date_time__lt=(datetime.now(UTC) + timedelta(hours=8)) - timedelta(days=30)
     ).delete()
     logger.debug("Material facts updated!")
 

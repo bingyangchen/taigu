@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def google_login(request: HttpRequest) -> JsonResponse:
-    GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
+    flow = google_oauth_flow.Flow.from_client_secrets_file(
         os.path.join(
             settings.BASE_DIR,
             "client_secret_85674097625-iqmtaroea8456oeh3461j2g8esb426ts.apps.googleusercontent.com.json",
@@ -35,11 +35,11 @@ def google_login(request: HttpRequest) -> JsonResponse:
     result = {}
     if (request.method == "GET") and (redirect_uri := request.GET.get("redirect_uri")):
         try:
-            GOOGLE_AUTH_FLOW.redirect_uri = redirect_uri
+            flow.redirect_uri = redirect_uri
             (
                 result["authorization_url"],
                 result["state"],
-            ) = GOOGLE_AUTH_FLOW.authorization_url(include_granted_scopes="true")
+            ) = flow.authorization_url(include_granted_scopes="true")
             return JsonResponse(result)
         except Exception as e:
             logger.error(f"Error in account/google_login [GET]: {e}")
@@ -50,13 +50,13 @@ def google_login(request: HttpRequest) -> JsonResponse:
         and (redirect_uri := request.POST.get("redirect_uri"))
     ):
         try:
-            GOOGLE_AUTH_FLOW.redirect_uri = redirect_uri
-            GOOGLE_AUTH_FLOW.fetch_token(code=code)
-            credentials = GOOGLE_AUTH_FLOW.credentials
+            flow.redirect_uri = redirect_uri
+            flow.fetch_token(code=code)
+            credentials = flow.credentials
             verify_result = id_token.verify_oauth2_token(
                 credentials.id_token,  # type: ignore
                 GoogleRequest(),
-                GOOGLE_AUTH_FLOW.client_config["client_id"],
+                flow.client_config["client_id"],
             )
 
             # login an existing user or register a new user
@@ -100,7 +100,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
 @require_POST
 @require_login
 def change_google_binding(request: HttpRequest) -> JsonResponse:
-    GOOGLE_AUTH_FLOW = google_oauth_flow.Flow.from_client_secrets_file(
+    flow = google_oauth_flow.Flow.from_client_secrets_file(
         os.path.join(
             settings.BASE_DIR,
             "client_secret_85674097625-iqmtaroea8456oeh3461j2g8esb426ts.apps.googleusercontent.com.json",
@@ -117,13 +117,13 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
     try:
-        GOOGLE_AUTH_FLOW.redirect_uri = redirect_uri
-        GOOGLE_AUTH_FLOW.fetch_token(code=code)
-        credentials = GOOGLE_AUTH_FLOW.credentials
+        flow.redirect_uri = redirect_uri
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
         verify_result = id_token.verify_oauth2_token(
             credentials.id_token,  # type: ignore
             GoogleRequest(),
-            GOOGLE_AUTH_FLOW.client_config["client_id"],
+            flow.client_config["client_id"],
         )
 
         # Check if the given google account is not bound to any other account

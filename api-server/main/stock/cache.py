@@ -29,5 +29,6 @@ class TimeSeriesStockInfoCacheManager(BaseCacheManager[TimeSeriesStockInfo]):
         return f"time_series_stock_info:{self.identifier}"
 
     def set(self, value: TimeSeriesStockInfo, timeout: int) -> None:
-        assert isinstance(value, TimeSeriesStockInfo), TypeError
+        if not isinstance(value, TimeSeriesStockInfo):
+            raise TypeError
         super().set(value, timeout)
