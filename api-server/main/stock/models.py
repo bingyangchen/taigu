@@ -3,6 +3,7 @@ from collections.abc import MutableMapping
 from typing import Any
 
 import requests
+import urllib3
 from django.db import models
 from pyquery import PyQuery
 
@@ -30,8 +31,11 @@ class CompanyManager(models.Manager):
 
     @classmethod
     def fetch_company_info(cls, sid: str) -> dict:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         basic_info_response = requests.post(
-            f"{ThirdPartyApi.company_info}{sid}", timeout=5
+            f"{ThirdPartyApi.company_info}{sid}",
+            timeout=5,
+            verify=False,  # noqa: S501
         )
         basic_info_document = PyQuery(basic_info_response.text)
         company_name = basic_info_document.find(
@@ -52,6 +56,7 @@ class CompanyManager(models.Manager):
                     "off": 1,
                 },
                 timeout=8,
+                verify=False,  # noqa: S501
             )
             business = (
                 PyQuery(business_response.text)("tr")

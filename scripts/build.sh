@@ -14,6 +14,7 @@ fi
 arch=$(uname -m)
 
 for service in api-server frontend scheduler; do
+    echo "Building $service..."
     if [ "$service" == "scheduler" ]; then
         cd ./api-server
     else
@@ -26,3 +27,5 @@ for service in api-server frontend scheduler; do
     fi
     cd ..
 done
+
+printf "${GREEN}Done!${RESET}\n"
