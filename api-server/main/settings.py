@@ -1,18 +1,18 @@
 import logging
 from pathlib import Path
 
-from main.env import env
+from main.env import Env, env
 
 logging.basicConfig(
-    level=logging.DEBUG,
-    format="[%(asctime)s] %(levelname)s: %(funcName)s => %(message)s",
+    level=env.LOG_LEVEL,
+    format="%(asctime)s \033[1m[%(levelname)s]\033[0m\t%(name)s::%(filename)s:%(lineno)d\n%(message)s\n",
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env.SECRET_KEY
-DEBUG = True
+DEBUG = env.ENV == Env.DEV
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*"] if env.ENV == Env.DEV else ["taigu.tw"]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "main.urls"
@@ -31,7 +31,6 @@ INSTALLED_APPS = [
     "corsheaders",
     # Local Apps
     "main.core",
-    "main.crontab",
     "main.account",
     "main.stock",
     "main.memo",
@@ -104,21 +103,21 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-## Uncomment the following block to see the SQL log in console
-# LOGGING = {
-#     "version": 1,
-#     "disable_existing_loggers": False,
-#     "handlers": {
-#         "console": {
-#             "level": "DEBUG",
-#             "class": "logging.StreamHandler",
-#         },
-#     },
-#     "loggers": {
-#         "django.db.backends": {
-#             "handlers": ["console"],
-#             "level": "DEBUG",
-#             "propagate": False,
-#         },
-#     },
-# }
+if env.SQL_LOG:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+            },
+        },
+        "loggers": {
+            "django.db.backends": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+        },
+    }

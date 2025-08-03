@@ -47,6 +47,6 @@ RUN pip install --upgrade pip setuptools wheel && \
 WORKDIR /app
 COPY . .
 ENV PYTHONPATH=/app
-ENV DJANGO_SETTINGS_MODULE=main.settings_prod
+ENV DJANGO_SETTINGS_MODULE=main.settings
 EXPOSE 8000
 CMD ["gunicorn"]
