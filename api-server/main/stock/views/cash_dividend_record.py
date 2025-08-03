@@ -1,11 +1,11 @@
 import json
 from datetime import datetime
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
 from main.core.decorators import require_login
-from main.stock import UnknownStockIdError
 from main.stock.models import CashDividendRecord, Company
 
 
@@ -58,27 +58,28 @@ def create(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
     deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
-    sid = str(sid)
     cash_dividend = int(cash_dividend)
+
     try:
-        company = Company.objects.get(pk=sid)
-        record = CashDividendRecord.objects.create(
-            owner=request.user,
-            company=company,
-            deal_time=deal_time,
-            cash_dividend=cash_dividend,
-        )
-        return JsonResponse(
-            {
-                "id": record.pk,
-                "deal_time": record.deal_time,
-                "sid": record.company.pk,
-                "company_name": record.company.name,
-                "cash_dividend": record.cash_dividend,
-            }
-        )
-    except UnknownStockIdError as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        company = Company.objects.get(pk=str(sid))
+    except ObjectDoesNotExist:
+        return JsonResponse({"message": "Unknown Stock ID"}, status=400)
+
+    record = CashDividendRecord.objects.create(
+        owner=request.user,
+        company=company,
+        deal_time=deal_time,
+        cash_dividend=cash_dividend,
+    )
+    return JsonResponse(
+        {
+            "id": record.pk,
+            "deal_time": record.deal_time,
+            "sid": record.company.pk,
+            "company_name": record.company.name,
+            "cash_dividend": record.cash_dividend,
+        }
+    )
 
 
 @require_login
@@ -92,7 +93,6 @@ def update_or_delete(request: HttpRequest, id: str | int) -> JsonResponse:
 
 
 def update(request: HttpRequest, id: str | int) -> JsonResponse:
-    id = int(id)
     payload = json.loads(request.body)
     if (
         (not (deal_time := payload.get("deal_time")))
@@ -101,25 +101,25 @@ def update(request: HttpRequest, id: str | int) -> JsonResponse:
     ):
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
-    sid = str(sid)
     try:
-        company = Company.objects.get(pk=sid)
-        record = CashDividendRecord.objects.get(pk=id, owner=request.user)
-        record.company = company
-        record.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
-        record.cash_dividend = int(cash_dividend)
-        record.save()
-        return JsonResponse(
-            {
-                "id": record.pk,
-                "deal_time": record.deal_time,
-                "sid": record.company.pk,
-                "company_name": record.company.name,
-                "cash_dividend": record.cash_dividend,
-            }
-        )
-    except UnknownStockIdError as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        company = Company.objects.get(pk=str(sid))
+    except ObjectDoesNotExist:
+        return JsonResponse({"message": "Unknown Stock ID"}, status=400)
+
+    record = CashDividendRecord.objects.get(pk=int(id), owner=request.user)
+    record.company = company
+    record.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
+    record.cash_dividend = int(cash_dividend)
+    record.save()
+    return JsonResponse(
+        {
+            "id": record.pk,
+            "deal_time": record.deal_time,
+            "sid": record.company.pk,
+            "company_name": record.company.name,
+            "cash_dividend": record.cash_dividend,
+        }
+    )
 
 
 def delete(request: HttpRequest, id: str | int) -> JsonResponse:
