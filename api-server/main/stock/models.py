@@ -80,7 +80,7 @@ class CompanyManager(models.Manager):
                 "business": re.sub(r"\s+", "", str(business)),
             }
         else:
-            raise UnknownStockIdError("Unknown Stock ID")
+            raise UnknownStockIdError(f"Unknown Stock ID: {sid}")
 
 
 class Company(models.Model):
