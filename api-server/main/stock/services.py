@@ -208,7 +208,7 @@ def _store_market_per_minute_info(
 
 def update_company_list() -> None:
     logger.info("Start updating company list.")
-    new_company_list = []
+    new_sids = []
 
     # Process TSE stocks
     try:
@@ -217,17 +217,19 @@ def update_company_list() -> None:
             verify=False,  # noqa: S501
             timeout=10,
         ).json()
-        for row in tse_response:
+        incoming_tse_sids = {row["Code"] for row in tse_response}
+        existing_tse_sids = {
+            c.pk for c in Company.objects.filter(trade_type=TradeType.TSE)
+        }
+        new_tse_sids = incoming_tse_sids - existing_tse_sids
+        new_sids.extend(new_tse_sids)
+        for sid in new_tse_sids:
             try:
-                sid = row["Code"]
-                c, created = Company.objects.get_or_create(pk=sid)
-                if created:
-                    new_company_list.append(c)
-                    logger.info(f"New TSE company: {sid}")
+                Company.objects.get_or_create(pk=sid)
                 sleep(0.5)
             except Exception as e:
                 logger.error(f"<{type(e).__name__}>: {e}")
-                logger.error(f"Row: {row}")
+                logger.error(f"SID: {sid}")
     except Exception as e:
         logger.error(f"<{type(e).__name__}>: {e}")
 
@@ -238,21 +240,23 @@ def update_company_list() -> None:
             verify=False,  # noqa: S501
             timeout=10,
         ).json()
-        for row in otc_response:
+        incoming_otc_sids = {row["SecuritiesCompanyCode"] for row in otc_response}
+        existing_otc_sids = {
+            c.pk for c in Company.objects.filter(trade_type=TradeType.OTC)
+        }
+        new_otc_sids = incoming_otc_sids - existing_otc_sids
+        new_sids.extend(new_otc_sids)
+        for sid in new_otc_sids:
             try:
-                sid = row["SecuritiesCompanyCode"]
-                c, created = Company.objects.get_or_create(pk=sid)
-                if created:
-                    new_company_list.append(c)
-                    logger.info(f"New OTC company: {sid}")
+                Company.objects.get_or_create(pk=sid)
                 sleep(0.5)
             except Exception as e:
                 logger.error(f"<{type(e).__name__}>: {e}")
-                logger.error(f"Row: {row}")
+                logger.error(f"SID: {sid}")
     except Exception as e:
         logger.error(f"<{type(e).__name__}>: {e}")
 
-    logger.info(f"New company list: {new_company_list}")
+    logger.info(f"New company list: {new_sids}")
     logger.info("Company list updated!")
 
 
