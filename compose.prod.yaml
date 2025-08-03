@@ -78,9 +78,7 @@ services:
         max-file: "1"
   scheduler:
     image: taigutw/scheduler:prod
-    volumes:
-      - ./api-server/scheduler.py:/app/scheduler.py:ro
-    command: ["python", "-u", "scheduler.py"]
+    command: ["python", "-u", "main.py"]
     env_file: .env
     depends_on:
       - redis

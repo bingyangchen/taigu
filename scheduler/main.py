@@ -1,7 +1,7 @@
 """
-This file is not part of API Server.
-It is a scheduler for the whole project (We don't use Cronjob).
+We don't use Cronjob.
 """
+
 
 import logging
 import signal

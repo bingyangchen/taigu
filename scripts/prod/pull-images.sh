@@ -19,4 +19,4 @@ for image in "${remote_images[@]}"; do
     docker pull "$image"
 done
 
-printf "${GREEN} ✔ Images pulled${RESET}\n"
+printf "${GREEN} ✔ All images pulled${RESET}\n"
