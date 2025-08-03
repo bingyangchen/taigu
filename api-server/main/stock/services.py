@@ -213,71 +213,44 @@ def update_company_list() -> None:
     new_sids = []
     to_create_stock_info = []
 
-    # Process TSE stocks
-    try:
-        tse_response: list[dict[str, str]] = requests.get(
-            ThirdPartyApi.single_day[TradeType.TSE],
-            verify=False,  # noqa: S501
-            timeout=10,
-        ).json()
-        incoming_sids = {row["Code"] for row in tse_response}
-        existing_sids = {c.pk for c in Company.objects.filter(trade_type=TradeType.TSE)}
-        new_tse_sids = incoming_sids - existing_sids
-        for sid in new_tse_sids:
-            try:
-                _c, created = Company.objects.get_or_create(pk=sid)
-                if created:
-                    to_create_stock_info.append(
-                        StockInfo(
-                            company_id=sid,
-                            date=today,
-                            quantity=0,
-                            close_price=0,
-                            fluct_price=0,
+    for trade_type in [TradeType.TSE, TradeType.OTC]:
+        try:
+            response: list[dict[str, str]] = requests.get(
+                ThirdPartyApi.single_day[trade_type],
+                verify=False,  # noqa: S501
+                timeout=10,
+            ).json()
+            incoming_sids = {
+                (row.get("SecuritiesCompanyCode") or row.get("Code"))
+                for row in response
+            }
+            existing_sids = {
+                c.pk for c in Company.objects.filter(trade_type=trade_type)
+            }
+            for sid in incoming_sids - existing_sids:
+                try:
+                    _c, created = Company.objects.get_or_create(pk=sid)
+                    if created:
+                        to_create_stock_info.append(
+                            StockInfo(
+                                company_id=sid,
+                                date=today,
+                                quantity=0,
+                                close_price=0,
+                                fluct_price=0,
+                            )
                         )
-                    )
-                    new_sids.append(sid)
-                sleep(2)
-            except Exception as e:
-                logger.error(f"<{type(e).__name__}>: {e}")
-                logger.error(f"SID: {sid}")
-    except Exception as e:
-        logger.error(f"<{type(e).__name__}>: {e}")
-
-    # Process OTC stocks
-    try:
-        otc_response: list[dict[str, str]] = requests.get(
-            ThirdPartyApi.single_day[TradeType.OTC],
-            verify=False,  # noqa: S501
-            timeout=10,
-        ).json()
-        incoming_sids = {row["SecuritiesCompanyCode"] for row in otc_response}
-        existing_sids = {c.pk for c in Company.objects.filter(trade_type=TradeType.OTC)}
-        new_otc_sids = incoming_sids - existing_sids
-        for sid in new_otc_sids:
-            try:
-                _c, created = Company.objects.get_or_create(pk=sid)
-                if created:
-                    to_create_stock_info.append(
-                        StockInfo(
-                            company_id=sid,
-                            date=today,
-                            quantity=0,
-                            close_price=0,
-                            fluct_price=0,
-                        )
-                    )
-                    new_sids.append(sid)
-                sleep(2)
-            except Exception as e:
-                logger.error(f"<{type(e).__name__}>: {e}")
-                logger.error(f"SID: {sid}")
-    except Exception as e:
-        logger.error(f"<{type(e).__name__}>: {e}")
+                        new_sids.append(sid)
+                except Exception as e:
+                    logger.error(f"<{type(e).__name__}>: {e}")
+                finally:
+                    sleep(1.5)
+        except Exception as e:
+            logger.error(f"<{type(e).__name__}>: {e}")
 
     StockInfo.objects.bulk_create(
         to_create_stock_info,
-        update_conflicts=True,
+        ignore_conflicts=True,
         update_fields=["date", "quantity", "close_price", "fluct_price"],
         unique_fields=["company_id"],
     )
