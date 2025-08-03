@@ -206,11 +206,9 @@ def _store_market_per_minute_info(
     )
 
 
-def fetch_and_store_close_info_today() -> None:
-    """This function is currently not used."""
-
-    logger.info("Start fetching sotck market close info today.")
-    date_ = (datetime.now(UTC) + timedelta(hours=8)).date()
+def update_company_list() -> None:
+    logger.info("Start updating company list.")
+    new_company_list = []
 
     # Process TSE stocks
     try:
@@ -221,23 +219,15 @@ def fetch_and_store_close_info_today() -> None:
         ).json()
         for row in tse_response:
             try:
-                company, _created = Company.objects.get_or_create(pk=row["Code"])
-                StockInfo.objects.update_or_create(
-                    company=company,
-                    defaults={
-                        "date": date_,
-                        "quantity": int(row["TradeVolume"] or 0),
-                        "close_price": round(
-                            float(row["ClosingPrice"] or row["HighestPrice"] or 0.0),
-                            2,
-                        ),
-                        "fluct_price": round(float(row["Change"] or 0.0), 2),
-                    },
-                )
+                sid = row["Code"]
+                c, created = Company.objects.get_or_create(pk=sid)
+                if created:
+                    new_company_list.append(c)
+                    logger.info(f"New TSE company: {sid}")
+                sleep(0.5)
             except Exception as e:
                 logger.error(f"<{type(e).__name__}>: {e}")
                 logger.error(f"Row: {row}")
-                continue
     except Exception as e:
         logger.error(f"<{type(e).__name__}>: {e}")
 
@@ -250,44 +240,20 @@ def fetch_and_store_close_info_today() -> None:
         ).json()
         for row in otc_response:
             try:
-                company, created = Company.objects.get_or_create(
-                    pk=row["SecuritiesCompanyCode"]
-                )
-                StockInfo.objects.update_or_create(
-                    company=company,
-                    defaults={
-                        "date": date_,
-                        "quantity": int(
-                            row["TradingShares"]
-                            if "--" not in row["TradingShares"]
-                            else 0
-                        ),
-                        "close_price": round(
-                            float(
-                                row["Close"]
-                                if "--" not in row["Close"]
-                                else (row["High"] if "--" not in row["High"] else 0)
-                            ),
-                            2,
-                        ),
-                        "fluct_price": round(
-                            float(
-                                row["Change"]
-                                if "--" not in row["Change"]
-                                and "除息" not in row["Change"]
-                                else 0
-                            ),
-                            2,
-                        ),
-                    },
-                )
+                sid = row["SecuritiesCompanyCode"]
+                c, created = Company.objects.get_or_create(pk=sid)
+                if created:
+                    new_company_list.append(c)
+                    logger.info(f"New OTC company: {sid}")
+                sleep(0.5)
             except Exception as e:
                 logger.error(f"<{type(e).__name__}>: {e}")
                 logger.error(f"Row: {row}")
-                continue
     except Exception as e:
         logger.error(f"<{type(e).__name__}>: {e}")
-    logger.info(f"Stock market close info of {datetime.now().date()} is up to date!")
+
+    logger.info(f"New company list: {new_company_list}")
+    logger.info("Company list updated!")
 
 
 def _fetch_and_store_historical_info_from_yahoo(
