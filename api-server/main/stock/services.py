@@ -208,7 +208,10 @@ def _store_market_per_minute_info(
 
 def update_company_list() -> None:
     logger.info("Start updating company list.")
+
+    today = date.today()
     new_sids = []
+    to_create_stock_info = []
 
     # Process TSE stocks
     try:
@@ -217,15 +220,23 @@ def update_company_list() -> None:
             verify=False,  # noqa: S501
             timeout=10,
         ).json()
-        incoming_tse_sids = {row["Code"] for row in tse_response}
-        existing_tse_sids = {
-            c.pk for c in Company.objects.filter(trade_type=TradeType.TSE)
-        }
-        new_tse_sids = incoming_tse_sids - existing_tse_sids
-        new_sids.extend(new_tse_sids)
+        incoming_sids = {row["Code"] for row in tse_response}
+        existing_sids = {c.pk for c in Company.objects.filter(trade_type=TradeType.TSE)}
+        new_tse_sids = incoming_sids - existing_sids
         for sid in new_tse_sids:
             try:
-                Company.objects.get_or_create(pk=sid)
+                _c, created = Company.objects.get_or_create(pk=sid)
+                if created:
+                    to_create_stock_info.append(
+                        StockInfo(
+                            company_id=sid,
+                            date=today,
+                            quantity=0,
+                            close_price=0,
+                            fluct_price=0,
+                        )
+                    )
+                    new_sids.append(sid)
                 sleep(2)
             except Exception as e:
                 logger.error(f"<{type(e).__name__}>: {e}")
@@ -240,21 +251,36 @@ def update_company_list() -> None:
             verify=False,  # noqa: S501
             timeout=10,
         ).json()
-        incoming_otc_sids = {row["SecuritiesCompanyCode"] for row in otc_response}
-        existing_otc_sids = {
-            c.pk for c in Company.objects.filter(trade_type=TradeType.OTC)
-        }
-        new_otc_sids = incoming_otc_sids - existing_otc_sids
-        new_sids.extend(new_otc_sids)
+        incoming_sids = {row["SecuritiesCompanyCode"] for row in otc_response}
+        existing_sids = {c.pk for c in Company.objects.filter(trade_type=TradeType.OTC)}
+        new_otc_sids = incoming_sids - existing_sids
         for sid in new_otc_sids:
             try:
-                Company.objects.get_or_create(pk=sid)
+                _c, created = Company.objects.get_or_create(pk=sid)
+                if created:
+                    to_create_stock_info.append(
+                        StockInfo(
+                            company_id=sid,
+                            date=today,
+                            quantity=0,
+                            close_price=0,
+                            fluct_price=0,
+                        )
+                    )
+                    new_sids.append(sid)
                 sleep(2)
             except Exception as e:
                 logger.error(f"<{type(e).__name__}>: {e}")
                 logger.error(f"SID: {sid}")
     except Exception as e:
         logger.error(f"<{type(e).__name__}>: {e}")
+
+    StockInfo.objects.bulk_create(
+        to_create_stock_info,
+        update_conflicts=True,
+        update_fields=["date", "quantity", "close_price", "fluct_price"],
+        unique_fields=["company_id"],
+    )
 
     logger.info(f"New company list: {new_sids}")
     logger.info("Company list updated!")

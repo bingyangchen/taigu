@@ -1,3 +1,4 @@
+import logging
 import re
 from collections.abc import MutableMapping
 from typing import Any
@@ -10,6 +11,8 @@ from pyquery import PyQuery
 from main.account.models import User
 from main.core.models import CreateUpdateDateModel
 from main.stock import Frequency, ThirdPartyApi, TradeType, UnknownStockIdError
+
+logger = logging.getLogger(__name__)
 
 
 class CompanyManager(models.Manager):
@@ -42,32 +45,38 @@ class CompanyManager(models.Manager):
             "tr:nth-child(2)>td:nth-child(4)"
         ).text()
         trade_type = basic_info_document.find("tr:nth-child(2)>td:nth-child(5)").text()
-        if company_name:
-            business_response = requests.post(
-                ThirdPartyApi.company_business,
-                data={  # please refer to https://mopsov.twse.com.tw/mops/web/t05st03
-                    "co_id": sid,
-                    "queryName": "co_id",
-                    "inpuType": "co_id",
-                    "TYPEK": "all",
-                    "encodeURIComponent": 1,
-                    "firstin": True,
-                    "step": 1,
-                    "off": 1,
-                },
-                timeout=8,
-                verify=False,  # noqa: S501
-            )
-            business = (
-                PyQuery(business_response.text)("tr")
-                .filter(lambda _, this: PyQuery(this)("th").text() == "主要經營業務")(
-                    "td"
+        trade_type = TradeType.TRADE_TYPE_ZH_ENG_MAP.get(str(trade_type))
+        if company_name and trade_type:
+            business = ""
+            try:
+                business_response = requests.post(
+                    ThirdPartyApi.company_business,
+                    data={  # please refer to https://mopsov.twse.com.tw/mops/web/t05st03
+                        "co_id": sid,
+                        "queryName": "co_id",
+                        "inpuType": "co_id",
+                        "TYPEK": "all",
+                        "encodeURIComponent": 1,
+                        "firstin": True,
+                        "step": 1,
+                        "off": 1,
+                    },
+                    timeout=8,
+                    verify=False,  # noqa: S501
                 )
-                .text()
-            )
+                business = (
+                    PyQuery(business_response.text)("tr")
+                    .filter(
+                        lambda _, this: PyQuery(this)("th").text() == "主要經營業務"
+                    )("td")
+                    .text()
+                )
+            except Exception:
+                logger.error(f"Failed to fetch business for {sid}")
+
             return {
                 "name": str(company_name),
-                "trade_type": TradeType.TRADE_TYPE_ZH_ENG_MAP.get(str(trade_type)),
+                "trade_type": trade_type,
                 "business": re.sub(r"\s+", "", str(business)),
             }
         else:
