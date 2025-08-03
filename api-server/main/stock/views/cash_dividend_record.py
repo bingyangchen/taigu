@@ -123,6 +123,5 @@ def update(request: HttpRequest, id: str | int) -> JsonResponse:
 
 
 def delete(request: HttpRequest, id: str | int) -> JsonResponse:
-    id = int(id)
-    CashDividendRecord.objects.get(pk=id, owner=request.user).delete()
+    CashDividendRecord.objects.get(pk=int(id), owner=request.user).delete()
     return JsonResponse({})

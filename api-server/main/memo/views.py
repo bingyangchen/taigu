@@ -183,8 +183,7 @@ def update_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
 
 
 def delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
-    id = int(id)
-    TradePlan.objects.get(pk=id, owner=request.user).delete()
+    TradePlan.objects.get(pk=int(id), owner=request.user).delete()
     return JsonResponse({})
 
 
