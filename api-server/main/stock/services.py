@@ -208,17 +208,20 @@ def _store_market_per_minute_info(
 
 def fetch_and_store_close_info_today() -> None:
     """This function is currently not used."""
+
     logger.debug("Start fetching sotck market close info today.")
     date_ = (datetime.now(UTC) + timedelta(hours=8)).date()
 
     # Process TSE stocks
     try:
         tse_response: list[dict[str, str]] = requests.get(
-            ThirdPartyApi.single_day[TradeType.TSE], timeout=10
+            ThirdPartyApi.single_day[TradeType.TSE],
+            verify=False,  # noqa: S501
+            timeout=10,
         ).json()
         for row in tse_response:
             try:
-                company, created = Company.objects.get_or_create(pk=row["Code"])
+                company, _created = Company.objects.get_or_create(pk=row["Code"])
                 StockInfo.objects.update_or_create(
                     company=company,
                     defaults={
@@ -241,7 +244,9 @@ def fetch_and_store_close_info_today() -> None:
     # Process OTC stocks
     try:
         otc_response: list[dict[str, str]] = requests.get(
-            ThirdPartyApi.single_day[TradeType.OTC], timeout=10
+            ThirdPartyApi.single_day[TradeType.OTC],
+            verify=False,  # noqa: S501
+            timeout=10,
         ).json()
         for row in otc_response:
             try:
@@ -305,6 +310,7 @@ def _fetch_and_store_historical_info_from_yahoo(
     response = requests.get(
         f"{ThirdPartyApi.multiple_days}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start.timestamp())}&period2={int(end.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
         headers=headers,
+        verify=False,  # noqa: S501
         timeout=10,
     )
     data = StringIO(response.text)
@@ -369,7 +375,9 @@ def update_material_facts() -> None:
     for trade_type in [TradeType.TSE, TradeType.OTC]:
         try:
             response: list[dict[str, str]] = requests.get(
-                ThirdPartyApi.material_fact[trade_type], timeout=10
+                ThirdPartyApi.material_fact[trade_type],
+                verify=False,  # noqa: S501
+                timeout=10,
             ).json()
 
             # Fill the data of missed companies

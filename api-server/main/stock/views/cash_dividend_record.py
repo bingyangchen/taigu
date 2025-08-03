@@ -23,7 +23,7 @@ def create_or_list(request: HttpRequest) -> JsonResponse:
             sid = str(sid)
             cash_dividend = int(cash_dividend)
             try:
-                company, created = Company.objects.get_or_create(pk=sid)
+                company = Company.objects.get(pk=sid)
                 record = CashDividendRecord.objects.create(
                     owner=request.user,
                     company=company,
@@ -92,7 +92,7 @@ def update_or_delete(request: HttpRequest, id: str | int) -> JsonResponse:
         else:
             sid = str(sid)
             try:
-                company, created = Company.objects.get_or_create(pk=sid)
+                company = Company.objects.get(pk=sid)
                 record = CashDividendRecord.objects.get(pk=id)
                 record.company = company
                 record.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
