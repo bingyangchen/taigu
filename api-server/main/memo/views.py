@@ -1,12 +1,12 @@
 import json
 import logging
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
 from main.core.decorators import require_login
 from main.memo.models import Favorite, StockMemo, TradePlan
-from main.stock import UnknownStockIdError
 from main.stock.models import Company
 
 logger = logging.getLogger(__name__)
@@ -15,22 +15,24 @@ logger = logging.getLogger(__name__)
 @require_POST
 @require_login
 def update_or_create_stock_memo(request: HttpRequest, sid: str) -> JsonResponse:
+    note = json.loads(request.body)["note"] or ""
+
     try:
-        note = json.loads(request.body)["note"] or ""
         company = Company.objects.get(pk=sid)
-        memo, _created = StockMemo.objects.update_or_create(
-            owner=request.user, company=company, defaults={"note": note}
-        )
-        return JsonResponse(
-            {
-                "sid": memo.company.pk,
-                "company_name": memo.company.name,
-                "business": company.business,
-                "note": memo.note,
-            }
-        )
-    except UnknownStockIdError as e:
-        return JsonResponse({"message": str(e)}, status=400)
+    except ObjectDoesNotExist:
+        return JsonResponse({"message": "Unknown Stock ID"}, status=400)
+
+    memo, _created = StockMemo.objects.update_or_create(
+        owner=request.user, company=company, defaults={"note": note}
+    )
+    return JsonResponse(
+        {
+            "sid": memo.company.pk,
+            "company_name": memo.company.name,
+            "business": company.business,
+            "note": memo.note,
+        }
+    )
 
 
 @require_GET
@@ -83,29 +85,30 @@ def create_trade_plan(request: HttpRequest) -> JsonResponse:
     ):
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
-    sid = str(sid)
     target_quantity = int(target_quantity)
+
     try:
-        company = Company.objects.get(pk=sid)
-        plan = TradePlan.objects.create(
-            owner=request.user,
-            company=company,
-            plan_type=plan_type,
-            target_price=target_price,
-            target_quantity=target_quantity,
-        )
-        return JsonResponse(
-            {
-                "id": plan.pk,
-                "sid": plan.company.pk,
-                "company_name": plan.company.name,
-                "plan_type": plan.plan_type,
-                "target_price": plan.target_price,
-                "target_quantity": plan.target_quantity,
-            }
-        )
-    except UnknownStockIdError as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        company = Company.objects.get(pk=str(sid))
+    except ObjectDoesNotExist:
+        return JsonResponse({"message": "Unknown Stock ID"}, status=400)
+
+    plan = TradePlan.objects.create(
+        owner=request.user,
+        company=company,
+        plan_type=plan_type,
+        target_price=target_price,
+        target_quantity=target_quantity,
+    )
+    return JsonResponse(
+        {
+            "id": plan.pk,
+            "sid": plan.company.pk,
+            "company_name": plan.company.name,
+            "plan_type": plan.plan_type,
+            "target_price": plan.target_price,
+            "target_quantity": plan.target_quantity,
+        }
+    )
 
 
 @require_GET
@@ -147,7 +150,6 @@ def update_or_delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResp
 
 
 def update_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
-    id = int(id)
     payload = json.loads(request.body)
 
     if (
@@ -158,28 +160,29 @@ def update_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
     ):
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
-    sid = str(sid)
     target_quantity = int(target_quantity)
+
     try:
-        company = Company.objects.get(pk=sid)
-        plan = TradePlan.objects.get(pk=id, owner=request.user)
-        plan.company = company
-        plan.plan_type = plan_type
-        plan.target_price = target_price
-        plan.target_quantity = target_quantity
-        plan.save()
-        return JsonResponse(
-            {
-                "id": plan.pk,
-                "sid": plan.company.pk,
-                "company_name": plan.company.name,
-                "plan_type": plan.plan_type,
-                "target_price": plan.target_price,
-                "target_quantity": plan.target_quantity,
-            }
-        )
-    except UnknownStockIdError as e:
-        return JsonResponse({"message": str(e)}, status=400)
+        company = Company.objects.get(pk=str(sid))
+    except ObjectDoesNotExist:
+        return JsonResponse({"message": "Unknown Stock ID"}, status=400)
+
+    plan = TradePlan.objects.get(pk=int(id), owner=request.user)
+    plan.company = company
+    plan.plan_type = plan_type
+    plan.target_price = target_price
+    plan.target_quantity = target_quantity
+    plan.save()
+    return JsonResponse(
+        {
+            "id": plan.pk,
+            "sid": plan.company.pk,
+            "company_name": plan.company.name,
+            "plan_type": plan.plan_type,
+            "target_price": plan.target_price,
+            "target_quantity": plan.target_quantity,
+        }
+    )
 
 
 def delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:

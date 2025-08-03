@@ -46,6 +46,16 @@ def update_all_stocks_history() -> None:
         logger.error(f"Error in update_all_stocks_history: {e}")
 
 
+def update_company_list() -> None:
+    try:
+        subprocess.run(  # noqa: S603
+            ["python", "manage.py", "update_company_list"],  # noqa: S607
+            check=True,
+        )
+    except Exception as e:
+        logger.error(f"Error in update_company_list: {e}")
+
+
 def update_material_facts() -> None:
     try:
         subprocess.run(  # noqa: S603
@@ -98,6 +108,11 @@ if __name__ == "__main__":
         update_all_stocks_history,
         CronTrigger.from_crontab("0 15 * * mon-fri"),
         name="update_stock_history",
+    )
+    scheduler.add_job(
+        update_company_list,
+        CronTrigger.from_crontab("30 22 * * *"),
+        name="update_company_list",
     )
     scheduler.add_job(
         update_material_facts,
