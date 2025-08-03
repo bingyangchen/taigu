@@ -40,13 +40,13 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     oauth_org = models.CharField(max_length=8, choices=OAuthOrganization.CHOICES)
     oauth_id = models.CharField(max_length=64, db_index=True)
     email = models.EmailField(max_length=256, unique=True)
-    username = models.CharField(max_length=64, unique=False)
+    username = models.CharField(max_length=64)
     avatar_url = models.CharField(max_length=2048, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(db_default=True)  # type: ignore
 
     # Remove default attributes of AbstracUser
     first_name = None
@@ -63,4 +63,4 @@ class User(AbstractUser):
         unique_together = [["oauth_org", "oauth_id"]]
 
     def __str__(self) -> str:
-        return self.username
+        return str(self.username)

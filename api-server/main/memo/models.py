@@ -6,15 +6,15 @@ from main.stock.models import Company
 
 
 class StockMemo(CreateUpdateDateModel):
-    owner = models.ForeignKey(
+    owner: User = models.ForeignKey(  # type: ignore
         User, on_delete=models.CASCADE, related_name="stock_memos", db_index=True
     )
-    company = models.ForeignKey(
+    company: Company = models.ForeignKey(  # type: ignore
         Company, on_delete=models.PROTECT, related_name="memos", db_index=True
     )
-    note = models.TextField(default="")
+    note = models.TextField(db_default="")
 
-    class Meta:  # type: ignore
+    class Meta:
         db_table = "stock_memo"
         unique_together = [["owner", "company"]]
 
@@ -23,15 +23,17 @@ class StockMemo(CreateUpdateDateModel):
 
 
 class TradePlan(CreateUpdateDateModel):
-    owner = models.ForeignKey(
+    owner: User = models.ForeignKey(  # type: ignore
         User, on_delete=models.CASCADE, related_name="trade_plans", db_index=True
     )
-    company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    company: Company = models.ForeignKey(  # type: ignore
+        Company, on_delete=models.PROTECT
+    )
     plan_type = models.CharField(max_length=32)
     target_price = models.FloatField()
     target_quantity = models.BigIntegerField()
 
-    class Meta:  # type: ignore
+    class Meta:
         db_table = "trade_plan"
 
     def __str__(self) -> str:
@@ -39,14 +41,14 @@ class TradePlan(CreateUpdateDateModel):
 
 
 class Favorite(CreateUpdateDateModel):
-    owner = models.ForeignKey(
+    owner: User = models.ForeignKey(  # type: ignore
         User, on_delete=models.CASCADE, related_name="favorites", db_index=True
     )
-    company = models.ForeignKey(
+    company: Company = models.ForeignKey(  # type: ignore
         Company, on_delete=models.PROTECT, related_name="followers", db_index=True
     )
 
-    class Meta:  # type: ignore
+    class Meta:
         db_table = "favorite"
         unique_together = [["owner", "company"]]
 
