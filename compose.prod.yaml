@@ -1,6 +1,8 @@
 services:
   api-server:
     image: taigutw/api-server:prod
+    volumes:
+      - ./api-server/google_client_secret.json:/app/google_client_secret.json:ro
     command: ["gunicorn"]
     env_file: .env
     expose:
@@ -78,9 +80,7 @@ services:
         max-file: "1"
   scheduler:
     image: taigutw/scheduler:prod
-    volumes:
-      - ./api-server/scheduler.py:/app/scheduler.py:ro
-    command: ["python", "-u", "scheduler.py"]
+    command: ["python", "-u", "main.py"]
     env_file: .env
     depends_on:
       - redis

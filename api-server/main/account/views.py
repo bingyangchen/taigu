@@ -22,10 +22,7 @@ logger = logging.getLogger(__name__)
 
 def google_login(request: HttpRequest) -> JsonResponse:
     flow = google_oauth_flow.Flow.from_client_secrets_file(
-        os.path.join(
-            settings.BASE_DIR,
-            "client_secret_85674097625-iqmtaroea8456oeh3461j2g8esb426ts.apps.googleusercontent.com.json",
-        ),
+        os.path.join(settings.BASE_DIR, "google_client_secret.json"),
         scopes=[
             "openid",
             "https://www.googleapis.com/auth/userinfo.email",
@@ -101,10 +98,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
 @require_login
 def change_google_binding(request: HttpRequest) -> JsonResponse:
     flow = google_oauth_flow.Flow.from_client_secrets_file(
-        os.path.join(
-            settings.BASE_DIR,
-            "client_secret_85674097625-iqmtaroea8456oeh3461j2g8esb426ts.apps.googleusercontent.com.json",
-        ),
+        os.path.join(settings.BASE_DIR, "google_client_secret.json"),
         scopes=[
             "openid",
             "https://www.googleapis.com/auth/userinfo.email",

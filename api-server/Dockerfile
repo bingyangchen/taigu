@@ -16,7 +16,7 @@ RUN poetry export --with main,dev --without-hashes --no-interaction --no-ansi \
 
 ########################################################################################
 
-FROM package_manager AS production_dependencies
+FROM package_manager AS prod_dependencies
 RUN poetry export --without dev --without-hashes --no-interaction --no-ansi \
     -f requirements.txt -o requirements.txt
 
@@ -41,7 +41,7 @@ CMD ["gunicorn"]
 FROM python_base AS prod_final
 ENV TZ=Asia/Taipei
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-COPY --from=production_dependencies requirements.txt .
+COPY --from=prod_dependencies requirements.txt .
 RUN pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt --force-reinstall --no-warn-script-location
 WORKDIR /app

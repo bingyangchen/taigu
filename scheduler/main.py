@@ -1,13 +1,14 @@
 """
-This file is not part of API Server.
-It is a scheduler for the whole project (We don't use Cronjob).
+We don't use Cronjob.
 """
 
 import logging
+import os
 import signal
 import subprocess
 import sys
 import threading
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from apscheduler.executors.pool import ThreadPoolExecutor
@@ -58,7 +59,7 @@ def update_material_facts() -> None:
 ########################################################################################
 
 
-def cleanup_threads(signum: int, frame) -> None:  # noqa: ANN001
+def cleanup_threads(signum, frame) -> None:  # noqa: ANN001
     logger.info("Shutting down gracefully...")
     shutdown_event.set()
     if scheduler:
@@ -70,6 +71,13 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, cleanup_threads)
     signal.signal(signal.SIGTERM, cleanup_threads)
 
+    # Log current time and timezone
+    timezone = os.environ.get("TZ")
+    if timezone is None:
+        raise ValueError("TZ environment variable is not set")
+    logger.info(f"Timezone: {timezone}")
+    logger.info(f"Current time: {datetime.now()}")
+
     jobstores = {"default": MemoryJobStore()}
     executors = {"default": ThreadPoolExecutor(20)}
     job_defaults = {"coalesce": True, "max_instances": 1, "misfire_grace_time": 30}
@@ -77,7 +85,7 @@ if __name__ == "__main__":
         jobstores=jobstores,
         executors=executors,
         job_defaults=job_defaults,
-        timezone=ZoneInfo("Asia/Taipei"),
+        timezone=ZoneInfo(timezone),
     )
 
     # NOTE: In the day_of_week field, 0 = Monday, 6 = Sunday

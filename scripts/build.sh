@@ -15,17 +15,15 @@ arch=$(uname -m)
 
 for service in api-server frontend scheduler; do
     echo "Building $service..."
-    if [ "$service" == "scheduler" ]; then
-        cd ./api-server
-    else
-        cd ./$service
-    fi
+    cd ./$service
     if [ "$1" == "prod" ]; then
-        docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final -f ./Dockerfile --platform linux/x86_64 .
+        docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final \
+            -f ./Dockerfile --platform linux/x86_64 .
     else
-        docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final -f ./Dockerfile --platform linux/$arch .
+        docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final \
+            -f ./Dockerfile --platform linux/$arch .
     fi
     cd ..
 done
 
-printf "${GREEN}Done!${RESET}\n"
+printf "${GREEN} ✔ All images built${RESET}\n"

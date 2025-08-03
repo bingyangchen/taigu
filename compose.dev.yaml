@@ -84,8 +84,8 @@ services:
   scheduler:
     image: taigutw/scheduler:dev
     volumes:
-      - ./api-server/scheduler.py:/app/scheduler.py:ro
-    command: ["python", "-u", "scheduler.py"]
+      - ./scheduler/main.py:/app/main.py:ro
+    command: ["python", "-u", "main.py"]
     env_file: .env
     depends_on:
       - redis

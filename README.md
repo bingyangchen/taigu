@@ -77,7 +77,7 @@ gitGraph
 - Docker (>=27.4.0)
 - Visual Studio Code (or any other editor that supports devcontainer)
 
-### Setup
+### Quick Start
 
 - Step 0: Clone the repository
 
@@ -118,13 +118,8 @@ gitGraph
 
   ```bash
   make start
+  # To stop the server, run `make stop`
   ```
-
-### Stop the Development Server
-
-```bash
-make stop
-```
 
 ### The Development Workflow
 
@@ -137,7 +132,7 @@ make stop
 - **Step 7:** SSH into the EC2 instance, pull the latest code and images.
 - **Step 8:** Restart all Docker containers. You're done!
 
-### Add/Remove a Dependency
+### Dependency Management
 
 Let's dive deeper into the details of **Step 2** of the development workflow when you need to add or remove a dependency:
 
@@ -156,6 +151,19 @@ Let's dive deeper into the details of **Step 2** of the development workflow whe
 - **Step 2-3:** Exit the shell and build the images for development.
 - **Step 2-4:** Restart all Docker containers.
 
+### Environment Variable Management
+
+- **Step 1:** Define a new environment variable (with no value) in the `example.env` file.
+- **Step 2:** Define the environment variable (with the value) in the `.env` file.
+- **Step 3:** If it is used in the API server, you will also need to define the environment variable in `api-server/main/env.py`.
+
+### Google Client Secret File
+
+> - We use Google OAuth2.0 for authentication. You can get the client secret file from the Google Cloud Console.
+> - The secret file should never be committed to the repository.
+
+Every time you make changes to the Google OAuth2.0 configuration, you will get a new client secret file. You need to update the client secret file at `api-server/google_client_secret.json`.
+
 ## 🚀 Production
 
 ### Prerequisites
@@ -166,7 +174,7 @@ Let's dive deeper into the details of **Step 2** of the development workflow whe
 - GNU Make (>=3.81.0)
 - Docker (>=27.4.0)
 
-### Setup
+### One-Time Setup
 
 ```bash
 git clone git@github.com:bingyangchen/taigu.git
@@ -189,3 +197,18 @@ make shell-db
     psql taigu < /backup.sql
     exit
 ```
+
+### Deploying a New Version
+
+```bash
+cd ~/taigu
+make deploy
+```
+
+### Environment Variable Management
+
+You can view `example.env` as the template for environment variable requirements. When you modify the environment variable requirements in `example.env`, you must also update the corresponding environment variables in the `.env` file on the production server.
+
+### Google Client Secret File
+
+Since the client secret file is not committed to the repository, you need to update it manually on the production server before deploying a new version.
