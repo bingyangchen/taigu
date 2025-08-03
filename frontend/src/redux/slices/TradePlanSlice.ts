@@ -29,7 +29,7 @@ export const createPlan = createAsyncThunk(
   "tradePlan/createPlan",
   async (requestBody: CreateTradePlanRequestBody): Promise<TradePlan> => {
     const response = await Api.sendRequest(
-      "memo/trade-plans",
+      "memo/trade-plan",
       "post",
       JSON.stringify(requestBody)
     );
