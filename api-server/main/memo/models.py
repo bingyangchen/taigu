@@ -42,7 +42,7 @@ class TradePlan(CreateUpdateDateModel):
 
 class Favorite(CreateUpdateDateModel):
     owner: User = models.ForeignKey(  # type: ignore
-        User, on_delete=models.CASCADE, related_name="favorites", db_index=True
+        User, on_delete=models.CASCADE, related_name="favorites"
     )
     company: Company = models.ForeignKey(  # type: ignore
         Company, on_delete=models.PROTECT, related_name="followers", db_index=True

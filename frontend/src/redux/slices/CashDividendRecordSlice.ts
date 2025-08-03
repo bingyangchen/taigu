@@ -35,7 +35,7 @@ export const createRecord = createAsyncThunk(
     requestBody: CreateCashDividendRecordRequestBody
   ): Promise<CashDividendRecord> => {
     const response = await Api.sendRequest(
-      "stock/cash-dividends",
+      "stock/cash-dividend",
       "post",
       JSON.stringify(requestBody)
     );
@@ -50,7 +50,7 @@ export const updateRecord = createAsyncThunk(
     requestBody: UpdateCashDividendRecordRequestBody
   ): Promise<CashDividendRecord> => {
     const response = await Api.sendRequest(
-      `stock/cash-dividends/${requestBody.id}`,
+      `stock/cash-dividend/${requestBody.id}`,
       "post",
       JSON.stringify(requestBody)
     );
@@ -62,7 +62,7 @@ export const updateRecord = createAsyncThunk(
 export const deleteRecord = createAsyncThunk(
   "cashDividendRecord/deleteRecord",
   async (id: string | number): Promise<string | number> => {
-    await Api.sendRequest(`stock/cash-dividends/${id}`, "delete");
+    await Api.sendRequest(`stock/cash-dividend/${id}`, "delete");
     navigator.vibrate(20);
     return id;
   }

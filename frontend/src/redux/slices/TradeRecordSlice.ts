@@ -56,7 +56,7 @@ export const createRecord = createAsyncThunk(
     thunkAPI
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     const response = await Api.sendRequest(
-      "stock/trade-records",
+      "stock/trade-record",
       "post",
       JSON.stringify(requestBody)
     );

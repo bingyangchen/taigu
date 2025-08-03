@@ -31,65 +31,57 @@ def google_login(request: HttpRequest) -> JsonResponse:
     )
     result = {}
     if (request.method == "GET") and (redirect_uri := request.GET.get("redirect_uri")):
-        try:
-            flow.redirect_uri = redirect_uri
-            (
-                result["authorization_url"],
-                result["state"],
-            ) = flow.authorization_url(include_granted_scopes="true")
-            return JsonResponse(result)
-        except Exception as e:
-            logger.error(f"Error in account/google_login [GET]: {e}")
-            return JsonResponse({"message": "Internal Server Error"}, status=500)
+        flow.redirect_uri = redirect_uri
+        (
+            result["authorization_url"],
+            result["state"],
+        ) = flow.authorization_url(include_granted_scopes="true")
+        return JsonResponse(result)
     elif (
         (request.method == "POST")
         and (code := request.POST.get("code"))
         and (redirect_uri := request.POST.get("redirect_uri"))
     ):
-        try:
-            flow.redirect_uri = redirect_uri
-            flow.fetch_token(code=code)
-            credentials = flow.credentials
-            verify_result = id_token.verify_oauth2_token(
-                credentials.id_token,  # type: ignore
-                GoogleRequest(),
-                flow.client_config["client_id"],
-            )
+        flow.redirect_uri = redirect_uri
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+        verify_result = id_token.verify_oauth2_token(
+            credentials.id_token,  # type: ignore
+            GoogleRequest(),
+            flow.client_config["client_id"],
+        )
 
-            # login an existing user or register a new user
-            user, _ = User.objects.get_or_create(
-                oauth_org=OAuthOrganization.GOOGLE,
-                oauth_id=verify_result["sub"],
-                defaults={
-                    "email": verify_result["email"],
-                    "username": verify_result["name"],
-                    "avatar_url": verify_result["picture"],
-                },
-            )
-            request.user = user
-            jwt_ = jwt.encode(
-                {
-                    "id": str(user.id),
-                    "oauth_id": user.oauth_id,
-                    "iat": int(datetime.now().timestamp()),
-                    "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
-                },
-                key=settings.SECRET_KEY,
-                algorithm=ALGORITHMS.HS256,
-            )
-            http_response = JsonResponse(result, headers={"is-log-in": "yes"})
-            http_response.set_cookie(
-                AUTH_COOKIE_NAME,
-                value=jwt_,
-                max_age=172800,
-                secure=True,
-                httponly=True,
-                samesite="Strict",
-            )
-            return http_response
-        except Exception as e:
-            logger.error(f"Error in account/google_login [POST]: {e}")
-            return JsonResponse({"message": "Internal Server Error"}, status=500)
+        # login an existing user or register a new user
+        user, _ = User.objects.get_or_create(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id=verify_result["sub"],
+            defaults={
+                "email": verify_result["email"],
+                "username": verify_result["name"],
+                "avatar_url": verify_result["picture"],
+            },
+        )
+        request.user = user
+        jwt_ = jwt.encode(
+            {
+                "id": str(user.id),
+                "oauth_id": user.oauth_id,
+                "iat": int(datetime.now().timestamp()),
+                "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
+            },
+            key=settings.SECRET_KEY,
+            algorithm=ALGORITHMS.HS256,
+        )
+        http_response = JsonResponse(result, headers={"is-log-in": "yes"})
+        http_response.set_cookie(
+            AUTH_COOKIE_NAME,
+            value=jwt_,
+            max_age=172800,
+            secure=True,
+            httponly=True,
+            samesite="Strict",
+        )
+        return http_response
     else:
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
@@ -110,63 +102,59 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
     if not code or not redirect_uri:
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
-    try:
-        flow.redirect_uri = redirect_uri
-        flow.fetch_token(code=code)
-        credentials = flow.credentials
-        verify_result = id_token.verify_oauth2_token(
-            credentials.id_token,  # type: ignore
-            GoogleRequest(),
-            flow.client_config["client_id"],
+    flow.redirect_uri = redirect_uri
+    flow.fetch_token(code=code)
+    credentials = flow.credentials
+    verify_result = id_token.verify_oauth2_token(
+        credentials.id_token,  # type: ignore
+        GoogleRequest(),
+        flow.client_config["client_id"],
+    )
+
+    # Check if the given google account is not bound to any other account
+    if (
+        User.objects.filter(
+            oauth_org=OAuthOrganization.GOOGLE, oauth_id=verify_result["sub"]
+        ).first()
+        is not None
+    ):
+        return JsonResponse(
+            {"message": "This Google account is already bound to another account."},
+            status=400,
         )
 
-        # Check if the given google account is not bound to any other account
-        if (
-            User.objects.filter(
-                oauth_org=OAuthOrganization.GOOGLE, oauth_id=verify_result["sub"]
-            ).first()
-            is not None
-        ):
-            return JsonResponse(
-                {"message": "This Google account is already bound to another account."},
-                status=400,
-            )
+    user: User = request.user  # type: ignore
+    user.oauth_org = OAuthOrganization.GOOGLE
+    user.oauth_id = verify_result["sub"]
+    user.email = verify_result["email"]
+    user.username = verify_result["name"]
+    user.avatar_url = verify_result["picture"]
+    user.save()
 
-        user: User = request.user  # type: ignore
-        user.oauth_org = OAuthOrganization.GOOGLE
-        user.oauth_id = verify_result["sub"]
-        user.email = verify_result["email"]
-        user.username = verify_result["name"]
-        user.avatar_url = verify_result["picture"]
-        user.save()
-
-        jwt_ = jwt.encode(
-            {
-                "id": str(user.id),
-                "oauth_id": user.oauth_id,
-                "iat": int(datetime.now().timestamp()),
-                "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
-            },
-            key=settings.SECRET_KEY,
-            algorithm=ALGORITHMS.HS256,
-        )
-        result["id"] = str(user.id)
-        result["email"] = user.email
-        result["username"] = user.username
-        result["avatar_url"] = user.avatar_url
-        http_response = JsonResponse(result, headers={"is-log-in": "yes"})
-        http_response.set_cookie(
-            AUTH_COOKIE_NAME,
-            value=jwt_,
-            max_age=172800,
-            secure=True,
-            httponly=True,
-            samesite="Strict",
-        )
-        return http_response
-    except Exception as e:
-        logger.error(f"Error in account/change_google_binding [POST]: {e}")
-        return JsonResponse({"message": "Internal Server Error"}, status=500)
+    jwt_ = jwt.encode(
+        {
+            "id": str(user.id),
+            "oauth_id": user.oauth_id,
+            "iat": int(datetime.now().timestamp()),
+            "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
+        },
+        key=settings.SECRET_KEY,
+        algorithm=ALGORITHMS.HS256,
+    )
+    result["id"] = str(user.id)
+    result["email"] = user.email
+    result["username"] = user.username
+    result["avatar_url"] = user.avatar_url
+    http_response = JsonResponse(result, headers={"is-log-in": "yes"})
+    http_response.set_cookie(
+        AUTH_COOKIE_NAME,
+        value=jwt_,
+        max_age=172800,
+        secure=True,
+        httponly=True,
+        samesite="Strict",
+    )
+    return http_response
 
 
 @require_GET
@@ -211,22 +199,5 @@ def update(request: HttpRequest) -> JsonResponse:
                 "avatar_url": user.avatar_url or None,
             }
         )
-    except Exception as e:
-        if isinstance(e, ValidationError):
-            return JsonResponse({"message": e.messages[0]}, status=400)
-        else:
-            logger.error(f"Error in account/update: {e}")
-            return JsonResponse({"message": "Internal Server Error"}, status=500)
-
-
-# @require_login
-# def delete(request: HttpRequest):
-#     if request.method == "DELETE":
-#         request.user.delete()
-#         http_response = JsonResponse({}, headers={"is-log-out": "yes"})
-#         http_response.delete_cookie(
-#             AUTH_COOKIE_NAME, samesite="Strict"
-#         )
-#         return http_response
-#     else:
-#         return JsonResponse({"message": "DELETE Method Required"}, status=405)
+    except ValidationError as e:
+        return JsonResponse({"message": e.messages[0]}, status=400)
