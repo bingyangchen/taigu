@@ -30,7 +30,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def fetch_and_store_realtime_stock_info() -> None:
-    logger.debug("Start fetching realtime sotck info.")
+    logger.info("Start fetching realtime sotck info.")
     market_indices = ("t00", "o00")
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
@@ -39,7 +39,7 @@ def fetch_and_store_realtime_stock_info() -> None:
         f"{x['trade_type']}_{x['pk']}.tw" for x in query_set
     ]
     batch_size = 145
-    logger.debug(f"Expected request count: {math.ceil(len(all) / batch_size)}")
+    logger.info(f"Expected request count: {math.ceil(len(all) / batch_size)}")
     while len(all) > 0:
         start = datetime.now()
         url = f"{ThirdPartyApi.realtime['stock']}{'|'.join(all[:batch_size])}"
@@ -162,7 +162,7 @@ def fetch_and_store_realtime_stock_info() -> None:
 
             # API rate limit: 3 requests per 5 seconds
             sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
-    logger.debug("All realtime stock info updated!")
+    logger.info("All realtime stock info updated!")
 
 
 def _store_market_per_minute_info(
@@ -208,17 +208,20 @@ def _store_market_per_minute_info(
 
 def fetch_and_store_close_info_today() -> None:
     """This function is currently not used."""
-    logger.debug("Start fetching sotck market close info today.")
+
+    logger.info("Start fetching sotck market close info today.")
     date_ = (datetime.now(UTC) + timedelta(hours=8)).date()
 
     # Process TSE stocks
     try:
         tse_response: list[dict[str, str]] = requests.get(
-            ThirdPartyApi.single_day[TradeType.TSE], timeout=10
+            ThirdPartyApi.single_day[TradeType.TSE],
+            verify=False,  # noqa: S501
+            timeout=10,
         ).json()
         for row in tse_response:
             try:
-                company, created = Company.objects.get_or_create(pk=row["Code"])
+                company, _created = Company.objects.get_or_create(pk=row["Code"])
                 StockInfo.objects.update_or_create(
                     company=company,
                     defaults={
@@ -241,7 +244,9 @@ def fetch_and_store_close_info_today() -> None:
     # Process OTC stocks
     try:
         otc_response: list[dict[str, str]] = requests.get(
-            ThirdPartyApi.single_day[TradeType.OTC], timeout=10
+            ThirdPartyApi.single_day[TradeType.OTC],
+            verify=False,  # noqa: S501
+            timeout=10,
         ).json()
         for row in otc_response:
             try:
@@ -282,7 +287,7 @@ def fetch_and_store_close_info_today() -> None:
                 continue
     except Exception as e:
         logger.error(f"<{type(e).__name__}>: {e}")
-    logger.debug(f"Stock market close info of {datetime.now().date()} is up to date!")
+    logger.info(f"Stock market close info of {datetime.now().date()} is up to date!")
 
 
 def _fetch_and_store_historical_info_from_yahoo(
@@ -305,6 +310,7 @@ def _fetch_and_store_historical_info_from_yahoo(
     response = requests.get(
         f"{ThirdPartyApi.multiple_days}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start.timestamp())}&period2={int(end.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
         headers=headers,
+        verify=False,  # noqa: S501
         timeout=10,
     )
     data = StringIO(response.text)
@@ -365,11 +371,13 @@ def update_all_stocks_history() -> None:
 
 
 def update_material_facts() -> None:
-    logger.debug("Start fetching material facts.")
+    logger.info("Start fetching material facts.")
     for trade_type in [TradeType.TSE, TradeType.OTC]:
         try:
             response: list[dict[str, str]] = requests.get(
-                ThirdPartyApi.material_fact[trade_type], timeout=10
+                ThirdPartyApi.material_fact[trade_type],
+                verify=False,  # noqa: S501
+                timeout=10,
             ).json()
 
             # Fill the data of missed companies
@@ -415,7 +423,7 @@ def update_material_facts() -> None:
     MaterialFact.objects.filter(
         date_time__lt=(datetime.now(UTC) + timedelta(hours=8)) - timedelta(days=30)
     ).delete()
-    logger.debug("Material facts updated!")
+    logger.info("Material facts updated!")
 
 
 def roc_date_string_to_date(roc_date_string: str) -> date:

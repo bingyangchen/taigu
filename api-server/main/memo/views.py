@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 def update_or_create_stock_memo(request: HttpRequest, sid: str) -> JsonResponse:
     try:
         note = json.loads(request.body)["note"] or ""
-        company, created = Company.objects.get_or_create(pk=sid)
-        memo, created = StockMemo.objects.update_or_create(
+        company = Company.objects.get(pk=sid)
+        memo, _created = StockMemo.objects.update_or_create(
             owner=request.user, company=company, defaults={"note": note}
         )
         return JsonResponse(
@@ -84,7 +84,7 @@ def create_or_list_trade_plan(request: HttpRequest) -> JsonResponse:
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
-                company, created = Company.objects.get_or_create(pk=sid)
+                company = Company.objects.get(pk=sid)
                 plan = TradePlan.objects.create(
                     owner=request.user,
                     company=company,
@@ -147,7 +147,7 @@ def update_or_delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResp
             sid = str(sid)
             target_quantity = int(target_quantity)
             try:
-                company, created = Company.objects.get_or_create(pk=sid)
+                company = Company.objects.get(pk=sid)
                 plan = TradePlan.objects.get(pk=id)
                 plan.company = company
                 plan.plan_type = plan_type
@@ -177,7 +177,7 @@ def update_or_delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResp
 def create_or_delete_favorite(request: HttpRequest, sid: str) -> JsonResponse:
     try:
         result = {}
-        company, created = Company.objects.get_or_create(pk=sid)
+        company = Company.objects.get(pk=sid)
         if request.method == "POST":
             Favorite.objects.get_or_create(owner=request.user, company=company)
             result["sid"] = sid

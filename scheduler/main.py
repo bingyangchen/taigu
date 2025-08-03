@@ -101,7 +101,7 @@ if __name__ == "__main__":
     )
     scheduler.add_job(
         update_material_facts,
-        CronTrigger.from_crontab("0 * * * mon-fri"),
+        CronTrigger.from_crontab("0 * * * *"),
         name="update_material_facts",
     )
 
