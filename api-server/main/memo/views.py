@@ -162,7 +162,7 @@ def update_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
     target_quantity = int(target_quantity)
     try:
         company = Company.objects.get(pk=sid)
-        plan = TradePlan.objects.get(pk=id)
+        plan = TradePlan.objects.get(pk=id, owner=request.user)
         plan.company = company
         plan.plan_type = plan_type
         plan.target_price = target_price
@@ -184,7 +184,7 @@ def update_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
 
 def delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
     id = int(id)
-    TradePlan.objects.get(pk=id).delete()
+    TradePlan.objects.get(pk=id, owner=request.user).delete()
     return JsonResponse({})
 
 
@@ -206,8 +206,7 @@ def create_favorite(request: HttpRequest, sid: str) -> JsonResponse:
 
 def delete_favorite(request: HttpRequest, sid: str) -> JsonResponse:
     company = Company.objects.get(pk=sid)
-    if favorite := Favorite.objects.filter(owner=request.user, company=company).first():
-        favorite.delete()
+    Favorite.objects.get(owner=request.user, company=company).delete()
     return JsonResponse({"sid": sid})
 
 

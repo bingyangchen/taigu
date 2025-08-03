@@ -104,7 +104,7 @@ def update(request: HttpRequest, id: str | int) -> JsonResponse:
     sid = str(sid)
     try:
         company = Company.objects.get(pk=sid)
-        record = CashDividendRecord.objects.get(pk=id)
+        record = CashDividendRecord.objects.get(pk=id, owner=request.user)
         record.company = company
         record.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
         record.cash_dividend = int(cash_dividend)
@@ -124,5 +124,5 @@ def update(request: HttpRequest, id: str | int) -> JsonResponse:
 
 def delete(request: HttpRequest, id: str | int) -> JsonResponse:
     id = int(id)
-    CashDividendRecord.objects.get(pk=id).delete()
+    CashDividendRecord.objects.get(pk=id, owner=request.user).delete()
     return JsonResponse({})
