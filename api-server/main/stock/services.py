@@ -226,7 +226,7 @@ def update_company_list() -> None:
         for sid in new_tse_sids:
             try:
                 Company.objects.get_or_create(pk=sid)
-                sleep(0.5)
+                sleep(2)
             except Exception as e:
                 logger.error(f"<{type(e).__name__}>: {e}")
                 logger.error(f"SID: {sid}")
@@ -249,7 +249,7 @@ def update_company_list() -> None:
         for sid in new_otc_sids:
             try:
                 Company.objects.get_or_create(pk=sid)
-                sleep(0.5)
+                sleep(2)
             except Exception as e:
                 logger.error(f"<{type(e).__name__}>: {e}")
                 logger.error(f"SID: {sid}")
