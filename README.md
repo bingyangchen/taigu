@@ -211,4 +211,4 @@ You can view `example.env` as the template for environment variable requirements
 
 ### Google Client Secret File
 
-Since the client secret file is not committed to the repository, you need to update it manually on the production server.
+Since the client secret file is not committed to the repository, you need to update it manually on the production server before deploying a new version.
