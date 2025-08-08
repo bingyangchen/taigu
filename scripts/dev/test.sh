@@ -8,14 +8,19 @@ source "$(dirname "$(realpath "$0")")/../common.sh"
 
 check_env dev
 
+T=""
+if [ -z "$MAKELEVEL" ]; then
+    T="-T"
+fi
+
 printf "${BLUE}Running codespell...${RESET}\n"
-docker compose -f compose.dev.yaml --progress quiet run --rm api-server codespell
+docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server codespell
 echo Passed
 
 printf "${BLUE}Running ruff...${RESET}\n"
-docker compose -f compose.dev.yaml --progress quiet run --rm api-server \
+docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server \
   ruff check . --config=ruff.toml --no-cache
 # Ruff will echo passed by default.
 
 printf "${BLUE}Running pytest...${RESET}\n"
-docker compose -f compose.dev.yaml --progress quiet run --rm api-server pytest
+docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server pytest
