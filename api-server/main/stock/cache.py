@@ -1,24 +1,22 @@
 from datetime import date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from main.core.cache import BaseCacheManager
 
 
 class TimeSeriesStockInfoPointData(BaseModel):
+    model_config = ConfigDict(strict=True)
+
     date: date
     price: float
     fluct_price: float
 
-    class Config:
-        strict = True
-
 
 class TimeSeriesStockInfo(BaseModel):
-    data: dict[int, TimeSeriesStockInfoPointData]
+    model_config = ConfigDict(strict=True)
 
-    class Config:
-        strict = True
+    data: dict[int, TimeSeriesStockInfoPointData]
 
 
 class TimeSeriesStockInfoCacheManager(BaseCacheManager[TimeSeriesStockInfo]):
