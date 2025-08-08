@@ -149,7 +149,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
     http_response.set_cookie(
         AUTH_COOKIE_NAME,
         value=jwt_,
-        max_age=172800,
+        max_age=259200,
         secure=True,
         httponly=True,
         samesite="Strict",
