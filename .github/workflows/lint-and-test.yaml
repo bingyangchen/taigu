@@ -65,17 +65,17 @@ jobs:
     runs-on: ubuntu-24.04-arm
     env:
       ENV: dev
-      DB_HOST: dev
-      DB_USER: dev
-      DB_NAME: dev
-      DB_PASSWORD: dev
-      DB_PORT: 0
-      REDIS_HOST: dev
-      REDIS_PORT: 0
-      SECRET_KEY: dev
-      GOOGLE_CLIENT_ID: dev
-      GOOGLE_PROJECT_ID: dev
-      GOOGLE_CLIENT_SECRET: dev
+      DB_HOST: db
+      DB_USER: postgres
+      DB_NAME: taigu
+      DB_PASSWORD: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SECRET_KEY: test
+      GOOGLE_CLIENT_ID: test
+      GOOGLE_PROJECT_ID: test
+      GOOGLE_CLIENT_SECRET: test
       LOG_LEVEL: DEBUG
       SQL_LOG: 0
     steps:
