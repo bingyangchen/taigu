@@ -11,14 +11,15 @@ from main.account.models import User
 
 
 class MyBackend(BaseBackend):
-    def authenticate(self, request: HttpRequest, token: str) -> User | None:  # type: ignore
-        user = None
+    def authenticate(self, request: HttpRequest, token: str) -> User | None:
+        user: User | None = None
         with suppress(Exception):
-            d = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHMS.HS256])
-            if (
-                d["exp"] > datetime.now().timestamp()
-                and d["oauth_id"] == (u := User.objects.get(pk=d["id"])).oauth_id
-            ):
-                user = u
+            claims = jwt.decode(
+                token, settings.SECRET_KEY, algorithms=[ALGORITHMS.HS256]
+            )
+            if claims["exp"] > datetime.now().timestamp():
+                # TODO: read from cache
+                db_user: User = User.objects.get(pk=claims["id"], is_active=True)
+                user = db_user
         request.user = user  # type: ignore
         return user

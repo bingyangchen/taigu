@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -16,13 +15,32 @@ from jose.constants import ALGORITHMS
 from main.account import AUTH_COOKIE_NAME, OAuthOrganization
 from main.account.models import User
 from main.core.decorators import require_login
+from main.env import env
 
 logger = logging.getLogger(__name__)
 
+# Docs: https://github.com/googleapis/google-api-python-client/blob/main/docs/client-secrets.md
+GOOGLE_CLIENT_CONFIG = {
+    "web": {
+        "client_id": env.GOOGLE_CLIENT_ID,
+        "project_id": env.GOOGLE_PROJECT_ID,
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_secret": env.GOOGLE_CLIENT_SECRET,
+        "redirect_uris": [
+            "https://localhost/login",
+            "https://localhost/settings/account-binding",
+            "https://taigu.tw/login",
+            "https://taigu.tw/settings/account-binding",
+        ],
+    }
+}
+
 
 def google_login(request: HttpRequest) -> JsonResponse:
-    flow = google_oauth_flow.Flow.from_client_secrets_file(
-        os.path.join(settings.BASE_DIR, "google_client_secret.json"),
+    flow = google_oauth_flow.Flow.from_client_config(
+        GOOGLE_CLIENT_CONFIG,
         scopes=[
             "openid",
             "https://www.googleapis.com/auth/userinfo.email",
@@ -61,12 +79,10 @@ def google_login(request: HttpRequest) -> JsonResponse:
                 "avatar_url": verify_result["picture"],
             },
         )
-        request.user = user
+        request.user = user  # type: ignore
         jwt_ = jwt.encode(
             {
                 "id": str(user.id),
-                "oauth_id": user.oauth_id,
-                "iat": int(datetime.now().timestamp()),
                 "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
             },
             key=settings.SECRET_KEY,
@@ -76,7 +92,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
         http_response.set_cookie(
             AUTH_COOKIE_NAME,
             value=jwt_,
-            max_age=172800,
+            max_age=259200,
             secure=True,
             httponly=True,
             samesite="Strict",
@@ -89,8 +105,8 @@ def google_login(request: HttpRequest) -> JsonResponse:
 @require_POST
 @require_login
 def change_google_binding(request: HttpRequest) -> JsonResponse:
-    flow = google_oauth_flow.Flow.from_client_secrets_file(
-        os.path.join(settings.BASE_DIR, "google_client_secret.json"),
+    flow = google_oauth_flow.Flow.from_client_config(
+        GOOGLE_CLIENT_CONFIG,
         scopes=[
             "openid",
             "https://www.googleapis.com/auth/userinfo.email",
@@ -134,8 +150,6 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
     jwt_ = jwt.encode(
         {
             "id": str(user.id),
-            "oauth_id": user.oauth_id,
-            "iat": int(datetime.now().timestamp()),
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         },
         key=settings.SECRET_KEY,
@@ -149,7 +163,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
     http_response.set_cookie(
         AUTH_COOKIE_NAME,
         value=jwt_,
-        max_age=172800,
+        max_age=259200,
         secure=True,
         httponly=True,
         samesite="Strict",
