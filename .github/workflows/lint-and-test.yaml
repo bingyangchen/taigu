@@ -37,7 +37,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install codespell
-        run: pip install codespell
+        run: pip install codespell==2.4.1
       - name: Run codespell
         run: codespell --config=.codespellrc
 
@@ -54,7 +54,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install Ruff
-        run: pip install ruff
+        run: pip install ruff==0.12.8
       - name: Run Ruff
         run: ruff check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
 
@@ -66,6 +66,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set environment variables from file
+        run: |
+          cat example.env >> $GITHUB_ENV
       - name: Build Docker image for testing
         run: |
           cd api-server
