@@ -63,16 +63,44 @@ jobs:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.backend == 'true' }}
     runs-on: ubuntu-24.04-arm
+    env:
+      ENV: dev
+      DB_HOST: dev
+      DB_USER: dev
+      DB_NAME: dev
+      DB_PASSWORD: dev
+      DB_PORT: 0
+      REDIS_HOST: dev
+      REDIS_PORT: 0
+      SECRET_KEY: dev
+      GOOGLE_CLIENT_ID: dev
+      GOOGLE_PROJECT_ID: dev
+      GOOGLE_CLIENT_SECRET: dev
+      LOG_LEVEL: DEBUG
+      SQL_LOG: 0
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Set environment variables from file
-        run: |
-          cat example.env >> $GITHUB_ENV
       - name: Build Docker image for testing
         run: |
           cd api-server
           docker build --target dev_final -t taigu-api-test .
       - name: Run pytest
         run: |
-          docker run --rm -v ${{ github.workspace }}/api-server:/app:ro taigu-api-test pytest
+          docker run --rm \
+            -v ${{ github.workspace }}/api-server:/app:ro \
+            -e ENV="${ENV}" \
+            -e DB_HOST="${DB_HOST}" \
+            -e DB_USER="${DB_USER}" \
+            -e DB_NAME="${DB_NAME}" \
+            -e DB_PASSWORD="${DB_PASSWORD}" \
+            -e DB_PORT="${DB_PORT}" \
+            -e REDIS_HOST="${REDIS_HOST}" \
+            -e REDIS_PORT="${REDIS_PORT}" \
+            -e SECRET_KEY="${SECRET_KEY}" \
+            -e GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
+            -e GOOGLE_PROJECT_ID="${GOOGLE_PROJECT_ID}" \
+            -e GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}" \
+            -e LOG_LEVEL="${LOG_LEVEL}" \
+            -e SQL_LOG="${SQL_LOG}" \
+            taigu-api-test pytest
