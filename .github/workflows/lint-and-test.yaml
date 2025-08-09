@@ -77,19 +77,19 @@ jobs:
           docker build --target dev_final -t taigutw/api-server:dev .
       - name: Run pytest
         run: |
-          docker compose -f compose.dev.yaml --progress quiet run --rm api-server pytest --ignore-glob="**/tests/integration/*"
-        env:
-          ENV: ${{ vars.ENV }}
-          DB_HOST: ${{ vars.DB_HOST }}
-          DB_USER: ${{ vars.DB_USER }}
-          DB_NAME: ${{ vars.DB_NAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_PORT: ${{ vars.DB_PORT }}
-          REDIS_HOST: ${{ vars.REDIS_HOST }}
-          REDIS_PORT: ${{ vars.REDIS_PORT }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
-          GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          LOG_LEVEL: ${{ vars.LOG_LEVEL }}
-          SQL_LOG: ${{ vars.SQL_LOG }}
+          docker compose -f compose.dev.yaml --progress quiet run --rm \
+            -e ENV="${{ vars.ENV }}" \
+            -e DB_HOST="${{ vars.DB_HOST }}" \
+            -e DB_USER="${{ vars.DB_USER }}" \
+            -e DB_NAME="${{ vars.DB_NAME }}" \
+            -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            -e DB_PORT="${{ vars.DB_PORT }}" \
+            -e REDIS_HOST="${{ vars.REDIS_HOST }}" \
+            -e REDIS_PORT="${{ vars.REDIS_PORT }}" \
+            -e SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+            -e GOOGLE_CLIENT_ID="${{ vars.GOOGLE_CLIENT_ID }}" \
+            -e GOOGLE_PROJECT_ID="${{ vars.GOOGLE_PROJECT_ID }}" \
+            -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            -e LOG_LEVEL="${{ vars.LOG_LEVEL }}" \
+            -e SQL_LOG="${{ vars.SQL_LOG }}" \
+            api-server pytest --ignore-glob="**/tests/integration/*"
