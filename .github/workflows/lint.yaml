@@ -7,9 +7,11 @@ on:
 
 jobs:
   detect-changes:
+    name: Detect file changes
     runs-on: ubuntu-24.04-arm
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,9 +23,11 @@ jobs:
             backend:
               - 'api-server/**'
               - 'scheduler/**'
+            frontend:
+              - 'frontend/**'
 
   codespell:
-    name: Codespell
+    name: Check code spelling
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout code
@@ -53,3 +57,19 @@ jobs:
         run: pip install ruff
       - name: Run Ruff
         run: ruff check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
+
+  backend-unit-tests:
+    name: Backend unit tests
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build Docker image for testing
+        run: |
+          cd api-server
+          docker build --target dev_final -t taigu-api-test .
+      - name: Run pytest
+        run: |
+          docker run --rm -v ${{ github.workspace }}/api-server:/app:ro taigu-api-test pytest
