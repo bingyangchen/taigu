@@ -6,7 +6,7 @@ from main.core.cache import BaseCacheManager
 
 
 class TimeSeriesStockInfoPointData(BaseModel):
-    model_config = ConfigDict(strict=True)
+    model_config = ConfigDict(strict=True, extra="forbid")
 
     date: date
     price: float
@@ -14,7 +14,7 @@ class TimeSeriesStockInfoPointData(BaseModel):
 
 
 class TimeSeriesStockInfo(BaseModel):
-    model_config = ConfigDict(strict=True)
+    model_config = ConfigDict(strict=True, extra="forbid")
 
     data: dict[int, TimeSeriesStockInfoPointData]
 
@@ -22,6 +22,3 @@ class TimeSeriesStockInfo(BaseModel):
 class TimeSeriesStockInfoCacheManager(BaseCacheManager[TimeSeriesStockInfo]):
     cache_name = "time_series_stock_info"
     value_validator_model = TimeSeriesStockInfo
-
-    def __init__(self, stock_id: str) -> None:
-        super().__init__(stock_id)

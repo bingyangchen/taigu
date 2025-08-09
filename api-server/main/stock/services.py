@@ -188,15 +188,15 @@ def _store_market_per_minute_info(
         .delete()
     )
 
-    cache_manager = TimeSeriesStockInfoCacheManager(market_id)
+    cache_manager = TimeSeriesStockInfoCacheManager()
     current_data_to_cache = {
         minutes_after_opening: TimeSeriesStockInfoPointData(
             date=date_, price=price, fluct_price=fluct_price
         )
     }
-    if delete_count == 0 and (cache_data := cache_manager.get()) is not None:
+    if delete_count == 0 and (cache_data := cache_manager.get(market_id)) is not None:
         current_data_to_cache.update(cache_data.model_dump()["data"])
-    cache_manager.set(TimeSeriesStockInfo(data=current_data_to_cache), 180)
+    cache_manager.set(market_id, TimeSeriesStockInfo(data=current_data_to_cache), 180)
 
     MarketIndexPerMinute.objects.get_or_create(
         market=market_id,

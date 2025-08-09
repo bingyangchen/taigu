@@ -10,15 +10,15 @@ class BaseCacheManager(Generic[T]):
     cache_name: str
     value_validator_model: type[BaseModel]
 
-    def __init__(self, identifier: str) -> None:
-        self.identifier = identifier
+    def __gen_cache_key(self, identifier: str) -> str:
+        return f"{self.cache_name}:{identifier}"
 
-    def __gen_cache_key(self) -> str:
-        return f"{self.cache_name}:{self.identifier}"
+    def get(self, identifier: str) -> T | None:
+        return cache.get(self.__gen_cache_key(identifier))
 
-    def get(self) -> T | None:
-        return cache.get(self.__gen_cache_key())
-
-    def set(self, value: T, timeout: int) -> None:
+    def set(self, identifier: str, value: T, timeout: int) -> None:
         self.value_validator_model.model_validate(value)
-        cache.set(self.__gen_cache_key(), value, timeout)
+        cache.set(self.__gen_cache_key(identifier), value, timeout)
+
+    def delete(self, identifier: str) -> None:
+        cache.delete(self.__gen_cache_key(identifier))
