@@ -4,7 +4,6 @@ set -e
 source "$(dirname "$(realpath "$0")")/../common.sh"
 
 check_triggered_by_make
-check_env dev
 load_env_vars
 
 if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
