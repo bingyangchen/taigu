@@ -67,6 +67,7 @@ jobs:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.backend == 'true' }}
     runs-on: ubuntu-24.04-arm
+    environment: Test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -76,4 +77,19 @@ jobs:
           docker build --target dev_final -t taigutw/api-server:dev .
       - name: Run pytest
         run: |
-          docker compose -f compose.dev.yaml --progress quiet run --rm --env-from-file example.env api-server pytest --ignore-glob="**/tests/integration/*"
+          docker compose -f compose.dev.yaml --progress quiet run --rm api-server pytest --ignore-glob="**/tests/integration/*"
+        env:
+          ENV: ${{ vars.ENV }}
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_USER: ${{ vars.DB_USER }}
+          DB_NAME: ${{ vars.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          REDIS_PORT: ${{ vars.REDIS_PORT }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+          SQL_LOG: ${{ vars.SQL_LOG }}

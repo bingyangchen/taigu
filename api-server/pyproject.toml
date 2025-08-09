@@ -8,7 +8,7 @@ authors = [
 readme = "README.md"
 requires-python = "==3.13.3"
 dependencies = [
-    "django (==5.0.7)",
+    "django (==5.2.5)",
     "gunicorn (==22.0.0)",
     "requests (==2.32.2)",
     "pyquery (==1.4.3)",
