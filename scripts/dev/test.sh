@@ -14,12 +14,13 @@ if [ -z "$MAKELEVEL" ]; then
 fi
 
 printf "${BLUE}Running codespell...${RESET}\n"
-docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server codespell
+docker compose -f compose.dev.yaml --progress quiet run $T --rm -v "$(pwd):/app:ro" \
+  api-server codespell --config=.codespellrc
 printf "Passed!\n\n"
 
 printf "${BLUE}Running ruff...${RESET}\n"
-docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server \
-  ruff check . --config=ruff.toml --no-cache
+docker compose -f compose.dev.yaml --progress quiet run $T --rm -v "$(pwd):/app:ro" \
+  api-server ruff check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
 # Ruff will echo passed by default.
 
 printf "\n${BLUE}Running pytest...${RESET}\n"

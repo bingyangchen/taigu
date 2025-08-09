@@ -1,0 +1,75 @@
+name: Lint and test
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  detect-changes:
+    name: Detect file changes
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check for backend changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'api-server/**'
+              - 'scheduler/**'
+            frontend:
+              - 'frontend/**'
+
+  codespell:
+    name: Check code spelling
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+      - name: Install codespell
+        run: pip install codespell==2.4.1
+      - name: Run codespell
+        run: codespell --config=.codespellrc
+
+  lint-backend:
+    name: Lint Python with Ruff
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+      - name: Install Ruff
+        run: pip install ruff==0.12.8
+      - name: Run Ruff
+        run: ruff check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
+
+  backend-unit-tests:
+    name: Backend unit tests
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build Docker image for testing
+        run: |
+          cd api-server
+          docker build --target dev_final -t taigutw/api-server:dev .
+      - name: Run pytest
+        run: |
+          docker compose -f compose.dev.yaml --progress quiet run --rm --env-from-file example.env api-server pytest --ignore-glob="**/tests/integration/*"

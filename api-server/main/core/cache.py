@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from django.core.cache import cache
 from pydantic import BaseModel
@@ -6,7 +6,7 @@ from pydantic import BaseModel
 T = TypeVar("T")
 
 
-class BaseCacheManager(Generic[T]):
+class BaseCacheManager[T]:
     cache_name: str
     value_validator_model: type[BaseModel]
 
