@@ -66,6 +66,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Build Docker image for testing
+        run: |
+          cd api-server
+          docker build --target dev_final -t taigutw/api-server:dev .
       - name: Run pytest
         run: |
           docker compose -f compose.dev.yaml --progress quiet run --rm --env-from-file example.env api-server pytest
