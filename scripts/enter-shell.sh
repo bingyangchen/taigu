@@ -12,11 +12,9 @@ clear_screen
 #       the running postgres/redis. So we use 'exec' to get a shell in the existing
 #       container instead of creating a new one.
 if [ "$1" = "db" ]; then
-    echo "Opening psql..."
-    docker compose -f compose.$ENV.yaml --progress quiet exec $1 psql -U $DB_USER -d $DB_NAME
+    docker compose -f compose.$ENV.yaml --progress quiet exec $1 bash
 elif [ "$1" = "redis" ]; then
-    echo "Opening redis-cli..."
-    docker compose -f compose.$ENV.yaml --progress quiet exec $1 redis-cli
+    docker compose -f compose.$ENV.yaml --progress quiet exec $1 bash
 else
     docker compose -f compose.$ENV.yaml --progress quiet run --rm $1 bash
 fi
