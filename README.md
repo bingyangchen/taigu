@@ -155,7 +155,9 @@ Let's dive deeper into the details of **Step 2** of the development workflow whe
 
 - **Step 1:** Define a new environment variable (with no value) in the `example.env` file.
 - **Step 2:** Define the environment variable (with the value) in the `.env` file.
-- **Step 3:** If it is used in the API server, you will also need to define the environment variable in `api-server/main/env.py`.
+- **Step 3:** If it is used in the API server, you will also need to define the environment variable in `api-server/main/env.py` and `.github/workflows/lint-and-test.yaml`.
+
+  You will also need to add the new environment variables into the `Test` environment on GitHub repository settings (Settings > Environments > Test > Variables/Secrets).
 
 ## 🚀 Production
 
