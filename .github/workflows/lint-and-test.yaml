@@ -63,44 +63,9 @@ jobs:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.backend == 'true' }}
     runs-on: ubuntu-24.04-arm
-    env:
-      ENV: dev
-      DB_HOST: db
-      DB_USER: postgres
-      DB_NAME: taigu
-      DB_PASSWORD: postgres
-      DB_PORT: 5432
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      SECRET_KEY: test
-      GOOGLE_CLIENT_ID: test
-      GOOGLE_PROJECT_ID: test
-      GOOGLE_CLIENT_SECRET: test
-      LOG_LEVEL: DEBUG
-      SQL_LOG: 0
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Build Docker image for testing
-        run: |
-          cd api-server
-          docker build --target dev_final -t taigu-api-test .
       - name: Run pytest
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/api-server:/app:ro \
-            -e ENV="${ENV}" \
-            -e DB_HOST="${DB_HOST}" \
-            -e DB_USER="${DB_USER}" \
-            -e DB_NAME="${DB_NAME}" \
-            -e DB_PASSWORD="${DB_PASSWORD}" \
-            -e DB_PORT="${DB_PORT}" \
-            -e REDIS_HOST="${REDIS_HOST}" \
-            -e REDIS_PORT="${REDIS_PORT}" \
-            -e SECRET_KEY="${SECRET_KEY}" \
-            -e GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
-            -e GOOGLE_PROJECT_ID="${GOOGLE_PROJECT_ID}" \
-            -e GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}" \
-            -e LOG_LEVEL="${LOG_LEVEL}" \
-            -e SQL_LOG="${SQL_LOG}" \
-            taigu-api-test pytest
+          docker compose -f compose.dev.yaml --progress quiet run --rm --env-from-file example.env api-server pytest
