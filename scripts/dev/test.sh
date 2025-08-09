@@ -15,12 +15,12 @@ fi
 
 printf "${BLUE}Running codespell...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server codespell
-echo Passed
+printf "Passed!\n\n"
 
 printf "${BLUE}Running ruff...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server \
   ruff check . --config=ruff.toml --no-cache
 # Ruff will echo passed by default.
 
-printf "${BLUE}Running pytest...${RESET}\n"
+printf "\n${BLUE}Running pytest...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server pytest

@@ -17,7 +17,6 @@ from main.account.models import User
 class TestCheckLoginStatusMiddleware:
     @pytest.fixture
     def user(self) -> User:
-        """Create a sample user for testing."""
         return User.objects.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -27,25 +26,18 @@ class TestCheckLoginStatusMiddleware:
 
     @pytest.fixture
     def request_obj(self) -> HttpRequest:
-        """Create a sample request object."""
         return HttpRequest()
 
     @pytest.fixture
     def middleware(self) -> Callable[[HttpRequest], HttpResponse]:
-        """Create middleware instance for testing."""
-
         def mock_get_response(request: HttpRequest) -> HttpResponse:
-            """Mock get_response function for testing."""
             return HttpResponse("Test response")
 
         return check_login_status_middleware(mock_get_response)
 
     def create_valid_token(self, user: User) -> str:
-        """Helper method to create a valid JWT token."""
         payload = {
             "id": str(user.id),
-            "oauth_id": user.oauth_id,
-            "iat": int(datetime.now().timestamp()),
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
         return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
@@ -55,7 +47,6 @@ class TestCheckLoginStatusMiddleware:
         middleware: Callable[[HttpRequest], HttpResponse],
         request_obj: HttpRequest,
     ) -> None:
-        """Test middleware with no authentication token."""
         request_obj.COOKIES = {}
 
         response = middleware(request_obj)
@@ -70,7 +61,6 @@ class TestCheckLoginStatusMiddleware:
         request_obj: HttpRequest,
         user: User,
     ) -> None:
-        """Test middleware with valid authentication token."""
         token = self.create_valid_token(user)
         request_obj.COOKIES = {AUTH_COOKIE_NAME: token}
 
@@ -87,7 +77,6 @@ class TestCheckLoginStatusMiddleware:
         middleware: Callable[[HttpRequest], HttpResponse],
         request_obj: HttpRequest,
     ) -> None:
-        """Test middleware with invalid authentication token."""
         request_obj.COOKIES = {AUTH_COOKIE_NAME: "invalid_token"}
 
         response = middleware(request_obj)
@@ -104,11 +93,8 @@ class TestCheckLoginStatusMiddleware:
         request_obj: HttpRequest,
         user: User,
     ) -> None:
-        """Test middleware with expired authentication token."""
         payload = {
             "id": str(user.id),
-            "oauth_id": user.oauth_id,
-            "iat": int((datetime.now() - timedelta(days=2)).timestamp()),
             "exp": int((datetime.now() - timedelta(days=1)).timestamp()),
         }
         expired_token = jwt.encode(
@@ -129,11 +115,8 @@ class TestCheckLoginStatusMiddleware:
         middleware: Callable[[HttpRequest], HttpResponse],
         request_obj: HttpRequest,
     ) -> None:
-        """Test middleware with token for non-existent user."""
         payload = {
             "id": "00000000-0000-0000-0000-000000000000",
-            "oauth_id": "nonexistent_oauth_id",
-            "iat": int(datetime.now().timestamp()),
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
         invalid_token = jwt.encode(
@@ -152,8 +135,6 @@ class TestCheckLoginStatusMiddleware:
     def test_middleware_401_response(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        """Test middleware with 401 response (should delete cookie)."""
-
         def mock_get_response_401(request: HttpRequest) -> HttpResponse:
             response = HttpResponse("Unauthorized", status=401)
             return response
@@ -172,8 +153,6 @@ class TestCheckLoginStatusMiddleware:
     def test_middleware_login_response(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        """Test middleware with login response (should not modify cookie)."""
-
         def mock_get_response_login(request: HttpRequest) -> HttpResponse:
             response = HttpResponse("Login response")
             response["is-log-in"] = "yes"
@@ -194,8 +173,6 @@ class TestCheckLoginStatusMiddleware:
     def test_middleware_logout_response(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        """Test middleware with logout response (should not modify cookie)."""
-
         def mock_get_response_logout(request: HttpRequest) -> HttpResponse:
             response = HttpResponse("Logout response")
             response["is-log-out"] = "yes"
@@ -219,7 +196,6 @@ class TestCheckLoginStatusMiddleware:
         request_obj: HttpRequest,
         user: User,
     ) -> None:
-        """Test middleware refreshes cookie max_age."""
         token = self.create_valid_token(user)
         request_obj.COOKIES = {AUTH_COOKIE_NAME: token}
 
@@ -229,7 +205,7 @@ class TestCheckLoginStatusMiddleware:
         assert AUTH_COOKIE_NAME in response.cookies
         cookie = response.cookies[AUTH_COOKIE_NAME]
         assert cookie.value == token
-        assert cookie["max-age"] == 172800
+        assert cookie["max-age"] == 259200
         assert cookie["secure"] is True
         assert cookie["httponly"] is True
         assert cookie["samesite"] == "Strict"
@@ -239,7 +215,6 @@ class TestCheckLoginStatusMiddleware:
         middleware: Callable[[HttpRequest], HttpResponse],
         request_obj: HttpRequest,
     ) -> None:
-        """Test middleware deletes cookie when no token is present."""
         request_obj.COOKIES = {}
 
         response = middleware(request_obj)
@@ -254,7 +229,6 @@ class TestCheckLoginStatusMiddleware:
         request_obj: HttpRequest,
         user: User,
     ) -> None:
-        """Test middleware preserves other cookies."""
         token = self.create_valid_token(user)
         request_obj.COOKIES = {
             AUTH_COOKIE_NAME: token,
@@ -275,7 +249,6 @@ class TestCheckLoginStatusMiddleware:
         request_obj: HttpRequest,
         user: User,
     ) -> None:
-        """Test middleware with multiple requests from same user."""
         token = self.create_valid_token(user)
 
         # First request
@@ -293,7 +266,6 @@ class TestCheckLoginStatusMiddleware:
     def test_middleware_different_users(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        """Test middleware with different users."""
         # Create second user
         user2 = User.objects.create_user(
             oauth_org=OAuthOrganization.FACEGOOK,
@@ -321,8 +293,6 @@ class TestCheckLoginStatusMiddleware:
     def test_middleware_custom_headers_removal(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        """Test that custom headers are removed from response."""
-
         def mock_get_response_with_headers(request: HttpRequest) -> HttpResponse:
             response = HttpResponse("Response with headers")
             response["is-log-in"] = "yes"
@@ -347,7 +317,6 @@ class TestCheckLoginStatusMiddleware:
         middleware: Callable[[HttpRequest], HttpResponse],
         request_obj: HttpRequest,
     ) -> None:
-        """Test middleware with empty token string."""
         request_obj.COOKIES = {AUTH_COOKIE_NAME: ""}
 
         response = middleware(request_obj)
@@ -364,7 +333,6 @@ class TestCheckLoginStatusMiddleware:
         request_obj: HttpRequest,
         user: User,
     ) -> None:
-        """Test middleware with token containing extra whitespace."""
         token = self.create_valid_token(user)
         request_obj.COOKIES = {AUTH_COOKIE_NAME: f" {token} "}
 

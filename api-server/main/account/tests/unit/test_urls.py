@@ -7,67 +7,61 @@ from main.account import views
 
 class TestAccountUrls:
     def test_google_login_url_pattern(self) -> None:
-        """Test that google-login URL pattern resolves to correct view."""
-        url = "/api/account/google-login/"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.google_login
+        # Test with trailing slash
+        url_with_slash = "/api/account/google-login/"
+        resolver_with_slash = resolve(url_with_slash)
+        assert resolver_with_slash.func == views.google_login
 
-    def test_google_login_url_pattern_without_slash(self) -> None:
-        """Test that google-login URL pattern without trailing slash works."""
-        url = "/api/account/google-login"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.google_login
+        # Test without trailing slash
+        url_without_slash = "/api/account/google-login"
+        resolver_without_slash = resolve(url_without_slash)
+        assert resolver_without_slash.func == views.google_login
 
     def test_logout_url_pattern(self) -> None:
-        """Test that logout URL pattern resolves to correct view."""
-        url = "/api/account/logout/"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.logout
+        # Test with trailing slash
+        url_with_slash = "/api/account/logout/"
+        resolver_with_slash = resolve(url_with_slash)
+        assert resolver_with_slash.func == views.logout
 
-    def test_logout_url_pattern_without_slash(self) -> None:
-        """Test that logout URL pattern without trailing slash works."""
-        url = "/api/account/logout"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.logout
+        # Test without trailing slash
+        url_without_slash = "/api/account/logout"
+        resolver_without_slash = resolve(url_without_slash)
+        assert resolver_without_slash.func == views.logout
 
     def test_me_url_pattern(self) -> None:
-        """Test that me URL pattern resolves to correct view."""
-        url = "/api/account/me/"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.me
+        # Test with trailing slash
+        url_with_slash = "/api/account/me/"
+        resolver_with_slash = resolve(url_with_slash)
+        assert resolver_with_slash.func == views.me
 
-    def test_me_url_pattern_without_slash(self) -> None:
-        """Test that me URL pattern without trailing slash works."""
-        url = "/api/account/me"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.me
+        # Test without trailing slash
+        url_without_slash = "/api/account/me"
+        resolver_without_slash = resolve(url_without_slash)
+        assert resolver_without_slash.func == views.me
 
     def test_update_url_pattern(self) -> None:
-        """Test that update URL pattern resolves to correct view."""
-        url = "/api/account/update/"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.update
+        # Test with trailing slash
+        url_with_slash = "/api/account/update/"
+        resolver_with_slash = resolve(url_with_slash)
+        assert resolver_with_slash.func == views.update
 
-    def test_update_url_pattern_without_slash(self) -> None:
-        """Test that update URL pattern without trailing slash works."""
-        url = "/api/account/update"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.update
+        # Test without trailing slash
+        url_without_slash = "/api/account/update"
+        resolver_without_slash = resolve(url_without_slash)
+        assert resolver_without_slash.func == views.update
 
     def test_change_binding_url_pattern(self) -> None:
-        """Test that change-binding URL pattern resolves to correct view."""
-        url = "/api/account/change-binding/"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.change_google_binding
+        # Test with trailing slash
+        url_with_slash = "/api/account/change-binding/"
+        resolver_with_slash = resolve(url_with_slash)
+        assert resolver_with_slash.func == views.change_google_binding
 
-    def test_change_binding_url_pattern_without_slash(self) -> None:
-        """Test that change-binding URL pattern without trailing slash works."""
-        url = "/api/account/change-binding"
-        resolver_obj = resolve(url)
-        assert resolver_obj.func == views.change_google_binding
+        # Test without trailing slash
+        url_without_slash = "/api/account/change-binding"
+        resolver_without_slash = resolve(url_without_slash)
+        assert resolver_without_slash.func == views.change_google_binding
 
     def test_url_patterns_count(self) -> None:
-        """Test that all expected URL patterns are defined."""
         from main.account.urls import urlpatterns
 
         # Count the active URL patterns (excluding commented ones)
@@ -81,7 +75,6 @@ class TestAccountUrls:
         assert len(active_patterns) == 5
 
     def test_url_patterns_view_mappings(self) -> None:
-        """Test that URL patterns map to correct view functions."""
         from main.account.urls import urlpatterns
 
         expected_mappings = {
@@ -100,7 +93,6 @@ class TestAccountUrls:
                     assert pattern.callback == expected_view
 
     def test_url_patterns_regex_patterns(self) -> None:
-        """Test that URL patterns have correct regex patterns."""
         from main.account.urls import urlpatterns
 
         expected_patterns = [
@@ -123,7 +115,6 @@ class TestAccountUrls:
         assert actual_patterns == expected_patterns
 
     def test_commented_url_pattern(self) -> None:
-        """Test that commented URL pattern is not active."""
         from main.account.urls import urlpatterns
 
         # Check that delete URL pattern is commented out
@@ -138,7 +129,6 @@ class TestAccountUrls:
         assert delete_pattern is None
 
     def test_url_resolution_with_parameters(self) -> None:
-        """Test URL resolution with query parameters."""
         # Test google-login with redirect_uri parameter
         url = "/api/account/google-login/"
         request = HttpRequest()
@@ -149,7 +139,6 @@ class TestAccountUrls:
         assert resolver_obj.func == views.google_login
 
     def test_url_patterns_case_sensitivity(self) -> None:
-        """Test that URL patterns are case sensitive."""
         # Test that URLs are case sensitive
         url = "/api/account/google-login/"
 
@@ -157,20 +146,7 @@ class TestAccountUrls:
         with pytest.raises(Resolver404):
             resolve(url.upper())
 
-    def test_url_patterns_trailing_slash_handling(self) -> None:
-        """Test that URL patterns handle trailing slashes correctly."""
-        # Test with trailing slash
-        url_with_slash = "/api/account/google-login/"
-        resolver_with_slash = resolve(url_with_slash)
-        assert resolver_with_slash.func == views.google_login
-
-        # Test without trailing slash
-        url_without_slash = "/api/account/google-login"
-        resolver_without_slash = resolve(url_without_slash)
-        assert resolver_without_slash.func == views.google_login
-
     def test_url_patterns_http_methods(self) -> None:
-        """Test that URL patterns support correct HTTP methods."""
         # Test that each view supports the expected HTTP methods
         expected_methods = {
             "/api/account/google-login/": ["GET", "POST"],
@@ -189,7 +165,6 @@ class TestAccountUrls:
             assert callable(view_func)
 
     def test_url_patterns_view_imports(self) -> None:
-        """Test that all view functions are properly imported."""
         from main.account.urls import urlpatterns
 
         # Check that all view functions are imported and callable
@@ -200,7 +175,6 @@ class TestAccountUrls:
                 assert callable(view_func)
 
     def test_url_patterns_no_duplicates(self) -> None:
-        """Test that there are no duplicate URL patterns."""
         from main.account.urls import urlpatterns
 
         # Check for duplicate patterns

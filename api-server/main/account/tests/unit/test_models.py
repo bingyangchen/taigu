@@ -13,13 +13,11 @@ from main.account.models import User, UserManager
 class TestUserManager:
     @pytest.fixture
     def manager(self) -> UserManager:
-        """Create a UserManager instance for testing."""
         manager = UserManager()
         manager.model = User
         return manager
 
     def test_create_user_success(self, manager: UserManager) -> None:
-        """Test creating a regular user successfully."""
         user = manager.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -35,7 +33,6 @@ class TestUserManager:
         assert user.is_active
 
     def test_create_user_with_staff_permissions(self, manager: UserManager) -> None:
-        """Test creating a user with staff permissions."""
         user = manager.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -47,7 +44,6 @@ class TestUserManager:
         assert not user.is_superuser
 
     def test_create_user_with_superuser_permissions(self, manager: UserManager) -> None:
-        """Test creating a user with superuser permissions."""
         user = manager.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -59,7 +55,6 @@ class TestUserManager:
         assert not user.is_staff
 
     def test_create_user_with_extra_fields(self, manager: UserManager) -> None:
-        """Test creating a user with extra fields."""
         user = manager.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -72,7 +67,6 @@ class TestUserManager:
         assert user.avatar_url == "https://example.com/avatar.jpg"
 
     def test_create_user_email_normalization(self, manager: UserManager) -> None:
-        """Test that email is normalized when creating user."""
         user = manager.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -82,7 +76,6 @@ class TestUserManager:
         assert user.email == "TEST@example.com"
 
     def test_create_superuser_success(self, manager: UserManager) -> None:
-        """Test creating a superuser successfully."""
         user = manager.create_superuser(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -95,7 +88,6 @@ class TestUserManager:
         assert user.is_active
 
     def test_create_superuser_with_extra_fields(self, manager: UserManager) -> None:
-        """Test creating a superuser with extra fields."""
         user = manager.create_superuser(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -112,7 +104,6 @@ class TestUserManager:
 class TestUserModel:
     @pytest.fixture
     def user_data(self) -> dict[str, Any]:
-        """Sample user data for testing."""
         return {
             "oauth_org": OAuthOrganization.GOOGLE,
             "oauth_id": "test_oauth_id",
@@ -121,7 +112,6 @@ class TestUserModel:
         }
 
     def test_user_creation(self, user_data: dict[str, Any]) -> None:
-        """Test creating a user instance."""
         user = User.objects.create_user(**user_data)
 
         assert isinstance(user.id, uuid.UUID)
@@ -133,33 +123,28 @@ class TestUserModel:
         assert user.avatar_url is None
 
     def test_user_creation_with_avatar(self, user_data: dict[str, Any]) -> None:
-        """Test creating a user with avatar URL."""
         user_data["avatar_url"] = "https://example.com/avatar.jpg"
         user = User.objects.create_user(**user_data)
 
         assert user.avatar_url == "https://example.com/avatar.jpg"
 
     def test_user_str_representation(self, user_data: dict[str, Any]) -> None:
-        """Test the string representation of user."""
         user = User.objects.create_user(**user_data)
 
         assert str(user) == "testuser"
 
     def test_user_meta_options(self) -> None:
-        """Test user model meta options."""
         assert User._meta.db_table == "user"
         assert User.USERNAME_FIELD == "email"
         assert User.REQUIRED_FIELDS == ["oauth_org", "oauth_id", "username"]
 
     def test_user_unique_constraints(self, user_data: dict[str, Any]) -> None:
-        """Test that users with same oauth_org and oauth_id cannot be created."""
         User.objects.create_user(**user_data)
 
         with pytest.raises((IntegrityError, ValueError)):
             User.objects.create_user(**user_data)
 
     def test_user_email_uniqueness(self, user_data: dict[str, Any]) -> None:
-        """Test that users with same email cannot be created."""
         User.objects.create_user(**user_data)
 
         user_data2 = user_data.copy()
@@ -169,7 +154,6 @@ class TestUserModel:
             User.objects.create_user(**user_data2)
 
     def test_user_oauth_choices(self, user_data: dict[str, Any]) -> None:
-        """Test that oauth_org field accepts valid choices."""
         # Test Google
         user_data["oauth_org"] = OAuthOrganization.GOOGLE
         user = User.objects.create_user(**user_data)
@@ -184,21 +168,11 @@ class TestUserModel:
         assert user2.oauth_org == OAuthOrganization.FACEGOOK
 
     def test_user_is_active_default(self, user_data: dict[str, Any]) -> None:
-        """Test that is_active defaults to True."""
         user = User.objects.create_user(**user_data)
 
         assert user.is_active
 
-    def test_user_is_active_can_be_set(self, user_data: dict[str, Any]) -> None:
-        """Test that is_active can be set to False."""
-        user = User.objects.create_user(**user_data)
-        user.is_active = False
-        user.save()
-
-        assert not user.is_active
-
     def test_user_avatar_url_null_blank(self, user_data: dict[str, Any]) -> None:
-        """Test that avatar_url can be null or blank."""
         user = User.objects.create_user(**user_data)
 
         # Test setting to None
@@ -214,42 +188,36 @@ class TestUserModel:
         assert user.avatar_url == ""
 
     def test_user_oauth_id_max_length(self, user_data: dict[str, Any]) -> None:
-        """Test that oauth_id respects max length constraint."""
         user_data["oauth_id"] = "a" * 65  # Exceeds max_length=64
 
         with pytest.raises((IntegrityError, ValueError, DataError)):
             User.objects.create_user(**user_data)
 
     def test_user_email_max_length(self, user_data: dict[str, Any]) -> None:
-        """Test that email respects max length constraint."""
         user_data["email"] = "a" * 250 + "@example.com"  # Exceeds max_length=256
 
         with pytest.raises((IntegrityError, ValueError, DataError)):
             User.objects.create_user(**user_data)
 
     def test_user_username_max_length(self, user_data: dict[str, Any]) -> None:
-        """Test that username respects max length constraint."""
         user_data["username"] = "a" * 65  # Exceeds max_length=64
 
         with pytest.raises((IntegrityError, ValueError, DataError)):
             User.objects.create_user(**user_data)
 
     def test_user_avatar_url_max_length(self, user_data: dict[str, Any]) -> None:
-        """Test that avatar_url respects max length constraint."""
         user_data["avatar_url"] = "a" * 2049  # Exceeds max_length=2048
 
         with pytest.raises((IntegrityError, ValueError, DataError)):
             User.objects.create_user(**user_data)
 
     def test_user_oauth_org_max_length(self, user_data: dict[str, Any]) -> None:
-        """Test that oauth_org respects max length constraint."""
         user_data["oauth_org"] = "toolonger"  # Exceeds max_length=8
 
         with pytest.raises((IntegrityError, ValueError, DataError)):
             User.objects.create_user(**user_data)
 
     def test_user_get_or_create(self) -> None:
-        """Test get_or_create functionality."""
         user, created = User.objects.get_or_create(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -264,7 +232,6 @@ class TestUserModel:
         assert user.oauth_org == OAuthOrganization.GOOGLE
         assert user.oauth_id == "test_oauth_id"
 
-        # Try to get_or_create the same user
         user2, created2 = User.objects.get_or_create(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",

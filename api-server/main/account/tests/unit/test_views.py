@@ -10,25 +10,17 @@ from django.http import HttpRequest
 
 from main.account import AUTH_COOKIE_NAME, OAuthOrganization
 from main.account.models import User
-from main.account.views import (
-    change_google_binding,
-    google_login,
-    logout,
-    me,
-    update,
-)
+from main.account.views import change_google_binding, google_login, logout, me, update
 
 
 @pytest.mark.django_db
 class TestGoogleLoginView:
     @pytest.fixture
     def request_obj(self) -> HttpRequest:
-        """Create a sample request object."""
         return HttpRequest()
 
     @pytest.fixture
     def mock_flow(self) -> Any:
-        """Create a mock Google OAuth flow."""
         mock = Mock()
         mock.client_config = {"client_id": "test_client_id"}
         mock.credentials = Mock()
@@ -37,12 +29,10 @@ class TestGoogleLoginView:
 
     @pytest.fixture
     def mock_credentials(self) -> Any:
-        """Create a mock Google credentials object."""
         return Mock()
 
     @pytest.fixture
     def mock_verify_result(self) -> dict[str, Any]:
-        """Create a mock Google OAuth verification result."""
         return {
             "sub": "test_oauth_id",
             "email": "test@example.com",
@@ -53,7 +43,6 @@ class TestGoogleLoginView:
     def test_google_login_get_success(
         self, monkeypatch: Any, request_obj: HttpRequest, mock_flow: Any
     ) -> None:
-        """Test successful GET request for Google login."""
         # Mock the Google OAuth flow
         mock_flow_from_secrets = Mock(return_value=mock_flow)
         mock_path_join = Mock(return_value="path/to/google_client_secret.json")
@@ -85,7 +74,6 @@ class TestGoogleLoginView:
         mock_flow: Any,
         mock_verify_result: dict[str, Any],
     ) -> None:
-        """Test successful POST request for Google login with new user."""
         # Mock all the required functions
         mock_flow_from_secrets = Mock(return_value=mock_flow)
         mock_path_join = Mock(return_value="path/to/google_client_secret.json")
@@ -122,7 +110,6 @@ class TestGoogleLoginView:
         mock_flow: Any,
         mock_verify_result: dict[str, Any],
     ) -> None:
-        """Test successful POST request for Google login with existing user."""
         # Create existing user
         User.objects.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
@@ -160,7 +147,6 @@ class TestGoogleLoginView:
         assert AUTH_COOKIE_NAME in response.cookies
 
     def test_google_login_insufficient_data(self, request_obj: HttpRequest) -> None:
-        """Test Google login with insufficient data."""
         request_obj.method = "POST"
         request_obj.POST = {"code": "auth_code"}  # Missing redirect_uri
 
@@ -171,7 +157,6 @@ class TestGoogleLoginView:
         assert data["message"] == "Data Not Sufficient"
 
     def test_google_login_wrong_method(self, request_obj: HttpRequest) -> None:
-        """Test Google login with wrong HTTP method."""
         request_obj.method = "POST"
         request_obj.POST = {}
 
@@ -186,7 +171,6 @@ class TestGoogleLoginView:
 class TestChangeGoogleBindingView:
     @pytest.fixture
     def user(self) -> User:
-        """Create a sample user for testing."""
         return User.objects.create_user(
             oauth_org=OAuthOrganization.FACEGOOK,
             oauth_id="facebook_oauth_id",
@@ -196,14 +180,12 @@ class TestChangeGoogleBindingView:
 
     @pytest.fixture
     def request_obj(self, user: User) -> HttpRequest:
-        """Create a sample request object with user."""
         request = HttpRequest()
         request.user = user
         return request
 
     @pytest.fixture
     def mock_flow(self) -> Any:
-        """Create a mock Google OAuth flow."""
         mock = Mock()
         mock.client_config = {"client_id": "test_client_id"}
         mock.credentials = Mock()
@@ -212,12 +194,10 @@ class TestChangeGoogleBindingView:
 
     @pytest.fixture
     def mock_credentials(self) -> Any:
-        """Create a mock Google credentials object."""
         return Mock()
 
     @pytest.fixture
     def mock_verify_result(self) -> dict[str, Any]:
-        """Create a mock Google OAuth verification result."""
         return {
             "sub": "new_google_oauth_id",
             "email": "new@example.com",
@@ -232,7 +212,6 @@ class TestChangeGoogleBindingView:
         mock_flow: Any,
         mock_verify_result: dict[str, Any],
     ) -> None:
-        """Test successful Google binding change."""
         # Mock all the required functions
         mock_flow_from_secrets = Mock(return_value=mock_flow)
         mock_path_join = Mock(return_value="path/to/google_client_secret.json")
@@ -273,7 +252,6 @@ class TestChangeGoogleBindingView:
         mock_flow: Any,
         mock_verify_result: dict[str, Any],
     ) -> None:
-        """Test Google binding change when account is already bound to another user."""
         # Create another user with the same Google oauth_id
         User.objects.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
@@ -314,7 +292,6 @@ class TestChangeGoogleBindingView:
     def test_change_google_binding_insufficient_data(
         self, request_obj: HttpRequest
     ) -> None:
-        """Test Google binding change with insufficient data."""
         request_obj.method = "POST"
         request_obj.POST = {"code": "auth_code"}  # Missing redirect_uri
 
@@ -329,7 +306,6 @@ class TestChangeGoogleBindingView:
 class TestMeView:
     @pytest.fixture
     def user(self) -> User:
-        """Create a sample user for testing."""
         return User.objects.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -340,13 +316,11 @@ class TestMeView:
 
     @pytest.fixture
     def request_obj(self, user: User) -> HttpRequest:
-        """Create a sample request object with user."""
         request = HttpRequest()
         request.user = user
         return request
 
     def test_me_success(self, request_obj: HttpRequest) -> None:
-        """Test successful me endpoint."""
         request_obj.method = "GET"
         response = me(request_obj)
 
@@ -358,7 +332,6 @@ class TestMeView:
         assert data["avatar_url"] == "https://example.com/avatar.jpg"
 
     def test_me_without_avatar(self, request_obj: HttpRequest, user: User) -> None:
-        """Test me endpoint with user without avatar."""
         user.avatar_url = None
         user.save()
 
@@ -374,7 +347,6 @@ class TestMeView:
 class TestLogoutView:
     @pytest.fixture
     def user(self) -> User:
-        """Create a sample user for testing."""
         return User.objects.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -384,13 +356,11 @@ class TestLogoutView:
 
     @pytest.fixture
     def request_obj(self, user: User) -> HttpRequest:
-        """Create a sample request object with user."""
         request = HttpRequest()
         request.user = user
         return request
 
     def test_logout_success(self, request_obj: HttpRequest) -> None:
-        """Test successful logout."""
         request_obj.method = "GET"
         response = logout(request_obj)
 
@@ -404,7 +374,6 @@ class TestLogoutView:
 class TestUpdateView:
     @pytest.fixture
     def user(self) -> User:
-        """Create a sample user for testing."""
         return User.objects.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
@@ -415,7 +384,6 @@ class TestUpdateView:
 
     @pytest.fixture
     def request_obj(self, user: User) -> HttpRequest:
-        """Create a sample request object with user."""
         request = HttpRequest()
         request.user = user
         return request
@@ -423,7 +391,6 @@ class TestUpdateView:
     def test_update_username_success(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        """Test successful username update."""
         request_obj.method = "POST"
         body_data = json.dumps({"username": "New Username"}).encode()
         request_obj._body = body_data
@@ -443,7 +410,6 @@ class TestUpdateView:
     def test_update_avatar_url_success(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        """Test successful avatar URL update."""
         request_obj.method = "POST"
         body_data = json.dumps(
             {"avatar_url": "https://example.com/new_avatar.jpg"}
@@ -463,7 +429,6 @@ class TestUpdateView:
     def test_update_avatar_url_to_empty(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        """Test setting avatar URL to empty string."""
         request_obj.method = "POST"
         body_data = json.dumps({"avatar_url": ""}).encode()
         request_obj._body = body_data
@@ -479,7 +444,6 @@ class TestUpdateView:
         assert user.avatar_url is None
 
     def test_update_multiple_fields(self, request_obj: HttpRequest, user: User) -> None:
-        """Test updating multiple fields at once."""
         request_obj.method = "POST"
         body_data = json.dumps(
             {
@@ -502,7 +466,6 @@ class TestUpdateView:
         assert user.avatar_url == "https://example.com/new_avatar.jpg"
 
     def test_update_no_fields(self, request_obj: HttpRequest) -> None:
-        """Test update with no fields to update."""
         request_obj.method = "POST"
         body_data = json.dumps({}).encode()
         request_obj._body = body_data
@@ -516,7 +479,6 @@ class TestUpdateView:
         assert data["avatar_url"] == "https://example.com/avatar.jpg"
 
     def test_update_invalid_json(self, request_obj: HttpRequest) -> None:
-        """Test update with invalid JSON."""
         request_obj.method = "POST"
         request_obj._body = b"invalid json"
 
@@ -526,7 +488,6 @@ class TestUpdateView:
     def test_update_validation_error(
         self, monkeypatch: Any, request_obj: HttpRequest
     ) -> None:
-        """Test update with validation error."""
         mock_save = Mock()
         mock_save.side_effect = ValidationError("Invalid username")
 
@@ -545,7 +506,6 @@ class TestUpdateView:
     def test_update_unsupported_field(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        """Test update with unsupported field."""
         request_obj.method = "POST"
         body_data = json.dumps({"email": "new@example.com"}).encode()
         request_obj._body = body_data
