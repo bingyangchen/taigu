@@ -20,8 +20,7 @@ load_env_vars() {
     if [ -f .env ]; then
         export $(cat .env | grep -v '^#' | xargs)
     else
-        printf "${RED}Error: .env file not found${RESET}\n"
-        exit 1
+        printf "${YELLOW}Warning: .env file not found, using default values${RESET}\n"
     fi
 }
 
