@@ -15,8 +15,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.13'
+          python-version: "3.13"
       - name: Install codespell
         run: pip install codespell
       - name: Run codespell
-        run: codespell .
+        run: codespell --config=.codespellrc

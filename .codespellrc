@@ -1,0 +1,2 @@
+[codespell]
+skip = */node_modules,*/dev-key.pem,*/dev-cert.pem,*/package-lock.json
