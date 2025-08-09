@@ -61,12 +61,10 @@ def google_login(request: HttpRequest) -> JsonResponse:
                 "avatar_url": verify_result["picture"],
             },
         )
-        request.user = user
+        request.user = user  # type: ignore
         jwt_ = jwt.encode(
             {
                 "id": str(user.id),
-                "oauth_id": user.oauth_id,
-                "iat": int(datetime.now().timestamp()),
                 "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
             },
             key=settings.SECRET_KEY,
@@ -76,7 +74,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
         http_response.set_cookie(
             AUTH_COOKIE_NAME,
             value=jwt_,
-            max_age=172800,
+            max_age=259200,
             secure=True,
             httponly=True,
             samesite="Strict",
@@ -134,8 +132,6 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
     jwt_ = jwt.encode(
         {
             "id": str(user.id),
-            "oauth_id": user.oauth_id,
-            "iat": int(datetime.now().timestamp()),
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         },
         key=settings.SECRET_KEY,

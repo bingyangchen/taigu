@@ -24,7 +24,7 @@ def check_login_status_middleware(
                 response.set_cookie(
                     key=AUTH_COOKIE_NAME,
                     value=token,
-                    max_age=172800,
+                    max_age=259200,
                     secure=True,
                     httponly=True,
                     samesite="Strict",
