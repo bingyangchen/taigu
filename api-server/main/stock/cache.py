@@ -20,13 +20,8 @@ class TimeSeriesStockInfo(BaseModel):
 
 
 class TimeSeriesStockInfoCacheManager(BaseCacheManager[TimeSeriesStockInfo]):
+    cache_name = "time_series_stock_info"
+    value_validator_model = TimeSeriesStockInfo
+
     def __init__(self, stock_id: str) -> None:
         super().__init__(stock_id)
-
-    def _gen_cache_key(self) -> str:
-        return f"time_series_stock_info:{self.identifier}"
-
-    def set(self, value: TimeSeriesStockInfo, timeout: int) -> None:
-        if not isinstance(value, TimeSeriesStockInfo):
-            raise TypeError
-        super().set(value, timeout)

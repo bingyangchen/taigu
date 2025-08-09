@@ -28,7 +28,7 @@ def market_index(request: HttpRequest) -> JsonResponse:
                 }
                 for row in MarketIndexPerMinute.objects.filter(market=market_id)
             }
-            cache_manager.set(TimeSeriesStockInfo(data=data), 180)
+            cache_manager.set(TimeSeriesStockInfo.model_validate({"data": data}), 180)
         result[market_id] = data
     return JsonResponse(result)
 

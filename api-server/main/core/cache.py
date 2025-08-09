@@ -1,21 +1,24 @@
 from typing import Generic, TypeVar
 
 from django.core.cache import cache
+from pydantic import BaseModel
 
 T = TypeVar("T")
 
 
 class BaseCacheManager(Generic[T]):
+    cache_name: str
+    value_validator_model: type[BaseModel]
+
     def __init__(self, identifier: str) -> None:
         self.identifier = identifier
 
-    # NOTE: Don't use double underscore to name this method, as subclasses won't be able
-    #       to override it due to name mangling.
-    def _gen_cache_key(self) -> str:
-        raise NotImplementedError
+    def __gen_cache_key(self) -> str:
+        return f"{self.cache_name}:{self.identifier}"
 
     def get(self) -> T | None:
-        return cache.get(self._gen_cache_key())
+        return cache.get(self.__gen_cache_key())
 
     def set(self, value: T, timeout: int) -> None:
-        cache.set(self._gen_cache_key(), value, timeout)
+        self.value_validator_model.model_validate(value)
+        cache.set(self.__gen_cache_key(), value, timeout)
