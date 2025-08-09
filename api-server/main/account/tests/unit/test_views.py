@@ -44,14 +44,12 @@ class TestGoogleLoginView:
         self, monkeypatch: Any, request_obj: HttpRequest, mock_flow: Any
     ) -> None:
         # Mock the Google OAuth flow
-        mock_flow_from_secrets = Mock(return_value=mock_flow)
-        mock_path_join = Mock(return_value="path/to/google_client_secret.json")
+        mock_flow_from_config = Mock(return_value=mock_flow)
         mock_flow.authorization_url.return_value = ("https://auth.url", "state123")
 
-        monkeypatch.setattr("main.account.views.os.path.join", mock_path_join)
         monkeypatch.setattr(
-            "main.account.views.google_oauth_flow.Flow.from_client_secrets_file",
-            mock_flow_from_secrets,
+            "main.account.views.google_oauth_flow.Flow.from_client_config",
+            mock_flow_from_config,
         )
 
         request_obj.method = "GET"
@@ -75,15 +73,13 @@ class TestGoogleLoginView:
         mock_verify_result: dict[str, Any],
     ) -> None:
         # Mock all the required functions
-        mock_flow_from_secrets = Mock(return_value=mock_flow)
-        mock_path_join = Mock(return_value="path/to/google_client_secret.json")
+        mock_flow_from_config = Mock(return_value=mock_flow)
         mock_verify_token = Mock(return_value=mock_verify_result)
         mock_jwt_encode = Mock(return_value="test_jwt_token")
 
-        monkeypatch.setattr("main.account.views.os.path.join", mock_path_join)
         monkeypatch.setattr(
-            "main.account.views.google_oauth_flow.Flow.from_client_secrets_file",
-            mock_flow_from_secrets,
+            "main.account.views.google_oauth_flow.Flow.from_client_config",
+            mock_flow_from_config,
         )
         monkeypatch.setattr(
             "main.account.views.id_token.verify_oauth2_token", mock_verify_token
@@ -119,15 +115,13 @@ class TestGoogleLoginView:
         )
 
         # Mock all the required functions
-        mock_flow_from_secrets = Mock(return_value=mock_flow)
-        mock_path_join = Mock(return_value="path/to/google_client_secret.json")
+        mock_flow_from_config = Mock(return_value=mock_flow)
         mock_verify_token = Mock(return_value=mock_verify_result)
         mock_jwt_encode = Mock(return_value="test_jwt_token")
 
-        monkeypatch.setattr("main.account.views.os.path.join", mock_path_join)
         monkeypatch.setattr(
-            "main.account.views.google_oauth_flow.Flow.from_client_secrets_file",
-            mock_flow_from_secrets,
+            "main.account.views.google_oauth_flow.Flow.from_client_config",
+            mock_flow_from_config,
         )
         monkeypatch.setattr(
             "main.account.views.id_token.verify_oauth2_token", mock_verify_token
@@ -213,15 +207,13 @@ class TestChangeGoogleBindingView:
         mock_verify_result: dict[str, Any],
     ) -> None:
         # Mock all the required functions
-        mock_flow_from_secrets = Mock(return_value=mock_flow)
-        mock_path_join = Mock(return_value="path/to/google_client_secret.json")
+        mock_flow_from_config = Mock(return_value=mock_flow)
         mock_verify_token = Mock(return_value=mock_verify_result)
         mock_jwt_encode = Mock(return_value="test_jwt_token")
 
-        monkeypatch.setattr("main.account.views.os.path.join", mock_path_join)
         monkeypatch.setattr(
-            "main.account.views.google_oauth_flow.Flow.from_client_secrets_file",
-            mock_flow_from_secrets,
+            "main.account.views.google_oauth_flow.Flow.from_client_config",
+            mock_flow_from_config,
         )
         monkeypatch.setattr(
             "main.account.views.id_token.verify_oauth2_token", mock_verify_token
@@ -261,14 +253,12 @@ class TestChangeGoogleBindingView:
         )
 
         # Mock all the required functions
-        mock_flow_from_secrets = Mock(return_value=mock_flow)
-        mock_path_join = Mock(return_value="path/to/google_client_secret.json")
+        mock_flow_from_config = Mock(return_value=mock_flow)
         mock_verify_token = Mock(return_value=mock_verify_result)
 
-        monkeypatch.setattr("main.account.views.os.path.join", mock_path_join)
         monkeypatch.setattr(
-            "main.account.views.google_oauth_flow.Flow.from_client_secrets_file",
-            mock_flow_from_secrets,
+            "main.account.views.google_oauth_flow.Flow.from_client_config",
+            mock_flow_from_config,
         )
         monkeypatch.setattr(
             "main.account.views.id_token.verify_oauth2_token", mock_verify_token

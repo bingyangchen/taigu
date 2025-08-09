@@ -157,13 +157,6 @@ Let's dive deeper into the details of **Step 2** of the development workflow whe
 - **Step 2:** Define the environment variable (with the value) in the `.env` file.
 - **Step 3:** If it is used in the API server, you will also need to define the environment variable in `api-server/main/env.py`.
 
-### Google Client Secret File
-
-> - We use Google OAuth2.0 for authentication. You can get the client secret file from the Google Cloud Console.
-> - The secret file should never be committed to the repository.
-
-Every time you make changes to the Google OAuth2.0 configuration, you will get a new client secret file. You need to update the client secret file at `api-server/google_client_secret.json`.
-
 ## 🚀 Production
 
 ### Prerequisites
@@ -208,7 +201,3 @@ make deploy
 ### Environment Variable Management
 
 You can view `example.env` as the template for environment variable requirements. When you modify the environment variable requirements in `example.env`, you must also update the corresponding environment variables in the `.env` file on the production server.
-
-### Google Client Secret File
-
-Since the client secret file is not committed to the repository, you need to update it manually on the production server before deploying a new version.
