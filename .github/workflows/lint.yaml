@@ -1,0 +1,22 @@
+name: Lint
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  codespell:
+    name: Codespell
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      - name: Install codespell
+        run: pip install codespell
+      - name: Run codespell
+        run: codespell .
