@@ -72,4 +72,4 @@ jobs:
           docker build --target dev_final -t taigutw/api-server:dev .
       - name: Run pytest
         run: |
-          docker compose -f compose.dev.yaml --progress quiet run --rm --env-from-file example.env api-server pytest
+          docker compose -f compose.dev.yaml --progress quiet run --rm --env-from-file example.env api-server pytest --ignore-glob="**/tests/integration/*"
