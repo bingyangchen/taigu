@@ -30,6 +30,9 @@ class EnvironmentVariableManager(BaseModel):
     REDIS_HOST: str = os.environ.get("REDIS_HOST")  # type: ignore
     REDIS_PORT: int = int(os.environ.get("REDIS_PORT"))  # type: ignore
     SECRET_KEY: str = os.environ.get("SECRET_KEY")  # type: ignore
+    GOOGLE_CLIENT_ID: str = os.environ.get("GOOGLE_CLIENT_ID")  # type: ignore
+    GOOGLE_PROJECT_ID: str = os.environ.get("GOOGLE_PROJECT_ID")  # type: ignore
+    GOOGLE_CLIENT_SECRET: str = os.environ.get("GOOGLE_CLIENT_SECRET")  # type: ignore
     LOG_LEVEL: LogLevel = LogLevel(os.environ.get("LOG_LEVEL"))
     SQL_LOG: bool = bool(int(os.environ.get("SQL_LOG")))  # type: ignore
 
