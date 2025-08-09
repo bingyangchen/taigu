@@ -6,6 +6,22 @@ on:
     types: [opened, synchronize]
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check for backend changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'api-server/**'
+              - 'scheduler/**'
+
   codespell:
     name: Codespell
     runs-on: ubuntu-24.04-arm
@@ -20,3 +36,20 @@ jobs:
         run: pip install codespell
       - name: Run codespell
         run: codespell --config=.codespellrc
+
+  lint-backend:
+    name: Lint Python with Ruff
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+      - name: Install Ruff
+        run: pip install ruff
+      - name: Run Ruff
+        run: ruff check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
