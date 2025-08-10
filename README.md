@@ -44,12 +44,12 @@ gitGraph
    switch main
    merge feature/xxx
    commit
-   branch fix/xxx
-   switch fix/xxx
+   branch bugfix/xxx
+   switch bugfix/xxx
    commit
    commit
    switch main
-   merge fix/xxx
+   merge bugfix/xxx
    commit
 ```
 
@@ -123,7 +123,7 @@ gitGraph
 
 ### The Development Workflow
 
-- **Step 1:** Create a branch from `main`, naming it `feature/xxx` or `hotfix/xxx`.
+- **Step 1:** Create a branch from `main`, naming it `feature/xxx` or `bugfix/xxx`.
 - **Step 2:** Complete your work, then commit and push your changes.
 - **Step 3:** Open a pull request on GitHub and obtain approval for your PR.
 - **Step 4:** Merge your branch into `main`.
