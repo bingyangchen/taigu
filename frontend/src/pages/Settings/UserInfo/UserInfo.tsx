@@ -7,9 +7,11 @@ import { connect } from "react-redux";
 import { Button, Form, LabeledInput } from "../../../components";
 import { updateAccountInfo } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
+import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, settingsPagePath, withRouter } from "../../../router";
 import Env from "../../../utils/env";
+import Util from "../../../utils/util";
 
 function mapStateToProps(rootState: RootState) {
   const { avatar_url, username, isWaiting } = rootState.account;
@@ -32,17 +34,19 @@ class UserInfo extends React.Component<Props, State> {
     super(props);
     this.state = { showDefaultAvatar: false, avatarUrl: "", username: "" };
   }
+
   public async componentDidMount(): Promise<void> {
-    this.props.dispatch(updateHeaderTitle("頭貼與名字"));
+    this.props.dispatch(updateHeaderTitle("頭像與名字"));
     this.setState({
       avatarUrl: this.props.avatar_url || "",
       username: this.props.username,
     });
   }
+
   public async componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any
+    snapshot?: any,
   ): Promise<void> {
     if (prevProps.username !== this.props.username) {
       this.setState({ username: this.props.username });
@@ -54,10 +58,11 @@ class UserInfo extends React.Component<Props, State> {
       });
     }
   }
+
   public render(): React.ReactNode {
     return (
       <Form
-        title="頭貼與名字"
+        title="頭像與名字"
         goBackHandler={() => {
           this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
             replace: true,
@@ -91,18 +96,18 @@ class UserInfo extends React.Component<Props, State> {
         ) : (
           <img
             className={styles.avatar_preview}
-            src={this.state.avatarUrl}
+            src={Util.validateAndSanitizeUrl(this.state.avatarUrl) || ""}
             alt=""
             onError={() => this.setState({ showDefaultAvatar: true })}
           />
         )}
         <LabeledInput
-          title="頭貼 URL"
+          title="頭像 URL"
           type="text"
           value={this.state.avatarUrl || ""}
-          onChange={(avatarUrl: string) =>
-            this.setState({ avatarUrl: avatarUrl, showDefaultAvatar: false })
-          }
+          onChange={(avatarUrl: string) => {
+            this.setState({ avatarUrl: avatarUrl, showDefaultAvatar: false });
+          }}
           autoFocus
         />
         <LabeledInput
@@ -114,13 +119,23 @@ class UserInfo extends React.Component<Props, State> {
       </Form>
     );
   }
+
   private handleClickSave = async (): Promise<void> => {
+    const validatedAvatarUrl = Util.validateAndSanitizeUrl(this.state.avatarUrl);
+
+    if (this.state.avatarUrl && !validatedAvatarUrl) {
+      this.props.dispatch(
+        pushToast({ type: "error", text: "無效的頭像 URL，請檢查格式是否正確" }),
+      );
+      return;
+    }
+
     await this.props
       .dispatch(
         updateAccountInfo({
-          avatar_url: this.state.avatarUrl,
+          avatar_url: validatedAvatarUrl || "",
           username: this.state.username,
-        })
+        }),
       )
       .unwrap();
     this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {

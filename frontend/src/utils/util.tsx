@@ -37,7 +37,7 @@ export default class Util {
   }
   public static debounce = <T,>(
     func: (...args: T[]) => void,
-    delay: number
+    delay: number,
   ): ((...args: T[]) => any) => {
     let timer: NodeJS.Timeout;
     return (...params: T[]) => {
@@ -51,18 +51,30 @@ export default class Util {
       ?.setAttribute("content", colorCode);
   }
   public static isTradeRecord(
-    target: TradeRecord | CashDividendRecord | TradePlan
+    target: TradeRecord | CashDividendRecord | TradePlan,
   ): target is TradeRecord {
     return "deal_quantity" in target && "deal_time" in target;
   }
   public static isCashDividendRecord(
-    target: TradeRecord | CashDividendRecord | TradePlan
+    target: TradeRecord | CashDividendRecord | TradePlan,
   ): target is CashDividendRecord {
     return "cash_dividend" in target;
   }
   public static isTradePlan(
-    target: TradeRecord | CashDividendRecord | TradePlan
+    target: TradeRecord | CashDividendRecord | TradePlan,
   ): target is TradePlan {
     return "plan_type" in target;
+  }
+
+  public static validateAndSanitizeUrl(url: string): string | null {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.protocol !== "http:" && urlObj.protocol !== "https:") {
+        return null;
+      }
+      return urlObj.href;
+    } catch (error) {
+      return null;
+    }
   }
 }
