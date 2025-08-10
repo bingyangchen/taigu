@@ -22,6 +22,12 @@ printf "${BLUE}Running ruff...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm -v "$(pwd):/app:ro" \
   api-server ruff check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
 # Ruff will echo passed by default.
+printf "\n"
 
-printf "\n${BLUE}Running pytest...${RESET}\n"
+printf "${BLUE}Running eslint...${RESET}\n"
+docker compose -f compose.dev.yaml --progress quiet run $T --rm frontend npm run lint
+printf "Passed!\n\n"
+
+printf "${BLUE}Running pytest...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server pytest
+printf "Passed!\n"
