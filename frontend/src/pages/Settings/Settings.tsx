@@ -1,5 +1,3 @@
-import styles from "./Settings.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 import { Outlet } from "react-router-dom";
@@ -14,6 +12,7 @@ import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
 import Nav from "../../utils/nav";
 import Util from "../../utils/util";
+import styles from "./Settings.module.scss";
 
 interface Props extends IRouter {
   dispatch: AppDispatch;

@@ -1,7 +1,5 @@
 export { default as IconAppAdd } from "./IconAppAdd";
 export { default as IconBell } from "./IconBell";
-export { default as IconBrandStrategy } from "./IconBrandStrategy";
-export { default as IconBrandStrategyBold } from "./IconBrandStrategyBold";
 export { default as IconBriefcase } from "./IconBriefcase";
 export { default as IconChartHistogram } from "./IconChartHistogram";
 export { default as IconChartHistogramBold } from "./IconChartHistogramBold";
@@ -32,6 +30,8 @@ export { default as IconPersonVcard } from "./IconPersonVcard";
 export { default as IconShieldCheck } from "./IconShieldCheck";
 export { default as IconStar } from "./IconStar";
 export { default as IconTermsInfo } from "./IconTermsInfo";
+export { default as IconThumbtack } from "./IconThumbtack";
+export { default as IconThumbtackBold } from "./IconThumbtackBold";
 export { default as IconToggleOn } from "./IconToggleOn";
 export { default as IconTrash } from "./IconTrash";
 export { default as IconUser } from "./IconUser";

@@ -9,10 +9,15 @@
     "source=${localWorkspaceFolder}/frontend,target=/app,type=bind,consistency=cached"
   ],
   "shutdownAction": "stopContainer",
-  "postCreateCommand": "npm install",
+  "postCreateCommand": "npm ci",
   "customizations": {
     "vscode": {
       "settings": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit",
+          "source.organizeImports": "explicit"
+        },
         "files.insertFinalNewline": true,
         "files.trimFinalNewlines": true,
         "files.trimTrailingWhitespace": true,
@@ -24,7 +29,8 @@
         ]
       },
       "extensions": [
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
       ]
     }
   }

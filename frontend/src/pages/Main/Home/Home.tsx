@@ -1,7 +1,5 @@
-import styles from "./Home.module.scss";
-
 import React from "react";
-import Chart from "react-google-charts";
+import { Chart } from "react-google-charts";
 import { connect } from "react-redux";
 
 import {
@@ -20,6 +18,7 @@ import {
 import type { RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import { IndexPriceInfo } from "../../../types";
+import styles from "./Home.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const {
@@ -411,28 +410,12 @@ class Home extends React.Component<Props, State> {
               chartType="PieChart"
               data={this.marketValuePieChartData}
               options={{
+                // prettier-ignore
                 // colors: [
-                //     "#abdee6",
-                //     "#ff968a",
-                //     "#ffc8a2",
-                //     "#97c1a9",
-                //     "#cbaacb",
-                //     "#c6dbda",
-                //     "#f3b0c3",
-                //     "#cce2cb",
-                //     "#ffffb5",
-                //     "#8fcaca",
-                //     "#ffccb6",
-                //     "#55cbcd",
-                //     "#f6eac2",
-                //     "#04f0f0",
-                //     "#fee1e8",
-                //     "#fed7c3",
-                //     "#b6cfb6",
-                //     "#ecd5e3",
-                //     "#ffc5bf",
-                //     "#a21edb",
-                //     "#ffaea5",
+                //   "#abdee6", "#ff968a", "#ffc8a2", "#97c1a9", "#cbaacb", "#c6dbda",
+                //   "#f3b0c3", "#cce2cb", "#ffffb5", "#8fcaca", "#ffccb6", "#55cbcd",
+                //   "#f6eac2", "#04f0f0", "#fee1e8", "#fed7c3", "#b6cfb6", "#ecd5e3",
+                //   "#ffc5bf", "#a21edb", "#ffaea5",
                 // ],
                 sliceVisibilityThreshold: 0.05,
                 backgroundColor: "transparent",
@@ -451,9 +434,7 @@ class Home extends React.Component<Props, State> {
     );
   }
   private animateTotalCashInvested(): void {
-    if (this.state.animatedTotalCashInvested === this.props.totalCashInvested) {
-      return;
-    }
+    if (this.state.animatedTotalCashInvested === this.props.totalCashInvested) return;
     this.setState(
       (state, props) => {
         return {

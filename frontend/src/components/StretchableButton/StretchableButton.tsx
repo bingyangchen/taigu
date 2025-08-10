@@ -1,6 +1,3 @@
-import logo from "../../assets/logo.png";
-import styles from "./StretchableButton.module.scss";
-
 import React, { MouseEvent } from "react";
 
 import {
@@ -10,14 +7,11 @@ import {
   TradePlanModal,
   TradeRecordModal,
 } from "..";
-import {
-  IconBrandStrategy,
-  IconCoin,
-  IconMagnifier,
-  IconPencilSquare,
-} from "../../icons";
+import logo from "../../assets/logo.png";
+import { IconCoin, IconMagnifier, IconPencilSquare, IconThumbtack } from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Util from "../../utils/util";
+import styles from "./StretchableButton.module.scss";
 
 interface Props extends IRouter {
   defaultSid?: string;
@@ -93,7 +87,7 @@ class StretchableButton extends React.Component<Props, State> {
                 this.setState({ activeModalName: "createTradePlan" });
               }}
             >
-              <IconBrandStrategy sideLength="20" />
+              <IconThumbtack sideLength="20" />
               <div className={styles.hint_text}>買賣計畫</div>
             </div>
             <div

@@ -1,10 +1,8 @@
-import imgPersonFill from "../../assets/person-fill.svg";
-import styles from "./Main.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 import { Outlet } from "react-router-dom";
 
+import imgPersonFill from "../../assets/person-fill.svg";
 import {
   Footer,
   HeaderForMain,
@@ -13,14 +11,14 @@ import {
   ToastList,
 } from "../../components";
 import {
-  IconBrandStrategy,
-  IconBrandStrategyBold,
   IconChartHistogram,
   IconChartHistogramBold,
   IconClockHistory,
   IconClockHistoryBold,
   IconHome,
   IconHomeBold,
+  IconThumbtack,
+  IconThumbtackBold,
 } from "../../icons";
 import {
   fetchAccountInfo,
@@ -55,6 +53,7 @@ import type { Subpage } from "../../types";
 import Env from "../../utils/env";
 import Nav from "../../utils/nav";
 import Util from "../../utils/util";
+import styles from "./Main.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { username, avatar_url } = rootState.account;
@@ -125,8 +124,8 @@ class Main extends React.Component<Props, State> {
         path: `${Env.frontendRootPath}records`,
       },
       {
-        icon: <IconBrandStrategy sideLength="95%" />,
-        icon_bold: <IconBrandStrategyBold sideLength="98%" />,
+        icon: <IconThumbtack sideLength="98%" />,
+        icon_bold: <IconThumbtackBold sideLength="100%" />,
         name: "買賣計畫",
         path: `${Env.frontendRootPath}plans`,
       },
