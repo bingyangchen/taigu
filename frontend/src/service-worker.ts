@@ -124,11 +124,7 @@ self.addEventListener("fetch", (event) => {
               if (networkResponse.status < 400) {
                 cache.put(request, networkResponse.clone());
                 networkResponse.json().then((data) => {
-                  channel.postMessage({
-                    authorized: true,
-                    url: requestUrl,
-                    data,
-                  });
+                  channel.postMessage({ authorized: true, url: requestUrl, data });
                 });
               } else if (networkResponse.status === 401) {
                 // Same logic as src/utils/api.tsx

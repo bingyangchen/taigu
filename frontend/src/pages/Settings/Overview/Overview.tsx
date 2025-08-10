@@ -64,16 +64,8 @@ class Overview extends React.Component<Props, State> {
       //     name: "通知",
       //     path: "#notification",
       // },
-      {
-        icon: <IconInfoCircle sideLength="100%" />,
-        name: "關於",
-        path: "#about",
-      },
-      {
-        icon: <IconUser sideLength="100%" />,
-        name: "帳號",
-        path: "#account",
-      },
+      { icon: <IconInfoCircle sideLength="100%" />, name: "關於", path: "#about" },
+      { icon: <IconUser sideLength="100%" />, name: "帳號", path: "#account" },
     ];
   }
   public componentDidMount(): void {

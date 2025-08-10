@@ -33,10 +33,7 @@ class StockSearchModal extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = {
-      searchKeyword: "",
-      searchResults: [],
-    };
+    this.state = { searchKeyword: "", searchResults: [] };
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {

@@ -40,12 +40,7 @@ class MarketIndexLineChart extends React.Component<Props, State> {
             },
             series: { 0: { color: this.lineColor } },
             interpolateNulls: true,
-            chartArea: {
-              left: "0",
-              top: "10%",
-              width: "100%",
-              height: "90%",
-            },
+            chartArea: { left: "0", top: "10%", width: "100%", height: "90%" },
             enableInteractivity: false,
           }}
           width="100%"

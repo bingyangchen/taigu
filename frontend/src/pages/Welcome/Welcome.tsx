@@ -121,9 +121,7 @@ export default class Welcome extends React.Component<Props, State> {
                   className={`${styles.ball} ${
                     [styles.blue, styles.yellow, styles.green][this.state.captionToShow]
                   }`}
-                  style={{
-                    transform: `scale(${this.state.ballScale})`,
-                  }}
+                  style={{ transform: `scale(${this.state.ballScale})` }}
                 />
               </div>
             </div>

@@ -13,12 +13,8 @@ interface StockInfoState {
     };
   };
   isWaitingHistoricalPrices: boolean;
-  tseIndexRealtimePrices: {
-    [number: string]: IndexPriceInfo;
-  };
-  otcIndexRealtimePrices: {
-    [number: string]: IndexPriceInfo;
-  };
+  tseIndexRealtimePrices: { [number: string]: IndexPriceInfo };
+  otcIndexRealtimePrices: { [number: string]: IndexPriceInfo };
 }
 
 const initialState: StockInfoState = {

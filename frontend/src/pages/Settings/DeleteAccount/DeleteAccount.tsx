@@ -79,9 +79,7 @@ class DeleteAccount extends React.Component<Props, State> {
     await this.props
       .dispatch(deleteAccount({ password: this.state.password }))
       .unwrap();
-    this.props.router.navigate(`${Env.frontendRootPath}login`, {
-      replace: true,
-    });
+    this.props.router.navigate(`${Env.frontendRootPath}login`, { replace: true });
   };
 }
 

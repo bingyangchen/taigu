@@ -53,9 +53,7 @@ class BottomSheet extends React.Component<Props, State> {
     this.headerRef.current!.addEventListener("touchmove", this.handleTouchMove);
     this.headerRef.current!.addEventListener("touchend", this.handleTouchEnd);
 
-    this.setState({
-      initialMainHeight: this.mainRef.current!.clientHeight,
-    });
+    this.setState({ initialMainHeight: this.mainRef.current!.clientHeight });
   }
   public componentDidUpdate(
     prevProps: Readonly<Props>,
@@ -142,9 +140,7 @@ class BottomSheet extends React.Component<Props, State> {
         });
       } else {
         this.setState(
-          {
-            touchEndY: window.visualViewport!.height - this.state.initialMainHeight,
-          },
+          { touchEndY: window.visualViewport!.height - this.state.initialMainHeight },
           () => {
             setTimeout(
               () => this.setState({ touchEndY: null }),
@@ -156,15 +152,10 @@ class BottomSheet extends React.Component<Props, State> {
     } else {
       if (this.state.touchDiffY! > this.minimizeThreshold) {
         this.setState(
-          {
-            touchEndY: window.visualViewport!.height - this.state.initialMainHeight,
-          },
+          { touchEndY: window.visualViewport!.height - this.state.initialMainHeight },
           () => {
             setTimeout(() => {
-              this.setState({
-                touchEndY: null,
-                isMaximized: false,
-              });
+              this.setState({ touchEndY: null, isMaximized: false });
             }, this.transitionDuration);
           },
         );

@@ -22,12 +22,7 @@ export default class InventoryHistogram extends React.Component<Props, State> {
           legend: { position: "none" },
           colors: ["#444"],
           backgroundColor: "transparent",
-          chartArea: {
-            left: "10%",
-            top: "8%",
-            width: "85%",
-            height: "80%",
-          },
+          chartArea: { left: "10%", top: "8%", width: "85%", height: "80%" },
           vAxis: { gridlines: { color: "#eee" } },
         }}
         width="100%"

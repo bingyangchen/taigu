@@ -25,10 +25,7 @@ export default class LabeledInput extends React.Component<Props, State> {
   private inputRef: React.RefObject<HTMLInputElement>;
   public constructor(props: Props) {
     super(props);
-    this.state = {
-      isInputFocused: false,
-      type: props.type || "text",
-    };
+    this.state = { isInputFocused: false, type: props.type || "text" };
     this.inputRef = React.createRef();
   }
   public componentDidMount(): void {

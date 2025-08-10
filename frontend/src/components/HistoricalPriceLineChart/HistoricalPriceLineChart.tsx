@@ -40,11 +40,7 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
           legend: "none",
           backgroundColor: "transparent",
           hAxis: this.props.isWaiting
-            ? {
-                textPosition: "none",
-                gridlines: { color: "none" },
-                baseline: "none",
-              }
+            ? { textPosition: "none", gridlines: { color: "none" }, baseline: "none" }
             : {
                 textStyle: { color: "#aaa" },
                 gridlines: { color: "none" },
@@ -68,11 +64,7 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
                   lineWidth: 0,
                   enableInteractivity: false,
                 },
-                1: {
-                  targetAxisIndex: 1,
-                  lineWidth: 2.5,
-                  color: "#4c8bf5",
-                },
+                1: { targetAxisIndex: 1, lineWidth: 2.5, color: "#4c8bf5" },
               },
           vAxes: this.props.isWaiting
             ? undefined
@@ -92,19 +84,10 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
                 },
               },
           vAxis: this.props.isWaiting
-            ? {
-                textPosition: "none",
-                gridlines: { color: "none" },
-                baseline: "none",
-              }
+            ? { textPosition: "none", gridlines: { color: "none" }, baseline: "none" }
             : undefined,
           chartArea: this.props.isWaiting
-            ? {
-                left: "0%",
-                top: "3%",
-                width: "100%",
-                height: "100%",
-              }
+            ? { left: "0%", top: "3%", width: "100%", height: "100%" }
             : {
                 left: "0%",
                 top: "3%",

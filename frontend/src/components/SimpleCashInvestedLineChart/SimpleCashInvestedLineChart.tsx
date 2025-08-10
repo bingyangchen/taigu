@@ -50,11 +50,7 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
                 lineWidth: 0,
                 enableInteractivity: false,
               },
-              1: {
-                targetAxisIndex: 1,
-                lineWidth: 3,
-                color: "#4c8bf5",
-              },
+              1: { targetAxisIndex: 1, lineWidth: 3, color: "#4c8bf5" },
             },
             vAxes: {
               0: {

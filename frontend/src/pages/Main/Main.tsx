@@ -80,10 +80,7 @@ class Main extends React.Component<Props, State> {
   private fetchAllStockInfoTimer: NodeJS.Timer | null;
   public constructor(props: Props) {
     super(props);
-    this.state = {
-      isLoading: true,
-      prevLocationPathname: null,
-    };
+    this.state = { isLoading: true, prevLocationPathname: null };
     this.channel = new BroadcastChannel(Env.broadcastChannelName);
     this.channel.addEventListener("message", this.handleNonCacheResponse);
     this.mainRef = React.createRef();
@@ -170,9 +167,7 @@ class Main extends React.Component<Props, State> {
         prevProps.router.location.state === this.props.router.location.state
       ) {
         this.setState(
-          {
-            prevLocationPathname: prevProps.router.location.pathname,
-          },
+          { prevLocationPathname: prevProps.router.location.pathname },
           () => this.props.router.navigate(-1),
         );
       } else this.setState({ prevLocationPathname: null });
@@ -208,11 +203,7 @@ class Main extends React.Component<Props, State> {
     this.props.dispatch(updateScrollTop(this.mainRef.current!.scrollTop));
   };
   private handleNonCacheResponse = async (
-    e: MessageEvent<{
-      authorized: boolean;
-      url: string;
-      data: any;
-    }>,
+    e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
   ): Promise<void> => {
     if (e.data.authorized) {
       if (/account\/me[/]?$/gs.test(e.data.url)) {

@@ -1,7 +1,4 @@
-export type UpdateAccountInfoRequestBody = {
-  username?: string;
-  avatar_url?: string;
-};
+export type UpdateAccountInfoRequestBody = { username?: string; avatar_url?: string };
 
 export type UpdateCashDividendRecordRequestBody = {
   id: string;
@@ -15,10 +12,7 @@ export type CreateCashDividendRecordRequestBody = Omit<
   "id"
 >;
 
-export type UpdateOrCreateMemoRequestBody = {
-  sid: string;
-  note: string;
-};
+export type UpdateOrCreateMemoRequestBody = { sid: string; note: string };
 
 export type UpdateTradePlanRequestBody = {
   id: string;
@@ -55,9 +49,7 @@ export type Account = {
   avatar_url: string | null;
 };
 
-export type StockWarehouse = {
-  [sid: string]: number[];
-};
+export type StockWarehouse = { [sid: string]: number[] };
 
 export type CashDividendRecord = {
   id: number;
@@ -67,10 +59,7 @@ export type CashDividendRecord = {
   cash_dividend: number;
 };
 
-export type ToastMessage = {
-  type: "success" | "error";
-  text: string;
-};
+export type ToastMessage = { type: "success" | "error"; text: string };
 
 export type CompanyInfo = {
   sid: string;
@@ -80,11 +69,7 @@ export type CompanyInfo = {
   material_facts: MaterialFact[];
 };
 
-export type MaterialFact = {
-  date_time: string;
-  title: string;
-  description: string;
-};
+export type MaterialFact = { date_time: string; title: string; description: string };
 
 export type StockInfo = {
   sid: string;
@@ -94,11 +79,7 @@ export type StockInfo = {
   fluct_price: number;
 };
 
-export type IndexPriceInfo = {
-  date: string;
-  fluct_price: number;
-  price: number;
-};
+export type IndexPriceInfo = { date: string; fluct_price: number; price: number };
 
 export type TradePlan = {
   id: string;
@@ -120,23 +101,8 @@ export type TradeRecord = {
 };
 
 export type MarketIndex = {
-  tse: {
-    [number: string]: {
-      date: string;
-      fluct_price: number;
-      price: number;
-    };
-  };
-  otc: {
-    [number: string]: {
-      date: string;
-      fluct_price: number;
-      price: number;
-    };
-  };
+  tse: { [number: string]: { date: string; fluct_price: number; price: number } };
+  otc: { [number: string]: { date: string; fluct_price: number; price: number } };
 };
 
-export type GraphQL = {
-  query: string;
-  variables?: { [key: string]: any };
-};
+export type GraphQL = { query: string; variables?: { [key: string]: any } };

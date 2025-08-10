@@ -439,12 +439,7 @@ class Home extends React.Component<Props, State> {
                 pieHole: 0.8,
                 pieSliceText: "none",
                 pieSliceBorderColor: "",
-                chartArea: {
-                  left: "0",
-                  top: "5%",
-                  width: "100%",
-                  height: "90%",
-                },
+                chartArea: { left: "0", top: "5%", width: "100%", height: "90%" },
                 legend: "none",
               }}
               width="100%"

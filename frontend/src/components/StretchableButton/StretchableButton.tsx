@@ -37,10 +37,7 @@ class StretchableButton extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = {
-      isActive: false,
-      activeModalName: null,
-    };
+    this.state = { isActive: false, activeModalName: null };
   }
   public componentDidMount(): void {}
   public componentDidUpdate(

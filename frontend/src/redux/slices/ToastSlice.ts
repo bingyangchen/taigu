@@ -6,9 +6,7 @@ interface ToastState {
   toasts: ToastMessage[];
 }
 
-const initialState: ToastState = {
-  toasts: [],
-};
+const initialState: ToastState = { toasts: [] };
 
 const setAutoRemoveToastTimer = createAsyncThunk(
   "toasts/setAutoRemoveToastTimer",

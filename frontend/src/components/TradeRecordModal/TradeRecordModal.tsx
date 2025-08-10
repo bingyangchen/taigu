@@ -110,9 +110,7 @@ class TradeRecordModal extends React.Component<Props, State> {
                   dealPrice: dealPrice === "" ? NaN : parseFloat(dealPrice),
                 });
                 setTimeout(() => {
-                  this.setState({
-                    handlingFee: this.calcDefaultHandlingFee(),
-                  });
+                  this.setState({ handlingFee: this.calcDefaultHandlingFee() });
                 });
               }}
               autoFocus={Boolean(this.state.sid)}

@@ -27,9 +27,7 @@ class Settings extends React.Component<Props, State> {
   private channel: BroadcastChannel;
   public constructor(props: Props) {
     super(props);
-    this.state = {
-      prevLocationPathname: null,
-    };
+    this.state = { prevLocationPathname: null };
     this.channel = new BroadcastChannel(Env.broadcastChannelName);
     this.channel.addEventListener("message", this.handleNonCacheResponse);
   }
@@ -50,9 +48,7 @@ class Settings extends React.Component<Props, State> {
         prevProps.router.location.state === this.props.router.location.state
       ) {
         this.setState(
-          {
-            prevLocationPathname: prevProps.router.location.pathname,
-          },
+          { prevLocationPathname: prevProps.router.location.pathname },
           () => this.props.router.navigate(-1),
         );
       } else this.setState({ prevLocationPathname: null });
@@ -77,11 +73,7 @@ class Settings extends React.Component<Props, State> {
     );
   }
   private handleNonCacheResponse = async (
-    e: MessageEvent<{
-      authorized: boolean;
-      url: string;
-      data: any;
-    }>,
+    e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
   ): Promise<void> => {
     if (e.data.authorized) {
       if (/account\/me[/]?$/gs.test(e.data.url)) {

@@ -12,10 +12,7 @@ interface TradePlanState {
   isWaiting: boolean;
 }
 
-const initialState: TradePlanState = {
-  tradePlans: [],
-  isWaiting: false,
-};
+const initialState: TradePlanState = { tradePlans: [], isWaiting: false };
 
 export const fetchAllTradePlans = createAsyncThunk(
   "tradePlan/fetchAllTradePlans",

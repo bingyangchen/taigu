@@ -2,5 +2,6 @@
   "printWidth": 88,
   "trailingComma": "all",
   "arrowParens": "always",
+  "objectWrap": "collapse",
   "endOfLine": "lf"
 }

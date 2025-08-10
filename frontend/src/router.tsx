@@ -85,13 +85,7 @@ export function withRouter<T extends IRouter>(Component: React.ComponentType<T>)
     return (
       <Component
         {...(props as T)}
-        router={{
-          location,
-          navigate,
-          params,
-          search_params,
-          set_search_params,
-        }}
+        router={{ location, navigate, params, search_params, set_search_params }}
       />
     );
   };

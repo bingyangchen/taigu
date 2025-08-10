@@ -146,24 +146,15 @@ class Details extends React.Component<Props, State> {
             };
           },
           () => {
-            this.setState({
-              rateOfReturn: this.calcRateOfReturn(),
-            });
+            this.setState({ rateOfReturn: this.calcRateOfReturn() });
           },
         );
       });
     this.props
-      .dispatch(
-        fetchSingleStockHistoricalPrices({
-          sid: this.sid,
-          frequency: "DAILY",
-        }),
-      )
+      .dispatch(fetchSingleStockHistoricalPrices({ sid: this.sid, frequency: "DAILY" }))
       .unwrap()
       .then(() => {
-        this.setState({
-          historicalPriceChartData: this.getHistoricalPriceChartData(),
-        });
+        this.setState({ historicalPriceChartData: this.getHistoricalPriceChartData() });
       });
     this.props.dispatch(fetchCompanyInfo(this.sid));
   }
@@ -203,9 +194,7 @@ class Details extends React.Component<Props, State> {
       prevProps.sidHistoricalPricesMap[this.sid] !==
       this.props.sidHistoricalPricesMap[this.sid]
     ) {
-      this.setState({
-        historicalPriceChartData: this.getHistoricalPriceChartData(),
-      });
+      this.setState({ historicalPriceChartData: this.getHistoricalPriceChartData() });
     }
   }
   public componentWillUnmount(): void {
@@ -415,9 +404,7 @@ class Details extends React.Component<Props, State> {
               <div
                 className={styles.cube}
                 onClick={() => {
-                  this.setState({
-                    activeModalName: "companyInfo",
-                  });
+                  this.setState({ activeModalName: "companyInfo" });
                 }}
               >
                 <IconBriefcase sideLength="30" color="#888" />
@@ -426,9 +413,7 @@ class Details extends React.Component<Props, State> {
               <div
                 className={styles.cube}
                 onClick={() => {
-                  this.setState({
-                    activeModalName: "updateOrCreateNote",
-                  });
+                  this.setState({ activeModalName: "updateOrCreateNote" });
                 }}
               >
                 <IconMemo sideLength="30" color="#888" />
@@ -491,10 +476,7 @@ class Details extends React.Component<Props, State> {
       return Util.isMobile ? (
         <BottomSheet
           onClickBackground={() =>
-            this.setState({
-              activeModalName: null,
-              activeMaterialFact: null,
-            })
+            this.setState({ activeModalName: null, activeMaterialFact: null })
           }
           canMaximize
         >
@@ -507,10 +489,7 @@ class Details extends React.Component<Props, State> {
             children: "", // no use
             className: "transparent xs", // no use
             onClick: () =>
-              this.setState({
-                activeModalName: null,
-                activeMaterialFact: null,
-              }),
+              this.setState({ activeModalName: null, activeMaterialFact: null }),
           }}
           layout="auto"
           noFooter
@@ -601,10 +580,7 @@ class Details extends React.Component<Props, State> {
   }
   private handleTouchStart = (e: TouchEvent): void => {
     const touch = e.touches[0];
-    this.setState({
-      touchStartX: touch.clientX,
-      touchStartY: touch.clientY,
-    });
+    this.setState({ touchStartX: touch.clientX, touchStartY: touch.clientY });
   };
   private handleTouchMove = (e: TouchEvent): void => {
     const touch = e.changedTouches[0];
@@ -761,11 +737,7 @@ class Details extends React.Component<Props, State> {
                   <div className={styles.right}>
                     <RoundButton
                       className="p-12"
-                      onClick={() =>
-                        this.setState({
-                          activeMaterialFact: m,
-                        })
-                      }
+                      onClick={() => this.setState({ activeMaterialFact: m })}
                     >
                       <IconChevronRight />
                     </RoundButton>

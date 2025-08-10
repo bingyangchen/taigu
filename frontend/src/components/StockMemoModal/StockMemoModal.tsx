@@ -27,10 +27,7 @@ class StockMemoModal extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = {
-      sid: props.sid,
-      value: props.defaultValue,
-    };
+    this.state = { sid: props.sid, value: props.defaultValue };
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
@@ -71,10 +68,7 @@ class StockMemoModal extends React.Component<Props, State> {
     if (!this.canSubmit) return;
     await this.props
       .dispatch(
-        updateOrCreateMemo({
-          sid: this.state.sid,
-          note: this.state.value.trim(),
-        }),
+        updateOrCreateMemo({ sid: this.state.sid, note: this.state.value.trim() }),
       )
       .unwrap();
     this.props.hideModal(e);

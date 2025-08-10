@@ -104,23 +104,16 @@ class TradeVolumeBarChart extends React.Component<Props, State> {
                       ui: {
                         chartType: "LineChart",
                         chartOptions: {
-                          chartArea: {
-                            width: "95%",
-                            height: "10%",
-                          },
+                          chartArea: { width: "95%", height: "10%" },
                           backgroundColor: "transparent",
                           hAxis: {
                             baselineColor: "none",
                             textPosition: "none",
-                            gridlines: {
-                              color: "none",
-                            },
+                            gridlines: { color: "none" },
                           },
                           vAxis: {
                             textPosition: "none",
-                            gridlines: {
-                              color: "none",
-                            },
+                            gridlines: { color: "none" },
                             baselineColor: "none",
                           },
                           series: {
@@ -130,15 +123,8 @@ class TradeVolumeBarChart extends React.Component<Props, State> {
                               pointSize: 0,
                               lineWidth: 0,
                             },
-                            1: {
-                              targetAxisIndex: 1,
-                              color: "#4c8bf5",
-                            },
-                            2: {
-                              targetAxisIndex: 1,
-                              lineWidth: "0.5",
-                              color: "#aaa",
-                            },
+                            1: { targetAxisIndex: 1, color: "#4c8bf5" },
+                            2: { targetAxisIndex: 1, lineWidth: "0.5", color: "#aaa" },
                           },
                         },
                       },
@@ -146,10 +132,7 @@ class TradeVolumeBarChart extends React.Component<Props, State> {
                     controlPosition: "bottom",
                     controlWrapperParams: {
                       state: {
-                        range: {
-                          start: this.controlStartDate,
-                          end: new Date(),
-                        },
+                        range: { start: this.controlStartDate, end: new Date() },
                       },
                     },
                   },

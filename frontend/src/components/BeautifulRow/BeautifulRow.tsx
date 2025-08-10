@@ -19,9 +19,7 @@ export default class BeautifulRow extends React.Component<Props, State> {
   private rippleRef: React.RefObject<HTMLDivElement>;
   public constructor(props: Props) {
     super(props);
-    this.state = {
-      isRippling: false,
-    };
+    this.state = { isRippling: false };
     this.rippleRef = React.createRef();
   }
   public render(): React.ReactNode {
