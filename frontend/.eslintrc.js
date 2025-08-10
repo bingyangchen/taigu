@@ -17,11 +17,11 @@ module.exports = {
     project: "./tsconfig.json",
     tsconfigRootDir: __dirname,
   },
-  plugins: ["react", "@typescript-eslint", "jsx-a11y", "import"],
+  plugins: ["react", "@typescript-eslint", "jsx-a11y", "import", "simple-import-sort"],
   rules: {
     // Global rule override - ensure all rules are at most warnings
     "eslint-disable": "off",
-    
+
     // Core ESLint rules - force to warn
     "no-unused-vars": "warn",
     "no-undef": "warn",
@@ -39,7 +39,7 @@ module.exports = {
     "valid-typeof": "warn",
     "no-extra-boolean-cast": "warn",
     "no-prototype-builtins": "warn",
-    
+
     // React specific rules
     "react/react-in-jsx-scope": "off", // Not needed in React 17+
     "react/prop-types": "off", // We're using TypeScript
@@ -98,14 +98,11 @@ module.exports = {
     "jsx-a11y/no-interactive-element-to-noninteractive-role": "warn",
 
     // Import rules
-    "import/order": [
-      "warn",
-      {
-        groups: ["builtin", "external", "internal", "parent", "sibling", "index"],
-        "newlines-between": "always",
-        alphabetize: { order: "asc", caseInsensitive: true },
-      },
-    ],
+    "simple-import-sort/imports": "warn",
+    "simple-import-sort/exports": "warn",
+    "import/first": "warn",
+    "import/newline-after-import": "warn",
+    "import/no-duplicates": "warn",
     "import/no-unresolved": "off", // TypeScript handles this
     "import/default": "warn",
     "import/export": "warn",
@@ -120,6 +117,20 @@ module.exports = {
   settings: {
     react: { version: "detect" },
     "import/resolver": { node: { extensions: [".js", ".jsx", ".ts", ".tsx"] } },
+    "simple-import-sort": {
+      groups: [
+        // React and React-related imports
+        ["^react", "^@react", "^react-"],
+        // Node.js built-ins
+        ["^node:"],
+        // External packages
+        ["^[a-zA-Z]"],
+        // Internal imports (relative paths)
+        ["^[./]"],
+        // Type imports
+        ["^@types/"],
+      ],
+    },
   },
   ignorePatterns: [
     "node_modules/",
