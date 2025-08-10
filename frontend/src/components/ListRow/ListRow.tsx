@@ -66,8 +66,8 @@ class ListRow extends React.Component<Props, State> {
             {Util.isTradeRecord(this.props.target)
               ? this.props.target.deal_price.toLocaleString()
               : Util.isCashDividendRecord(this.props.target)
-              ? this.props.target.cash_dividend.toLocaleString()
-              : this.props.target.target_price.toLocaleString()}
+                ? this.props.target.cash_dividend.toLocaleString()
+                : this.props.target.target_price.toLocaleString()}
           </span>
           {!Util.isCashDividendRecord(this.props.target) && (
             <span className={styles.quantity_outer}>
@@ -84,10 +84,10 @@ class ListRow extends React.Component<Props, State> {
                 <ListRowActionBar
                   forMobile
                   onClickEdit={this.handleClickButtonInBottomSheet(
-                    this.handleClickEdit
+                    this.handleClickEdit,
                   )}
                   onClickDelete={this.handleClickButtonInBottomSheet(
-                    this.handleClickDelete
+                    this.handleClickDelete,
                   )}
                 />
               </BottomSheet>

@@ -48,7 +48,7 @@ class ToastList extends React.Component<Props, State> {
           );
         })}
       </div>,
-      this.toastRoot
+      this.toastRoot,
     );
   }
   private handleClickRemoveMessage = (idx: number): void => {

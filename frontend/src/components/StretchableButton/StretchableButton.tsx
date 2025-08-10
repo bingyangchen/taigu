@@ -46,7 +46,7 @@ class StretchableButton extends React.Component<Props, State> {
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any
+    snapshot?: any,
   ): void {
     if (
       prevProps.router.location.hash === "#@" &&

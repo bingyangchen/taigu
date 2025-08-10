@@ -87,8 +87,8 @@ class StockSearchModal extends React.Component<Props, State> {
                           stockInfo.fluct_price > 0
                             ? "▲"
                             : stockInfo.fluct_price < 0
-                            ? "▼"
-                            : "-"
+                              ? "▼"
+                              : "-"
                         }
                                                 ${
                                                   stockInfo.fluct_price !== 0
@@ -101,7 +101,7 @@ class StockSearchModal extends React.Component<Props, State> {
                                                       (
                                                         Math.abs(
                                                           stockInfo.fluct_price /
-                                                            stockInfo.close
+                                                            stockInfo.close,
                                                         ) * 100
                                                       ).toFixed(1) +
                                                       "%)"

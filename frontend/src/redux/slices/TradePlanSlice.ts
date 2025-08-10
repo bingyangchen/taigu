@@ -22,7 +22,7 @@ export const fetchAllTradePlans = createAsyncThunk(
   async (): Promise<TradePlan[]> => {
     const response = await Api.sendRequest("memo/trade-plans", "get");
     return response.data;
-  }
+  },
 );
 
 export const createPlan = createAsyncThunk(
@@ -31,11 +31,11 @@ export const createPlan = createAsyncThunk(
     const response = await Api.sendRequest(
       "memo/trade-plan",
       "post",
-      JSON.stringify(requestBody)
+      JSON.stringify(requestBody),
     );
     navigator.vibrate(20);
     return response;
-  }
+  },
 );
 
 export const updatePlan = createAsyncThunk(
@@ -44,11 +44,11 @@ export const updatePlan = createAsyncThunk(
     const response = await Api.sendRequest(
       `memo/trade-plan/${requestBody.id}`,
       "post",
-      JSON.stringify(requestBody)
+      JSON.stringify(requestBody),
     );
     navigator.vibrate(20);
     return response;
-  }
+  },
 );
 
 export const deletePlan = createAsyncThunk(
@@ -57,7 +57,7 @@ export const deletePlan = createAsyncThunk(
     await Api.sendRequest(`memo/trade-plan/${id}`, "delete");
     navigator.vibrate(20);
     return id;
-  }
+  },
 );
 
 export const tradePlanSlice = createSlice({
@@ -110,7 +110,7 @@ export const tradePlanSlice = createSlice({
       })
       .addCase(deletePlan.fulfilled, (state, action) => {
         state.tradePlans = [...state.tradePlans].filter(
-          (plan) => plan.id !== action.payload
+          (plan) => plan.id !== action.payload,
         );
         state.isWaiting = false;
       })

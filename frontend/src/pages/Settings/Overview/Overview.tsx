@@ -111,7 +111,7 @@ class Overview extends React.Component<Props, State> {
                 <BeautifulRow
                   onClick={() =>
                     this.props.router.navigate(
-                      `${Env.frontendRootPath}${settingsPagePath}/user-info`
+                      `${Env.frontendRootPath}${settingsPagePath}/user-info`,
                     )
                   }
                 >
@@ -129,7 +129,7 @@ class Overview extends React.Component<Props, State> {
                 <BeautifulRow
                   onClick={() =>
                     this.props.router.navigate(
-                      `${Env.frontendRootPath}${settingsPagePath}/account-binding`
+                      `${Env.frontendRootPath}${settingsPagePath}/account-binding`,
                     )
                   }
                 >

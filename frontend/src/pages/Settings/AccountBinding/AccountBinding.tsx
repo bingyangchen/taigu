@@ -42,11 +42,11 @@ class AccountBinding extends React.Component<Props, State> {
         const requestBody = new URLSearchParams();
         requestBody.append(
           "code",
-          this.props.router.search_params.get("code") as string
+          this.props.router.search_params.get("code") as string,
         );
         requestBody.append(
           "redirect_uri",
-          `${window.location.origin}/settings/account-binding`
+          `${window.location.origin}/settings/account-binding`,
         );
         await this.props.dispatch(changeAccountBinding(requestBody)).unwrap();
       } finally {
@@ -134,7 +134,7 @@ class AccountBinding extends React.Component<Props, State> {
     this.setState({ activeModalName: null });
     const response = await Api.sendRequest(
       `account/google-login?redirect_uri=${window.location.origin}/settings/account-binding`,
-      "get"
+      "get",
     );
     window.location = response.authorization_url;
   };

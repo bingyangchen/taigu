@@ -44,8 +44,8 @@ export default class FullLogo extends React.Component<Props, State> {
       (this.props.size === "s"
         ? styles.s
         : this.props.size === "m"
-        ? styles.m
-        : styles.l)
+          ? styles.m
+          : styles.l)
     );
   }
 }

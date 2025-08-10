@@ -39,7 +39,7 @@ class Settings extends React.Component<Props, State> {
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any
+    snapshot?: any,
   ): void {
     // Conditionally navigate back one more time
     if (prevProps.router.location.key !== this.props.router.location.key) {
@@ -53,7 +53,7 @@ class Settings extends React.Component<Props, State> {
           {
             prevLocationPathname: prevProps.router.location.pathname,
           },
-          () => this.props.router.navigate(-1)
+          () => this.props.router.navigate(-1),
         );
       } else this.setState({ prevLocationPathname: null });
     }
@@ -81,7 +81,7 @@ class Settings extends React.Component<Props, State> {
       authorized: boolean;
       url: string;
       data: any;
-    }>
+    }>,
   ): Promise<void> => {
     if (e.data.authorized) {
       if (/account\/me[/]?$/gs.test(e.data.url)) {
@@ -89,7 +89,7 @@ class Settings extends React.Component<Props, State> {
       }
     } else {
       Nav.goToWelcomePage(
-        this.props.router.location.pathname + this.props.router.location.search
+        this.props.router.location.pathname + this.props.router.location.search,
       );
     }
   };

@@ -154,7 +154,7 @@ class Main extends React.Component<Props, State> {
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any
+    snapshot?: any,
   ): void {
     if (prevProps.router.location.pathname !== this.props.router.location.pathname) {
       this.mainRef.current!.scrollTo(0, 0);
@@ -173,7 +173,7 @@ class Main extends React.Component<Props, State> {
           {
             prevLocationPathname: prevProps.router.location.pathname,
           },
-          () => this.props.router.navigate(-1)
+          () => this.props.router.navigate(-1),
         );
       } else this.setState({ prevLocationPathname: null });
     }
@@ -212,7 +212,7 @@ class Main extends React.Component<Props, State> {
       authorized: boolean;
       url: string;
       data: any;
-    }>
+    }>,
   ): Promise<void> => {
     if (e.data.authorized) {
       if (/account\/me[/]?$/gs.test(e.data.url)) {
@@ -224,7 +224,7 @@ class Main extends React.Component<Props, State> {
         this.fetchNecessaryStockInfo();
       } else if (/stock\/cash-dividends[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(
-          refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data)
+          refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
         );
       } else if (/stock\/market-index[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
@@ -237,7 +237,7 @@ class Main extends React.Component<Props, State> {
       }
     } else {
       Nav.goToWelcomePage(
-        this.props.router.location.pathname + this.props.router.location.search
+        this.props.router.location.pathname + this.props.router.location.search,
       );
     }
   };

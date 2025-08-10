@@ -26,37 +26,37 @@ export const fetchAllCashDividendRecords = createAsyncThunk(
   async (): Promise<CashDividendRecord[]> => {
     const response = await Api.sendRequest("stock/cash-dividends", "get");
     return response.data;
-  }
+  },
 );
 
 export const createRecord = createAsyncThunk(
   "cashDividendRecord/createRecord",
   async (
-    requestBody: CreateCashDividendRecordRequestBody
+    requestBody: CreateCashDividendRecordRequestBody,
   ): Promise<CashDividendRecord> => {
     const response = await Api.sendRequest(
       "stock/cash-dividend",
       "post",
-      JSON.stringify(requestBody)
+      JSON.stringify(requestBody),
     );
     navigator.vibrate(20);
     return response;
-  }
+  },
 );
 
 export const updateRecord = createAsyncThunk(
   "cashDividendRecord/updateRecord",
   async (
-    requestBody: UpdateCashDividendRecordRequestBody
+    requestBody: UpdateCashDividendRecordRequestBody,
   ): Promise<CashDividendRecord> => {
     const response = await Api.sendRequest(
       `stock/cash-dividend/${requestBody.id}`,
       "post",
-      JSON.stringify(requestBody)
+      JSON.stringify(requestBody),
     );
     navigator.vibrate(20);
     return response;
-  }
+  },
 );
 
 export const deleteRecord = createAsyncThunk(
@@ -65,7 +65,7 @@ export const deleteRecord = createAsyncThunk(
     await Api.sendRequest(`stock/cash-dividend/${id}`, "delete");
     navigator.vibrate(20);
     return id;
-  }
+  },
 );
 
 export const cashDividendRecordSlice = createSlice({
@@ -74,13 +74,13 @@ export const cashDividendRecordSlice = createSlice({
   reducers: {
     refreshCashDividendRecordsWithNonCacheResponse(
       state,
-      action: PayloadAction<CashDividendRecord[]>
+      action: PayloadAction<CashDividendRecord[]>,
     ) {
       state.cashDividendRecords = [...action.payload].sort(
-        (a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time)
+        (a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time),
       );
       state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
-        state.cashDividendRecords
+        state.cashDividendRecords,
       );
       state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
     },
@@ -92,10 +92,10 @@ export const cashDividendRecordSlice = createSlice({
       })
       .addCase(fetchAllCashDividendRecords.fulfilled, (state, action) => {
         state.cashDividendRecords = [...action.payload].sort(
-          (a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time)
+          (a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time),
         );
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
-          state.cashDividendRecords
+          state.cashDividendRecords,
         );
         state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
@@ -109,10 +109,10 @@ export const cashDividendRecordSlice = createSlice({
       })
       .addCase(createRecord.fulfilled, (state, action) => {
         state.cashDividendRecords = [action.payload, ...state.cashDividendRecords].sort(
-          (a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time)
+          (a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time),
         );
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
-          state.cashDividendRecords
+          state.cashDividendRecords,
         );
         state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
@@ -131,7 +131,7 @@ export const cashDividendRecordSlice = createSlice({
           })
           .sort((a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time));
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
-          state.cashDividendRecords
+          state.cashDividendRecords,
         );
         state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
@@ -145,10 +145,10 @@ export const cashDividendRecordSlice = createSlice({
       })
       .addCase(deleteRecord.fulfilled, (state, action) => {
         state.cashDividendRecords = [...state.cashDividendRecords].filter(
-          (r) => r.id !== action.payload
+          (r) => r.id !== action.payload,
         );
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
-          state.cashDividendRecords
+          state.cashDividendRecords,
         );
         state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
@@ -160,7 +160,7 @@ export const cashDividendRecordSlice = createSlice({
 });
 
 const getSidTotalCashDividendMap = (
-  cashDividendRecords: CashDividendRecord[]
+  cashDividendRecords: CashDividendRecord[],
 ): { [sid: string]: number } => {
   const result: { [sid: string]: number } = {};
   for (const record of cashDividendRecords) {

@@ -86,7 +86,7 @@ class Home extends React.Component<Props, State> {
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any
+    snapshot?: any,
   ): void {
     if (
       prevProps.tseIndexRealtimePrices !== this.props.tseIndexRealtimePrices ||
@@ -128,7 +128,7 @@ class Home extends React.Component<Props, State> {
                 </div>
                 <div className={styles.fluct_price}>
                   {this.getIndexFluctPriceText(
-                    this.latestTsePriceInfo?.fluct_price ?? 0
+                    this.latestTsePriceInfo?.fluct_price ?? 0,
                   )}{" "}
                   {this.getIndexFluctPercentText(this.latestTseFluctPercent)}
                 </div>
@@ -148,7 +148,7 @@ class Home extends React.Component<Props, State> {
                 </div>
                 <div className={styles.fluct_price}>
                   {this.getIndexFluctPriceText(
-                    this.latestOtcPriceInfo?.fluct_price ?? 0
+                    this.latestOtcPriceInfo?.fluct_price ?? 0,
                   )}{" "}
                   {this.getIndexFluctPercentText(this.latestOtcFluctPercent)}
                 </div>
@@ -259,13 +259,13 @@ class Home extends React.Component<Props, State> {
   }
   private get latestTsePriceInfo(): IndexPriceInfo | null {
     const maxNum = Math.max(
-      ...Object.keys(this.props.tseIndexRealtimePrices).map((k) => parseInt(k))
+      ...Object.keys(this.props.tseIndexRealtimePrices).map((k) => parseInt(k)),
     );
     return this.props.tseIndexRealtimePrices[maxNum.toString()] ?? null;
   }
   private get latestOtcPriceInfo(): IndexPriceInfo | null {
     const maxNum = Math.max(
-      ...Object.keys(this.props.otcIndexRealtimePrices).map((k) => parseInt(k))
+      ...Object.keys(this.props.otcIndexRealtimePrices).map((k) => parseInt(k)),
     );
     return this.props.otcIndexRealtimePrices[maxNum.toString()] ?? null;
   }
@@ -275,7 +275,7 @@ class Home extends React.Component<Props, State> {
       Math.round(
         (latestTseFluctPrice /
           ((this.latestTsePriceInfo?.price ?? 0) + latestTseFluctPrice)) *
-          10000
+          10000,
       ) / 100
     );
   }
@@ -285,7 +285,7 @@ class Home extends React.Component<Props, State> {
       Math.round(
         (latestOtcFluctPrice /
           ((this.latestOtcPriceInfo?.price ?? 0) + latestOtcFluctPrice)) *
-          10000
+          10000,
       ) / 100
     );
   }
@@ -298,8 +298,8 @@ class Home extends React.Component<Props, State> {
       return latestTsePrice > prevTseClosePrice
         ? styles.red
         : latestTsePrice < prevTseClosePrice
-        ? styles.green
-        : styles.gray;
+          ? styles.green
+          : styles.gray;
     } else {
       const latestOtcPrice = this.latestOtcPriceInfo?.price ?? 0;
       const prevOtcClosePrice =
@@ -308,8 +308,8 @@ class Home extends React.Component<Props, State> {
       return latestOtcPrice > prevOtcClosePrice
         ? styles.red
         : latestOtcPrice < prevOtcClosePrice
-        ? styles.green
-        : styles.gray;
+          ? styles.green
+          : styles.gray;
     }
   }
   private getIndexFluctPriceText(fluctPrice: number): string {
@@ -396,11 +396,11 @@ class Home extends React.Component<Props, State> {
         return {
           sidMarketValueMap: getSidMarketValueMap(
             props.sidStockInfoMap,
-            props.stockWarehouse
+            props.stockWarehouse,
           ),
           totalMarketValue: getTotalMarketValue(
             props.sidStockInfoMap,
-            props.stockWarehouse
+            props.stockWarehouse,
           ),
         };
       },
@@ -452,7 +452,7 @@ class Home extends React.Component<Props, State> {
             />
           ),
         });
-      }
+      },
     );
   }
   private animateTotalCashInvested(): void {
@@ -466,13 +466,13 @@ class Home extends React.Component<Props, State> {
             state.animatedTotalCashInvested +
               Math.max(
                 1,
-                (props.totalCashInvested - state.animatedTotalCashInvested) / 2.5
+                (props.totalCashInvested - state.animatedTotalCashInvested) / 2.5,
               ),
-            props.totalCashInvested
+            props.totalCashInvested,
           ),
         };
       },
-      () => setTimeout(() => this.animateTotalCashInvested(), 30)
+      () => setTimeout(() => this.animateTotalCashInvested(), 30),
     );
   }
 }

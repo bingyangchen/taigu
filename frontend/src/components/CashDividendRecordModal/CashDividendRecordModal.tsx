@@ -4,10 +4,7 @@ import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
 import { LabeledInput, Modal } from "..";
-import {
-  createRecord,
-  updateRecord,
-} from "../../redux/slices/CashDividendRecordSlice";
+import { createRecord, updateRecord } from "../../redux/slices/CashDividendRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { CashDividendRecord } from "../../types";
 import Util from "../../utils/util";
@@ -69,9 +66,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
             title="交易日期"
             type="date"
             value={this.state.dealTime}
-            onChange={(dealTime: string) =>
-              this.setState({ dealTime: dealTime })
-            }
+            onChange={(dealTime: string) => this.setState({ dealTime: dealTime })}
           />
           <LabeledInput
             title="證券代號"
@@ -89,8 +84,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
             }
             onChange={(cashDividend: string) => {
               this.setState({
-                cashDividend:
-                  cashDividend === "" ? NaN : parseInt(cashDividend),
+                cashDividend: cashDividend === "" ? NaN : parseInt(cashDividend),
               });
             }}
             autoFocus={Boolean(this.state.sid)}
@@ -104,7 +98,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
       this.state.dealTime &&
         this.state.sid &&
         !Object.is(this.state.cashDividend, NaN) &&
-        !this.props.isWaiting
+        !this.props.isWaiting,
     );
   }
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {
@@ -119,7 +113,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
               sid: this.state.sid,
               deal_time: this.state.dealTime,
               cash_dividend: this.state.cashDividend,
-            })
+            }),
           )
           .unwrap();
       } else {
@@ -130,7 +124,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
               sid: this.state.sid,
               deal_time: this.state.dealTime,
               cash_dividend: this.state.cashDividend,
-            })
+            }),
           )
           .unwrap();
       }

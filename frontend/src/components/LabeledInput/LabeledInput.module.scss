@@ -1,65 +1,65 @@
 @use "../../global_variables" as _;
 
 .main {
-    position: relative;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 8px 0 0;
-    border-radius: 5px;
-    border: 1px solid _.$light-gray;
-    padding: 0;
-    transition-duration: 150ms;
-    &.focused {
-        border-color: transparent !important;
-        outline: 2px solid _.$blue;
-        & > legend {
-            color: _.$blue;
-        }
-    }
-    @media (hover: hover) {
-        &:hover:not(:disabled) {
-            border-color: _.$gray;
-        }
-    }
-    &:disabled::before {
-        content: "";
-        position: absolute;
-        top: -8px;
-        left: -1px;
-        width: calc(100% + 2px);
-        height: calc(100% + 10px);
-        z-index: 1;
-        background-color: _.$transparent-white;
-        cursor: not-allowed;
-    }
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 0;
+  border-radius: 5px;
+  border: 1px solid _.$light-gray;
+  padding: 0;
+  transition-duration: 150ms;
+  &.focused {
+    border-color: transparent !important;
+    outline: 2px solid _.$blue;
     & > legend {
-        position: absolute;
-        top: -2px;
-        left: 0;
-        transform: translateY(-50%);
-        border-radius: 10px;
-        height: fit-content;
-        min-width: max-content;
-        padding: 0 3px;
-        margin-left: 5px;
-        font-size: 0.8 * _.$base-font-size;
-        background-color: _.$white;
-        color: _.$gray;
-        transition-duration: 150ms;
+      color: _.$blue;
     }
-    & > input {
-        width: 100%;
-        height: 3.5 * _.$base-font-size;
-        border: none;
-        font-size: 1 * _.$base-font-size;
-        padding: 0 10px;
-        letter-spacing: inherit;
-        background-color: transparent;
-        outline: none;
-        &:disabled {
-            cursor: not-allowed;
-        }
+  }
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      border-color: _.$gray;
     }
+  }
+  &:disabled::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: -1px;
+    width: calc(100% + 2px);
+    height: calc(100% + 10px);
+    z-index: 1;
+    background-color: _.$transparent-white;
+    cursor: not-allowed;
+  }
+  & > legend {
+    position: absolute;
+    top: -2px;
+    left: 0;
+    transform: translateY(-50%);
+    border-radius: 10px;
+    height: fit-content;
+    min-width: max-content;
+    padding: 0 3px;
+    margin-left: 5px;
+    font-size: 0.8 * _.$base-font-size;
+    background-color: _.$white;
+    color: _.$gray;
+    transition-duration: 150ms;
+  }
+  & > input {
+    width: 100%;
+    height: 3.5 * _.$base-font-size;
+    border: none;
+    font-size: 1 * _.$base-font-size;
+    padding: 0 10px;
+    letter-spacing: inherit;
+    background-color: transparent;
+    outline: none;
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
 }

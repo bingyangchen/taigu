@@ -7,7 +7,7 @@ export default class Api {
   public static async sendRequest(
     endpoint: string,
     method: string,
-    requestBody?: URLSearchParams | string
+    requestBody?: URLSearchParams | string,
   ): Promise<any> {
     if (method === "post" && requestBody === undefined) {
       throw Error("requestBody is needed in POST request");
@@ -34,7 +34,7 @@ export default class Api {
           pushToast({
             type: "error",
             text: error instanceof Error ? error.message : "Error when sending request",
-          })
+          }),
         );
       }
       throw error;
