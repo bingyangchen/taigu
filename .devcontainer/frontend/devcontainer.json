@@ -17,8 +17,6 @@
         "files.trimFinalNewlines": true,
         "files.trimTrailingWhitespace": true,
         "defaultFormatter": "esbenp.prettier-vscode",
-        "prettier.tabWidth": 2,
-        "prettier.printWidth": 88,
         "editor.tabSize": 2,
         "editor.insertSpaces": true,
         "editor.rulers": [
