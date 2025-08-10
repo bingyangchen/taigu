@@ -1,11 +1,9 @@
-import googleLogo from "../../../assets/google.png";
-import logo from "../../../assets/logo.png";
-import imgPersonFill from "../../../assets/person-fill.svg";
-import styles from "./Overview.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 
+import googleLogo from "../../../assets/google.png";
+import logo from "../../../assets/logo.png";
+import imgPersonFill from "../../../assets/person-fill.svg";
 import {
   BeautifulBlock,
   BeautifulRow,
@@ -29,6 +27,7 @@ import type { Subpage } from "../../../types";
 import Env from "../../../utils/env";
 import Nav from "../../../utils/nav";
 import Util from "../../../utils/util";
+import styles from "./Overview.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { email, username, avatar_url, isWaiting } = rootState.account;

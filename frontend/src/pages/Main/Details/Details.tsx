@@ -1,5 +1,3 @@
-import styles from "./Details.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
@@ -16,7 +14,6 @@ import {
   StretchableButton,
 } from "../../../components";
 import {
-  IconBrandStrategy,
   IconBriefcase,
   IconChevronLeft,
   IconChevronRight,
@@ -24,6 +21,7 @@ import {
   IconHeart,
   IconHeartFill,
   IconMemo,
+  IconThumbtack,
 } from "../../../icons";
 import {
   addToFavorites,
@@ -42,6 +40,7 @@ import { IRouter, withRouter } from "../../../router";
 import { MaterialFact } from "../../../types";
 import Env from "../../../utils/env";
 import Util from "../../../utils/util";
+import styles from "./Details.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { sidStockInfoMap } = rootState.stockInfo;
@@ -398,7 +397,7 @@ class Details extends React.Component<Props, State> {
                 to={`${Env.frontendRootPath}plans?sid=${this.sid}`}
                 className={styles.cube}
               >
-                <IconBrandStrategy sideLength="30" color="#888" />
+                <IconThumbtack sideLength="30" color="#888" />
                 買賣計畫
               </Link>
               <div
@@ -529,7 +528,7 @@ class Details extends React.Component<Props, State> {
   }
   private getHistoricalPriceChartData(): (Date | string | number)[][] {
     // Add dummy because we want the price axis to show in the right-hand side.
-    let result: (Date | string | number)[][] = [];
+    const result: (Date | string | number)[][] = [];
     if (this.sid in this.props.sidHistoricalPricesMap) {
       const data = this.props.sidHistoricalPricesMap[this.sid].daily;
       if (data) {

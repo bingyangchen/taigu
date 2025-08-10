@@ -1,4 +1,5 @@
 import { MouseEventHandler } from "react";
+
 import { CashDividendRecord, TradePlan, TradeRecord } from "../types";
 
 export default class Util {

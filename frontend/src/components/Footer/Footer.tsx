@@ -1,11 +1,10 @@
-import styles from "./Footer.module.scss";
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 
 import { IRouter, withRouter } from "../../router";
 import type { Subpage } from "../../types";
 import Env from "../../utils/env";
+import styles from "./Footer.module.scss";
 
 interface Props extends IRouter {
   subpages: Subpage[];

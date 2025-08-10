@@ -42,7 +42,9 @@
       }
     }
     & > p {
-      font-size: 0.9 * _.$base-font-size;
+      @media (max-width: _.$width-512) {
+        font-size: 0.9 * _.$base-font-size;
+      }
       & > ul {
         margin: 0;
         padding-left: 20px;
