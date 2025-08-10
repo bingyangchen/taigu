@@ -67,6 +67,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
             credentials.id_token,  # type: ignore
             GoogleRequest(),
             flow.client_config["client_id"],
+            clock_skew_in_seconds=10,  # Allow 10 seconds of clock skew
         )
 
         # login an existing user or register a new user
@@ -125,6 +126,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
         credentials.id_token,  # type: ignore
         GoogleRequest(),
         flow.client_config["client_id"],
+        clock_skew_in_seconds=10,  # Allow 10 seconds of clock skew
     )
 
     # Check if the given google account is not bound to any other account
