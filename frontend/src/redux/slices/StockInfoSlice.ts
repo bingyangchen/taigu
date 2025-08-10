@@ -13,12 +13,8 @@ interface StockInfoState {
     };
   };
   isWaitingHistoricalPrices: boolean;
-  tseIndexRealtimePrices: {
-    [number: string]: IndexPriceInfo;
-  };
-  otcIndexRealtimePrices: {
-    [number: string]: IndexPriceInfo;
-  };
+  tseIndexRealtimePrices: { [number: string]: IndexPriceInfo };
+  otcIndexRealtimePrices: { [number: string]: IndexPriceInfo };
 }
 
 const initialState: StockInfoState = {
@@ -33,7 +29,7 @@ export const fetchRealtimeMarketIndex = createAsyncThunk(
   "stockInfo/fetchRealtimeMarketIndex",
   async (): Promise<MarketIndex> => {
     return await Api.sendRequest("stock/market-index", "get");
-  }
+  },
 );
 
 export const fetchStockInfo = createAsyncThunk(
@@ -41,9 +37,9 @@ export const fetchStockInfo = createAsyncThunk(
   async (sids: string[]): Promise<{ [sid: string]: StockInfo }> => {
     return await Api.sendRequest(
       `stock/current-stock-info${sids.length > 0 ? `?sids=${sids.join(",")}` : ""}`,
-      "get"
+      "get",
     );
-  }
+  },
 );
 
 export const fetchSingleStockInfo = createAsyncThunk(
@@ -51,10 +47,10 @@ export const fetchSingleStockInfo = createAsyncThunk(
   async (sid: string): Promise<StockInfo> => {
     const response = await Api.sendRequest(
       `stock/current-stock-info?sids=${sid}`,
-      "get"
+      "get",
     );
     return response[sid];
-  }
+  },
 );
 
 export const fetchSingleStockHistoricalPrices = createAsyncThunk(
@@ -70,7 +66,7 @@ export const fetchSingleStockHistoricalPrices = createAsyncThunk(
     const { sid, frequency } = payload;
     const response = await Api.sendRequest(
       `stock/historical-prices/${sid}?frequency=${frequency}`,
-      "get"
+      "get",
     );
     const data: { date: string; price: number }[] = response.data.map(
       (row: { date: string; price: number }) => {
@@ -78,10 +74,10 @@ export const fetchSingleStockHistoricalPrices = createAsyncThunk(
           date: new Date(Date.parse(row.date)).toLocaleDateString("af"),
           price: row.price,
         };
-      }
+      },
     );
     return { sid, frequency, data };
-  }
+  },
 );
 
 export const stockInfoSlice = createSlice({
@@ -165,7 +161,7 @@ export const stockInfoSlice = createSlice({
 
 export const getSidMarketValueMap = (
   sidStockInfoMap: { [sid: string]: StockInfo },
-  stockWarehouse: { [sid: string]: number[] }
+  stockWarehouse: { [sid: string]: number[] },
 ): { [sid: string]: number } => {
   const result: { [sid: string]: number } = {};
   for (const [sid, inventoryCosts] of Object.entries(stockWarehouse)) {
@@ -176,14 +172,14 @@ export const getSidMarketValueMap = (
 
 export const calculateMarketValue = (
   stockInfo: StockInfo | undefined,
-  inventoryCosts: number[]
+  inventoryCosts: number[],
 ): number => {
   return (stockInfo?.close || 0) * inventoryCosts.length;
 };
 
 export const getTotalMarketValue = (
   sidStockInfoMap: { [sid: string]: StockInfo },
-  stockWarehouse: { [sid: string]: number[] }
+  stockWarehouse: { [sid: string]: number[] },
 ): number => {
   let result = 0;
   for (const [sid, inventoryCosts] of Object.entries(stockWarehouse)) {

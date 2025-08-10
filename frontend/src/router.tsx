@@ -60,8 +60,8 @@ const myRouter = createBrowserRouter(
       <Route path="privacy-policy" element={<PrivacyPolicy />}></Route>
       <Route path="terms-of-service" element={<TermsOfService />}></Route>
       <Route path="*" element={<NotFound />} />
-    </Route>
-  )
+    </Route>,
+  ),
 );
 
 export default myRouter;
@@ -85,13 +85,7 @@ export function withRouter<T extends IRouter>(Component: React.ComponentType<T>)
     return (
       <Component
         {...(props as T)}
-        router={{
-          location,
-          navigate,
-          params,
-          search_params,
-          set_search_params,
-        }}
+        router={{ location, navigate, params, search_params, set_search_params }}
       />
     );
   };

@@ -37,10 +37,9 @@ class DeleteAccount extends React.Component<Props, State> {
       <Form
         title="刪除帳號"
         goBackHandler={() => {
-          this.props.router.navigate(
-            `${Env.frontendRootPath}${settingsPagePath}`,
-            { replace: true }
-          );
+          this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
+            replace: true,
+          });
         }}
         primaryFooterButton={
           <Button
@@ -56,10 +55,9 @@ class DeleteAccount extends React.Component<Props, State> {
           <Button
             className="light l"
             onClick={() =>
-              this.props.router.navigate(
-                `${Env.frontendRootPath}${settingsPagePath}`,
-                { replace: true }
-              )
+              this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
+                replace: true,
+              })
             }
           >
             捨棄
@@ -81,9 +79,7 @@ class DeleteAccount extends React.Component<Props, State> {
     await this.props
       .dispatch(deleteAccount({ password: this.state.password }))
       .unwrap();
-    this.props.router.navigate(`${Env.frontendRootPath}login`, {
-      replace: true,
-    });
+    this.props.router.navigate(`${Env.frontendRootPath}login`, { replace: true });
   };
 }
 

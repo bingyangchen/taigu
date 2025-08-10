@@ -28,9 +28,7 @@ class Market extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = {
-      numberToShow: 15,
-    };
+    this.state = { numberToShow: 15 };
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
@@ -64,7 +62,7 @@ class Market extends React.Component<Props, State> {
                 includeWarehouseInfo={this.props.activeSubpageName === "holding"}
                 onClick={() => {
                   this.props.router.navigate(
-                    `${Env.frontendRootPath}market/${this.props.activeSubpageName}/${sid}`
+                    `${Env.frontendRootPath}market/${this.props.activeSubpageName}/${sid}`,
                   );
                 }}
               />

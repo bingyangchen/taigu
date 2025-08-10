@@ -53,7 +53,7 @@ registerRoute(
     // Return true to signal that we want to use the handler.
     return true;
   },
-  createHandlerBoundToURL(process.env.PUBLIC_URL + "/index.html")
+  createHandlerBoundToURL(process.env.PUBLIC_URL + "/index.html"),
 );
 
 // An example runtime caching route for requests that aren't handled by the precache.
@@ -75,7 +75,7 @@ registerRoute(
       // least-recently used images are removed.
       new ExpirationPlugin({ maxEntries: 50 }),
     ],
-  })
+  }),
 );
 
 // This allows the web app to trigger skipWaiting via
@@ -124,11 +124,7 @@ self.addEventListener("fetch", (event) => {
               if (networkResponse.status < 400) {
                 cache.put(request, networkResponse.clone());
                 networkResponse.json().then((data) => {
-                  channel.postMessage({
-                    authorized: true,
-                    url: requestUrl,
-                    data,
-                  });
+                  channel.postMessage({ authorized: true, url: requestUrl, data });
                 });
               } else if (networkResponse.status === 401) {
                 // Same logic as src/utils/api.tsx
@@ -139,7 +135,7 @@ self.addEventListener("fetch", (event) => {
             });
             return cacheResponse || (await fetchPromise);
           });
-        })
+        }),
       );
     } else if (
       (/account\/logout[/]?$/gs.test(requestUrl) && method === "get") ||

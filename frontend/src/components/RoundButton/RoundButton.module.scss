@@ -1,63 +1,63 @@
 @use "../../global_variables" as _;
 
 .main {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 100px;
-    width: min-content;
-    height: min-content;
-    aspect-ratio: 1;
-    padding: 6px;
-    margin: 0;
-    color: _.$gray;
-    transition-duration: 150ms;
-    cursor: pointer;
-    &.disabled {
-        color: _.$light-gray;
-        cursor: default;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100px;
+  width: min-content;
+  height: min-content;
+  aspect-ratio: 1;
+  padding: 6px;
+  margin: 0;
+  color: _.$gray;
+  transition-duration: 150ms;
+  cursor: pointer;
+  &.disabled {
+    color: _.$light-gray;
+    cursor: default;
+  }
+  &:active {
+    &:not(.disabled) {
+      background-color: _.$transparent-black;
     }
-    &:active {
-        &:not(.disabled) {
-            background-color: _.$transparent-black;
+  }
+  @media (hover: hover) {
+    &:hover {
+      &:not(.disabled) {
+        color: _.$deep-gray;
+        background-color: _.$transparent-black;
+      }
+      & > .hint_text {
+        display: initial;
+        animation: fadein 400ms ease;
+      }
+      @keyframes fadein {
+        from {
+          opacity: 0;
         }
-    }
-    @media (hover: hover) {
-        &:hover {
-            &:not(.disabled) {
-                color: _.$deep-gray;
-                background-color: _.$transparent-black;
-            }
-            & > .hint_text {
-                display: initial;
-                animation: fadein 400ms ease;
-            }
-            @keyframes fadein {
-                from {
-                    opacity: 0;
-                }
-                50% {
-                    opacity: 0;
-                }
-                to {
-                    opacity: 1;
-                }
-            }
+        50% {
+          opacity: 0;
         }
+        to {
+          opacity: 1;
+        }
+      }
     }
-    & > .hint_text {
-        position: absolute;
-        bottom: -2px;
-        left: 50%;
-        display: none;
-        transform: translate(-50%, 100%);
-        width: max-content;
-        padding: 3px 8px 4px;
-        background-color: _.$deep-gray;
-        color: _.$white;
-        font-size: 0.8 * _.$base-font-size;
-        border-radius: 5px;
-        z-index: 1;
-    }
+  }
+  & > .hint_text {
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    display: none;
+    transform: translate(-50%, 100%);
+    width: max-content;
+    padding: 3px 8px 4px;
+    background-color: _.$deep-gray;
+    color: _.$white;
+    font-size: 0.8 * _.$base-font-size;
+    border-radius: 5px;
+    z-index: 1;
+  }
 }

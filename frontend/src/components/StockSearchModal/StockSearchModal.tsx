@@ -33,10 +33,7 @@ class StockSearchModal extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = {
-      searchKeyword: "",
-      searchResults: [],
-    };
+    this.state = { searchKeyword: "", searchResults: [] };
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
@@ -87,8 +84,8 @@ class StockSearchModal extends React.Component<Props, State> {
                           stockInfo.fluct_price > 0
                             ? "▲"
                             : stockInfo.fluct_price < 0
-                            ? "▼"
-                            : "-"
+                              ? "▼"
+                              : "-"
                         }
                                                 ${
                                                   stockInfo.fluct_price !== 0
@@ -101,7 +98,7 @@ class StockSearchModal extends React.Component<Props, State> {
                                                       (
                                                         Math.abs(
                                                           stockInfo.fluct_price /
-                                                            stockInfo.close
+                                                            stockInfo.close,
                                                         ) * 100
                                                       ).toFixed(1) +
                                                       "%)"

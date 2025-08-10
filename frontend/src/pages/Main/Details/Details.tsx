@@ -141,36 +141,27 @@ class Details extends React.Component<Props, State> {
             return {
               marketValue: calculateMarketValue(
                 props.sidStockInfoMap[this.sid],
-                props.stockWarehouse[this.sid] || []
+                props.stockWarehouse[this.sid] || [],
               ),
             };
           },
           () => {
-            this.setState({
-              rateOfReturn: this.calcRateOfReturn(),
-            });
-          }
+            this.setState({ rateOfReturn: this.calcRateOfReturn() });
+          },
         );
       });
     this.props
-      .dispatch(
-        fetchSingleStockHistoricalPrices({
-          sid: this.sid,
-          frequency: "DAILY",
-        })
-      )
+      .dispatch(fetchSingleStockHistoricalPrices({ sid: this.sid, frequency: "DAILY" }))
       .unwrap()
       .then(() => {
-        this.setState({
-          historicalPriceChartData: this.getHistoricalPriceChartData(),
-        });
+        this.setState({ historicalPriceChartData: this.getHistoricalPriceChartData() });
       });
     this.props.dispatch(fetchCompanyInfo(this.sid));
   }
   public async componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any
+    snapshot?: any,
   ): Promise<void> {
     if (prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord) {
       this.setState({
@@ -192,20 +183,18 @@ class Details extends React.Component<Props, State> {
           return {
             marketValue: calculateMarketValue(
               props.sidStockInfoMap[this.sid],
-              props.stockWarehouse[this.sid] || []
+              props.stockWarehouse[this.sid] || [],
             ),
           };
         },
-        () => this.setState({ rateOfReturn: this.calcRateOfReturn() })
+        () => this.setState({ rateOfReturn: this.calcRateOfReturn() }),
       );
     }
     if (
       prevProps.sidHistoricalPricesMap[this.sid] !==
       this.props.sidHistoricalPricesMap[this.sid]
     ) {
-      this.setState({
-        historicalPriceChartData: this.getHistoricalPriceChartData(),
-      });
+      this.setState({ historicalPriceChartData: this.getHistoricalPriceChartData() });
     }
   }
   public componentWillUnmount(): void {
@@ -294,7 +283,7 @@ class Details extends React.Component<Props, State> {
               <div className={styles.trade_quantity}>
                 成交{" "}
                 {Math.round(
-                  (this.props.sidStockInfoMap[this.sid]?.quantity || 0) / 1000
+                  (this.props.sidStockInfoMap[this.sid]?.quantity || 0) / 1000,
                 ).toLocaleString()}{" "}
                 張
               </div>
@@ -323,7 +312,7 @@ class Details extends React.Component<Props, State> {
                 <span>
                   <DollarSign />
                   {Math.round(
-                    this.props.sidCashInvestedMap[this.sid] || 0
+                    this.props.sidCashInvestedMap[this.sid] || 0,
                   ).toLocaleString()}
                 </span>
               </div>
@@ -371,8 +360,8 @@ class Details extends React.Component<Props, State> {
                     this.finalGain > 0
                       ? styles.red
                       : this.finalGain < 0
-                      ? styles.green
-                      : styles.gray
+                        ? styles.green
+                        : styles.gray
                   }`}
                 >
                   <DollarSign />
@@ -386,8 +375,8 @@ class Details extends React.Component<Props, State> {
                     this.state.rateOfReturn > 0
                       ? styles.red
                       : this.state.rateOfReturn < 0
-                      ? styles.green
-                      : styles.gray
+                        ? styles.green
+                        : styles.gray
                   }`}
                 >
                   {this.state.rateOfReturn.toFixed(2)}
@@ -415,9 +404,7 @@ class Details extends React.Component<Props, State> {
               <div
                 className={styles.cube}
                 onClick={() => {
-                  this.setState({
-                    activeModalName: "companyInfo",
-                  });
+                  this.setState({ activeModalName: "companyInfo" });
                 }}
               >
                 <IconBriefcase sideLength="30" color="#888" />
@@ -426,9 +413,7 @@ class Details extends React.Component<Props, State> {
               <div
                 className={styles.cube}
                 onClick={() => {
-                  this.setState({
-                    activeModalName: "updateOrCreateNote",
-                  });
+                  this.setState({ activeModalName: "updateOrCreateNote" });
                 }}
               >
                 <IconMemo sideLength="30" color="#888" />
@@ -491,10 +476,7 @@ class Details extends React.Component<Props, State> {
       return Util.isMobile ? (
         <BottomSheet
           onClickBackground={() =>
-            this.setState({
-              activeModalName: null,
-              activeMaterialFact: null,
-            })
+            this.setState({ activeModalName: null, activeMaterialFact: null })
           }
           canMaximize
         >
@@ -507,10 +489,7 @@ class Details extends React.Component<Props, State> {
             children: "", // no use
             className: "transparent xs", // no use
             onClick: () =>
-              this.setState({
-                activeModalName: null,
-                activeMaterialFact: null,
-              }),
+              this.setState({ activeModalName: null, activeMaterialFact: null }),
           }}
           layout="auto"
           noFooter
@@ -542,7 +521,7 @@ class Details extends React.Component<Props, State> {
       fluct_price !== 0
         ? ` (${(
             Math.abs(
-              fluct_price / (this.props.sidStockInfoMap[this.sid].close - fluct_price)
+              fluct_price / (this.props.sidStockInfoMap[this.sid].close - fluct_price),
             ) * 100
           ).toFixed(2)}%)`
         : ""
@@ -561,19 +540,19 @@ class Details extends React.Component<Props, State> {
     }
     result.sort((a, b) => Date.parse(a[0] as string) - Date.parse(b[0] as string));
     result.forEach(
-      (row) => (row[0] = (row[0] as string).split("-").slice(1).join("/"))
+      (row) => (row[0] = (row[0] as string).split("-").slice(1).join("/")),
     );
     result.splice(0, 0, ["日期", "dummy", "價格"]);
     return result;
   }
   private get hasInventory(): boolean {
     return Boolean(
-      this.props.stockWarehouse[this.sid] && this.props.stockWarehouse[this.sid].length
+      this.props.stockWarehouse[this.sid] && this.props.stockWarehouse[this.sid].length,
     );
   }
   private async calcInventoryHistogramChartData(): Promise<(string | number)[][]> {
     const worker = new Worker(
-      new URL("../../../workers/histogramChartWorker.ts", import.meta.url)
+      new URL("../../../workers/histogramChartWorker.ts", import.meta.url),
     );
     worker.postMessage(this.props.sidTradeRecordsMap[this.sid] || []);
     return await new Promise((resolve) => {
@@ -601,10 +580,7 @@ class Details extends React.Component<Props, State> {
   }
   private handleTouchStart = (e: TouchEvent): void => {
     const touch = e.touches[0];
-    this.setState({
-      touchStartX: touch.clientX,
-      touchStartY: touch.clientY,
-    });
+    this.setState({ touchStartX: touch.clientX, touchStartY: touch.clientY });
   };
   private handleTouchMove = (e: TouchEvent): void => {
     const touch = e.changedTouches[0];
@@ -674,7 +650,7 @@ class Details extends React.Component<Props, State> {
       this.props.router.location.pathname
         .replace(/\/+$/, "")
         .replace(/\/[^/]+$/, `/${sids[prevIndex]}`),
-      { replace: true }
+      { replace: true },
     );
   }
   private goToNextOne(): void {
@@ -690,7 +666,7 @@ class Details extends React.Component<Props, State> {
       this.props.router.location.pathname
         .replace(/\/+$/, "")
         .replace(/\/[^/]+$/, `/${sids[nextIndex]}`),
-      { replace: true }
+      { replace: true },
     );
   }
   private get isFavorite(): boolean {
@@ -722,7 +698,7 @@ class Details extends React.Component<Props, State> {
           <div className={styles.title}>{this.state.activeMaterialFact.title}</div>
           <div className={styles.date_time}>
             {new Date(
-              Date.parse(this.state.activeMaterialFact.date_time)
+              Date.parse(this.state.activeMaterialFact.date_time),
             ).toLocaleString("af")}
           </div>
           <div className={styles.description}>
@@ -761,11 +737,7 @@ class Details extends React.Component<Props, State> {
                   <div className={styles.right}>
                     <RoundButton
                       className="p-12"
-                      onClick={() =>
-                        this.setState({
-                          activeMaterialFact: m,
-                        })
-                      }
+                      onClick={() => this.setState({ activeMaterialFact: m })}
                     >
                       <IconChevronRight />
                     </RoundButton>

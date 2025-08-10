@@ -64,16 +64,8 @@ class Overview extends React.Component<Props, State> {
       //     name: "通知",
       //     path: "#notification",
       // },
-      {
-        icon: <IconInfoCircle sideLength="100%" />,
-        name: "關於",
-        path: "#about",
-      },
-      {
-        icon: <IconUser sideLength="100%" />,
-        name: "帳號",
-        path: "#account",
-      },
+      { icon: <IconInfoCircle sideLength="100%" />, name: "關於", path: "#about" },
+      { icon: <IconUser sideLength="100%" />, name: "帳號", path: "#account" },
     ];
   }
   public componentDidMount(): void {
@@ -111,7 +103,7 @@ class Overview extends React.Component<Props, State> {
                 <BeautifulRow
                   onClick={() =>
                     this.props.router.navigate(
-                      `${Env.frontendRootPath}${settingsPagePath}/user-info`
+                      `${Env.frontendRootPath}${settingsPagePath}/user-info`,
                     )
                   }
                 >
@@ -129,7 +121,7 @@ class Overview extends React.Component<Props, State> {
                 <BeautifulRow
                   onClick={() =>
                     this.props.router.navigate(
-                      `${Env.frontendRootPath}${settingsPagePath}/account-binding`
+                      `${Env.frontendRootPath}${settingsPagePath}/account-binding`,
                     )
                   }
                 >

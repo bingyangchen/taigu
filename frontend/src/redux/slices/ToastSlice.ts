@@ -6,9 +6,7 @@ interface ToastState {
   toasts: ToastMessage[];
 }
 
-const initialState: ToastState = {
-  toasts: [],
-};
+const initialState: ToastState = { toasts: [] };
 
 const setAutoRemoveToastTimer = createAsyncThunk(
   "toasts/setAutoRemoveToastTimer",
@@ -16,7 +14,7 @@ const setAutoRemoveToastTimer = createAsyncThunk(
     return new Promise((resolve) => {
       setTimeout(() => resolve(), 5000);
     });
-  }
+  },
 );
 
 export const pushToast = createAsyncThunk(
@@ -25,7 +23,7 @@ export const pushToast = createAsyncThunk(
     thunkAPI.dispatch(setAutoRemoveToastTimer());
     navigator.vibrate(20);
     return toast;
-  }
+  },
 );
 
 export const toastSlice = createSlice({

@@ -62,6 +62,31 @@ jobs:
       - name: Run Ruff
         run: ruff check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
 
+  lint-frontend:
+    name: Lint frontend with ESLint
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.14.0"
+      - name: Install only dev dependencies
+        run: |
+          cd frontend
+          npm install --only=dev
+      - name: Run Prettier
+        run: |
+          cd frontend
+          npm run format:check
+      - name: Run ESLint
+        run: |
+          cd frontend
+          npm run lint
+
   backend-unit-tests:
     name: Backend unit tests
     needs: detect-changes

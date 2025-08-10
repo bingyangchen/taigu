@@ -1,45 +1,45 @@
 @use "../../global_variables" as _;
 
 .main {
-    position: sticky;
-    top: 0;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: _.$function-bar-width;
+  min-width: _.$function-bar-width;
+  background-color: _.$white;
+  overflow-y: auto;
+  border-right: 0.5px solid _.$light-gray;
+  & > .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 65px;
+    padding: 0 5px;
+    margin: 0 10px 5px;
+    border-bottom: 1px solid _.$noisy-white;
+  }
+  & > .subpage_list {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    width: _.$function-bar-width;
-    min-width: _.$function-bar-width;
-    background-color: _.$white;
-    overflow-y: auto;
-    border-right: 0.5px solid _.$light-gray;
-    & > .header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        height: 65px;
-        padding: 0 5px;
-        margin: 0 10px 5px;
-        border-bottom: 1px solid _.$noisy-white;
+    gap: 5px;
+    padding: 0 5px;
+  }
+  & > .footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    & > .logo_outer {
+      display: flex;
+      justify-content: center;
+      margin: 15px;
     }
-    & > .subpage_list {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        padding: 0 5px;
+    & > .copyright {
+      text-align: center;
+      font-size: 0.7 * _.$base-font-size;
+      color: _.$gray;
+      margin: 0 10px 10px;
     }
-    & > .footer {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-        & > .logo_outer {
-            display: flex;
-            justify-content: center;
-            margin: 15px;
-        }
-        & > .copyright {
-            text-align: center;
-            font-size: 0.7 * _.$base-font-size;
-            color: _.$gray;
-            margin: 0 10px 10px;
-        }
-    }
+  }
 }

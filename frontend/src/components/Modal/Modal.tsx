@@ -44,7 +44,7 @@ class Modal extends React.Component<Props, State> {
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any
+    snapshot?: any,
   ): void {
     if (
       prevProps.router.location.hash === "##" &&
@@ -68,8 +68,8 @@ class Modal extends React.Component<Props, State> {
             this.props.layout === "auto"
               ? styles.auto
               : this.props.layout === "fullScreen"
-              ? styles.full_screen
-              : styles.compact
+                ? styles.full_screen
+                : styles.compact
           } ${this.props.transparent ? styles.transparent : ""}`}
         >
           <div className={styles.header} onClick={(e) => e.stopPropagation()}>
@@ -119,7 +119,7 @@ class Modal extends React.Component<Props, State> {
           )}
         </div>
       </div>,
-      this.modalRoot
+      this.modalRoot,
     );
   }
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {

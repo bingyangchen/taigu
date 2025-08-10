@@ -5,10 +5,7 @@ interface MainPageState {
   marketPageSubpageName: "holding" | "favorites";
 }
 
-const initialState: MainPageState = {
-  scrollTop: 0,
-  marketPageSubpageName: "holding",
-};
+const initialState: MainPageState = { scrollTop: 0, marketPageSubpageName: "holding" };
 
 export const mainPageSlice = createSlice({
   name: "mainPage",

@@ -1,26 +1,26 @@
 @use "../../global_variables" as _;
 
 .round_button {
-    &.dangerous {
-        @media (hover: hover) {
-            &:not(.disabled):hover {
-                color: _.$white;
-                background-color: _.$red;
-            }
-        }
+  &.dangerous {
+    @media (hover: hover) {
+      &:not(.disabled):hover {
+        color: _.$white;
+        background-color: _.$red;
+      }
     }
-    &.active {
-        &:not(.disabled) {
-            color: _.$deep-gray;
-        }
-        &.primary {
-            &:not(.disabled) {
-                color: _.$blue;
-                background-color: _.$transparent-blue;
-            }
-        }
+  }
+  &.active {
+    &:not(.disabled) {
+      color: _.$deep-gray;
     }
-    &.p-12 {
-        padding: 12px !important;
+    &.primary {
+      &:not(.disabled) {
+        color: _.$blue;
+        background-color: _.$transparent-blue;
+      }
     }
+  }
+  &.p-12 {
+    padding: 12px !important;
+  }
 }

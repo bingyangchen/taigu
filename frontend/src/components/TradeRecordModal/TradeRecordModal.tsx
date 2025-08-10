@@ -6,10 +6,7 @@ import { connect } from "react-redux";
 import { LabeledInput, Modal } from "..";
 import { IconToggleOn } from "../../icons";
 import { fetchSingleStockInfo } from "../../redux/slices/StockInfoSlice";
-import {
-  createRecord,
-  updateRecord,
-} from "../../redux/slices/TradeRecordSlice";
+import { createRecord, updateRecord } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { TradeRecord } from "../../types";
 import Util from "../../utils/util";
@@ -113,9 +110,7 @@ class TradeRecordModal extends React.Component<Props, State> {
                   dealPrice: dealPrice === "" ? NaN : parseFloat(dealPrice),
                 });
                 setTimeout(() => {
-                  this.setState({
-                    handlingFee: this.calcDefaultHandlingFee(),
-                  });
+                  this.setState({ handlingFee: this.calcDefaultHandlingFee() });
                 });
               }}
               autoFocus={Boolean(this.state.sid)}
@@ -146,8 +141,8 @@ class TradeRecordModal extends React.Component<Props, State> {
                     absDealQuantity === ""
                       ? NaN
                       : parseInt(absDealQuantity) < 0
-                      ? 0
-                      : parseInt(absDealQuantity),
+                        ? 0
+                        : parseInt(absDealQuantity),
                 });
                 setTimeout(() => {
                   this.setState({ handlingFee: this.calcDefaultHandlingFee() });
@@ -179,8 +174,8 @@ class TradeRecordModal extends React.Component<Props, State> {
       Math.floor(
         this.state.dealPrice *
           this.state.absDealQuantity *
-          (this.state.isBuying ? 0.001425 : 0.004425)
-      )
+          (this.state.isBuying ? 0.001425 : 0.004425),
+      ),
     );
   }
   private get canSubmit(): boolean {
@@ -190,7 +185,7 @@ class TradeRecordModal extends React.Component<Props, State> {
         !Object.is(this.state.dealPrice, NaN) &&
         !Object.is(this.state.absDealQuantity, NaN) &&
         !Object.is(this.state.handlingFee, NaN) &&
-        !this.props.isWaiting
+        !this.props.isWaiting,
     );
   }
   private handleClickToggle = (): void => {
@@ -200,7 +195,7 @@ class TradeRecordModal extends React.Component<Props, State> {
       },
       () => {
         this.setState({ handlingFee: this.calcDefaultHandlingFee() });
-      }
+      },
     );
   };
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {
@@ -219,7 +214,7 @@ class TradeRecordModal extends React.Component<Props, State> {
                 ? this.state.absDealQuantity
                 : -1 * this.state.absDealQuantity,
               handling_fee: this.state.handlingFee,
-            })
+            }),
           )
           .unwrap();
       } else {
@@ -234,7 +229,7 @@ class TradeRecordModal extends React.Component<Props, State> {
                 ? this.state.absDealQuantity
                 : -1 * this.state.absDealQuantity,
               handling_fee: this.state.handlingFee,
-            })
+            }),
           )
           .unwrap();
       }

@@ -4,9 +4,7 @@ interface SettingsPageState {
   headerTitle: string;
 }
 
-const initialState: SettingsPageState = {
-  headerTitle: "",
-};
+const initialState: SettingsPageState = { headerTitle: "" };
 
 export const settingsPageSlice = createSlice({
   name: "settingsPage",

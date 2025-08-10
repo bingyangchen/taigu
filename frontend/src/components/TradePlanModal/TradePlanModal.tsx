@@ -82,8 +82,7 @@ class TradePlanModal extends React.Component<Props, State> {
               }
               onChange={(targetPrice: string) => {
                 this.setState({
-                  targetPrice:
-                    targetPrice === "" ? NaN : parseFloat(targetPrice),
+                  targetPrice: targetPrice === "" ? NaN : parseFloat(targetPrice),
                 });
               }}
               autoFocus={Boolean(this.state.sid)}
@@ -116,8 +115,8 @@ class TradePlanModal extends React.Component<Props, State> {
                     targetQuantity === ""
                       ? NaN
                       : parseInt(targetQuantity) < 0
-                      ? 0
-                      : parseInt(targetQuantity),
+                        ? 0
+                        : parseInt(targetQuantity),
                 });
               }}
             />
@@ -131,7 +130,7 @@ class TradePlanModal extends React.Component<Props, State> {
       this.state.sid &&
         !Object.is(this.state.targetPrice, NaN) &&
         !Object.is(this.state.targetQuantity, NaN) &&
-        !this.props.isWaiting
+        !this.props.isWaiting,
     );
   }
   private handleClickToggle = (): void => {
@@ -152,7 +151,7 @@ class TradePlanModal extends React.Component<Props, State> {
               target_price: this.state.targetPrice,
               plan_type: this.state.planType,
               target_quantity: this.state.targetQuantity,
-            })
+            }),
           )
           .unwrap();
       } else {
@@ -164,7 +163,7 @@ class TradePlanModal extends React.Component<Props, State> {
               target_price: this.state.targetPrice,
               target_quantity: this.state.targetQuantity,
               plan_type: this.state.planType,
-            })
+            }),
           )
           .unwrap();
       }

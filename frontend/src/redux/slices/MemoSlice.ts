@@ -20,7 +20,7 @@ export const fetchCompanyInfo = createAsyncThunk(
   async (sid: string): Promise<CompanyInfo | undefined> => {
     const response = await Api.sendRequest(`memo/company-info?sids=${sid}`, "get");
     return response[sid];
-  }
+  },
 );
 
 export const updateOrCreateMemo = createAsyncThunk(
@@ -29,11 +29,11 @@ export const updateOrCreateMemo = createAsyncThunk(
     const response = await Api.sendRequest(
       `memo/stock-memo/${requestBody.sid}`,
       "post",
-      JSON.stringify(requestBody)
+      JSON.stringify(requestBody),
     );
     navigator.vibrate(20);
     return response;
-  }
+  },
 );
 
 export const fetchAllFavorites = createAsyncThunk(
@@ -41,7 +41,7 @@ export const fetchAllFavorites = createAsyncThunk(
   async (): Promise<string[]> => {
     const response = await Api.sendRequest("memo/favorites", "get");
     return response.data;
-  }
+  },
 );
 
 export const addToFavorites = createAsyncThunk(
@@ -50,10 +50,10 @@ export const addToFavorites = createAsyncThunk(
     const response = await Api.sendRequest(
       `memo/favorite/${sid}`,
       "post",
-      JSON.stringify({})
+      JSON.stringify({}),
     );
     return response.sid;
-  }
+  },
 );
 
 export const removeFromFavorites = createAsyncThunk(
@@ -61,7 +61,7 @@ export const removeFromFavorites = createAsyncThunk(
   async (sid: string): Promise<string> => {
     const response = await Api.sendRequest(`memo/favorite/${sid}`, "delete");
     return response.sid;
-  }
+  },
 );
 
 export const memoSlice = createSlice({
@@ -70,7 +70,7 @@ export const memoSlice = createSlice({
   reducers: {
     refreshAllCompanyInfoWithNonCacheResponse(
       state,
-      action: PayloadAction<{ [sid: string]: CompanyInfo }>
+      action: PayloadAction<{ [sid: string]: CompanyInfo }>,
     ) {
       for (const [sid, companyInfo] of Object.entries(action.payload)) {
         state.sidCompanyInfoMap[sid] = companyInfo;

@@ -56,14 +56,14 @@ export default class Welcome extends React.Component<Props, State> {
       this.setState({
         demoImageToShow: Math.min(
           5,
-          Math.max(0, Math.floor((mainDiv.scrollTop * 2) / mainDiv.clientHeight) - 2)
+          Math.max(0, Math.floor((mainDiv.scrollTop * 2) / mainDiv.clientHeight) - 2),
         ),
         captionToShow: Math.min(
           2,
-          Math.max(0, Math.floor(mainDiv.scrollTop / mainDiv.clientHeight) - 1)
+          Math.max(0, Math.floor(mainDiv.scrollTop / mainDiv.clientHeight) - 1),
         ),
         ballScale: this.getBallScale(
-          Math.min(3.3, Math.max(0, mainDiv.scrollTop - 200) / mainDiv.clientHeight)
+          Math.min(3.3, Math.max(0, mainDiv.scrollTop - 200) / mainDiv.clientHeight),
         ),
       });
     });
@@ -121,9 +121,7 @@ export default class Welcome extends React.Component<Props, State> {
                   className={`${styles.ball} ${
                     [styles.blue, styles.yellow, styles.green][this.state.captionToShow]
                   }`}
-                  style={{
-                    transform: `scale(${this.state.ballScale})`,
-                  }}
+                  style={{ transform: `scale(${this.state.ballScale})` }}
                 />
               </div>
             </div>

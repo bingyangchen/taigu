@@ -20,7 +20,7 @@ export const fetchAccountInfo = createAsyncThunk(
   "account/fetchAccountInfo",
   async (): Promise<Account> => {
     return await Api.sendRequest("account/me", "get");
-  }
+  },
 );
 
 export const updateAccountInfo = createAsyncThunk(
@@ -29,11 +29,11 @@ export const updateAccountInfo = createAsyncThunk(
     const response = await Api.sendRequest(
       "account/update",
       "post",
-      JSON.stringify(requestBody)
+      JSON.stringify(requestBody),
     );
     navigator.vibrate(20);
     return response;
-  }
+  },
 );
 
 export const changeAccountBinding = createAsyncThunk(
@@ -42,32 +42,32 @@ export const changeAccountBinding = createAsyncThunk(
     const response = await Api.sendRequest(
       "account/change-binding",
       "post",
-      requestBody
+      requestBody,
     );
     thunkAPI.dispatch(pushToast({ type: "success", text: "成功綁定" }));
     return response;
-  }
+  },
 );
 
 export const deleteAccount = createAsyncThunk(
   "account/deleteAccount",
   async (requestBody: { password: string }): Promise<void> => {
     await Api.sendRequest("account/delete", "delete", JSON.stringify(requestBody));
-  }
+  },
 );
 
 export const login = createAsyncThunk(
   "account/login",
   async (requestBody: URLSearchParams): Promise<void> => {
     await Api.sendRequest("account/login", "post", requestBody);
-  }
+  },
 );
 
 export const loginWithGoogle = createAsyncThunk(
   "account/loginWithGoogle",
   async (requestBody: URLSearchParams): Promise<void> => {
     await Api.sendRequest("account/google-login", "post", requestBody);
-  }
+  },
 );
 
 export const logout = createAsyncThunk("account/logout", async (): Promise<void> => {

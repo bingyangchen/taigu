@@ -1,29 +1,29 @@
 @use "../../global_variables" as _;
 
 .modal_inner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  .row {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
-    .row {
+    gap: 10px;
+    .buy_or_sell {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      span {
+        font-size: 0.9 * _.$base-font-size;
+      }
+      .toggle_outer {
         display: flex;
-        gap: 10px;
-        .buy_or_sell {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            span {
-                font-size: 0.9 * _.$base-font-size;
-            }
-            .toggle_outer {
-                display: flex;
-                align-items: center;
-                color: _.$blue;
-                cursor: pointer;
-                margin-top: 2px;
-                &.buy {
-                    transform: scaleX(-1);
-                }
-            }
+        align-items: center;
+        color: _.$blue;
+        cursor: pointer;
+        margin-top: 2px;
+        &.buy {
+          transform: scaleX(-1);
         }
+      }
     }
+  }
 }

@@ -46,7 +46,7 @@ class Login extends React.Component<Props, State> {
         const requestBody = new URLSearchParams();
         requestBody.append(
           "code",
-          this.props.router.search_params.get("code") as string
+          this.props.router.search_params.get("code") as string,
         );
         requestBody.append("redirect_uri", `${window.location.origin}/login`);
         await this.props.dispatch(loginWithGoogle(requestBody)).unwrap();
@@ -92,7 +92,7 @@ class Login extends React.Component<Props, State> {
   private handleClickGoogleLogin = async () => {
     const response = await Api.sendRequest(
       `account/google-login?redirect_uri=${window.location.origin}/login`,
-      "get"
+      "get",
     );
     window.location = response.authorization_url;
   };

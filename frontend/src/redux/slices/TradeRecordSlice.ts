@@ -46,67 +46,67 @@ export const fetchAllTradeRecords = createAsyncThunk(
   async (): Promise<Omit<TradeRecordState, "isWaiting">> => {
     const response = await Api.sendRequest("stock/trade-records", "get");
     return await computeNewState(response.data);
-  }
+  },
 );
 
 export const createRecord = createAsyncThunk(
   "tradeRecord/createRecord",
   async (
     requestBody: CreateTradeRecordRequestBody,
-    thunkAPI
+    thunkAPI,
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     const response = await Api.sendRequest(
       "stock/trade-record",
       "post",
-      JSON.stringify(requestBody)
+      JSON.stringify(requestBody),
     );
     navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
     return await computeNewState([response, ...rootState.tradeRecord.tradeRecords]);
-  }
+  },
 );
 
 export const updateRecord = createAsyncThunk(
   "tradeRecord/updateRecord",
   async (
     requestBody: UpdateTradeRecordRequestBody,
-    thunkAPI
+    thunkAPI,
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     const response = await Api.sendRequest(
       `stock/trade-records/${requestBody.id}`,
       "post",
-      JSON.stringify(requestBody)
+      JSON.stringify(requestBody),
     );
     navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
     return await computeNewState(
       rootState.tradeRecord.tradeRecords
         .map((r) => (r.id === response.id ? response : r))
-        .sort((a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time))
+        .sort((a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time)),
     );
-  }
+  },
 );
 
 export const deleteRecord = createAsyncThunk(
   "tradeRecord/deleteRecord",
   async (
     id: string | number,
-    thunkAPI
+    thunkAPI,
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     await Api.sendRequest(`stock/trade-records/${id}`, "delete");
     navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
     return await computeNewState(
-      [...rootState.tradeRecord.tradeRecords].filter((r) => r.id !== id)
+      [...rootState.tradeRecord.tradeRecords].filter((r) => r.id !== id),
     );
-  }
+  },
 );
 
 export const refreshWithNonCacheResponse = createAsyncThunk(
   "tradeRecord/refreshWithNonCacheResponse",
   async (tradeRecords: TradeRecord[]): Promise<Omit<TradeRecordState, "isWaiting">> => {
     return await computeNewState(tradeRecords);
-  }
+  },
 );
 
 export const tradeRecordSlice = createSlice({
@@ -223,10 +223,10 @@ export const tradeRecordSlice = createSlice({
 });
 
 const computeNewState = async (
-  tradeRecords: TradeRecord[]
+  tradeRecords: TradeRecord[],
 ): Promise<Omit<TradeRecordState, "isWaiting">> => {
   const worker = new Worker(
-    new URL("../../workers/tradeRecordWorker.ts", import.meta.url)
+    new URL("../../workers/tradeRecordWorker.ts", import.meta.url),
   );
   worker.postMessage(tradeRecords);
   return await new Promise((resolve) => {

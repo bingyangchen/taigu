@@ -62,21 +62,19 @@ class CheckDeleteModal extends React.Component<Props, State> {
               {(Util.isTradeRecord(this.props.target)
                 ? this.props.target.deal_price
                 : Util.isCashDividendRecord(this.props.target)
-                ? this.props.target.cash_dividend
-                : this.props.target.target_price
+                  ? this.props.target.cash_dividend
+                  : this.props.target.target_price
               ).toLocaleString()}
             </span>
             {!Util.isCashDividendRecord(this.props.target) && (
-              <span className={this.tradeTypeClass}>
-                {this.tradeTypeString}
-              </span>
+              <span className={this.tradeTypeClass}>{this.tradeTypeString}</span>
             )}
             {!Util.isCashDividendRecord(this.props.target) && (
               <span className={styles.quantity}>
                 {Math.abs(
                   Util.isTradeRecord(this.props.target)
                     ? this.props.target.deal_quantity
-                    : this.props.target.target_quantity
+                    : this.props.target.target_quantity,
                 )}{" "}
                 股
               </span>
@@ -124,9 +122,7 @@ class CheckDeleteModal extends React.Component<Props, State> {
     if (Util.isTradePlan(this.props.target)) {
       await this.props.dispatch(deletePlan(this.props.target.id)).unwrap();
     } else if (Util.isTradeRecord(this.props.target)) {
-      await this.props
-        .dispatch(deleteTradeRecord(this.props.target.id))
-        .unwrap();
+      await this.props.dispatch(deleteTradeRecord(this.props.target.id)).unwrap();
     } else if (Util.isCashDividendRecord(this.props.target)) {
       await this.props
         .dispatch(deleteCashDividendRecord(this.props.target.id))

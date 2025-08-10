@@ -9,21 +9,17 @@ interface Props {}
 interface State {}
 
 export default class LoadingScreen extends React.Component<Props, State> {
-    public state: State;
-    public constructor(props: Props) {
-        super(props);
-        this.state = {};
-    }
-    public render(): React.ReactNode {
-        return (
-            <div className={styles.main}>
-                <img className={styles.logo} src={logo} alt="" />
-                <img
-                    className={styles.loading_spinner}
-                    src={loadingSpinner}
-                    alt=""
-                />
-            </div>
-        );
-    }
+  public state: State;
+  public constructor(props: Props) {
+    super(props);
+    this.state = {};
+  }
+  public render(): React.ReactNode {
+    return (
+      <div className={styles.main}>
+        <img className={styles.logo} src={logo} alt="" />
+        <img className={styles.loading_spinner} src={loadingSpinner} alt="" />
+      </div>
+    );
+  }
 }

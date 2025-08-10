@@ -8,17 +8,17 @@ export default class Nav {
       window.location.hostname === "[::1]" ||
       // 127.0.0.0/8 are considered localhost for IPv4.
       window.location.hostname.match(
-        /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
+        /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/,
       ) ||
       // 192.168.0.0/16 are considered localhost for IPv4.
       window.location.hostname.match(
-        /^192\.168(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){2}$/
-      )
+        /^192\.168(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){2}$/,
+      ),
   );
   public static get isAt404Page(): boolean {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
+      "\\$&",
     )}404[/]?$`;
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);
@@ -34,7 +34,7 @@ export default class Nav {
   public static get isAtMarketPage(): boolean {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
+      "\\$&",
     )}market[/]?$`;
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);
@@ -42,7 +42,7 @@ export default class Nav {
   public static get isAtDetailsPage(): boolean {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
+      "\\$&",
     )}market/(.*)[/]?$`;
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);
@@ -50,7 +50,7 @@ export default class Nav {
   public static get isAtSettingsOverviewPage(): boolean {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
+      "\\$&",
     )}settings[/]?$`;
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);
@@ -58,7 +58,7 @@ export default class Nav {
   public static get isAtLoginPage(): boolean {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
+      "\\$&",
     )}login[/]?$`;
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);
@@ -66,7 +66,7 @@ export default class Nav {
   public static get isAtWelcomePage(): boolean {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
+      "\\$&",
     )}welcome[/]?$`;
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);

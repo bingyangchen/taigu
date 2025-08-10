@@ -43,7 +43,7 @@ class DetailCard extends React.Component<Props, State> {
       marketValue: props.includeWarehouseInfo
         ? calculateMarketValue(
             props.sidStockInfoMap[props.sid],
-            props.stockWarehouse[props.sid] || []
+            props.stockWarehouse[props.sid] || [],
           )
         : 0,
     };
@@ -53,7 +53,7 @@ class DetailCard extends React.Component<Props, State> {
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any
+    snapshot?: any,
   ): void {
     if (
       this.props.includeWarehouseInfo &&
@@ -64,7 +64,7 @@ class DetailCard extends React.Component<Props, State> {
         return {
           marketValue: calculateMarketValue(
             props.sidStockInfoMap[props.sid],
-            props.stockWarehouse[props.sid] || []
+            props.stockWarehouse[props.sid] || [],
           ),
         };
       });
@@ -75,7 +75,7 @@ class DetailCard extends React.Component<Props, State> {
       this.props.sid in this.props.sidStockInfoMap && (
         <div
           className={this.getMainClassName(
-            this.props.sidStockInfoMap[this.props.sid].fluct_price
+            this.props.sidStockInfoMap[this.props.sid].fluct_price,
           )}
         >
           <div className={styles.mask} onClick={this.handleClick}>
@@ -152,7 +152,7 @@ class DetailCard extends React.Component<Props, State> {
         ? ` (${(
             Math.abs(
               fluct_price /
-                (this.props.sidStockInfoMap[this.props.sid].close - fluct_price)
+                (this.props.sidStockInfoMap[this.props.sid].close - fluct_price),
             ) * 100
           ).toFixed(2)}%)`
         : ""
