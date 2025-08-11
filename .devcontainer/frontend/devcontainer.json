@@ -6,10 +6,10 @@
   "image": "taigutw/frontend:dev",
   "workspaceFolder": "/app",
   "mounts": [
-    "source=${localWorkspaceFolder}/frontend,target=/app,type=bind,consistency=cached"
+    "source=${localWorkspaceFolderBasename}_frontend_node_modules,target=/app/frontend/node_modules,type=volume",
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
   ],
   "shutdownAction": "stopContainer",
-  "postCreateCommand": "npm ci",
   "customizations": {
     "vscode": {
       "settings": {
