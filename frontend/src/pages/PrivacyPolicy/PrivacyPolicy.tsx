@@ -1,16 +1,18 @@
+import React from "react";
+import { Link } from "react-router-dom";
+
+import { FullLogo, RoundButton } from "../../components";
+import { IconChevronLeft } from "../../icons";
+import { IRouter, withRouter } from "../../router";
+import Env from "../../utils/env";
+import Util from "../../utils/util";
 import styles from "./PrivacyPolicy.module.scss";
 
-import React from "react";
-
-import { Link } from "react-router-dom";
-import { FullLogo } from "../../components";
-import Env from "../../utils/env";
-
-interface Props {}
+interface Props extends IRouter {}
 
 interface State {}
 
-export default class PrivacyPolicy extends React.Component<Props, State> {
+class PrivacyPolicy extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
@@ -21,6 +23,15 @@ export default class PrivacyPolicy extends React.Component<Props, State> {
     return (
       <div className={styles.main}>
         <div className={styles.header}>
+          {Util.isMobile && (
+            <RoundButton
+              className="p-12"
+              hint_text="上一頁"
+              onClick={() => this.props.router.navigate(-1)}
+            >
+              <IconChevronLeft sideLength="16" />
+            </RoundButton>
+          )}
           <Link to={Env.frontendRootPath}>
             <FullLogo size="m" />
           </Link>
@@ -102,3 +113,5 @@ export default class PrivacyPolicy extends React.Component<Props, State> {
     );
   }
 }
+
+export default withRouter(PrivacyPolicy);

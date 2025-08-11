@@ -177,7 +177,10 @@ class Overview extends React.Component<Props, State> {
               <BeautifulBlock title="關於">
                 <BeautifulRow
                   onClick={() =>
-                    window.open(`${Env.frontendRootPath}privacy-policy`, "_blank")
+                    window.open(
+                      `${Env.frontendRootPath}privacy-policy`,
+                      Util.isMobile ? "_self" : "_blank",
+                    )
                   }
                 >
                   <div className={`${styles.row_inner} ${styles.privacy_policy}`}>
@@ -187,7 +190,10 @@ class Overview extends React.Component<Props, State> {
                 </BeautifulRow>
                 <BeautifulRow
                   onClick={() =>
-                    window.open(`${Env.frontendRootPath}terms-of-service`, "_blank")
+                    window.open(
+                      `${Env.frontendRootPath}terms-of-service`,
+                      Util.isMobile ? "_self" : "_blank",
+                    )
                   }
                 >
                   <div className={`${styles.row_inner} ${styles.terms_of_service}`}>

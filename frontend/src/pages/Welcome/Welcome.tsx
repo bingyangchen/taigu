@@ -1,3 +1,6 @@
+import React from "react";
+import { Link } from "react-router-dom";
+
 import crossPlatform from "../../assets/cross-platform.png";
 import demo01 from "../../assets/demo01.png";
 import demo02 from "../../assets/demo02.png";
@@ -8,15 +11,11 @@ import demo06 from "../../assets/demo06.png";
 import demoInstantPrice from "../../assets/demo09.png";
 import demoManyStocks from "../../assets/demomanystocks.mp4";
 import logo from "../../assets/logo.png";
-import styles from "./Welcome.module.scss";
-
-import React from "react";
-import { Link } from "react-router-dom";
-
 import { Button, FullLogo } from "../../components";
 import { IconShieldCheck } from "../../icons";
 import Env from "../../utils/env";
 import Util from "../../utils/util";
+import styles from "./Welcome.module.scss";
 
 interface Props {}
 
@@ -183,10 +182,10 @@ export default class Welcome extends React.Component<Props, State> {
             <FullLogo size="m" />
           </div>
           <div className={styles.essential_links}>
-            <Link to="/privacy-policy" target="_blank">
+            <Link to="/privacy-policy" target={Util.isMobile ? "_self" : "_blank"}>
               隱私權政策
             </Link>
-            <Link to="/terms-of-service" target="_blank">
+            <Link to="/terms-of-service" target={Util.isMobile ? "_self" : "_blank"}>
               服務條款
             </Link>
           </div>
