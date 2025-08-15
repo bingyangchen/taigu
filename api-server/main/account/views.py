@@ -5,12 +5,14 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest, JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2 import id_token
 from google_auth_oauthlib import flow as google_oauth_flow
 from jose import jwt
 from jose.constants import ALGORITHMS
+from pydantic import BaseModel
 
 from main.account import AUTH_COOKIE_NAME, OAuthOrganization
 from main.account.models import User
@@ -36,103 +38,104 @@ GOOGLE_CLIENT_CONFIG = {
         ],
     }
 }
+SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+]
+JWT_COOKIE_MAX_AGE = 5 * 24 * 60 * 60  # 5 days
 
 
-def google_login(request: HttpRequest) -> JsonResponse:
+class TokenVerificationResult(BaseModel):
+    sub: str
+    email: str
+    name: str
+    picture: str
+
+
+def _verify_with_code_flow(code: str, redirect_uri: str) -> TokenVerificationResult:
     flow = google_oauth_flow.Flow.from_client_config(
-        GOOGLE_CLIENT_CONFIG,
-        scopes=[
-            "openid",
-            "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile",
-        ],
+        GOOGLE_CLIENT_CONFIG, scopes=SCOPES
     )
-    result = {}
-    if (request.method == "GET") and (redirect_uri := request.GET.get("redirect_uri")):
-        flow.redirect_uri = redirect_uri
-        (
-            result["authorization_url"],
-            result["state"],
-        ) = flow.authorization_url(include_granted_scopes="true")
-        return JsonResponse(result)
-    elif (
-        (request.method == "POST")
-        and (code := request.POST.get("code"))
-        and (redirect_uri := request.POST.get("redirect_uri"))
-    ):
-        flow.redirect_uri = redirect_uri
-        flow.fetch_token(code=code)
-        credentials = flow.credentials
-        verify_result = id_token.verify_oauth2_token(
-            credentials.id_token,  # type: ignore
-            GoogleRequest(),
-            flow.client_config["client_id"],
-            clock_skew_in_seconds=10,  # Allow 10 seconds of clock skew
-        )
-
-        # login an existing user or register a new user
-        user, _ = User.objects.get_or_create(
-            oauth_org=OAuthOrganization.GOOGLE,
-            oauth_id=verify_result["sub"],
-            defaults={
-                "email": verify_result["email"],
-                "username": verify_result["name"],
-                "avatar_url": verify_result["picture"],
-            },
-        )
-        request.user = user  # type: ignore
-        jwt_ = jwt.encode(
-            {
-                "id": str(user.id),
-                "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
-            },
-            key=settings.SECRET_KEY,
-            algorithm=ALGORITHMS.HS256,
-        )
-        http_response = JsonResponse(result, headers={"is-log-in": "yes"})
-        http_response.set_cookie(
-            AUTH_COOKIE_NAME,
-            value=jwt_,
-            max_age=259200,
-            secure=True,
-            httponly=True,
-            samesite="Strict",
-        )
-        return http_response
-    else:
-        return JsonResponse({"message": "Data Not Sufficient"}, status=400)
-
-
-@require_POST
-@require_login
-def change_google_binding(request: HttpRequest) -> JsonResponse:
-    flow = google_oauth_flow.Flow.from_client_config(
-        GOOGLE_CLIENT_CONFIG,
-        scopes=[
-            "openid",
-            "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile",
-        ],
-    )
-    result = {}
-    code, redirect_uri = request.POST.get("code"), request.POST.get("redirect_uri")
-    if not code or not redirect_uri:
-        return JsonResponse({"message": "Data Not Sufficient"}, status=400)
-
     flow.redirect_uri = redirect_uri
     flow.fetch_token(code=code)
     credentials = flow.credentials
-    verify_result = id_token.verify_oauth2_token(
+    verified_result = id_token.verify_oauth2_token(
         credentials.id_token,  # type: ignore
         GoogleRequest(),
         flow.client_config["client_id"],
         clock_skew_in_seconds=10,  # Allow 10 seconds of clock skew
     )
+    return TokenVerificationResult.model_validate(verified_result)
+
+
+def _make_jwt(user_id: str) -> str:
+    return jwt.encode(
+        {"id": user_id, "exp": int((datetime.now() + timedelta(days=30)).timestamp())},
+        key=settings.SECRET_KEY,
+        algorithm=ALGORITHMS.HS256,
+    )
+
+
+@ensure_csrf_cookie
+@require_GET
+def get_authorization_url(request: HttpRequest) -> JsonResponse:
+    redirect_uri = request.GET.get("redirect_uri")
+    if not redirect_uri:
+        return JsonResponse({"message": "redirect_uri is required"}, status=400)
+
+    flow = google_oauth_flow.Flow.from_client_config(
+        GOOGLE_CLIENT_CONFIG, scopes=SCOPES
+    )
+    flow.redirect_uri = redirect_uri
+    authorization_url, state = flow.authorization_url(include_granted_scopes="true")
+    return JsonResponse({"authorization_url": authorization_url, "state": state})
+
+
+@require_POST
+def google_login(request: HttpRequest) -> JsonResponse:
+    code, redirect_uri = request.POST.get("code"), request.POST.get("redirect_uri")
+    if not code or not redirect_uri:
+        return JsonResponse({"message": "Data Not Sufficient"}, status=400)
+
+    verified_result = _verify_with_code_flow(str(code), str(redirect_uri))
+
+    # login an existing user or register a new user
+    user, _ = User.objects.get_or_create(
+        oauth_org=OAuthOrganization.GOOGLE,
+        oauth_id=verified_result.sub,
+        defaults={
+            "email": verified_result.email,
+            "username": verified_result.name,
+            "avatar_url": verified_result.picture,
+        },
+    )
+    request.user = user  # type: ignore
+    response = JsonResponse({}, headers={"is-log-in": "yes"})
+    response.set_cookie(
+        AUTH_COOKIE_NAME,
+        value=_make_jwt(str(user.id)),
+        max_age=JWT_COOKIE_MAX_AGE,
+        secure=True,
+        httponly=True,
+        samesite="Strict",
+    )
+    return response
+
+
+@require_POST
+@require_login
+def change_google_binding(request: HttpRequest) -> JsonResponse:
+    code, redirect_uri = request.POST.get("code"), request.POST.get("redirect_uri")
+    if not code or not redirect_uri:
+        return JsonResponse({"message": "Data Not Sufficient"}, status=400)
+
+    verified_result = _verify_with_code_flow(str(code), str(redirect_uri))
 
     # Check if the given google account is not bound to any other account
     if (
         User.objects.filter(
-            oauth_org=OAuthOrganization.GOOGLE, oauth_id=verify_result["sub"]
+            oauth_org=OAuthOrganization.GOOGLE, oauth_id=verified_result.sub
         ).first()
         is not None
     ):
@@ -142,35 +145,31 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
         )
 
     user: User = request.user  # type: ignore
-    user.oauth_org = OAuthOrganization.GOOGLE
-    user.oauth_id = verify_result["sub"]
-    user.email = verify_result["email"]
-    user.username = verify_result["name"]
-    user.avatar_url = verify_result["picture"]
+    user.oauth_org = OAuthOrganization.GOOGLE  # type: ignore
+    user.oauth_id = verified_result.sub  # type: ignore
+    user.email = verified_result.email  # type: ignore
+    user.username = verified_result.name  # type: ignore
+    user.avatar_url = verified_result.picture  # type: ignore
     user.save()
 
-    jwt_ = jwt.encode(
+    response = JsonResponse(
         {
             "id": str(user.id),
-            "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
+            "email": user.email,
+            "username": user.username,
+            "avatar_url": user.avatar_url,
         },
-        key=settings.SECRET_KEY,
-        algorithm=ALGORITHMS.HS256,
+        headers={"is-log-in": "yes"},
     )
-    result["id"] = str(user.id)
-    result["email"] = user.email
-    result["username"] = user.username
-    result["avatar_url"] = user.avatar_url
-    http_response = JsonResponse(result, headers={"is-log-in": "yes"})
-    http_response.set_cookie(
+    response.set_cookie(
         AUTH_COOKIE_NAME,
-        value=jwt_,
-        max_age=259200,
+        value=_make_jwt(str(user.id)),
+        max_age=JWT_COOKIE_MAX_AGE,
         secure=True,
         httponly=True,
         samesite="Strict",
     )
-    return http_response
+    return response
 
 
 @require_GET
@@ -178,7 +177,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
 def me(request: HttpRequest) -> JsonResponse:
     return JsonResponse(
         {
-            "id": request.user.pk,
+            "id": request.user.pk,  # type: ignore
             "username": request.user.username,  # type: ignore
             "email": request.user.email,  # type: ignore
             "avatar_url": request.user.avatar_url or None,  # type: ignore
@@ -189,9 +188,9 @@ def me(request: HttpRequest) -> JsonResponse:
 @require_GET
 @require_login
 def logout(request: HttpRequest) -> JsonResponse:
-    http_response = JsonResponse({}, headers={"is-log-out": "yes"})
-    http_response.delete_cookie(AUTH_COOKIE_NAME)
-    return http_response
+    response = JsonResponse({}, headers={"is-log-out": "yes"})
+    response.delete_cookie(AUTH_COOKIE_NAME)
+    return response
 
 
 @require_POST
@@ -205,7 +204,7 @@ def update(request: HttpRequest) -> JsonResponse:
         if avatar_url := payload.get("avatar_url"):
             user.avatar_url = avatar_url
         elif avatar_url == "":
-            user.avatar_url = None
+            user.avatar_url = None  # type: ignore
         user.save()
         return JsonResponse(
             {
