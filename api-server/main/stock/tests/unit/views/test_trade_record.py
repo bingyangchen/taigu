@@ -12,7 +12,7 @@ from main.account import OAuthOrganization
 from main.account.models import User
 from main.stock import TradeType
 from main.stock.models import Company, TradeRecord
-from main.stock.views.trade_record import create, delete, update, update_or_delete
+from main.stock.views.trade_record import create, update_or_delete
 from main.stock.views.trade_record import list as list_view
 
 
@@ -381,34 +381,6 @@ class TestTradeRecordCreateView:
         with pytest.raises(ValueError):  # strptime should raise ValueError
             create(request)
 
-    def test_create_zero_values(
-        self, request_factory: RequestFactory, user: User, company: Company
-    ) -> None:
-        payload = {
-            "deal_time": "2023-12-01",
-            "sid": "1234",
-            "deal_price": 0,
-            "deal_quantity": 0,
-            "handling_fee": 0,
-        }
-
-        request = request_factory.post(
-            "/api/stock/trade-record/",
-            data=json.dumps(payload),
-            content_type="application/json",
-        )
-        request.user = user
-
-        response = create(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200  # Zero values should be allowed
-
-        data = json.loads(response.content)
-        assert data["deal_price"] == 0.0
-        assert data["deal_quantity"] == 0
-        assert data["handling_fee"] == 0
-
 
 @pytest.mark.django_db
 class TestTradeRecordUpdateOrDeleteView:
@@ -428,11 +400,28 @@ class TestTradeRecordUpdateOrDeleteView:
     @pytest.fixture
     def company(self) -> Company:
         return Company.objects.create(
-            stock_id="1234",
+            stock_id="1111",
             name="Test Company",
             trade_type=TradeType.TSE,
             business="Test business",
         )
+
+    @pytest.fixture
+    def companies(self) -> list[Company]:
+        return [
+            Company.objects.create(
+                stock_id="1234",
+                name="Company A",
+                trade_type=TradeType.TSE,
+                business="Business A",
+            ),
+            Company.objects.create(
+                stock_id="5678",
+                name="Company B",
+                trade_type=TradeType.OTC,
+                business="Business B",
+            ),
+        ]
 
     @pytest.fixture
     def trade_record(self, user: User, company: Company) -> TradeRecord:
@@ -454,7 +443,7 @@ class TestTradeRecordUpdateOrDeleteView:
     ) -> None:
         payload = {
             "deal_time": "2023-12-02",
-            "sid": "1234",
+            "sid": "1111",
             "deal_price": 200.0,
             "deal_quantity": 2000,
             "handling_fee": 100,
@@ -512,51 +501,7 @@ class TestTradeRecordUpdateOrDeleteView:
         data = json.loads(response.content)
         assert data["message"] == "Method Not Allowed"
 
-
-@pytest.mark.django_db
-class TestTradeRecordUpdateView:
-    @pytest.fixture
-    def request_factory(self) -> RequestFactory:
-        return RequestFactory()
-
-    @pytest.fixture
-    def user(self) -> User:
-        return User.objects.create_user(
-            oauth_org=OAuthOrganization.GOOGLE,
-            oauth_id="test_oauth_id",
-            email="test@example.com",
-            username="testuser",
-        )
-
-    @pytest.fixture
-    def companies(self) -> list[Company]:
-        return [
-            Company.objects.create(
-                stock_id="1234",
-                name="Company A",
-                trade_type=TradeType.TSE,
-                business="Business A",
-            ),
-            Company.objects.create(
-                stock_id="5678",
-                name="Company B",
-                trade_type=TradeType.OTC,
-                business="Business B",
-            ),
-        ]
-
-    @pytest.fixture
-    def trade_record(self, user: User, companies: list[Company]) -> TradeRecord:
-        return TradeRecord.objects.create(
-            owner=user,
-            company=companies[0],
-            deal_time=date(2023, 12, 1),
-            deal_price=100.5,
-            deal_quantity=1000,
-            handling_fee=50,
-        )
-
-    def test_update_valid_data(
+    def test_update_with_different_company(
         self,
         request_factory: RequestFactory,
         user: User,
@@ -578,7 +523,7 @@ class TestTradeRecordUpdateView:
         )
         request.user = user
 
-        response = update(request, trade_record.pk)
+        response = update_or_delete(request, str(trade_record.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -611,7 +556,7 @@ class TestTradeRecordUpdateView:
         )
         request.user = user
 
-        response = update(request, trade_record.pk)
+        response = update_or_delete(request, str(trade_record.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 400
@@ -637,7 +582,7 @@ class TestTradeRecordUpdateView:
         )
         request.user = user
 
-        response = update(request, trade_record.pk)
+        response = update_or_delete(request, str(trade_record.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 400
@@ -664,65 +609,7 @@ class TestTradeRecordUpdateView:
         request.user = user
 
         with pytest.raises(ObjectDoesNotExist):
-            update(request, 99999)
-
-
-@pytest.mark.django_db
-class TestTradeRecordDeleteView:
-    @pytest.fixture
-    def request_factory(self) -> RequestFactory:
-        return RequestFactory()
-
-    @pytest.fixture
-    def user(self) -> User:
-        return User.objects.create_user(
-            oauth_org=OAuthOrganization.GOOGLE,
-            oauth_id="test_oauth_id",
-            email="test@example.com",
-            username="testuser",
-        )
-
-    @pytest.fixture
-    def company(self) -> Company:
-        return Company.objects.create(
-            stock_id="1234",
-            name="Test Company",
-            trade_type=TradeType.TSE,
-            business="Test business",
-        )
-
-    @pytest.fixture
-    def trade_record(self, user: User, company: Company) -> TradeRecord:
-        return TradeRecord.objects.create(
-            owner=user,
-            company=company,
-            deal_time=date(2023, 12, 1),
-            deal_price=100.5,
-            deal_quantity=1000,
-            handling_fee=50,
-        )
-
-    def test_delete_valid_record(
-        self,
-        request_factory: RequestFactory,
-        user: User,
-        trade_record: TradeRecord,
-    ) -> None:
-        record_id = trade_record.pk
-
-        request = request_factory.delete(f"/api/stock/trade-records/{record_id}/")
-        request.user = user
-
-        response = delete(request, record_id)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert data == {}
-
-        # Verify record was deleted from database
-        assert not TradeRecord.objects.filter(pk=record_id).exists()
+            update_or_delete(request, "99999")
 
     def test_delete_nonexistent_record(
         self, request_factory: RequestFactory, user: User
@@ -731,7 +618,7 @@ class TestTradeRecordDeleteView:
         request.user = user
 
         with pytest.raises(ObjectDoesNotExist):
-            delete(request, 99999)
+            update_or_delete(request, "99999")
 
     def test_delete_other_users_record(
         self,
@@ -751,4 +638,4 @@ class TestTradeRecordDeleteView:
         request.user = other_user
 
         with pytest.raises(ObjectDoesNotExist):
-            delete(request, trade_record.pk)
+            update_or_delete(request, str(trade_record.pk))

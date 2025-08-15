@@ -91,7 +91,7 @@ class Login extends React.Component<Props, State> {
   }
   private handleClickGoogleLogin = async () => {
     const response = await Api.sendRequest(
-      `account/google-login?redirect_uri=${window.location.origin}/login`,
+      `account/authorization-url?redirect_uri=${window.location.origin}/login`,
       "get",
     );
     window.location = response.authorization_url;

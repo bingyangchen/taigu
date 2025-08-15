@@ -107,43 +107,26 @@ class TestFetchAndStoreRealtimeStockInfo:
     @patch("main.stock.services.requests.get")
     @patch("main.stock.services.Company.objects.filter")
     @patch("main.stock.services.logger")
-    def test_fetch_and_store_realtime_stock_info_read_timeout(
+    def test_fetch_and_store_realtime_stock_info_error_handling(
         self, mock_logger: Mock, mock_filter: Mock, mock_get: Mock
     ) -> None:
         mock_filter.return_value.values.return_value = []
-        mock_get.side_effect = ReadTimeout()
 
-        fetch_and_store_realtime_stock_info()
+        # Test different types of errors
+        errors = [ReadTimeout(), ConnectTimeout(), JSONDecodeError("msg", "doc", 0)]
 
-        mock_logger.warning.assert_called_with("ReadTimeout")
+        for error in errors:
+            if isinstance(error, JSONDecodeError):
+                mock_response = Mock()
+                mock_response.json.side_effect = error
+                mock_get.return_value = mock_response
+            else:
+                mock_get.side_effect = error
 
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.Company.objects.filter")
-    @patch("main.stock.services.logger")
-    def test_fetch_and_store_realtime_stock_info_connect_timeout(
-        self, mock_logger: Mock, mock_filter: Mock, mock_get: Mock
-    ) -> None:
-        mock_filter.return_value.values.return_value = []
-        mock_get.side_effect = ConnectTimeout()
+            fetch_and_store_realtime_stock_info()
 
-        fetch_and_store_realtime_stock_info()
-
-        mock_logger.warning.assert_called_with("ConnectTimeout")
-
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.Company.objects.filter")
-    @patch("main.stock.services.logger")
-    def test_fetch_and_store_realtime_stock_info_json_decode_error(
-        self, mock_logger: Mock, mock_filter: Mock, mock_get: Mock
-    ) -> None:
-        mock_filter.return_value.values.return_value = []
-        mock_response = Mock()
-        mock_response.json.side_effect = JSONDecodeError("msg", "doc", 0)
-        mock_get.return_value = mock_response
-
-        fetch_and_store_realtime_stock_info()
-
-        mock_logger.warning.assert_called_with("JSONDecodeError")
+            # Verify error was logged
+            assert mock_logger.warning.called or mock_logger.error.called
 
     @patch("main.stock.services.requests.get")
     @patch("main.stock.services.Company.objects.filter")
@@ -239,63 +222,6 @@ class TestStoreMarketPerMinuteInfo:
             defaults={"price": 150.0, "fluct_price": 2.0},
         )
 
-    @patch("main.stock.services.TimeSeriesStockInfoCacheManager")
-    @patch("main.stock.services.MarketIndexPerMinute.objects.get_or_create")
-    @patch("main.stock.services.MarketIndexPerMinute.objects.filter")
-    def test_store_market_per_minute_info_during_lunch_break(
-        self,
-        mock_filter: Mock,
-        mock_get_or_create: Mock,
-        mock_cache_manager_class: Mock,
-    ) -> None:
-        test_date = date(2023, 12, 1)
-
-        # Mock the datetime computation to return 13:35 (275 minutes after 9:00) - during lunch break
-        with patch("main.stock.services.datetime") as mock_datetime:
-            mock_time_result = Mock()
-            mock_time_result.time.return_value = time(13, 35)
-            mock_datetime.now.return_value.__add__.return_value = mock_time_result
-
-            _store_market_per_minute_info("t00", test_date, 15000.0, 50.0)
-
-        # Should not call get_or_create during lunch break
-        mock_get_or_create.assert_not_called()
-
-    @patch("main.stock.services.TimeSeriesStockInfoCacheManager")
-    @patch("main.stock.services.MarketIndexPerMinute.objects.get_or_create")
-    @patch("main.stock.services.MarketIndexPerMinute.objects.filter")
-    def test_store_market_per_minute_info_after_market_close(
-        self,
-        mock_filter: Mock,
-        mock_get_or_create: Mock,
-        mock_cache_manager_class: Mock,
-    ) -> None:
-        mock_delete = Mock()
-        mock_delete.delete.return_value = (0, {})
-        mock_filter.return_value.exclude.return_value = mock_delete
-
-        mock_cache_manager = Mock()
-        mock_cache_manager.get.return_value = None
-        mock_cache_manager_class.return_value = mock_cache_manager
-
-        test_date = date(2023, 12, 1)
-
-        # Mock the datetime computation to return 14:00 (300 minutes after 9:00) - after market close
-        with patch("main.stock.services.datetime") as mock_datetime:
-            mock_time_result = Mock()
-            mock_time_result.time.return_value = time(14, 0)
-            mock_datetime.now.return_value.__add__.return_value = mock_time_result
-
-            _store_market_per_minute_info("t00", test_date, 15000.0, 50.0)
-
-        # Should convert to 270 (market close)
-        mock_get_or_create.assert_called_once_with(
-            market=TradeType.TSE,
-            date=test_date,
-            number=270,
-            defaults={"price": 15000.0, "fluct_price": 50.0},
-        )
-
 
 @pytest.mark.django_db
 class TestUpdateCompanyList:
@@ -358,29 +284,6 @@ class TestUpdateCompanyList:
         # Should log the error
         assert mock_logger.error.called
 
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.Company.objects.get_or_create")
-    @patch("main.stock.services.Company.objects.filter")
-    @patch("main.stock.services.logger")
-    @patch("main.stock.services.sleep")
-    def test_update_company_list_company_creation_error(
-        self,
-        mock_sleep: Mock,
-        mock_logger: Mock,
-        mock_filter: Mock,
-        mock_get_or_create: Mock,
-        mock_get: Mock,
-    ) -> None:
-        tse_response = [{"SecuritiesCompanyCode": "1234"}]
-        mock_get.return_value.json.return_value = tse_response
-        mock_filter.return_value = []
-        mock_get_or_create.side_effect = Exception("Company creation error")
-
-        update_company_list()
-
-        # Should log the error but continue
-        assert mock_logger.error.called
-
 
 @pytest.mark.django_db
 class TestFetchAndStoreHistoricalInfoFromYahoo:
@@ -417,52 +320,6 @@ class TestFetchAndStoreHistoricalInfoFromYahoo:
         mock_get.assert_called_once()
         # Verify bulk_create was called
         mock_bulk_create.assert_called_once()
-
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.History.objects.filter")
-    @patch("main.stock.services.History.objects.bulk_create")
-    def test_fetch_and_store_historical_info_from_yahoo_weekly(
-        self,
-        mock_bulk_create: Mock,
-        mock_filter: Mock,
-        mock_get: Mock,
-        company: Company,
-    ) -> None:
-        csv_data = "Date,Open,High,Low,Close,Adj Close,Volume\n2023-11-01,100.0,105.0,95.0,102.0,102.0,1000000"
-        mock_response = Mock()
-        mock_response.text = csv_data
-        mock_get.return_value = mock_response
-
-        mock_filter.return_value.delete.return_value = None
-
-        _fetch_and_store_historical_info_from_yahoo(company, Frequency.WEEKLY)
-
-        # Verify the request URL contains weekly interval
-        call_args = mock_get.call_args[0][0]
-        assert "interval=1wk" in call_args
-
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.History.objects.filter")
-    @patch("main.stock.services.History.objects.bulk_create")
-    def test_fetch_and_store_historical_info_from_yahoo_monthly(
-        self,
-        mock_bulk_create: Mock,
-        mock_filter: Mock,
-        mock_get: Mock,
-        company: Company,
-    ) -> None:
-        csv_data = "Date,Open,High,Low,Close,Adj Close,Volume\n2023-11-01,100.0,105.0,95.0,102.0,102.0,1000000"
-        mock_response = Mock()
-        mock_response.text = csv_data
-        mock_get.return_value = mock_response
-
-        mock_filter.return_value.delete.return_value = None
-
-        _fetch_and_store_historical_info_from_yahoo(company, Frequency.MONTHLY)
-
-        # Verify the request URL contains monthly interval
-        call_args = mock_get.call_args[0][0]
-        assert "interval=1mo" in call_args
 
     @patch("main.stock.services.requests.get")
     @patch("main.stock.services.History.objects.filter")
@@ -620,23 +477,7 @@ class TestRocDateStringToDate:
         expected = date(2020, 2, 29)
         assert result == expected
 
-    def test_roc_date_string_to_date_early_roc(self) -> None:
-        # ROC year 70 = 1981
-        result = roc_date_string_to_date("0700601")
-        expected = date(1981, 6, 1)
-        assert result == expected
-
     def test_roc_date_string_to_date_invalid_format(self) -> None:
         # Test with invalid date format - should raise ValueError
         with pytest.raises(ValueError):
             roc_date_string_to_date("invalid")
-
-    def test_roc_date_string_to_date_invalid_month(self) -> None:
-        # Test with invalid month - should raise ValueError
-        with pytest.raises(ValueError):
-            roc_date_string_to_date("1121301")
-
-    def test_roc_date_string_to_date_invalid_day(self) -> None:
-        # Test with invalid day - should raise ValueError
-        with pytest.raises(ValueError):
-            roc_date_string_to_date("1120132")

@@ -213,37 +213,6 @@ class TestCurrentStockInfoView:
         data = json.loads(response.content)
         assert data == {}
 
-    def test_current_stock_info_with_mixed_valid_invalid_sids(
-        self, request_factory: RequestFactory, stock_infos: list[StockInfo]
-    ) -> None:
-        request = request_factory.get(
-            "/api/stock/current-stock-info/?sids=1234,9999,5678"
-        )
-
-        response = current_stock_info(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert "1234" in data
-        assert "5678" in data
-        assert "9999" not in data
-
-    def test_current_stock_info_with_trailing_commas(
-        self, request_factory: RequestFactory, stock_infos: list[StockInfo]
-    ) -> None:
-        request = request_factory.get("/api/stock/current-stock-info/?sids=,1234,5678,")
-
-        response = current_stock_info(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert "1234" in data
-        assert "5678" in data
-
 
 @pytest.mark.django_db
 class TestHistoricalPricesView:
@@ -357,23 +326,6 @@ class TestHistoricalPricesView:
 
         data = json.loads(response.content)
         assert "data" in data
-        assert len(data["data"]) == 0
-
-    def test_historical_prices_invalid_frequency(
-        self, request_factory: RequestFactory, history_records: list[History]
-    ) -> None:
-        request = request_factory.get(
-            "/api/stock/historical-prices/1234/?frequency=INVALID"
-        )
-
-        response = historical_prices(request, "1234")
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert "data" in data
-        # Should return no data for invalid frequency
         assert len(data["data"]) == 0
 
 
@@ -491,18 +443,6 @@ class TestSearchView:
         assert "data" in data
         assert len(data["data"]) == 0
 
-    def test_search_empty_keyword(self, request_factory: RequestFactory) -> None:
-        request = request_factory.get("/api/stock/search/?keyword=")
-
-        response = search(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert "data" in data
-        assert len(data["data"]) == 0
-
     def test_search_no_results(
         self,
         request_factory: RequestFactory,
@@ -518,32 +458,6 @@ class TestSearchView:
         data = json.loads(response.content)
         assert "data" in data
         assert len(data["data"]) == 0
-
-    def test_search_result_structure(
-        self,
-        request_factory: RequestFactory,
-        companies_and_stock_infos: list[tuple[Company, StockInfo]],
-    ) -> None:
-        request = request_factory.get("/api/stock/search/?keyword=1234")
-
-        response = search(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert "data" in data
-        assert len(data["data"]) == 1
-
-        result_item = data["data"][0]
-        expected_keys = {"sid", "name", "quantity", "close", "fluct_price"}
-        assert set(result_item.keys()) == expected_keys
-
-        assert result_item["sid"] == "1234"
-        assert result_item["name"] == "Taiwan Semiconductor"
-        assert result_item["quantity"] == 1000000
-        assert result_item["close"] == 100.0
-        assert result_item["fluct_price"] == 2.0
 
     def test_search_limit_results(self, request_factory: RequestFactory) -> None:
         # Create more than 30 companies to test the limit

@@ -133,7 +133,7 @@ class AccountBinding extends React.Component<Props, State> {
   private handleClickGoogleLogin = async (e: MouseEvent) => {
     this.setState({ activeModalName: null });
     const response = await Api.sendRequest(
-      `account/google-login?redirect_uri=${window.location.origin}/settings/account-binding`,
+      `account/authorization-url?redirect_uri=${window.location.origin}/settings/account-binding`,
       "get",
     );
     window.location = response.authorization_url;

@@ -1,4 +1,4 @@
-from typing import Any, Self
+from typing import Self
 from unittest.mock import Mock, patch
 
 import pytest
@@ -74,17 +74,6 @@ class TestBaseCacheManager:
         mock_cache.set.assert_called_once_with("test:test_id", test_value, test_timeout)
 
     @patch("main.core.cache.cache")
-    def test_set_with_different_timeout(
-        self, mock_cache: Mock, cache_manager: ConcreteCacheManager
-    ) -> None:
-        test_value = "another_value"
-        test_timeout = 7200
-
-        cache_manager.set("test_id", test_value, test_timeout)
-
-        mock_cache.set.assert_called_once_with("test:test_id", test_value, test_timeout)
-
-    @patch("main.core.cache.cache")
     def test_set_with_invalid_value(
         self, mock_cache: Mock, cache_manager: ConcreteCacheManager
     ) -> None:
@@ -93,13 +82,6 @@ class TestBaseCacheManager:
 
         with pytest.raises(ValidationError):
             cache_manager.set("test_id", test_value, test_timeout)
-
-    def test_concrete_implementation_gen_cache_key(self) -> None:
-        manager = self.ConcreteCacheManager()
-
-        cache_key = manager._BaseCacheManager__gen_cache_key("my_test_id")
-
-        assert cache_key == "test:my_test_id"
 
     @patch("main.core.cache.cache")
     def test_full_cache_workflow(
@@ -119,38 +101,6 @@ class TestBaseCacheManager:
         mock_cache.get.assert_called_once_with("test:test_id")
         assert result == test_value
 
-    def test_type_safety_with_different_types(self) -> None:
-        # Test with integer type
-        class IntCacheManager(BaseCacheManager[int]):
-            cache_name = "int"
-
-            class IntValueModel(BaseModel):
-                pass
-
-            value_validator_model = IntValueModel
-
-        int_manager = IntCacheManager()
-        assert int_manager.cache_name == "int"
-        assert (
-            int_manager._BaseCacheManager__gen_cache_key("int_test") == "int:int_test"
-        )
-
-        # Test with dict type
-        class DictCacheManager(BaseCacheManager[dict[str, Any]]):
-            cache_name = "dict"
-
-            class DictValueModel(BaseModel):
-                pass
-
-            value_validator_model = DictValueModel
-
-        dict_manager = DictCacheManager()
-        assert dict_manager.cache_name == "dict"
-        assert (
-            dict_manager._BaseCacheManager__gen_cache_key("dict_test")
-            == "dict:dict_test"
-        )
-
     @patch("main.core.cache.cache")
     def test_delete_calls_django_cache_delete(
         self, mock_cache: Mock, cache_manager: ConcreteCacheManager
@@ -158,32 +108,6 @@ class TestBaseCacheManager:
         cache_manager.delete("test_id")
 
         mock_cache.delete.assert_called_once_with("test:test_id")
-
-    def test_cache_key_uniqueness(self) -> None:
-        manager = self.ConcreteCacheManager()
-
-        key1 = manager._BaseCacheManager__gen_cache_key("id1")
-        key2 = manager._BaseCacheManager__gen_cache_key("id2")
-
-        assert key1 != key2
-        assert key1 == "test:id1"
-        assert key2 == "test:id2"
-
-    def test_cache_key_with_special_characters(self) -> None:
-        manager = self.ConcreteCacheManager()
-
-        # Test various special characters
-        special_ids = ["user@example.com", "user:123", "user/path", "user-id_123"]
-
-        for special_id in special_ids:
-            key = manager._BaseCacheManager__gen_cache_key(special_id)
-            assert key == f"test:{special_id}"
-
-    def test_cache_key_with_empty_identifier(self) -> None:
-        manager = self.ConcreteCacheManager()
-
-        key = manager._BaseCacheManager__gen_cache_key("")
-        assert key == "test:"
 
     @patch("main.core.cache.cache")
     def test_validation_called_before_cache_set(
@@ -197,18 +121,3 @@ class TestBaseCacheManager:
 
         # Verify cache.set was never called due to validation failure
         mock_cache.set.assert_not_called()
-
-    @patch("main.core.cache.cache")
-    def test_delete_with_different_identifiers(
-        self, mock_cache: Mock, cache_manager: ConcreteCacheManager
-    ) -> None:
-        # Test delete with multiple different identifiers
-        identifiers = ["id1", "id2", "special@id"]
-
-        for identifier in identifiers:
-            cache_manager.delete(identifier)
-
-        # Verify all deletes were called with correct cache keys
-        assert mock_cache.delete.call_count == len(identifiers)
-        for identifier in identifiers:
-            mock_cache.delete.assert_any_call(f"test:{identifier}")

@@ -15,21 +15,27 @@ DEBUG = env.ENV == Env.DEV
 ALLOWED_HOSTS = ["*"] if env.ENV == Env.DEV else ["taigu.tw"]
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_COOKIE_SAMESITE = "Strict"
+CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = (
+    ["https://localhost"] if env.ENV == Env.DEV else ["https://taigu.tw"]
+)
+
 ROOT_URLCONF = "main.urls"
 WSGI_APPLICATION = "main.wsgi.application"
 AUTH_USER_MODEL = "account.User"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 INSTALLED_APPS = [
-    # Django modules
+    # Django
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    # 3rd-party packages
+    # 3rd-party
     "corsheaders",
-    # Local Apps
+    # Local
     "main.core",
     "main.account",
     "main.stock",
@@ -41,11 +47,12 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "csp.middleware.CSPMiddleware",
-    # Local middlewares
+    # Local
     "main.account.middleware.check_login_status_middleware",
 ]
 

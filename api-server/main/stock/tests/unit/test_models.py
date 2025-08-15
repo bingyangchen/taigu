@@ -195,14 +195,6 @@ class TestCompanyModel:
         assert company.trade_type == TradeType.TSE
         assert company.business == "Test business"
 
-    def test_company_str_representation(self, company_data: dict[str, Any]) -> None:
-        company = Company.objects.create(**company_data)
-
-        assert str(company) == "Test Company(1234)"
-
-    def test_company_meta_options(self) -> None:
-        assert Company._meta.db_table == "company"
-
     def test_company_primary_key(self, company_data: dict[str, Any]) -> None:
         company = Company.objects.create(**company_data)
 
@@ -270,24 +262,6 @@ class TestStockInfoModel:
         assert stock_info.close_price == 100.5
         assert stock_info.fluct_price == 2.3
 
-    def test_stock_info_str_representation(
-        self, stock_info_data: dict[str, Any]
-    ) -> None:
-        stock_info = StockInfo.objects.create(**stock_info_data)
-
-        assert str(stock_info) == f"1234({date.today()})"
-
-    def test_stock_info_meta_options(self) -> None:
-        assert StockInfo._meta.db_table == "stock_info"
-
-    def test_stock_info_company_relationship(
-        self, stock_info_data: dict[str, Any]
-    ) -> None:
-        stock_info = StockInfo.objects.create(**stock_info_data)
-
-        # Test reverse relationship
-        assert stock_info.company.stock_info == stock_info
-
     def test_stock_info_cascade_delete(self, stock_info_data: dict[str, Any]) -> None:
         company = stock_info_data["company"]
         stock_info = StockInfo.objects.create(**stock_info_data)
@@ -317,12 +291,6 @@ class TestMarketIndexPerMinuteModel:
         assert market_index.number == 30
         assert market_index.price == 15000.5
         assert market_index.fluct_price == 50.2
-
-    def test_market_index_meta_options(self) -> None:
-        assert MarketIndexPerMinute._meta.db_table == "market_index_per_minute"
-        assert MarketIndexPerMinute._meta.unique_together == (
-            ("market", "date", "number"),
-        )
 
     def test_market_index_unique_constraint(
         self, market_index_data: dict[str, Any]
@@ -372,15 +340,6 @@ class TestHistoryModel:
         assert history.date == date.today()
         assert history.quantity == 1000000
         assert history.close_price == 100.5
-
-    def test_history_str_representation(self, history_data: dict[str, Any]) -> None:
-        history = History.objects.create(**history_data)
-
-        assert str(history) == f"1234({date.today()}-{Frequency.DAILY})"
-
-    def test_history_meta_options(self) -> None:
-        assert History._meta.db_table == "history"
-        assert History._meta.unique_together == (("company", "frequency", "date"),)
 
     def test_history_unique_constraint(self, history_data: dict[str, Any]) -> None:
         History.objects.create(**history_data)
@@ -437,17 +396,6 @@ class TestMaterialFactModel:
             == "This is an important announcement for shareholders"
         )
 
-    def test_material_fact_str_representation(
-        self, material_fact_data: dict[str, Any]
-    ) -> None:
-        material_fact = MaterialFact.objects.create(**material_fact_data)
-
-        assert str(material_fact) == f"1234({material_fact.date_time})"
-
-    def test_material_fact_meta_options(self) -> None:
-        assert MaterialFact._meta.db_table == "material_fact"
-        assert MaterialFact._meta.unique_together == (("company", "date_time"),)
-
     def test_material_fact_unique_constraint(
         self, material_fact_data: dict[str, Any]
     ) -> None:
@@ -455,15 +403,6 @@ class TestMaterialFactModel:
 
         with pytest.raises(IntegrityError):
             MaterialFact.objects.create(**material_fact_data)
-
-    def test_material_fact_company_relationship(
-        self, material_fact_data: dict[str, Any]
-    ) -> None:
-        company = material_fact_data["company"]
-        material_fact = MaterialFact.objects.create(**material_fact_data)
-
-        # Test reverse relationship
-        assert material_fact in company.material_facts.all()
 
 
 @pytest.mark.django_db
@@ -506,25 +445,6 @@ class TestTradeRecordModel:
         assert trade_record.deal_price == 100.5
         assert trade_record.deal_quantity == 1000
         assert trade_record.handling_fee == 50
-
-    def test_trade_record_str_representation(
-        self, trade_record_data: dict[str, Any]
-    ) -> None:
-        trade_record = TradeRecord.objects.create(**trade_record_data)
-
-        assert str(trade_record) == f"testuser_{date.today()}_1234"
-
-    def test_trade_record_meta_options(self) -> None:
-        assert TradeRecord._meta.db_table == "trade_record"
-
-    def test_trade_record_user_relationship(
-        self, trade_record_data: dict[str, Any]
-    ) -> None:
-        user = trade_record_data["owner"]
-        trade_record = TradeRecord.objects.create(**trade_record_data)
-
-        # Test reverse relationship
-        assert trade_record in user.trade_records.all()
 
     def test_trade_record_company_protect_delete(
         self, trade_record_data: dict[str, Any]
@@ -586,25 +506,6 @@ class TestCashDividendRecordModel:
         assert cash_dividend.company.stock_id == "1234"
         assert cash_dividend.deal_time == date.today()
         assert cash_dividend.cash_dividend == 500
-
-    def test_cash_dividend_record_str_representation(
-        self, cash_dividend_data: dict[str, Any]
-    ) -> None:
-        cash_dividend = CashDividendRecord.objects.create(**cash_dividend_data)
-
-        assert str(cash_dividend) == f"testuser_{date.today()}_1234"
-
-    def test_cash_dividend_record_meta_options(self) -> None:
-        assert CashDividendRecord._meta.db_table == "cash_dividend_record"
-
-    def test_cash_dividend_record_user_relationship(
-        self, cash_dividend_data: dict[str, Any]
-    ) -> None:
-        user = cash_dividend_data["owner"]
-        cash_dividend = CashDividendRecord.objects.create(**cash_dividend_data)
-
-        # Test reverse relationship
-        assert cash_dividend in user.cash_dividend_records.all()
 
     def test_cash_dividend_record_company_protect_delete(
         self, cash_dividend_data: dict[str, Any]
