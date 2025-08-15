@@ -161,7 +161,8 @@ def fetch_and_store_realtime_stock_info() -> None:
             all = all[batch_size:]
 
             # API rate limit: 3 requests per 5 seconds
-            sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
+            if all:
+                sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
     logger.info("All realtime stock info updated!")
 
 

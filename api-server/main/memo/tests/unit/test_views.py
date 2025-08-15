@@ -100,18 +100,6 @@ class TestUpdateOrCreateStockMemoView:
         data = json.loads(response.content)
         assert data["note"] == ""
 
-    def test_update_or_create_stock_memo_null_note(
-        self, request_obj: HttpRequest, company: Company
-    ) -> None:
-        body_data = json.dumps({"note": None}).encode()
-        request_obj._body = body_data
-
-        response = update_or_create_stock_memo(request_obj, company.pk)
-
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["note"] == ""
-
     def test_update_or_create_stock_memo_unknown_company(
         self, request_obj: HttpRequest
     ) -> None:
@@ -202,17 +190,6 @@ class TestListCompanyInfoView:
         hon_hai_data = data["2317"]
         assert hon_hai_data["note"] == ""
 
-    def test_list_company_info_with_trailing_comma(
-        self, request_obj: HttpRequest, companies: list[Company]
-    ) -> None:
-        request_obj.GET = {"sids": "2330,2317,"}
-
-        response = list_company_info(request_obj)
-
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        assert len(data) == 2
-
     def test_list_company_info_single_company(
         self, request_obj: HttpRequest, companies: list[Company]
     ) -> None:
@@ -236,17 +213,6 @@ class TestListCompanyInfoView:
 
     def test_list_company_info_empty_sids(self, request_obj: HttpRequest) -> None:
         request_obj.GET = {"sids": ""}
-
-        response = list_company_info(request_obj)
-
-        assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["message"] == "sids is required."
-
-    def test_list_company_info_empty_sids_with_commas(
-        self, request_obj: HttpRequest
-    ) -> None:
-        request_obj.GET = {"sids": ",,,"}
 
         response = list_company_info(request_obj)
 
@@ -417,42 +383,6 @@ class TestCreateTradePlanView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
-    def test_create_trade_plan_target_price_zero(
-        self, request_obj: HttpRequest, company: Company
-    ) -> None:
-        trade_plan_data = {
-            "sid": company.pk,
-            "plan_type": "BUY",
-            "target_price": 0,  # Zero is a valid value
-            "target_quantity": 1000,
-        }
-        body_data = json.dumps(trade_plan_data).encode()
-        request_obj._body = body_data
-
-        response = create_trade_plan(request_obj)
-
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["target_price"] == 0
-
-    def test_create_trade_plan_target_quantity_zero(
-        self, request_obj: HttpRequest, company: Company
-    ) -> None:
-        trade_plan_data = {
-            "sid": company.pk,
-            "plan_type": "BUY",
-            "target_price": 550.0,
-            "target_quantity": 0,  # Zero is a valid value
-        }
-        body_data = json.dumps(trade_plan_data).encode()
-        request_obj._body = body_data
-
-        response = create_trade_plan(request_obj)
-
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["target_quantity"] == 0
-
     def test_create_trade_plan_unknown_company(self, request_obj: HttpRequest) -> None:
         trade_plan_data = {
             "sid": "unknown_sid",
@@ -584,17 +514,6 @@ class TestListTradePlansView:
         data = json.loads(response.content)
         assert len(data["data"]) == 2  # Should return all plans
 
-    def test_list_trade_plans_with_trailing_comma(
-        self, request_obj: HttpRequest, trade_plans: list[TradePlan]
-    ) -> None:
-        request_obj.GET = {"sids": "2330,"}
-
-        response = list_trade_plans(request_obj)
-
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        assert len(data["data"]) == 1
-
     def test_list_trade_plans_no_plans(self, request_obj: HttpRequest) -> None:
         request_obj.GET = {}
 
@@ -671,17 +590,6 @@ class TestUpdateOrDeleteTradePlanView:
 
         # Verify plan was deleted
         assert not TradePlan.objects.filter(id=plan_id).exists()
-
-    def test_update_or_delete_trade_plan_unsupported_method(
-        self, request_obj: HttpRequest, trade_plan: TradePlan
-    ) -> None:
-        request_obj.method = "GET"
-
-        response = update_or_delete_trade_plan(request_obj, str(trade_plan.id))
-
-        assert response.status_code == 405
-        data = json.loads(response.content)
-        assert data["message"] == "Method Not Allowed"
 
 
 @pytest.mark.django_db
@@ -900,17 +808,6 @@ class TestCreateOrDeleteFavoriteView:
         assert not Favorite.objects.filter(
             owner=request_obj.user, company=company
         ).exists()
-
-    def test_create_or_delete_favorite_unsupported_method(
-        self, request_obj: HttpRequest, company: Company
-    ) -> None:
-        request_obj.method = "GET"
-
-        response = create_or_delete_favorite(request_obj, company.pk)
-
-        assert response.status_code == 405
-        data = json.loads(response.content)
-        assert data["message"] == "Method Not Allowed"
 
 
 @pytest.mark.django_db

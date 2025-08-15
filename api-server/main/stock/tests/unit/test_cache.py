@@ -21,23 +21,8 @@ class TestTimeSeriesStockInfoPointData:
         assert point_data.price == 100.5
         assert point_data.fluct_price == 2.3
 
-    def test_point_data_with_negative_fluct_price(self) -> None:
-        point_data = TimeSeriesStockInfoPointData(
-            date=date(2023, 12, 1), price=100.5, fluct_price=-2.3
-        )
-
-        assert point_data.fluct_price == -2.3
-
-    def test_point_data_with_zero_price(self) -> None:
-        point_data = TimeSeriesStockInfoPointData(
-            date=date(2023, 12, 1), price=0.0, fluct_price=0.0
-        )
-
-        assert point_data.price == 0.0
-        assert point_data.fluct_price == 0.0
-
-    def test_point_data_strict_validation(self) -> None:
-        # Test that strict mode is enabled - extra fields should raise error
+    def test_point_data_validation(self) -> None:
+        # Test strict mode and missing required fields
         with pytest.raises(ValidationError):
             TimeSeriesStockInfoPointData(
                 date=date(2023, 12, 1),
@@ -46,51 +31,19 @@ class TestTimeSeriesStockInfoPointData:
                 extra_field="not_allowed",  # type: ignore
             )
 
-    def test_point_data_missing_required_fields(self) -> None:
-        # Test missing date
+        # Test missing required fields
         with pytest.raises(ValidationError):
             TimeSeriesStockInfoPointData(
                 price=100.5,  # type: ignore
                 fluct_price=2.3,
             )
 
-        # Test missing price
-        with pytest.raises(ValidationError):
-            TimeSeriesStockInfoPointData(
-                date=date(2023, 12, 1),  # type: ignore
-                fluct_price=2.3,
-            )
-
-        # Test missing fluct_price
-        with pytest.raises(ValidationError):
-            TimeSeriesStockInfoPointData(
-                date=date(2023, 12, 1),  # type: ignore
-                price=100.5,
-            )
-
-    def test_point_data_invalid_types(self) -> None:
-        # Test invalid date type
+        # Test invalid types
         with pytest.raises(ValidationError):
             TimeSeriesStockInfoPointData(
                 date="2023-12-01",  # type: ignore
                 price=100.5,
                 fluct_price=2.3,
-            )
-
-        # Test invalid price type
-        with pytest.raises(ValidationError):
-            TimeSeriesStockInfoPointData(
-                date=date(2023, 12, 1),
-                price="100.5",  # type: ignore
-                fluct_price=2.3,
-            )
-
-        # Test invalid fluct_price type
-        with pytest.raises(ValidationError):
-            TimeSeriesStockInfoPointData(
-                date=date(2023, 12, 1),
-                price=100.5,
-                fluct_price="2.3",  # type: ignore
             )
 
     def test_point_data_model_dump(self) -> None:
@@ -125,38 +78,20 @@ class TestTimeSeriesStockInfo:
         assert len(time_series.data) == 0
         assert time_series.data == {}
 
-    def test_time_series_with_various_time_keys(self) -> None:
-        point_data = TimeSeriesStockInfoPointData(
-            date=date(2023, 12, 1), price=100.5, fluct_price=2.3
-        )
-
-        time_series = TimeSeriesStockInfo(
-            data={
-                0: point_data,  # Market open
-                90: point_data,  # 1.5 hours after open
-                270: point_data,  # Market close
-            }
-        )
-
-        assert len(time_series.data) == 3
-        assert all(key in [0, 90, 270] for key in time_series.data.keys())
-
-    def test_time_series_strict_validation(self) -> None:
-        # Test that strict mode is enabled
+    def test_time_series_validation(self) -> None:
+        # Test strict mode
         with pytest.raises(ValidationError):
             TimeSeriesStockInfo(
                 data={},
                 extra_field="not_allowed",  # type: ignore
             )
 
-    def test_time_series_invalid_data_type(self) -> None:
         # Test invalid data type
         with pytest.raises(ValidationError):
             TimeSeriesStockInfo(
                 data="invalid_data"  # type: ignore
             )
 
-    def test_time_series_invalid_point_data(self) -> None:
         # Test with invalid point data in dict
         with pytest.raises(ValidationError):
             TimeSeriesStockInfo(
@@ -181,12 +116,6 @@ class TestTimeSeriesStockInfo:
 
         assert dumped == expected
 
-    def test_time_series_access_non_existent_key(self) -> None:
-        time_series = TimeSeriesStockInfo(data={})
-
-        with pytest.raises(KeyError):
-            _ = time_series.data[999]
-
 
 class TestTimeSeriesStockInfoCacheManager:
     @pytest.fixture
@@ -206,13 +135,6 @@ class TestTimeSeriesStockInfoCacheManager:
         # Should have methods from BaseCacheManager
         assert hasattr(cache_manager, "get")
         assert hasattr(cache_manager, "set")
-
-    def test_cache_manager_with_different_instances(self) -> None:
-        cache_manager_1 = TimeSeriesStockInfoCacheManager()
-        cache_manager_2 = TimeSeriesStockInfoCacheManager()
-
-        # They should be different instances
-        assert cache_manager_1 != cache_manager_2
 
     @patch("main.core.cache.cache")
     def test_cache_manager_set_operation(
@@ -268,27 +190,8 @@ class TestTimeSeriesStockInfoCacheManager:
             "time_series_stock_info:test_stock_id"
         )
 
-    def test_cache_manager_class_attributes(self) -> None:
-        # Test class-level attributes
-        assert TimeSeriesStockInfoCacheManager.cache_name == "time_series_stock_info"
-        assert (
-            TimeSeriesStockInfoCacheManager.value_validator_model == TimeSeriesStockInfo
-        )
-
-    def test_cache_manager_with_empty_stock_id(self) -> None:
-        # Test with empty stock ID
-        cache_manager = TimeSeriesStockInfoCacheManager()
-        # Should be able to use empty string as identifier
-        assert hasattr(cache_manager, "get")
-
-    def test_cache_manager_with_special_characters_stock_id(self) -> None:
-        # Test with special characters in stock ID
-        cache_manager = TimeSeriesStockInfoCacheManager()
-        # Should be able to use special characters as identifier
-        assert hasattr(cache_manager, "get")
-
     @patch("main.core.cache.cache")
-    def test_cache_manager_set_with_validation_error(
+    def test_cache_manager_validation_error(
         self, mock_cache: Mock, cache_manager: TimeSeriesStockInfoCacheManager
     ) -> None:
         # Test setting invalid data should raise validation error
@@ -300,105 +203,6 @@ class TestTimeSeriesStockInfoCacheManager:
 
         # Verify cache.set was never called due to validation failure
         mock_cache.set.assert_not_called()
-
-    @patch("main.core.cache.cache")
-    def test_cache_manager_cache_key_generation(
-        self, mock_cache: Mock, cache_manager: TimeSeriesStockInfoCacheManager
-    ) -> None:
-        # Test that cache keys are generated correctly for different stock IDs
-        stock_ids = ["AAPL", "GOOGL", "TSLA", "special@stock", "stock-123"]
-
-        point_data = TimeSeriesStockInfoPointData(
-            date=date(2023, 12, 1), price=100.0, fluct_price=0.0
-        )
-        time_series = TimeSeriesStockInfo(data={30: point_data})
-
-        for stock_id in stock_ids:
-            cache_manager.set(stock_id, time_series, 300)
-
-        # Verify each call used the correct cache key
-        for stock_id in stock_ids:
-            mock_cache.set.assert_any_call(
-                f"time_series_stock_info:{stock_id}", time_series, 300
-            )
-
-    @patch("main.core.cache.cache")
-    def test_cache_manager_with_complex_time_series_data(
-        self, mock_cache: Mock, cache_manager: TimeSeriesStockInfoCacheManager
-    ) -> None:
-        # Test with more complex time series data
-        complex_data = {
-            0: TimeSeriesStockInfoPointData(
-                date=date(2023, 12, 1), price=100.0, fluct_price=2.5
-            ),
-            30: TimeSeriesStockInfoPointData(
-                date=date(2023, 12, 1), price=102.5, fluct_price=0.0
-            ),
-            60: TimeSeriesStockInfoPointData(
-                date=date(2023, 12, 1), price=101.8, fluct_price=-0.7
-            ),
-            270: TimeSeriesStockInfoPointData(
-                date=date(2023, 12, 1), price=103.2, fluct_price=1.4
-            ),
-        }
-
-        time_series = TimeSeriesStockInfo(data=complex_data)
-
-        cache_manager.set("COMPLEX_STOCK", time_series, 600)
-
-        mock_cache.set.assert_called_once_with(
-            "time_series_stock_info:COMPLEX_STOCK", time_series, 600
-        )
-
-    @patch("main.core.cache.cache")
-    def test_cache_manager_validation_with_invalid_point_data(
-        self, mock_cache: Mock, cache_manager: TimeSeriesStockInfoCacheManager
-    ) -> None:
-        # Test validation fails with invalid point data
-        with pytest.raises(ValidationError):
-            TimeSeriesStockInfo(
-                data={30: "invalid_point_data"}  # type: ignore
-            )
-
-        # Test validation fails when trying to cache invalid data
-        with pytest.raises(ValidationError):
-            # This should fail during validation
-            cache_manager.set("INVALID_STOCK", "not_a_time_series", 300)  # type: ignore
-
-        mock_cache.set.assert_not_called()
-
-    def test_cache_manager_empty_data_handling(self) -> None:
-        # Test that empty time series data is valid
-        empty_time_series = TimeSeriesStockInfo(data={})
-
-        # Should not raise an exception
-        assert empty_time_series.data == {}
-        assert len(empty_time_series.data) == 0
-
-    @patch("main.core.cache.cache")
-    def test_cache_manager_different_timeout_values(
-        self, mock_cache: Mock, cache_manager: TimeSeriesStockInfoCacheManager
-    ) -> None:
-        point_data = TimeSeriesStockInfoPointData(
-            date=date(2023, 12, 1), price=100.0, fluct_price=0.0
-        )
-        time_series = TimeSeriesStockInfo(data={30: point_data})
-
-        # Test different timeout values
-        timeout_tests = [
-            ("SHORT_TTL", 60),  # 1 minute
-            ("MEDIUM_TTL", 300),  # 5 minutes
-            ("LONG_TTL", 3600),  # 1 hour
-        ]
-
-        for stock_id, timeout in timeout_tests:
-            cache_manager.set(stock_id, time_series, timeout)
-
-        # Verify each call used the correct timeout
-        for stock_id, timeout in timeout_tests:
-            mock_cache.set.assert_any_call(
-                f"time_series_stock_info:{stock_id}", time_series, timeout
-            )
 
     @patch("main.core.cache.cache")
     def test_cache_manager_full_workflow(

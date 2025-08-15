@@ -6,11 +6,71 @@ from unittest.mock import Mock
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.http import HttpRequest
+from django.http import HttpRequest, QueryDict
 
 from main.account import AUTH_COOKIE_NAME, OAuthOrganization
 from main.account.models import User
-from main.account.views import change_google_binding, google_login, logout, me, update
+from main.account.views import (
+    change_google_binding,
+    get_authorization_url,
+    google_login,
+    logout,
+    me,
+    update,
+)
+
+
+@pytest.mark.django_db
+class TestGetAuthorizationUrlView:
+    @pytest.fixture
+    def request_obj(self) -> HttpRequest:
+        return HttpRequest()
+
+    @pytest.fixture
+    def mock_flow(self) -> Any:
+        mock = Mock()
+        mock.client_config = {"client_id": "test_client_id"}
+        mock.credentials = Mock()
+        mock.credentials.id_token = "test_id_token"
+        return mock
+
+    def test_get_authorization_url_success(
+        self, monkeypatch: Any, request_obj: HttpRequest, mock_flow: Any
+    ) -> None:
+        # Mock the Google OAuth flow
+        mock_flow_from_config = Mock(return_value=mock_flow)
+        mock_flow.authorization_url.return_value = ("https://auth.url", "state123")
+
+        monkeypatch.setattr(
+            "main.account.views.google_oauth_flow.Flow.from_client_config",
+            mock_flow_from_config,
+        )
+
+        request_obj.method = "GET"
+        # Set GET parameters using QueryDict
+        request_obj.GET = QueryDict("redirect_uri=https://example.com/callback")
+
+        response = get_authorization_url(request_obj)
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["authorization_url"] == "https://auth.url"
+        assert data["state"] == "state123"
+        mock_flow.authorization_url.assert_called_once_with(
+            include_granted_scopes="true"
+        )
+
+    def test_get_authorization_url_missing_redirect_uri(
+        self, request_obj: HttpRequest
+    ) -> None:
+        request_obj.method = "GET"
+        request_obj.GET = QueryDict("")
+
+        response = get_authorization_url(request_obj)
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["message"] == "redirect_uri is required"
 
 
 @pytest.mark.django_db
@@ -39,31 +99,6 @@ class TestGoogleLoginView:
             "name": "Test User",
             "picture": "https://example.com/avatar.jpg",
         }
-
-    def test_google_login_get_success(
-        self, monkeypatch: Any, request_obj: HttpRequest, mock_flow: Any
-    ) -> None:
-        # Mock the Google OAuth flow
-        mock_flow_from_config = Mock(return_value=mock_flow)
-        mock_flow.authorization_url.return_value = ("https://auth.url", "state123")
-
-        monkeypatch.setattr(
-            "main.account.views.google_oauth_flow.Flow.from_client_config",
-            mock_flow_from_config,
-        )
-
-        request_obj.method = "GET"
-        request_obj.GET = {"redirect_uri": "https://example.com/callback"}
-
-        response = google_login(request_obj)
-
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["authorization_url"] == "https://auth.url"
-        assert data["state"] == "state123"
-        mock_flow.authorization_url.assert_called_once_with(
-            include_granted_scopes="true"
-        )
 
     def test_google_login_post_success_new_user(
         self,
@@ -150,9 +185,11 @@ class TestGoogleLoginView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
-    def test_google_login_wrong_method(self, request_obj: HttpRequest) -> None:
+    def test_google_login_missing_code(self, request_obj: HttpRequest) -> None:
         request_obj.method = "POST"
-        request_obj.POST = {}
+        request_obj.POST = {
+            "redirect_uri": "https://example.com/callback"
+        }  # Missing code
 
         response = google_login(request_obj)
 

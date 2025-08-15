@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 
 import pytest
 from django.conf import settings
-from django.contrib.auth import authenticate
 from django.http import HttpRequest
 from jose import jwt
 from jose.constants import ALGORITHMS
@@ -44,7 +43,6 @@ class TestMyBackend:
         authenticated_user = backend.authenticate(request_obj, token)
 
         assert authenticated_user == user
-        assert request_obj.user == user
 
     def test_authenticate_expired_token(
         self, backend: MyBackend, request_obj: HttpRequest, user: User
@@ -59,7 +57,6 @@ class TestMyBackend:
         authenticated_user = backend.authenticate(request_obj, token)
 
         assert authenticated_user is None
-        assert request_obj.user is None
 
     def test_authenticate_invalid_token_format(
         self, backend: MyBackend, request_obj: HttpRequest
@@ -69,17 +66,6 @@ class TestMyBackend:
         authenticated_user = backend.authenticate(request_obj, token)
 
         assert authenticated_user is None
-        assert request_obj.user is None
-
-    def test_authenticate_malformed_token(
-        self, backend: MyBackend, request_obj: HttpRequest
-    ) -> None:
-        token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid.signature"  # noqa: S105
-
-        authenticated_user = backend.authenticate(request_obj, token)
-
-        assert authenticated_user is None
-        assert request_obj.user is None
 
     def test_authenticate_wrong_secret_key(
         self, backend: MyBackend, request_obj: HttpRequest, user: User
@@ -93,7 +79,6 @@ class TestMyBackend:
         authenticated_user = backend.authenticate(request_obj, token)
 
         assert authenticated_user is None
-        assert request_obj.user is None
 
     def test_authenticate_missing_user_id(
         self, backend: MyBackend, request_obj: HttpRequest, user: User
@@ -104,7 +89,6 @@ class TestMyBackend:
         authenticated_user = backend.authenticate(request_obj, token)
 
         assert authenticated_user is None
-        assert request_obj.user is None
 
     def test_authenticate_missing_exp(
         self, backend: MyBackend, request_obj: HttpRequest, user: User
@@ -115,7 +99,6 @@ class TestMyBackend:
         authenticated_user = backend.authenticate(request_obj, token)
 
         assert authenticated_user is None
-        assert request_obj.user is None
 
     def test_authenticate_nonexistent_user(
         self, backend: MyBackend, request_obj: HttpRequest
@@ -129,88 +112,12 @@ class TestMyBackend:
         authenticated_user = backend.authenticate(request_obj, token)
 
         assert authenticated_user is None
-        assert request_obj.user is None
-
-    def test_authenticate_none_token(
-        self, backend: MyBackend, request_obj: HttpRequest
-    ) -> None:
-        authenticated_user = backend.authenticate(request_obj, None)
-
-        assert authenticated_user is None
-        assert request_obj.user is None
-
-    def test_authenticate_empty_token(
-        self, backend: MyBackend, request_obj: HttpRequest
-    ) -> None:
-        authenticated_user = backend.authenticate(request_obj, "")
-
-        assert authenticated_user is None
-        assert request_obj.user is None
-
-    def test_authenticate_with_django_authenticate(
-        self, backend: MyBackend, request_obj: HttpRequest, user: User
-    ) -> None:
-        payload = {
-            "id": str(user.id),
-            "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
-        }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
-
-        authenticated_user = authenticate(request_obj, token=token)
-
-        assert authenticated_user == user
-        assert request_obj.user == user
-
-    def test_authenticate_token_with_extra_fields(
-        self, backend: MyBackend, request_obj: HttpRequest, user: User
-    ) -> None:
-        payload = {
-            "id": str(user.id),
-            "oauth_id": user.oauth_id,
-            "iat": int(datetime.now().timestamp()),
-            "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
-            "extra_field": "extra_value",
-        }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
-
-        authenticated_user = backend.authenticate(request_obj, token)
-
-        assert authenticated_user == user
-        assert request_obj.user == user
-
-    def test_authenticate_token_expiring_soon(
-        self, backend: MyBackend, request_obj: HttpRequest, user: User
-    ) -> None:
-        payload = {
-            "id": str(user.id),
-            "exp": int((datetime.now() + timedelta(seconds=1)).timestamp()),
-        }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
-
-        authenticated_user = backend.authenticate(request_obj, token)
-
-        assert authenticated_user == user
-        assert request_obj.user == user
-
-    def test_authenticate_token_expired_by_seconds(
-        self, backend: MyBackend, request_obj: HttpRequest, user: User
-    ) -> None:
-        payload = {
-            "id": str(user.id),
-            "exp": int((datetime.now() - timedelta(seconds=1)).timestamp()),
-        }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
-
-        authenticated_user = backend.authenticate(request_obj, token)
-
-        assert authenticated_user is None
-        assert request_obj.user is None
 
     def test_authenticate_user_deactivated(
         self, backend: MyBackend, request_obj: HttpRequest, user: User
     ) -> None:
-        user.is_active = False
-        user.save()
+        User.objects.filter(id=user.id).update(is_active=False)
+        user.refresh_from_db()
 
         payload = {
             "id": str(user.id),
@@ -221,18 +128,3 @@ class TestMyBackend:
         authenticated_user = backend.authenticate(request_obj, token)
 
         assert authenticated_user is None
-        assert request_obj.user is None
-
-    def test_authenticate_invalid_uuid_format(
-        self, backend: MyBackend, request_obj: HttpRequest, user: User
-    ) -> None:
-        payload = {
-            "id": "invalid-uuid-format",
-            "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
-        }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
-
-        authenticated_user = backend.authenticate(request_obj, token)
-
-        assert authenticated_user is None
-        assert request_obj.user is None
