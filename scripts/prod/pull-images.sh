@@ -8,15 +8,15 @@ check_env prod
 load_env_vars
 
 if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
-    printf "${RED}Usage: $0 <dev|prod>${RESET}\n"
+    printf "${RED} ✗ Usage: $0 <dev|prod>${RESET}\n" >&2
     exit 1
 fi
 
 echo "$DOCKER_ACCESS_TOKEN" | docker login --username "$DOCKER_USERNAME" --password-stdin
-remote_images=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/frontend:$1" "$DOCKER_USERNAME/scheduler:$1")
+REMOTE_IMAGES=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/frontend:$1" "$DOCKER_USERNAME/scheduler:$1")
 
-for image in "${remote_images[@]}"; do
+for image in "${REMOTE_IMAGES[@]}"; do
     docker pull "$image"
 done
 
-printf "${GREEN} ✔ All images pulled${RESET}\n"
+printf "${GREEN} ✔ All images pulled from the registry${RESET}\n"

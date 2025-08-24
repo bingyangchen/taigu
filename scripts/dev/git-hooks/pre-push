@@ -9,7 +9,7 @@ RESET='\033[0m'
 set -e
 
 if [ ! -d ".git" ]; then
-    printf "${RED}Wrong directory: $(pwd).${RESET}\n"
+    printf "${RED} ✗ Wrong directory: $(pwd).${RESET}\n" >&2
     exit 1
 fi
 

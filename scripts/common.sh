@@ -27,7 +27,7 @@ load_env_vars() {
 check_env() {
     load_env_vars
     if [ "$ENV" != "$1" ]; then
-        printf "${RED}This is a $1-only script, aborting...${RESET}\n"
+        printf "${RED} ✗ This is a $1-only script, aborting...${RESET}\n" >&2
         exit 1
     fi
 }
@@ -36,10 +36,18 @@ clear_screen() {
     clear && printf "\033[3J"
 }
 
+clear_current_line() {
+    printf "\r\033[K"
+}
+
+clear_previous_line() {
+    printf "\033[1A\r\033[K"
+}
+
 validate_service() {
     local service=$1
     if ! echo "${SERVICES[@]}" | grep -w "$service" >/dev/null; then
-        printf "${RED}Error: '$service' is not a valid service.\nMust be one of: ${SERVICES[*]}${RESET}\n"
+        printf "${RED} ✗ Error: '$service' is not a valid service.\nMust be one of: ${SERVICES[*]}${RESET}\n" >&2
         exit 1
     fi
 }
