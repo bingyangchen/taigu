@@ -7,11 +7,12 @@ source "$(dirname "$(realpath "$0")")/../common.sh"
 #       post-merge hook.
 
 check_env dev
-printf "${BLUE}Installing git hooks... ${RESET}"
+echo "Installing git hooks..."
 
 find .git/hooks -type f ! -name '*.sample' -delete
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 cp -R "$SCRIPT_DIR"/git-hooks/* .git/hooks/
 chmod +x .git/hooks/*
 
-printf "${GREEN}DONE${RESET}\n"
+clear_previous_line
+printf "${GREEN}Installing git hooks... ✔${RESET}\n"

@@ -66,12 +66,10 @@ services:
       - "5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh # This will be executed when the container starts
     environment:
-      - PGUSER=postgres
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres # for default, the application doesn't use this
-      - APP_DB=taigu
+      - POSTGRES_DB=taigu
     restart: unless-stopped
     logging:
       driver: "json-file"

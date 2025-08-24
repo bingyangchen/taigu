@@ -9,10 +9,8 @@ RESET='\033[0m'
 set -e
 
 if [ ! -d ".git" ]; then
-    printf "${RED}Wrong directory: $(pwd).${RESET}\n"
+    printf "${RED} ✗ Wrong directory: $(pwd).${RESET}\n" >&2
     exit 1
 fi
 
-printf "${BLUE}Updating git hooks...${RESET}\n"
 bash ./scripts/dev/install-git-hooks.sh
-printf "${GREEN} ✔ Git hooks updated${RESET}\n"

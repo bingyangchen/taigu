@@ -21,6 +21,10 @@ stop:
 restart:
 	$(SHELL) ./scripts/restart.sh
 
+.PHONY: restart-and-recycle
+restart-and-recycle:
+	$(SHELL) ./scripts/restart.sh --recycle
+
 .PHONY: shell-api-server
 shell-api-server:
 	$(SHELL) ./scripts/enter-shell.sh api-server

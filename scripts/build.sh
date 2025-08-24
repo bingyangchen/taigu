@@ -7,7 +7,7 @@ check_triggered_by_make
 load_env_vars
 
 if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
-    printf "${RED}Usage: $0 <dev|prod>${RESET}\n"
+    printf "${RED} ✗ Usage: $0 <dev|prod>${RESET}\n" >&2
     exit 1
 fi
 
