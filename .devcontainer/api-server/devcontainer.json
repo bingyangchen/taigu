@@ -1,7 +1,9 @@
 {
   "name": "API Server",
   "runArgs": [
-    "--name=taigu-devcontainer-api-server"
+    "--name=taigu-devcontainer-api-server",
+    "--env-file",
+    ".env"
   ],
   "image": "taigutw/api-server:dev",
   "workspaceFolder": "/app",
