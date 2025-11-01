@@ -1,3 +1,16 @@
+
+
+
+
+
+
+# THIS SCRIPT IS DEPRECATED. NOW WE USE CLOUDFLARE TO GENERATE THE SSL CERTIFICATE.
+
+
+
+
+
+
 #!/usr/bin/env bash
 
 set -e

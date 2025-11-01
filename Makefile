@@ -65,10 +65,6 @@ install-git-hooks:
 cert-dev:
 	$(SHELL) ./scripts/dev/cert.sh
 
-.PHONY: cert-prod
-cert-prod:
-	$(SHELL) ./scripts/prod/cert.sh
-
 .PHONY: push-images-dev
 push-images-dev:
 	$(SHELL) ./scripts/dev/push-images.sh dev
