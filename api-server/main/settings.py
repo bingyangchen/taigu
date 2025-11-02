@@ -14,6 +14,9 @@ DEBUG = env.ENV == Env.DEV
 
 ALLOWED_HOSTS = ["*"] if env.ENV == Env.DEV else ["api.taigu.tw"]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = (
+    ["https://localhost"] if env.ENV == Env.DEV else ["https://taigu.tw"]
+)
 
 CSRF_COOKIE_SAMESITE = "Strict"
 CSRF_COOKIE_SECURE = True
