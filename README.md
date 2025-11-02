@@ -14,13 +14,13 @@
 
 ```mermaid
 architecture-beta
-    group ec2(cloud)[EC2]
-    service db(database)[Relational Database] in ec2
-    service in_mem_cache(database)[In Memory Cache] in ec2
-    service api_server(server)[API Server] in ec2
-    service frontend(server)[Static File Server] in ec2
-    service reverse_proxy(server)[Reverse Proxy] in ec2
-    service scheduler(server)[Scheduler] in ec2
+    group localhost(server)[Localhost]
+    service db(database)[Relational Database] in localhost
+    service in_mem_cache(database)[In Memory Cache] in localhost
+    service api_server(server)[API Server] in localhost
+    service frontend(server)[Static File Server] in localhost
+    service reverse_proxy(server)[Reverse Proxy] in localhost
+    service scheduler(server)[Scheduler] in localhost
     service internet(internet)[Internet]
 
     internet:B --> T:reverse_proxy
@@ -36,7 +36,7 @@ architecture-beta
 
 ```mermaid
 architecture-beta
-    group ec2(cloud)[EC2]
+    group ec2(cloud)[AWS EC2]
     service db(database)[Relational Database] in ec2
     service in_mem_cache(database)[In Memory Cache] in ec2
     service api_server(server)[API Server] in ec2
