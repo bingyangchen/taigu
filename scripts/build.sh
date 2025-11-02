@@ -11,19 +11,28 @@ if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
     exit 1
 fi
 
-arch=$(uname -m)
-
-for service in api-server frontend scheduler; do
-    echo "Building $service..."
-    cd ./$service
-    if [ "$1" == "prod" ]; then
+if [ "$1" == "prod" ]; then
+    for service in api-server scheduler; do
+        echo "Building $service..."
+        cd ./$service
         docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final \
             -f ./Dockerfile --platform linux/x86_64 .
-    else
-        docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final \
-            -f ./Dockerfile --platform linux/$arch .
-    fi
-    cd ..
-done
+        cd ..
+    done
+else
+    arch=$(uname -m)
+    for service in api-server frontend scheduler; do
+        echo "Building $service..."
+        cd ./$service
+        if [ "$1" == "prod" ]; then
+            docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final \
+                -f ./Dockerfile --platform linux/x86_64 .
+        else
+            docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final \
+                -f ./Dockerfile --platform linux/$arch .
+        fi
+        cd ..
+    done
+fi
 
 printf "${GREEN} ✔ All images built${RESET}\n"

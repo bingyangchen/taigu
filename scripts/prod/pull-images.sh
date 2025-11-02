@@ -13,9 +13,14 @@ if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
 fi
 
 echo "$DOCKER_ACCESS_TOKEN" | docker login --username "$DOCKER_USERNAME" --password-stdin
-REMOTE_IMAGES=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/frontend:$1" "$DOCKER_USERNAME/scheduler:$1")
 
-for image in "${REMOTE_IMAGES[@]}"; do
+if [ "$1" == "prod" ]; then
+    remote_images=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/scheduler:$1")
+else
+    remote_images=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/frontend:$1" "$DOCKER_USERNAME/scheduler:$1")
+fi
+
+for image in "${remote_images[@]}"; do
     docker pull "$image"
 done
 
