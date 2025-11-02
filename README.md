@@ -206,9 +206,10 @@ cp example.env .env
 
 # [ACTION REQUIRED] Update ~/taigu/.env
 
-make cert-prod
+# For running docker commands without sudo
 sudo usermod -aG docker $USER
 newgrp docker
+
 make pull-images-prod
 sudo timedatectl set-timezone Asia/Taipei
 make start

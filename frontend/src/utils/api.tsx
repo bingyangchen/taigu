@@ -16,6 +16,10 @@ export default class Api {
     return null;
   }
 
+  private static deleteCookie(name: string): void {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.taigu.tw`;
+  }
+
   public static async sendRequest(
     endpoint: string,
     method: string,
@@ -61,6 +65,7 @@ export default class Api {
   private static async handleResponse(response: Response): Promise<any> {
     if (response.status === 404) Nav.goTo404Page();
     else if ([401, 403].includes(response.status)) {
+      if (response.status === 403) Api.deleteCookie("csrftoken");
       const url = new URL(response.url);
       if (url.pathname !== "/api/account/logout") {
         await Api.sendRequest("account/logout", "get");
