@@ -20,7 +20,7 @@ CORS_ALLOWED_ORIGINS = (
 
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_DOMAIN = ".taigu.tw"
+CSRF_COOKIE_DOMAIN = None if env.ENV == Env.DEV else ".taigu.tw"
 CSRF_TRUSTED_ORIGINS = (
     ["https://localhost"] if env.ENV == Env.DEV else ["https://taigu.tw"]
 )
