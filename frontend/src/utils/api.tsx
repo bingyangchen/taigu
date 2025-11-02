@@ -18,6 +18,7 @@ export default class Api {
 
   private static deleteCookie(name: string): void {
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.taigu.tw`;
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
   }
 
   public static async sendRequest(
