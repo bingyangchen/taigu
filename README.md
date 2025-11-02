@@ -40,16 +40,18 @@ architecture-beta
     service db(database)[Relational Database] in ec2
     service in_mem_cache(database)[In Memory Cache] in ec2
     service api_server(server)[API Server] in ec2
-    service frontend(server)[Static File Server] in ec2
     service reverse_proxy(server)[Reverse Proxy] in ec2
     service scheduler(server)[Scheduler] in ec2
     service internet(internet)[Internet]
     service cloudflare(cloud)[Cloudflare]
+    service cloudflare_pages(server)[Cloudflare Pages]
+    service github(server)[GitHub]
 
     internet:B --> T:cloudflare
+    cloudflare:L --> R:cloudflare_pages
+    cloudflare_pages:B --> T:github
     cloudflare:B --> T:reverse_proxy
     reverse_proxy:R --> L:api_server
-    reverse_proxy:L --> R:frontend
     api_server:R --> L:db
     api_server:B --> L:in_mem_cache
     scheduler:L --> R:db

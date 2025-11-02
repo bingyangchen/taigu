@@ -12,7 +12,12 @@ if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
 fi
 
 echo "$DOCKER_ACCESS_TOKEN" | docker login --username "$DOCKER_USERNAME" --password-stdin
-local_images=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/frontend:$1" "$DOCKER_USERNAME/scheduler:$1")
+
+if [ "$1" == "prod" ]; then
+    local_images=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/scheduler:$1")
+else
+    local_images=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/frontend:$1" "$DOCKER_USERNAME/scheduler:$1")
+fi
 
 for image in "${local_images[@]}"; do
     if ! docker image inspect "$image" >/dev/null 2>&1; then
