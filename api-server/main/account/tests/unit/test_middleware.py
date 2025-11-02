@@ -11,6 +11,7 @@ from jose.constants import ALGORITHMS
 from main.account import AUTH_COOKIE_NAME, OAuthOrganization
 from main.account.middleware import check_login_status_middleware
 from main.account.models import User
+from main.env import Env, env
 
 
 @pytest.mark.django_db
@@ -183,7 +184,9 @@ class TestCheckLoginStatusMiddleware:
         assert AUTH_COOKIE_NAME in response.cookies
         cookie = response.cookies[AUTH_COOKIE_NAME]
         assert cookie.value == token
-        assert cookie["max-age"] == 259200
+        assert cookie["max-age"] == 432_000
         assert cookie["secure"] is True
         assert cookie["httponly"] is True
-        assert cookie["samesite"] == "Strict"
+        assert cookie["samesite"] == "None" if env.ENV == Env.PROD else "Strict"
+        if env.ENV == Env.PROD:
+            assert cookie["domain"] == "taigu.tw"
