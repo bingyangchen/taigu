@@ -14,8 +14,9 @@ from jose import jwt
 from jose.constants import ALGORITHMS
 from pydantic import BaseModel
 
-from main.account import AUTH_COOKIE_NAME, OAuthOrganization
+from main.account import OAuthOrganization
 from main.account.models import User
+from main.account.utils import delete_auth_cookie, set_auth_cookie
 from main.core.decorators import require_login
 from main.env import env
 
@@ -112,14 +113,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
     )
     request.user = user  # type: ignore
     response = JsonResponse({}, headers={"is-log-in": "yes"})
-    response.set_cookie(
-        AUTH_COOKIE_NAME,
-        value=_make_jwt(str(user.id)),
-        max_age=JWT_COOKIE_MAX_AGE,
-        secure=True,
-        httponly=True,
-        samesite="Strict",
-    )
+    response = set_auth_cookie(response, _make_jwt(str(user.id)))
     return response
 
 
@@ -161,14 +155,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
         },
         headers={"is-log-in": "yes"},
     )
-    response.set_cookie(
-        AUTH_COOKIE_NAME,
-        value=_make_jwt(str(user.id)),
-        max_age=JWT_COOKIE_MAX_AGE,
-        secure=True,
-        httponly=True,
-        samesite="Strict",
-    )
+    response = set_auth_cookie(response, _make_jwt(str(user.id)))
     return response
 
 
@@ -189,7 +176,7 @@ def me(request: HttpRequest) -> JsonResponse:
 @require_login
 def logout(request: HttpRequest) -> JsonResponse:
     response = JsonResponse({}, headers={"is-log-out": "yes"})
-    response.delete_cookie(AUTH_COOKIE_NAME)
+    response = delete_auth_cookie(response)
     return response
 
 
