@@ -152,7 +152,13 @@ export default class Welcome extends React.Component<Props, State> {
             </div>
           </div>
           <div className={styles.iphone}>
-            <video className={styles.demo_video} src={demoManyStocks} autoPlay muted />
+            <video
+              className={styles.demo_video}
+              src={demoManyStocks}
+              autoPlay
+              muted
+              loop
+            />
           </div>
         </div>
         <div className={`${styles.slide} ${styles.five}`}>
