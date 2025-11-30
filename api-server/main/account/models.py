@@ -1,7 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db import models
+from django.db.models import BooleanField, CharField, EmailField, UUIDField
 
 from main.account import OAuthOrganization
 
@@ -12,7 +12,6 @@ class UserManager(BaseUserManager):
         oauth_org: str,
         oauth_id: str,
         email: str,
-        is_staff: bool = False,
         is_superuser: bool = False,
         **extra_fields,  # noqa: ANN003
     ) -> "User":
@@ -22,7 +21,6 @@ class UserManager(BaseUserManager):
             oauth_org=oauth_org,
             oauth_id=oauth_id,
             email=email,
-            is_staff=is_staff,
             is_superuser=is_superuser,
             **extra_fields,
         )
@@ -36,21 +34,22 @@ class UserManager(BaseUserManager):
         email: str,
         **extra_fields,  # noqa: ANN003
     ) -> "User":
-        return self.create_user(oauth_org, oauth_id, email, True, True, **extra_fields)
+        return self.create_user(oauth_org, oauth_id, email, True, **extra_fields)
 
 
 class User(AbstractUser):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    oauth_org = models.CharField(max_length=8, choices=OAuthOrganization.CHOICES)
-    oauth_id = models.CharField(max_length=64, db_index=True)
-    email = models.EmailField(max_length=256, unique=True)
-    username = models.CharField(max_length=64)
-    avatar_url = models.CharField(max_length=2048, blank=True, null=True)
-    is_active = models.BooleanField(db_default=True)  # type: ignore
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    oauth_org = CharField(max_length=8, choices=OAuthOrganization.CHOICES)
+    oauth_id = CharField(max_length=64)
+    email = EmailField(max_length=256, unique=True)
+    username = CharField(max_length=64)
+    avatar_url = CharField(max_length=2048, blank=True, null=True)
+    is_active = BooleanField(db_default=True)  # type: ignore
 
     # Remove default attributes of AbstracUser
     first_name = None
     last_name = None
+    is_staff = None
 
     objects = UserManager()
 

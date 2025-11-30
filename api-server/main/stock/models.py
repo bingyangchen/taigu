@@ -5,7 +5,21 @@ from typing import Any
 
 import requests
 import urllib3
-from django.db import models
+from django.db.models import (
+    CASCADE,
+    PROTECT,
+    BigIntegerField,
+    CharField,
+    DateField,
+    DateTimeField,
+    FloatField,
+    ForeignKey,
+    Manager,
+    Model,
+    OneToOneField,
+    PositiveSmallIntegerField,
+    TextField,
+)
 from pyquery import PyQuery
 
 from main.account.models import User
@@ -15,7 +29,7 @@ from main.stock import Frequency, ThirdPartyApi, TradeType, UnknownStockIdError
 logger = logging.getLogger(__name__)
 
 
-class CompanyManager(models.Manager):
+class CompanyManager(Manager):
     def get_or_create(
         self,
         defaults: MutableMapping[str, Any] | None = None,
@@ -83,11 +97,11 @@ class CompanyManager(models.Manager):
             raise UnknownStockIdError(f"Unknown Stock ID: {sid}")
 
 
-class Company(models.Model):
-    stock_id = models.CharField(max_length=32, primary_key=True)
-    name = models.CharField(max_length=32)
-    trade_type = models.CharField(max_length=4, choices=TradeType.CHOICES, null=True)
-    business = models.TextField(db_default="")
+class Company(Model):
+    stock_id = CharField(max_length=32, primary_key=True)
+    name = CharField(max_length=32)
+    trade_type = CharField(max_length=4, choices=TradeType.CHOICES, null=True)
+    business = TextField(db_default="")
 
     objects = CompanyManager()
 
@@ -99,13 +113,13 @@ class Company(models.Model):
 
 
 class StockInfo(CreateUpdateDateModel):
-    company: Company = models.OneToOneField(  # type: ignore
-        Company, on_delete=models.CASCADE, related_name="stock_info", db_index=True
+    company: Company = OneToOneField(  # type: ignore
+        Company, on_delete=CASCADE, related_name="stock_info", db_index=True
     )
-    date = models.DateField(db_index=True)
-    quantity = models.BigIntegerField()
-    close_price = models.FloatField()
-    fluct_price = models.FloatField()
+    date = DateField(db_index=True)
+    quantity = BigIntegerField()
+    close_price = FloatField()
+    fluct_price = FloatField()
 
     class Meta:
         db_table = "stock_info"
@@ -115,11 +129,11 @@ class StockInfo(CreateUpdateDateModel):
 
 
 class MarketIndexPerMinute(CreateUpdateDateModel):
-    market = models.CharField(max_length=4, choices=TradeType.CHOICES, db_index=True)
-    date = models.DateField(db_index=True)
-    number = models.PositiveSmallIntegerField(db_index=True)
-    price = models.FloatField()
-    fluct_price = models.FloatField()
+    market = CharField(max_length=4, choices=TradeType.CHOICES)
+    date = DateField(db_index=True)
+    number = PositiveSmallIntegerField(db_index=True)
+    price = FloatField()
+    fluct_price = FloatField()
 
     class Meta:
         db_table = "market_index_per_minute"
@@ -127,13 +141,13 @@ class MarketIndexPerMinute(CreateUpdateDateModel):
 
 
 class History(CreateUpdateDateModel):
-    company: Company = models.ForeignKey(  # type: ignore
-        Company, on_delete=models.CASCADE, related_name="history", db_index=True
+    company: Company = ForeignKey(  # type: ignore
+        Company, on_delete=CASCADE, related_name="history", db_index=False
     )
-    frequency = models.CharField(max_length=8, choices=Frequency.CHOICES, db_index=True)
-    date = models.DateField(db_index=True)
-    quantity = models.BigIntegerField()
-    close_price = models.FloatField()
+    frequency = CharField(max_length=8, choices=Frequency.CHOICES, db_index=True)
+    date = DateField(db_index=True)
+    quantity = BigIntegerField()
+    close_price = FloatField()
 
     class Meta:
         db_table = "history"
@@ -144,12 +158,12 @@ class History(CreateUpdateDateModel):
 
 
 class MaterialFact(CreateUpdateDateModel):
-    company: Company = models.ForeignKey(  # type: ignore
-        Company, on_delete=models.CASCADE, related_name="material_facts", db_index=True
+    company: Company = ForeignKey(  # type: ignore
+        Company, on_delete=CASCADE, related_name="material_facts", db_index=False
     )
-    date_time = models.DateTimeField()
-    title = models.TextField(db_default="")
-    description = models.TextField(db_default="")
+    date_time = DateTimeField()
+    title = TextField(db_default="")
+    description = TextField(db_default="")
 
     class Meta:
         db_table = "material_fact"
@@ -160,16 +174,14 @@ class MaterialFact(CreateUpdateDateModel):
 
 
 class TradeRecord(CreateUpdateDateModel):
-    owner: User = models.ForeignKey(  # type: ignore
-        User, on_delete=models.CASCADE, related_name="trade_records", db_index=True
+    owner: User = ForeignKey(  # type: ignore
+        User, on_delete=CASCADE, related_name="trade_records", db_index=True
     )
-    company: Company = models.ForeignKey(  # type: ignore
-        Company, on_delete=models.PROTECT
-    )
-    deal_time = models.DateField()
-    deal_price = models.FloatField()
-    deal_quantity = models.BigIntegerField()
-    handling_fee = models.BigIntegerField()
+    company: Company = ForeignKey(Company, on_delete=PROTECT, db_index=True)  # type: ignore
+    deal_time = DateField()
+    deal_price = FloatField()
+    deal_quantity = BigIntegerField()
+    handling_fee = BigIntegerField()
 
     class Meta:
         db_table = "trade_record"
@@ -179,17 +191,15 @@ class TradeRecord(CreateUpdateDateModel):
 
 
 class CashDividendRecord(CreateUpdateDateModel):
-    owner: User = models.ForeignKey(  # type: ignore
+    owner: User = ForeignKey(  # type: ignore
         User,
-        on_delete=models.CASCADE,
+        on_delete=CASCADE,
         related_name="cash_dividend_records",
         db_index=True,
     )
-    company: Company = models.ForeignKey(  # type: ignore
-        Company, on_delete=models.PROTECT
-    )
-    deal_time = models.DateField()
-    cash_dividend = models.BigIntegerField()
+    company: Company = ForeignKey(Company, on_delete=PROTECT, db_index=True)  # type: ignore
+    deal_time = DateField()
+    cash_dividend = BigIntegerField()
 
     class Meta:
         db_table = "cash_dividend_record"
