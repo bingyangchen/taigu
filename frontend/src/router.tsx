@@ -1,38 +1,33 @@
 import React from "react";
 import {
+  createBrowserRouter,
+  createRoutesFromElements,
   Location,
   NavigateFunction,
   Params,
   Route,
-  createBrowserRouter,
-  createRoutesFromElements,
   useLocation,
   useNavigate,
   useParams,
   useSearchParams,
 } from "react-router-dom";
 
-import Env from "./utils/env";
-
-// layer one
 import Login from "./pages/Login/Login";
-import Main from "./pages/Main/Main";
-import NotFound from "./pages/NotFound/NotFound";
-import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy";
-import Settings from "./pages/Settings/Settings";
-import TermsOfService from "./pages/TermsOfService/TermsOfService";
-import Welcome from "./pages/Welcome/Welcome";
-
-// layer two
 import Details from "./pages/Main/Details/Details";
 import Home from "./pages/Main/Home/Home";
+import Main from "./pages/Main/Main";
 import Market from "./pages/Main/Market/Market";
 import Plans from "./pages/Main/Plans/Plans";
 import Records from "./pages/Main/Records/Records";
-// import DeleteAccount from "./pages/Settings/DeleteAccount/DeleteAccount";
+import NotFound from "./pages/NotFound/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy";
 import AccountBinding from "./pages/Settings/AccountBinding/AccountBinding";
 import Overview from "./pages/Settings/Overview/Overview";
+import Settings from "./pages/Settings/Settings";
 import UserInfo from "./pages/Settings/UserInfo/UserInfo";
+import TermsOfService from "./pages/TermsOfService/TermsOfService";
+import Welcome from "./pages/Welcome/Welcome";
+import Env from "./utils/env";
 
 export const settingsPagePath = "settings";
 
@@ -45,7 +40,6 @@ const myRouter = createBrowserRouter(
         <Route path="" element={<Overview />}></Route>
         <Route path="user-info" element={<UserInfo />}></Route>
         <Route path="account-binding" element={<AccountBinding />}></Route>
-        {/* <Route path="delete-account" element={<DeleteAccount />} /> */}
       </Route>
       <Route path="" element={<Main />}>
         <Route path="" element={<Home />}></Route>
@@ -55,7 +49,6 @@ const myRouter = createBrowserRouter(
         <Route path="market/holding/:sid" element={<Details />} />
         <Route path="market/favorites/:sid" element={<Details />} />
         <Route path="plans" element={<Plans />}></Route>
-        {/* <Route path="tools" element={<ExternalApps />} /> */}
       </Route>
       <Route path="privacy-policy" element={<PrivacyPolicy />}></Route>
       <Route path="terms-of-service" element={<TermsOfService />}></Route>
@@ -77,7 +70,7 @@ export interface IRouter {
 }
 
 export function withRouter<T extends IRouter>(Component: React.ComponentType<T>) {
-  return (props: Omit<T, keyof IRouter>) => {
+  const WrappedComponent = (props: Omit<T, keyof IRouter>) => {
     const location = useLocation();
     const navigate = useNavigate();
     const params = useParams();
@@ -89,4 +82,6 @@ export function withRouter<T extends IRouter>(Component: React.ComponentType<T>)
       />
     );
   };
+  WrappedComponent.displayName = `withRouter(${Component.displayName ?? Component.name ?? "Component"})`;
+  return WrappedComponent;
 }

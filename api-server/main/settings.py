@@ -17,7 +17,6 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = (
     ["https://localhost"] if env.ENV == Env.DEV else ["https://taigu.tw"]
 )
-
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_DOMAIN = None if env.ENV == Env.DEV else ".taigu.tw"
@@ -78,14 +77,6 @@ AUTHENTICATION_BACKENDS = [
     "main.account.backends.MyBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
-]
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Taipei"
@@ -97,12 +88,7 @@ if env.SQL_LOG:
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
-        "handlers": {
-            "console": {
-                "level": "DEBUG",
-                "class": "logging.StreamHandler",
-            },
-        },
+        "handlers": {"console": {"level": "DEBUG", "class": "logging.StreamHandler"}},
         "loggers": {
             "django.db.backends": {
                 "handlers": ["console"],
