@@ -90,7 +90,7 @@ export default class Welcome extends React.Component<Props, State> {
             <img src={logo} alt="" className={styles.logo} />
             <div className={styles.middle}>
               <div className={styles.top}>Taigu</div>
-              <div className={styles.bottom}>你最佳的投資記帳幫手</div>
+              <div className={styles.bottom}>專為台股設計，你的專業記帳幫手</div>
             </div>
             <Link to={`${Env.frontendRootPath}login`} className={styles.cta_button}>
               <Button className="white l">搶先體驗</Button>
@@ -98,7 +98,7 @@ export default class Welcome extends React.Component<Props, State> {
           </div>
         )}
         <div className={`${styles.slide} ${styles.one}`}>
-          <h1 className={styles.title}>Taigu helps you trade smartly.</h1>
+          <h1 className={styles.title}>Taigu：一款適合學生和上班族的股票記帳軟體</h1>
           <div className={styles.subtitle}>
             <h2>專為投資記帳而生</h2>
             <h2>帶你看見更全面的績效數據</h2>
@@ -129,7 +129,7 @@ export default class Welcome extends React.Component<Props, State> {
             <div className={styles.inner}>
               <div className={this.getCaptionClass(0)}>介面簡潔乾淨</div>
               <div className={this.getCaptionClass(1)}>圖表一目了然</div>
-              <div className={this.getCaptionClass(2)}>操作近乎直覺</div>
+              <div className={this.getCaptionClass(2)}>操作流暢直覺</div>
             </div>
           </div>
         </div>
@@ -163,8 +163,8 @@ export default class Welcome extends React.Component<Props, State> {
         </div>
         <div className={`${styles.slide} ${styles.five}`}>
           <div className={styles.title}>
-            適用於<span className={styles.blue}>各種裝置</span>
-            <span className={styles.star}>✦</span>
+            <div className={styles.blue}>隨時隨地，</div>
+            <div>跨裝置無縫接軌您的投資管理。</div>
           </div>
           <img src={crossPlatform} alt="" />
         </div>
@@ -173,14 +173,17 @@ export default class Welcome extends React.Component<Props, State> {
           <hr />
           <div className={styles.title}>保證安全</div>
           <div className={styles.subtitle}>
-            我們以最高標準的加密技術和嚴謹的安全措施，全力守護您的資料安全。
+            我們以最高標準的加密技術和嚴謹的安全措施，您的每一筆交易資料我們皆全力守護。
           </div>
         </div>
         <div className={`${styles.slide} ${styles.seven}`}>
           <img src={logo} alt="" className={styles.logo} />
-          <div className={styles.title}>開始嶄新的投資記帳體驗！</div>
+          <div className={styles.title_wrapper}>
+            <h2 className={styles.title}>你該不會還在用 Excel 記錄投資績效吧？</h2>
+            <h2 className={styles.title}>使用 Taigu 開始你嶄新的台股投資記帳體驗！</h2>
+          </div>
           <Link to={`${Env.frontendRootPath}login`}>
-            <Button className="primary_fill xl">開始免費體驗</Button>
+            <Button className="white bold border xl">立即免費體驗</Button>
           </Link>
         </div>
         <footer className={styles.footer}>
@@ -193,6 +196,18 @@ export default class Welcome extends React.Component<Props, State> {
             </Link>
             <Link to="/terms-of-service" target={Util.isMobile ? "_self" : "_blank"}>
               服務條款
+            </Link>
+            <Link
+              to="https://github.com/bingyangchen/taigu"
+              target={Util.isMobile ? "_self" : "_blank"}
+            >
+              開源程式碼
+            </Link>
+            <Link
+              to="https://github.com/bingyangchen/taigu/issues"
+              target={Util.isMobile ? "_self" : "_blank"}
+            >
+              問題回報
             </Link>
           </div>
           <hr />

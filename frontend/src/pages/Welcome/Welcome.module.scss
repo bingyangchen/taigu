@@ -365,14 +365,14 @@
         max-width: 800px;
         & > .title {
           width: fit-content;
-          font-size: 2.8 * _.$base-font-size;
+          font-size: 3.4 * _.$base-font-size;
           font-weight: 600;
           text-align: center;
           @media (min-width: _.$width-780) and (max-width: _.$width-1280) {
-            font-size: 2.5 * _.$base-font-size;
+            font-size: 3 * _.$base-font-size;
           }
           @media (max-width: _.$width-780) {
-            font-size: 2 * _.$base-font-size;
+            font-size: 2.5 * _.$base-font-size;
             letter-spacing: 0px;
           }
           & > .red {
@@ -426,8 +426,8 @@
       }
       & > .title {
         display: flex;
+        flex-direction: column;
         justify-content: center;
-        align-items: center;
         flex-grow: 1;
         margin: auto;
         padding: 0 0 30px 40px;
@@ -437,26 +437,15 @@
           font-size: 3 * _.$base-font-size;
         }
         @media (min-width: _.$width-780) and (max-width: _.$width-1024) {
-          padding: 0 0 50px 0;
+          padding: 0 30px 50px 30px;
         }
         @media (max-width: _.$width-780) {
           font-size: 2.5 * _.$base-font-size;
           letter-spacing: 0px;
-          padding: 0 0 50px 0;
+          padding: 0 30px 50px 30px;
         }
         & > .blue {
           color: _.$blue;
-        }
-        & > .star {
-          color: _.$blue;
-          font-size: 2 * _.$base-font-size;
-          padding-left: 5px;
-          @media (min-width: _.$width-1024) and (max-width: _.$width-1280) {
-            font-size: 1.8 * _.$base-font-size;
-          }
-          @media (max-width: _.$width-780) {
-            font-size: 1.5 * _.$base-font-size;
-          }
         }
       }
       & > img {
@@ -500,7 +489,7 @@
       & > .subtitle {
         color: _.$gray;
         margin: 20px 0;
-        line-height: 1.5rem;
+        line-height: 1.8rem;
         text-align: center;
         max-width: 600px;
         font-size: 1.1 * _.$base-font-size;
@@ -531,23 +520,30 @@
         border-radius: 12px;
         z-index: 1;
       }
-      & > .title {
-        font-size: 3.2 * _.$base-font-size;
-        letter-spacing: 2.5 * _.$base-letter-spacing;
-        margin-bottom: 50px;
-        color: _.$noisy-white;
-        font-weight: 600;
-        text-shadow: 0 0 10px _.$semi-transparent-black;
+      & > .title_wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         z-index: 1;
-        @media (min-width: _.$width-780) and (max-width: _.$width-1280) {
-          font-size: 2.5 * _.$base-font-size;
-        }
-        @media (min-width: _.$width-512) and (max-width: _.$width-780) {
-          font-size: 2.5 * _.$base-font-size;
-        }
-        @media (max-width: _.$width-512) {
-          font-size: 1.8 * _.$base-font-size;
-          letter-spacing: 2 * _.$base-letter-spacing;
+        margin: 30px 0;
+        & > .title {
+          font-size: 3.2 * _.$base-font-size;
+          letter-spacing: 2.5 * _.$base-letter-spacing;
+          line-height: 5rem;
+          margin: 0px;
+          color: _.$noisy-white;
+          font-weight: 600;
+          text-shadow: 0 0 10px _.$semi-transparent-black;
+          @media (min-width: _.$width-780) and (max-width: _.$width-1280) {
+            font-size: 2.5 * _.$base-font-size;
+          }
+          @media (min-width: _.$width-512) and (max-width: _.$width-780) {
+            font-size: 2.5 * _.$base-font-size;
+          }
+          @media (max-width: _.$width-512) {
+            font-size: 1.8 * _.$base-font-size;
+            letter-spacing: 2 * _.$base-letter-spacing;
+          }
         }
       }
     }
