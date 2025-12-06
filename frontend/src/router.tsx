@@ -12,9 +12,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 
-// layer one
 import Login from "./pages/Login/Login";
-// layer two
 import Details from "./pages/Main/Details/Details";
 import Home from "./pages/Main/Home/Home";
 import Main from "./pages/Main/Main";
@@ -23,7 +21,6 @@ import Plans from "./pages/Main/Plans/Plans";
 import Records from "./pages/Main/Records/Records";
 import NotFound from "./pages/NotFound/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy";
-// import DeleteAccount from "./pages/Settings/DeleteAccount/DeleteAccount";
 import AccountBinding from "./pages/Settings/AccountBinding/AccountBinding";
 import Overview from "./pages/Settings/Overview/Overview";
 import Settings from "./pages/Settings/Settings";
@@ -43,7 +40,6 @@ const myRouter = createBrowserRouter(
         <Route path="" element={<Overview />}></Route>
         <Route path="user-info" element={<UserInfo />}></Route>
         <Route path="account-binding" element={<AccountBinding />}></Route>
-        {/* <Route path="delete-account" element={<DeleteAccount />} /> */}
       </Route>
       <Route path="" element={<Main />}>
         <Route path="" element={<Home />}></Route>
@@ -53,7 +49,6 @@ const myRouter = createBrowserRouter(
         <Route path="market/holding/:sid" element={<Details />} />
         <Route path="market/favorites/:sid" element={<Details />} />
         <Route path="plans" element={<Plans />}></Route>
-        {/* <Route path="tools" element={<ExternalApps />} /> */}
       </Route>
       <Route path="privacy-policy" element={<PrivacyPolicy />}></Route>
       <Route path="terms-of-service" element={<TermsOfService />}></Route>
