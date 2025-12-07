@@ -167,10 +167,6 @@ const chartDataHelper = (
   while (datesToProcess.length > 0) {
     const solvingDateString = datesToProcess.shift();
     if (!solvingDateString) break;
-    const solvingDate = new Date(
-      solvingDateString.split("-").map((e) => parseInt(e)) as any,
-    );
-    solvingDate.setHours(0, 0, 0, 0);
 
     const solvingRecords = remainingRecords.filter(
       (record) => record.deal_time === solvingDateString,
@@ -182,7 +178,7 @@ const chartDataHelper = (
     currentStockWarehouse = updateStockWarehouse(solvingRecords, currentStockWarehouse);
 
     result.push([
-      solvingDate.toLocaleDateString(), // convert to string for redux serialization problem
+      solvingDateString,
       0, // dummy
       Math.round(getTotalCashInvested(currentStockWarehouse)),
       solvingRecords.reduce((a, b) => a + b.deal_price * Math.abs(b.deal_quantity), 0),
