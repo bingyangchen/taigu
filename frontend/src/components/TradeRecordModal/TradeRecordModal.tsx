@@ -1,15 +1,13 @@
-import styles from "./TradeRecordModal.module.scss";
-
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { LabeledInput, Modal } from "..";
-import { IconToggleOn } from "../../icons";
+import { LabeledInput, Modal } from "../../components";
 import { fetchSingleStockInfo } from "../../redux/slices/StockInfoSlice";
 import { createRecord, updateRecord } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { TradeRecord } from "../../types";
 import Util from "../../utils/util";
+import styles from "./TradeRecordModal.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.tradeRecord;
@@ -52,7 +50,7 @@ class TradeRecordModal extends React.Component<Props, State> {
       this.state = {
         recordId: null,
         dealTime: new Date().toLocaleDateString("af"),
-        sid: props.defaultSid || "",
+        sid: props.defaultSid ?? "",
         dealPrice: NaN,
         isBuying: true,
         absDealQuantity: NaN,
@@ -94,7 +92,7 @@ class TradeRecordModal extends React.Component<Props, State> {
             title="證券代號"
             value={this.state.sid}
             onChange={(sid: string) => this.setState({ sid: sid })}
-            autoFocus={!Boolean(this.state.sid)}
+            autoFocus={!this.state.sid}
           />
           <div className={styles.row}>
             <LabeledInput
@@ -117,14 +115,18 @@ class TradeRecordModal extends React.Component<Props, State> {
             />
             <div className={styles.buy_or_sell}>
               <span>買</span>
-              <span
-                className={`${styles.toggle_outer} ${
+              <button
+                type="button"
+                role="switch"
+                aria-checked={this.state.isBuying}
+                aria-label={this.state.isBuying ? "買" : "賣"}
+                className={`${styles.switch} ${
                   this.state.isBuying ? styles.buy : styles.sell
                 }`}
                 onClick={this.handleClickToggle}
               >
-                <IconToggleOn sideLength="28" />
-              </span>
+                <span className={styles.switch_thumb} />
+              </button>
               <span>賣</span>
             </div>
             <LabeledInput
@@ -190,7 +192,7 @@ class TradeRecordModal extends React.Component<Props, State> {
   }
   private handleClickToggle = (): void => {
     this.setState(
-      (state, props) => {
+      (state) => {
         return { isBuying: !state.isBuying };
       },
       () => {

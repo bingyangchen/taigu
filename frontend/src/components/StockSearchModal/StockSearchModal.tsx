@@ -1,15 +1,14 @@
-import styles from "./StockSearchModal.module.scss";
-
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { DollarSign, Modal, SearchKeywordInput } from "..";
+import { DollarSign, Modal, SearchKeywordInput } from "../../components";
 import type { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import type { StockInfo, TradePlan } from "../../types";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
 import Util from "../../utils/util";
+import styles from "./StockSearchModal.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.tradePlan;

@@ -1,10 +1,9 @@
-import styles from "./BottomSheet.module.scss";
-
 import React, { MouseEvent, MouseEventHandler } from "react";
 import ReactDOM from "react-dom";
 
 import { IRouter, withRouter } from "../../router";
 import Util from "../../utils/util";
+import styles from "./BottomSheet.module.scss";
 
 interface Props extends IRouter {
   children?: React.ReactNode;

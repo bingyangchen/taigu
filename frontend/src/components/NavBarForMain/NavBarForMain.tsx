@@ -1,14 +1,13 @@
-import styles from "./NavBarForMain.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 import { NavLink } from "react-router-dom";
 
-import { FullLogo, NavTab } from "..";
+import { FullLogo, NavTab } from "../../components";
 import { AppDispatch, RootState } from "../../redux/store";
 import { settingsPagePath } from "../../router";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
+import styles from "./NavBarForMain.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.account;
