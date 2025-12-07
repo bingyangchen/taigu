@@ -1,7 +1,7 @@
 import React from "react";
-
 import { Chart } from "react-google-charts";
 import { connect } from "react-redux";
+
 import { RootState } from "../../redux/store";
 import Util from "../../utils/util";
 

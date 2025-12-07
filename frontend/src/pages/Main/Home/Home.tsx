@@ -380,7 +380,11 @@ class Home extends React.Component<Props, State> {
   private updateCashInvestedLineChart(): void {
     this.setState((state, props) => {
       const chartData = props.cashInvestedChartData.map((row, i) => {
-        return i === 0 ? row : [new Date(row[0]), ...row.slice(1)];
+        if (i === 0) return row;
+        const dateStr = row[0] as string;
+        const [year, month, day] = dateStr.split("-").map((e) => parseInt(e, 10));
+        const date = new Date(year, month - 1, day);
+        return [date, ...row.slice(1)];
       });
       return {
         cashInvestedLineChart: (
