@@ -12,7 +12,6 @@
   box-shadow: 0 3px 10px -5px _.$semi-transparent-black;
   width: $card-width;
   gap: 10px;
-  transition-duration: 100ms;
   cursor: pointer;
   &.tall {
     padding: 15px;
@@ -25,7 +24,6 @@
     border-radius: 0;
     width: $card-width;
     border: 1px solid _.$noisy-white;
-    transition-duration: 0ms;
     &.tall {
       padding: 15px 25px;
     }

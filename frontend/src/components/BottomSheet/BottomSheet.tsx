@@ -119,9 +119,9 @@ class BottomSheet extends React.Component<Props, State> {
   };
   private handleTouchMove = (e: TouchEvent): void => {
     const touch = e.changedTouches[0];
-    this.setState((state, props) => {
+    this.setState((state) => {
       return {
-        touchDiffY: touch.clientY - (state.touchStartY || 0),
+        touchDiffY: touch.clientY - (state.touchStartY ?? 0),
         touchEndY: touch.clientY,
       };
     });
