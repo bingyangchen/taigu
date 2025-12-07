@@ -195,28 +195,36 @@ $block-body-width: min(450px, 87vw);
       }
     }
     & > .investment_info {
-      display: table;
-      border-collapse: collapse;
-      & > .row {
-        display: table-row;
-        & > span {
-          display: table-cell;
-          padding: 10px;
-          vertical-align: middle;
-          &:first-child {
-            font-size: 0.8 * _.$base-font-size;
-            color: _.$gray;
-            text-align: right;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      width: 100%;
+      padding: 20px 0;
+      & > .cube {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        & > .upper {
+          color: _.$gray;
+          font-size: 0.75 * _.$base-font-size;
+          font-weight: 300;
+        }
+        & > .lower {
+          font-size: 1.3 * _.$base-font-size;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          @media (max-width: _.$width-512) {
+            font-size: 1.2 * _.$base-font-size;
           }
-          &:last-child {
-            text-align: left;
-            font-weight: bold;
-            & > .text {
-              font-size: 0.8 * _.$base-font-size;
-              color: _.$gray;
-              font-weight: normal;
-              margin-left: 3px;
-            }
+          & > .text {
+            font-size: 0.7 * _.$base-font-size;
+            color: _.$gray;
+            font-weight: normal;
+            margin-left: 3px;
           }
         }
       }

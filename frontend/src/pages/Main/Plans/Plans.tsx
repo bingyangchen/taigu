@@ -40,7 +40,7 @@ class Plans extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <div className={styles.search_input_container}>
+        <div className={styles.floating_pill}>
           <SearchKeywordInput
             placeholder="輸入證券代號或名稱"
             keyword={this.state.searchKeyword ?? ""}
@@ -49,7 +49,6 @@ class Plans extends React.Component<Props, State> {
             }
           />
         </div>
-        <StretchableButton />
         <div className={styles.record_list}>
           {this.filteredAndSortedPlans
             .slice(0, this.state.numberToShow)
@@ -66,6 +65,7 @@ class Plans extends React.Component<Props, State> {
             </Button>
           </div>
         </div>
+        <StretchableButton />
       </div>
     );
   }

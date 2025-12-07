@@ -306,32 +306,32 @@ class Details extends React.Component<Props, State> {
           </div>
           <div className={styles.block}>
             <div className={styles.investment_info}>
-              <div className={styles.row}>
-                <span>現金投入</span>
-                <span>
+              <div className={styles.cube}>
+                <span className={styles.upper}>現金投入</span>
+                <span className={styles.lower}>
                   <DollarSign />
                   {Math.round(
                     this.props.sidCashInvestedMap[this.sid] || 0,
                   ).toLocaleString()}
                 </span>
               </div>
-              <div className={styles.row}>
-                <span>證券市值</span>
-                <span>
+              <div className={styles.cube}>
+                <span className={styles.upper}>證券市值</span>
+                <span className={styles.lower}>
                   <DollarSign />
                   {Math.round(this.state.marketValue)?.toLocaleString()}
                 </span>
               </div>
-              <div className={styles.row}>
-                <span>庫存</span>
-                <span>
+              <div className={styles.cube}>
+                <span className={styles.upper}>庫存</span>
+                <span className={styles.lower}>
                   {(this.props.stockWarehouse[this.sid] || []).length}
                   <span className={styles.text}>股</span>
                 </span>
               </div>
-              <div className={styles.row}>
-                <span>平均成本</span>
-                <span>
+              <div className={styles.cube}>
+                <span className={styles.upper}>平均成本</span>
+                <span className={styles.lower}>
                   <DollarSign />
                   {(this.hasInventory
                     ? (this.props.sidCashInvestedMap[this.sid] || 0) /

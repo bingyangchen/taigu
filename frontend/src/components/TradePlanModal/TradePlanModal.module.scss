@@ -31,10 +31,10 @@
           outline-offset: 2px;
         }
         &.buy {
-          background-color: _.$blue;
+          background-color: _.$red;
         }
         &.sell {
-          background-color: _.$red;
+          background-color: _.$blue;
         }
         & > .switch_thumb {
           position: absolute;
@@ -45,13 +45,13 @@
           border-radius: 50%;
           background-color: _.$white;
           transition: transform 0.2s ease;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 2px 4px #00000033;
         }
         &.buy > .switch_thumb {
-          transform: translateX(19px);
+          transform: translateX(0);
         }
         &.sell > .switch_thumb {
-          transform: translateX(0);
+          transform: translateX(19px);
         }
       }
     }
