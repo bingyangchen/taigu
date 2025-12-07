@@ -136,7 +136,7 @@ class StretchableButton extends React.Component<Props, State> {
   }
   private toggle = (e: MouseEvent): void => {
     e.stopPropagation();
-    this.setState((state, props) => {
+    this.setState((state) => {
       if (state.isActive) {
         setTimeout(() => {
           if (this.props.router.location.hash === "#@") {

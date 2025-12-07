@@ -1,9 +1,7 @@
-import imgPersonFill from "../../../assets/person-fill.svg";
-import styles from "./UserInfo.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 
+import imgPersonFill from "../../../assets/person-fill.svg";
 import { Button, Form, LabeledInput } from "../../../components";
 import { updateAccountInfo } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
@@ -12,6 +10,7 @@ import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, settingsPagePath, withRouter } from "../../../router";
 import Env from "../../../utils/env";
 import Util from "../../../utils/util";
+import styles from "./UserInfo.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { avatar_url, username, isWaiting } = rootState.account;
