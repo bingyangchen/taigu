@@ -4,14 +4,14 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
   background-color: _.$white;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 5vh;
+  gap: 5dvh;
   z-index: 8;
   & > .logo {
     width: 60px;

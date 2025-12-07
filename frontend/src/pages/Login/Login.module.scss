@@ -4,7 +4,7 @@
   display: grid;
   grid-template-columns: 1.618fr 1fr;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   @media (max-width: _.$width-780) {
     display: flex;
     justify-content: center;
@@ -45,7 +45,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 5vh;
+    gap: 5dvh;
     & > .greeting {
       font-size: 1.5 * _.$base-font-size;
     }

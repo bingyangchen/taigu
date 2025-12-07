@@ -1,7 +1,7 @@
 @use "../../global_variables" as _;
 
 .main {
-  height: 100vh;
+  height: 100dvh;
   width: 100%;
   overflow: auto;
   & > .header {
@@ -28,7 +28,7 @@
     max-width: 720px;
     margin: 0 auto;
     padding: 30px;
-    padding-bottom: 15vh;
+    padding-bottom: 15dvh;
     line-height: 2rem;
     text-align: justify;
     & > .effective_date {
