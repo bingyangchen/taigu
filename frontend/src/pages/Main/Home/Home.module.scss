@@ -37,8 +37,8 @@
       gap: 20px;
       overflow-x: auto;
       padding: 15px 20px;
-      background-color: _.$transparent-white;
-      box-shadow: 0 0 15px -10px _.$semi-transparent-black;
+      background-color: #ffffff90;
+      box-shadow: 0 0 15px -10px _.$transparent-black;
       border-radius: $border-radius;
       &::-webkit-scrollbar {
         display: none;
@@ -46,9 +46,7 @@
       @media (max-width: _.$width-512) {
         flex-direction: column;
         padding: 10px 15px 15px;
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-        box-shadow: 0 15px 10px -10px _.$light-gray;
+        margin: 0 15px;
       }
       & > .market_index {
         display: flex;
@@ -106,7 +104,7 @@
       justify-content: flex-end;
       border-radius: $border-radius;
       padding: 20px 20px 15px 20px;
-      background-color: _.$transparent-white;
+      background-color: #ffffff90;
       box-shadow: 0 0 15px -10px _.$semi-transparent-black;
       @media (max-width: _.$width-1280) {
         height: fit-content;
@@ -121,21 +119,19 @@
         display: flex;
         flex-direction: column;
         gap: 3px;
-        color: _.$blue;
         @media (max-width: _.$width-512) {
           padding: 0 20px;
         }
         & > .title {
-          font-size: 0.9 * _.$base-font-size;
-          font-weight: 500;
-          margin-left: 11px;
+          color: _.$gray;
         }
         & > .cash_invested {
-          font-size: 2.2 * _.$base-font-size;
+          font-size: 2.3 * _.$base-font-size;
           letter-spacing: 0.5 * _.$base-letter-spacing;
-          font-weight: bold;
+          font-weight: 600;
+          color: _.$blue;
           @media (max-width: _.$width-512) {
-            font-size: 2 * _.$base-font-size;
+            font-size: 2.1 * _.$base-font-size;
           }
         }
       }
@@ -173,6 +169,7 @@
               flex-direction: row;
             }
             & > .time_span_options_inner {
+              position: relative;
               display: flex;
               flex-direction: column-reverse;
               align-items: center;
@@ -180,30 +177,55 @@
               border-radius: 100px;
               background-color: _.$transparent-black;
               overflow: hidden;
+              --active-index: 0;
+              --option-height: 55px;
               @media (max-width: _.$width-512) {
                 flex-direction: row;
                 height: 40px;
                 width: fit-content;
+                --option-height: 65px;
+              }
+              & > .sliding_background {
+                position: absolute;
+                height: var(--option-height);
+                width: 35px;
+                aspect-ratio: 1;
+                border-radius: 100px;
+                background-color: _.$transparent-black;
+                transition: transform 0.3s ease;
+                z-index: 0;
+                transform: translateY(
+                  calc(var(--active-index) * -1 * var(--option-height))
+                );
+                @media (max-width: _.$width-512) {
+                  height: 40px;
+                  width: var(--option-height);
+                  transform: translateX(
+                    calc(var(--active-index) * var(--option-height))
+                  );
+                }
               }
               & > span {
+                position: relative;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                height: 55px;
+                height: var(--option-height);
                 aspect-ratio: 1;
                 border-radius: 100px;
                 font-size: 0.8 * _.$base-font-size;
                 color: _.$gray;
+                z-index: 1;
+                transition: color 0.3s ease;
                 @media (max-width: _.$width-512) {
-                  height: 65px;
+                  height: var(--option-height);
                 }
                 @media (hover: hover) {
                   &:hover {
-                    background-color: _.$transparent-black;
+                    color: _.$white;
                   }
                 }
                 &.active {
-                  background-color: _.$transparent-black;
                   color: _.$white;
                 }
               }
@@ -255,9 +277,8 @@
         align-items: center;
         gap: 10px;
         color: _.$gray;
-        border: 0.5px solid _.$light-gray;
+        border: 1px solid _.$light-gray;
         border-radius: 200px;
-        z-index: -1;
         & > .upper {
           font-size: 0.75 * _.$base-font-size;
           font-weight: 300;

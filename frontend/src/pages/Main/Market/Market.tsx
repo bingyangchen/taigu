@@ -1,13 +1,12 @@
-import styles from "./Market.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 
-import { Button, DetailCard, StretchableButton } from "../../../components";
+import { DetailCard, StretchableButton } from "../../../components";
 import { changeMarketPageSubpage } from "../../../redux/slices/MainPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Env from "../../../utils/env";
+import styles from "./Market.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { stockWarehouse } = rootState.tradeRecord;
@@ -22,32 +21,68 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {
   numberToShow: number;
+  sliderPosition: number;
 }
 
 class Market extends React.Component<Props, State> {
+  private holdingButtonRef = React.createRef<HTMLButtonElement>();
+  private favoritesButtonRef = React.createRef<HTMLButtonElement>();
+  private containerRef = React.createRef<HTMLDivElement>();
+
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = { numberToShow: 15 };
+    this.state = { numberToShow: 15, sliderPosition: 0 };
   }
-  public componentDidMount(): void {}
+  public componentDidMount(): void {
+    requestAnimationFrame(() => this.updateSliderPosition());
+    window.addEventListener("resize", this.updateSliderPosition);
+  }
+  public componentWillUnmount(): void {
+    window.removeEventListener("resize", this.updateSliderPosition);
+  }
+  public componentDidUpdate(prevProps: Props): void {
+    if (prevProps.activeSubpageName !== this.props.activeSubpageName) {
+      this.updateSliderPosition();
+    }
+  }
+  private updateSliderPosition = (): void => {
+    const activeButton =
+      this.props.activeSubpageName === "holding"
+        ? this.holdingButtonRef.current
+        : this.favoritesButtonRef.current;
+    const container = this.containerRef.current;
+
+    if (activeButton && container) {
+      const containerRect = container.getBoundingClientRect();
+      const buttonRect = activeButton.getBoundingClientRect();
+      const position = buttonRect.left - containerRect.left;
+      this.setState({ sliderPosition: position });
+    }
+  };
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <div className={styles.switch_button_container_outer}>
-          <div className={styles.switch_button_container}>
-            <Button
-              className={this.getSwitchButtonClass("holding")}
+        <div className={styles.floating_pill_wrapper}>
+          <div ref={this.containerRef} className={styles.floating_pill}>
+            <div
+              className={styles.active_indicator}
+              style={{ transform: `translateX(${this.state.sliderPosition}px)` }}
+            />
+            <button
+              ref={this.holdingButtonRef}
+              className={`${styles.tab_button} ${this.props.activeSubpageName === "holding" ? styles.active : ""}`}
               onClick={() => this.props.dispatch(changeMarketPageSubpage("holding"))}
             >
               持股
-            </Button>
-            <Button
-              className={this.getSwitchButtonClass("favorites")}
+            </button>
+            <button
+              ref={this.favoritesButtonRef}
+              className={`${styles.tab_button} ${this.props.activeSubpageName === "favorites" ? styles.active : ""}`}
               onClick={() => this.props.dispatch(changeMarketPageSubpage("favorites"))}
             >
               觀察
-            </Button>
+            </button>
           </div>
         </div>
         <div className={styles.list}>
@@ -72,9 +107,6 @@ class Market extends React.Component<Props, State> {
         <StretchableButton />
       </div>
     );
-  }
-  private getSwitchButtonClass(name: "holding" | "favorites"): string {
-    return this.props.activeSubpageName === name ? "white xs" : "transparent xs";
   }
 }
 
