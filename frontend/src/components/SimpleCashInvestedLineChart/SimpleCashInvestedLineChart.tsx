@@ -1,8 +1,8 @@
 import React from "react";
 import { Chart } from "react-google-charts";
 import { connect } from "react-redux";
-import { AppDispatch, RootState } from "../../redux/store";
 
+import { AppDispatch, RootState } from "../../redux/store";
 import Util from "../../utils/util";
 
 function mapStateToProps(rootState: RootState) {
@@ -67,7 +67,6 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
                 viewWindowMode: "maximized",
               },
             },
-            forceIFrame: true,
             chartArea: {
               left: "0%",
               top: "3%",
