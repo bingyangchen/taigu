@@ -1,7 +1,7 @@
 @use "../../global_variables" as _;
 
 .main {
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
   overflow: auto;
   scroll-behavior: smooth;
@@ -26,8 +26,8 @@
   }
   & > .cta_container {
     position: fixed;
-    bottom: min(5.5vw, 5.5vh);
-    right: min(5.5vw, 5.5vh);
+    bottom: min(5.5vw, 5.5dvh);
+    right: min(5.5vw, 5.5dvh);
     display: flex;
     align-items: center;
     gap: 15px;
@@ -63,7 +63,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      height: 100dvh;
       background-image: url("../../assets/cover001.png");
       background-size: cover;
       background-attachment: fixed;
@@ -150,7 +150,7 @@
     }
     &.two {
       position: relative;
-      height: 400vh;
+      height: 400dvh;
       display: grid;
       grid-template-columns: 1fr 1fr;
       @media (max-width: _.$width-512) {
@@ -190,8 +190,8 @@
             z-index: 1;
             overflow: hidden;
             @media (max-width: _.$width-512) {
-              height: 61.8vh;
-              width: 31.6vh;
+              height: 61.8dvh;
+              width: 31.6dvh;
             }
             & > .demo_image {
               position: absolute;
@@ -223,7 +223,7 @@
             top: -1 * $y;
             left: -1 * $x;
             width: 100vw;
-            height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             pointer-events: none;
             z-index: -1;
@@ -235,7 +235,7 @@
             }
             & > .ball {
               position: absolute;
-              top: 21vh;
+              top: 21dvh;
               left: $x - 56px;
               width: 400px;
               height: 400px;
@@ -255,7 +255,7 @@
                 left: -36px;
               }
               @media (max-width: _.$width-512) {
-                top: 10.5vh;
+                top: 10.5dvh;
                 left: 50%;
                 translate: -50% 0;
               }
@@ -266,7 +266,7 @@
       & > .right {
         @media (max-width: _.$width-512) {
           position: sticky;
-          top: 75vh;
+          top: 75dvh;
         }
         & > .inner {
           position: sticky;
@@ -274,7 +274,7 @@
           display: flex;
           justify-content: center;
           align-items: center;
-          height: 100vh;
+          height: 100dvh;
           @media (max-width: _.$width-512) {
             height: fit-content;
           }
@@ -316,7 +316,7 @@
     &.three {
       display: flex;
       align-items: center;
-      padding: 25vh 0;
+      padding: 25dvh 0;
       @media (max-width: _.$width-1024) {
         flex-direction: column;
         gap: 30px;
@@ -340,7 +340,7 @@
       }
       & > img {
         object-fit: contain;
-        max-height: 61.8vh;
+        max-height: 61.8dvh;
         padding-right: 50px;
         @media (min-width: _.$width-1024) and (max-width: _.$width-1280) {
           max-width: 55vw;
@@ -396,13 +396,13 @@
         background-size: cover;
         background-repeat: no-repeat;
         background-position: top;
-        height: 61.8vh;
+        height: 61.8dvh;
         width: 400px;
         z-index: 1;
         overflow: hidden;
         @media (max-width: _.$width-512) {
           height: 300px;
-          width: 31.6vh;
+          width: 31.6dvh;
         }
         & > .demo_video {
           position: absolute;
@@ -412,7 +412,7 @@
           outline: 1.5px solid _.$white;
           outline-offset: -1px;
           @media (max-width: _.$width-512) {
-            top: 5vh;
+            top: 5dvh;
           }
         }
       }
@@ -450,7 +450,7 @@
       }
       & > img {
         object-fit: contain;
-        max-height: 60vh;
+        max-height: 60dvh;
         padding-right: 50px;
         @media (min-width: _.$width-1024) and (max-width: _.$width-1280) {
           max-width: 55vw;
@@ -465,7 +465,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30vh 50px;
+      padding: 30dvh 50px;
       background-color: _.$noisy-white;
       & > svg {
         transition: transform 0.3s ease;
@@ -501,7 +501,7 @@
       flex-direction: column;
       align-items: center;
       gap: 20px;
-      padding: 25vh 50px;
+      padding: 25dvh 50px;
       background-image: url("../../assets/cover001.png");
       background-size: cover;
       background-attachment: fixed;
