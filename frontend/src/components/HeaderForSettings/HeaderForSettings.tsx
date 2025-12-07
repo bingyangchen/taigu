@@ -1,13 +1,12 @@
-import styles from "./HeaderForSettings.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 
-import { RoundButton } from "..";
+import { RoundButton } from "../../components";
 import { IconChevronLeft } from "../../icons";
 import type { RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
+import styles from "./HeaderForSettings.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { headerTitle } = rootState.settingsPage;

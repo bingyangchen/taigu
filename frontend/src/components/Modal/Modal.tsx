@@ -1,13 +1,12 @@
-import styles from "./Modal.module.scss";
-
 import React, { MouseEvent } from "react";
 import ReactDOM from "react-dom";
 
-import { Button, RoundButton } from "..";
+import { Button, RoundButton } from "../../components";
 import { IconXLarge } from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Util from "../../utils/util";
 import { Props as ButtonProps } from "../Button/Button";
+import styles from "./Modal.module.scss";
 
 interface Props extends IRouter {
   title?: React.ReactNode;

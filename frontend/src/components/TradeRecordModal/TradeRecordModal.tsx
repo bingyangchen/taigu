@@ -1,7 +1,7 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { LabeledInput, Modal } from "..";
+import { LabeledInput, Modal } from "../../components";
 import { fetchSingleStockInfo } from "../../redux/slices/StockInfoSlice";
 import { createRecord, updateRecord } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";

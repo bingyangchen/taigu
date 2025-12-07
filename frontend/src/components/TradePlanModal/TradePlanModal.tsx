@@ -1,7 +1,7 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { LabeledInput, Modal } from "..";
+import { LabeledInput, Modal } from "../../components";
 import { createPlan, updatePlan } from "../../redux/slices/TradePlanSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { TradePlan } from "../../types";

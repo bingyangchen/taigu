@@ -1,15 +1,14 @@
-import styles from "./CheckDeleteModal.module.scss";
-
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { DollarSign, Modal } from "..";
+import { DollarSign, Modal } from "../../components";
 import { deleteRecord as deleteCashDividendRecord } from "../../redux/slices/CashDividendRecordSlice";
 import { deletePlan } from "../../redux/slices/TradePlanSlice";
 import { deleteRecord as deleteTradeRecord } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { CashDividendRecord, TradePlan, TradeRecord } from "../../types";
 import Util from "../../utils/util";
+import styles from "./CheckDeleteModal.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting: isWaitingTradeRecord } = rootState.tradeRecord;

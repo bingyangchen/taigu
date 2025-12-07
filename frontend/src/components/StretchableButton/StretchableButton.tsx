@@ -1,13 +1,13 @@
 import React, { MouseEvent } from "react";
 
+import logo from "../../assets/logo.png";
 import {
   CashDividendRecordModal,
   Modal,
   StockSearchModal,
   TradePlanModal,
   TradeRecordModal,
-} from "..";
-import logo from "../../assets/logo.png";
+} from "../../components";
 import { IconCoin, IconMagnifier, IconPencilSquare, IconThumbtack } from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Util from "../../utils/util";

@@ -1,10 +1,9 @@
-import styles from "./Form.module.scss";
-
 import React, { MouseEventHandler } from "react";
 
-import { Button, RoundButton } from "..";
+import { Button, RoundButton } from "../../components";
 import { IconChevronLeft } from "../../icons";
 import Util from "../../utils/util";
+import styles from "./Form.module.scss";
 
 interface Props {
   title: string;
