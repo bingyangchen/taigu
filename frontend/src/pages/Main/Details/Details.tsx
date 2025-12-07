@@ -601,7 +601,7 @@ class Details extends React.Component<Props, State> {
       if (this.state.touchDiffX <= -this.switchingThreshold) {
         this.setState((state, props) => {
           if (!state.hasVibrated) {
-            navigator.vibrate(20);
+            if (navigator.vibrate) navigator.vibrate(20);
             return { hasVibrated: true, switchDirection: "next" };
           }
           return { switchDirection: "next" } as State;
@@ -609,7 +609,7 @@ class Details extends React.Component<Props, State> {
       } else if (this.state.touchDiffX >= this.switchingThreshold) {
         this.setState((state, props) => {
           if (!state.hasVibrated) {
-            navigator.vibrate(20);
+            if (navigator.vibrate) navigator.vibrate(20);
             return { hasVibrated: true, switchDirection: "prev" };
           }
           return { switchDirection: "prev" } as State;
@@ -643,7 +643,7 @@ class Details extends React.Component<Props, State> {
         : this.props.favorites;
     const prevIndex = sids.findIndex((e) => e === this.sid) - 1;
     if (prevIndex < 0) return;
-    navigator.vibrate(10);
+    if (navigator.vibrate) navigator.vibrate(10);
     this.componentWillUnmount();
     this.props.router.navigate(
       this.props.router.location.pathname
@@ -659,7 +659,7 @@ class Details extends React.Component<Props, State> {
         : this.props.favorites;
     const nextIndex = sids.findIndex((e) => e === this.sid) + 1;
     if (nextIndex >= sids.length) return;
-    navigator.vibrate(10);
+    if (navigator.vibrate) navigator.vibrate(10);
     this.componentWillUnmount();
     this.props.router.navigate(
       this.props.router.location.pathname

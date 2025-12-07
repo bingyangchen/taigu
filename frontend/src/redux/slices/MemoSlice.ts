@@ -31,7 +31,7 @@ export const updateOrCreateMemo = createAsyncThunk(
       "post",
       JSON.stringify(requestBody),
     );
-    navigator.vibrate(20);
+    if (navigator.vibrate) navigator.vibrate(20);
     return response;
   },
 );

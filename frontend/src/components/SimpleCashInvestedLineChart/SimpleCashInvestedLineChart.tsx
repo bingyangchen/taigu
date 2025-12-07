@@ -67,6 +67,7 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
                 viewWindowMode: "maximized",
               },
             },
+            forceIFrame: true,
             chartArea: {
               left: "0%",
               top: "3%",

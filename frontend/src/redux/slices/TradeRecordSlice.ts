@@ -60,7 +60,7 @@ export const createRecord = createAsyncThunk(
       "post",
       JSON.stringify(requestBody),
     );
-    navigator.vibrate(20);
+    if (navigator.vibrate) navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
     return await computeNewState([response, ...rootState.tradeRecord.tradeRecords]);
   },
@@ -77,7 +77,7 @@ export const updateRecord = createAsyncThunk(
       "post",
       JSON.stringify(requestBody),
     );
-    navigator.vibrate(20);
+    if (navigator.vibrate) navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
     return await computeNewState(
       rootState.tradeRecord.tradeRecords
@@ -94,7 +94,7 @@ export const deleteRecord = createAsyncThunk(
     thunkAPI,
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     await Api.sendRequest(`stock/trade-records/${id}`, "delete");
-    navigator.vibrate(20);
+    if (navigator.vibrate) navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
     return await computeNewState(
       [...rootState.tradeRecord.tradeRecords].filter((r) => r.id !== id),
