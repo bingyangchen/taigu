@@ -10,7 +10,9 @@
   height: _.$footer-height;
   width: 100%;
   padding: 0 5px 15px 5px;
-  background-color: _.$white;
+  background-color: #ffffffdd;
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%) !important;
   border-radius: 25px 25px 0 0;
   box-shadow: 0 0px 8px 3px _.$transparent-black;
   z-index: 2;

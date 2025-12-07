@@ -30,45 +30,74 @@ $block-body-width: min(450px, 87vw);
     width: fit-content;
     padding-left: 13px;
     margin-right: auto;
-    z-index: 2;
+    z-index: 3;
+    transition: top 300ms ease;
+    &.scrolled {
+      top: 10px;
+      left: 10px;
+      height: auto;
+      padding-left: 0;
+      & > * {
+        border-radius: 50% !important;
+        background-color: _.$transparent-white !important;
+        backdrop-filter: blur(10px) saturate(150%) !important;
+        -webkit-backdrop-filter: blur(10px) saturate(150%) !important;
+        box-shadow:
+          0 4px 16px #0000001a,
+          0 2px 8px #00000014 !important;
+        border: 0.5px solid _.$noisy-white !important;
+        &:active {
+          background-color: #ffffffdd !important;
+        }
+        @media (hover: hover) {
+          &:hover {
+            background-color: #ffffffee !important;
+          }
+        }
+      }
+    }
   }
   & > .stock_brief_info_container {
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     display: none;
-    height: _.$header-height;
-    width: 100%;
-    background-color: _.$white;
-    border-bottom: 0.5px solid _.$noisy-white;
+    align-items: center;
+    gap: 10px;
+    height: 41px;
+    padding: 0 16px;
+    border-radius: 25px;
+    background-color: _.$transparent-white;
+    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(10px) saturate(150%);
+    box-shadow:
+      0 4px 16px #0000001a,
+      0 2px 8px #00000014;
+    border: 0.5px solid _.$noisy-white;
     z-index: 2;
     animation: 300ms fadein ease;
     &.show {
       display: flex;
-      align-items: center;
     }
     @keyframes fadein {
       from {
         opacity: 0;
+        transform: translateX(-50%) scale(0.95);
       }
       to {
         opacity: 1;
+        transform: translateX(-50%) scale(1);
       }
     }
-    & > .left {
-      padding-left: 13px;
+    & > .company_name {
+      white-space: nowrap;
+      font-size: 0.9 * _.$base-font-size;
+      font-weight: 500;
     }
-    & > .right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      & > .company_name {
-        white-space: nowrap;
-      }
-      & > .sid {
-        font-size: 0.8 * _.$base-font-size;
-        color: _.$gray;
-      }
+    & > .sid {
+      font-size: 0.8 * _.$base-font-size;
+      color: _.$gray;
     }
   }
   & > .block {
