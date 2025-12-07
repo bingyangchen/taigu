@@ -9,18 +9,13 @@
     display: flex;
     min-height: 100%;
     width: 100%;
+    @media (max-width: _.$width-780) {
+      min-height: calc(100% - _.$header-height - _.$footer-height);
+    }
   }
 }
 
 .user_avatar {
   width: 28px;
   border-radius: 100px;
-}
-
-@media screen and (max-width: _.$width-780) {
-  .main {
-    & > .body {
-      min-height: calc(100% - _.$header-height - _.$footer-height);
-    }
-  }
 }

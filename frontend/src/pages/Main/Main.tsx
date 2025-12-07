@@ -106,25 +106,25 @@ class Main extends React.Component<Props, State> {
 
     this.subpages = [
       {
-        icon: <IconHome sideLength="98%" />,
+        icon: <IconHome sideLength="100%" />,
         icon_bold: <IconHomeBold sideLength="100%" />,
         name: "儀表板",
         path: Env.frontendRootPath,
       },
       {
-        icon: <IconChartHistogram sideLength="98%" />,
+        icon: <IconChartHistogram sideLength="100%" />,
         icon_bold: <IconChartHistogramBold sideLength="100%" />,
         name: "市場",
         path: `${Env.frontendRootPath}market`,
       },
       {
-        icon: <IconClockHistory sideLength="98%" />,
+        icon: <IconClockHistory sideLength="100%" />,
         icon_bold: <IconClockHistoryBold sideLength="100%" />,
         name: "歷史紀錄",
         path: `${Env.frontendRootPath}records`,
       },
       {
-        icon: <IconThumbtack sideLength="98%" />,
+        icon: <IconThumbtack sideLength="100%" />,
         icon_bold: <IconThumbtackBold sideLength="100%" />,
         name: "買賣計畫",
         path: `${Env.frontendRootPath}plans`,
