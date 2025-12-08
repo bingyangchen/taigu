@@ -1,6 +1,5 @@
 import React, { MouseEvent } from "react";
 
-import logo from "../../assets/logo.png";
 import {
   CashDividendRecordModal,
   Modal,
@@ -8,7 +7,13 @@ import {
   TradePlanModal,
   TradeRecordModal,
 } from "../../components";
-import { IconCoin, IconMagnifier, IconPencilSquare, IconThumbtack } from "../../icons";
+import {
+  IconCoin,
+  IconMagnifier,
+  IconPencilSquare,
+  IconPlus,
+  IconThumbtack,
+} from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Util from "../../utils/util";
 import styles from "./SpeedDial.module.scss";
@@ -51,7 +56,7 @@ class SpeedDial extends React.Component<Props, State> {
           className={`${styles.main} ${this.state.isActive ? styles.active : ""}`}
           onClick={this.toggle}
         >
-          <img className={styles.button_image} src={logo} alt="" />
+          <IconPlus sideLength="26" />
           <div className={styles.button_container}>
             <div
               className={styles.button}
@@ -62,7 +67,7 @@ class SpeedDial extends React.Component<Props, State> {
               }}
             >
               <IconPencilSquare sideLength="20" />
-              <div className={styles.hint_text}>交易紀錄</div>
+              <div className={styles.hint_text}>新增交易紀錄</div>
             </div>
             <div
               className={styles.button}
@@ -73,7 +78,7 @@ class SpeedDial extends React.Component<Props, State> {
               }}
             >
               <IconCoin sideLength="20" />
-              <div className={styles.hint_text}>現金股利</div>
+              <div className={styles.hint_text}>新增現金股利</div>
             </div>
             <div
               className={styles.button}
@@ -84,7 +89,7 @@ class SpeedDial extends React.Component<Props, State> {
               }}
             >
               <IconThumbtack sideLength="20" />
-              <div className={styles.hint_text}>買賣計畫</div>
+              <div className={styles.hint_text}>新增買賣計畫</div>
             </div>
             <div
               className={styles.button}

@@ -28,6 +28,7 @@ export { default as IconMagnifier } from "./IconMagnifier";
 export { default as IconMemo } from "./IconMemo";
 export { default as IconPencilSquare } from "./IconPencilSquare";
 export { default as IconPersonVcard } from "./IconPersonVcard";
+export { default as IconPlus } from "./IconPlus";
 export { default as IconShieldCheck } from "./IconShieldCheck";
 export { default as IconStar } from "./IconStar";
 export { default as IconTermsInfo } from "./IconTermsInfo";
