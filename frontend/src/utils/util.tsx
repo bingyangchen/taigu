@@ -1,4 +1,4 @@
-import { MouseEventHandler } from "react";
+import React, { MouseEventHandler } from "react";
 
 import { CashDividendRecord, TradePlan, TradeRecord } from "../types";
 
@@ -40,7 +40,7 @@ export default class Util {
     func: (...args: T[]) => void,
     delay: number,
   ): ((...args: T[]) => any) => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
     return (...params: T[]) => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => func(...params), delay);
