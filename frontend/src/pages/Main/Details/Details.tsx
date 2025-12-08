@@ -10,8 +10,8 @@ import {
   Modal,
   PercentSign,
   RoundButton,
+  SpeedDial,
   StockMemoModal,
-  StretchableButton,
 } from "../../../components";
 import {
   IconBriefcase,
@@ -415,7 +415,7 @@ class Details extends React.Component<Props, State> {
               </div>
             </div>
           </div>
-          <StretchableButton defaultSid={this.sid} />
+          <SpeedDial defaultSid={this.sid} />
           {Util.isMobile ? (
             <>
               <div

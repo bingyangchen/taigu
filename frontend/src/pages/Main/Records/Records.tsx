@@ -1,12 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 
-import {
-  Button,
-  ListRow,
-  SearchKeywordInput,
-  StretchableButton,
-} from "../../../components";
+import { Button, ListRow, SearchKeywordInput, SpeedDial } from "../../../components";
 import type { RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { CashDividendRecord, TradeRecord } from "../../../types";
@@ -120,7 +115,7 @@ class Records extends React.Component<Props, State> {
             </Button>
           </div>
         </div>
-        <StretchableButton />
+        <SpeedDial />
       </div>
     );
   }

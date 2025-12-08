@@ -11,7 +11,7 @@ import {
 import { IconCoin, IconMagnifier, IconPencilSquare, IconThumbtack } from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Util from "../../utils/util";
-import styles from "./StretchableButton.module.scss";
+import styles from "./SpeedDial.module.scss";
 
 interface Props extends IRouter {
   defaultSid?: string;
@@ -27,7 +27,7 @@ interface State {
     | null;
 }
 
-class StretchableButton extends React.Component<Props, State> {
+class SpeedDial extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
@@ -163,4 +163,4 @@ class StretchableButton extends React.Component<Props, State> {
   };
 }
 
-export default withRouter(StretchableButton);
+export default withRouter(SpeedDial);

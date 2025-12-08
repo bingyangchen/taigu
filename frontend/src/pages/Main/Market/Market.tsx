@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 
-import { DetailCard, StretchableButton } from "../../../components";
+import { DetailCard, SpeedDial } from "../../../components";
 import { changeMarketPageSubpage } from "../../../redux/slices/MainPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
@@ -104,7 +104,7 @@ class Market extends React.Component<Props, State> {
             );
           })}
         </div>
-        <StretchableButton />
+        <SpeedDial />
       </div>
     );
   }
