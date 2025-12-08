@@ -29,11 +29,13 @@ class Market extends React.Component<Props, State> {
   private holdingButtonRef = React.createRef<HTMLButtonElement>();
   private favoritesButtonRef = React.createRef<HTMLButtonElement>();
   private containerRef = React.createRef<HTMLDivElement>();
+  private fetchFavoriteStockInfoTimer: ReturnType<typeof setInterval> | null;
 
   public state: State;
   public constructor(props: Props) {
     super(props);
     this.state = { numberToShow: 15, sliderPosition: 0 };
+    this.fetchFavoriteStockInfoTimer = null;
   }
   public componentDidMount(): void {
     requestAnimationFrame(() => this.updateSliderPosition());
@@ -41,9 +43,18 @@ class Market extends React.Component<Props, State> {
     if (this.props.activeSubpageName === "favorites") {
       this.fetchFavoriteStockInfo();
     }
+    this.fetchFavoriteStockInfoTimer = setInterval(() => {
+      if (this.props.activeSubpageName === "favorites") {
+        this.fetchFavoriteStockInfo();
+      }
+    }, 15000);
   }
   public componentWillUnmount(): void {
     window.removeEventListener("resize", this.updateSliderPosition);
+    if (this.fetchFavoriteStockInfoTimer) {
+      clearInterval(this.fetchFavoriteStockInfoTimer);
+      this.fetchFavoriteStockInfoTimer = null;
+    }
   }
   public componentDidUpdate(prevProps: Props): void {
     if (prevProps.activeSubpageName !== this.props.activeSubpageName) {
