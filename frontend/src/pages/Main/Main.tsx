@@ -58,8 +58,7 @@ import styles from "./Main.module.scss";
 function mapStateToProps(rootState: RootState) {
   const { username, avatar_url } = rootState.account;
   const { stockWarehouse } = rootState.tradeRecord;
-  const { favorites } = rootState.memo;
-  return { username, avatar_url, stockWarehouse, favorites };
+  return { username, avatar_url, stockWarehouse };
 }
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
@@ -231,7 +230,7 @@ class Main extends React.Component<Props, State> {
     const hodlingSids = Object.entries(this.props.stockWarehouse)
       .filter(([sid, warehouse]) => warehouse.length > 0)
       .map(([sid, warehouse]) => sid);
-    const sids = Array.from(new Set([...hodlingSids, ...this.props.favorites]));
+    const sids = Array.from(new Set(hodlingSids));
     await this.props.dispatch(fetchStockInfo(sids)).unwrap();
     this.setState({ isLoading: false });
   };

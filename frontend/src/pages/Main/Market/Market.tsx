@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 
 import { DetailCard, SpeedDial } from "../../../components";
 import { changeMarketPageSubpage } from "../../../redux/slices/MainPageSlice";
+import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Env from "../../../utils/env";
@@ -37,6 +38,9 @@ class Market extends React.Component<Props, State> {
   public componentDidMount(): void {
     requestAnimationFrame(() => this.updateSliderPosition());
     window.addEventListener("resize", this.updateSliderPosition);
+    if (this.props.activeSubpageName === "favorites") {
+      this.fetchFavoriteStockInfo();
+    }
   }
   public componentWillUnmount(): void {
     window.removeEventListener("resize", this.updateSliderPosition);
@@ -60,6 +64,15 @@ class Market extends React.Component<Props, State> {
       this.setState({ sliderPosition: position });
     }
   };
+  private fetchFavoriteStockInfo = async (): Promise<void> => {
+    if (this.props.favorites.length > 0) {
+      await this.props.dispatch(fetchStockInfo(this.props.favorites)).unwrap();
+    }
+  };
+  private handleFavoritesClick = async (): Promise<void> => {
+    this.props.dispatch(changeMarketPageSubpage("favorites"));
+    await this.fetchFavoriteStockInfo();
+  };
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
@@ -79,7 +92,7 @@ class Market extends React.Component<Props, State> {
             <button
               ref={this.favoritesButtonRef}
               className={`${styles.tab_button} ${this.props.activeSubpageName === "favorites" ? styles.active : ""}`}
-              onClick={() => this.props.dispatch(changeMarketPageSubpage("favorites"))}
+              onClick={this.handleFavoritesClick}
             >
               觀察
             </button>
