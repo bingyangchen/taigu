@@ -142,7 +142,7 @@ class StretchableButton extends React.Component<Props, State> {
           if (this.props.router.location.hash === "#@") {
             this.props.router.navigate(-1);
           }
-          Util.changePWAThemeColor("#fff");
+          Util.changePWAThemeColor("#d1eeff");
           document.body.style.overscrollBehaviorY = "initial";
         });
       } else {
@@ -158,7 +158,7 @@ class StretchableButton extends React.Component<Props, State> {
   private hide = (): void => {
     if (this.props.router.location.hash === "#@") this.props.router.navigate(-1);
     document.body.style.overscrollBehaviorY = "initial";
-    Util.changePWAThemeColor("#fff");
+    Util.changePWAThemeColor("#d1eeff");
     this.setState({ isActive: false });
   };
 }

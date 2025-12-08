@@ -54,7 +54,7 @@ class Modal extends React.Component<Props, State> {
   }
   public componentWillUnmount(): void {
     document.body.style.overscrollBehaviorY = "initial";
-    Util.changePWAThemeColor("#fff");
+    Util.changePWAThemeColor("#d1eeff");
     if (this.props.router.location.hash === "##") {
       this.props.router.navigate(-1);
     }
