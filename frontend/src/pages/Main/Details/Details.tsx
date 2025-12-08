@@ -96,6 +96,7 @@ interface State {
 class Details extends React.Component<Props, State> {
   public state: State;
   private mainRef: React.RefObject<HTMLDivElement>;
+  private fetchStockInfoTimer: ReturnType<typeof setInterval> | null = null;
   private readonly SCROLLING_THRESHOLD: number = 10;
   private readonly SWITCHING_THRESHOLD: number = 85;
   private readonly SHOW_FLOATING_INFO_THRESHOLD: number = 120;
@@ -156,6 +157,10 @@ class Details extends React.Component<Props, State> {
         this.setState({ historicalPriceChartData: this.getHistoricalPriceChartData() });
       });
     this.props.dispatch(fetchCompanyInfo(this.sid));
+
+    this.fetchStockInfoTimer = setInterval(() => {
+      this.props.dispatch(fetchSingleStockInfo(this.sid)).unwrap();
+    }, 15000);
   }
   public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
     if (prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord) {
@@ -167,6 +172,10 @@ class Details extends React.Component<Props, State> {
       });
     }
     if (prevProps.router.params.sid !== this.props.router.params.sid) {
+      if (this.fetchStockInfoTimer) {
+        clearInterval(this.fetchStockInfoTimer);
+        this.fetchStockInfoTimer = null;
+      }
       this.componentDidMount();
     }
     if (
@@ -197,6 +206,11 @@ class Details extends React.Component<Props, State> {
       this.mainRef.current!.removeEventListener("touchstart", this.handleTouchStart);
       this.mainRef.current!.removeEventListener("touchmove", this.handleTouchMove);
       this.mainRef.current!.removeEventListener("touchend", this.handleTouchEnd);
+    }
+
+    if (this.fetchStockInfoTimer) {
+      clearInterval(this.fetchStockInfoTimer);
+      this.fetchStockInfoTimer = null;
     }
   }
   public render(): React.ReactNode {
