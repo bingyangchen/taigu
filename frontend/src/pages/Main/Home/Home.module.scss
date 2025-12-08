@@ -13,10 +13,10 @@
     flex-direction: column;
     gap: 30px;
     height: fit-content;
-    @media (max-width: _.$width-512) {
-      padding: 0;
-      gap: 10dvh;
-    }
+  }
+  @media (max-width: _.$width-512) {
+    padding: 0 0 calc(_.$footer-height + 80px) 0;
+    gap: 10dvh;
   }
   & > .left {
     display: grid;
@@ -26,9 +26,9 @@
       display: flex;
       flex-direction: column;
       gap: 30px;
-      @media (max-width: _.$width-512) {
-        gap: 60px;
-      }
+    }
+    @media (max-width: _.$width-512) {
+      gap: 60px;
     }
     & > .upper {
       position: relative;
@@ -108,12 +108,12 @@
       box-shadow: 0 0 15px -10px _.$semi-transparent-black;
       @media (max-width: _.$width-1280) {
         height: fit-content;
-        @media (max-width: _.$width-512) {
-          padding: 0;
-          border-radius: 0;
-          background-color: transparent;
-          box-shadow: none;
-        }
+      }
+      @media (max-width: _.$width-512) {
+        padding: 0;
+        border-radius: 0;
+        background-color: transparent;
+        box-shadow: none;
       }
       & > .cash_invested_text {
         display: flex;
@@ -247,7 +247,6 @@
       border-radius: 0;
       background-color: transparent;
       box-shadow: none;
-      padding-bottom: 15dvh;
     }
     & > .title {
       color: _.$gray;
@@ -290,22 +289,38 @@
       }
     }
     & > .summary {
-      display: table;
-      border-collapse: collapse;
-      margin: 30px 0;
-      & > .row {
-        display: table-row;
-        & > span {
-          display: table-cell;
-          padding: 10px;
-          vertical-align: middle;
-          &:first-child {
-            font-size: 0.8 * _.$base-font-size;
+      display: flex;
+      flex-direction: column;
+      padding: 15px 25px;
+      margin-top: 20px;
+      background-color: #ffffff90;
+      box-shadow: 0 0 15px -10px _.$transparent-black;
+      border-radius: $border-radius;
+      & > .summary_row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        height: 40px;
+        width: 100%;
+        min-width: fit-content;
+        & > .left {
+          min-width: max-content;
+          width: 75px;
+          & > .title {
+            font-size: 0.9 * _.$base-font-size;
             color: _.$gray;
-            text-align: right;
+            margin-right: 10px;
           }
-          &:last-child {
-            text-align: left;
+        }
+        & > .price {
+          display: flex;
+          flex-direction: column;
+          width: 105px;
+          text-align: right;
+          gap: 3px;
+          margin-left: auto;
+          & > .price {
+            font-size: 1.1 * _.$base-font-size;
             font-weight: bold;
           }
         }
