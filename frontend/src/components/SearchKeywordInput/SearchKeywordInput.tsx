@@ -1,8 +1,7 @@
-import styles from "./SearchKeywordInput.module.scss";
-
 import React, { ChangeEvent } from "react";
 
 import { IconMagnifier } from "../../icons";
+import styles from "./SearchKeywordInput.module.scss";
 
 interface Props {
   placeholder: string;

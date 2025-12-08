@@ -1,5 +1,3 @@
-import styles from "./Plans.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 
@@ -12,6 +10,7 @@ import {
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { TradePlan } from "../../../types";
+import styles from "./Plans.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { tradePlans } = rootState.tradePlan;
@@ -41,16 +40,15 @@ class Plans extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <div className={styles.search_input_container}>
+        <div className={styles.floating_pill}>
           <SearchKeywordInput
             placeholder="輸入證券代號或名稱"
-            keyword={this.state.searchKeyword || ""}
+            keyword={this.state.searchKeyword ?? ""}
             onChange={(searchKeyword) =>
               this.setState({ searchKeyword: searchKeyword })
             }
           />
         </div>
-        <StretchableButton />
         <div className={styles.record_list}>
           {this.filteredAndSortedPlans
             .slice(0, this.state.numberToShow)
@@ -67,6 +65,7 @@ class Plans extends React.Component<Props, State> {
             </Button>
           </div>
         </div>
+        <StretchableButton />
       </div>
     );
   }
@@ -101,7 +100,7 @@ class Plans extends React.Component<Props, State> {
       });
   }
   private handleClickShowMore = (): void => {
-    this.setState((state, props) => {
+    this.setState((state) => {
       return { numberToShow: state.numberToShow * 2 };
     });
   };

@@ -1,9 +1,8 @@
-import styles from "./LabeledInput.module.scss";
-
 import React, { ChangeEvent, FocusEvent } from "react";
 
-import { RoundButton } from "..";
+import { RoundButton } from "../../components";
 import { IconEye, IconEyeSlash } from "../../icons";
+import styles from "./LabeledInput.module.scss";
 
 interface Props {
   title: string;

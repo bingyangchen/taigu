@@ -32,7 +32,7 @@ class TestCheckLoginStatusMiddleware:
     @pytest.fixture
     def middleware(self) -> Callable[[HttpRequest], HttpResponse]:
         def mock_get_response(request: HttpRequest) -> HttpResponse:
-            return HttpResponse("Test response")
+            return HttpResponse(b"Test response")
 
         return check_login_status_middleware(mock_get_response)
 

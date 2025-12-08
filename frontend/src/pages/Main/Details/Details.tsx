@@ -209,7 +209,13 @@ class Details extends React.Component<Props, State> {
         {this.activeModal}
         <div className={styles.main} ref={this.mainRef}>
           {Util.isMobile && (
-            <div className={styles.mobile_back_button_container}>
+            <div
+              className={`${styles.mobile_back_button_container} ${
+                this.props.mainScrollTop > this.showBriefInfoOnHeaderThreshold
+                  ? styles.scrolled
+                  : ""
+              }`}
+            >
               <RoundButton
                 onClick={() => this.props.router.navigate(-1)}
                 className="p-12"
@@ -227,21 +233,10 @@ class Details extends React.Component<Props, State> {
                   : ""
               }`}
             >
-              <div className={styles.left}>
-                <RoundButton
-                  onClick={() => this.props.router.navigate(-1)}
-                  className="p-12"
-                  hint_text="回列表"
-                >
-                  <IconChevronLeft sideLength="16" />
-                </RoundButton>
+              <div className={styles.company_name}>
+                {this.props.sidStockInfoMap[this.sid].name}
               </div>
-              <div className={styles.right}>
-                <div className={styles.company_name}>
-                  {this.props.sidStockInfoMap[this.sid].name}
-                </div>
-                <div className={styles.sid}>{this.sid}</div>
-              </div>
+              <div className={styles.sid}>{this.sid}</div>
             </div>
           )}
           <div className={styles.block}>
@@ -306,32 +301,32 @@ class Details extends React.Component<Props, State> {
           </div>
           <div className={styles.block}>
             <div className={styles.investment_info}>
-              <div className={styles.row}>
-                <span>現金投入</span>
-                <span>
+              <div className={styles.cube}>
+                <span className={styles.upper}>現金投入</span>
+                <span className={styles.lower}>
                   <DollarSign />
                   {Math.round(
                     this.props.sidCashInvestedMap[this.sid] || 0,
                   ).toLocaleString()}
                 </span>
               </div>
-              <div className={styles.row}>
-                <span>證券市值</span>
-                <span>
+              <div className={styles.cube}>
+                <span className={styles.upper}>證券市值</span>
+                <span className={styles.lower}>
                   <DollarSign />
                   {Math.round(this.state.marketValue)?.toLocaleString()}
                 </span>
               </div>
-              <div className={styles.row}>
-                <span>庫存</span>
-                <span>
+              <div className={styles.cube}>
+                <span className={styles.upper}>庫存</span>
+                <span className={styles.lower}>
                   {(this.props.stockWarehouse[this.sid] || []).length}
                   <span className={styles.text}>股</span>
                 </span>
               </div>
-              <div className={styles.row}>
-                <span>平均成本</span>
-                <span>
+              <div className={styles.cube}>
+                <span className={styles.upper}>平均成本</span>
+                <span className={styles.lower}>
                   <DollarSign />
                   {(this.hasInventory
                     ? (this.props.sidCashInvestedMap[this.sid] || 0) /
@@ -601,7 +596,7 @@ class Details extends React.Component<Props, State> {
       if (this.state.touchDiffX <= -this.switchingThreshold) {
         this.setState((state, props) => {
           if (!state.hasVibrated) {
-            navigator.vibrate(20);
+            if (navigator.vibrate) navigator.vibrate(20);
             return { hasVibrated: true, switchDirection: "next" };
           }
           return { switchDirection: "next" } as State;
@@ -609,7 +604,7 @@ class Details extends React.Component<Props, State> {
       } else if (this.state.touchDiffX >= this.switchingThreshold) {
         this.setState((state, props) => {
           if (!state.hasVibrated) {
-            navigator.vibrate(20);
+            if (navigator.vibrate) navigator.vibrate(20);
             return { hasVibrated: true, switchDirection: "prev" };
           }
           return { switchDirection: "prev" } as State;
@@ -643,7 +638,7 @@ class Details extends React.Component<Props, State> {
         : this.props.favorites;
     const prevIndex = sids.findIndex((e) => e === this.sid) - 1;
     if (prevIndex < 0) return;
-    navigator.vibrate(10);
+    if (navigator.vibrate) navigator.vibrate(10);
     this.componentWillUnmount();
     this.props.router.navigate(
       this.props.router.location.pathname
@@ -659,7 +654,7 @@ class Details extends React.Component<Props, State> {
         : this.props.favorites;
     const nextIndex = sids.findIndex((e) => e === this.sid) + 1;
     if (nextIndex >= sids.length) return;
-    navigator.vibrate(10);
+    if (navigator.vibrate) navigator.vibrate(10);
     this.componentWillUnmount();
     this.props.router.navigate(
       this.props.router.location.pathname

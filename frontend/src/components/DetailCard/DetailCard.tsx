@@ -1,11 +1,10 @@
-import styles from "./DetailCard.module.scss";
-
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
 import { calculateMarketValue } from "../../redux/slices/StockInfoSlice";
 import type { RootState } from "../../redux/store";
 import DollarSign from "../DollarSign/DollarSign";
+import styles from "./DetailCard.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { sidStockInfoMap } = rootState.stockInfo;

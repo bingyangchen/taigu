@@ -1,7 +1,7 @@
 @use "../../global_variables" as _;
 
 .main {
-  $card-width: min(87vw, 320px);
+  --card-width: min(87vw, 320px);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -10,22 +10,19 @@
   border-radius: 8px;
   background-color: _.$transparent-white;
   box-shadow: 0 3px 10px -5px _.$semi-transparent-black;
-  width: $card-width;
+  width: var(--card-width);
   gap: 10px;
-  transition-duration: 100ms;
+  overflow: hidden;
   cursor: pointer;
   &.tall {
     padding: 15px;
   }
   @media (max-width: _.$width-780) {
-    $card-width: 100%;
+    --card-width: 100%;
     padding: 10px 25px;
-    background-color: _.$white;
+    background-color: _.$transparent-white;
     box-shadow: none;
-    border-radius: 0;
-    width: $card-width;
-    border: 1px solid _.$noisy-white;
-    transition-duration: 0ms;
+    border-radius: 20px;
     &.tall {
       padding: 15px 25px;
     }

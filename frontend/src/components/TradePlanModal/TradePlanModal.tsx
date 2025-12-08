@@ -1,14 +1,12 @@
-import styles from "./TradePlanModal.module.scss";
-
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { LabeledInput, Modal } from "..";
-import { IconToggleOn } from "../../icons";
+import { LabeledInput, Modal } from "../../components";
 import { createPlan, updatePlan } from "../../redux/slices/TradePlanSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { TradePlan } from "../../types";
 import Util from "../../utils/util";
+import styles from "./TradePlanModal.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.tradePlan;
@@ -69,7 +67,7 @@ class TradePlanModal extends React.Component<Props, State> {
             title="證券代號"
             value={this.state.sid}
             onChange={(sid: string) => this.setState({ sid: sid })}
-            autoFocus={!Boolean(this.state.sid)}
+            autoFocus={!this.state.sid}
           />
           <div className={styles.row}>
             <LabeledInput
@@ -89,16 +87,18 @@ class TradePlanModal extends React.Component<Props, State> {
             />
             <div className={styles.buy_or_sell}>
               <span>買</span>
-              <span
-                className={
-                  styles.toggle_outer +
-                  " " +
-                  (this.state.planType === "buy" ? styles.buy : styles.sell)
-                }
+              <button
+                type="button"
+                role="switch"
+                aria-checked={this.state.planType === "buy"}
+                aria-label={this.state.planType === "buy" ? "買" : "賣"}
+                className={`${styles.switch} ${
+                  this.state.planType === "buy" ? styles.buy : styles.sell
+                }`}
                 onClick={this.handleClickToggle}
               >
-                <IconToggleOn sideLength="28" />
-              </span>
+                <span className={styles.switch_thumb} />
+              </button>
               <span>賣</span>
             </div>
             <LabeledInput
@@ -134,7 +134,7 @@ class TradePlanModal extends React.Component<Props, State> {
     );
   }
   private handleClickToggle = (): void => {
-    this.setState((state, props) => {
+    this.setState((state) => {
       return { planType: state.planType === "buy" ? "sell" : "buy" };
     });
   };

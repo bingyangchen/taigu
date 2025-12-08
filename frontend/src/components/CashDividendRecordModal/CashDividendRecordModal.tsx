@@ -1,13 +1,12 @@
-import styles from "./CashDividendRecordModal.module.scss";
-
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { LabeledInput, Modal } from "..";
+import { LabeledInput, Modal } from "../../components";
 import { createRecord, updateRecord } from "../../redux/slices/CashDividendRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { CashDividendRecord } from "../../types";
 import Util from "../../utils/util";
+import styles from "./CashDividendRecordModal.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.cashDividend;
@@ -72,7 +71,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
             title="證券代號"
             value={this.state.sid}
             onChange={(sid: string) => this.setState({ sid: sid })}
-            autoFocus={!Boolean(this.state.sid)}
+            autoFocus={!this.state.sid}
           />
           <LabeledInput
             title="現金股利"

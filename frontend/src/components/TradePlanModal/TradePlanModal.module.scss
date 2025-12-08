@@ -14,14 +14,44 @@
       span {
         font-size: 0.9 * _.$base-font-size;
       }
-      .toggle_outer {
-        display: flex;
-        align-items: center;
-        color: _.$blue;
+      & > .switch {
+        position: relative;
+        width: 38px;
+        height: 19px;
+        border: none;
+        border-radius: 10px;
         cursor: pointer;
+        padding: 0;
+        background-color: _.$light-gray;
+        transition: background-color 0.2s ease;
+        outline: none;
         margin-top: 2px;
+        &:focus-visible {
+          outline: 2px solid _.$blue;
+          outline-offset: 2px;
+        }
         &.buy {
-          transform: scaleX(-1);
+          background-color: _.$red;
+        }
+        &.sell {
+          background-color: _.$blue;
+        }
+        & > .switch_thumb {
+          position: absolute;
+          top: 1.5px;
+          left: 1.5px;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background-color: _.$white;
+          transition: transform 0.2s ease;
+          box-shadow: 0 2px 4px #00000033;
+        }
+        &.buy > .switch_thumb {
+          transform: translateX(0);
+        }
+        &.sell > .switch_thumb {
+          transform: translateX(19px);
         }
       }
     }

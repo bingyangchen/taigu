@@ -1,12 +1,11 @@
-import styles from "./HeaderForMain.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 
-import { FullLogo } from "..";
+import { FullLogo } from "../../components";
 import type { RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Nav from "../../utils/nav";
+import styles from "./HeaderForMain.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { scrollTop } = rootState.mainPage;

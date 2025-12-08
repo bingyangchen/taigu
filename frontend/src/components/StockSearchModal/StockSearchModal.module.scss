@@ -4,23 +4,28 @@
   display: flex;
   flex-direction: column;
   height: fit-content;
-  max-height: 85vh;
+  max-height: 85dvh;
   width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
   border-radius: 10px;
   background-color: _.$noisy-white;
-  & > :first-child:not(:last-child) {
-    border-bottom: 1px solid _.$light-gray;
+  overflow: hidden;
+  & > .search_input_outer {
+    &:not(:last-child) {
+      border-bottom: 1px solid #0000000d;
+    }
   }
   & > .result {
     height: 100%;
-    padding: 5px;
+    padding: 4px 0;
     overflow: auto;
     & > .row {
       display: flex;
       justify-content: space-between;
       gap: 10px;
-      padding: 8px 10px;
-      border-radius: 10px;
+      padding: 10px 17px;
+      border-radius: 0;
       @media (hover: hover) {
         &:hover {
           background-color: _.$transparent-black;

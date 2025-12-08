@@ -1,7 +1,7 @@
 import React, { ChangeEvent, MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { AutoResizeTextarea, Modal } from "..";
+import { AutoResizeTextarea, Modal } from "../../components";
 import { updateOrCreateMemo } from "../../redux/slices/MemoSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import Util from "../../utils/util";

@@ -1,6 +1,5 @@
-import styles from "./ListRow.module.scss";
-
 import React, { MouseEvent, MouseEventHandler, TouchEvent } from "react";
+
 import {
   BottomSheet,
   CashDividendRecordModal,
@@ -10,10 +9,11 @@ import {
   Modal,
   TradePlanModal,
   TradeRecordModal,
-} from "..";
+} from "../../components";
 import { IRouter, withRouter } from "../../router";
 import { CashDividendRecord, TradePlan, TradeRecord } from "../../types";
 import Util from "../../utils/util";
+import styles from "./ListRow.module.scss";
 
 interface Props extends IRouter {
   target: TradeRecord | CashDividendRecord | TradePlan;

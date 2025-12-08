@@ -1,13 +1,12 @@
-import styles from "./ToastList.module.scss";
-
 import React from "react";
 import ReactDOM from "react-dom";
 import { connect } from "react-redux";
 
-import { RoundButton } from "..";
+import { RoundButton } from "../../components";
 import { IconXLarge } from "../../icons";
 import { removeToast } from "../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
+import styles from "./ToastList.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { toasts } = rootState.toast;

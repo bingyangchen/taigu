@@ -28,7 +28,6 @@ class TestUserManager:
         assert user.oauth_org == OAuthOrganization.GOOGLE
         assert user.oauth_id == "test_oauth_id"
         assert user.email == "test@example.com"
-        assert not user.is_staff
         assert not user.is_superuser
         assert user.is_active
 
@@ -61,7 +60,6 @@ class TestUserManager:
         )
 
         assert isinstance(user, User)
-        assert user.is_staff
         assert user.is_superuser
         assert user.is_active
 

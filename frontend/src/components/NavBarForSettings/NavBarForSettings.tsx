@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 
-import { FullLogo, NavTab, RoundButton } from "..";
+import { FullLogo, NavTab, RoundButton } from "../../components";
 import { IconChevronLeft } from "../../icons";
 import { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";

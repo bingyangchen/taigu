@@ -1,9 +1,8 @@
-import styles from "./ListRowActionBar.module.scss";
-
 import React, { MouseEvent, MouseEventHandler } from "react";
 
-import { RoundButton } from "..";
+import { RoundButton } from "../../components";
 import { IconPencilSquare, IconTrash } from "../../icons";
+import styles from "./ListRowActionBar.module.scss";
 
 interface Props {
   forMobile?: boolean;

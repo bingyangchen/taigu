@@ -3,14 +3,16 @@
 .main {
   $side-length: 60px;
   position: fixed;
-  bottom: _.$footer-height + 15px;
+  bottom: _.$footer-height + 20px;
   right: 30px;
   border: 0.1px solid _.$light-gray;
   border-radius: 100px;
   height: $side-length;
   width: $side-length;
   background-color: _.$white;
-  box-shadow: 0 6px 12px -10px _.$black;
+  box-shadow:
+    0 4px 12px #0000001a,
+    0 2px 6px #00000014;
   z-index: 4;
   transition-duration: 200ms;
   &.active {
@@ -31,7 +33,7 @@
       top: 0;
       left: 0;
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
       display: block;
       background-color: _.$semi-transparent-black;
       z-index: 3;
@@ -39,7 +41,9 @@
   }
   @media (hover: hover) {
     &:hover {
-      box-shadow: 0 10px 30px -15px _.$black;
+      box-shadow:
+        0 6px 16px #0000001f,
+        0 3px 8px #0000001a;
     }
   }
   & > .button_image {

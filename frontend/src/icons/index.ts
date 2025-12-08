@@ -32,7 +32,6 @@ export { default as IconStar } from "./IconStar";
 export { default as IconTermsInfo } from "./IconTermsInfo";
 export { default as IconThumbtack } from "./IconThumbtack";
 export { default as IconThumbtackBold } from "./IconThumbtackBold";
-export { default as IconToggleOn } from "./IconToggleOn";
 export { default as IconTrash } from "./IconTrash";
 export { default as IconUser } from "./IconUser";
 export { default as IconXLarge } from "./IconXLarge";

@@ -1,13 +1,13 @@
 import React, { MouseEvent } from "react";
 
+import logo from "../../assets/logo.png";
 import {
   CashDividendRecordModal,
   Modal,
   StockSearchModal,
   TradePlanModal,
   TradeRecordModal,
-} from "..";
-import logo from "../../assets/logo.png";
+} from "../../components";
 import { IconCoin, IconMagnifier, IconPencilSquare, IconThumbtack } from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Util from "../../utils/util";
@@ -136,7 +136,7 @@ class StretchableButton extends React.Component<Props, State> {
   }
   private toggle = (e: MouseEvent): void => {
     e.stopPropagation();
-    this.setState((state, props) => {
+    this.setState((state) => {
       if (state.isActive) {
         setTimeout(() => {
           if (this.props.router.location.hash === "#@") {

@@ -158,8 +158,7 @@ class Home extends React.Component<Props, State> {
             <div className={styles.cash_invested_text}>
               <div className={styles.title}>投入金額</div>
               <div className={styles.cash_invested}>
-                <DollarSign />
-                {Math.round(this.state.animatedTotalCashInvested).toLocaleString()}
+                ${Math.round(this.state.animatedTotalCashInvested).toLocaleString()}
               </div>
             </div>
             <div className={styles.body}>
@@ -168,7 +167,15 @@ class Home extends React.Component<Props, State> {
               </div>
               <div className={styles.controls}>
                 <div className={styles.time_span_options}>
-                  <div className={styles.time_span_options_inner}>
+                  <div
+                    className={styles.time_span_options_inner}
+                    style={
+                      {
+                        "--active-index": this.getActiveOptionIndex(),
+                      } as React.CSSProperties
+                    }
+                  >
+                    <div className={styles.sliding_background} />
                     <span
                       className={this.getTimeSpanOptionClass(30)}
                       onClick={() => this.handleClickTimeSpanOption(30)}
@@ -326,6 +333,10 @@ class Home extends React.Component<Props, State> {
   private getTimeSpanOptionClass(number: number): string {
     return this.state.daysToShow === number ? styles.active : "";
   }
+  private getActiveOptionIndex(): number {
+    const options = [30, 91, 365, Infinity];
+    return options.indexOf(this.state.daysToShow);
+  }
   private handleClickTimeSpanOption = (number: number): void => {
     this.setState({ daysToShow: number });
   };
@@ -380,7 +391,11 @@ class Home extends React.Component<Props, State> {
   private updateCashInvestedLineChart(): void {
     this.setState((state, props) => {
       const chartData = props.cashInvestedChartData.map((row, i) => {
-        return i === 0 ? row : [new Date(row[0]), ...row.slice(1)];
+        if (i === 0) return row;
+        const dateStr = row[0] as string;
+        const [year, month, day] = dateStr.split("-").map((e) => parseInt(e, 10));
+        const date = new Date(year, month - 1, day);
+        return [date, ...row.slice(1)];
       });
       return {
         cashInvestedLineChart: (

@@ -9,22 +9,29 @@
   justify-content: space-around;
   height: _.$footer-height;
   width: 100%;
-  padding: 0 5px;
-  background-color: _.$white;
-  border-top: 0.5px solid _.$noisy-white;
+  padding: 0 5px 15px 5px;
+  background-color: #ffffffdd;
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%) !important;
+  border-radius: 25px 25px 0 0;
+  box-shadow: 0 0px 8px 3px _.$transparent-black;
   z-index: 2;
   & > .icon_outer {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: _.$footer-height;
+    height: 100%;
     color: _.$black;
+    &:not(.active) {
+      color: _.$gray;
+    }
     & > .icon_inner {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 23px;
+      width: 25px;
+      padding: 1px;
     }
   }
 }

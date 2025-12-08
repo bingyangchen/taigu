@@ -42,7 +42,7 @@ const getSidTradeRecordsMap = (
   const result: { [sid: string]: TradeRecord[] } = {};
   reversedRecords.forEach((r) => {
     const { sid } = r;
-    if (!result.hasOwnProperty(sid)) result[sid] = [r];
+    if (!Object.prototype.hasOwnProperty.call(result, sid)) result[sid] = [r];
     else result[sid].push(r);
   });
   return result;
@@ -51,7 +51,7 @@ const getSidTradeRecordsMap = (
 const getStockWarehouse = (timeSeriesTradeRecords: TradeRecord[]): StockWarehouse => {
   const result: StockWarehouse = {};
   for (const { sid, deal_price, deal_quantity } of timeSeriesTradeRecords) {
-    if (!result.hasOwnProperty(sid)) result[sid] = [];
+    if (!Object.prototype.hasOwnProperty.call(result, sid)) result[sid] = [];
     if (deal_quantity >= 0) {
       result[sid].push(...Array(deal_quantity).fill(deal_price));
     } else result[sid].splice(0, -deal_quantity);
@@ -151,9 +151,8 @@ const chartDataHelper = (
   stockWarehouse: StockWarehouse = {},
   result: (string | number)[][] = [["日期", "dummy", "現金投入", "交易金額"]],
 ): (string | number)[][] => {
-  if (timeSeriesTradeRecords.length === 0 && dates.length === 0) {
-    return result;
-  } else if (dates.length === 0) {
+  if (dates.length === 0) {
+    if (timeSeriesTradeRecords.length === 0) return result;
     if (new Date(timeSeriesTradeRecords[0].deal_time) <= new Date()) {
       dates = Util.getDateStringList(
         new Date(timeSeriesTradeRecords[0].deal_time),
@@ -162,28 +161,31 @@ const chartDataHelper = (
     } else return result;
   }
 
-  const solvingDateString = dates.shift();
-  const solvingDate = new Date(
-    solvingDateString!.split("-").map((e) => parseInt(e)) as any,
-  );
-  solvingDate.setHours(0, 0, 0, 0);
-  const solvingRecords = timeSeriesTradeRecords.filter(
-    (record) => record.deal_time === solvingDateString,
-  );
+  let remainingRecords = [...timeSeriesTradeRecords];
+  let currentStockWarehouse = { ...stockWarehouse };
+  const datesToProcess = [...dates];
+  while (datesToProcess.length > 0) {
+    const solvingDateString = datesToProcess.shift();
+    if (!solvingDateString) break;
 
-  timeSeriesTradeRecords = timeSeriesTradeRecords.filter(
-    (record) => record.deal_time !== solvingDateString,
-  );
-  stockWarehouse = updateStockWarehouse(solvingRecords, stockWarehouse);
+    const solvingRecords = remainingRecords.filter(
+      (record) => record.deal_time === solvingDateString,
+    );
+    remainingRecords = remainingRecords.filter(
+      (record) => record.deal_time !== solvingDateString,
+    );
 
-  result.push([
-    solvingDate.toLocaleDateString(), // convert to string for redux serialization problem
-    0, // dummy
-    Math.round(getTotalCashInvested(stockWarehouse)),
-    solvingRecords.reduce((a, b) => a + b.deal_price * Math.abs(b.deal_quantity), 0),
-  ]);
+    currentStockWarehouse = updateStockWarehouse(solvingRecords, currentStockWarehouse);
 
-  return chartDataHelper(timeSeriesTradeRecords, dates, stockWarehouse, result);
+    result.push([
+      solvingDateString,
+      0, // dummy
+      Math.round(getTotalCashInvested(currentStockWarehouse)),
+      solvingRecords.reduce((a, b) => a + b.deal_price * Math.abs(b.deal_quantity), 0),
+    ]);
+  }
+
+  return result;
 };
 
 const updateStockWarehouse = (
