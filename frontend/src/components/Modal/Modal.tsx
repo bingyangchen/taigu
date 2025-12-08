@@ -32,6 +32,7 @@ class Modal extends React.Component<Props, State> {
     this.modalRoot = document.getElementById("modal-root")!;
   }
   public componentDidMount(): void {
+    window.addEventListener("keydown", this.handleHitEsc);
     setTimeout(() => {
       this.props.router.navigate("##");
       if (this.props.layout !== "fullScreen" || this.props.transparent) {
@@ -53,6 +54,7 @@ class Modal extends React.Component<Props, State> {
     }
   }
   public componentWillUnmount(): void {
+    window.removeEventListener("keydown", this.handleHitEsc);
     document.body.style.overscrollBehaviorY = "initial";
     Util.changePWAThemeColor("#d1eeff");
     if (this.props.router.location.hash === "##") {
@@ -87,8 +89,7 @@ class Modal extends React.Component<Props, State> {
             )}
             {this.props.children}
           </div>
-          {(this.props.submitButtonProps || this.props.discardButtonProps) &&
-          !this.props.noFooter ? (
+          {!this.props.noFooter && (
             <div className={styles.footer} onClick={(e) => e.stopPropagation()}>
               {this.props.discardButtonProps && (
                 <Button
@@ -113,8 +114,6 @@ class Modal extends React.Component<Props, State> {
                 </Button>
               )}
             </div>
-          ) : (
-            <div className={styles.fake_footer} onClick={(e) => e.stopPropagation()} />
           )}
         </div>
       </div>,
@@ -130,6 +129,16 @@ class Modal extends React.Component<Props, State> {
   private handleClickBackground = (e: MouseEvent): void => {
     e.stopPropagation();
     if (!this.props.silentBackground) this.handleClickDiscard(e);
+  };
+  private handleHitEsc = (e: KeyboardEvent): void => {
+    if (e.key === "Escape") {
+      try {
+        const result = this.handleClickDiscard({} as MouseEvent);
+        if (result && typeof result === "object" && "catch" in result) {
+          (result as Promise<unknown>).catch(() => {});
+        }
+      } catch (error) {}
+    }
   };
 }
 
