@@ -1,4 +1,4 @@
-import React, { MouseEvent } from "react";
+import React from "react";
 import { connect } from "react-redux";
 
 import googleLogo from "../../../assets/google.png";
@@ -126,10 +126,10 @@ class AccountBinding extends React.Component<Props, State> {
   private handleClickChangeBinding = async (): Promise<void> => {
     this.setState({ activeModalName: "changeBinding" });
   };
-  private handleClickBottomSheetBackground = (e: MouseEvent): void => {
+  private handleClickBottomSheetBackground = (): void => {
     this.setState({ activeModalName: null });
   };
-  private handleClickGoogleLogin = async (e: MouseEvent) => {
+  private handleClickGoogleLogin = async () => {
     this.setState({ activeModalName: null });
     const response = await Api.sendRequest(
       `account/authorization-url?redirect_uri=${window.location.origin}/settings/account-binding`,

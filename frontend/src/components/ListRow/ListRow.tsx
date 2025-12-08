@@ -1,4 +1,4 @@
-import React, { MouseEvent, MouseEventHandler, TouchEvent } from "react";
+import React, { MouseEventHandler, TouchEvent } from "react";
 
 import {
   BottomSheet,
@@ -168,12 +168,12 @@ class ListRow extends React.Component<Props, State> {
     this.setState({ activeModalName: "checkDelete" });
   };
   private handleClickButtonInBottomSheet = (callback: Function): MouseEventHandler => {
-    return (e: MouseEvent): void => {
+    return (): void => {
       if (this.props.router.location.hash === "#!") {
         this.props.router.navigate(-1);
       }
       setTimeout(() => {
-        this.handleClickBottomSheetBackground(e);
+        this.handleClickBottomSheetBackground();
         callback();
       });
     };
@@ -205,7 +205,7 @@ class ListRow extends React.Component<Props, State> {
   private onTouchMove = (): void => {
     clearTimeout(this.timer);
   };
-  private handleClickBottomSheetBackground = (e: MouseEvent): void => {
+  private handleClickBottomSheetBackground = (): void => {
     this.setState({ activatedForMobile: false });
   };
 }

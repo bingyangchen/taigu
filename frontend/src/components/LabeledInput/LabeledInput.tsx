@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FocusEvent } from "react";
+import React, { ChangeEvent } from "react";
 
 import { RoundButton } from "../../components";
 import { IconEye, IconEyeSlash } from "../../icons";
@@ -77,14 +77,14 @@ export default class LabeledInput extends React.Component<Props, State> {
   private handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     this.props.onChange?.(e.target.value);
   };
-  private handleFocusInput = (e: FocusEvent) => {
+  private handleFocusInput = () => {
     this.setState({ isInputFocused: true });
   };
-  private handleUnfocusInput = (e: FocusEvent) => {
+  private handleUnfocusInput = () => {
     this.setState({ isInputFocused: false });
   };
   private handlePasswordPeekability = () => {
-    this.setState((state, props) => {
+    this.setState((state) => {
       return { type: state.type === "password" ? "text" : "password" };
     });
   };

@@ -122,7 +122,7 @@ class BottomSheet extends React.Component<Props, State> {
       };
     });
   };
-  private handleTouchEnd = (e: TouchEvent) => {
+  private handleTouchEnd = () => {
     if (!this.state.isMaximized) {
       if (this.props.canMaximize && -this.state.touchDiffY! > this.maximizeThreshold) {
         this.setState({ touchEndY: 20, isMaximized: true });
