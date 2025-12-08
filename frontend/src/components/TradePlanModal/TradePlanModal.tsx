@@ -37,7 +37,7 @@ class TradePlanModal extends React.Component<Props, State> {
       planId: props.plan?.id.toString() || null,
       sid: props.plan?.sid || props.defaultSid || "",
       targetPrice: props.plan ? props.plan.target_price : NaN,
-      planType: props.plan?.plan_type || "buy",
+      planType: props.plan?.plan_type ?? "buy",
       targetQuantity: props.plan ? props.plan.target_quantity : NaN,
     };
   }

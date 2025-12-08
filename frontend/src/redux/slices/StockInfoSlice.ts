@@ -174,7 +174,7 @@ export const calculateMarketValue = (
   stockInfo: StockInfo | undefined,
   inventoryCosts: number[],
 ): number => {
-  return (stockInfo?.close || 0) * inventoryCosts.length;
+  return (stockInfo?.close ?? 0) * inventoryCosts.length;
 };
 
 export const getTotalMarketValue = (

@@ -24,7 +24,7 @@ export default class LabeledInput extends React.Component<Props, State> {
   private inputRef: React.RefObject<HTMLInputElement>;
   public constructor(props: Props) {
     super(props);
-    this.state = { isInputFocused: false, type: props.type || "text" };
+    this.state = { isInputFocused: false, type: props.type ?? "text" };
     this.inputRef = React.createRef();
   }
   public componentDidMount(): void {
@@ -34,7 +34,7 @@ export default class LabeledInput extends React.Component<Props, State> {
     return (
       <fieldset
         className={`${styles.main} ${this.state.isInputFocused ? styles.focused : ""}`}
-        disabled={this.props.disabled || false}
+        disabled={this.props.disabled ?? false}
       >
         <legend className={this.state.isInputFocused ? styles.focused : ""}>
           {this.props.title}
@@ -42,7 +42,7 @@ export default class LabeledInput extends React.Component<Props, State> {
         <input
           ref={this.inputRef}
           type={this.state.type}
-          disabled={this.props.disabled || false}
+          disabled={this.props.disabled ?? false}
           value={this.props.value}
           onChange={this.handleInputChange}
           autoComplete={this.props.autocomplete || "off"}
