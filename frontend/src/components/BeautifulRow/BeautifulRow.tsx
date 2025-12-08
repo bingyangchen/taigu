@@ -1,8 +1,7 @@
-import styles from "./BeautifulRow.module.scss";
-
 import React, { MouseEvent, MouseEventHandler } from "react";
 
 import { IconChevronRight } from "../../icons";
+import styles from "./BeautifulRow.module.scss";
 
 interface Props {
   label?: string;

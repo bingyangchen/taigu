@@ -103,7 +103,7 @@ module.exports = {
     "import/first": "warn",
     "import/newline-after-import": "warn",
     "import/no-duplicates": "warn",
-    "import/no-unresolved": "off", // TypeScript handles this
+    "import/no-unresolved": "warn",
     "import/default": "warn",
     "import/export": "warn",
     "import/first": "warn",

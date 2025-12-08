@@ -1,6 +1,6 @@
-import styles from "./NotFound.module.scss";
-
 import React from "react";
+
+import styles from "./NotFound.module.scss";
 
 interface Props {}
 

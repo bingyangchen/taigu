@@ -1,15 +1,14 @@
-import google from "../../assets/google.png";
-import styles from "./Login.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 
+import google from "../../assets/google.png";
 import { Button, FullLogo, ToastList } from "../../components";
 import { loginWithGoogle } from "../../redux/slices/AccountSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
+import styles from "./Login.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.account;

@@ -1,6 +1,6 @@
-import styles from "./DollarSign.module.scss";
-
 import React from "react";
+
+import styles from "./DollarSign.module.scss";
 
 interface Props {}
 

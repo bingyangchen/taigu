@@ -1,8 +1,8 @@
+import React from "react";
+
 import loadingSpinner from "../../assets/loading.svg";
 import logo from "../../assets/logo.png";
 import styles from "./LoadingScreen.module.scss";
-
-import React from "react";
 
 interface Props {}
 

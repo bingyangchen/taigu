@@ -1,11 +1,10 @@
-import simulator_icon from "../../../assets/simulator_icon.png";
-import simulator_pro_icon from "../../../assets/simulator_pro_icon.png";
-import styles from "./ExternalApps.module.scss";
-
 import React from "react";
 
+import simulator_icon from "../../../assets/simulator_icon.png";
+import simulator_pro_icon from "../../../assets/simulator_pro_icon.png";
 import { IconStar } from "../../../icons";
 import { IRouter, withRouter } from "../../../router";
+import styles from "./ExternalApps.module.scss";
 
 interface Props extends IRouter {}
 
@@ -28,7 +27,7 @@ class ExternalApps extends React.Component<Props, State> {
             className={styles.app}
             href="https://byc1999.com/stock-simulator/basic/"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >
             <div className={styles.number}>1</div>
             <div className={styles.inner}>
@@ -46,7 +45,7 @@ class ExternalApps extends React.Component<Props, State> {
             className={styles.app}
             href="https://byc1999.com/stock-simulator/pro/"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >
             <div className={styles.number}>2</div>
             <div className={styles.inner}>
