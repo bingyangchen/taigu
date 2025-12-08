@@ -12,6 +12,7 @@ import {
 } from "../../../components";
 import {
   IconEnvelope,
+  IconExclamation,
   IconExit,
   IconIncognito,
   IconInfoCircle,
@@ -199,6 +200,19 @@ class Overview extends React.Component<Props, State> {
                   <div className={`${styles.row_inner} ${styles.terms_of_service}`}>
                     <IconTermsInfo sideLength="16px" />
                     服務條款
+                  </div>
+                </BeautifulRow>
+                <BeautifulRow
+                  onClick={() =>
+                    window.open(
+                      "https://github.com/bingyangchen/taigu/issues",
+                      Util.isMobile ? "_self" : "_blank",
+                    )
+                  }
+                >
+                  <div className={`${styles.row_inner} ${styles.issue_report}`}>
+                    <IconExclamation sideLength="16px" />
+                    問題回報
                   </div>
                 </BeautifulRow>
               </BeautifulBlock>

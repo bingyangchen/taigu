@@ -8,7 +8,7 @@ import {
   PercentSign,
   RoundButton,
   SimpleCashInvestedLineChart,
-  StretchableButton,
+  SpeedDial,
 } from "../../../components";
 import { IconFullScreen } from "../../../icons";
 import {
@@ -110,7 +110,7 @@ class Home extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <StretchableButton />
+        <SpeedDial />
         <div className={styles.left}>
           <div className={styles.upper}>
             <div className={styles.market_index}>

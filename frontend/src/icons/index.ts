@@ -11,6 +11,7 @@ export { default as IconClockHistoryBold } from "./IconClockHistoryBold";
 export { default as IconCoin } from "./IconCoin";
 export { default as IconCreditCard } from "./IconCreditCard";
 export { default as IconEnvelope } from "./IconEnvelope";
+export { default as IconExclamation } from "./IconExclamation";
 export { default as IconExit } from "./IconExit";
 export { default as IconEye } from "./IconEye";
 export { default as IconEyeSlash } from "./IconEyeSlash";

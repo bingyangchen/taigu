@@ -16,7 +16,7 @@
   user-select: none;
   animation: 300ms fadein ease;
   & > .main {
-    $modal-body-padding-x: 25px;
+    $modal-body-margin-x: 25px;
     border-radius: 20px;
     background-color: _.$white;
     animation: 0.3s fadescalein ease;
@@ -24,6 +24,8 @@
       width: min(85vw, 350px);
     }
     &.auto {
+      width: fit-content;
+      min-width: min(85vw, 350px);
       max-width: min(85vw, 720px);
     }
     &.full_screen {
@@ -37,7 +39,7 @@
       animation: none;
       & > .header {
         * {
-          color: _.$light-gray;
+          color: _.$gray;
         }
       }
       & > .body {
@@ -48,6 +50,18 @@
         bottom: 0;
         background-color: _.$white;
       }
+      &.transparent {
+        width: fit-content;
+        min-width: min(85vw, 650px);
+        height: fit-content;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        & > .body {
+          margin: 0 auto;
+        }
+      }
     }
     &.transparent {
       background-color: transparent;
@@ -57,8 +71,12 @@
       justify-content: flex-end;
       align-items: center;
       height: 60px;
-      padding: 0 $modal-body-padding-x;
+      margin: 0 $modal-body-margin-x;
       color: _.$gray;
+      &:empty {
+        height: 0;
+        margin: 0 $modal-body-margin-x 60px;
+      }
       & > .header_title {
         display: flex;
         align-items: center;
@@ -70,7 +88,8 @@
       flex-direction: column;
       gap: 10px;
       max-height: 512px;
-      padding: 0 $modal-body-padding-x 5px;
+      margin: 0 $modal-body-margin-x 5px;
+      padding: 2px;
       overflow: auto;
       & > .description {
         font-size: 0.8 * _.$base-font-size;
@@ -82,11 +101,13 @@
       justify-content: flex-end;
       align-items: flex-end;
       height: fit-content;
-      padding: 15px $modal-body-padding-x;
+      padding: 15px $modal-body-margin-x;
       gap: 15px;
-    }
-    & > .fake_footer {
-      height: 25px;
+      &:empty {
+        height: 0px;
+        padding: 0;
+        margin-bottom: 25px;
+      }
     }
   }
 }

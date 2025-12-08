@@ -67,7 +67,7 @@ class BottomSheet extends React.Component<Props, State> {
     }
   }
   public componentWillUnmount(): void {
-    Util.changePWAThemeColor("#fff");
+    Util.changePWAThemeColor("#d1eeff");
     document.body.style.overscrollBehaviorY = "initial";
     this.headerRef.current!.removeEventListener("touchstart", this.handleTouchStart);
     this.headerRef.current!.removeEventListener("touchmove", this.handleTouchMove);

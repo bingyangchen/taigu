@@ -46,6 +46,7 @@ class StockSearchModal extends React.Component<Props, State> {
         layout="fullScreen"
         transparent
         noFooter
+        noX
       >
         <div className={styles.modal_inner}>
           <div className={styles.search_input_outer}>
@@ -86,23 +87,20 @@ class StockSearchModal extends React.Component<Props, State> {
                               ? "▼"
                               : "-"
                         }
-                                                ${
-                                                  stockInfo.fluct_price !== 0
-                                                    ? Math.abs(stockInfo.fluct_price)
-                                                    : ""
-                                                }
-                                                ${
-                                                  stockInfo.fluct_price !== 0
-                                                    ? "(" +
-                                                      (
-                                                        Math.abs(
-                                                          stockInfo.fluct_price /
-                                                            stockInfo.close,
-                                                        ) * 100
-                                                      ).toFixed(1) +
-                                                      "%)"
-                                                    : ""
-                                                }`}
+                        ${
+                          stockInfo.fluct_price !== 0
+                            ? Math.abs(stockInfo.fluct_price)
+                            : ""
+                        }
+                        ${
+                          stockInfo.fluct_price !== 0
+                            ? "(" +
+                              (
+                                Math.abs(stockInfo.fluct_price / stockInfo.close) * 100
+                              ).toFixed(1) +
+                              "%)"
+                            : ""
+                        }`}
                       </div>
                     </div>
                   </div>
