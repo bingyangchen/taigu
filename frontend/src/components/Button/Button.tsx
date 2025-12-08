@@ -40,7 +40,12 @@ export default class Button extends React.Component<Props, State> {
   }
   private handleHitEnter = (e: KeyboardEvent): void => {
     if (this.props.canTriggerByEnter && e.key === "Enter") {
-      this.props.onClick?.(e);
+      try {
+        const result = this.props.onClick?.(e);
+        if (result && typeof result === "object" && "catch" in result) {
+          (result as Promise<unknown>).catch(() => {});
+        }
+      } catch (error) {}
     }
   };
 }

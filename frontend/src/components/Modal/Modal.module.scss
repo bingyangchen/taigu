@@ -24,6 +24,7 @@
       width: min(85vw, 350px);
     }
     &.auto {
+      min-width: min(85vw, 350px);
       max-width: min(85vw, 720px);
     }
     &.full_screen {

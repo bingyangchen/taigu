@@ -55,6 +55,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
           disabled: !this.canSubmit,
           waiting: this.props.isWaiting,
           onClick: this.handleClickSubmit,
+          canTriggerByEnter: true,
         }}
         layout={Util.isMobile ? "fullScreen" : "compact"}
         noX
@@ -129,7 +130,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
       }
       this.props.hideModal(e);
       this.props.onSave?.();
-    } catch (reason: any) {
+    } catch (reason) {
       this.props.hideModal(e);
     }
   };

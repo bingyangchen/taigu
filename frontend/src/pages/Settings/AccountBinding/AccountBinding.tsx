@@ -1,10 +1,8 @@
-import googleLogo from "../../../assets/google.png";
-import logo from "../../../assets/logo.png";
-import styles from "./AccountBinding.module.scss";
-
 import React, { MouseEvent } from "react";
 import { connect } from "react-redux";
 
+import googleLogo from "../../../assets/google.png";
+import logo from "../../../assets/logo.png";
 import { BottomSheet, Button, Modal } from "../../../components";
 import Form from "../../../components/Form/Form";
 import { IconLink } from "../../../icons";
@@ -15,6 +13,7 @@ import { IRouter, settingsPagePath, withRouter } from "../../../router";
 import Api from "../../../utils/api";
 import Env from "../../../utils/env";
 import Util from "../../../utils/util";
+import styles from "./AccountBinding.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { email, isWaiting } = rootState.account;
