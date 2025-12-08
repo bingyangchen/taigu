@@ -54,11 +54,7 @@ class BottomSheet extends React.Component<Props, State> {
 
     this.setState({ initialMainHeight: this.mainRef.current!.clientHeight });
   }
-  public componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot?: any,
-  ): void {
+  public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (
       prevProps.router.location.hash === "#!" &&
       this.props.router.location.hash === ""

@@ -42,11 +42,7 @@ class UserInfo extends React.Component<Props, State> {
     });
   }
 
-  public async componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot?: any,
-  ): Promise<void> {
+  public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
     if (prevProps.username !== this.props.username) {
       this.setState({ username: this.props.username });
     }

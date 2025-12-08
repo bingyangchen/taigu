@@ -85,7 +85,6 @@ class Home extends React.Component<Props, State> {
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any,
   ): void {
     if (
       prevProps.tseIndexRealtimePrices !== this.props.tseIndexRealtimePrices ||

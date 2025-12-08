@@ -157,11 +157,7 @@ class Details extends React.Component<Props, State> {
       });
     this.props.dispatch(fetchCompanyInfo(this.sid));
   }
-  public async componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot?: any,
-  ): Promise<void> {
+  public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
     if (prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord) {
       this.setState({
         inventoryHistogram: (

@@ -33,11 +33,7 @@ class Settings extends React.Component<Props, State> {
   public async componentDidMount(): Promise<void> {
     this.props.dispatch(fetchAccountInfo());
   }
-  public componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot?: any,
-  ): void {
+  public componentDidUpdate(prevProps: Readonly<Props>): void {
     // Conditionally navigate back one more time
     if (prevProps.router.location.key !== this.props.router.location.key) {
       if (
