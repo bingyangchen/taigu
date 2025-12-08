@@ -1,7 +1,8 @@
-import styles from "./RoundButton.module.scss";
 import "./RoundButton.scss";
 
 import React, { MouseEventHandler } from "react";
+
+import styles from "./RoundButton.module.scss";
 
 interface Props {
   children: any;

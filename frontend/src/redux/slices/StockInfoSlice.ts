@@ -91,22 +91,22 @@ export const stockInfoSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchRealtimeMarketIndex.pending, (state) => {})
+      .addCase(fetchRealtimeMarketIndex.pending, () => {})
       .addCase(fetchRealtimeMarketIndex.fulfilled, (state, action) => {
         state.tseIndexRealtimePrices = action.payload.tse;
         state.otcIndexRealtimePrices = action.payload.otc;
       })
-      .addCase(fetchRealtimeMarketIndex.rejected, (state) => {})
+      .addCase(fetchRealtimeMarketIndex.rejected, () => {})
 
-      .addCase(fetchStockInfo.pending, (state) => {})
+      .addCase(fetchStockInfo.pending, () => {})
       .addCase(fetchStockInfo.fulfilled, (state, action) => {
         for (const [sid, info] of Object.entries(action.payload)) {
           state.sidStockInfoMap[sid] = info;
         }
       })
-      .addCase(fetchStockInfo.rejected, (state) => {})
+      .addCase(fetchStockInfo.rejected, () => {})
 
-      .addCase(fetchSingleStockInfo.pending, (state) => {})
+      .addCase(fetchSingleStockInfo.pending, () => {})
       .addCase(fetchSingleStockInfo.fulfilled, (state, action) => {
         state.sidStockInfoMap[action.payload.sid] = action.payload;
         if (!(action.payload.sid in state.sidHistoricalPricesMap)) {
@@ -119,7 +119,7 @@ export const stockInfoSlice = createSlice({
           new Date().toLocaleDateString("af")
         ] = action.payload.close;
       })
-      .addCase(fetchSingleStockInfo.rejected, (state) => {})
+      .addCase(fetchSingleStockInfo.rejected, () => {})
 
       .addCase(fetchSingleStockHistoricalPrices.pending, (state) => {
         state.isWaitingHistoricalPrices = true;
@@ -174,7 +174,7 @@ export const calculateMarketValue = (
   stockInfo: StockInfo | undefined,
   inventoryCosts: number[],
 ): number => {
-  return (stockInfo?.close || 0) * inventoryCosts.length;
+  return (stockInfo?.close ?? 0) * inventoryCosts.length;
 };
 
 export const getTotalMarketValue = (

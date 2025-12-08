@@ -85,7 +85,6 @@ class Home extends React.Component<Props, State> {
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
-    snapshot?: any,
   ): void {
     if (
       prevProps.tseIndexRealtimePrices !== this.props.tseIndexRealtimePrices ||
@@ -222,26 +221,40 @@ class Home extends React.Component<Props, State> {
             </div>
           </div>
           <div className={styles.summary}>
-            <div className={styles.row}>
-              <span>報酬率</span>
-              <span>
-                {this.props.tradeRecords.length > 0 ? this.rateOfReturn.toFixed(2) : 0}
-                <PercentSign />
-              </span>
+            <div className={styles.summary_row}>
+              <div className={styles.left}>
+                <div className={styles.title}>報酬率</div>
+              </div>
+              <div className={styles.price}>
+                <div className={styles.price}>
+                  {this.props.tradeRecords.length > 0
+                    ? this.rateOfReturn.toFixed(2)
+                    : 0}
+                  <PercentSign />
+                </div>
+              </div>
             </div>
-            <div className={styles.row}>
-              <span>實現損益</span>
-              <span>
-                <DollarSign />
-                {Math.round(this.totalEarning).toLocaleString()}
-              </span>
+            <div className={styles.summary_row}>
+              <div className={styles.left}>
+                <div className={styles.title}>實現損益</div>
+              </div>
+              <div className={styles.price}>
+                <div className={styles.price}>
+                  <DollarSign />
+                  {Math.round(this.totalEarning).toLocaleString()}
+                </div>
+              </div>
             </div>
-            <div className={styles.row}>
-              <span>手續費用</span>
-              <span>
-                <DollarSign />
-                {this.props.totalHandlingFee.toLocaleString()}
-              </span>
+            <div className={styles.summary_row}>
+              <div className={styles.left}>
+                <div className={styles.title}>手續費用</div>
+              </div>
+              <div className={styles.price}>
+                <div className={styles.price}>
+                  <DollarSign />
+                  {this.props.totalHandlingFee.toLocaleString()}
+                </div>
+              </div>
             </div>
           </div>
         </div>

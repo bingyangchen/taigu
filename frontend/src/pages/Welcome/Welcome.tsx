@@ -49,7 +49,7 @@ export default class Welcome extends React.Component<Props, State> {
         canInstallPWA: true,
       });
     });
-    this.mainRef.current!.addEventListener("scroll", (e) => {
+    this.mainRef.current!.addEventListener("scroll", () => {
       const mainDiv = this.mainRef.current;
       if (mainDiv === null) return;
       this.setState({

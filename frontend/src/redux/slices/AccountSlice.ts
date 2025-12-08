@@ -135,7 +135,7 @@ export const accountSlice = createSlice({
       .addCase(deleteAccount.pending, (state) => {
         state.isWaiting = true;
       })
-      .addCase(deleteAccount.fulfilled, (state, action) => {
+      .addCase(deleteAccount.fulfilled, (state) => {
         state.isWaiting = false;
       })
       .addCase(deleteAccount.rejected, (state) => {
@@ -145,7 +145,7 @@ export const accountSlice = createSlice({
       .addCase(login.pending, (state) => {
         state.isWaiting = true;
       })
-      .addCase(login.fulfilled, (state, action) => {
+      .addCase(login.fulfilled, (state) => {
         state.isWaiting = false;
       })
       .addCase(login.rejected, (state) => {
@@ -155,7 +155,7 @@ export const accountSlice = createSlice({
       .addCase(loginWithGoogle.pending, (state) => {
         state.isWaiting = true;
       })
-      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+      .addCase(loginWithGoogle.fulfilled, (state) => {
         state.isWaiting = false;
       })
       .addCase(loginWithGoogle.rejected, (state) => {
@@ -165,7 +165,7 @@ export const accountSlice = createSlice({
       .addCase(logout.pending, (state) => {
         state.isWaiting = true;
       })
-      .addCase(logout.fulfilled, (state, action) => {
+      .addCase(logout.fulfilled, (state) => {
         state.isWaiting = false;
       })
       .addCase(logout.rejected, (state) => {

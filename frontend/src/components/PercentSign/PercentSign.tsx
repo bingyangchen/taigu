@@ -1,6 +1,6 @@
-import styles from "./PercentSign.module.scss";
-
 import React from "react";
+
+import styles from "./PercentSign.module.scss";
 
 interface Props {}
 

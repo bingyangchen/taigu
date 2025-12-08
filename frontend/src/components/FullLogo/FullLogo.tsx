@@ -21,7 +21,7 @@ export default class FullLogo extends React.Component<Props, State> {
     return (
       <div
         className={this.class_name}
-        style={{ transform: `translateX(${this.props.translateX || 0}px)` }}
+        style={{ transform: `translateX(${this.props.translateX ?? 0}px)` }}
       >
         <div className={styles.logo_container}>
           <img className={styles.logo} src={logo} alt="" />

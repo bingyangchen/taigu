@@ -54,11 +54,7 @@ class BottomSheet extends React.Component<Props, State> {
 
     this.setState({ initialMainHeight: this.mainRef.current!.clientHeight });
   }
-  public componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot?: any,
-  ): void {
+  public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (
       prevProps.router.location.hash === "#!" &&
       this.props.router.location.hash === ""
@@ -126,7 +122,7 @@ class BottomSheet extends React.Component<Props, State> {
       };
     });
   };
-  private handleTouchEnd = (e: TouchEvent) => {
+  private handleTouchEnd = () => {
     if (!this.state.isMaximized) {
       if (this.props.canMaximize && -this.state.touchDiffY! > this.maximizeThreshold) {
         this.setState({ touchEndY: 20, isMaximized: true });

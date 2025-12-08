@@ -27,6 +27,7 @@ interface State {
   dealTime: string;
   sid: string;
   dealPrice: number;
+  dealPriceInput: string;
   isBuying: boolean;
   absDealQuantity: number;
   handlingFee: number;
@@ -42,6 +43,7 @@ class TradeRecordModal extends React.Component<Props, State> {
         dealTime: props.record.deal_time,
         sid: props.record.sid,
         dealPrice: props.record.deal_price,
+        dealPriceInput: props.record.deal_price.toString(),
         isBuying: props.record.deal_quantity > 0 ? true : false,
         absDealQuantity: Math.abs(props.record.deal_quantity),
         handlingFee: props.record.handling_fee,
@@ -52,6 +54,7 @@ class TradeRecordModal extends React.Component<Props, State> {
         dealTime: new Date().toLocaleDateString("af"),
         sid: props.defaultSid ?? "",
         dealPrice: NaN,
+        dealPriceInput: "",
         isBuying: true,
         absDealQuantity: NaN,
         handlingFee: 0,
@@ -99,15 +102,11 @@ class TradeRecordModal extends React.Component<Props, State> {
             <LabeledInput
               title="成交單價"
               type="number"
-              value={
-                this.state.dealPrice || this.state.dealPrice === 0
-                  ? this.state.dealPrice.toString()
-                  : ""
-              }
+              inputMode="decimal"
+              value={this.state.dealPriceInput}
               onChange={(dealPrice: string) => {
-                this.setState({
-                  dealPrice: dealPrice === "" ? NaN : parseFloat(dealPrice),
-                });
+                const parsed = dealPrice === "" ? NaN : parseFloat(dealPrice);
+                this.setState({ dealPriceInput: dealPrice, dealPrice: parsed });
                 setTimeout(() => {
                   this.setState({ handlingFee: this.calcDefaultHandlingFee() });
                 });
@@ -133,6 +132,7 @@ class TradeRecordModal extends React.Component<Props, State> {
             <LabeledInput
               title="成交股數"
               type="number"
+              inputMode="numeric"
               value={
                 this.state.absDealQuantity || this.state.absDealQuantity === 0
                   ? this.state.absDealQuantity.toString()
@@ -156,6 +156,7 @@ class TradeRecordModal extends React.Component<Props, State> {
           <LabeledInput
             title="手續費用"
             type="number"
+            inputMode="numeric"
             value={
               this.state.handlingFee || this.state.handlingFee === 0
                 ? this.state.handlingFee.toString()

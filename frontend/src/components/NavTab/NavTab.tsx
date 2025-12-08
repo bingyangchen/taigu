@@ -1,11 +1,10 @@
-import styles from "./NavTab.module.scss";
-
 import React, { MouseEventHandler } from "react";
 import { NavLink } from "react-router-dom";
 
 import { IRouter, withRouter } from "../../router";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
+import styles from "./NavTab.module.scss";
 
 interface Props extends IRouter {
   page: Subpage;
@@ -36,10 +35,10 @@ class NavTab extends React.Component<Props, State> {
     ) : (
       <NavLink
         to={this.props.page.path}
-        end={this.props.end || false}
+        end={this.props.end ?? false}
         className={styles.tab}
         onClick={this.props.onClick}
-        replace={this.props.replace || false}
+        replace={this.props.replace ?? false}
       >
         <div className={styles.icon_outer}>{this.props.page.icon}</div>
         {this.props.page.name}

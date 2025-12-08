@@ -1,6 +1,6 @@
-import styles from "./AutoResizeTextarea.module.scss";
-
 import React, { ChangeEventHandler } from "react";
+
+import styles from "./AutoResizeTextarea.module.scss";
 
 interface Props {
   value: string;
@@ -39,7 +39,7 @@ export default class AutoResizeTextarea extends React.Component<Props, State> {
       <textarea
         className={styles.main}
         value={this.props.value}
-        onChange={this.props.onChange || (() => {})}
+        onChange={this.props.onChange ?? (() => {})}
         placeholder={this.props.placeholder}
         ref={this.textareaRef}
       />

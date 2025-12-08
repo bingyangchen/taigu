@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FocusEvent } from "react";
+import React, { ChangeEvent } from "react";
 
 import { RoundButton } from "../../components";
 import { IconEye, IconEyeSlash } from "../../icons";
@@ -7,6 +7,15 @@ import styles from "./LabeledInput.module.scss";
 interface Props {
   title: string;
   type?: "number" | "text" | "password" | "email" | "date" | "hidden";
+  inputMode?:
+    | "none"
+    | "text"
+    | "tel"
+    | "url"
+    | "email"
+    | "numeric"
+    | "decimal"
+    | "search";
   autocomplete?: string;
   value: string;
   disabled?: boolean;
@@ -24,7 +33,7 @@ export default class LabeledInput extends React.Component<Props, State> {
   private inputRef: React.RefObject<HTMLInputElement>;
   public constructor(props: Props) {
     super(props);
-    this.state = { isInputFocused: false, type: props.type || "text" };
+    this.state = { isInputFocused: false, type: props.type ?? "text" };
     this.inputRef = React.createRef();
   }
   public componentDidMount(): void {
@@ -34,7 +43,7 @@ export default class LabeledInput extends React.Component<Props, State> {
     return (
       <fieldset
         className={`${styles.main} ${this.state.isInputFocused ? styles.focused : ""}`}
-        disabled={this.props.disabled || false}
+        disabled={this.props.disabled ?? false}
       >
         <legend className={this.state.isInputFocused ? styles.focused : ""}>
           {this.props.title}
@@ -42,7 +51,8 @@ export default class LabeledInput extends React.Component<Props, State> {
         <input
           ref={this.inputRef}
           type={this.state.type}
-          disabled={this.props.disabled || false}
+          inputMode={this.props.inputMode}
+          disabled={this.props.disabled ?? false}
           value={this.props.value}
           onChange={this.handleInputChange}
           autoComplete={this.props.autocomplete || "off"}
@@ -77,14 +87,14 @@ export default class LabeledInput extends React.Component<Props, State> {
   private handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     this.props.onChange?.(e.target.value);
   };
-  private handleFocusInput = (e: FocusEvent) => {
+  private handleFocusInput = () => {
     this.setState({ isInputFocused: true });
   };
-  private handleUnfocusInput = (e: FocusEvent) => {
+  private handleUnfocusInput = () => {
     this.setState({ isInputFocused: false });
   };
   private handlePasswordPeekability = () => {
-    this.setState((state, props) => {
+    this.setState((state) => {
       return { type: state.type === "password" ? "text" : "password" };
     });
   };

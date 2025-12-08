@@ -1,3 +1,5 @@
+import React from "react";
+
 export type UpdateAccountInfoRequestBody = { username?: string; avatar_url?: string };
 
 export type UpdateCashDividendRecordRequestBody = {
@@ -36,8 +38,8 @@ export type UpdateTradeRecordRequestBody = {
 export type CreateTradeRecordRequestBody = Omit<UpdateTradeRecordRequestBody, "id">;
 
 export type Subpage = {
-  icon: JSX.Element;
-  icon_bold?: JSX.Element;
+  icon: React.ReactElement;
+  icon_bold?: React.ReactElement;
   name: string;
   path: string;
 };

@@ -96,9 +96,9 @@ interface State {
 class Details extends React.Component<Props, State> {
   public state: State;
   private mainRef: React.RefObject<HTMLDivElement>;
-  private scrollingThreshold: number = 10;
-  private switchingThreshold: number = 85;
-  private showBriefInfoOnHeaderThreshold: number = 120;
+  private readonly SCROLLING_THRESHOLD: number = 10;
+  private readonly SWITCHING_THRESHOLD: number = 85;
+  private readonly SHOW_FLOATING_INFO_THRESHOLD: number = 120;
   public constructor(props: Props) {
     super(props);
     this.state = {
@@ -157,11 +157,7 @@ class Details extends React.Component<Props, State> {
       });
     this.props.dispatch(fetchCompanyInfo(this.sid));
   }
-  public async componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot?: any,
-  ): Promise<void> {
+  public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
     if (prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord) {
       this.setState({
         inventoryHistogram: (
@@ -211,7 +207,7 @@ class Details extends React.Component<Props, State> {
           {Util.isMobile && (
             <div
               className={`${styles.mobile_back_button_container} ${
-                this.props.mainScrollTop > this.showBriefInfoOnHeaderThreshold
+                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
                   ? styles.scrolled
                   : ""
               }`}
@@ -228,10 +224,11 @@ class Details extends React.Component<Props, State> {
           {Util.isMobile && this.sid in this.props.sidStockInfoMap && (
             <div
               className={`${styles.stock_brief_info_container} ${
-                this.props.mainScrollTop > this.showBriefInfoOnHeaderThreshold
+                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
                   ? styles.show
                   : ""
               }`}
+              onClick={this.handleScrollToTop}
             >
               <div className={styles.company_name}>
                 {this.props.sidStockInfoMap[this.sid].name}
@@ -579,30 +576,30 @@ class Details extends React.Component<Props, State> {
   private handleTouchMove = (e: TouchEvent): void => {
     const touch = e.changedTouches[0];
     if (!this.state.isScrollingVertically && !this.state.isScrollingHorizontally) {
-      this.setState((state, props) => {
-        if (Math.abs(touch.clientY - state.touchStartY) > this.scrollingThreshold) {
+      this.setState((state) => {
+        if (Math.abs(touch.clientY - state.touchStartY) > this.SCROLLING_THRESHOLD) {
           return { isScrollingVertically: true } as State;
         } else if (
-          Math.abs(touch.clientX - state.touchStartX) > this.scrollingThreshold
+          Math.abs(touch.clientX - state.touchStartX) > this.SCROLLING_THRESHOLD
         ) {
           return { isScrollingHorizontally: true } as State;
         }
       });
     } else {
       if (!this.state.isScrollingHorizontally) return;
-      this.setState((state, props) => {
+      this.setState((state) => {
         return { touchDiffX: touch.clientX - state.touchStartX };
       });
-      if (this.state.touchDiffX <= -this.switchingThreshold) {
-        this.setState((state, props) => {
+      if (this.state.touchDiffX <= -this.SWITCHING_THRESHOLD) {
+        this.setState((state) => {
           if (!state.hasVibrated) {
             if (navigator.vibrate) navigator.vibrate(20);
             return { hasVibrated: true, switchDirection: "next" };
           }
           return { switchDirection: "next" } as State;
         });
-      } else if (this.state.touchDiffX >= this.switchingThreshold) {
-        this.setState((state, props) => {
+      } else if (this.state.touchDiffX >= this.SWITCHING_THRESHOLD) {
+        this.setState((state) => {
           if (!state.hasVibrated) {
             if (navigator.vibrate) navigator.vibrate(20);
             return { hasVibrated: true, switchDirection: "prev" };
@@ -630,6 +627,17 @@ class Details extends React.Component<Props, State> {
   };
   private handleClickNextButton = (): void => {
     this.goToNextOne();
+  };
+  private handleScrollToTop = (): void => {
+    let element: HTMLElement | null = this.mainRef.current;
+    while (element && element.parentElement) {
+      element = element.parentElement;
+      if (element.scrollHeight > element.clientHeight) {
+        element.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   private goToPrevOne(): void {
     const sids =

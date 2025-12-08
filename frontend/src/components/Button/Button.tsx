@@ -31,8 +31,8 @@ export default class Button extends React.Component<Props, State> {
         className={`button ${this.props.className} ${
           this.props.waiting ? "waiting" : ""
         }`}
-        onClick={this.props.onClick || (() => {})}
-        disabled={this.props.disabled || false}
+        onClick={this.props.onClick ?? (() => {})}
+        disabled={this.props.disabled ?? false}
       >
         {this.props.children}
       </button>

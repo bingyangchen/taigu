@@ -1,8 +1,8 @@
 import React from "react";
 import { Chart } from "react-google-charts";
 import { connect } from "react-redux";
-import { AppDispatch, RootState } from "../../redux/store";
 
+import { AppDispatch, RootState } from "../../redux/store";
 import Util from "../../utils/util";
 
 function mapStateToProps(rootState: RootState) {

@@ -1,5 +1,3 @@
-import styles from "./DeleteAccount.module.scss";
-
 import React from "react";
 import { connect } from "react-redux";
 
@@ -9,6 +7,7 @@ import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, settingsPagePath, withRouter } from "../../../router";
 import Env from "../../../utils/env";
+import styles from "./DeleteAccount.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.account;

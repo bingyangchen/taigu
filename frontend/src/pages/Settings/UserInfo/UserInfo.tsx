@@ -37,22 +37,18 @@ class UserInfo extends React.Component<Props, State> {
   public async componentDidMount(): Promise<void> {
     this.props.dispatch(updateHeaderTitle("頭像與名字"));
     this.setState({
-      avatarUrl: this.props.avatar_url || "",
+      avatarUrl: this.props.avatar_url ?? "",
       username: this.props.username,
     });
   }
 
-  public async componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot?: any,
-  ): Promise<void> {
+  public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
     if (prevProps.username !== this.props.username) {
       this.setState({ username: this.props.username });
     }
     if (prevProps.avatar_url !== this.props.avatar_url) {
       this.setState({
-        avatarUrl: this.props.avatar_url || "",
+        avatarUrl: this.props.avatar_url ?? "",
         showDefaultAvatar: false,
       });
     }
@@ -95,7 +91,7 @@ class UserInfo extends React.Component<Props, State> {
         ) : (
           <img
             className={styles.avatar_preview}
-            src={Util.validateAndSanitizeUrl(this.state.avatarUrl) || ""}
+            src={Util.validateAndSanitizeUrl(this.state.avatarUrl) ?? ""}
             alt=""
             onError={() => this.setState({ showDefaultAvatar: true })}
           />
@@ -132,7 +128,7 @@ class UserInfo extends React.Component<Props, State> {
     await this.props
       .dispatch(
         updateAccountInfo({
-          avatar_url: validatedAvatarUrl || "",
+          avatar_url: validatedAvatarUrl ?? "",
           username: this.state.username,
         }),
       )

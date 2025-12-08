@@ -49,11 +49,7 @@ class DetailCard extends React.Component<Props, State> {
     this.rippleRef = React.createRef();
   }
   public componentDidMount(): void {}
-  public componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot?: any,
-  ): void {
+  public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (
       this.props.includeWarehouseInfo &&
       (prevProps.stockWarehouse !== this.props.stockWarehouse ||

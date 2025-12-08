@@ -76,7 +76,7 @@ class Main extends React.Component<Props, State> {
   private channel: BroadcastChannel;
   private mainRef: React.RefObject<HTMLDivElement>;
   private subpages: Subpage[];
-  private fetchAllStockInfoTimer: NodeJS.Timer | null;
+  private fetchAllStockInfoTimer: ReturnType<typeof setTimeout> | null;
   public constructor(props: Props) {
     super(props);
     this.state = { isLoading: true, prevLocationPathname: null };
@@ -147,11 +147,7 @@ class Main extends React.Component<Props, State> {
       this.props.dispatch(fetchRealtimeMarketIndex());
     }, 15000);
   }
-  public componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot?: any,
-  ): void {
+  public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (prevProps.router.location.pathname !== this.props.router.location.pathname) {
       this.mainRef.current!.scrollTo(0, 0);
       this.props.dispatch(fetchAccountInfo());

@@ -77,6 +77,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
           <LabeledInput
             title="現金股利"
             type="number"
+            inputMode="numeric"
             value={
               this.state.cashDividend || this.state.cashDividend === 0
                 ? this.state.cashDividend.toString()
