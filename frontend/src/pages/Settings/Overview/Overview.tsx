@@ -69,7 +69,7 @@ class Overview extends React.Component<Props, State> {
     ];
   }
   public componentDidMount(): void {
-    this.props.dispatch(updateHeaderTitle("Settings"));
+    this.props.dispatch(updateHeaderTitle("設定"));
   }
   public render(): React.ReactNode {
     return (
