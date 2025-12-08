@@ -6,8 +6,8 @@
   display: flex;
   flex-direction: column;
   height: fit-content;
-  padding: 10px 15px;
-  border-radius: 8px;
+  padding: 12px 20px;
+  border-radius: 20px;
   background-color: _.$transparent-white;
   box-shadow: 0 3px 10px -5px _.$semi-transparent-black;
   width: var(--card-width);
@@ -20,9 +20,7 @@
   @media (max-width: _.$width-780) {
     --card-width: 100%;
     padding: 10px 25px;
-    background-color: _.$transparent-white;
     box-shadow: none;
-    border-radius: 20px;
     &.tall {
       padding: 15px 25px;
     }
@@ -31,6 +29,7 @@
     &:hover {
       background-color: _.$white;
       box-shadow: 0 3px 20px -10px _.$semi-transparent-black;
+      transition-duration: 150ms;
     }
   }
   & > .mask {
