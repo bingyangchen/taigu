@@ -75,7 +75,7 @@ class Main extends React.Component<Props, State> {
   private channel: BroadcastChannel;
   private mainRef: React.RefObject<HTMLDivElement>;
   private subpages: Subpage[];
-  private fetchAllStockInfoTimer: ReturnType<typeof setTimeout> | null;
+  private fetchStockInfoTimer: ReturnType<typeof setTimeout> | null;
   public constructor(props: Props) {
     super(props);
     this.state = { isLoading: true, prevLocationPathname: null };
@@ -83,7 +83,7 @@ class Main extends React.Component<Props, State> {
     this.channel.addEventListener("message", this.handleNonCacheResponse);
     this.mainRef = React.createRef();
     this.subpages = [];
-    this.fetchAllStockInfoTimer = null;
+    this.fetchStockInfoTimer = null;
   }
   public async componentDidMount(): Promise<void> {
     oncontextmenu = (e) => e.preventDefault();
@@ -100,7 +100,7 @@ class Main extends React.Component<Props, State> {
         this.props.dispatch(fetchAllTradePlans()).unwrap(),
         this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
       ]);
-      await this.fetchNecessaryStockInfo();
+      await this.fetchHoldingStockInfo();
     } catch (e) {}
 
     this.subpages = [
@@ -141,8 +141,8 @@ class Main extends React.Component<Props, State> {
       },
     ];
 
-    this.fetchAllStockInfoTimer = setInterval(() => {
-      this.fetchNecessaryStockInfo();
+    this.fetchStockInfoTimer = setInterval(() => {
+      this.fetchHoldingStockInfo();
       this.props.dispatch(fetchRealtimeMarketIndex());
     }, 15000);
   }
@@ -169,8 +169,10 @@ class Main extends React.Component<Props, State> {
   }
   public componentWillUnmount(): void {
     this.mainRef.current!.removeEventListener("scroll", this.handleScroll);
-    clearInterval(this.fetchAllStockInfoTimer!);
-    this.fetchAllStockInfoTimer = null;
+    if (this.fetchStockInfoTimer) {
+      clearInterval(this.fetchStockInfoTimer);
+      this.fetchStockInfoTimer = null;
+    }
     this.channel.close();
   }
   public render(): React.ReactNode {
@@ -206,7 +208,7 @@ class Main extends React.Component<Props, State> {
         await this.props
           .dispatch(refreshTradeRecordsWithNonCacheResponse(e.data.data.data))
           .unwrap();
-        this.fetchNecessaryStockInfo();
+        this.fetchHoldingStockInfo();
       } else if (/stock\/cash-dividends[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(
           refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
@@ -226,12 +228,11 @@ class Main extends React.Component<Props, State> {
       );
     }
   };
-  private fetchNecessaryStockInfo = async (): Promise<void> => {
+  private fetchHoldingStockInfo = async (): Promise<void> => {
     const hodlingSids = Object.entries(this.props.stockWarehouse)
       .filter(([sid, warehouse]) => warehouse.length > 0)
       .map(([sid, warehouse]) => sid);
-    const sids = Array.from(new Set(hodlingSids));
-    await this.props.dispatch(fetchStockInfo(sids)).unwrap();
+    await this.props.dispatch(fetchStockInfo(hodlingSids)).unwrap();
     this.setState({ isLoading: false });
   };
 }
