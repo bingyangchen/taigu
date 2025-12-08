@@ -25,6 +25,7 @@ interface State {
   planId: string | null;
   sid: string;
   targetPrice: number;
+  targetPriceInput: string;
   planType: "buy" | "sell";
   targetQuantity: number;
 }
@@ -37,6 +38,7 @@ class TradePlanModal extends React.Component<Props, State> {
       planId: props.plan?.id.toString() || null,
       sid: props.plan?.sid || props.defaultSid || "",
       targetPrice: props.plan ? props.plan.target_price : NaN,
+      targetPriceInput: props.plan ? props.plan.target_price.toString() : "",
       planType: props.plan?.plan_type ?? "buy",
       targetQuantity: props.plan ? props.plan.target_quantity : NaN,
     };
@@ -74,15 +76,11 @@ class TradePlanModal extends React.Component<Props, State> {
             <LabeledInput
               title="目標價格"
               type="number"
-              value={
-                this.state.targetPrice || this.state.targetPrice === 0
-                  ? this.state.targetPrice.toString()
-                  : ""
-              }
+              inputMode="decimal"
+              value={this.state.targetPriceInput}
               onChange={(targetPrice: string) => {
-                this.setState({
-                  targetPrice: targetPrice === "" ? NaN : parseFloat(targetPrice),
-                });
+                const parsed = targetPrice === "" ? NaN : parseFloat(targetPrice);
+                this.setState({ targetPriceInput: targetPrice, targetPrice: parsed });
               }}
               autoFocus={Boolean(this.state.sid)}
             />
@@ -105,6 +103,7 @@ class TradePlanModal extends React.Component<Props, State> {
             <LabeledInput
               title="目標股數"
               type="number"
+              inputMode="numeric"
               value={
                 this.state.targetQuantity || this.state.targetQuantity === 0
                   ? this.state.targetQuantity.toString()

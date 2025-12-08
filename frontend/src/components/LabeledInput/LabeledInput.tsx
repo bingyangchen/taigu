@@ -7,6 +7,15 @@ import styles from "./LabeledInput.module.scss";
 interface Props {
   title: string;
   type?: "number" | "text" | "password" | "email" | "date" | "hidden";
+  inputMode?:
+    | "none"
+    | "text"
+    | "tel"
+    | "url"
+    | "email"
+    | "numeric"
+    | "decimal"
+    | "search";
   autocomplete?: string;
   value: string;
   disabled?: boolean;
@@ -42,6 +51,7 @@ export default class LabeledInput extends React.Component<Props, State> {
         <input
           ref={this.inputRef}
           type={this.state.type}
+          inputMode={this.props.inputMode}
           disabled={this.props.disabled ?? false}
           value={this.props.value}
           onChange={this.handleInputChange}
