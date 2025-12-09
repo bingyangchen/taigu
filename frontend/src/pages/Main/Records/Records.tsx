@@ -5,6 +5,7 @@ import { Button, ListRow, SearchKeywordInput, SpeedDial } from "../../../compone
 import type { RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { CashDividendRecord, TradeRecord } from "../../../types";
+import Util from "../../../utils/util";
 import styles from "./Records.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -115,7 +116,7 @@ class Records extends React.Component<Props, State> {
             </Button>
           </div>
         </div>
-        <SpeedDial />
+        {Util.isMobile && <SpeedDial />}
       </div>
     );
   }

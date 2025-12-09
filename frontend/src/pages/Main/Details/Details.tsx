@@ -426,9 +426,9 @@ class Details extends React.Component<Props, State> {
               </div>
             </div>
           </div>
-          <SpeedDial defaultSid={this.sid} />
           {Util.isMobile ? (
             <>
+              <SpeedDial defaultSid={this.sid} />
               <div
                 className={`${styles.switch_hint_icon_for_mobile} ${styles.left} ${
                   this.state.switchDirection === "prev" ? styles.active : ""

@@ -7,6 +7,7 @@ import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Env from "../../../utils/env";
+import Util from "../../../utils/util";
 import styles from "./Market.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -128,7 +129,7 @@ class Market extends React.Component<Props, State> {
             );
           })}
         </div>
-        <SpeedDial />
+        {Util.isMobile && <SpeedDial />}
       </div>
     );
   }

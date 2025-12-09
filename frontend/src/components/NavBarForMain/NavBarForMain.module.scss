@@ -55,6 +55,89 @@
     flex-direction: column;
     gap: 5px;
     padding: 0 5px;
+    position: relative;
+    & > .action_button {
+      height: 65px;
+      padding: 0 20px;
+      color: _.$gray;
+      font-size: 0.9 * _.$base-font-size;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition-duration: 150ms;
+      position: relative;
+      @media (hover: hover) {
+        &:hover {
+          background-color: _.$transparent-black;
+        }
+      }
+      & > .icon_outer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+      }
+      & > .triangle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        cursor: pointer;
+        transition-duration: 150ms;
+        padding: 25px 5px;
+        &::before {
+          content: "";
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 6px solid _.$gray;
+          transition-duration: 150ms;
+        }
+        @media (hover: hover) {
+          &:hover::before {
+            border-top-color: _.$deep-gray;
+          }
+        }
+      }
+      & > .context_menu {
+        position: absolute;
+        top: 75%;
+        right: 5%;
+        width: max-content;
+        min-width: fit-content;
+        background-color: _.$white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px #00000026;
+        padding: 5px;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 5px;
+        animation: fadein 150ms;
+        & > .context_menu_item {
+          display: flex;
+          align-items: center;
+          padding: 10px 15px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition-duration: 150ms;
+          @media (hover: hover) {
+            &:hover {
+              background-color: _.$transparent-black;
+            }
+          }
+          & > .text {
+            font-size: 0.9 * _.$base-font-size;
+            color: _.$gray;
+            white-space: nowrap;
+          }
+        }
+      }
+    }
   }
   & > .lower {
     position: absolute;
