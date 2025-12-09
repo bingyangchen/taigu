@@ -5,6 +5,7 @@ import { Button, ListRow, SearchKeywordInput, SpeedDial } from "../../../compone
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { TradePlan } from "../../../types";
+import Util from "../../../utils/util";
 import styles from "./Plans.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -60,7 +61,7 @@ class Plans extends React.Component<Props, State> {
             </Button>
           </div>
         </div>
-        <SpeedDial />
+        {Util.isMobile && <SpeedDial />}
       </div>
     );
   }

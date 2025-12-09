@@ -18,6 +18,7 @@ import {
 import type { RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import { IndexPriceInfo } from "../../../types";
+import Util from "../../../utils/util";
 import styles from "./Home.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -109,7 +110,7 @@ class Home extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <SpeedDial />
+        {Util.isMobile && <SpeedDial />}
         <div className={styles.left}>
           <div className={styles.upper}>
             <div className={styles.market_index}>
