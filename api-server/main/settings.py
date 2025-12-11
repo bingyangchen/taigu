@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "main.account",
     "main.stock",
     "main.memo",
+    "main.handling_fee",
 ]
 
 MIDDLEWARE = [
