@@ -74,27 +74,7 @@ class Overview extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <>
-        {this.state.activeModalName === "checkLogout" && (
-          <Modal
-            title="登出"
-            discardButtonProps={{
-              children: "取消",
-              className: "transparent l",
-              onClick: Util.getHideModalCallback(this),
-            }}
-            submitButtonProps={{
-              children: "登出",
-              className: "primary l",
-              disabled: this.props.isWaiting,
-              waiting: this.props.isWaiting,
-              onClick: this.handleClickCheckLogout,
-            }}
-            noX
-            silentBackground
-          >
-            您確定要登出嗎？
-          </Modal>
-        )}
+        {this.activeModal}
         <div className={styles.main}>
           {!Util.isMobile && <NavBarForSettings subpages={this.subpages} />}
           <div className={styles.body}>
@@ -251,6 +231,32 @@ class Overview extends React.Component<Props, State> {
         </div>
       </>
     );
+  }
+  private get activeModal(): React.ReactElement<typeof Modal> | null {
+    if (this.state.activeModalName === "checkLogout") {
+      return (
+        <Modal
+          title="登出"
+          discardButtonProps={{
+            children: "取消",
+            className: "transparent l",
+            onClick: Util.getHideModalCallback(this),
+          }}
+          submitButtonProps={{
+            children: "登出",
+            className: "primary l",
+            disabled: this.props.isWaiting,
+            waiting: this.props.isWaiting,
+            onClick: this.handleClickCheckLogout,
+          }}
+          noX
+          silentBackground
+        >
+          您確定要登出嗎？
+        </Modal>
+      );
+    }
+    return null;
   }
   private handleClickCheckLogout = async (): Promise<void> => {
     await this.props.dispatch(logout()).unwrap();

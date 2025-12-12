@@ -120,11 +120,11 @@ class Details extends React.Component<Props, State> {
     this.mainRef = React.createRef();
   }
   public async componentDidMount(): Promise<void> {
-    if (this.listName !== null) {
+    if (this.listName !== null && this.mainRef.current) {
       // Do not write this using React inline event handling
-      this.mainRef.current!.addEventListener("touchstart", this.handleTouchStart, true);
-      this.mainRef.current!.addEventListener("touchmove", this.handleTouchMove, true);
-      this.mainRef.current!.addEventListener("touchend", this.handleTouchEnd, true);
+      this.mainRef.current.addEventListener("touchstart", this.handleTouchStart, true);
+      this.mainRef.current.addEventListener("touchmove", this.handleTouchMove, true);
+      this.mainRef.current.addEventListener("touchend", this.handleTouchEnd, true);
     }
     this.setState({
       inventoryHistogram: (
@@ -202,10 +202,10 @@ class Details extends React.Component<Props, State> {
     }
   }
   public componentWillUnmount(): void {
-    if (this.listName !== null) {
-      this.mainRef.current!.removeEventListener("touchstart", this.handleTouchStart);
-      this.mainRef.current!.removeEventListener("touchmove", this.handleTouchMove);
-      this.mainRef.current!.removeEventListener("touchend", this.handleTouchEnd);
+    if (this.listName !== null && this.mainRef.current) {
+      this.mainRef.current.removeEventListener("touchstart", this.handleTouchStart);
+      this.mainRef.current.removeEventListener("touchmove", this.handleTouchMove);
+      this.mainRef.current.removeEventListener("touchend", this.handleTouchEnd);
     }
 
     if (this.fetchStockInfoTimer) {
@@ -506,7 +506,7 @@ class Details extends React.Component<Props, State> {
     return null;
   }
   private get sid(): string {
-    return this.props.router.params.sid!;
+    return this.props.router.params.sid ?? "";
   }
   private get listName(): string | null {
     const pathList = this.props.router.location.pathname.split("/");
@@ -551,9 +551,7 @@ class Details extends React.Component<Props, State> {
     return result;
   }
   private get hasInventory(): boolean {
-    return Boolean(
-      this.props.stockWarehouse[this.sid] && this.props.stockWarehouse[this.sid].length,
-    );
+    return Boolean(this.props.stockWarehouse[this.sid]?.length);
   }
   private async calcInventoryHistogramChartData(): Promise<(string | number)[][]> {
     const worker = new Worker(
@@ -644,7 +642,7 @@ class Details extends React.Component<Props, State> {
   };
   private handleScrollToTop = (): void => {
     let element: HTMLElement | null = this.mainRef.current;
-    while (element && element.parentElement) {
+    while (element?.parentElement) {
       element = element.parentElement;
       if (element.scrollHeight > element.clientHeight) {
         element.scrollTo({ top: 0, behavior: "smooth" });
