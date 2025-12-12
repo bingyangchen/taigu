@@ -105,7 +105,7 @@
       border-radius: $border-radius;
       padding: 20px 20px 15px 20px;
       background-color: #ffffff90;
-      box-shadow: 0 0 15px -10px _.$semi-transparent-black;
+      box-shadow: 0 0 15px -10px _.$transparent-black;
       @media (max-width: _.$width-1280) {
         height: fit-content;
       }
@@ -238,64 +238,66 @@
   & > .right {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 20px;
-    border-radius: $border-radius;
-    background-color: _.$transparent-black;
-    box-shadow: 0 0 15px -10px _.$black;
-    @media (max-width: _.$width-512) {
-      border-radius: 0;
-      background-color: transparent;
-      box-shadow: none;
-    }
-    & > .title {
-      color: _.$gray;
-      text-align: center;
-      font-weight: normal;
-      font-size: _.$base-font-size;
-      margin: 0 5px;
+    gap: 30px;
+    & > .upper {
+      padding: 20px;
+      border-radius: $border-radius;
+      background-color: _.$transparent-black;
+      box-shadow: 0 0 15px -10px _.$black;
       @media (max-width: _.$width-512) {
-        margin: 0 auto;
+        padding: 0;
+        border-radius: 0;
+        background-color: transparent;
+        box-shadow: none;
       }
-    }
-    & > .market_value_chart_container {
-      position: relative;
-      height: 28dvh;
-      min-height: 200px;
-      width: 100%;
-      & > .chart_center {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        height: max(66%, 135px);
-        aspect-ratio: 1;
-        transform: translate(-50%, -50%);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
+      & > .title {
         color: _.$gray;
-        border: 1px solid _.$light-gray;
-        border-radius: 200px;
-        & > .upper {
-          font-size: 0.75 * _.$base-font-size;
-          font-weight: 300;
-        }
-        & > .lower {
-          font-size: 1.3 * _.$base-font-size;
-          margin-bottom: 20px;
+        text-align: center;
+        font-weight: normal;
+        font-size: _.$base-font-size;
+        margin: 0 5px 10px;
+      }
+      & > .market_value_chart_container {
+        position: relative;
+        height: 28dvh;
+        min-height: 200px;
+        width: 100%;
+        & > .chart_center {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          height: max(66%, 135px);
+          aspect-ratio: 1;
+          transform: translate(-50%, -50%);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
+          color: _.$gray;
+          border: 1px solid _.$light-gray;
+          border-radius: 200px;
+          & > .upper {
+            font-size: 0.75 * _.$base-font-size;
+            font-weight: 300;
+          }
+          & > .lower {
+            font-size: 1.3 * _.$base-font-size;
+            margin-bottom: 20px;
+          }
         }
       }
     }
-    & > .summary {
+    & > .lower {
       display: flex;
       flex-direction: column;
       padding: 15px 25px;
-      margin-top: 20px;
       background-color: #ffffff90;
       box-shadow: 0 0 15px -10px _.$transparent-black;
       border-radius: $border-radius;
+      @media (max-width: _.$width-512) {
+        margin: 0 20px;
+      }
       & > .summary_row {
         display: flex;
         align-items: center;

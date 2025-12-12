@@ -210,18 +210,20 @@ class Home extends React.Component<Props, State> {
           </div>
         </div>
         <div className={styles.right}>
-          <div className={styles.title}>投資組合</div>
-          <div className={styles.market_value_chart_container}>
-            {this.state.marketValuePieChart}
-            <div className={styles.chart_center}>
-              <div className={styles.upper}>目前市值</div>
-              <div className={styles.lower}>
-                <DollarSign />
-                {Math.round(this.state.totalMarketValue).toLocaleString()}
+          <div className={styles.upper}>
+            <div className={styles.title}>投資組合</div>
+            <div className={styles.market_value_chart_container}>
+              {this.state.marketValuePieChart}
+              <div className={styles.chart_center}>
+                <div className={styles.upper}>目前市值</div>
+                <div className={styles.lower}>
+                  <DollarSign />
+                  {Math.round(this.state.totalMarketValue).toLocaleString()}
+                </div>
               </div>
             </div>
           </div>
-          <div className={styles.summary}>
+          <div className={styles.lower}>
             <div className={styles.summary_row}>
               <div className={styles.left}>
                 <div className={styles.title}>報酬率</div>
