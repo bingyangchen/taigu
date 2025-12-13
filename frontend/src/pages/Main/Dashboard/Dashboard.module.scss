@@ -15,7 +15,7 @@
     height: fit-content;
   }
   @media (max-width: _.$width-512) {
-    padding: 0 0 calc(_.$footer-height + 80px) 0;
+    padding: 0 0 calc(_.$footer-height + 90px) 0;
     gap: 10dvh;
   }
   & > .left {
@@ -238,17 +238,14 @@
   & > .right {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 10px;
     & > .upper {
-      padding: 20px;
+      padding: 20px 20px 25px 20px;
       border-radius: $border-radius;
-      background-color: _.$transparent-black;
-      box-shadow: 0 0 15px -10px _.$black;
+      margin-bottom: 30px;
       @media (max-width: _.$width-512) {
         padding: 0;
         border-radius: 0;
-        background-color: transparent;
-        box-shadow: none;
       }
       & > .title {
         color: _.$gray;
@@ -284,46 +281,6 @@
           & > .lower {
             font-size: 1.3 * _.$base-font-size;
             margin-bottom: 20px;
-          }
-        }
-      }
-    }
-    & > .lower {
-      display: flex;
-      flex-direction: column;
-      padding: 15px 25px;
-      background-color: #ffffff90;
-      box-shadow: 0 0 15px -10px _.$transparent-black;
-      border-radius: $border-radius;
-      @media (max-width: _.$width-512) {
-        margin: 0 20px;
-      }
-      & > .summary_row {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        height: 40px;
-        width: 100%;
-        min-width: fit-content;
-        & > .left {
-          min-width: max-content;
-          width: 75px;
-          & > .title {
-            font-size: 0.9 * _.$base-font-size;
-            color: _.$gray;
-            margin-right: 10px;
-          }
-        }
-        & > .price {
-          display: flex;
-          flex-direction: column;
-          width: 105px;
-          text-align: right;
-          gap: 3px;
-          margin-left: auto;
-          & > .price {
-            font-size: 1.1 * _.$base-font-size;
-            font-weight: bold;
           }
         }
       }

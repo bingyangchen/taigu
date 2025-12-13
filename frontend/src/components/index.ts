@@ -31,6 +31,7 @@ export { default as SimpleCashInvestedLineChart } from "./SimpleCashInvestedLine
 export { default as SpeedDial } from "./SpeedDial/SpeedDial";
 export { default as StockMemoModal } from "./StockMemoModal/StockMemoModal";
 export { default as StockSearchModal } from "./StockSearchModal/StockSearchModal";
+export { default as SummaryCard } from "./SummaryCard/SummaryCard";
 export { default as ToastList } from "./ToastList/ToastList";
 export { default as TradePlanModal } from "./TradePlanModal/TradePlanModal";
 export { default as TradeRecordModal } from "./TradeRecordModal/TradeRecordModal";
