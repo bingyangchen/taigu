@@ -40,6 +40,7 @@ class Footer extends React.Component<Props, State> {
               key={idx}
               end={subpage.path === Env.frontendRootPath}
               className={styles.icon_outer}
+              replace={this.shouldReplacePath(subpage)}
             >
               <div className={styles.icon_inner}>{subpage.icon}</div>
             </NavLink>
@@ -49,20 +50,34 @@ class Footer extends React.Component<Props, State> {
     );
   }
 
+  private get currentPath(): string {
+    return this.props.router.location.pathname;
+  }
+
   private isActive(subpage: Subpage): boolean {
-    const currentPath = this.props.router.location.pathname;
     const pagePath = subpage.path;
     if (pagePath === Env.frontendRootPath) {
-      if (currentPath === pagePath) {
+      if (this.currentPath === pagePath) {
         return true;
-      } else if (this.dashboardSubpages.includes(currentPath)) {
+      } else if (this.dashboardSubpages.includes(this.currentPath)) {
         return true;
       } else {
         return false;
       }
     } else {
-      return currentPath.startsWith(pagePath);
+      return this.currentPath.startsWith(pagePath);
     }
+  }
+
+  private shouldReplacePath(subpage: Subpage): boolean {
+    const prioritizedPaths = [`${Env.frontendRootPath}market`, Env.frontendRootPath];
+    if (prioritizedPaths.indexOf(this.currentPath) !== -1) {
+      return (
+        prioritizedPaths.indexOf(subpage.path) >
+        prioritizedPaths.indexOf(this.currentPath)
+      );
+    }
+    return true;
   }
 }
 
