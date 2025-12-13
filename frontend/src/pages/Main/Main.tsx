@@ -7,7 +7,7 @@ import {
   Footer,
   HeaderForMain,
   LoadingScreen,
-  NavBarForMain,
+  MainSideBar,
   ToastList,
 } from "../../components";
 import {
@@ -183,7 +183,7 @@ class Main extends React.Component<Props, State> {
         {Util.isMobile && <HeaderForMain />}
         <div className={styles.body}>
           {!Util.isMobile && (
-            <NavBarForMain
+            <MainSideBar
               avatarUrl={this.props.avatar_url || imgPersonFill}
               username={this.props.username}
               subpages={Util.isMobile ? this.subpages : this.subpages.slice(0, 4)}

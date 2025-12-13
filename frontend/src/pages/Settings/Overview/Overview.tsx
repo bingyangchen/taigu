@@ -8,7 +8,7 @@ import {
   BeautifulBlock,
   BeautifulRow,
   Modal,
-  NavBarForSettings,
+  SettingsSideBar,
 } from "../../../components";
 import {
   IconEnvelope,
@@ -79,7 +79,7 @@ class Overview extends React.Component<Props, State> {
       <>
         {this.activeModal}
         <div className={styles.main}>
-          {!Util.isMobile && <NavBarForSettings subpages={this.subpages} />}
+          {!Util.isMobile && <SettingsSideBar subpages={this.subpages} />}
           <div className={styles.body}>
             <div id="basic-info" className={styles.section}>
               <BeautifulBlock title="基本資訊">
