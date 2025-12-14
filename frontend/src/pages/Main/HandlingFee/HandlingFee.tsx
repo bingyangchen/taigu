@@ -303,11 +303,21 @@ class HandlingFee extends React.Component<Props, State> {
 
     const monthlyMap: { [month: string]: number } = {};
 
+    // Calculate handling fees from trade records
     this.props.tradeRecords.forEach((record) => {
       const recordDate = new Date(record.deal_time);
       if (recordDate >= cutoffDate) {
         const monthKey = `${recordDate.getFullYear()}-${String(recordDate.getMonth() + 1).padStart(2, "0")}`;
         monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) + record.handling_fee;
+      }
+    });
+
+    // Subtract handling fee discounts for each month
+    this.props.discounts.forEach((discount) => {
+      const discountDate = new Date(discount.date);
+      if (discountDate >= cutoffDate) {
+        const monthKey = `${discountDate.getFullYear()}-${String(discountDate.getMonth() + 1).padStart(2, "0")}`;
+        monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) - discount.amount;
       }
     });
 
