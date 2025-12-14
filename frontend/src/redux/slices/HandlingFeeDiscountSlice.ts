@@ -6,6 +6,8 @@ import type {
   UpdateHandlingFeeDiscountRequestBody,
 } from "../../types";
 import Api from "../../utils/api";
+import { RootState } from "../store";
+import { adjustTotalHandlingFee } from "./TradeRecordSlice";
 
 interface HandlingFeeDiscountState {
   discounts: HandlingFeeDiscount[];
@@ -24,39 +26,51 @@ export const fetchAllDiscounts = createAsyncThunk(
 
 export const createDiscount = createAsyncThunk(
   "handlingFeeDiscount/createDiscount",
-  async (
-    requestBody: CreateHandlingFeeDiscountRequestBody,
-  ): Promise<HandlingFeeDiscount> => {
+  async (requestBody: CreateHandlingFeeDiscountRequestBody, thunkAPI) => {
     const response = await Api.sendRequest(
       "handling-fee/discount",
       "post",
       JSON.stringify(requestBody),
     );
     if (navigator.vibrate) navigator.vibrate(20);
+    thunkAPI.dispatch(adjustTotalHandlingFee(-requestBody.amount));
     return response;
   },
 );
 
 export const updateDiscount = createAsyncThunk(
   "handlingFeeDiscount/updateDiscount",
-  async (
-    requestBody: UpdateHandlingFeeDiscountRequestBody,
-  ): Promise<HandlingFeeDiscount> => {
+  async (requestBody: UpdateHandlingFeeDiscountRequestBody, thunkAPI) => {
+    const rootState = thunkAPI.getState() as RootState;
+    const oldDiscount = rootState.handlingFeeDiscount.discounts.find(
+      (d) => d.id === requestBody.id,
+    );
     const response = await Api.sendRequest(
       `handling-fee/discount/${requestBody.id}`,
       "put",
       JSON.stringify(requestBody),
     );
     if (navigator.vibrate) navigator.vibrate(20);
+    if (requestBody.amount !== undefined && oldDiscount) {
+      const delta = oldDiscount.amount - requestBody.amount;
+      thunkAPI.dispatch(adjustTotalHandlingFee(delta));
+    }
     return response;
   },
 );
 
 export const deleteDiscount = createAsyncThunk(
   "handlingFeeDiscount/deleteDiscount",
-  async (id: string | number): Promise<string | number> => {
+  async (id: string | number, thunkAPI) => {
+    const rootState = thunkAPI.getState() as RootState;
+    const discountToDelete = rootState.handlingFeeDiscount.discounts.find(
+      (d) => d.id === id,
+    );
     await Api.sendRequest(`handling-fee/discount/${id}`, "delete");
     if (navigator.vibrate) navigator.vibrate(20);
+    if (discountToDelete) {
+      thunkAPI.dispatch(adjustTotalHandlingFee(discountToDelete.amount));
+    }
     return id;
   },
 );

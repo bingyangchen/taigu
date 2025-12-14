@@ -133,7 +133,10 @@ class ListRow extends React.Component<Props, State> {
           hideModal={Util.getHideModalCallback(this)}
         />
       ) : Util.isHandlingFeeDiscount(this.props.target) ? (
-        <HandlingFeeDiscountModal hideModal={Util.getHideModalCallback(this)} />
+        <HandlingFeeDiscountModal
+          record={this.props.target}
+          hideModal={Util.getHideModalCallback(this)}
+        />
       ) : (
         <TradePlanModal
           plan={this.props.target}

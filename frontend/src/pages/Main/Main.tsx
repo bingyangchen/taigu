@@ -48,8 +48,8 @@ import {
   refreshTradePlansWithNonCacheResponse,
 } from "../../redux/slices/TradePlanSlice";
 import {
+  calculateTotalHandlingFee,
   fetchAllTradeRecords,
-  recalculateTotalHandlingFee,
   refreshWithNonCacheResponse as refreshTradeRecordsWithNonCacheResponse,
 } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
@@ -105,7 +105,7 @@ class Main extends React.Component<Props, State> {
         this.props.dispatch(fetchAllDiscounts()).unwrap(),
       ]);
       await Promise.all([
-        this.props.dispatch(recalculateTotalHandlingFee()).unwrap(),
+        this.props.dispatch(calculateTotalHandlingFee()).unwrap(),
         this.fetchHoldingStockInfo(),
       ]);
     } catch (e) {}
