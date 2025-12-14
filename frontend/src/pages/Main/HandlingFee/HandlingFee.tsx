@@ -1,9 +1,10 @@
 import ReactECharts from "echarts-for-react";
-import React from "react";
+import React, { MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
 import {
   Button,
+  CheckDeleteModal,
   DollarSign,
   HandlingFeeDiscountModal,
   ListRow,
@@ -11,6 +12,7 @@ import {
   SpeedDial,
 } from "../../../components";
 import { IconChevronLeft } from "../../../icons";
+import { deleteDiscount } from "../../../redux/slices/HandlingFeeDiscountSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { HandlingFeeDiscount } from "../../../types";
@@ -20,8 +22,14 @@ import styles from "./HandlingFee.module.scss";
 function mapStateToProps(rootState: RootState) {
   const { scrollTop } = rootState.mainPage;
   const { totalHandlingFee, tradeRecords } = rootState.tradeRecord;
-  const { discounts } = rootState.handlingFeeDiscount;
-  return { mainScrollTop: scrollTop, totalHandlingFee, tradeRecords, discounts };
+  const { discounts, isWaiting: isWaitingDiscount } = rootState.handlingFeeDiscount;
+  return {
+    mainScrollTop: scrollTop,
+    totalHandlingFee,
+    tradeRecords,
+    discounts,
+    isWaitingDiscount,
+  };
 }
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
@@ -164,7 +172,21 @@ class HandlingFee extends React.Component<Props, State> {
                 {this.props.discounts
                   .slice(0, this.state.numberToShow)
                   .map((discount: HandlingFeeDiscount) => (
-                    <ListRow key={discount.id} target={discount} />
+                    <ListRow
+                      key={discount.id}
+                      target={discount}
+                      editModal={this.renderEditModal(discount)}
+                      deleteModal={this.renderDeleteModal(discount)}
+                    >
+                      <span className={styles.company}>
+                        {discount.memo || "手續費折讓"}
+                      </span>
+                      <span className={styles.price}>
+                        <DollarSign />
+                        {discount.amount.toLocaleString()}
+                      </span>
+                      <span className={styles.date}>{discount.date}</span>
+                    </ListRow>
                   ))}
                 {this.props.discounts.length > 0 && (
                   <div className={styles.show_more_button_outer}>
@@ -325,6 +347,47 @@ class HandlingFee extends React.Component<Props, State> {
   private get hasMoreToShow(): boolean {
     return this.props.discounts.length > this.state.numberToShow;
   }
+
+  private renderEditModal = (
+    discount: HandlingFeeDiscount,
+  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+    const EditModalComponent = (hideModal: MouseEventHandler) => {
+      return <HandlingFeeDiscountModal record={discount} hideModal={hideModal} />;
+    };
+    EditModalComponent.displayName = "EditModalComponent";
+    return EditModalComponent;
+  };
+
+  private renderDeleteModal = (
+    discount: HandlingFeeDiscount,
+  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+    const DeleteModalComponent = (hideModal: MouseEventHandler) => {
+      return (
+        <CheckDeleteModal
+          hideModal={hideModal}
+          isWaiting={this.props.isWaitingDiscount}
+          onDelete={this.getDeleteHandler(discount)}
+        >
+          <div className={styles.modal_inner}>
+            <span className={styles.company}>{discount.memo || "手續費折讓"}</span>
+            <span className={styles.price}>
+              <DollarSign />
+              {discount.amount.toLocaleString()}
+            </span>
+            <span className={styles.date}>{discount.date}</span>
+          </div>
+        </CheckDeleteModal>
+      );
+    };
+    DeleteModalComponent.displayName = "DeleteModalComponent";
+    return DeleteModalComponent;
+  };
+
+  private getDeleteHandler = (discount: HandlingFeeDiscount): (() => Promise<void>) => {
+    return async (): Promise<void> => {
+      await this.props.dispatch(deleteDiscount(discount.id)).unwrap();
+    };
+  };
 }
 
 export default connect(mapStateToProps)(withRouter(HandlingFee));

@@ -1,20 +1,39 @@
-import React from "react";
+import React, { MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { Button, ListRow, SearchKeywordInput, SpeedDial } from "../../../components";
-import type { RootState } from "../../../redux/store";
+import {
+  Button,
+  CashDividendRecordModal,
+  CheckDeleteModal,
+  DollarSign,
+  ListRow,
+  SearchKeywordInput,
+  SpeedDial,
+  TradeRecordModal,
+} from "../../../components";
+import { deleteRecord as deleteCashDividendRecord } from "../../../redux/slices/CashDividendRecordSlice";
+import { deleteRecord as deleteTradeRecord } from "../../../redux/slices/TradeRecordSlice";
+import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { CashDividendRecord, TradeRecord } from "../../../types";
 import Util from "../../../utils/util";
 import styles from "./Records.module.scss";
 
 function mapStateToProps(rootState: RootState) {
-  const { tradeRecords } = rootState.tradeRecord;
-  const { cashDividendRecords } = rootState.cashDividend;
-  return { tradeRecords, cashDividendRecords };
+  const { tradeRecords, isWaiting: isWaitingTradeRecord } = rootState.tradeRecord;
+  const { cashDividendRecords, isWaiting: isWaitingCashDividend } =
+    rootState.cashDividend;
+  return {
+    tradeRecords,
+    cashDividendRecords,
+    isWaitingTradeRecord,
+    isWaitingCashDividend,
+  };
 }
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {}
+interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
+  dispatch: AppDispatch;
+}
 
 interface State {
   activeSubpageName: "trade" | "cashDividend";
@@ -104,7 +123,39 @@ class Records extends React.Component<Props, State> {
           {this.filteredRecords
             .slice(0, this.state.numberToShow)
             .map((record: TradeRecord | CashDividendRecord, idx) => {
-              return <ListRow key={idx} target={record} />;
+              return (
+                <ListRow
+                  key={idx}
+                  target={record}
+                  editModal={this.renderEditModal(record)}
+                  deleteModal={this.renderDeleteModal(record)}
+                >
+                  <span className={styles.company}>
+                    {`${record.sid} ${record.company_name}`}
+                  </span>
+                  <span className={styles.price}>
+                    <DollarSign />
+                    {Util.isTradeRecord(record)
+                      ? record.deal_price.toLocaleString()
+                      : record.cash_dividend.toLocaleString()}
+                  </span>
+                  {Util.isTradeRecord(record) && (
+                    <span className={styles.quantity_outer}>
+                      <span
+                        className={`${styles.trade_type} ${
+                          record.deal_quantity > 0 ? styles.buy : styles.sell
+                        }`}
+                      >
+                        {record.deal_quantity > 0 ? "買" : "賣"}
+                      </span>
+                      <span className={styles.quantity}>
+                        {Math.abs(record.deal_quantity)} 股
+                      </span>
+                    </span>
+                  )}
+                  <span className={styles.date}>{record.deal_time}</span>
+                </ListRow>
+              );
             })}
           <div className={styles.show_more_button_outer}>
             <Button
@@ -151,6 +202,80 @@ class Records extends React.Component<Props, State> {
     this.setState((state) => {
       return { numberToShow: state.numberToShow * 2 };
     });
+  };
+
+  private renderEditModal = (
+    record: TradeRecord | CashDividendRecord,
+  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+    const EditModalComponent = (hideModal: MouseEventHandler) => {
+      return Util.isTradeRecord(record) ? (
+        <TradeRecordModal record={record} hideModal={hideModal} />
+      ) : (
+        <CashDividendRecordModal record={record} hideModal={hideModal} />
+      );
+    };
+    EditModalComponent.displayName = "EditModalComponent";
+    return EditModalComponent;
+  };
+
+  private renderDeleteModal = (
+    record: TradeRecord | CashDividendRecord,
+  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+    const DeleteModalComponent = (hideModal: MouseEventHandler) => {
+      return (
+        <CheckDeleteModal
+          hideModal={hideModal}
+          isWaiting={
+            Util.isTradeRecord(record)
+              ? this.props.isWaitingTradeRecord
+              : this.props.isWaitingCashDividend
+          }
+          onDelete={this.getDeleteHandler(record)}
+        >
+          <div className={styles.modal_inner}>
+            <span
+              className={styles.company}
+            >{`${record.sid} ${record.company_name}`}</span>
+            <span className={styles.price}>
+              <DollarSign />
+              {(Util.isTradeRecord(record)
+                ? record.deal_price
+                : record.cash_dividend
+              ).toLocaleString()}
+            </span>
+            {Util.isTradeRecord(record) && (
+              <>
+                <span
+                  className={`${styles.trade_type} ${
+                    record.deal_quantity > 0 ? styles.buy : styles.sell
+                  }`}
+                >
+                  {record.deal_quantity > 0 ? "買" : "賣"}
+                </span>
+                <span className={styles.quantity}>
+                  {Math.abs(record.deal_quantity)} 股
+                </span>
+              </>
+            )}
+            <span className={styles.date}>{record.deal_time}</span>
+          </div>
+        </CheckDeleteModal>
+      );
+    };
+    DeleteModalComponent.displayName = "DeleteModalComponent";
+    return DeleteModalComponent;
+  };
+
+  private getDeleteHandler = (
+    record: TradeRecord | CashDividendRecord,
+  ): (() => Promise<void>) => {
+    return async (): Promise<void> => {
+      if (Util.isTradeRecord(record)) {
+        await this.props.dispatch(deleteTradeRecord(record.id)).unwrap();
+      } else {
+        await this.props.dispatch(deleteCashDividendRecord(record.id)).unwrap();
+      }
+    };
   };
 }
 

@@ -1,16 +1,6 @@
-import React, { MouseEventHandler, TouchEvent } from "react";
+import React, { MouseEventHandler, ReactNode, TouchEvent } from "react";
 
-import {
-  BottomSheet,
-  CashDividendRecordModal,
-  CheckDeleteModal,
-  DollarSign,
-  HandlingFeeDiscountModal,
-  ListRowActionBar,
-  Modal,
-  TradePlanModal,
-  TradeRecordModal,
-} from "../../components";
+import { BottomSheet, ListRowActionBar } from "../../components";
 import { IRouter, withRouter } from "../../router";
 import {
   CashDividendRecord,
@@ -23,6 +13,9 @@ import styles from "./ListRow.module.scss";
 
 interface Props extends IRouter {
   target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount;
+  children: ReactNode;
+  editModal: ((hideModal: MouseEventHandler) => ReactNode) | null;
+  deleteModal: ((hideModal: MouseEventHandler) => ReactNode) | null;
 }
 
 interface State {
@@ -64,35 +57,7 @@ class ListRow extends React.Component<Props, State> {
               <span className={styles.ripple} ref={this.rippleRef} />
             )}
           </span>
-          <span className={styles.company}>
-            {Util.isHandlingFeeDiscount(this.props.target)
-              ? this.props.target.memo || "手續費折讓"
-              : `${this.props.target.sid} ${this.props.target.company_name}`}
-          </span>
-          <span className={styles.price}>
-            <DollarSign />
-            {Util.isTradeRecord(this.props.target)
-              ? this.props.target.deal_price.toLocaleString()
-              : Util.isCashDividendRecord(this.props.target)
-                ? this.props.target.cash_dividend.toLocaleString()
-                : Util.isHandlingFeeDiscount(this.props.target)
-                  ? this.props.target.amount.toLocaleString()
-                  : this.props.target.target_price.toLocaleString()}
-          </span>
-          {!Util.isCashDividendRecord(this.props.target) &&
-            !Util.isHandlingFeeDiscount(this.props.target) && (
-              <span className={styles.quantity_outer}>
-                <span className={this.tradeTypeClassName}>{this.tradeTypeString}</span>
-                <span className={styles.quantity}>{this.quantity} 股</span>
-              </span>
-            )}
-          {!Util.isTradePlan(this.props.target) && (
-            <span className={styles.date}>
-              {Util.isHandlingFeeDiscount(this.props.target)
-                ? this.props.target.date
-                : this.props.target.deal_time}
-            </span>
-          )}
+          {this.props.children}
           {Util.isMobile ? (
             this.state.activatedForMobile && (
               <BottomSheet onClickBackground={this.handleClickBottomSheetBackground}>
@@ -120,70 +85,14 @@ class ListRow extends React.Component<Props, State> {
     );
   }
 
-  private get activeModal(): React.ReactElement<typeof Modal> | null {
+  private get activeModal(): ReactNode {
+    const hideModal = Util.getHideModalCallback(this);
     if (this.state.activeModalName === "edit") {
-      return Util.isTradeRecord(this.props.target) ? (
-        <TradeRecordModal
-          record={this.props.target}
-          hideModal={Util.getHideModalCallback(this)}
-        />
-      ) : Util.isCashDividendRecord(this.props.target) ? (
-        <CashDividendRecordModal
-          record={this.props.target}
-          hideModal={Util.getHideModalCallback(this)}
-        />
-      ) : Util.isHandlingFeeDiscount(this.props.target) ? (
-        <HandlingFeeDiscountModal
-          record={this.props.target}
-          hideModal={Util.getHideModalCallback(this)}
-        />
-      ) : (
-        <TradePlanModal
-          plan={this.props.target}
-          hideModal={Util.getHideModalCallback(this)}
-        />
-      );
+      return this.props.editModal ? this.props.editModal(hideModal) : null;
     } else if (this.state.activeModalName === "checkDelete") {
-      return (
-        <CheckDeleteModal
-          target={this.props.target}
-          hideModal={Util.getHideModalCallback(this)}
-        />
-      );
+      return this.props.deleteModal ? this.props.deleteModal(hideModal) : null;
     }
     return null;
-  }
-
-  private get tradeTypeClassName(): string {
-    if (Util.isTradeRecord(this.props.target)) {
-      return (
-        styles.trade_type +
-        " " +
-        (this.props.target.deal_quantity > 0 ? styles.buy : styles.sell)
-      );
-    } else if (Util.isTradePlan(this.props.target)) {
-      return (
-        styles.trade_type +
-        " " +
-        (this.props.target.plan_type === "buy" ? styles.buy : styles.sell)
-      );
-    } else throw Error("TypeError");
-  }
-
-  private get tradeTypeString(): "買" | "賣" {
-    if (Util.isTradeRecord(this.props.target)) {
-      return this.props.target.deal_quantity > 0 ? "買" : "賣";
-    } else if (Util.isTradePlan(this.props.target)) {
-      return this.props.target.plan_type === "buy" ? "買" : "賣";
-    } else throw Error("TypeError");
-  }
-
-  private get quantity(): number {
-    if (Util.isTradeRecord(this.props.target)) {
-      return Math.abs(this.props.target.deal_quantity);
-    } else if (Util.isTradePlan(this.props.target)) {
-      return this.props.target.target_quantity;
-    } else throw Error("TypeError");
   }
 
   private handleClickEdit = (): void => {

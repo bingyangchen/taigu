@@ -260,8 +260,6 @@
         box-shadow: 0 0 5px 1px _.$transparent-black;
         padding-bottom: 50px;
         overflow: auto;
-        // max-height: 60dvh;
-        // flex-grow: 1;
         @media (max-width: _.$width-780) {
           border-radius: 0;
           padding-bottom: calc(80px + _.$footer-height);
@@ -273,7 +271,50 @@
           display: flex;
           justify-content: center;
         }
+        .company {
+          display: block;
+          width: 30%;
+          min-width: 150px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .price {
+          justify-content: flex-end;
+          align-items: flex-end;
+          width: 60px;
+          white-space: nowrap;
+        }
+        .date {
+          font-size: 0.75 * _.$base-font-size;
+          color: _.$gray;
+          white-space: nowrap;
+        }
       }
     }
+  }
+}
+
+.modal_inner {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85 * _.$base-font-size;
+  & > .company {
+    width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  & > .price {
+    width: 60px;
+    white-space: nowrap;
+  }
+  & > .date {
+    font-size: 0.75 * _.$base-font-size;
+    color: _.$gray;
+    white-space: nowrap;
   }
 }

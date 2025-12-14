@@ -20,6 +20,7 @@ export default class Util {
     }
     return result;
   }
+
   public static getHideModalCallback =
     (component: React.Component): MouseEventHandler =>
     (): void => {
@@ -27,6 +28,7 @@ export default class Util {
         component.setState({ activeModalName: null });
       } else throw Error("Lack of state: activeModalName");
     };
+
   public static get isMobile(): boolean {
     // prettier-ignore
     return (
@@ -38,9 +40,11 @@ export default class Util {
       )
     );
   }
+
   public static get isPWA(): boolean {
     return window.matchMedia("(display-mode: standalone)").matches;
   }
+
   public static debounce = <T,>(
     func: (...args: T[]) => void,
     delay: number,
@@ -51,36 +55,17 @@ export default class Util {
       timer = setTimeout(() => func(...params), delay);
     };
   };
+
   public static changePWAThemeColor(colorCode: string): void {
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute("content", colorCode);
   }
+
   public static isTradeRecord(
     target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount,
   ): target is TradeRecord {
     return "deal_quantity" in target && "deal_time" in target;
-  }
-  public static isCashDividendRecord(
-    target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount,
-  ): target is CashDividendRecord {
-    return "cash_dividend" in target;
-  }
-  public static isTradePlan(
-    target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount,
-  ): target is TradePlan {
-    return "plan_type" in target;
-  }
-  public static isHandlingFeeDiscount(
-    target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount,
-  ): target is HandlingFeeDiscount {
-    return (
-      "amount" in target &&
-      "date" in target &&
-      !("deal_quantity" in target) &&
-      !("cash_dividend" in target) &&
-      !("plan_type" in target)
-    );
   }
 
   public static validateAndSanitizeUrl(url: string): string | null {

@@ -92,5 +92,79 @@
       display: flex;
       justify-content: center;
     }
+    .company {
+      display: block;
+      width: 30%;
+      min-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .price {
+      justify-content: flex-end;
+      align-items: flex-end;
+      width: 60px;
+      white-space: nowrap;
+    }
+    .quantity_outer {
+      & > .trade_type {
+        font-weight: bold;
+        margin: 0 5px;
+        &.buy {
+          color: _.$red;
+        }
+        &.sell {
+          color: _.$blue;
+        }
+      }
+      & > .quantity {
+        text-align: right;
+        width: 60px;
+        white-space: nowrap;
+      }
+    }
+    .date {
+      font-size: 0.75 * _.$base-font-size;
+      color: _.$gray;
+      white-space: nowrap;
+    }
+  }
+}
+
+.modal_inner {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85 * _.$base-font-size;
+  & > .company {
+    width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  & > .price {
+    width: 60px;
+    white-space: nowrap;
+  }
+  & > .trade_type {
+    font-weight: bold;
+    margin: 0 5px 0 5px;
+    &.buy {
+      color: _.$red;
+    }
+    &.sell {
+      color: _.$blue;
+    }
+  }
+  & > .quantity {
+    width: 60px;
+    white-space: nowrap;
+  }
+  & > .date {
+    font-size: 0.75 * _.$base-font-size;
+    color: _.$gray;
+    white-space: nowrap;
   }
 }
