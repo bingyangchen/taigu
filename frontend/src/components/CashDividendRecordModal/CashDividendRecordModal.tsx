@@ -33,8 +33,8 @@ class CashDividendRecordModal extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {
-      recordId: props.record?.id.toString() || null,
-      dealTime: props.record?.deal_time || new Date().toLocaleDateString("af"),
+      recordId: props.record?.id.toString() ?? null,
+      dealTime: props.record?.deal_time ?? new Date().toLocaleDateString("af"),
       sid: props.defaultSid || props.record?.sid || "",
       cashDividend: props.record ? props.record.cash_dividend : NaN,
     };
@@ -110,7 +110,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
         await this.props
           .dispatch(
             updateRecord({
-              id: this.state.recordId!,
+              id: this.state.recordId,
               sid: this.state.sid,
               deal_time: this.state.dealTime,
               cash_dividend: this.state.cashDividend,
