@@ -73,23 +73,23 @@ def list_discounts(request: HttpRequest) -> JsonResponse:
 
 def update_discount(request: HttpRequest, id: str | int) -> JsonResponse:
     payload = json.loads(request.body)
-
     if (date := payload.get("date")) is not None:
         try:
             date = datetime.strptime(str(date), "%Y-%m-%d").date()
         except Exception:
             return JsonResponse({"message": "Invalid Date Format"}, status=400)
+    if (amount := payload.get("amount")) is not None and amount < 0:
+        return JsonResponse({"message": "Amount must be positive"}, status=400)
 
     discount = HandlingFeeDiscountRecord.objects.get(pk=int(id), owner=request.user)
     if date is not None:
         discount.date = date
-    if (amount := payload.get("amount")) is not None:
-        if amount < 0:
-            return JsonResponse({"message": "Amount must be positive"}, status=400)
+    if amount is not None:
         discount.amount = amount
     if (memo := payload.get("memo")) is not None:
         discount.memo = memo
     discount.save()
+
     return JsonResponse(
         {
             "id": discount.pk,
