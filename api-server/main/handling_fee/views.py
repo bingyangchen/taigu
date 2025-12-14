@@ -41,6 +41,9 @@ def create_discount(request: HttpRequest) -> JsonResponse:
     ) is None:
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
+    if amount < 0:
+        return JsonResponse({"message": "Amount must be positive"}, status=400)
+
     try:
         date = datetime.strptime(str(date), "%Y-%m-%d").date()
     except Exception:
@@ -81,6 +84,8 @@ def update_discount(request: HttpRequest, id: str | int) -> JsonResponse:
     if date is not None:
         discount.date = date
     if (amount := payload.get("amount")) is not None:
+        if amount < 0:
+            return JsonResponse({"message": "Amount must be positive"}, status=400)
         discount.amount = amount
     if (memo := payload.get("memo")) is not None:
         discount.memo = memo

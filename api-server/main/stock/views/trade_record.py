@@ -64,6 +64,11 @@ def create(request: HttpRequest) -> JsonResponse:
     ):
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
+    if deal_price < 0:
+        return JsonResponse({"message": "Deal price must be positive"}, status=400)
+    if handling_fee < 0:
+        return JsonResponse({"message": "Handling fee must be positive"}, status=400)
+
     try:
         company = Company.objects.get(pk=str(sid))
     except ObjectDoesNotExist:
@@ -111,6 +116,11 @@ def update(request: HttpRequest, id: str | int) -> JsonResponse:
         or ((handling_fee := payload.get("handling_fee")) is None)
     ):
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
+
+    if deal_price < 0:
+        return JsonResponse({"message": "Deal price must be positive"}, status=400)
+    if handling_fee < 0:
+        return JsonResponse({"message": "Handling fee must be positive"}, status=400)
 
     try:
         company = Company.objects.get(pk=str(sid))

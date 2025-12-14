@@ -1,4 +1,10 @@
-from django.db.models import CASCADE, BigIntegerField, DateField, ForeignKey, TextField
+from django.db.models import (
+    CASCADE,
+    DateField,
+    ForeignKey,
+    PositiveBigIntegerField,
+    TextField,
+)
 
 from main.account.models import User
 from main.core.models import CreateUpdateDateModel
@@ -11,7 +17,7 @@ class HandlingFeeDiscountRecord(CreateUpdateDateModel):
         related_name="handling_fee_discount_records",
         db_index=True,
     )
-    amount = BigIntegerField()
+    amount = PositiveBigIntegerField()
     date = DateField(db_index=True)
     memo = TextField(db_default="")
 

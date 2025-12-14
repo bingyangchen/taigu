@@ -1,10 +1,10 @@
 from django.db.models import (
     CASCADE,
     PROTECT,
-    BigIntegerField,
     CharField,
     FloatField,
     ForeignKey,
+    PositiveBigIntegerField,
     TextField,
 )
 
@@ -37,7 +37,7 @@ class TradePlan(CreateUpdateDateModel):
     company: Company = ForeignKey(Company, on_delete=PROTECT, db_index=True)  # type: ignore
     plan_type = CharField(max_length=32)
     target_price = FloatField()
-    target_quantity = BigIntegerField()
+    target_quantity = PositiveBigIntegerField()
 
     class Meta:
         db_table = "trade_plan"
