@@ -3,10 +3,16 @@ import { connect } from "react-redux";
 
 import { DollarSign, Modal } from "../../components";
 import { deleteRecord as deleteCashDividendRecord } from "../../redux/slices/CashDividendRecordSlice";
+import { deleteDiscount } from "../../redux/slices/HandlingFeeDiscountSlice";
 import { deletePlan } from "../../redux/slices/TradePlanSlice";
 import { deleteRecord as deleteTradeRecord } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
-import type { CashDividendRecord, TradePlan, TradeRecord } from "../../types";
+import type {
+  CashDividendRecord,
+  HandlingFeeDiscount,
+  TradePlan,
+  TradeRecord,
+} from "../../types";
 import Util from "../../utils/util";
 import styles from "./CheckDeleteModal.module.scss";
 
@@ -14,11 +20,17 @@ function mapStateToProps(rootState: RootState) {
   const { isWaiting: isWaitingTradeRecord } = rootState.tradeRecord;
   const { isWaiting: isWaitingCashDividend } = rootState.cashDividend;
   const { isWaiting: isWaitingTradePlan } = rootState.tradePlan;
-  return { isWaitingTradeRecord, isWaitingCashDividend, isWaitingTradePlan };
+  const { isWaiting: isWaitingDiscount } = rootState.handlingFeeDiscount;
+  return {
+    isWaitingTradeRecord,
+    isWaitingCashDividend,
+    isWaitingTradePlan,
+    isWaitingDiscount,
+  };
 }
 
 interface Props extends ReturnType<typeof mapStateToProps> {
-  target: TradeRecord | CashDividendRecord | TradePlan;
+  target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount;
   hideModal: MouseEventHandler;
   onDelete?: () => void;
   dispatch: AppDispatch;
@@ -53,33 +65,45 @@ class CheckDeleteModal extends React.Component<Props, State> {
       >
         <div className={styles.modal_inner}>
           <div className={styles.row}>
-            <span
-              className={styles.company}
-            >{`${this.props.target.sid} ${this.props.target.company_name}`}</span>
+            <span className={styles.company}>
+              {Util.isHandlingFeeDiscount(this.props.target)
+                ? this.props.target.memo || "手續費折讓"
+                : `${this.props.target.sid} ${this.props.target.company_name}`}
+            </span>
             <span className={styles.price}>
               <DollarSign />
               {(Util.isTradeRecord(this.props.target)
                 ? this.props.target.deal_price
                 : Util.isCashDividendRecord(this.props.target)
                   ? this.props.target.cash_dividend
-                  : this.props.target.target_price
+                  : Util.isHandlingFeeDiscount(this.props.target)
+                    ? this.props.target.amount
+                    : this.props.target.target_price
               ).toLocaleString()}
             </span>
-            {!Util.isCashDividendRecord(this.props.target) && (
-              <span className={this.tradeTypeClass}>{this.tradeTypeString}</span>
-            )}
-            {!Util.isCashDividendRecord(this.props.target) && (
-              <span className={styles.quantity}>
-                {Math.abs(
-                  Util.isTradeRecord(this.props.target)
-                    ? this.props.target.deal_quantity
-                    : this.props.target.target_quantity,
-                )}{" "}
-                股
-              </span>
-            )}
+            {!Util.isCashDividendRecord(this.props.target) &&
+              !Util.isHandlingFeeDiscount(this.props.target) && (
+                <span className={this.tradeTypeClass}>{this.tradeTypeString}</span>
+              )}
+            {!Util.isCashDividendRecord(this.props.target) &&
+              !Util.isHandlingFeeDiscount(this.props.target) && (
+                <span className={styles.quantity}>
+                  {Math.abs(
+                    Util.isTradeRecord(this.props.target)
+                      ? this.props.target.deal_quantity
+                      : Util.isTradePlan(this.props.target)
+                        ? this.props.target.target_quantity
+                        : 0,
+                  )}{" "}
+                  股
+                </span>
+              )}
             {!Util.isTradePlan(this.props.target) && (
-              <span className={styles.date}>{this.props.target.deal_time}</span>
+              <span className={styles.date}>
+                {Util.isHandlingFeeDiscount(this.props.target)
+                  ? this.props.target.date
+                  : this.props.target.deal_time}
+              </span>
             )}
           </div>
         </div>
@@ -93,6 +117,8 @@ class CheckDeleteModal extends React.Component<Props, State> {
       return this.props.isWaitingCashDividend;
     } else if (Util.isTradePlan(this.props.target)) {
       return this.props.isWaitingTradePlan;
+    } else if (Util.isHandlingFeeDiscount(this.props.target)) {
+      return this.props.isWaitingDiscount;
     } else throw Error("Unknown target type.");
   }
   private get tradeTypeClass(): string {
@@ -126,6 +152,8 @@ class CheckDeleteModal extends React.Component<Props, State> {
       await this.props
         .dispatch(deleteCashDividendRecord(this.props.target.id))
         .unwrap();
+    } else if (Util.isHandlingFeeDiscount(this.props.target)) {
+      await this.props.dispatch(deleteDiscount(this.props.target.id)).unwrap();
     } else throw Error("Unknown target type");
     this.props.hideModal(e);
     this.props.onDelete?.();

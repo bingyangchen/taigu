@@ -80,9 +80,9 @@ export const updateRecord = createAsyncThunk(
     if (navigator.vibrate) navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
     return await computeNewState(
-      rootState.tradeRecord.tradeRecords
-        .map((r) => (r.id === response.id ? response : r))
-        .sort((a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time)),
+      rootState.tradeRecord.tradeRecords.map((r) =>
+        r.id === response.id ? response : r,
+      ),
     );
   },
 );
