@@ -53,16 +53,10 @@ class NavTab extends React.Component<Props, State> {
     const currentPath = this.props.router.location.pathname;
     const pagePath = this.props.page.path;
     if (pagePath === Env.frontendRootPath) {
-      if (currentPath === pagePath) {
-        return true;
-      } else if (this.dashboardSubpages.includes(currentPath)) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return currentPath.startsWith(pagePath);
-    }
+      if (currentPath === pagePath) return true;
+      else if (this.dashboardSubpages.includes(currentPath)) return true;
+      else return false;
+    } else return currentPath.startsWith(pagePath);
   }
 }
 

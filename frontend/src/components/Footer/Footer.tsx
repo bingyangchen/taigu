@@ -57,16 +57,10 @@ class Footer extends React.Component<Props, State> {
   private isActive(subpage: Subpage): boolean {
     const pagePath = subpage.path;
     if (pagePath === Env.frontendRootPath) {
-      if (this.currentPath === pagePath) {
-        return true;
-      } else if (this.dashboardSubpages.includes(this.currentPath)) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return this.currentPath.startsWith(pagePath);
-    }
+      if (this.currentPath === pagePath) return true;
+      else if (this.dashboardSubpages.includes(this.currentPath)) return true;
+      else return false;
+    } else return this.currentPath.startsWith(pagePath);
   }
 
   private shouldReplacePath(subpage: Subpage): boolean {
