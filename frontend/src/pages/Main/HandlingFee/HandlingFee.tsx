@@ -31,7 +31,7 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 interface State {
   animatedTotalHandlingFee: number;
   daysToShow: number;
-  showDiscountModal: boolean;
+  activeModalName: "discountModal" | null;
   numberToShow: number;
 }
 
@@ -45,7 +45,7 @@ class HandlingFee extends React.Component<Props, State> {
     this.state = {
       animatedTotalHandlingFee: 0,
       daysToShow: this.TIME_SPAN_OPTIONS_IN_DAYS[0],
-      showDiscountModal: false,
+      activeModalName: null,
       numberToShow: 15,
     };
   }
@@ -62,28 +62,18 @@ class HandlingFee extends React.Component<Props, State> {
 
   public render(): React.ReactNode {
     return (
-      <div className={styles.main}>
-        {Util.isMobile && <SpeedDial />}
-        {Util.isMobile && (
-          <div
-            className={`${styles.mobile_back_button_container} ${
-              this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-                ? styles.scrolled
-                : ""
-            }`}
-          >
-            <RoundButton
-              onClick={() => this.props.router.navigate(-1)}
-              className="p-12"
-              hint_text="回儀表板"
+      <>
+        {this.activeModal}
+        <div className={styles.main}>
+          {Util.isMobile && <SpeedDial />}
+          {Util.isMobile && (
+            <div
+              className={`${styles.mobile_back_button_container} ${
+                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
+                  ? styles.scrolled
+                  : ""
+              }`}
             >
-              <IconChevronLeft sideLength="16" />
-            </RoundButton>
-          </div>
-        )}
-        <div className={styles.container}>
-          {!Util.isMobile && (
-            <div className={styles.desktop_back_button_container}>
               <RoundButton
                 onClick={() => this.props.router.navigate(-1)}
                 className="p-12"
@@ -93,98 +83,115 @@ class HandlingFee extends React.Component<Props, State> {
               </RoundButton>
             </div>
           )}
-          <div className={styles.left_block}>
-            <div className={styles.handling_fee_section}>
-              <div className={styles.title}>累積手續費</div>
-              <div className={styles.total_handling_fee}>
-                <DollarSign />
-                {Math.round(this.state.animatedTotalHandlingFee).toLocaleString()}
+          <div className={styles.container}>
+            {!Util.isMobile && (
+              <div className={styles.desktop_back_button_container}>
+                <RoundButton
+                  onClick={() => this.props.router.navigate(-1)}
+                  className="p-12"
+                  hint_text="回儀表板"
+                >
+                  <IconChevronLeft sideLength="16" />
+                </RoundButton>
               </div>
-            </div>
-            <div className={styles.chart_section}>
-              <div className={styles.chart_container}>
-                <ReactECharts
-                  option={this.handlingFeeChartOption}
-                  style={{ height: "100%", width: "100%" }}
-                />
+            )}
+            <div className={styles.left_block}>
+              <div className={styles.handling_fee_section}>
+                <div className={styles.title}>累積手續費</div>
+                <div className={styles.total_handling_fee}>
+                  <DollarSign />
+                  {Math.round(this.state.animatedTotalHandlingFee).toLocaleString()}
+                </div>
               </div>
-              <div className={styles.controls}>
-                <div className={styles.time_span_options}>
-                  <div
-                    className={styles.time_span_options_inner}
-                    style={
-                      {
-                        "--active-index": this.getActiveOptionIndex(),
-                      } as React.CSSProperties
-                    }
-                  >
-                    <div className={styles.sliding_background} />
-                    <span
-                      className={this.getTimeSpanOptionClass(182)}
-                      onClick={() => this.handleClickTimeSpanOption(182)}
+              <div className={styles.chart_section}>
+                <div className={styles.chart_container}>
+                  <ReactECharts
+                    option={this.handlingFeeChartOption}
+                    style={{ height: "100%", width: "100%" }}
+                  />
+                </div>
+                <div className={styles.controls}>
+                  <div className={styles.time_span_options}>
+                    <div
+                      className={styles.time_span_options_inner}
+                      style={
+                        {
+                          "--active-index": this.getActiveOptionIndex(),
+                        } as React.CSSProperties
+                      }
                     >
-                      6M
-                    </span>
-                    <span
-                      className={this.getTimeSpanOptionClass(365)}
-                      onClick={() => this.handleClickTimeSpanOption(365)}
-                    >
-                      1Y
-                    </span>
-                    <span
-                      className={this.getTimeSpanOptionClass(1825)}
-                      onClick={() => this.handleClickTimeSpanOption(1825)}
-                    >
-                      5Y
-                    </span>
-                    <span
-                      className={this.getTimeSpanOptionClass(Infinity)}
-                      onClick={() => this.handleClickTimeSpanOption(Infinity)}
-                    >
-                      ALL
-                    </span>
+                      <div className={styles.sliding_background} />
+                      <span
+                        className={this.getTimeSpanOptionClass(182)}
+                        onClick={() => this.handleClickTimeSpanOption(182)}
+                      >
+                        6M
+                      </span>
+                      <span
+                        className={this.getTimeSpanOptionClass(365)}
+                        onClick={() => this.handleClickTimeSpanOption(365)}
+                      >
+                        1Y
+                      </span>
+                      <span
+                        className={this.getTimeSpanOptionClass(1825)}
+                        onClick={() => this.handleClickTimeSpanOption(1825)}
+                      >
+                        5Y
+                      </span>
+                      <span
+                        className={this.getTimeSpanOptionClass(Infinity)}
+                        onClick={() => this.handleClickTimeSpanOption(Infinity)}
+                      >
+                        ALL
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className={styles.right_block}>
-            <div className={styles.section_header}>
-              <div className={styles.title}>手續費折讓</div>
-              <Button
-                className="light"
-                onClick={() => this.setState({ showDiscountModal: true })}
-              >
-                新增折讓紀錄
-              </Button>
-            </div>
-            <div className={styles.record_list}>
-              {this.props.discounts
-                .slice(0, this.state.numberToShow)
-                .map((discount: HandlingFeeDiscount) => (
-                  <ListRow key={discount.id} target={discount} />
-                ))}
-              {this.props.discounts.length > 0 && (
-                <div className={styles.show_more_button_outer}>
-                  <Button
-                    className="transparent"
-                    onClick={this.handleClickShowMore}
-                    disabled={!this.hasMoreToShow}
-                  >
-                    顯示更多
-                  </Button>
-                </div>
-              )}
+            <div className={styles.right_block}>
+              <div className={styles.section_header}>
+                <div className={styles.title}>手續費折讓</div>
+                <Button
+                  className="light"
+                  onClick={() => this.setState({ activeModalName: "discountModal" })}
+                >
+                  新增折讓紀錄
+                </Button>
+              </div>
+              <div className={styles.record_list}>
+                {this.props.discounts
+                  .slice(0, this.state.numberToShow)
+                  .map((discount: HandlingFeeDiscount) => (
+                    <ListRow key={discount.id} target={discount} />
+                  ))}
+                {this.props.discounts.length > 0 && (
+                  <div className={styles.show_more_button_outer}>
+                    <Button
+                      className="transparent"
+                      onClick={this.handleClickShowMore}
+                      disabled={!this.hasMoreToShow}
+                    >
+                      顯示更多
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-        {this.state.showDiscountModal && (
-          <HandlingFeeDiscountModal
-            hideModal={(e) => this.setState({ showDiscountModal: false })}
-          />
-        )}
-      </div>
+      </>
     );
+  }
+
+  private get activeModal(): React.ReactElement<
+    typeof HandlingFeeDiscountModal
+  > | null {
+    if (this.state.activeModalName === "discountModal") {
+      return <HandlingFeeDiscountModal hideModal={Util.getHideModalCallback(this)} />;
+    }
+    return null;
   }
 
   private animateTotalHandlingFee(): void {
