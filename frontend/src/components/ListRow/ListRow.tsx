@@ -44,7 +44,7 @@ class ListRow extends React.Component<Props, State> {
     };
     this.rippleRef = React.createRef();
   }
-  public componentDidMount(): void {}
+
   public render(): React.ReactNode {
     return (
       <>
@@ -119,6 +119,7 @@ class ListRow extends React.Component<Props, State> {
       </>
     );
   }
+
   private get activeModal(): React.ReactElement<typeof Modal> | null {
     if (this.state.activeModalName === "edit") {
       return Util.isTradeRecord(this.props.target) ? (
@@ -149,6 +150,7 @@ class ListRow extends React.Component<Props, State> {
     }
     return null;
   }
+
   private get tradeTypeClassName(): string {
     if (Util.isTradeRecord(this.props.target)) {
       return (
@@ -164,6 +166,7 @@ class ListRow extends React.Component<Props, State> {
       );
     } else throw Error("TypeError");
   }
+
   private get tradeTypeString(): "買" | "賣" {
     if (Util.isTradeRecord(this.props.target)) {
       return this.props.target.deal_quantity > 0 ? "買" : "賣";
@@ -171,6 +174,7 @@ class ListRow extends React.Component<Props, State> {
       return this.props.target.plan_type === "buy" ? "買" : "賣";
     } else throw Error("TypeError");
   }
+
   private get quantity(): number {
     if (Util.isTradeRecord(this.props.target)) {
       return Math.abs(this.props.target.deal_quantity);
@@ -178,12 +182,15 @@ class ListRow extends React.Component<Props, State> {
       return this.props.target.target_quantity;
     } else throw Error("TypeError");
   }
+
   private handleClickEdit = (): void => {
     this.setState({ activeModalName: "edit" });
   };
+
   private handleClickDelete = (): void => {
     this.setState({ activeModalName: "checkDelete" });
   };
+
   private handleClickButtonInBottomSheet = (callback: Function): MouseEventHandler => {
     return (): void => {
       if (this.props.router.location.hash === "#!") {
@@ -195,6 +202,7 @@ class ListRow extends React.Component<Props, State> {
       });
     };
   };
+
   private onTouchStart = (e: TouchEvent): void => {
     this.timer = setTimeout(() => this.setState({ activatedForMobile: true }), 500);
     if (this.state.isTouching) {
@@ -216,13 +224,16 @@ class ListRow extends React.Component<Props, State> {
       }px`;
     });
   };
+
   private onTouchEnd = (): void => {
     this.setState({ isTouching: false });
     clearTimeout(this.timer);
   };
+
   private onTouchMove = (): void => {
     clearTimeout(this.timer);
   };
+
   private handleClickBottomSheetBackground = (): void => {
     this.setState({ activatedForMobile: false });
   };
