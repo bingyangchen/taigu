@@ -103,7 +103,7 @@
       flex-direction: column;
       justify-content: flex-end;
       border-radius: $border-radius;
-      padding: 20px 20px 15px 20px;
+      padding: 25px;
       background-color: #ffffff90;
       box-shadow: 0 0 15px -10px _.$transparent-black;
       @media (max-width: _.$width-1280) {
@@ -126,84 +126,57 @@
           color: _.$gray;
         }
         & > .cash_invested {
-          font-size: 2.3 * _.$base-font-size;
+          font-size: 3lvw;
           letter-spacing: 0.5 * _.$base-letter-spacing;
           font-weight: 600;
           color: _.$blue;
           @media (max-width: _.$width-512) {
-            font-size: 2.1 * _.$base-font-size;
+            font-size: 8lvw;
           }
         }
       }
       & > .body {
         display: flex;
-        align-items: center;
-        @media (max-width: _.$width-512) {
-          flex-direction: column;
-          align-items: initial;
-        }
+        flex-direction: column;
+        align-items: initial;
+        flex-grow: 1;
         & > .cash_invested_chart_container {
           flex-grow: 1;
-          aspect-ratio: calc(3 / 2);
+          height: 100%;
           @media (max-width: _.$width-1280) {
-            height: 250px;
-            aspect-ratio: auto;
+            aspect-ratio: calc(3 / 2);
           }
         }
         & > .controls {
           display: flex;
-          flex-direction: column;
           align-items: center;
           gap: 10px;
-          padding-left: 20px;
-          @media (max-width: _.$width-512) {
-            flex-direction: row;
-            padding: 25px 15px 0;
-          }
+          padding: 25px 15px 0;
           & > .time_span_options {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             flex-grow: 1;
-            @media (max-width: _.$width-512) {
-              flex-direction: row;
-            }
             & > .time_span_options_inner {
               position: relative;
               display: flex;
-              flex-direction: column-reverse;
               align-items: center;
-              width: 35px;
               border-radius: 100px;
               background-color: _.$transparent-black;
               overflow: hidden;
               --active-index: 0;
-              --option-height: 55px;
-              @media (max-width: _.$width-512) {
-                flex-direction: row;
-                height: 40px;
-                width: fit-content;
-                --option-height: 65px;
-              }
+              height: 40px;
+              width: fit-content;
+              --option-height: 65px;
               & > .sliding_background {
                 position: absolute;
-                height: var(--option-height);
-                width: 35px;
+                height: 40px;
+                width: var(--option-height);
                 aspect-ratio: 1;
                 border-radius: 100px;
                 background-color: _.$transparent-black;
                 transition: transform 0.3s ease;
                 z-index: 0;
-                transform: translateY(
-                  calc(var(--active-index) * -1 * var(--option-height))
-                );
-                @media (max-width: _.$width-512) {
-                  height: 40px;
-                  width: var(--option-height);
-                  transform: translateX(
-                    calc(var(--active-index) * var(--option-height))
-                  );
-                }
+                transform: translateX(calc(var(--active-index) * var(--option-height)));
               }
               & > span {
                 position: relative;
@@ -217,9 +190,6 @@
                 color: _.$gray;
                 z-index: 1;
                 transition: color 0.3s ease;
-                @media (max-width: _.$width-512) {
-                  height: var(--option-height);
-                }
                 @media (hover: hover) {
                   &:hover {
                     color: _.$white;
@@ -253,30 +223,30 @@
         font-weight: normal;
         font-size: _.$base-font-size;
         margin: 0 5px 10px;
+        @media (max-width: _.$width-512) {
+          margin-bottom: 20px;
+        }
       }
       & > .market_value_chart_container {
         position: relative;
-        height: 28dvh;
-        min-height: 200px;
+        height: 30dvh;
+        min-height: 230px;
         width: 100%;
         & > .chart_center {
           position: absolute;
           top: 50%;
           left: 50%;
-          height: max(66%, 135px);
+          height: max(40%, 135px);
           aspect-ratio: 1;
           transform: translate(-50%, -50%);
           display: flex;
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           color: _.$gray;
-          border: 1px solid _.$light-gray;
-          border-radius: 200px;
           & > .upper {
-            font-size: 0.75 * _.$base-font-size;
-            font-weight: 300;
+            font-size: 0.8 * _.$base-font-size;
           }
           & > .lower {
             font-size: 1.3 * _.$base-font-size;

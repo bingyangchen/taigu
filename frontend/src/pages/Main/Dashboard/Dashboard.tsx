@@ -1,5 +1,5 @@
+import ReactECharts from "echarts-for-react";
 import React from "react";
-import { Chart } from "react-google-charts";
 import { connect } from "react-redux";
 
 import {
@@ -241,14 +241,41 @@ class Dashboard extends React.Component<Props, State> {
       </div>
     );
   }
-  private get marketValuePieChartData(): (string | number)[][] {
-    const result: (string | number)[][] = [];
+  private get marketValuePieChartOption(): any {
+    const data: { value: number; name: string }[] = [];
     for (const [sid, marketValue] of Object.entries(this.state.sidMarketValueMap)) {
-      result.push([sid, marketValue]);
+      data.push({ value: marketValue, name: sid });
     }
-    result.sort((a, b) => (b[1] as number) - (a[1] as number));
-    result.unshift(["Sid", "Market Value"]);
-    return result;
+    data.sort((a, b) => b.value - a.value);
+    return {
+      tooltip: {
+        trigger: "item",
+        formatter: (params: any) => {
+          const percentage =
+            this.state.totalMarketValue > 0
+              ? ((params.value / this.state.totalMarketValue) * 100).toFixed(2)
+              : "0.00";
+          return `${params.name}<br/>市值: $${params.value.toLocaleString()}<br/>占比: ${percentage}%`;
+        },
+      },
+      series: [
+        {
+          type: "pie",
+          radius: ["65%", "95%"],
+          padAngle: 5,
+          avoidLabelOverlap: false,
+          itemStyle: { borderRadius: 10 },
+          label: { show: false },
+          emphasis: { label: { show: false } },
+          data: data,
+        },
+      ],
+      // prettier-ignore
+      color: [
+        "#5470c6", "#91cc75", "#fac858", "#ee6666", "#73c0de", "#3ba272", "#fc8452",
+        "#9a60b4", "#ea7ccc",
+      ],
+    };
   }
   private get tseInfoDate(): string {
     return Object.values(this.props.tseIndexRealtimePrices)[0]?.date ?? "0000-00-00";
@@ -386,16 +413,20 @@ class Dashboard extends React.Component<Props, State> {
   }
   private updateCashInvestedLineChart(): void {
     this.setState((state, props) => {
-      const chartData = props.cashInvestedChartData.map((row, i) => {
-        if (i === 0) return row;
+      const allData = props.cashInvestedChartData.slice(1).map((row) => {
         const dateStr = row[0] as string;
         const [year, month, day] = dateStr.split("-").map((e) => parseInt(e, 10));
-        const date = new Date(year, month - 1, day);
-        return [date, ...row.slice(1)];
+        return { date: new Date(year, month - 1, day), value: row[1] as number };
       });
+
+      const daysToShow = Math.min(state.daysToShow, allData.length);
+      const filteredData = allData.slice(-daysToShow);
       return {
         cashInvestedLineChart: (
-          <SimpleCashInvestedLineChart data={chartData} daysToShow={state.daysToShow} />
+          <SimpleCashInvestedLineChart
+            dates={filteredData.map((d) => d.date)}
+            values={filteredData.map((d) => d.value)}
+          />
         ),
       };
     });
@@ -417,27 +448,9 @@ class Dashboard extends React.Component<Props, State> {
       () => {
         this.setState({
           marketValuePieChart: (
-            <Chart
-              chartType="PieChart"
-              data={this.marketValuePieChartData}
-              options={{
-                // prettier-ignore
-                // colors: [
-                //   "#abdee6", "#ff968a", "#ffc8a2", "#97c1a9", "#cbaacb", "#c6dbda",
-                //   "#f3b0c3", "#cce2cb", "#ffffb5", "#8fcaca", "#ffccb6", "#55cbcd",
-                //   "#f6eac2", "#04f0f0", "#fee1e8", "#fed7c3", "#b6cfb6", "#ecd5e3",
-                //   "#ffc5bf", "#a21edb", "#ffaea5",
-                // ],
-                sliceVisibilityThreshold: 0.05,
-                backgroundColor: "transparent",
-                pieHole: 0.8,
-                pieSliceText: "none",
-                pieSliceBorderColor: "",
-                chartArea: { left: "0", top: "5%", width: "100%", height: "90%" },
-                legend: "none",
-              }}
-              width="100%"
-              height="100%"
+            <ReactECharts
+              option={this.marketValuePieChartOption}
+              style={{ height: "100%", width: "100%" }}
             />
           ),
         });

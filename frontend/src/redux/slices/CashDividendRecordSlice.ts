@@ -174,7 +174,10 @@ const getSidTotalCashDividendMap = (
 const getTotalCashDividend = (sidCashDividendMap: {
   [sid: string]: number;
 }): number => {
-  return Object.values(sidCashDividendMap).reduce((a, b) => a + b, 0);
+  return Object.values(sidCashDividendMap).reduce(
+    (sum, cashDividend) => sum + cashDividend,
+    0,
+  );
 };
 
 export const { refreshCashDividendRecordsWithNonCacheResponse } =
