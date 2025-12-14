@@ -114,7 +114,8 @@ self.addEventListener("fetch", (event) => {
         /stock\/market-index[/]?$/gs.test(requestUrl) ||
         /memo\/trade-plans[/]?$/gs.test(requestUrl) ||
         /memo\/company-info[/]?$/gs.test(requestUrl) ||
-        /memo\/favorites[/]?$/gs.test(requestUrl)) &&
+        /memo\/favorites[/]?$/gs.test(requestUrl) ||
+        /handling-fee\/discount[/]?$/gs.test(requestUrl)) &&
       method === "get"
     ) {
       event.respondWith(

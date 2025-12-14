@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 
 import accountReducer from "./slices/AccountSlice";
 import fetchAllCashDividendReducer from "./slices/CashDividendRecordSlice";
+import handlingFeeDiscountReducer from "./slices/HandlingFeeDiscountSlice";
 import mainPageReducer from "./slices/MainPageSlice";
 import memoReducer from "./slices/MemoSlice";
 import settingsPageReducer from "./slices/SettingsPageSlice";
@@ -21,6 +22,7 @@ export const store = configureStore({
     memo: memoReducer,
     toast: toastReducer,
     mainPage: mainPageReducer,
+    handlingFeeDiscount: handlingFeeDiscountReducer,
   },
 });
 
