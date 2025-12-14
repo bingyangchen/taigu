@@ -16,8 +16,6 @@ export { default as IconExit } from "./IconExit";
 export { default as IconEye } from "./IconEye";
 export { default as IconEyeSlash } from "./IconEyeSlash";
 export { default as IconFullScreen } from "./IconFullScreen";
-export { default as IconGear } from "./IconGear";
-export { default as IconHandDollar } from "./IconHandDollar";
 export { default as IconHeart } from "./IconHeart";
 export { default as IconHeartFill } from "./IconHeartFill";
 export { default as IconHome } from "./IconHome";

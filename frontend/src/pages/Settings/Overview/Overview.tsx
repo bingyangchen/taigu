@@ -14,8 +14,6 @@ import {
   IconEnvelope,
   IconExclamation,
   IconExit,
-  IconGear,
-  IconHandDollar,
   IconIncognito,
   IconInfoCircle,
   IconPersonVcard,
@@ -66,7 +64,6 @@ class Overview extends React.Component<Props, State> {
       //     name: "通知",
       //     path: "#notification",
       // },
-      { icon: <IconGear sideLength="100%" />, name: "管理", path: "#manage" },
       { icon: <IconInfoCircle sideLength="100%" />, name: "關於", path: "#about" },
       { icon: <IconUser sideLength="100%" />, name: "登入", path: "#account" },
     ];
@@ -157,22 +154,6 @@ class Overview extends React.Component<Props, State> {
                 </BeautifulRow>
               </BeautifulBlock>
             </div> */}
-            <div id="manage" className={styles.section}>
-              <BeautifulBlock title="管理">
-                <BeautifulRow
-                  onClick={() =>
-                    this.props.router.navigate(
-                      `${Env.frontendRootPath}${settingsPagePath}/handling-fee`,
-                    )
-                  }
-                >
-                  <div className={`${styles.row_inner} ${styles.privacy_policy}`}>
-                    <IconHandDollar sideLength="16px" />
-                    手續費管理
-                  </div>
-                </BeautifulRow>
-              </BeautifulBlock>
-            </div>
             <div id="about" className={styles.section}>
               <BeautifulBlock title="關於">
                 <BeautifulRow
