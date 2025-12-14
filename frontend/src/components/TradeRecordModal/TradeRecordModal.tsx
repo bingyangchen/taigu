@@ -143,16 +143,7 @@ class TradeRecordModal extends React.Component<Props, State> {
                 ? this.state.handlingFee.toString()
                 : ""
             }
-            onChange={(handlingFee: string) => {
-              this.setState({
-                handlingFee:
-                  handlingFee === ""
-                    ? NaN
-                    : parseInt(handlingFee) < 0
-                      ? 0
-                      : parseInt(handlingFee),
-              });
-            }}
+            onChange={this.handleHandlingFeeChange}
           />
         </div>
       </Modal>
@@ -210,6 +201,12 @@ class TradeRecordModal extends React.Component<Props, State> {
     this.setState({ absDealQuantity: parsedQuantity }, () =>
       this.setState({ handlingFee: this.calcDefaultHandlingFee() }),
     );
+  };
+
+  private handleHandlingFeeChange = (handlingFee: string): void => {
+    const parsedFee =
+      handlingFee === "" ? NaN : parseInt(handlingFee) < 0 ? 0 : parseInt(handlingFee);
+    this.setState({ handlingFee: parsedFee });
   };
 
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {
