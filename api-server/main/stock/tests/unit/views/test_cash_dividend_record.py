@@ -315,8 +315,10 @@ class TestCashDividendRecordCreateView:
         request.user = user
 
         response = create(request)
-        assert response.status_code == 200
-        assert json.loads(response.content)["cash_dividend"] == -500
+        assert response.status_code == 400
+        assert (
+            json.loads(response.content)["message"] == "Cash dividend must be positive"
+        )
 
     def test_create_unknown_stock_id(
         self, request_factory: RequestFactory, user: User
