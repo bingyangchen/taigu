@@ -9,6 +9,7 @@ import {
   RoundButton,
   SimpleCashInvestedLineChart,
   SpeedDial,
+  SummaryCard,
 } from "../../../components";
 import { IconFullScreen } from "../../../icons";
 import {
@@ -18,8 +19,9 @@ import {
 import type { RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import { IndexPriceInfo } from "../../../types";
+import Env from "../../../utils/env";
 import Util from "../../../utils/util";
-import styles from "./Home.module.scss";
+import styles from "./Dashboard.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const {
@@ -62,7 +64,7 @@ interface State {
   animatedTotalCashInvested: number;
 }
 
-class Home extends React.Component<Props, State> {
+class Dashboard extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
@@ -210,54 +212,31 @@ class Home extends React.Component<Props, State> {
           </div>
         </div>
         <div className={styles.right}>
-          <div className={styles.title}>投資組合</div>
-          <div className={styles.market_value_chart_container}>
-            {this.state.marketValuePieChart}
-            <div className={styles.chart_center}>
-              <div className={styles.upper}>目前市值</div>
-              <div className={styles.lower}>
-                <DollarSign />
-                {Math.round(this.state.totalMarketValue).toLocaleString()}
-              </div>
-            </div>
-          </div>
-          <div className={styles.summary}>
-            <div className={styles.summary_row}>
-              <div className={styles.left}>
-                <div className={styles.title}>報酬率</div>
-              </div>
-              <div className={styles.price}>
-                <div className={styles.price}>
-                  {this.props.tradeRecords.length > 0
-                    ? this.rateOfReturn.toFixed(2)
-                    : 0}
-                  <PercentSign />
-                </div>
-              </div>
-            </div>
-            <div className={styles.summary_row}>
-              <div className={styles.left}>
-                <div className={styles.title}>實現損益</div>
-              </div>
-              <div className={styles.price}>
-                <div className={styles.price}>
+          <div className={styles.upper}>
+            <div className={styles.title}>投資組合</div>
+            <div className={styles.market_value_chart_container}>
+              {this.state.marketValuePieChart}
+              <div className={styles.chart_center}>
+                <div className={styles.upper}>目前市值</div>
+                <div className={styles.lower}>
                   <DollarSign />
-                  {Math.round(this.totalEarning).toLocaleString()}
-                </div>
-              </div>
-            </div>
-            <div className={styles.summary_row}>
-              <div className={styles.left}>
-                <div className={styles.title}>手續費用</div>
-              </div>
-              <div className={styles.price}>
-                <div className={styles.price}>
-                  <DollarSign />
-                  {this.props.totalHandlingFee.toLocaleString()}
+                  {Math.round(this.state.totalMarketValue).toLocaleString()}
                 </div>
               </div>
             </div>
           </div>
+          <SummaryCard title="報酬率">
+            {this.props.tradeRecords.length > 0 ? this.rateOfReturn.toFixed(2) : 0}
+            <PercentSign />
+          </SummaryCard>
+          <SummaryCard title="實現損益">
+            <DollarSign />
+            {Math.round(this.totalEarning).toLocaleString()}
+          </SummaryCard>
+          <SummaryCard title="手續費用" onClick={this.handleClickHandlingFee}>
+            <DollarSign />
+            {this.props.totalHandlingFee.toLocaleString()}
+          </SummaryCard>
         </div>
       </div>
     );
@@ -353,6 +332,9 @@ class Home extends React.Component<Props, State> {
   }
   private handleClickTimeSpanOption = (number: number): void => {
     this.setState({ daysToShow: number });
+  };
+  private handleClickHandlingFee = (): void => {
+    this.props.router.navigate(`${Env.frontendRootPath}handling-fee`);
   };
   private get rateOfReturn(): number {
     return (
@@ -482,4 +464,4 @@ class Home extends React.Component<Props, State> {
   }
 }
 
-export default connect(mapStateToProps)(withRouter(Home));
+export default connect(mapStateToProps)(withRouter(Dashboard));

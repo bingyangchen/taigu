@@ -59,6 +59,8 @@ def create(request: HttpRequest) -> JsonResponse:
 
     deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
     cash_dividend = int(cash_dividend)
+    if cash_dividend < 0:
+        return JsonResponse({"message": "Cash dividend must be positive"}, status=400)
 
     try:
         company = Company.objects.get(pk=str(sid))
@@ -101,6 +103,10 @@ def update(request: HttpRequest, id: str | int) -> JsonResponse:
     ):
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
+    cash_dividend = int(cash_dividend)
+    if cash_dividend < 0:
+        return JsonResponse({"message": "Cash dividend must be positive"}, status=400)
+
     try:
         company = Company.objects.get(pk=str(sid))
     except ObjectDoesNotExist:
@@ -109,7 +115,7 @@ def update(request: HttpRequest, id: str | int) -> JsonResponse:
     record = CashDividendRecord.objects.get(pk=int(id), owner=request.user)
     record.company = company
     record.deal_time = datetime.strptime(str(deal_time), "%Y-%m-%d").date()
-    record.cash_dividend = int(cash_dividend)
+    record.cash_dividend = cash_dividend
     record.save()
     return JsonResponse(
         {

@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { DollarSign, Modal, SearchKeywordInput } from "../../components";
 import type { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
-import type { StockInfo, TradePlan } from "../../types";
+import type { StockInfo } from "../../types";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
 import Util from "../../utils/util";
@@ -42,10 +42,7 @@ function mapStateToProps(rootState: RootState) {
 }
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  defaultSid?: string;
-  plan?: TradePlan;
   hideModal: MouseEventHandler;
-  onSave?: () => void;
   dispatch: AppDispatch;
 }
 

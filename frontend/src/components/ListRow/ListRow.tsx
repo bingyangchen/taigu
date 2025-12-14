@@ -1,22 +1,21 @@
-import React, { MouseEventHandler, TouchEvent } from "react";
+import React, { MouseEventHandler, ReactNode, TouchEvent } from "react";
 
-import {
-  BottomSheet,
-  CashDividendRecordModal,
-  CheckDeleteModal,
-  DollarSign,
-  ListRowActionBar,
-  Modal,
-  TradePlanModal,
-  TradeRecordModal,
-} from "../../components";
+import { BottomSheet, ListRowActionBar } from "../../components";
 import { IRouter, withRouter } from "../../router";
-import { CashDividendRecord, TradePlan, TradeRecord } from "../../types";
+import {
+  CashDividendRecord,
+  HandlingFeeDiscount,
+  TradePlan,
+  TradeRecord,
+} from "../../types";
 import Util from "../../utils/util";
 import styles from "./ListRow.module.scss";
 
 interface Props extends IRouter {
-  target: TradeRecord | CashDividendRecord | TradePlan;
+  target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount;
+  children: ReactNode;
+  editModal: ((hideModal: MouseEventHandler) => ReactNode) | null;
+  deleteModal: ((hideModal: MouseEventHandler) => ReactNode) | null;
 }
 
 interface State {
@@ -38,7 +37,7 @@ class ListRow extends React.Component<Props, State> {
     };
     this.rippleRef = React.createRef();
   }
-  public componentDidMount(): void {}
+
   public render(): React.ReactNode {
     return (
       <>
@@ -58,26 +57,7 @@ class ListRow extends React.Component<Props, State> {
               <span className={styles.ripple} ref={this.rippleRef} />
             )}
           </span>
-          <span className={styles.company}>
-            {`${this.props.target.sid} ${this.props.target.company_name}`}
-          </span>
-          <span className={styles.price}>
-            <DollarSign />
-            {Util.isTradeRecord(this.props.target)
-              ? this.props.target.deal_price.toLocaleString()
-              : Util.isCashDividendRecord(this.props.target)
-                ? this.props.target.cash_dividend.toLocaleString()
-                : this.props.target.target_price.toLocaleString()}
-          </span>
-          {!Util.isCashDividendRecord(this.props.target) && (
-            <span className={styles.quantity_outer}>
-              <span className={this.tradeTypeClassName}>{this.tradeTypeString}</span>
-              <span className={styles.quantity}>{this.quantity} 股</span>
-            </span>
-          )}
-          {!Util.isTradePlan(this.props.target) && (
-            <span className={styles.date}>{this.props.target.deal_time}</span>
-          )}
+          {this.props.children}
           {Util.isMobile ? (
             this.state.activatedForMobile && (
               <BottomSheet onClickBackground={this.handleClickBottomSheetBackground}>
@@ -104,69 +84,25 @@ class ListRow extends React.Component<Props, State> {
       </>
     );
   }
-  private get activeModal(): React.ReactElement<typeof Modal> | null {
+
+  private get activeModal(): ReactNode {
+    const hideModal = Util.getHideModalCallback(this);
     if (this.state.activeModalName === "edit") {
-      return Util.isTradeRecord(this.props.target) ? (
-        <TradeRecordModal
-          record={this.props.target}
-          hideModal={Util.getHideModalCallback(this)}
-        />
-      ) : Util.isCashDividendRecord(this.props.target) ? (
-        <CashDividendRecordModal
-          record={this.props.target}
-          hideModal={Util.getHideModalCallback(this)}
-        />
-      ) : (
-        <TradePlanModal
-          plan={this.props.target}
-          hideModal={Util.getHideModalCallback(this)}
-        />
-      );
+      return this.props.editModal ? this.props.editModal(hideModal) : null;
     } else if (this.state.activeModalName === "checkDelete") {
-      return (
-        <CheckDeleteModal
-          target={this.props.target}
-          hideModal={Util.getHideModalCallback(this)}
-        />
-      );
+      return this.props.deleteModal ? this.props.deleteModal(hideModal) : null;
     }
     return null;
   }
-  private get tradeTypeClassName(): string {
-    if (Util.isTradeRecord(this.props.target)) {
-      return (
-        styles.trade_type +
-        " " +
-        (this.props.target.deal_quantity > 0 ? styles.buy : styles.sell)
-      );
-    } else if (Util.isTradePlan(this.props.target)) {
-      return (
-        styles.trade_type +
-        " " +
-        (this.props.target.plan_type === "buy" ? styles.buy : styles.sell)
-      );
-    } else throw Error("TypeError");
-  }
-  private get tradeTypeString(): "買" | "賣" {
-    if (Util.isTradeRecord(this.props.target)) {
-      return this.props.target.deal_quantity > 0 ? "買" : "賣";
-    } else if (Util.isTradePlan(this.props.target)) {
-      return this.props.target.plan_type === "buy" ? "買" : "賣";
-    } else throw Error("TypeError");
-  }
-  private get quantity(): number {
-    if (Util.isTradeRecord(this.props.target)) {
-      return Math.abs(this.props.target.deal_quantity);
-    } else if (Util.isTradePlan(this.props.target)) {
-      return this.props.target.target_quantity;
-    } else throw Error("TypeError");
-  }
+
   private handleClickEdit = (): void => {
     this.setState({ activeModalName: "edit" });
   };
+
   private handleClickDelete = (): void => {
     this.setState({ activeModalName: "checkDelete" });
   };
+
   private handleClickButtonInBottomSheet = (callback: Function): MouseEventHandler => {
     return (): void => {
       if (this.props.router.location.hash === "#!") {
@@ -178,6 +114,7 @@ class ListRow extends React.Component<Props, State> {
       });
     };
   };
+
   private onTouchStart = (e: TouchEvent): void => {
     this.timer = setTimeout(() => this.setState({ activatedForMobile: true }), 500);
     if (this.state.isTouching) {
@@ -188,23 +125,27 @@ class ListRow extends React.Component<Props, State> {
     const diameter = Math.max(mask.clientWidth, mask.clientHeight);
     const touch = e.touches[0];
     this.setState({ isTouching: true }, () => {
-      this.rippleRef.current!.style.width =
-        this.rippleRef.current!.style.height = `${diameter}px`;
-      this.rippleRef.current!.style.left = `${
+      if (!this.rippleRef.current) return;
+      this.rippleRef.current.style.width =
+        this.rippleRef.current.style.height = `${diameter}px`;
+      this.rippleRef.current.style.left = `${
         touch.clientX - mask.getBoundingClientRect().left - diameter / 2
       }px`;
-      this.rippleRef.current!.style.top = `${
+      this.rippleRef.current.style.top = `${
         touch.clientY - mask.getBoundingClientRect().top - diameter / 2
       }px`;
     });
   };
+
   private onTouchEnd = (): void => {
     this.setState({ isTouching: false });
     clearTimeout(this.timer);
   };
+
   private onTouchMove = (): void => {
     clearTimeout(this.timer);
   };
+
   private handleClickBottomSheetBackground = (): void => {
     this.setState({ activatedForMobile: false });
   };

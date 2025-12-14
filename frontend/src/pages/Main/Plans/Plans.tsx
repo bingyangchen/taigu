@@ -1,7 +1,16 @@
-import React from "react";
+import React, { MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { Button, ListRow, SearchKeywordInput, SpeedDial } from "../../../components";
+import {
+  Button,
+  CheckDeleteModal,
+  DollarSign,
+  ListRow,
+  SearchKeywordInput,
+  SpeedDial,
+  TradePlanModal,
+} from "../../../components";
+import { deletePlan } from "../../../redux/slices/TradePlanSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { TradePlan } from "../../../types";
@@ -9,9 +18,9 @@ import Util from "../../../utils/util";
 import styles from "./Plans.module.scss";
 
 function mapStateToProps(rootState: RootState) {
-  const { tradePlans } = rootState.tradePlan;
+  const { tradePlans, isWaiting: isWaitingTradePlan } = rootState.tradePlan;
   const { sidStockInfoMap } = rootState.stockInfo;
-  return { tradePlans, sidStockInfoMap };
+  return { tradePlans, sidStockInfoMap, isWaitingTradePlan };
 }
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
@@ -49,7 +58,32 @@ class Plans extends React.Component<Props, State> {
           {this.filteredAndSortedPlans
             .slice(0, this.state.numberToShow)
             .map((plan: TradePlan, idx) => {
-              return <ListRow key={idx} target={plan} />;
+              return (
+                <ListRow
+                  key={idx}
+                  target={plan}
+                  editModal={this.renderEditModal(plan)}
+                  deleteModal={this.renderDeleteModal(plan)}
+                >
+                  <span className={styles.company}>
+                    {`${plan.sid} ${plan.company_name}`}
+                  </span>
+                  <span className={styles.price}>
+                    <DollarSign />
+                    {plan.target_price.toLocaleString()}
+                  </span>
+                  <span className={styles.quantity_outer}>
+                    <span
+                      className={`${styles.trade_type} ${
+                        plan.plan_type === "buy" ? styles.buy : styles.sell
+                      }`}
+                    >
+                      {plan.plan_type === "buy" ? "買" : "賣"}
+                    </span>
+                    <span className={styles.quantity}>{plan.target_quantity} 股</span>
+                  </span>
+                </ListRow>
+              );
             })}
           <div className={styles.show_more_button_outer}>
             <Button
@@ -103,6 +137,54 @@ class Plans extends React.Component<Props, State> {
   private get hasMoreToShow(): boolean {
     return this.filteredAndSortedPlans.length > this.state.numberToShow;
   }
+
+  private renderEditModal = (
+    plan: TradePlan,
+  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+    const EditModalComponent = (hideModal: MouseEventHandler) => {
+      return <TradePlanModal plan={plan} hideModal={hideModal} />;
+    };
+    EditModalComponent.displayName = "EditModalComponent";
+    return EditModalComponent;
+  };
+
+  private renderDeleteModal = (
+    plan: TradePlan,
+  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+    const DeleteModalComponent = (hideModal: MouseEventHandler) => {
+      return (
+        <CheckDeleteModal
+          hideModal={hideModal}
+          isWaiting={this.props.isWaitingTradePlan}
+          onDelete={this.getDeleteHandler(plan)}
+        >
+          <div className={styles.modal_inner}>
+            <span className={styles.company}>{`${plan.sid} ${plan.company_name}`}</span>
+            <span className={styles.price}>
+              <DollarSign />
+              {plan.target_price.toLocaleString()}
+            </span>
+            <span
+              className={`${styles.trade_type} ${
+                plan.plan_type === "buy" ? styles.buy : styles.sell
+              }`}
+            >
+              {plan.plan_type === "buy" ? "買" : "賣"}
+            </span>
+            <span className={styles.quantity}>{plan.target_quantity} 股</span>
+          </div>
+        </CheckDeleteModal>
+      );
+    };
+    DeleteModalComponent.displayName = "DeleteModalComponent";
+    return DeleteModalComponent;
+  };
+
+  private getDeleteHandler = (plan: TradePlan): (() => Promise<void>) => {
+    return async (): Promise<void> => {
+      await this.props.dispatch(deletePlan(plan.id)).unwrap();
+    };
+  };
 }
 
 export default connect(mapStateToProps)(withRouter(Plans));

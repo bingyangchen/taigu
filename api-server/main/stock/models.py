@@ -17,6 +17,7 @@ from django.db.models import (
     Manager,
     Model,
     OneToOneField,
+    PositiveBigIntegerField,
     PositiveSmallIntegerField,
     TextField,
 )
@@ -117,7 +118,7 @@ class StockInfo(CreateUpdateDateModel):
         Company, on_delete=CASCADE, related_name="stock_info", db_index=True
     )
     date = DateField(db_index=True)
-    quantity = BigIntegerField()
+    quantity = PositiveBigIntegerField()
     close_price = FloatField()
     fluct_price = FloatField()
 
@@ -146,7 +147,7 @@ class History(CreateUpdateDateModel):
     )
     frequency = CharField(max_length=8, choices=Frequency.CHOICES, db_index=True)
     date = DateField(db_index=True)
-    quantity = BigIntegerField()
+    quantity = PositiveBigIntegerField()
     close_price = FloatField()
 
     class Meta:
@@ -181,7 +182,7 @@ class TradeRecord(CreateUpdateDateModel):
     deal_time = DateField()
     deal_price = FloatField()
     deal_quantity = BigIntegerField()
-    handling_fee = BigIntegerField()
+    handling_fee = PositiveBigIntegerField()
 
     class Meta:
         db_table = "trade_record"
@@ -199,7 +200,7 @@ class CashDividendRecord(CreateUpdateDateModel):
     )
     company: Company = ForeignKey(Company, on_delete=PROTECT, db_index=True)  # type: ignore
     deal_time = DateField()
-    cash_dividend = BigIntegerField()
+    cash_dividend = PositiveBigIntegerField()
 
     class Meta:
         db_table = "cash_dividend_record"

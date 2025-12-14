@@ -86,6 +86,8 @@ def create_trade_plan(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
     target_quantity = int(target_quantity)
+    if target_quantity < 0:
+        return JsonResponse({"message": "Target quantity must be positive"}, status=400)
 
     try:
         company = Company.objects.get(pk=str(sid))
@@ -161,6 +163,8 @@ def update_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
         return JsonResponse({"message": "Data Not Sufficient"}, status=400)
 
     target_quantity = int(target_quantity)
+    if target_quantity < 0:
+        return JsonResponse({"message": "Target quantity must be positive"}, status=400)
 
     try:
         company = Company.objects.get(pk=str(sid))

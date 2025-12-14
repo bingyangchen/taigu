@@ -27,7 +27,6 @@ interface State {
   dealTime: string;
   sid: string;
   dealPrice: number;
-  dealPriceInput: string;
   isBuying: boolean;
   absDealQuantity: number;
   handlingFee: number;
@@ -43,7 +42,6 @@ class TradeRecordModal extends React.Component<Props, State> {
         dealTime: props.record.deal_time,
         sid: props.record.sid,
         dealPrice: props.record.deal_price,
-        dealPriceInput: props.record.deal_price.toString(),
         isBuying: props.record.deal_quantity > 0 ? true : false,
         absDealQuantity: Math.abs(props.record.deal_quantity),
         handlingFee: props.record.handling_fee,
@@ -54,7 +52,6 @@ class TradeRecordModal extends React.Component<Props, State> {
         dealTime: new Date().toLocaleDateString("af"),
         sid: props.defaultSid ?? "",
         dealPrice: NaN,
-        dealPriceInput: "",
         isBuying: true,
         absDealQuantity: NaN,
         handlingFee: 0,
@@ -88,9 +85,7 @@ class TradeRecordModal extends React.Component<Props, State> {
             title="交易日期"
             type="date"
             value={this.state.dealTime}
-            onChange={(dealTime: string) => {
-              this.setState({ dealTime: dealTime });
-            }}
+            onChange={(dealTime: string) => this.setState({ dealTime: dealTime })}
           />
           <LabeledInput
             title="證券代號"
@@ -103,14 +98,12 @@ class TradeRecordModal extends React.Component<Props, State> {
               title="成交單價"
               type="number"
               inputMode="decimal"
-              value={this.state.dealPriceInput}
-              onChange={(dealPrice: string) => {
-                const parsed = dealPrice === "" ? NaN : parseFloat(dealPrice);
-                this.setState({ dealPriceInput: dealPrice, dealPrice: parsed });
-                setTimeout(() => {
-                  this.setState({ handlingFee: this.calcDefaultHandlingFee() });
-                });
-              }}
+              value={
+                this.state.dealPrice || this.state.dealPrice === 0
+                  ? this.state.dealPrice.toString()
+                  : ""
+              }
+              onChange={this.handleDealPriceChange}
               autoFocus={Boolean(this.state.sid)}
             />
             <div className={styles.buy_or_sell}>
@@ -138,19 +131,7 @@ class TradeRecordModal extends React.Component<Props, State> {
                   ? this.state.absDealQuantity.toString()
                   : ""
               }
-              onChange={(absDealQuantity: string) => {
-                this.setState({
-                  absDealQuantity:
-                    absDealQuantity === ""
-                      ? NaN
-                      : parseInt(absDealQuantity) < 0
-                        ? 0
-                        : parseInt(absDealQuantity),
-                });
-                setTimeout(() => {
-                  this.setState({ handlingFee: this.calcDefaultHandlingFee() });
-                });
-              }}
+              onChange={this.handleAbsDealQuantityChange}
             />
           </div>
           <LabeledInput
@@ -162,16 +143,13 @@ class TradeRecordModal extends React.Component<Props, State> {
                 ? this.state.handlingFee.toString()
                 : ""
             }
-            onChange={(handlingFee: string) => {
-              this.setState({
-                handlingFee: handlingFee === "" ? NaN : parseInt(handlingFee),
-              });
-            }}
+            onChange={this.handleHandlingFeeChange}
           />
         </div>
       </Modal>
     );
   }
+
   private calcDefaultHandlingFee(): number {
     return Math.max(
       1,
@@ -182,6 +160,7 @@ class TradeRecordModal extends React.Component<Props, State> {
       ),
     );
   }
+
   private get canSubmit(): boolean {
     return Boolean(
       this.state.dealTime &&
@@ -192,6 +171,7 @@ class TradeRecordModal extends React.Component<Props, State> {
         !this.props.isWaiting,
     );
   }
+
   private handleClickToggle = (): void => {
     this.setState(
       (state) => {
@@ -202,6 +182,33 @@ class TradeRecordModal extends React.Component<Props, State> {
       },
     );
   };
+
+  private handleDealPriceChange = (dealPrice: string): void => {
+    const parsedPrice =
+      dealPrice === "" ? NaN : parseFloat(dealPrice) < 0 ? 0 : parseFloat(dealPrice);
+    this.setState({ dealPrice: parsedPrice }, () => {
+      this.setState({ handlingFee: this.calcDefaultHandlingFee() });
+    });
+  };
+
+  private handleAbsDealQuantityChange = (absDealQuantity: string): void => {
+    const parsedQuantity =
+      absDealQuantity === ""
+        ? NaN
+        : parseInt(absDealQuantity) < 0
+          ? 0
+          : parseInt(absDealQuantity);
+    this.setState({ absDealQuantity: parsedQuantity }, () =>
+      this.setState({ handlingFee: this.calcDefaultHandlingFee() }),
+    );
+  };
+
+  private handleHandlingFeeChange = (handlingFee: string): void => {
+    const parsedFee =
+      handlingFee === "" ? NaN : parseInt(handlingFee) < 0 ? 0 : parseInt(handlingFee);
+    this.setState({ handlingFee: parsedFee });
+  };
+
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {
     if (!this.canSubmit) return;
     try {
@@ -210,7 +217,7 @@ class TradeRecordModal extends React.Component<Props, State> {
         await this.props
           .dispatch(
             updateRecord({
-              id: this.state.recordId!,
+              id: this.state.recordId ?? "",
               sid: this.state.sid,
               deal_time: this.state.dealTime,
               deal_price: this.state.dealPrice,

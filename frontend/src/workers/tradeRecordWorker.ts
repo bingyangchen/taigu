@@ -25,8 +25,11 @@ self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
     sidHandlingFeeMap,
     sidGainMap,
     totalCashInvested: getTotalCashInvested(stockWarehouse),
-    totalHandlingFee: Object.values(sidHandlingFeeMap).reduce((a, b) => a + b, 0),
-    totalGain: Object.values(sidGainMap).reduce((a, b) => a + b, 0),
+    totalHandlingFee: Object.values(sidHandlingFeeMap).reduce(
+      (sum, fee) => sum + fee,
+      0,
+    ),
+    totalGain: Object.values(sidGainMap).reduce((sum, gain) => sum + gain, 0),
     cashInvestedChartData,
     tradeVolumeChartData,
     averageCashInvested,
@@ -65,7 +68,7 @@ const getSidCashInvestedMap = (
 ): { [sid: string]: number } => {
   const result: { [sid: string]: number } = {};
   for (const [sid, warehouse] of Object.entries(stockWarehouse)) {
-    result[sid] = warehouse.reduce((a, b) => a + b, 0);
+    result[sid] = warehouse.reduce((sum, cash) => sum + cash, 0);
   }
   return result;
 };
@@ -73,7 +76,7 @@ const getSidCashInvestedMap = (
 const getTotalCashInvested = (stockWarehouse: StockWarehouse): number => {
   let result = 0;
   for (const warehouse of Object.values(stockWarehouse)) {
-    result += warehouse.reduce((a, b) => a + b, 0);
+    result += warehouse.reduce((sum, cash) => sum + cash, 0);
   }
   return result;
 };
@@ -181,7 +184,10 @@ const chartDataHelper = (
       solvingDateString,
       0, // dummy
       Math.round(getTotalCashInvested(currentStockWarehouse)),
-      solvingRecords.reduce((a, b) => a + b.deal_price * Math.abs(b.deal_quantity), 0),
+      solvingRecords.reduce(
+        (sum, record) => sum + record.deal_price * Math.abs(record.deal_quantity),
+        0,
+      ),
     ]);
   }
 

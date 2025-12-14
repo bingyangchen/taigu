@@ -23,6 +23,9 @@ class NavTab extends React.Component<Props, State> {
     super(props);
     this.state = {};
   }
+
+  private readonly dashboardSubpages = [`${Env.frontendRootPath}handling-fee`];
+
   public render(): React.ReactNode {
     return (this.props.isCustomActive === undefined && this.isActive) ||
       this.props.isCustomActive ? (
@@ -45,13 +48,15 @@ class NavTab extends React.Component<Props, State> {
       </NavLink>
     );
   }
+
   private get isActive(): boolean {
-    return (
-      (this.props.router.location.pathname.indexOf(this.props.page.path) === 0 &&
-        this.props.page.path !== Env.frontendRootPath) ||
-      (this.props.router.location.pathname === this.props.page.path &&
-        this.props.page.path === Env.frontendRootPath)
-    );
+    const currentPath = this.props.router.location.pathname;
+    const pagePath = this.props.page.path;
+    if (pagePath === Env.frontendRootPath) {
+      if (currentPath === pagePath) return true;
+      else if (this.dashboardSubpages.includes(currentPath)) return true;
+      else return false;
+    } else return currentPath.startsWith(pagePath);
   }
 }
 

@@ -18,14 +18,14 @@ class Footer extends React.Component<Props, State> {
     super(props);
     this.state = {};
   }
+
+  private readonly dashboardSubpages = [`${Env.frontendRootPath}handling-fee`];
+
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
         {this.props.subpages.map((subpage, idx) => {
-          return (this.props.router.location.pathname.indexOf(subpage.path) === 0 &&
-            subpage.path !== Env.frontendRootPath) ||
-            (this.props.router.location.pathname === subpage.path &&
-              subpage.path === Env.frontendRootPath) ? (
+          return this.isActive(subpage) ? (
             <div // prevent auto navigate one more time
               key={idx}
               className={`${styles.icon_outer} ${styles.active}`}
@@ -40,6 +40,7 @@ class Footer extends React.Component<Props, State> {
               key={idx}
               end={subpage.path === Env.frontendRootPath}
               className={styles.icon_outer}
+              replace={this.shouldReplacePath(subpage)}
             >
               <div className={styles.icon_inner}>{subpage.icon}</div>
             </NavLink>
@@ -47,6 +48,30 @@ class Footer extends React.Component<Props, State> {
         })}
       </div>
     );
+  }
+
+  private get currentPath(): string {
+    return this.props.router.location.pathname;
+  }
+
+  private isActive(subpage: Subpage): boolean {
+    const pagePath = subpage.path;
+    if (pagePath === Env.frontendRootPath) {
+      if (this.currentPath === pagePath) return true;
+      else if (this.dashboardSubpages.includes(this.currentPath)) return true;
+      else return false;
+    } else return this.currentPath.startsWith(pagePath);
+  }
+
+  private shouldReplacePath(subpage: Subpage): boolean {
+    const prioritizedPaths = [`${Env.frontendRootPath}market`, Env.frontendRootPath];
+    if (prioritizedPaths.indexOf(this.currentPath) !== -1) {
+      return (
+        prioritizedPaths.indexOf(subpage.path) >
+        prioritizedPaths.indexOf(this.currentPath)
+      );
+    }
+    return true;
   }
 }
 

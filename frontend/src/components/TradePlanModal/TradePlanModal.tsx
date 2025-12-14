@@ -25,7 +25,6 @@ interface State {
   planId: string | null;
   sid: string;
   targetPrice: number;
-  targetPriceInput: string;
   planType: "buy" | "sell";
   targetQuantity: number;
 }
@@ -35,15 +34,14 @@ class TradePlanModal extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {
-      planId: props.plan?.id.toString() || null,
-      sid: props.plan?.sid || props.defaultSid || "",
+      planId: props.plan?.id.toString() ?? null,
+      sid: props.plan?.sid ?? props.defaultSid ?? "",
       targetPrice: props.plan ? props.plan.target_price : NaN,
-      targetPriceInput: props.plan ? props.plan.target_price.toString() : "",
       planType: props.plan?.plan_type ?? "buy",
       targetQuantity: props.plan ? props.plan.target_quantity : NaN,
     };
   }
-  public componentDidMount(): void {}
+
   public render(): React.ReactNode {
     return (
       <Modal
@@ -77,11 +75,12 @@ class TradePlanModal extends React.Component<Props, State> {
               title="目標價格"
               type="number"
               inputMode="decimal"
-              value={this.state.targetPriceInput}
-              onChange={(targetPrice: string) => {
-                const parsed = targetPrice === "" ? NaN : parseFloat(targetPrice);
-                this.setState({ targetPriceInput: targetPrice, targetPrice: parsed });
-              }}
+              value={
+                this.state.targetPrice || this.state.targetPrice === 0
+                  ? this.state.targetPrice.toString()
+                  : ""
+              }
+              onChange={this.handleTargetPriceChange}
               autoFocus={Boolean(this.state.sid)}
             />
             <div className={styles.buy_or_sell}>
@@ -109,22 +108,14 @@ class TradePlanModal extends React.Component<Props, State> {
                   ? this.state.targetQuantity.toString()
                   : ""
               }
-              onChange={(targetQuantity: string) => {
-                this.setState({
-                  targetQuantity:
-                    targetQuantity === ""
-                      ? NaN
-                      : parseInt(targetQuantity) < 0
-                        ? 0
-                        : parseInt(targetQuantity),
-                });
-              }}
+              onChange={this.handleTargetQuantityChange}
             />
           </div>
         </div>
       </Modal>
     );
   }
+
   private get canSubmit(): boolean {
     return Boolean(
       this.state.sid &&
@@ -133,11 +124,35 @@ class TradePlanModal extends React.Component<Props, State> {
         !this.props.isWaiting,
     );
   }
+
+  private handleTargetPriceChange = (targetPrice: string): void => {
+    this.setState({
+      targetPrice:
+        targetPrice === ""
+          ? NaN
+          : parseFloat(targetPrice) < 0
+            ? 0
+            : parseFloat(targetPrice),
+    });
+  };
+
   private handleClickToggle = (): void => {
     this.setState((state) => {
       return { planType: state.planType === "buy" ? "sell" : "buy" };
     });
   };
+
+  private handleTargetQuantityChange = (targetQuantity: string): void => {
+    this.setState({
+      targetQuantity:
+        targetQuantity === ""
+          ? NaN
+          : parseInt(targetQuantity) < 0
+            ? 0
+            : parseInt(targetQuantity),
+    });
+  };
+
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {
     if (!this.canSubmit) return;
     try {
@@ -146,7 +161,7 @@ class TradePlanModal extends React.Component<Props, State> {
         await this.props
           .dispatch(
             updatePlan({
-              id: this.state.planId!,
+              id: this.state.planId ?? "",
               sid: this.state.sid,
               target_price: this.state.targetPrice,
               plan_type: this.state.planType,

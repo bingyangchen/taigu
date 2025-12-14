@@ -7,7 +7,7 @@ import { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
-import styles from "./NavBarForSettings.module.scss";
+import styles from "./SettingsSideBar.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.account;
@@ -21,7 +21,7 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {}
 
-class NavBarForSettings extends React.Component<Props, State> {
+class SettingsSideBar extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
@@ -75,4 +75,4 @@ class NavBarForSettings extends React.Component<Props, State> {
   };
 }
 
-export default connect(mapStateToProps)(withRouter(NavBarForSettings));
+export default connect(mapStateToProps)(withRouter(SettingsSideBar));

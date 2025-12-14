@@ -7,7 +7,7 @@ import {
   Footer,
   HeaderForMain,
   LoadingScreen,
-  NavBarForMain,
+  MainSideBar,
   ToastList,
 } from "../../components";
 import {
@@ -28,6 +28,10 @@ import {
   fetchAllCashDividendRecords,
   refreshCashDividendRecordsWithNonCacheResponse,
 } from "../../redux/slices/CashDividendRecordSlice";
+import {
+  fetchAllDiscounts,
+  refreshDiscountsWithNonCacheResponse,
+} from "../../redux/slices/HandlingFeeDiscountSlice";
 import { updateScrollTop } from "../../redux/slices/MainPageSlice";
 import {
   fetchAllFavorites,
@@ -44,6 +48,7 @@ import {
   refreshTradePlansWithNonCacheResponse,
 } from "../../redux/slices/TradePlanSlice";
 import {
+  calculateTotalHandlingFee,
   fetchAllTradeRecords,
   refreshWithNonCacheResponse as refreshTradeRecordsWithNonCacheResponse,
 } from "../../redux/slices/TradeRecordSlice";
@@ -87,10 +92,8 @@ class Main extends React.Component<Props, State> {
   }
   public async componentDidMount(): Promise<void> {
     oncontextmenu = (e) => e.preventDefault();
-    this.mainRef.current!.addEventListener("scroll", this.handleScroll);
-    // if ("Notification" in window) Notification.requestPermission();
+    this.mainRef.current?.addEventListener("scroll", this.handleScroll);
 
-    // Fetch data
     try {
       await Promise.all([
         this.props.dispatch(fetchAccountInfo()).unwrap(),
@@ -99,8 +102,12 @@ class Main extends React.Component<Props, State> {
         this.props.dispatch(fetchAllFavorites()).unwrap(),
         this.props.dispatch(fetchAllTradePlans()).unwrap(),
         this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
+        this.props.dispatch(fetchAllDiscounts()).unwrap(),
       ]);
-      await this.fetchHoldingStockInfo();
+      await Promise.all([
+        this.props.dispatch(calculateTotalHandlingFee()).unwrap(),
+        this.fetchHoldingStockInfo(),
+      ]);
     } catch (e) {}
 
     this.subpages = [
@@ -168,7 +175,7 @@ class Main extends React.Component<Props, State> {
     }
   }
   public componentWillUnmount(): void {
-    this.mainRef.current!.removeEventListener("scroll", this.handleScroll);
+    this.mainRef.current?.removeEventListener("scroll", this.handleScroll);
     if (this.fetchStockInfoTimer) {
       clearInterval(this.fetchStockInfoTimer);
       this.fetchStockInfoTimer = null;
@@ -183,7 +190,7 @@ class Main extends React.Component<Props, State> {
         {Util.isMobile && <HeaderForMain />}
         <div className={styles.body}>
           {!Util.isMobile && (
-            <NavBarForMain
+            <MainSideBar
               avatarUrl={this.props.avatar_url || imgPersonFill}
               username={this.props.username}
               subpages={Util.isMobile ? this.subpages : this.subpages.slice(0, 4)}
@@ -221,6 +228,8 @@ class Main extends React.Component<Props, State> {
         this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
       } else if (/memo\/favorites[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
+      } else if (/handling-fee\/discount[/]?$/gs.test(e.data.url)) {
+        this.props.dispatch(refreshDiscountsWithNonCacheResponse(e.data.data.data));
       }
     } else {
       Nav.goToWelcomePage(

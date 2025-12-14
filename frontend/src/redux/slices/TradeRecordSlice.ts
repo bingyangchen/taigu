@@ -8,6 +8,7 @@ import type {
 } from "../../types";
 import Api from "../../utils/api";
 import { RootState } from "../store";
+import { refreshDiscountsWithNonCacheResponse } from "./HandlingFeeDiscountSlice";
 
 export interface TradeRecordState {
   tradeRecords: TradeRecord[];
@@ -62,7 +63,15 @@ export const createRecord = createAsyncThunk(
     );
     if (navigator.vibrate) navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
-    return await computeNewState([response, ...rootState.tradeRecord.tradeRecords]);
+    const newState = await computeNewState([
+      response,
+      ...rootState.tradeRecord.tradeRecords,
+    ]);
+    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
+      (sum, discount) => sum + discount.amount,
+      0,
+    );
+    return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
 
@@ -79,11 +88,16 @@ export const updateRecord = createAsyncThunk(
     );
     if (navigator.vibrate) navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
-    return await computeNewState(
-      rootState.tradeRecord.tradeRecords
-        .map((r) => (r.id === response.id ? response : r))
-        .sort((a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time)),
+    const newState = await computeNewState(
+      rootState.tradeRecord.tradeRecords.map((r) =>
+        r.id === response.id ? response : r,
+      ),
     );
+    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
+      (sum, discount) => sum + discount.amount,
+      0,
+    );
+    return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
 
@@ -96,23 +110,56 @@ export const deleteRecord = createAsyncThunk(
     await Api.sendRequest(`stock/trade-records/${id}`, "delete");
     if (navigator.vibrate) navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
-    return await computeNewState(
+    const newState = await computeNewState(
       [...rootState.tradeRecord.tradeRecords].filter((r) => r.id !== id),
     );
+    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
+      (sum, discount) => sum + discount.amount,
+      0,
+    );
+    return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
 
 export const refreshWithNonCacheResponse = createAsyncThunk(
   "tradeRecord/refreshWithNonCacheResponse",
-  async (tradeRecords: TradeRecord[]): Promise<Omit<TradeRecordState, "isWaiting">> => {
-    return await computeNewState(tradeRecords);
+  async (
+    tradeRecords: TradeRecord[],
+    thunkAPI,
+  ): Promise<Omit<TradeRecordState, "isWaiting">> => {
+    const newState = await computeNewState(tradeRecords);
+    const rootState = thunkAPI.getState() as RootState;
+    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
+      (sum, discount) => sum + discount.amount,
+      0,
+    );
+    return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
+  },
+);
+
+export const calculateTotalHandlingFee = createAsyncThunk(
+  "tradeRecord/calculateTotalHandlingFee",
+  async (_, thunkAPI) => {
+    const rootState = thunkAPI.getState() as RootState;
+    const baseTotalHandlingFee = Object.values(
+      rootState.tradeRecord.sidHandlingFeeMap,
+    ).reduce((sum, fee) => sum + fee, 0);
+    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
+      (sum, discount) => sum + discount.amount,
+      0,
+    );
+    return baseTotalHandlingFee - totalDiscount;
   },
 );
 
 export const tradeRecordSlice = createSlice({
   name: "tradeRecord",
   initialState,
-  reducers: {},
+  reducers: {
+    adjustTotalHandlingFee(state, action: { payload: number }) {
+      state.totalHandlingFee += action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchAllTradeRecords.pending, (state) => {
@@ -203,7 +250,6 @@ export const tradeRecordSlice = createSlice({
         state.isWaiting = false;
       })
 
-      .addCase(refreshWithNonCacheResponse.pending, (state) => {})
       .addCase(refreshWithNonCacheResponse.fulfilled, (state, action) => {
         state.tradeRecords = action.payload.tradeRecords;
         state.sidTradeRecordsMap = action.payload.sidTradeRecordsMap;
@@ -218,7 +264,22 @@ export const tradeRecordSlice = createSlice({
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
       })
-      .addCase(refreshWithNonCacheResponse.rejected, (state) => {});
+
+      .addCase(calculateTotalHandlingFee.fulfilled, (state, action) => {
+        state.totalHandlingFee = action.payload;
+      })
+
+      .addCase(refreshDiscountsWithNonCacheResponse, (state, action) => {
+        const baseTotalHandlingFee = Object.values(state.sidHandlingFeeMap).reduce(
+          (sum, fee) => sum + fee,
+          0,
+        );
+        const newTotalDiscount = action.payload.reduce(
+          (sum, discount) => sum + discount.amount,
+          0,
+        );
+        state.totalHandlingFee = baseTotalHandlingFee - newTotalDiscount;
+      });
   },
 });
 
@@ -237,4 +298,5 @@ const computeNewState = async (
   });
 };
 
+export const { adjustTotalHandlingFee } = tradeRecordSlice.actions;
 export default tradeRecordSlice.reducer;

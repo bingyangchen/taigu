@@ -13,8 +13,9 @@ import {
 } from "react-router-dom";
 
 import Login from "./pages/Login/Login";
+import Dashboard from "./pages/Main/Dashboard/Dashboard";
 import Details from "./pages/Main/Details/Details";
-import Home from "./pages/Main/Home/Home";
+import HandlingFee from "./pages/Main/HandlingFee/HandlingFee";
 import Main from "./pages/Main/Main";
 import Market from "./pages/Main/Market/Market";
 import Plans from "./pages/Main/Plans/Plans";
@@ -42,13 +43,14 @@ const myRouter = createBrowserRouter(
         <Route path="account-binding" element={<AccountBinding />}></Route>
       </Route>
       <Route path="" element={<Main />}>
-        <Route path="" element={<Home />}></Route>
+        <Route path="" element={<Dashboard />}></Route>
         <Route path="records" element={<Records />}></Route>
         <Route path="market" element={<Market />}></Route>
         <Route path="market/:sid" element={<Details />} />
         <Route path="market/holding/:sid" element={<Details />} />
         <Route path="market/favorites/:sid" element={<Details />} />
         <Route path="plans" element={<Plans />}></Route>
+        <Route path="handling-fee" element={<HandlingFee />}></Route>
       </Route>
       <Route path="privacy-policy" element={<PrivacyPolicy />}></Route>
       <Route path="terms-of-service" element={<TermsOfService />}></Route>

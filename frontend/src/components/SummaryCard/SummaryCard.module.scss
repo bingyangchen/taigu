@@ -1,0 +1,52 @@
+@use "../../global_variables" as _;
+
+.summary_card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 55px;
+  padding: 15px 25px;
+  background-color: #ffffff90;
+  box-shadow: 0 0 15px -10px _.$transparent-black;
+  border-radius: 20px;
+  transition: all 150ms ease;
+  @media (max-width: _.$width-512) {
+    margin: 0 20px;
+  }
+  & > .title {
+    min-width: max-content;
+    font-size: 0.9 * _.$base-font-size;
+    color: _.$gray;
+  }
+  & > .price {
+    text-align: right;
+    font-size: 1.1 * _.$base-font-size;
+    font-weight: bold;
+  }
+  &.clickable {
+    cursor: pointer;
+    position: relative;
+    & > .chevron {
+      position: absolute;
+      right: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      color: _.$gray;
+      opacity: 0.6;
+      transition: all 150ms ease;
+    }
+    @media (hover: hover) {
+      &:hover {
+        box-shadow: 0 4px 20px -8px _.$transparent-black;
+        background-color: _.$white;
+        & > .chevron {
+          opacity: 1;
+          transform: translateY(-50%) translateX(2px);
+          color: _.$blue;
+        }
+      }
+    }
+  }
+}

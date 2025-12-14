@@ -33,9 +33,9 @@ class CashDividendRecordModal extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {
-      recordId: props.record?.id.toString() || null,
-      dealTime: props.record?.deal_time || new Date().toLocaleDateString("af"),
-      sid: props.defaultSid || props.record?.sid || "",
+      recordId: props.record?.id.toString() ?? null,
+      dealTime: props.record?.deal_time ?? new Date().toLocaleDateString("af"),
+      sid: props.defaultSid ?? props.record?.sid ?? "",
       cashDividend: props.record ? props.record.cash_dividend : NaN,
     };
   }
@@ -83,17 +83,14 @@ class CashDividendRecordModal extends React.Component<Props, State> {
                 ? this.state.cashDividend.toString()
                 : ""
             }
-            onChange={(cashDividend: string) => {
-              this.setState({
-                cashDividend: cashDividend === "" ? NaN : parseInt(cashDividend),
-              });
-            }}
+            onChange={this.handleCashDividendChange}
             autoFocus={Boolean(this.state.sid)}
           />
         </div>
       </Modal>
     );
   }
+
   private get canSubmit(): boolean {
     return Boolean(
       this.state.dealTime &&
@@ -102,6 +99,17 @@ class CashDividendRecordModal extends React.Component<Props, State> {
         !this.props.isWaiting,
     );
   }
+
+  private handleCashDividendChange = (cashDividend: string): void => {
+    const parsedDividend =
+      cashDividend === ""
+        ? NaN
+        : parseInt(cashDividend) < 0
+          ? 0
+          : parseInt(cashDividend);
+    this.setState({ cashDividend: parsedDividend });
+  };
+
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {
     if (!this.canSubmit) throw Error("Cannot submit!");
     try {
@@ -110,7 +118,7 @@ class CashDividendRecordModal extends React.Component<Props, State> {
         await this.props
           .dispatch(
             updateRecord({
-              id: this.state.recordId!,
+              id: this.state.recordId,
               sid: this.state.sid,
               deal_time: this.state.dealTime,
               cash_dividend: this.state.cashDividend,

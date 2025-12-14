@@ -58,7 +58,7 @@
     position: relative;
     & > .action_button {
       height: 65px;
-      padding: 0 20px;
+      padding-left: 20px;
       color: _.$gray;
       font-size: 0.9 * _.$base-font-size;
       display: flex;
@@ -86,7 +86,7 @@
         margin-left: auto;
         cursor: pointer;
         transition-duration: 150ms;
-        padding: 25px 5px;
+        padding: 29px 25px 29px 5px;
         &::before {
           content: "";
           width: 0;

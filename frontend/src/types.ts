@@ -102,9 +102,27 @@ export type TradeRecord = {
   handling_fee: number;
 };
 
+export type HandlingFeeDiscount = {
+  id: number;
+  date: string;
+  amount: number;
+  memo: string;
+};
+
+export type CreateHandlingFeeDiscountRequestBody = {
+  date: string;
+  amount: number;
+  memo?: string;
+};
+
+export type UpdateHandlingFeeDiscountRequestBody = {
+  id: number;
+  date?: string;
+  amount?: number;
+  memo?: string;
+};
+
 export type MarketIndex = {
   tse: { [number: string]: { date: string; fluct_price: number; price: number } };
   otc: { [number: string]: { date: string; fluct_price: number; price: number } };
 };
-
-export type GraphQL = { query: string; variables?: { [key: string]: any } };

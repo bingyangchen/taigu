@@ -47,6 +47,14 @@ export default class Nav {
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);
   }
+  public static get isAtHandlingFeePage(): boolean {
+    const pathRegexString = `^${Env.frontendRootPath.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&",
+    )}handling-fee[/]?$`;
+    const escapedRegex = new RegExp(pathRegexString, "gs");
+    return escapedRegex.test(window.location.pathname);
+  }
   public static get isAtSettingsOverviewPage(): boolean {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,

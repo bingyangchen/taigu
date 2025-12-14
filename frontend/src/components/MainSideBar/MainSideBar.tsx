@@ -16,7 +16,7 @@ import { settingsPagePath } from "../../router";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
 import Util from "../../utils/util";
-import styles from "./NavBarForMain.module.scss";
+import styles from "./MainSideBar.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.account;
@@ -40,7 +40,7 @@ interface State {
   isContextMenuOpen: boolean;
 }
 
-class NavBarForMain extends React.Component<Props, State> {
+class MainSideBar extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
@@ -256,4 +256,4 @@ class NavBarForMain extends React.Component<Props, State> {
   };
 }
 
-export default connect(mapStateToProps)(NavBarForMain);
+export default connect(mapStateToProps)(MainSideBar);
