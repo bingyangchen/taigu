@@ -66,7 +66,7 @@ def list_discounts(request: HttpRequest) -> JsonResponse:
     discounts = (
         HandlingFeeDiscountRecord.objects.filter(owner=request.user)
         .values("id", "date", "amount", "memo")
-        .order_by("-date")
+        .order_by("-date", "-created_at")
     )
     return JsonResponse({"data": list(discounts)})
 
