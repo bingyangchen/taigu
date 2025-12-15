@@ -380,18 +380,28 @@ class Dashboard extends React.Component<Props, State> {
   }
   private updateIndexLineCharts(): void {
     this.setState((state, props) => {
-      const tseChartData: (string | number)[][] = [["時間", "價格"]];
+      const tseChartData: [number, number | null][] = [];
       for (let i = 0; i <= 270; i++) {
-        if (props.tseIndexRealtimePrices.hasOwnProperty(i.toString())) {
+        if (
+          Object.prototype.hasOwnProperty.call(
+            props.tseIndexRealtimePrices,
+            i.toString(),
+          )
+        ) {
           tseChartData.push([i, props.tseIndexRealtimePrices[i].price]);
-        } else tseChartData.push([i, NaN]);
+        } else tseChartData.push([i, null]);
       }
 
-      const otcChartData: (string | number)[][] = [["時間", "價格"]];
+      const otcChartData: [number, number | null][] = [];
       for (let i = 0; i <= 270; i++) {
-        if (props.otcIndexRealtimePrices.hasOwnProperty(i.toString())) {
+        if (
+          Object.prototype.hasOwnProperty.call(
+            props.otcIndexRealtimePrices,
+            i.toString(),
+          )
+        ) {
           otcChartData.push([i, props.otcIndexRealtimePrices[i].price]);
-        } else otcChartData.push([i, NaN]);
+        } else otcChartData.push([i, null]);
       }
 
       const prevTseClosePrice =
@@ -400,6 +410,7 @@ class Dashboard extends React.Component<Props, State> {
       const prevOtcClosePrice =
         (Object.values(this.props.otcIndexRealtimePrices)[0]?.price ?? 0) -
         (Object.values(this.props.otcIndexRealtimePrices)[0]?.fluct_price ?? 0);
+
       return {
         tseIndexLineChart: (
           <MarketIndexLineChart

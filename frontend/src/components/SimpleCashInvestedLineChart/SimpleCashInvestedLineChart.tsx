@@ -1,3 +1,4 @@
+import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 import { connect } from "react-redux";
@@ -40,7 +41,7 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
     );
   }
 
-  private get chartOption(): any {
+  private get chartOption(): EChartsOption {
     const { dates, values } = this.props;
 
     if (values.length === 0 || dates.length !== values.length) {
