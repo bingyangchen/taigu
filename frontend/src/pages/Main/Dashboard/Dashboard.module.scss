@@ -39,6 +39,8 @@
       background-color: #ffffff90;
       box-shadow: 0 0 15px -10px _.$transparent-black;
       border-radius: $border-radius;
+      overflow: hidden;
+      overflow-x: auto;
       @media (max-width: _.$width-512) {
         flex-direction: column;
         margin: 0 15px;
@@ -60,9 +62,7 @@
           white-space: nowrap;
           & > .title {
             color: _.$gray;
-            @media (max-width: _.$width-512) {
-              font-size: 0.9 * _.$base-font-size;
-            }
+            font-size: 0.9 * _.$base-font-size;
           }
           & > .date {
             color: _.$gray;
