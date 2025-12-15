@@ -86,7 +86,6 @@ class MarketIndexLineChart extends React.Component<Props, State> {
       ],
       tooltip: { show: false },
       animationDurationUpdate: 0,
-      animationDuration: 500,
     };
   }
 

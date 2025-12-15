@@ -33,51 +33,56 @@
     & > .upper {
       position: relative;
       display: flex;
-      align-items: center;
-      gap: 20px;
-      overflow-x: auto;
+      align-items: stretch;
       padding: 15px 20px;
+      gap: 20px;
       background-color: #ffffff90;
       box-shadow: 0 0 15px -10px _.$transparent-black;
       border-radius: $border-radius;
-      &::-webkit-scrollbar {
-        display: none;
-      }
       @media (max-width: _.$width-512) {
         flex-direction: column;
-        padding: 10px 15px 15px;
         margin: 0 15px;
+        gap: 15px;
       }
       & > .market_index {
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         gap: 5px;
-        width: 330px;
-        min-width: fit-content;
+        width: 100%;
+        @media (max-width: _.$width-512) {
+          height: 40px;
+        }
         & > .left {
-          min-width: max-content;
-          width: 75px;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+          width: 22%;
+          white-space: nowrap;
           & > .title {
-            font-size: 0.9 * _.$base-font-size;
             color: _.$gray;
-            margin-right: 10px;
+            @media (max-width: _.$width-512) {
+              font-size: 0.9 * _.$base-font-size;
+            }
           }
           & > .date {
             color: _.$gray;
             font-size: 0.65 * _.$base-font-size;
-            margin-right: auto;
           }
         }
         & > .chart_container {
           height: 40px;
-          width: 140px;
+          width: 48%;
+          @media (max-width: _.$width-512) {
+            height: 100%;
+          }
         }
         & > .price {
           display: flex;
           flex-direction: column;
-          width: 105px;
           text-align: right;
           gap: 3px;
+          white-space: nowrap;
+          width: 30%;
           &.red {
             color: _.$red;
           }
