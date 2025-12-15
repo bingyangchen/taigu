@@ -41,6 +41,7 @@ interface State {
   daysToShow: number;
   activeModalName: "discountModal" | null;
   numberToShow: number;
+  handlingFeeChart: React.ReactElement | null;
 }
 
 class HandlingFee extends React.Component<Props, State> {
@@ -55,16 +56,28 @@ class HandlingFee extends React.Component<Props, State> {
       daysToShow: this.TIME_SPAN_OPTIONS_IN_DAYS[0],
       activeModalName: null,
       numberToShow: 15,
+      handlingFeeChart: null,
     };
   }
 
   public async componentDidMount(): Promise<void> {
+    this.updateHandlingFeeChart();
     this.animateTotalHandlingFee();
   }
 
-  public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
+  public async componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevState: Readonly<State>,
+  ): Promise<void> {
     if (prevProps.totalHandlingFee !== this.props.totalHandlingFee) {
       this.animateTotalHandlingFee();
+    }
+    if (
+      prevProps.tradeRecords !== this.props.tradeRecords ||
+      prevProps.discounts !== this.props.discounts ||
+      prevState.daysToShow !== this.state.daysToShow
+    ) {
+      this.updateHandlingFeeChart();
     }
   }
 
@@ -113,10 +126,7 @@ class HandlingFee extends React.Component<Props, State> {
               </div>
               <div className={styles.chart_section}>
                 <div className={styles.chart_container}>
-                  <ReactECharts
-                    option={this.handlingFeeChartOption}
-                    style={{ height: "100%", width: "100%" }}
-                  />
+                  {this.state.handlingFeeChart}
                 </div>
                 <div className={styles.controls}>
                   <div className={styles.time_span_options}>
@@ -289,6 +299,17 @@ class HandlingFee extends React.Component<Props, State> {
       ],
       backgroundColor: "transparent",
     };
+  }
+
+  private updateHandlingFeeChart(): void {
+    this.setState({
+      handlingFeeChart: (
+        <ReactECharts
+          option={this.handlingFeeChartOption}
+          style={{ height: "100%", width: "100%" }}
+        />
+      ),
+    });
   }
 
   private getMonthlyHandlingFeeData(): { month: string; fee: number }[] {

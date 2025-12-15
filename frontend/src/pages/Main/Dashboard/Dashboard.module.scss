@@ -157,39 +157,39 @@
             justify-content: center;
             flex-grow: 1;
             & > .time_span_options_inner {
+              --active-index: 0;
+              --option-width: 65px;
               position: relative;
               display: flex;
               align-items: center;
               border-radius: 100px;
               background-color: _.$transparent-black;
               overflow: hidden;
-              --active-index: 0;
               height: 40px;
               width: fit-content;
-              --option-height: 65px;
               & > .sliding_background {
                 position: absolute;
                 height: 40px;
-                width: var(--option-height);
-                aspect-ratio: 1;
+                width: var(--option-width);
                 border-radius: 100px;
                 background-color: _.$transparent-black;
                 transition: transform 0.3s ease;
                 z-index: 0;
-                transform: translateX(calc(var(--active-index) * var(--option-height)));
+                transform: translateX(calc(var(--active-index) * var(--option-width)));
               }
               & > span {
                 position: relative;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                height: var(--option-height);
-                aspect-ratio: 1;
+                height: 100%;
+                width: var(--option-width);
                 border-radius: 100px;
                 font-size: 0.8 * _.$base-font-size;
                 color: _.$gray;
                 z-index: 1;
                 transition: color 0.3s ease;
+                cursor: pointer;
                 @media (hover: hover) {
                   &:hover {
                     color: _.$white;

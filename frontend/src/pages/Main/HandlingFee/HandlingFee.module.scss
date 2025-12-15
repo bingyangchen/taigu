@@ -124,95 +124,58 @@
       }
       & > .chart_section {
         display: flex;
+        flex-direction: column;
         align-items: center;
         width: 100%;
-        padding: 20px 0;
-        @media (max-width: _.$width-780) {
-          flex-direction: column;
-          gap: 20px;
-          padding: 20px;
-        }
+        gap: 20px;
+        padding: 20px;
         & > .chart_container {
-          flex-grow: 1;
-          height: 300px;
+          aspect-ratio: calc(3 / 2);
           width: 100%;
-          @media (max-width: _.$width-1280) {
-            height: 250px;
-          }
-          @media (max-width: _.$width-512) {
-            height: 250px;
-          }
         }
         & > .controls {
           display: flex;
-          flex-direction: column;
           align-items: center;
           gap: 10px;
-          @media (max-width: _.$width-512) {
-            flex-direction: row;
-            padding: 25px 15px 0;
-          }
+          padding: 25px 15px 0;
           & > .time_span_options {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             flex-grow: 1;
-            @media (max-width: _.$width-512) {
-              flex-direction: row;
-            }
             & > .time_span_options_inner {
+              --active-index: 0;
+              --option-width: 65px;
               position: relative;
               display: flex;
-              flex-direction: column-reverse;
               align-items: center;
-              width: 35px;
+              height: 40px;
+              width: fit-content;
               border-radius: 100px;
               background-color: _.$transparent-black;
               overflow: hidden;
-              --active-index: 0;
-              --option-height: 55px;
-              @media (max-width: _.$width-512) {
-                flex-direction: row;
-                height: 40px;
-                width: fit-content;
-                --option-height: 65px;
-              }
               & > .sliding_background {
                 position: absolute;
-                height: var(--option-height);
-                width: 35px;
-                aspect-ratio: 1;
+                height: 40px;
+                width: var(--option-width);
                 border-radius: 100px;
                 background-color: _.$transparent-black;
                 transition: transform 0.3s ease;
                 z-index: 0;
-                transform: translateY(
-                  calc(var(--active-index) * -1 * var(--option-height))
-                );
-                @media (max-width: _.$width-512) {
-                  height: 40px;
-                  width: var(--option-height);
-                  transform: translateX(
-                    calc(var(--active-index) * var(--option-height))
-                  );
-                }
+                transform: translateX(calc(var(--active-index) * var(--option-width)));
               }
               & > span {
                 position: relative;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                height: var(--option-height);
-                aspect-ratio: 1;
+                height: 100%;
+                width: var(--option-width);
                 border-radius: 100px;
                 font-size: 0.8 * _.$base-font-size;
                 color: _.$gray;
                 z-index: 1;
                 transition: color 0.3s ease;
                 cursor: pointer;
-                @media (max-width: _.$width-512) {
-                  height: var(--option-height);
-                }
                 @media (hover: hover) {
                   &:hover {
                     color: _.$white;

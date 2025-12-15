@@ -66,6 +66,7 @@ interface State {
 
 class Dashboard extends React.Component<Props, State> {
   public state: State;
+  private animationFrameId: number | null = null;
   public constructor(props: Props) {
     super(props);
     this.state = {
@@ -84,6 +85,12 @@ class Dashboard extends React.Component<Props, State> {
     this.updateCashInvestedLineChart();
     this.updateMarketValueDataAndPieChart();
     this.animateTotalCashInvested();
+  }
+  public componentWillUnmount(): void {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
   }
   public componentDidUpdate(
     prevProps: Readonly<Props>,
@@ -242,11 +249,9 @@ class Dashboard extends React.Component<Props, State> {
     );
   }
   private get marketValuePieChartOption(): any {
-    const data: { value: number; name: string }[] = [];
-    for (const [sid, marketValue] of Object.entries(this.state.sidMarketValueMap)) {
-      data.push({ value: marketValue, name: sid });
-    }
-    data.sort((a, b) => b.value - a.value);
+    const data = Object.entries(this.state.sidMarketValueMap)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
     return {
       tooltip: {
         trigger: "item",
@@ -458,9 +463,18 @@ class Dashboard extends React.Component<Props, State> {
     );
   }
   private animateTotalCashInvested(): void {
-    if (this.state.animatedTotalCashInvested === this.props.totalCashInvested) return;
-    this.setState(
-      (state, props) => {
+    if (this.state.animatedTotalCashInvested === this.props.totalCashInvested) {
+      if (this.animationFrameId !== null) {
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+      }
+      return;
+    }
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+    this.animationFrameId = requestAnimationFrame(() => {
+      this.setState((state, props) => {
         return {
           animatedTotalCashInvested: Math.min(
             state.animatedTotalCashInvested +
@@ -471,9 +485,10 @@ class Dashboard extends React.Component<Props, State> {
             props.totalCashInvested,
           ),
         };
-      },
-      () => setTimeout(() => this.animateTotalCashInvested(), 30),
-    );
+      });
+      this.animationFrameId = null;
+      this.animateTotalCashInvested();
+    });
   }
 }
 

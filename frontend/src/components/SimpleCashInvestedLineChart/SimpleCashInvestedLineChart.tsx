@@ -138,6 +138,7 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
         },
       },
       animationDurationUpdate: 0,
+      animationDuration: 500,
     };
   }
 
