@@ -22,7 +22,7 @@ export const pushToast = createAsyncThunk(
   "toasts/pushToast",
   (toast: ToastMessage, thunkAPI): ToastMessage => {
     thunkAPI.dispatch(setAutoRemoveToastTimer());
-    if (navigator.vibrate) navigator.vibrate(20);
+    // if (navigator.vibrate) navigator.vibrate(20);
     return toast;
   },
 );

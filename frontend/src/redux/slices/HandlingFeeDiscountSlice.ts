@@ -32,7 +32,7 @@ export const createDiscount = createAsyncThunk(
       "post",
       JSON.stringify(requestBody),
     );
-    if (navigator.vibrate) navigator.vibrate(20);
+    // if (navigator.vibrate) navigator.vibrate(20);
     thunkAPI.dispatch(adjustTotalHandlingFee(-requestBody.amount));
     return response;
   },
@@ -50,7 +50,7 @@ export const updateDiscount = createAsyncThunk(
       "put",
       JSON.stringify(requestBody),
     );
-    if (navigator.vibrate) navigator.vibrate(20);
+    // if (navigator.vibrate) navigator.vibrate(20);
     if (requestBody.amount !== undefined && oldDiscount) {
       const delta = oldDiscount.amount - requestBody.amount;
       thunkAPI.dispatch(adjustTotalHandlingFee(delta));
@@ -67,7 +67,7 @@ export const deleteDiscount = createAsyncThunk(
       (d) => d.id === id,
     );
     await Api.sendRequest(`handling-fee/discount/${id}`, "delete");
-    if (navigator.vibrate) navigator.vibrate(20);
+    // if (navigator.vibrate) navigator.vibrate(20);
     if (discountToDelete) {
       thunkAPI.dispatch(adjustTotalHandlingFee(discountToDelete.amount));
     }

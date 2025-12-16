@@ -1,3 +1,4 @@
+import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 import { connect } from "react-redux";
@@ -248,7 +249,7 @@ class Dashboard extends React.Component<Props, State> {
       </div>
     );
   }
-  private get marketValuePieChartOption(): any {
+  private get marketValuePieChartOption(): EChartsOption {
     const data = Object.entries(this.state.sidMarketValueMap)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);

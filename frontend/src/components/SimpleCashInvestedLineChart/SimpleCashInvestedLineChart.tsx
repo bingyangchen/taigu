@@ -129,7 +129,7 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
           const param = params[0];
           const dateStr = param.name;
           const value = param.value;
-          return `${dateStr}<br/>現金投入: $${Number(value).toLocaleString()}`;
+          return `${dateStr}<br/>$${Number(value).toLocaleString()}`;
         },
       },
       animationDurationUpdate: 0,

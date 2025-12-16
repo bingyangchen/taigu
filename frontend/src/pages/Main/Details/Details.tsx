@@ -130,7 +130,7 @@ class Details extends React.Component<Props, State> {
     }
     this.setState({
       inventoryHistogram: (
-        <InventoryHistogram data={await this.calcInventoryHistogramChartData()} />
+        <InventoryHistogram prices={await this.calcInventoryHistogramChartData()} />
       ),
       activeMaterialFact: null,
     });
@@ -172,7 +172,7 @@ class Details extends React.Component<Props, State> {
     if (prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord) {
       this.setState({
         inventoryHistogram: (
-          <InventoryHistogram data={await this.calcInventoryHistogramChartData()} />
+          <InventoryHistogram prices={await this.calcInventoryHistogramChartData()} />
         ),
         rateOfReturn: this.calcRateOfReturn(),
       });
@@ -563,12 +563,12 @@ class Details extends React.Component<Props, State> {
   private get hasInventory(): boolean {
     return Boolean(this.props.stockWarehouse[this.sid]?.length);
   }
-  private async calcInventoryHistogramChartData(): Promise<(string | number)[][]> {
+  private async calcInventoryHistogramChartData(): Promise<number[]> {
     const worker = new Worker(
       new URL("../../../workers/histogramChartWorker.ts", import.meta.url),
     );
     worker.postMessage(this.props.sidTradeRecordsMap[this.sid] || []);
-    return await new Promise((resolve) => {
+    return await new Promise<number[]>((resolve) => {
       worker.onmessage = (event) => {
         worker.terminate();
         resolve(event.data);
@@ -615,7 +615,7 @@ class Details extends React.Component<Props, State> {
       if (this.state.touchDiffX <= -this.SWITCHING_THRESHOLD) {
         this.setState((state) => {
           if (!state.hasVibrated) {
-            if (navigator.vibrate) navigator.vibrate(20);
+            // if (navigator.vibrate) navigator.vibrate(20);
             return { hasVibrated: true, switchDirection: "next" };
           }
           return { switchDirection: "next" } as State;
@@ -623,7 +623,7 @@ class Details extends React.Component<Props, State> {
       } else if (this.state.touchDiffX >= this.SWITCHING_THRESHOLD) {
         this.setState((state) => {
           if (!state.hasVibrated) {
-            if (navigator.vibrate) navigator.vibrate(20);
+            // if (navigator.vibrate) navigator.vibrate(20);
             return { hasVibrated: true, switchDirection: "prev" };
           }
           return { switchDirection: "prev" } as State;
@@ -668,7 +668,7 @@ class Details extends React.Component<Props, State> {
         : this.props.favorites;
     const prevIndex = sids.findIndex((e) => e === this.sid) - 1;
     if (prevIndex < 0) return;
-    if (navigator.vibrate) navigator.vibrate(10);
+    // if (navigator.vibrate) navigator.vibrate(10);
     this.componentWillUnmount();
     this.props.router.navigate(
       this.props.router.location.pathname
@@ -684,7 +684,7 @@ class Details extends React.Component<Props, State> {
         : this.props.favorites;
     const nextIndex = sids.findIndex((e) => e === this.sid) + 1;
     if (nextIndex >= sids.length) return;
-    if (navigator.vibrate) navigator.vibrate(10);
+    // if (navigator.vibrate) navigator.vibrate(10);
     this.componentWillUnmount();
     this.props.router.navigate(
       this.props.router.location.pathname

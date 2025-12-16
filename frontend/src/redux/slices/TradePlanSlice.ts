@@ -30,7 +30,7 @@ export const createPlan = createAsyncThunk(
       "post",
       JSON.stringify(requestBody),
     );
-    if (navigator.vibrate) navigator.vibrate(20);
+    // if (navigator.vibrate) navigator.vibrate(20);
     return response;
   },
 );
@@ -43,7 +43,7 @@ export const updatePlan = createAsyncThunk(
       "post",
       JSON.stringify(requestBody),
     );
-    if (navigator.vibrate) navigator.vibrate(20);
+    // if (navigator.vibrate) navigator.vibrate(20);
     return response;
   },
 );
@@ -52,7 +52,7 @@ export const deletePlan = createAsyncThunk(
   "tradePlan/deletePlan",
   async (id: string | number): Promise<string | number> => {
     await Api.sendRequest(`memo/trade-plan/${id}`, "delete");
-    if (navigator.vibrate) navigator.vibrate(20);
+    // if (navigator.vibrate) navigator.vibrate(20);
     return id;
   },
 );

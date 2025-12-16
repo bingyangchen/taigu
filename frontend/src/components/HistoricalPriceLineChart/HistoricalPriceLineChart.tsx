@@ -133,14 +133,14 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
         show: !this.props.isWaiting,
         trigger: "axis",
         axisPointer: { type: "line" },
-        formatter: (params: any) => {
+        formatter: (params: unknown) => {
           if (!Array.isArray(params) || params.length === 0) {
             return "";
           }
           const param = params[0];
           const dateStr = param.name;
           const value = param.value;
-          return `${dateStr}<br/>價格: $${value.toLocaleString()}`;
+          return `${dateStr}<br/>$${value.toLocaleString()}`;
         },
       },
       animationDurationUpdate: 0,
