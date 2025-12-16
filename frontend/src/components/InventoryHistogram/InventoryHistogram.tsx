@@ -1,10 +1,10 @@
 import type { EChartsOption } from "echarts";
 import * as echarts from "echarts";
 import ReactECharts from "echarts-for-react";
-import ecStat from "echarts-stat";
+import * as ecStat from "echarts-stat";
 import React from "react";
 
-echarts.registerTransform(ecStat.transform.histogram);
+echarts.registerTransform((ecStat as any).transform.histogram);
 
 interface Props {
   prices: number[];
