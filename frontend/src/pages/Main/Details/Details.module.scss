@@ -202,11 +202,8 @@ $block-body-width: min(450px, 87vw);
     }
     & > .historical_price_chart_container {
       position: relative;
-      height: 280px;
       width: 100%;
-      @media (max-width: _.$width-780) {
-        height: 250px;
-      }
+      aspect-ratio: 3 / 2;
       &.is_waiting {
         &::before {
           content: "更新股價中...";

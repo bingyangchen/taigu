@@ -13,8 +13,8 @@ self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
   const sidHandlingFeeMap = getSidHandlingFeeMap(sidTradeRecordsMap);
   const sidGainMap = getSidGainMap(sidTradeRecordsMap);
   const chartData = chartDataHelper([...tradeRecords].reverse());
-  const cashInvestedChartData = chartData.map((row) => [row[0], row[1], row[2]]);
-  const tradeVolumeChartData = chartData.map((row) => [row[0], row[1], row[3]]);
+  const cashInvestedChartData = chartData.map((row) => [row[0], row[1]]);
+  const tradeVolumeChartData = chartData.map((row) => [row[0], row[2]]);
   const averageCashInvested = getAverageCashInvested(cashInvestedChartData);
 
   const result: Omit<TradeRecordState, "isWaiting"> = {
@@ -152,7 +152,7 @@ const chartDataHelper = (
   timeSeriesTradeRecords: TradeRecord[],
   dates: string[] = [],
   stockWarehouse: StockWarehouse = {},
-  result: (string | number)[][] = [["日期", "dummy", "現金投入", "交易金額"]],
+  result: (string | number)[][] = [["日期", "現金投入", "交易金額"]],
 ): (string | number)[][] => {
   if (dates.length === 0) {
     if (timeSeriesTradeRecords.length === 0) return result;
@@ -182,7 +182,6 @@ const chartDataHelper = (
 
     result.push([
       solvingDateString,
-      0, // dummy
       Math.round(getTotalCashInvested(currentStockWarehouse)),
       solvingRecords.reduce(
         (sum, record) => sum + record.deal_price * Math.abs(record.deal_quantity),
@@ -218,9 +217,9 @@ const getAverageCashInvested = (
     let total = 0;
     cashInvestedChartData
       .slice(1)
-      .map((row) => row[2] as number)
-      .forEach((val, j) => {
-        total += val * ((j + 1) / denominator);
+      .map((row) => row[1] as number)
+      .forEach((val, idx) => {
+        total += val * ((idx + 1) / denominator);
       });
     averageCashInvested = Math.round(total);
   }

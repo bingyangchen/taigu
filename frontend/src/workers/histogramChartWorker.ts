@@ -3,14 +3,12 @@
 import type { TradeRecord } from "../types";
 
 self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
-  const result: (string | number)[][] = [];
-  for (const record of e.data) {
-    const { deal_price: p, deal_quantity: q, deal_time: t } = record;
-    if (q >= 0) for (let i = 0; i < q; i++) result.push([t, p]);
-    else result.splice(0, -q);
+  const prices: number[] = [];
+  for (const { deal_price: p, deal_quantity: q } of e.data) {
+    if (q > 0 && p > 0) prices.push(...Array(q).fill(p));
+    else if (q < 0) prices.splice(0, -q);
   }
-  result.splice(0, 0, ["日期", "價格"]);
-  self.postMessage(result);
+  self.postMessage(prices);
 };
 
 export {};

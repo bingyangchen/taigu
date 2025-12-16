@@ -1,3 +1,4 @@
+import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React, { MouseEventHandler } from "react";
 import { connect } from "react-redux";
@@ -41,6 +42,7 @@ interface State {
   daysToShow: number;
   activeModalName: "discountModal" | null;
   numberToShow: number;
+  handlingFeeChart: React.ReactElement | null;
 }
 
 class HandlingFee extends React.Component<Props, State> {
@@ -55,16 +57,28 @@ class HandlingFee extends React.Component<Props, State> {
       daysToShow: this.TIME_SPAN_OPTIONS_IN_DAYS[0],
       activeModalName: null,
       numberToShow: 15,
+      handlingFeeChart: null,
     };
   }
 
   public async componentDidMount(): Promise<void> {
+    this.updateHandlingFeeChart();
     this.animateTotalHandlingFee();
   }
 
-  public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
+  public async componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevState: Readonly<State>,
+  ): Promise<void> {
     if (prevProps.totalHandlingFee !== this.props.totalHandlingFee) {
       this.animateTotalHandlingFee();
+    }
+    if (
+      prevProps.tradeRecords !== this.props.tradeRecords ||
+      prevProps.discounts !== this.props.discounts ||
+      prevState.daysToShow !== this.state.daysToShow
+    ) {
+      this.updateHandlingFeeChart();
     }
   }
 
@@ -113,10 +127,7 @@ class HandlingFee extends React.Component<Props, State> {
               </div>
               <div className={styles.chart_section}>
                 <div className={styles.chart_container}>
-                  <ReactECharts
-                    option={this.handlingFeeChartOption}
-                    style={{ height: "100%", width: "100%" }}
-                  />
+                  {this.state.handlingFeeChart}
                 </div>
                 <div className={styles.controls}>
                   <div className={styles.time_span_options}>
@@ -235,12 +246,12 @@ class HandlingFee extends React.Component<Props, State> {
     );
   }
 
-  private get handlingFeeChartOption(): any {
+  private get handlingFeeChartOption(): EChartsOption {
     const monthlyData = this.getMonthlyHandlingFeeData();
     const months = monthlyData.map((item) => item.month);
     const values = monthlyData.map((item) => item.fee);
     const borderRadius = Math.max(
-      3,
+      1,
       Math.min(Math.floor(2500 / this.state.daysToShow), 10),
     );
     return {
@@ -256,7 +267,12 @@ class HandlingFee extends React.Component<Props, State> {
       xAxis: {
         type: "category",
         data: months,
-        axisLabel: { color: "#aaa", fontSize: 11 },
+        axisLabel: {
+          color: "#aaa",
+          fontSize: 11,
+          hideOverlap: true,
+          formatter: (value: string) => `${new Date(value).getMonth() + 1}月`,
+        },
         axisLine: { show: false },
         axisTick: { show: false },
       },
@@ -266,8 +282,8 @@ class HandlingFee extends React.Component<Props, State> {
           color: "#aaa",
           fontSize: 11,
           formatter: (value: number) => {
-            if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-            if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+            if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+            if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
             return value.toString();
           },
         },
@@ -280,15 +296,22 @@ class HandlingFee extends React.Component<Props, State> {
           name: "手續費",
           type: "bar",
           data: values,
-          itemStyle: {
-            color: "#4c8bf5",
-            borderRadius: [borderRadius, borderRadius, 0, 0],
-          },
-          emphasis: { itemStyle: { color: "#3a6bc4" } },
+          itemStyle: { color: "#4c8bf5", borderRadius: borderRadius },
         },
       ],
       backgroundColor: "transparent",
     };
+  }
+
+  private updateHandlingFeeChart(): void {
+    this.setState({
+      handlingFeeChart: (
+        <ReactECharts
+          option={this.handlingFeeChartOption}
+          style={{ height: "100%", width: "100%" }}
+        />
+      ),
+    });
   }
 
   private getMonthlyHandlingFeeData(): { month: string; fee: number }[] {
