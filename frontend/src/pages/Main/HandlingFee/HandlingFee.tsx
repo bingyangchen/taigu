@@ -271,7 +271,11 @@ class HandlingFee extends React.Component<Props, State> {
           color: "#aaa",
           fontSize: 11,
           hideOverlap: true,
-          formatter: (value: string) => `${new Date(value).getMonth() + 1}月`,
+          formatter: (value: string) => {
+            // value is in format "YYYY/MM", extract month directly instead of using new Date(value).getMonth() + 1
+            const month = parseInt(value.split("/")[1], 10);
+            return `${month}月`;
+          },
         },
         axisLine: { show: false },
         axisTick: { show: false },
