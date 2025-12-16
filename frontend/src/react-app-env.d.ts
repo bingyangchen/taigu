@@ -6,9 +6,7 @@ declare module "*.mp4" {
 }
 
 declare module "echarts-stat" {
-  interface EChartsStat {
-    transform: { histogram: any };
-  }
-  const ecStat: EChartsStat;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ecStat: { transform: { histogram: any } };
   export default ecStat;
 }
