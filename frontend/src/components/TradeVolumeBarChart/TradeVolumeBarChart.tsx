@@ -1,5 +1,6 @@
+import type { EChartsOption } from "echarts";
+import ReactECharts from "echarts-for-react";
 import React from "react";
-import { Chart } from "react-google-charts";
 import { connect } from "react-redux";
 
 import { AppDispatch, RootState } from "../../redux/store";
@@ -25,124 +26,169 @@ class TradeVolumeBarChart extends React.Component<Props, State> {
     this.state = {};
   }
   public render(): React.ReactNode {
+    if (this.props.tradeRecords.length === 0 || this.props.data.length <= 1) {
+      return null;
+    }
+
     return (
-      this.props.tradeRecords.length > 0 &&
-      this.props.data.length > 1 && (
-        <Chart
-          chartType="ComboChart"
-          data={Util.isMobile ? this.cashInvestedChartDataMobile : this.props.data}
-          chartPackages={!Util.isMobile ? ["corechart", "controls"] : ["corechart"]}
-          options={{
-            legend: "none",
-            backgroundColor: "transparent",
-            hAxis: {
-              format: this.props.daysToShow > 30 ? "M月" : "d日",
-              textStyle: { color: "#aaa" },
-              gridlines: { color: "none" },
-              showTextEvery: 2,
-            },
-            seriesType: "bars",
-            series: {
-              0: {
-                // dummy
-                targetAxisIndex: 0,
-                visibleInLegend: false,
-                pointSize: 0,
-                lineWidth: 0,
-                enableInteractivity: false,
-                type: "line",
-              },
-              1: {
-                // cumulated cash invested
-                targetAxisIndex: 1,
-                lineWidth: Util.isMobile ? "2.5" : "2",
-                color: "#4c8bf5",
-                type: "line",
-              },
-              2: {
-                // volume
-                targetAxisIndex: 1,
-                lineWidth: "0.5",
-                color: "#aaa",
-              },
-            },
-            vAxes: {
-              0: {
-                textPosition: "none",
-                gridlines: { color: "none" },
-                baseline: "none",
-              },
-              1: {
-                format: "short",
-                textPosition: Util.isMobile ? undefined : "none",
-                textStyle: { color: "#aaa" },
-                gridlines: { color: "none", count: 3.5 },
-                baseline: Util.isMobile ? "none" : 1,
-              },
-              2: {
-                textPosition: "none",
-                gridlines: { color: "none" },
-                baseline: "none",
-              },
-            },
-            chartArea: {
-              left: "1%",
-              top: "5%",
-              width: Util.isMobile ? "84%" : "98%",
-              height: "85%",
-            },
-          }}
-          width="100%"
-          height={Util.isMobile ? "100%" : "95%"}
-          controls={
-            !Util.isMobile
-              ? [
-                  {
-                    controlType: "ChartRangeFilter",
-                    options: {
-                      filterColumnIndex: 0,
-                      ui: {
-                        chartType: "LineChart",
-                        chartOptions: {
-                          chartArea: { width: "95%", height: "10%" },
-                          backgroundColor: "transparent",
-                          hAxis: {
-                            baselineColor: "none",
-                            textPosition: "none",
-                            gridlines: { color: "none" },
-                          },
-                          vAxis: {
-                            textPosition: "none",
-                            gridlines: { color: "none" },
-                            baselineColor: "none",
-                          },
-                          series: {
-                            0: {
-                              targetAxisIndex: 0,
-                              visibleInLegend: false,
-                              pointSize: 0,
-                              lineWidth: 0,
-                            },
-                            1: { targetAxisIndex: 1, color: "#4c8bf5" },
-                            2: { targetAxisIndex: 1, lineWidth: "0.5", color: "#aaa" },
-                          },
-                        },
-                      },
-                    },
-                    controlPosition: "bottom",
-                    controlWrapperParams: {
-                      state: {
-                        range: { start: this.controlStartDate, end: new Date() },
-                      },
-                    },
-                  },
-                ]
-              : undefined
-          }
-        />
-      )
+      <ReactECharts
+        option={this.chartOption}
+        style={{ height: Util.isMobile ? "100%" : "95%", width: "100%" }}
+        notMerge={true}
+      />
     );
   }
+
+  private get chartData(): (Date | string | number)[][] {
+    return Util.isMobile ? this.cashInvestedChartDataMobile : this.props.data;
+  }
+
+  private get chartOption(): EChartsOption {
+    const data = this.chartData;
+    if (data.length === 0) {
+      return {};
+    }
+
+    // Extract dates and values from data
+    // Data format: [date, dummy, cashInvested, volume]
+    const dates: (Date | string | number)[] = [];
+    const dummyValues: number[] = [];
+    const cashInvestedValues: number[] = [];
+    const volumeValues: number[] = [];
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      dates.push(row[0]);
+      dummyValues.push(0);
+      const cashInvested = row[2] || row[1];
+      const volume = row[3] || 0;
+      cashInvestedValues.push(typeof cashInvested === "number" ? cashInvested : 0);
+      volumeValues.push(typeof volume === "number" ? volume : 0);
+    }
+
+    const dateFormatter = (date: Date | string | number): string => {
+      if (date instanceof Date) {
+        return this.props.daysToShow > 30
+          ? `${date.getMonth() + 1}月`
+          : `${date.getDate()}日`;
+      }
+      return String(date);
+    };
+
+    return {
+      backgroundColor: "transparent",
+      grid: {
+        left: "1%",
+        top: "5%",
+        right: Util.isMobile ? "16%" : "2%",
+        bottom: !Util.isMobile ? "15%" : "12%",
+        containLabel: false,
+      },
+      xAxis: {
+        type: "category",
+        data: dates.map(dateFormatter),
+        axisLabel: {
+          color: "#aaa",
+          interval: 1,
+          showMaxLabel: true,
+          showMinLabel: true,
+        },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: { show: false },
+      },
+      yAxis: [
+        {
+          type: "value",
+          show: false,
+          axisLabel: { show: false },
+          axisLine: { show: false },
+          axisTick: { show: false },
+          splitLine: { show: false },
+        },
+        {
+          type: "value",
+          show: Util.isMobile,
+          position: "right",
+          axisLabel: {
+            show: Util.isMobile,
+            color: "#aaa",
+            formatter: (value: number) => {
+              if (value >= 1000000) return (value / 1000000).toFixed(1) + "M";
+              if (value >= 1000) return (value / 1000).toFixed(1) + "K";
+              return value.toString();
+            },
+          },
+          axisLine: { show: false },
+          axisTick: { show: false },
+          splitLine: { show: false },
+          splitNumber: 3,
+        },
+        {
+          type: "value",
+          show: false,
+          axisLabel: { show: false },
+          axisLine: { show: false },
+          axisTick: { show: false },
+          splitLine: { show: false },
+        },
+      ],
+      series: [
+        {
+          type: "line",
+          data: dummyValues,
+          lineStyle: { width: 0 },
+          symbol: "none",
+          silent: true,
+          yAxisIndex: 0,
+        },
+        {
+          type: "line",
+          data: cashInvestedValues,
+          lineStyle: { width: Util.isMobile ? 2.5 : 2, color: "#4c8bf5" },
+          symbol: "none",
+          yAxisIndex: 1,
+        },
+        {
+          type: "bar",
+          data: volumeValues,
+          itemStyle: { color: "#aaa" },
+          barWidth: "60%",
+          yAxisIndex: 1,
+        },
+      ],
+      dataZoom: !Util.isMobile
+        ? [
+            {
+              type: "slider",
+              show: true,
+              xAxisIndex: [0],
+              start: 0,
+              end: 100,
+              bottom: "0%",
+              height: "10%",
+              handleIcon:
+                "path://M30.9,53.2C16.8,53.2,5.3,41.7,5.3,27.6S16.8,2,30.9,2C45,2,56.4,13.5,56.4,27.6S45,53.2,30.9,53.2z M30.9,3.5C17.6,3.5,6.8,14.4,6.8,27.6c0,13.2,10.8,24.1,24.1,24.1C44.2,51.7,55,40.8,55,27.6C54.9,14.4,44.1,3.5,30.9,3.5z M36.9,35.8c0,0.5-0.4,0.9-0.9,0.9s-0.9-0.4-0.9-0.9V19.4c0-0.5,0.4-0.9,0.9-0.9s0.9,0.4,0.9,0.9V35.8z M25.8,35.8c0,0.5-0.4,0.9-0.9,0.9s-0.9-0.4-0.9-0.9V19.4c0-0.5,0.4-0.9,0.9-0.9s0.9,0.4,0.9,0.9V35.8z",
+              handleSize: "80%",
+              handleStyle: { color: "#4c8bf5", borderColor: "#4c8bf5" },
+              textStyle: { color: "#aaa" },
+              borderColor: "transparent",
+              fillerColor: "rgba(76, 139, 245, 0.1)",
+              dataBackground: {
+                lineStyle: { color: "#4c8bf5", width: 0.5 },
+                areaStyle: { color: "transparent" },
+              },
+              selectedDataBackground: {
+                lineStyle: { color: "#4c8bf5", width: 0.5 },
+                areaStyle: { color: "rgba(76, 139, 245, 0.1)" },
+              },
+            },
+          ]
+        : undefined,
+      tooltip: { show: true, trigger: "axis", axisPointer: { type: "line" } },
+    };
+  }
+
   private get controlStartDate(): Date {
     return new Date(
       Math.min(
@@ -150,6 +196,7 @@ class TradeVolumeBarChart extends React.Component<Props, State> {
       ),
     );
   }
+
   private get cashInvestedChartDataMobile(): (Date | string | number)[][] {
     const candidates = [
       ...this.props.data.slice(

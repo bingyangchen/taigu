@@ -69,11 +69,8 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
           hideOverlap: true,
           formatter: (value: string) => {
             const date = new Date(value);
-            if (values.length > 30) {
-              return `${date.getMonth() + 1}月`;
-            } else {
-              return `${date.getDate()}日`;
-            }
+            if (values.length > 30) return `${date.getMonth() + 1}月`;
+            return `${date.getDate()}日`;
           },
         },
         axisLine: { show: false },
@@ -88,11 +85,8 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
           color: "#aaa",
           margin: 3,
           formatter: (value: number) => {
-            if (value >= 1_000_000) {
-              return (value / 1_000_000).toFixed(1) + "M";
-            } else if (value >= 1_000) {
-              return Math.round(value / 1_000) + "K";
-            }
+            if (value >= 1_000_000) return (value / 1_000_000).toFixed(1) + "M";
+            else if (value >= 1_000) return Math.round(value / 1_000) + "K";
             return value.toString();
           },
         },

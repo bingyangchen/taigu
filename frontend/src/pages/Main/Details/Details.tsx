@@ -79,7 +79,8 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {
   activeModalName: "companyInfo" | "updateOrCreateNote" | null;
-  historicalPriceChartData: (Date | string | number)[][];
+  historicalPriceChartDates: string[];
+  historicalPriceChartValues: number[];
   marketValue: number;
   rateOfReturn: number;
   inventoryHistogram: React.ReactElement | null;
@@ -104,7 +105,8 @@ class Details extends React.Component<Props, State> {
     super(props);
     this.state = {
       activeModalName: null,
-      historicalPriceChartData: [],
+      historicalPriceChartDates: [],
+      historicalPriceChartValues: [],
       marketValue: 0,
       rateOfReturn: 0,
       inventoryHistogram: null,
@@ -154,7 +156,11 @@ class Details extends React.Component<Props, State> {
       .dispatch(fetchSingleStockHistoricalPrices({ sid: this.sid, frequency: "DAILY" }))
       .unwrap()
       .then(() => {
-        this.setState({ historicalPriceChartData: this.getHistoricalPriceChartData() });
+        const chartData = this.getHistoricalPriceChartData();
+        this.setState({
+          historicalPriceChartDates: chartData.dates,
+          historicalPriceChartValues: chartData.values,
+        });
       });
     this.props.dispatch(fetchCompanyInfo(this.sid));
 
@@ -198,7 +204,11 @@ class Details extends React.Component<Props, State> {
       prevProps.sidHistoricalPricesMap[this.sid] !==
       this.props.sidHistoricalPricesMap[this.sid]
     ) {
-      this.setState({ historicalPriceChartData: this.getHistoricalPriceChartData() });
+      const chartData = this.getHistoricalPriceChartData();
+      this.setState({
+        historicalPriceChartDates: chartData.dates,
+        historicalPriceChartValues: chartData.values,
+      });
     }
   }
   public componentWillUnmount(): void {
@@ -296,16 +306,17 @@ class Details extends React.Component<Props, State> {
             <div
               className={`${styles.historical_price_chart_container} ${
                 this.props.isWaitingHistoricalPrices ||
-                this.state.historicalPriceChartData.length <= 1
+                this.state.historicalPriceChartDates.length === 0
                   ? styles.is_waiting
                   : ""
               }`}
             >
               <HistoricalPriceLineChart
-                data={this.state.historicalPriceChartData}
+                dates={this.state.historicalPriceChartDates}
+                values={this.state.historicalPriceChartValues}
                 isWaiting={
                   this.props.isWaitingHistoricalPrices ||
-                  this.state.historicalPriceChartData.length <= 1
+                  this.state.historicalPriceChartDates.length === 0
                 }
               />
             </div>
@@ -532,23 +543,22 @@ class Details extends React.Component<Props, State> {
         : ""
     }`;
   }
-  private getHistoricalPriceChartData(): (Date | string | number)[][] {
-    // Add dummy because we want the price axis to show in the right-hand side.
-    const result: (Date | string | number)[][] = [];
+  private getHistoricalPriceChartData(): { dates: string[]; values: number[] } {
+    const dates: string[] = [];
+    const values: number[] = [];
     if (this.sid in this.props.sidHistoricalPricesMap) {
       const data = this.props.sidHistoricalPricesMap[this.sid].daily;
       if (data) {
-        for (const [date, price] of Object.entries(data)) {
-          result.push([date, 0, price]);
+        const entries = Object.entries(data);
+        entries.sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]));
+        for (const [date, price] of entries) {
+          const formattedDate = date.split("-").slice(1).join("/");
+          dates.push(formattedDate);
+          values.push(price);
         }
       }
     }
-    result.sort((a, b) => Date.parse(a[0] as string) - Date.parse(b[0] as string));
-    result.forEach(
-      (row) => (row[0] = (row[0] as string).split("-").slice(1).join("/")),
-    );
-    result.splice(0, 0, ["日期", "dummy", "價格"]);
-    return result;
+    return { dates, values };
   }
   private get hasInventory(): boolean {
     return Boolean(this.props.stockWarehouse[this.sid]?.length);
