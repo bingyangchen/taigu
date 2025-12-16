@@ -6,6 +6,9 @@ declare module "*.mp4" {
 }
 
 declare module "echarts-stat" {
-  const ecStat: any;
+  interface EChartsStat {
+    transform: { histogram: any };
+  }
+  const ecStat: EChartsStat;
   export default ecStat;
 }
