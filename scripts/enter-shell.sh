@@ -15,7 +15,7 @@ clear_screen
 if [ "$1" = "db" ]; then
     docker compose -f compose.$ENV.yaml --progress quiet exec $1 bash
 elif [ "$1" = "redis" ]; then
-    docker compose -f compose.$ENV.yaml --progress quiet exec $1 bash
+    docker compose -f compose.$ENV.yaml --progress quiet exec $1 sh
 else
     docker compose -f compose.$ENV.yaml --progress quiet run --rm $1 bash
 fi

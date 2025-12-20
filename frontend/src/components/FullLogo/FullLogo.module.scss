@@ -1,50 +1,15 @@
 @use "../../global_variables" as _;
 
 .main {
-  display: flex;
-  align-items: center;
-  width: fit-content;
-  gap: 3px;
-  & > .logo_container {
-    width: 38px;
-    height: 38px;
-    padding: 3px 3px 5px;
-    & > .logo {
-      width: 100%;
-      aspect-ratio: 1;
-      padding: 2px;
-      background-color: _.$white;
-      object-fit: cover;
-      border-radius: 100px;
-    }
-  }
-  & > .product_name {
-    white-space: nowrap;
-    font-family: Arial, sans-serif;
-    color: _.$black;
-    letter-spacing: 1.5 * _.$base-letter-spacing;
-    font-size: 1.1 * _.$base-font-size;
+  height: 38px;
+  & > .logo {
+    height: 100%;
+    object-fit: cover;
   }
   &.m {
-    & > .logo_container {
-      width: 45px;
-      height: 45px;
-      padding: 5px 5px 7px;
-    }
-    & > .product_name {
-      letter-spacing: 1.8 * _.$base-letter-spacing;
-      font-size: 1.2 * _.$base-font-size;
-    }
+    height: 45px;
   }
   &.l {
-    & > .logo_container {
-      width: 55px;
-      height: 55px;
-      padding: 6px 6px 8px;
-    }
-    & > .product_name {
-      letter-spacing: 2.7 * _.$base-letter-spacing;
-      font-size: 1.5 * _.$base-font-size;
-    }
+    height: 70px;
   }
 }

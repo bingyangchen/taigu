@@ -11,12 +11,8 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 5dvh;
+  gap: 2dvh;
   z-index: 8;
-  & > .logo {
-    width: 60px;
-    aspect-ratio: 1;
-  }
   & > .loading_spinner {
     width: 20px;
     aspect-ratio: 1;

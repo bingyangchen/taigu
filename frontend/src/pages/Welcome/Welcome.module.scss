@@ -31,7 +31,7 @@
     right: min(5.5vw, 5.5dvh);
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     padding: 15px;
     border-radius: 20px;
     background-color: _.$black;
@@ -40,7 +40,7 @@
     & > .logo {
       width: 46px;
       aspect-ratio: 1;
-      border-radius: 12px;
+      object-fit: cover;
     }
     & > .middle {
       display: flex;
@@ -518,7 +518,7 @@
       & > .logo {
         width: 100px;
         aspect-ratio: 1;
-        border-radius: 12px;
+        object-fit: cover;
         z-index: 1;
       }
       & > .title_wrapper {

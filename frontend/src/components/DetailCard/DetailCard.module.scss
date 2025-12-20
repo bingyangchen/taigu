@@ -47,7 +47,7 @@
       background-color: _.$transparent-black;
     }
   }
-  & > .upper {
+  & > .stock_info {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -89,25 +89,25 @@
       }
     }
   }
-  & > .lower {
+  & > .warehouse_info {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 15px;
     font-size: 0.7 * _.$base-font-size;
     & > div {
       min-width: max-content;
+      letter-spacing: 0.5 * _.$base-letter-spacing;
     }
   }
   &.red {
-    .upper {
+    .stock_info {
       .price {
         color: _.$red;
       }
     }
   }
   &.green {
-    .upper {
+    .stock_info {
       .price {
         color: _.$green;
       }

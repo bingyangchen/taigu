@@ -121,6 +121,7 @@ class Details extends React.Component<Props, State> {
     };
     this.mainRef = React.createRef();
   }
+
   public async componentDidMount(): Promise<void> {
     if (this.listName !== null && this.mainRef.current) {
       // Do not write this using React inline event handling
@@ -168,6 +169,7 @@ class Details extends React.Component<Props, State> {
       this.props.dispatch(fetchSingleStockInfo(this.sid)).unwrap();
     }, 15000);
   }
+
   public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
     if (prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord) {
       this.setState({
@@ -211,18 +213,19 @@ class Details extends React.Component<Props, State> {
       });
     }
   }
+
   public componentWillUnmount(): void {
     if (this.listName !== null && this.mainRef.current) {
       this.mainRef.current.removeEventListener("touchstart", this.handleTouchStart);
       this.mainRef.current.removeEventListener("touchmove", this.handleTouchMove);
       this.mainRef.current.removeEventListener("touchend", this.handleTouchEnd);
     }
-
     if (this.fetchStockInfoTimer) {
       clearInterval(this.fetchStockInfoTimer);
       this.fetchStockInfoTimer = null;
     }
   }
+
   public render(): React.ReactNode {
     return (
       <>
@@ -407,14 +410,14 @@ class Details extends React.Component<Props, State> {
                 to={`${Env.frontendRootPath}records?sid=${this.sid}`}
                 className={styles.cube}
               >
-                <IconClockHistory sideLength="30" color="#888" />
+                <IconClockHistory sideLength="30" color="#444" />
                 交易紀錄
               </Link>
               <Link
                 to={`${Env.frontendRootPath}plans?sid=${this.sid}`}
                 className={styles.cube}
               >
-                <IconThumbtack sideLength="30" color="#888" />
+                <IconThumbtack sideLength="30" color="#444" />
                 買賣計畫
               </Link>
               <div
@@ -423,7 +426,7 @@ class Details extends React.Component<Props, State> {
                   this.setState({ activeModalName: "companyInfo" });
                 }}
               >
-                <IconBriefcase sideLength="30" color="#888" />
+                <IconBriefcase sideLength="30" color="#444" />
                 公司資訊
               </div>
               <div
@@ -432,7 +435,7 @@ class Details extends React.Component<Props, State> {
                   this.setState({ activeModalName: "updateOrCreateNote" });
                 }}
               >
-                <IconMemo sideLength="30" color="#888" />
+                <IconMemo sideLength="30" color="#444" />
                 備註
               </div>
             </div>
@@ -479,6 +482,7 @@ class Details extends React.Component<Props, State> {
       </>
     );
   }
+
   private get activeModal(): React.ReactElement<typeof Modal> | null {
     if (this.state.activeModalName === "updateOrCreateNote") {
       return (
@@ -516,19 +520,23 @@ class Details extends React.Component<Props, State> {
     }
     return null;
   }
+
   private get sid(): string {
     return this.props.router.params.sid ?? "";
   }
+
   private get listName(): string | null {
     const pathList = this.props.router.location.pathname.split("/");
     return pathList.length < 4 ? null : pathList[2];
   }
+
   private get fluctPriceClass(): string {
     const fluct_price = this.props.sidStockInfoMap[this.sid]?.fluct_price || 0;
     return `${styles.price_fluctuation} ${
       fluct_price > 0 ? styles.red : fluct_price < 0 ? styles.green : styles.gray
     }`;
   }
+
   private get fluctPriceString(): string {
     const fluct_price = this.props.sidStockInfoMap[this.sid]?.fluct_price || 0;
     return `${fluct_price > 0 ? "▲" : fluct_price < 0 ? "▼" : "-"}${
@@ -543,6 +551,7 @@ class Details extends React.Component<Props, State> {
         : ""
     }`;
   }
+
   private getHistoricalPriceChartData(): { dates: string[]; values: number[] } {
     const dates: string[] = [];
     const values: number[] = [];
@@ -560,9 +569,11 @@ class Details extends React.Component<Props, State> {
     }
     return { dates, values };
   }
+
   private get hasInventory(): boolean {
     return Boolean(this.props.stockWarehouse[this.sid]?.length);
   }
+
   private async calcInventoryHistogramChartData(): Promise<number[]> {
     const worker = new Worker(
       new URL("../../../workers/histogramChartWorker.ts", import.meta.url),
@@ -575,6 +586,7 @@ class Details extends React.Component<Props, State> {
       };
     });
   }
+
   private calcRateOfReturn(): number {
     return this.props.sidCashInvestedMap[this.sid]
       ? ((this.state.marketValue -
@@ -585,16 +597,19 @@ class Details extends React.Component<Props, State> {
           100
       : 0;
   }
+
   private get finalGain(): number {
     return (
       (this.props.sidGainMap[this.sid] || 0) +
       (this.props.sidTotalCashDividendMap[this.sid] || 0)
     );
   }
+
   private handleTouchStart = (e: TouchEvent): void => {
     const touch = e.touches[0];
     this.setState({ touchStartX: touch.clientX, touchStartY: touch.clientY });
   };
+
   private handleTouchMove = (e: TouchEvent): void => {
     const touch = e.changedTouches[0];
     if (!this.state.isScrollingVertically && !this.state.isScrollingHorizontally) {
@@ -631,6 +646,7 @@ class Details extends React.Component<Props, State> {
       } else this.setState({ switchDirection: null });
     }
   };
+
   private handleTouchEnd = (): void => {
     if (this.state.switchDirection === "next") this.goToNextOne();
     else if (this.state.switchDirection === "prev") this.goToPrevOne();
@@ -644,12 +660,15 @@ class Details extends React.Component<Props, State> {
       hasVibrated: false,
     });
   };
+
   private handleClickPrevButton = (): void => {
     this.goToPrevOne();
   };
+
   private handleClickNextButton = (): void => {
     this.goToNextOne();
   };
+
   private handleScrollToTop = (): void => {
     let element: HTMLElement | null = this.mainRef.current;
     while (element?.parentElement) {
@@ -661,6 +680,7 @@ class Details extends React.Component<Props, State> {
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   private goToPrevOne(): void {
     const sids =
       this.listName === "holding"
@@ -677,6 +697,7 @@ class Details extends React.Component<Props, State> {
       { replace: true },
     );
   }
+
   private goToNextOne(): void {
     const sids =
       this.listName === "holding"
@@ -693,9 +714,11 @@ class Details extends React.Component<Props, State> {
       { replace: true },
     );
   }
+
   private get isFavorite(): boolean {
     return this.props.favorites.includes(this.sid);
   }
+
   private changeFavStatus = (): void => {
     if (this.isFavorite) {
       this.props.dispatch(fakeRemoveFromFavorites(this.sid));
@@ -705,6 +728,7 @@ class Details extends React.Component<Props, State> {
       this.props.dispatch(addToFavorites(this.sid));
     }
   };
+
   private get companyInfoSection(): React.ReactNode {
     return this.state.activeMaterialFact ? (
       <>

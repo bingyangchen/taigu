@@ -2,8 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import googleLogo from "../../../assets/google.png";
-import logo from "../../../assets/logo.png";
-import { BottomSheet, Button, Modal } from "../../../components";
+import { BottomSheet, Button, FullLogo, Modal } from "../../../components";
 import Form from "../../../components/Form/Form";
 import { IconLink } from "../../../icons";
 import { changeAccountBinding } from "../../../redux/slices/AccountSlice";
@@ -111,7 +110,7 @@ class AccountBinding extends React.Component<Props, State> {
           }
         >
           <div className={styles.logo_container}>
-            <img className={styles.logo} src={logo} alt="" />
+            <FullLogo size="l" />
             <IconLink sideLength="16px" color="gray" />
             <img className={styles.google_logo} src={googleLogo} alt="" />
           </div>
