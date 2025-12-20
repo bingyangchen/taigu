@@ -3,12 +3,12 @@ import { Link } from "react-router-dom";
 
 import cover01 from "../../assets/cover01.webp";
 import crossPlatform from "../../assets/cross-platform.png";
-import demo01 from "../../assets/demo01.png";
-import demo02 from "../../assets/demo02.png";
-import demo03 from "../../assets/demo03.png";
-import demo04 from "../../assets/demo04.png";
-import demo05 from "../../assets/demo05.png";
-import demo06 from "../../assets/demo06.png";
+import demo01 from "../../assets/demo01.webp";
+import demo02 from "../../assets/demo02.webp";
+import demo03 from "../../assets/demo03.webp";
+import demo04 from "../../assets/demo04.webp";
+import demo05 from "../../assets/demo05.webp";
+import demo06 from "../../assets/demo06.webp";
 import demoInstantPrice from "../../assets/demo09.png";
 import demoManyStocks from "../../assets/demomanystocks.mp4";
 import logo from "../../assets/logo.png";

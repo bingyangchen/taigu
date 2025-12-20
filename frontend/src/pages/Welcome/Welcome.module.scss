@@ -168,7 +168,7 @@
       }
       & > .left {
         $x: 100px;
-        $y: 60px;
+        $y: 10dvh;
         padding: $y 0 $y $x;
         @media (min-width: _.$width-512) and (max-width: _.$width-780) {
           padding-left: 20px;
@@ -190,12 +190,8 @@
             position: relative;
             display: flex;
             justify-content: center;
-            background-image: url("../../assets/iphone.png");
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            height: 568px;
-            width: 288px;
+            height: 600px;
+            width: 300px;
             z-index: 1;
             overflow: hidden;
             @media (max-width: _.$width-512) {
@@ -204,12 +200,10 @@
             }
             & > .demo_image {
               position: absolute;
-              top: 8.4%;
+              top: 0;
               display: none;
-              height: 87.2%;
-              padding: 0 2px 0 1px;
+              height: 100%;
               object-fit: contain;
-              background-color: _.$white;
               &.show {
                 display: initial;
                 animation: fadein 0.3s ease;
@@ -244,7 +238,7 @@
             }
             & > .ball {
               position: absolute;
-              top: 21dvh;
+              top: 22dvh;
               left: $x - 56px;
               width: 400px;
               height: 400px;
@@ -264,7 +258,7 @@
                 left: -36px;
               }
               @media (max-width: _.$width-512) {
-                top: 10.5dvh;
+                top: 18dvh;
                 left: 50%;
                 translate: -50% 0;
               }
