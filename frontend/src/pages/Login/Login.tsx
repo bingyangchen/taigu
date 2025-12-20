@@ -33,7 +33,7 @@ class Login extends React.Component<Props, State> {
     // Randomly select and import a cover image
     this.setState({
       coverImage: (
-        await import(`../../assets/cover00${Math.floor(Math.random() * 5) + 1}.png`)
+        await import(`../../assets/cover0${Math.floor(Math.random() * 5) + 1}.webp`)
       ).default,
     });
 

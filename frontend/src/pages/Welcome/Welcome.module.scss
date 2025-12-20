@@ -57,17 +57,25 @@
     }
   }
   & > .slide {
+    position: relative;
     width: 100%;
+    background-color: _.$white;
     &.one {
-      position: relative;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100dvh;
-      background-image: url("../../assets/cover001.png");
-      background-size: cover;
-      background-attachment: fixed;
+      overflow: hidden;
+      & > .cover_image {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100dvh;
+        object-fit: cover;
+        z-index: 0;
+      }
       &::before {
         content: "";
         position: absolute;
@@ -76,6 +84,7 @@
         height: 100%;
         width: 100%;
         backdrop-filter: brightness(40%);
+        z-index: 1;
       }
       & > .title {
         font-family:
@@ -150,7 +159,6 @@
       }
     }
     &.two {
-      position: relative;
       height: 400dvh;
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -160,7 +168,7 @@
       }
       & > .left {
         $x: 100px;
-        $y: 60px;
+        $y: 10dvh;
         padding: $y 0 $y $x;
         @media (min-width: _.$width-512) and (max-width: _.$width-780) {
           padding-left: 20px;
@@ -182,12 +190,8 @@
             position: relative;
             display: flex;
             justify-content: center;
-            background-image: url("../../assets/iphone.png");
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            height: 568px;
-            width: 288px;
+            height: 600px;
+            width: 300px;
             z-index: 1;
             overflow: hidden;
             @media (max-width: _.$width-512) {
@@ -196,12 +200,10 @@
             }
             & > .demo_image {
               position: absolute;
-              top: 8.4%;
+              top: 0;
               display: none;
-              height: 87.2%;
-              padding: 0 2px 0 1px;
+              height: 100%;
               object-fit: contain;
-              background-color: _.$white;
               &.show {
                 display: initial;
                 animation: fadein 0.3s ease;
@@ -236,7 +238,7 @@
             }
             & > .ball {
               position: absolute;
-              top: 21dvh;
+              top: 22dvh;
               left: $x - 56px;
               width: 400px;
               height: 400px;
@@ -256,7 +258,7 @@
                 left: -36px;
               }
               @media (max-width: _.$width-512) {
-                top: 10.5dvh;
+                top: 18dvh;
                 left: 50%;
                 translate: -50% 0;
               }
@@ -393,17 +395,26 @@
         position: relative;
         display: flex;
         justify-content: center;
-        background-image: url("../../assets/iphone.png");
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: top;
         height: 61.8dvh;
         width: 400px;
-        z-index: 1;
         overflow: hidden;
         @media (max-width: _.$width-512) {
           height: 300px;
           width: 31.6dvh;
+        }
+        &::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: url("../../assets/iphone.webp");
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: top;
+          z-index: 1;
+          pointer-events: none;
         }
         & > .demo_video {
           position: absolute;
@@ -412,9 +423,7 @@
           object-fit: contain;
           outline: 1.5px solid _.$white;
           outline-offset: -1px;
-          @media (max-width: _.$width-512) {
-            top: 5dvh;
-          }
+          z-index: 0;
         }
       }
     }
@@ -497,15 +506,12 @@
       }
     }
     &.seven {
-      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 20px;
       padding: 25dvh 50px;
-      background-image: url("../../assets/cover001.png");
-      background-size: cover;
-      background-attachment: fixed;
+      background-color: #0000;
       &::before {
         content: "";
         position: absolute;
@@ -550,6 +556,7 @@
     }
   }
   & > .footer {
+    position: relative;
     padding: 50px 30px 40px;
     background-color: _.$noisy-white;
     & > .logo_container {
