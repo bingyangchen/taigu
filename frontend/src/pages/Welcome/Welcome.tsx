@@ -2,16 +2,16 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 import cover01 from "../../assets/cover01.webp";
-import crossPlatform from "../../assets/cross-platform.png";
+import crossPlatform from "../../assets/cross_platform.webp";
+import demoManyStocks from "../../assets/demo.mp4";
 import demo01 from "../../assets/demo01.webp";
 import demo02 from "../../assets/demo02.webp";
 import demo03 from "../../assets/demo03.webp";
 import demo04 from "../../assets/demo04.webp";
 import demo05 from "../../assets/demo05.webp";
 import demo06 from "../../assets/demo06.webp";
-import demoInstantPrice from "../../assets/demo09.png";
-import demoManyStocks from "../../assets/demomanystocks.mp4";
 import logo from "../../assets/logo.png";
+import realtimeInfo from "../../assets/realtime_info.webp";
 import { Button, FullLogo } from "../../components";
 import { IconShieldCheck } from "../../icons";
 import Env from "../../utils/env";
@@ -140,7 +140,7 @@ export default class Welcome extends React.Component<Props, State> {
             <div className={styles.yellow}>即時股價，</div>
             <div>隨時掌握市場動態。</div>
           </div>
-          <img src={demoInstantPrice} alt="" />
+          <img src={realtimeInfo} alt="" />
         </div>
         <div className={`${styles.slide} ${styles.four}`}>
           <div className={styles.container}>
