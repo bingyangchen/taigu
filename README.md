@@ -1,7 +1,7 @@
 # Taigu
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/bingyangchen/taigu/refs/heads/main/frontend/src/assets/logo.png" alt="Taigu Logo" width="100">
+  <img src="https://raw.githubusercontent.com/bingyangchen/taigu/refs/heads/main/frontend/src/assets/logo-no-bg.png" alt="Taigu Logo" width="100">
 </p>
 
 ![GitHub contributors](https://img.shields.io/github/contributors/bingyangchen/taigu?style=flat-square&logo=github&logoColor=white&label=Contributors&color=2ea44f) ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/bingyangchen/taigu/main?style=flat-square&label=Total%20Commits&color=0969da) ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/bingyangchen/taigu/main?style=flat-square&label=Weekly%20Commits&color=ffd43b) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/bingyangchen/taigu/main?style=flat-square&label=Last%20Commit&color=cf222e) ![GitHub code search count](https://img.shields.io/github/search?query=taigu&label=Search&style=flat-square&color=6f42c1) ![Docker Pulls](https://img.shields.io/docker/pulls/taigutw/api-server?style=flat-square&color=0db7ed&label=Docker%20Pulls)

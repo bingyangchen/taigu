@@ -45,9 +45,9 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 5dvh;
+    gap: 3dvh;
     & > .greeting {
-      font-size: 1.5 * _.$base-font-size;
+      font-size: 1.2 * _.$base-font-size;
     }
     .google_icon {
       height: 24px;

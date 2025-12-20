@@ -1,7 +1,7 @@
 import React from "react";
 
 import loadingSpinner from "../../assets/loading.svg";
-import logo from "../../assets/logo.png";
+import { FullLogo } from "../../components";
 import styles from "./LoadingScreen.module.scss";
 
 interface Props {}
@@ -17,7 +17,7 @@ export default class LoadingScreen extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <img className={styles.logo} src={logo} alt="" />
+        <FullLogo size="l" />
         <img className={styles.loading_spinner} src={loadingSpinner} alt="" />
       </div>
     );

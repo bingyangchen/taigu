@@ -2,11 +2,11 @@ import React from "react";
 import { connect } from "react-redux";
 
 import googleLogo from "../../../assets/google.png";
-import logo from "../../../assets/logo.png";
 import imgPersonFill from "../../../assets/person-fill.svg";
 import {
   BeautifulBlock,
   BeautifulRow,
+  FullLogo,
   Modal,
   SettingsSideBar,
 } from "../../../components";
@@ -221,10 +221,8 @@ class Overview extends React.Component<Props, State> {
                 </BeautifulRow>
               </BeautifulBlock>
             </div>
-            <div className={styles.logo_container}>
-              <img src={logo} alt="Taigu" className={styles.logo} />
-            </div>
             <div className={styles.copyright}>
+              <FullLogo size="m" />
               Copyright {new Date().getFullYear()} Taigu All rights reserved.
             </div>
           </div>

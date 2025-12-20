@@ -22,23 +22,15 @@ class HeaderForMain extends React.Component<Props, State> {
     super(props);
     this.state = {};
   }
+
   public render(): React.ReactNode {
     return (
       <header className={styles.main}>
-        <FullLogo
-          size="s"
-          textOpacity={this.logoTextOpacity}
-          translateX={this.logoTranslateX}
-        />
+        <FullLogo size="s" translateX={this.logoTranslateX} />
       </header>
     );
   }
-  private get logoTextOpacity(): number {
-    if (Nav.isAtMarketPage || Nav.isAtDetailsPage) {
-      return Math.max(0, 45 - this.props.mainScrollTop) / 45;
-    }
-    return 1;
-  }
+
   private get logoTranslateX(): number {
     if (Nav.isAtDetailsPage || Nav.isAtHandlingFeePage) {
       return 40;

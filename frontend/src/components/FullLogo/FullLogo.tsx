@@ -1,11 +1,10 @@
 import React from "react";
 
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo-no-bg.png";
 import styles from "./FullLogo.module.scss";
 
 interface Props {
   size: "s" | "m" | "l";
-  textOpacity?: number;
   translateX?: number;
 }
 
@@ -23,15 +22,7 @@ export default class FullLogo extends React.Component<Props, State> {
         className={this.class_name}
         style={{ transform: `translateX(${this.props.translateX ?? 0}px)` }}
       >
-        <div className={styles.logo_container}>
-          <img className={styles.logo} src={logo} alt="" />
-        </div>
-        <div
-          className={styles.product_name}
-          style={{ opacity: this.props.textOpacity ?? 1 }}
-        >
-          Taigu
-        </div>
+        <img className={styles.logo} src={logo} alt="" />
       </div>
     );
   }
