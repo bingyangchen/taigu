@@ -48,7 +48,7 @@ class DetailCard extends React.Component<Props, State> {
     };
     this.rippleRef = React.createRef();
   }
-  public componentDidMount(): void {}
+
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (
       this.props.includeWarehouseInfo &&
@@ -65,6 +65,7 @@ class DetailCard extends React.Component<Props, State> {
       });
     }
   }
+
   public render(): React.ReactNode {
     return (
       this.props.sid in this.props.sidStockInfoMap && (
@@ -78,7 +79,7 @@ class DetailCard extends React.Component<Props, State> {
               <div className={styles.ripple} ref={this.rippleRef} />
             )}
           </div>
-          <div className={styles.upper}>
+          <div className={styles.stock_info}>
             <div className={styles.company}>
               <div className={styles.name}>
                 {this.props.sidStockInfoMap[this.props.sid].name}
@@ -96,7 +97,7 @@ class DetailCard extends React.Component<Props, State> {
           {this.props.includeWarehouseInfo &&
             this.props.sid in this.props.sidCashInvestedMap &&
             this.props.sid in this.props.stockWarehouse && (
-              <div className={styles.lower}>
+              <div className={styles.warehouse_info}>
                 <div className={styles.inventory}>
                   庫存 {this.props.stockWarehouse[this.props.sid].length} 股
                 </div>
@@ -115,29 +116,34 @@ class DetailCard extends React.Component<Props, State> {
       )
     );
   }
+
   private getMainClassName(fluct_price: number): string {
     return `${styles.main} ${
       fluct_price > 0 ? styles.red : fluct_price < 0 ? styles.green : styles.gray
     } ${!this.props.includeWarehouseInfo ? styles.tall : ""}`;
   }
+
   private handleClick = (e: MouseEvent): void => {
     const mask = e.currentTarget as HTMLElement;
     const diameter = Math.max(mask.clientWidth, mask.clientHeight);
     this.setState({ isRippling: true }, () => {
-      this.rippleRef.current!.style.width = `${diameter}px`;
-      this.rippleRef.current!.style.height = `${diameter}px`;
-      this.rippleRef.current!.style.left = `${
-        e.clientX - mask.getBoundingClientRect().left - diameter / 2
-      }px`;
-      this.rippleRef.current!.style.top = `${
-        e.clientY - mask.getBoundingClientRect().top - diameter / 2
-      }px`;
+      if (this.rippleRef.current) {
+        this.rippleRef.current.style.width = `${diameter}px`;
+        this.rippleRef.current.style.height = `${diameter}px`;
+        this.rippleRef.current.style.left = `${
+          e.clientX - mask.getBoundingClientRect().left - diameter / 2
+        }px`;
+        this.rippleRef.current.style.top = `${
+          e.clientY - mask.getBoundingClientRect().top - diameter / 2
+        }px`;
+      }
     });
     setTimeout(() => {
       this.setState({ isRippling: false });
       this.props.onClick?.(e);
     }, 250);
   };
+
   private get fluctPriceString(): string {
     const fluct_price = this.props.sidStockInfoMap[this.props.sid].fluct_price || 0;
     return `${fluct_price > 0 ? "▲" : fluct_price < 0 ? "▼" : "-"}${
@@ -153,6 +159,7 @@ class DetailCard extends React.Component<Props, State> {
         : ""
     }`;
   }
+
   private get rateOfReturn(): number {
     return (
       ((this.state.marketValue -
