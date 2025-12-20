@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+import cover01 from "../../assets/cover01.webp";
 import crossPlatform from "../../assets/cross-platform.png";
 import demo01 from "../../assets/demo01.png";
 import demo02 from "../../assets/demo02.png";
@@ -98,6 +99,7 @@ export default class Welcome extends React.Component<Props, State> {
           </div>
         )}
         <div className={`${styles.slide} ${styles.one}`}>
+          <img src={cover01} alt="" className={styles.cover_image} />
           <h1 className={styles.title}>Taigu：一款適合學生和上班族的股票記帳軟體</h1>
           <div className={styles.subtitle}>
             <h2>專為投資記帳而生</h2>
