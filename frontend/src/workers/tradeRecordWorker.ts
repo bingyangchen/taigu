@@ -29,7 +29,6 @@ self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
       (sum, fee) => sum + fee,
       0,
     ),
-    totalGain: Object.values(sidGainMap).reduce((sum, gain) => sum + gain, 0),
     cashInvestedChartData,
     tradeVolumeChartData,
     averageCashInvested,

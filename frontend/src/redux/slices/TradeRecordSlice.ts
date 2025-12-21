@@ -19,7 +19,6 @@ export interface TradeRecordState {
   stockWarehouse: StockWarehouse;
   totalCashInvested: number;
   totalHandlingFee: number;
-  totalGain: number;
   cashInvestedChartData: (string | number)[][];
   tradeVolumeChartData: (string | number)[][];
   averageCashInvested: number;
@@ -35,7 +34,6 @@ const initialState: TradeRecordState = {
   stockWarehouse: {},
   totalCashInvested: 0,
   totalHandlingFee: 0,
-  totalGain: 0,
   cashInvestedChartData: [],
   tradeVolumeChartData: [],
   averageCashInvested: 0,
@@ -179,7 +177,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -201,7 +198,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -223,7 +219,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -245,7 +240,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -264,7 +258,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;

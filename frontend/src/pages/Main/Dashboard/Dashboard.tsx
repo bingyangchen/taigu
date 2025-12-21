@@ -30,7 +30,7 @@ function mapStateToProps(rootState: RootState) {
     stockWarehouse,
     totalCashInvested,
     totalHandlingFee,
-    totalGain,
+    sidGainMap,
     cashInvestedChartData,
     averageCashInvested,
   } = rootState.tradeRecord;
@@ -45,7 +45,7 @@ function mapStateToProps(rootState: RootState) {
     totalCashDividend,
     totalCashInvested,
     totalHandlingFee,
-    totalGain,
+    sidGainMap,
     cashInvestedChartData,
     averageCashInvested,
     sidStockInfoMap,
@@ -65,6 +65,7 @@ interface State {
   daysToShow: number;
   sidMarketValueMap: { [sid: string]: number };
   totalMarketValue: number;
+  totalEarning: number;
   animatedTotalCashInvested: number;
   xirr: number;
 }
@@ -82,6 +83,7 @@ class Dashboard extends React.Component<Props, State> {
       daysToShow: 30,
       sidMarketValueMap: {},
       totalMarketValue: 0,
+      totalEarning: 0,
       animatedTotalCashInvested: 0,
       xirr: 0,
     };
@@ -123,6 +125,12 @@ class Dashboard extends React.Component<Props, State> {
       prevProps.sidStockInfoMap !== this.props.sidStockInfoMap
     ) {
       this.updateMarketRelatedData();
+    }
+    if (
+      prevProps.sidGainMap !== this.props.sidGainMap ||
+      prevProps.totalCashDividend !== this.props.totalCashDividend
+    ) {
+      this.updateTotalEarning();
     }
   }
 
@@ -250,7 +258,7 @@ class Dashboard extends React.Component<Props, State> {
           </SummaryCard>
           <SummaryCard title="實現損益">
             <DollarSign />
-            {Math.round(this.totalEarning).toLocaleString()}
+            {Math.round(this.state.totalEarning).toLocaleString()}
           </SummaryCard>
           <SummaryCard title="手續費用" onClick={this.handleClickHandlingFee}>
             <DollarSign />
@@ -375,8 +383,12 @@ class Dashboard extends React.Component<Props, State> {
     return `(${fluctPercent !== 0 ? Math.abs(fluctPercent) + "%" : "-"})`;
   }
 
-  private get totalEarning(): number {
-    return this.props.totalGain + this.props.totalCashDividend;
+  private updateTotalEarning(): void {
+    this.setState({
+      totalEarning:
+        Object.values(this.props.sidGainMap).reduce((sum, gain) => sum + gain, 0) +
+        this.props.totalCashDividend,
+    });
   }
 
   private getTimeSpanOptionClass(number: number): string {
