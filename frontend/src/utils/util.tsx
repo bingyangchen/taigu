@@ -80,4 +80,74 @@ export default class Util {
       return null;
     }
   }
+
+  public static calculateXIRR(
+    tradeRecords: TradeRecord[],
+    handlingFeeDiscountRecords: HandlingFeeDiscount[],
+    cashDividendRecords: CashDividendRecord[],
+    totalMarketValue: number,
+  ): number {
+    if (tradeRecords.length <= 1) return 0;
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const firstDateMs = Date.parse(tradeRecords[tradeRecords.length - 1].deal_time);
+    const cashFlowMap = new Map<number, number>();
+
+    tradeRecords.forEach((record) => {
+      const cashFlow =
+        -1 * record.deal_price * record.deal_quantity - record.handling_fee;
+      const key = Math.round((Date.parse(record.deal_time) - firstDateMs) / msPerDay);
+      cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
+    });
+
+    handlingFeeDiscountRecords.forEach((discount) => {
+      const cashFlow = discount.amount;
+      const key = Math.round((Date.parse(discount.date) - firstDateMs) / msPerDay);
+      cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
+    });
+
+    cashDividendRecords.forEach((record) => {
+      const cashFlow = record.cash_dividend;
+      const key = Math.round((Date.parse(record.deal_time) - firstDateMs) / msPerDay);
+      cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const key = Math.round((today.getTime() - firstDateMs) / msPerDay);
+    cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + totalMarketValue);
+
+    if (cashFlowMap.size < 2) return 0;
+
+    const cashFlowData = Array.from(cashFlowMap.entries()).map(([days, amount]) => {
+      return { days, amount };
+    });
+
+    // NPV function: Σ(CF_i / (1 + rate)^(days_i / 365))
+    const npv = (r: number): number => {
+      return cashFlowData.reduce((sum, cf) => {
+        const years = cf.days / 365;
+        if (r <= -1) return Infinity;
+        return sum + cf.amount / Math.pow(1 + r, years);
+      }, 0);
+    };
+
+    // Bisection method
+    const maxIterations = 100;
+    const tolerance = 1e-6;
+    let minRate = -0.99;
+    let maxRate = 10;
+    for (let i = 0; i < maxIterations; i++) {
+      const midRate = (minRate + maxRate) / 2;
+      const npvMid = npv(midRate);
+
+      if (Math.abs(npvMid) < tolerance) return midRate;
+
+      if (npvMid > 0) minRate = midRate;
+      else maxRate = midRate;
+
+      if (Math.abs(maxRate - minRate) < tolerance) return midRate;
+    }
+    return (minRate + maxRate) / 2;
+  }
 }

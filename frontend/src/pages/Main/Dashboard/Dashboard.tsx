@@ -34,7 +34,7 @@ function mapStateToProps(rootState: RootState) {
     cashInvestedChartData,
     averageCashInvested,
   } = rootState.tradeRecord;
-  const { cashDividendRecords, totalCashDividend } = rootState.cashDividend;
+  const { cashDividendRecords } = rootState.cashDividend;
   const { sidStockInfoMap, tseIndexRealtimePrices, otcIndexRealtimePrices } =
     rootState.stockInfo;
   const { handlingFeeDiscountRecords } = rootState.handlingFeeDiscount;
@@ -42,7 +42,6 @@ function mapStateToProps(rootState: RootState) {
     tradeRecords,
     cashDividendRecords,
     handlingFeeDiscountRecords,
-    totalCashDividend,
     totalCashInvested,
     totalHandlingFee,
     sidGainMap,
@@ -93,6 +92,8 @@ class Dashboard extends React.Component<Props, State> {
     this.updateIndexLineCharts();
     this.updateCashInvestedLineChart();
     this.updateMarketRelatedData();
+    this.updateXIRR();
+    this.updateTotalEarning();
     this.animateTotalCashInvested();
   }
 
@@ -127,8 +128,16 @@ class Dashboard extends React.Component<Props, State> {
       this.updateMarketRelatedData();
     }
     if (
+      prevProps.tradeRecords !== this.props.tradeRecords ||
+      prevProps.handlingFeeDiscountRecords !== this.props.handlingFeeDiscountRecords ||
+      prevProps.cashDividendRecords !== this.props.cashDividendRecords ||
+      prevState.totalMarketValue !== this.state.totalMarketValue
+    ) {
+      this.updateXIRR();
+    }
+    if (
       prevProps.sidGainMap !== this.props.sidGainMap ||
-      prevProps.totalCashDividend !== this.props.totalCashDividend
+      prevProps.cashDividendRecords !== this.props.cashDividendRecords
     ) {
       this.updateTotalEarning();
     }
@@ -387,7 +396,10 @@ class Dashboard extends React.Component<Props, State> {
     this.setState({
       totalEarning:
         Object.values(this.props.sidGainMap).reduce((sum, gain) => sum + gain, 0) +
-        this.props.totalCashDividend,
+        this.props.cashDividendRecords.reduce(
+          (sum, record) => sum + record.cash_dividend,
+          0,
+        ),
     });
   }
 
@@ -407,73 +419,6 @@ class Dashboard extends React.Component<Props, State> {
   private handleClickHandlingFee = (): void => {
     this.props.router.navigate(`${Env.frontendRootPath}handling-fee`);
   };
-
-  private calculateXIRR(): number {
-    if (this.props.tradeRecords.length <= 1) return 0;
-
-    const msPerDay = 1000 * 60 * 60 * 24;
-    const firstDateMs = Date.parse(
-      this.props.tradeRecords[this.props.tradeRecords.length - 1].deal_time,
-    );
-    const cashFlowMap = new Map<number, number>();
-
-    this.props.tradeRecords.forEach((record) => {
-      const cashFlow =
-        -1 * record.deal_price * record.deal_quantity - record.handling_fee;
-      const key = Math.round((Date.parse(record.deal_time) - firstDateMs) / msPerDay);
-      cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
-    });
-
-    this.props.handlingFeeDiscountRecords.forEach((discount) => {
-      const cashFlow = discount.amount;
-      const key = Math.round((Date.parse(discount.date) - firstDateMs) / msPerDay);
-      cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
-    });
-
-    this.props.cashDividendRecords.forEach((record) => {
-      const cashFlow = record.cash_dividend;
-      const key = Math.round((Date.parse(record.deal_time) - firstDateMs) / msPerDay);
-      cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
-    });
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const key = Math.round((today.getTime() - firstDateMs) / msPerDay);
-    cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + this.state.totalMarketValue);
-
-    if (cashFlowMap.size < 2) return 0;
-
-    const cashFlowData = Array.from(cashFlowMap.entries()).map(([days, amount]) => {
-      return { days, amount };
-    });
-
-    // NPV function: Σ(CF_i / (1 + rate)^(days_i / 365))
-    const npv = (r: number): number => {
-      return cashFlowData.reduce((sum, cf) => {
-        const years = cf.days / 365;
-        if (r <= -1) return Infinity;
-        return sum + cf.amount / Math.pow(1 + r, years);
-      }, 0);
-    };
-
-    // Bisection method
-    const maxIterations = 100;
-    const tolerance = 1e-6;
-    let minRate = -0.99;
-    let maxRate = 10;
-    for (let i = 0; i < maxIterations; i++) {
-      const midRate = (minRate + maxRate) / 2;
-      const npvMid = npv(midRate);
-
-      if (Math.abs(npvMid) < tolerance) return midRate;
-
-      if (npvMid > 0) minRate = midRate;
-      else maxRate = midRate;
-
-      if (Math.abs(maxRate - minRate) < tolerance) return midRate;
-    }
-    return (minRate + maxRate) / 2;
-  }
 
   private updateIndexLineCharts(): void {
     this.setState((state, props) => {
@@ -566,10 +511,22 @@ class Dashboard extends React.Component<Props, State> {
               style={{ height: "100%", width: "100%" }}
             />
           ),
-          xirr: this.calculateXIRR(),
         });
       },
     );
+  }
+
+  private updateXIRR(): void {
+    this.setState((state, props) => {
+      return {
+        xirr: Util.calculateXIRR(
+          props.tradeRecords,
+          props.handlingFeeDiscountRecords,
+          props.cashDividendRecords,
+          state.totalMarketValue,
+        ),
+      };
+    });
   }
 
   private animateTotalCashInvested(): void {
