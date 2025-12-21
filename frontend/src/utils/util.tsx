@@ -90,7 +90,9 @@ export default class Util {
     if (tradeRecords.length <= 1) return 0;
 
     const msPerDay = 1000 * 60 * 60 * 24;
-    const firstDateMs = Date.parse(tradeRecords[tradeRecords.length - 1].deal_time);
+    const firstDateMs = Math.min(
+      ...tradeRecords.map((record) => Date.parse(record.deal_time)),
+    );
     const cashFlowMap = new Map<number, number>();
 
     tradeRecords.forEach((record) => {
@@ -100,9 +102,9 @@ export default class Util {
       cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
     });
 
-    handlingFeeDiscountRecords.forEach((discount) => {
-      const cashFlow = discount.amount;
-      const key = Math.round((Date.parse(discount.date) - firstDateMs) / msPerDay);
+    handlingFeeDiscountRecords.forEach((record) => {
+      const cashFlow = record.amount;
+      const key = Math.round((Date.parse(record.date) - firstDateMs) / msPerDay);
       cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
     });
 

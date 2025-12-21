@@ -52,11 +52,12 @@ function mapStateToProps(rootState: RootState) {
     stockWarehouse,
     isWaiting: isWaitingTradeRecord,
   } = rootState.tradeRecord;
-  const { sidTotalCashDividendMap } = rootState.cashDividend;
+  const { cashDividendRecords, sidTotalCashDividendMap } = rootState.cashDividend;
   const { sidHistoricalPricesMap, isWaitingHistoricalPrices } = rootState.stockInfo;
   const { sidCompanyInfoMap, favorites } = rootState.memo;
   const { scrollTop } = rootState.mainPage;
   return {
+    cashDividendRecords,
     sidStockInfoMap,
     sidTradeRecordsMap,
     sidCashInvestedMap,
@@ -82,7 +83,7 @@ interface State {
   historicalPriceChartDates: string[];
   historicalPriceChartValues: number[];
   marketValue: number;
-  rateOfReturn: number;
+  xirr: number;
   inventoryHistogram: React.ReactElement | null;
   touchStartX: number;
   touchStartY: number;
@@ -108,7 +109,7 @@ class Details extends React.Component<Props, State> {
       historicalPriceChartDates: [],
       historicalPriceChartValues: [],
       marketValue: 0,
-      rateOfReturn: 0,
+      xirr: 0,
       inventoryHistogram: null,
       touchStartX: 0,
       touchStartY: 0,
@@ -149,7 +150,7 @@ class Details extends React.Component<Props, State> {
             };
           },
           () => {
-            this.setState({ rateOfReturn: this.calcRateOfReturn() });
+            this.setState({ xirr: this.calcXIRR() });
           },
         );
       });
@@ -176,7 +177,7 @@ class Details extends React.Component<Props, State> {
         inventoryHistogram: (
           <InventoryHistogram prices={await this.calcInventoryHistogramChartData()} />
         ),
-        rateOfReturn: this.calcRateOfReturn(),
+        xirr: this.calcXIRR(),
       });
     }
     if (prevProps.router.params.sid !== this.props.router.params.sid) {
@@ -199,7 +200,7 @@ class Details extends React.Component<Props, State> {
             ),
           };
         },
-        () => this.setState({ rateOfReturn: this.calcRateOfReturn() }),
+        () => this.setState({ xirr: this.calcXIRR() }),
       );
     }
     if (
@@ -388,17 +389,17 @@ class Details extends React.Component<Props, State> {
                 </span>
               </div>
               <div className={styles.cube}>
-                <span className={styles.upper}>報酬率</span>
+                <span className={styles.upper}>年化報酬率</span>
                 <span
                   className={`${styles.lower} ${
-                    this.state.rateOfReturn > 0
+                    this.state.xirr > 0
                       ? styles.red
-                      : this.state.rateOfReturn < 0
+                      : this.state.xirr < 0
                         ? styles.green
                         : styles.gray
                   }`}
                 >
-                  {this.state.rateOfReturn.toFixed(2)}
+                  {(this.state.xirr * 100).toFixed(2)}
                   <PercentSign />
                 </span>
               </div>
@@ -587,15 +588,13 @@ class Details extends React.Component<Props, State> {
     });
   }
 
-  private calcRateOfReturn(): number {
-    return this.props.sidCashInvestedMap[this.sid]
-      ? ((this.state.marketValue -
-          (this.props.sidCashInvestedMap[this.sid] || 0) +
-          this.finalGain -
-          (this.props.sidHandlingFeeMap[this.sid] || 0)) /
-          this.props.sidCashInvestedMap[this.sid]) *
-          100
-      : 0;
+  private calcXIRR(): number {
+    return Util.calculateXIRR(
+      this.props.sidTradeRecordsMap[this.sid] || [],
+      [],
+      this.props.cashDividendRecords.filter((record) => record.sid === this.sid),
+      this.state.marketValue,
+    );
   }
 
   private get finalGain(): number {
