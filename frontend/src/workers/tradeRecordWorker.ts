@@ -148,25 +148,18 @@ const getSidGainMap = (sidTradeRecordsMap: {
 //     return chartData;
 // };
 
-const chartDataHelper = (
-  timeSeriesTradeRecords: TradeRecord[],
-  dates: string[] = [],
-  stockWarehouse: StockWarehouse = {},
-  result: (string | number)[][] = [["日期", "現金投入", "交易金額"]],
-): (string | number)[][] => {
-  if (dates.length === 0) {
-    if (timeSeriesTradeRecords.length === 0) return result;
-    if (new Date(timeSeriesTradeRecords[0].deal_time) <= new Date()) {
-      dates = Util.getDateStringList(
-        new Date(timeSeriesTradeRecords[0].deal_time),
-        new Date(),
-      );
-    } else return result;
-  }
+const chartDataHelper = (orderedTradeRecords: TradeRecord[]): (string | number)[][] => {
+  // return columns: date, cashInvested, tradeVolume
+  if (orderedTradeRecords.length === 0) return [];
+  if (new Date(orderedTradeRecords[0].deal_time) > new Date()) return [];
 
-  let remainingRecords = [...timeSeriesTradeRecords];
-  let currentStockWarehouse = { ...stockWarehouse };
-  const datesToProcess = [...dates];
+  let remainingRecords = [...orderedTradeRecords];
+  let currentStockWarehouse: StockWarehouse = {};
+  const datesToProcess = Util.getDateStringList(
+    new Date(orderedTradeRecords[0].deal_time),
+    new Date(),
+  );
+  const result: (string | number)[][] = [];
   while (datesToProcess.length > 0) {
     const solvingDateString = datesToProcess.shift();
     if (!solvingDateString) break;
@@ -189,15 +182,14 @@ const chartDataHelper = (
       ),
     ]);
   }
-
   return result;
 };
 
 const updateStockWarehouse = (
-  timeSeriesTradeRecords: TradeRecord[],
+  orderedTradeRecords: TradeRecord[],
   prev: StockWarehouse = {},
 ): StockWarehouse => {
-  for (const record of timeSeriesTradeRecords) {
+  for (const record of orderedTradeRecords) {
     const { sid, deal_price: p, deal_quantity: q } = record;
     if (!(sid in prev)) prev[sid] = [];
     if (q >= 0) for (let i = 0; i < q; i++) prev[sid].push(p);
@@ -208,15 +200,14 @@ const updateStockWarehouse = (
 };
 
 const getAverageCashInvested = (
-  cashInvestedChartData: (Date | string | number)[][],
+  cashInvestedChartData: (string | number)[][],
 ): number => {
   let averageCashInvested = 0;
-  if (cashInvestedChartData.length > 1) {
+  if (cashInvestedChartData.length > 0) {
     const denominator =
-      (cashInvestedChartData.length * (cashInvestedChartData.length - 1)) / 2;
+      ((cashInvestedChartData.length + 1) * cashInvestedChartData.length) / 2;
     let total = 0;
     cashInvestedChartData
-      .slice(1)
       .map((row) => row[1] as number)
       .forEach((val, idx) => {
         total += val * ((idx + 1) / denominator);

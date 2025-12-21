@@ -452,7 +452,7 @@ class Dashboard extends React.Component<Props, State> {
 
   private updateCashInvestedLineChart(): void {
     this.setState((state, props) => {
-      const allData = props.cashInvestedChartData.slice(1).map((row) => {
+      const allData = props.cashInvestedChartData.map((row) => {
         const dateStr = row[0] as string;
         const [year, month, day] = dateStr.split("-").map((e) => parseInt(e, 10));
         return { date: new Date(year, month - 1, day), value: row[1] as number };

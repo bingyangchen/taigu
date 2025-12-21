@@ -20,8 +20,8 @@ export interface TradeRecordState {
   totalCashInvested: number;
   totalHandlingFee: number;
   totalGain: number;
-  cashInvestedChartData: (Date | string | number)[][];
-  tradeVolumeChartData: (Date | string | number)[][];
+  cashInvestedChartData: (string | number)[][];
+  tradeVolumeChartData: (string | number)[][];
   averageCashInvested: number;
   isWaiting: boolean;
 }

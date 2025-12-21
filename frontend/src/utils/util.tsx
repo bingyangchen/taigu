@@ -8,13 +8,9 @@ import {
 } from "../types";
 
 export default class Util {
-  public static getDateStringList(start_date: Date, end_date: Date): string[] {
+  public static getDateStringList(start: Date, end: Date): string[] {
     const result = [];
-    for (
-      let date = new Date(start_date);
-      date <= end_date;
-      date.setDate(date.getDate() + 1)
-    ) {
+    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
       // Do not drop weekend because sometimes the market would open on weekend
       result.push(date.toLocaleDateString("af"));
     }
