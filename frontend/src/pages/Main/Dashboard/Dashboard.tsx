@@ -63,6 +63,7 @@ interface State {
   sidMarketValueMap: { [sid: string]: number };
   totalMarketValue: number;
   animatedTotalCashInvested: number;
+  xirr: number;
 }
 
 class Dashboard extends React.Component<Props, State> {
@@ -79,13 +80,14 @@ class Dashboard extends React.Component<Props, State> {
       sidMarketValueMap: {},
       totalMarketValue: 0,
       animatedTotalCashInvested: 0,
+      xirr: 0,
     };
   }
 
   public componentDidMount(): void {
     this.updateIndexLineCharts();
     this.updateCashInvestedLineChart();
-    this.updateMarketValueDataAndPieChart();
+    this.updateMarketRelatedData();
     this.animateTotalCashInvested();
   }
 
@@ -117,7 +119,7 @@ class Dashboard extends React.Component<Props, State> {
       prevProps.totalCashInvested !== this.props.totalCashInvested ||
       prevProps.sidStockInfoMap !== this.props.sidStockInfoMap
     ) {
-      this.updateMarketValueDataAndPieChart();
+      this.updateMarketRelatedData();
     }
   }
 
@@ -237,8 +239,10 @@ class Dashboard extends React.Component<Props, State> {
               </div>
             </div>
           </div>
-          <SummaryCard title="報酬率">
-            {this.props.tradeRecords.length > 0 ? this.rateOfReturn.toFixed(2) : 0}
+          <SummaryCard title="年化報酬率">
+            {this.props.tradeRecords.length > 0
+              ? (this.state.xirr * 100).toFixed(2)
+              : 0}
             <PercentSign />
           </SummaryCard>
           <SummaryCard title="實現損益">
@@ -389,15 +393,57 @@ class Dashboard extends React.Component<Props, State> {
     this.props.router.navigate(`${Env.frontendRootPath}handling-fee`);
   };
 
-  private get rateOfReturn(): number {
-    return (
-      ((this.state.totalMarketValue -
-        this.props.totalCashInvested +
-        this.totalEarning -
-        this.props.totalHandlingFee) /
-        this.props.averageCashInvested) *
-      100
+  private calculateXIRR(): number {
+    if (this.props.tradeRecords.length <= 1) return 0;
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const firstDateMs = Date.parse(
+      this.props.tradeRecords[this.props.tradeRecords.length - 1].deal_time,
     );
+    const cashFlowMap = new Map<number, number>();
+    this.props.tradeRecords.forEach((record) => {
+      const cashFlow = -1 * record.deal_price * record.deal_quantity;
+      const key = Math.round((Date.parse(record.deal_time) - firstDateMs) / msPerDay);
+      cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const key = Math.round((today.getTime() - firstDateMs) / msPerDay);
+    cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + this.state.totalMarketValue);
+
+    if (cashFlowMap.size < 2) return 0;
+
+    const cashFlowData = Array.from(cashFlowMap.entries()).map(([days, amount]) => {
+      return { days, amount };
+    });
+
+    // NPV function: Σ(CF_i / (1 + rate)^(days_i / 365))
+    const npv = (r: number): number => {
+      return cashFlowData.reduce((sum, cf) => {
+        const years = cf.days / 365;
+        if (r <= -1) return Infinity;
+        return sum + cf.amount / Math.pow(1 + r, years);
+      }, 0);
+    };
+
+    // Bisection method
+    const maxIterations = 100;
+    const tolerance = 1e-6;
+    let minRate = -0.99;
+    let maxRate = 10;
+    for (let i = 0; i < maxIterations; i++) {
+      const midRate = (minRate + maxRate) / 2;
+      const npvMid = npv(midRate);
+
+      if (Math.abs(npvMid) < tolerance) return midRate;
+
+      if (npvMid > 0) minRate = midRate;
+      else maxRate = midRate;
+
+      if (Math.abs(maxRate - minRate) < tolerance) return midRate;
+    }
+    return (minRate + maxRate) / 2;
   }
 
   private updateIndexLineCharts(): void {
@@ -454,8 +500,7 @@ class Dashboard extends React.Component<Props, State> {
     this.setState((state, props) => {
       const allData = props.cashInvestedChartData.map((row) => {
         const dateStr = row[0] as string;
-        const [year, month, day] = dateStr.split("-").map((e) => parseInt(e, 10));
-        return { date: new Date(year, month - 1, day), value: row[1] as number };
+        return { date: Util.dateStringToDate(dateStr), value: row[1] as number };
       });
       const daysToShow = Math.min(state.daysToShow, allData.length);
       const filteredData = allData.slice(-daysToShow);
@@ -470,7 +515,7 @@ class Dashboard extends React.Component<Props, State> {
     });
   }
 
-  private updateMarketValueDataAndPieChart(): void {
+  private updateMarketRelatedData(): void {
     this.setState(
       (state, props) => {
         return {
@@ -492,6 +537,7 @@ class Dashboard extends React.Component<Props, State> {
               style={{ height: "100%", width: "100%" }}
             />
           ),
+          xirr: this.calculateXIRR(),
         });
       },
     );

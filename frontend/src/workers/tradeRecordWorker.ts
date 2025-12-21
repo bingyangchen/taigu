@@ -12,7 +12,7 @@ self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
   const stockWarehouse = getStockWarehouse([...tradeRecords].reverse());
   const sidHandlingFeeMap = getSidHandlingFeeMap(sidTradeRecordsMap);
   const sidGainMap = getSidGainMap(sidTradeRecordsMap);
-  const chartData = chartDataHelper([...tradeRecords].reverse());
+  const chartData = getChartData([...tradeRecords].reverse());
   const cashInvestedChartData = chartData.map((row) => [row[0], row[1]]);
   const tradeVolumeChartData = chartData.map((row) => [row[0], row[2]]);
   const averageCashInvested = getAverageCashInvested(cashInvestedChartData);
@@ -130,7 +130,7 @@ const getSidGainMap = (sidTradeRecordsMap: {
 // const getCashInvestedChartDataWithAverageCashInvested = (
 //     timeSeriesTradeRecords: TradeRecord[]
 // ): (string | number)[][] => {
-//     const chartData = chartDataHelper(timeSeriesTradeRecords);
+//     const chartData = getChartData(timeSeriesTradeRecords);
 //     chartData.forEach((row, i) => {
 //         if (i === 0) row.push("平均投入");
 //         else {
@@ -148,7 +148,7 @@ const getSidGainMap = (sidTradeRecordsMap: {
 //     return chartData;
 // };
 
-const chartDataHelper = (orderedTradeRecords: TradeRecord[]): (string | number)[][] => {
+const getChartData = (orderedTradeRecords: TradeRecord[]): (string | number)[][] => {
   // return columns: date, cashInvested, tradeVolume
   if (orderedTradeRecords.length === 0) return [];
   if (new Date(orderedTradeRecords[0].deal_time) > new Date()) return [];
@@ -172,15 +172,12 @@ const chartDataHelper = (orderedTradeRecords: TradeRecord[]): (string | number)[
     );
 
     currentStockWarehouse = updateStockWarehouse(solvingRecords, currentStockWarehouse);
-
-    result.push([
-      solvingDateString,
-      Math.round(getTotalCashInvested(currentStockWarehouse)),
-      solvingRecords.reduce(
-        (sum, record) => sum + record.deal_price * Math.abs(record.deal_quantity),
-        0,
-      ),
-    ]);
+    const totalCashInvested = Math.round(getTotalCashInvested(currentStockWarehouse));
+    const tradeVolume = solvingRecords.reduce(
+      (sum, record) => sum + record.deal_price * record.deal_quantity,
+      0,
+    );
+    result.push([solvingDateString, totalCashInvested, tradeVolume]);
   }
   return result;
 };

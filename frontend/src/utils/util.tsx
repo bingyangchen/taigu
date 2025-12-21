@@ -17,6 +17,11 @@ export default class Util {
     return result;
   }
 
+  public static dateStringToDate(dateString: string): Date {
+    const [year, month, day] = dateString.split("-").map((e) => parseInt(e, 10));
+    return new Date(year, month - 1, day);
+  }
+
   public static getHideModalCallback =
     (component: React.Component): MouseEventHandler =>
     (): void => {
