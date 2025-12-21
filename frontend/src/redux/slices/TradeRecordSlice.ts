@@ -67,10 +67,11 @@ export const createRecord = createAsyncThunk(
       response,
       ...rootState.tradeRecord.tradeRecords,
     ]);
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
@@ -93,10 +94,11 @@ export const updateRecord = createAsyncThunk(
         r.id === response.id ? response : r,
       ),
     );
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
@@ -113,10 +115,11 @@ export const deleteRecord = createAsyncThunk(
     const newState = await computeNewState(
       [...rootState.tradeRecord.tradeRecords].filter((r) => r.id !== id),
     );
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
@@ -129,10 +132,11 @@ export const refreshWithNonCacheResponse = createAsyncThunk(
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     const newState = await computeNewState(tradeRecords);
     const rootState = thunkAPI.getState() as RootState;
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
@@ -144,10 +148,11 @@ export const calculateTotalHandlingFee = createAsyncThunk(
     const baseTotalHandlingFee = Object.values(
       rootState.tradeRecord.sidHandlingFeeMap,
     ).reduce((sum, fee) => sum + fee, 0);
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return baseTotalHandlingFee - totalDiscount;
   },
 );

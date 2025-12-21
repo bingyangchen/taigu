@@ -34,11 +34,14 @@ function mapStateToProps(rootState: RootState) {
     cashInvestedChartData,
     averageCashInvested,
   } = rootState.tradeRecord;
-  const { totalCashDividend } = rootState.cashDividend;
+  const { cashDividendRecords, totalCashDividend } = rootState.cashDividend;
   const { sidStockInfoMap, tseIndexRealtimePrices, otcIndexRealtimePrices } =
     rootState.stockInfo;
+  const { handlingFeeDiscountRecords } = rootState.handlingFeeDiscount;
   return {
     tradeRecords,
+    cashDividendRecords,
+    handlingFeeDiscountRecords,
     totalCashDividend,
     totalCashInvested,
     totalHandlingFee,
@@ -401,8 +404,22 @@ class Dashboard extends React.Component<Props, State> {
       this.props.tradeRecords[this.props.tradeRecords.length - 1].deal_time,
     );
     const cashFlowMap = new Map<number, number>();
+
     this.props.tradeRecords.forEach((record) => {
-      const cashFlow = -1 * record.deal_price * record.deal_quantity;
+      const cashFlow =
+        -1 * record.deal_price * record.deal_quantity - record.handling_fee;
+      const key = Math.round((Date.parse(record.deal_time) - firstDateMs) / msPerDay);
+      cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
+    });
+
+    this.props.handlingFeeDiscountRecords.forEach((discount) => {
+      const cashFlow = discount.amount;
+      const key = Math.round((Date.parse(discount.date) - firstDateMs) / msPerDay);
+      cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
+    });
+
+    this.props.cashDividendRecords.forEach((record) => {
+      const cashFlow = record.cash_dividend;
       const key = Math.round((Date.parse(record.deal_time) - firstDateMs) / msPerDay);
       cashFlowMap.set(key, (cashFlowMap.get(key) ?? 0) + cashFlow);
     });

@@ -10,11 +10,14 @@ import { RootState } from "../store";
 import { adjustTotalHandlingFee } from "./TradeRecordSlice";
 
 interface HandlingFeeDiscountState {
-  discounts: HandlingFeeDiscount[];
+  handlingFeeDiscountRecords: HandlingFeeDiscount[];
   isWaiting: boolean;
 }
 
-const initialState: HandlingFeeDiscountState = { discounts: [], isWaiting: false };
+const initialState: HandlingFeeDiscountState = {
+  handlingFeeDiscountRecords: [],
+  isWaiting: false,
+};
 
 export const fetchAllDiscounts = createAsyncThunk(
   "handlingFeeDiscount/fetchAllDiscounts",
@@ -42,7 +45,7 @@ export const updateDiscount = createAsyncThunk(
   "handlingFeeDiscount/updateDiscount",
   async (requestBody: UpdateHandlingFeeDiscountRequestBody, thunkAPI) => {
     const rootState = thunkAPI.getState() as RootState;
-    const oldDiscount = rootState.handlingFeeDiscount.discounts.find(
+    const oldDiscount = rootState.handlingFeeDiscount.handlingFeeDiscountRecords.find(
       (d) => d.id === requestBody.id,
     );
     const response = await Api.sendRequest(
@@ -63,9 +66,8 @@ export const deleteDiscount = createAsyncThunk(
   "handlingFeeDiscount/deleteDiscount",
   async (id: string | number, thunkAPI) => {
     const rootState = thunkAPI.getState() as RootState;
-    const discountToDelete = rootState.handlingFeeDiscount.discounts.find(
-      (d) => d.id === id,
-    );
+    const discountToDelete =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.find((d) => d.id === id);
     await Api.sendRequest(`handling-fee/discount/${id}`, "delete");
     // if (navigator.vibrate) navigator.vibrate(20);
     if (discountToDelete) {
@@ -83,7 +85,7 @@ export const handlingFeeDiscountSlice = createSlice({
       state,
       action: PayloadAction<HandlingFeeDiscount[]>,
     ) {
-      state.discounts = action.payload;
+      state.handlingFeeDiscountRecords = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -92,7 +94,7 @@ export const handlingFeeDiscountSlice = createSlice({
         state.isWaiting = true;
       })
       .addCase(fetchAllDiscounts.fulfilled, (state, action) => {
-        state.discounts = action.payload;
+        state.handlingFeeDiscountRecords = action.payload;
         state.isWaiting = false;
       })
       .addCase(fetchAllDiscounts.rejected, (state) => {
@@ -103,7 +105,10 @@ export const handlingFeeDiscountSlice = createSlice({
         state.isWaiting = true;
       })
       .addCase(createDiscount.fulfilled, (state, action) => {
-        state.discounts = [action.payload, ...state.discounts];
+        state.handlingFeeDiscountRecords = [
+          action.payload,
+          ...state.handlingFeeDiscountRecords,
+        ];
         state.isWaiting = false;
       })
       .addCase(createDiscount.rejected, (state) => {
@@ -114,7 +119,7 @@ export const handlingFeeDiscountSlice = createSlice({
         state.isWaiting = true;
       })
       .addCase(updateDiscount.fulfilled, (state, action) => {
-        state.discounts = state.discounts.map((d) => {
+        state.handlingFeeDiscountRecords = state.handlingFeeDiscountRecords.map((d) => {
           return d.id === action.payload.id ? action.payload : d;
         });
         state.isWaiting = false;
@@ -127,7 +132,7 @@ export const handlingFeeDiscountSlice = createSlice({
         state.isWaiting = true;
       })
       .addCase(deleteDiscount.fulfilled, (state, action) => {
-        state.discounts = [...state.discounts].filter(
+        state.handlingFeeDiscountRecords = [...state.handlingFeeDiscountRecords].filter(
           (discount) => discount.id !== action.payload,
         );
         state.isWaiting = false;
