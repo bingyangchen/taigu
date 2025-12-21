@@ -3,20 +3,23 @@ import { connect } from "react-redux";
 
 import { calculateMarketValue } from "../../redux/slices/StockInfoSlice";
 import type { RootState } from "../../redux/store";
+import Util from "../../utils/util";
 import DollarSign from "../DollarSign/DollarSign";
 import styles from "./DetailCard.module.scss";
 
 function mapStateToProps(rootState: RootState) {
+  const { sidTradeRecordsMap } = rootState.tradeRecord;
   const { sidStockInfoMap } = rootState.stockInfo;
   const { sidHandlingFeeMap, sidGainMap, sidCashInvestedMap, stockWarehouse } =
     rootState.tradeRecord;
-  const { sidTotalCashDividendMap } = rootState.cashDividend;
+  const { cashDividendRecords } = rootState.cashDividend;
   return {
+    sidTradeRecordsMap,
+    cashDividendRecords,
     sidStockInfoMap,
     sidCashInvestedMap,
     sidHandlingFeeMap,
     sidGainMap,
-    sidTotalCashDividendMap,
     stockWarehouse,
   };
 }
@@ -108,7 +111,7 @@ class DetailCard extends React.Component<Props, State> {
                   ).toFixed(2)}`}
                 </div>
                 <div className={styles.rate_of_return}>
-                  報酬率 {this.rateOfReturn.toFixed(2)}%
+                  報酬率 {(this.xirr * 100).toFixed(2)}%
                 </div>
               </div>
             )}
@@ -145,30 +148,27 @@ class DetailCard extends React.Component<Props, State> {
   };
 
   private get fluctPriceString(): string {
-    const fluct_price = this.props.sidStockInfoMap[this.props.sid].fluct_price || 0;
-    return `${fluct_price > 0 ? "▲" : fluct_price < 0 ? "▼" : "-"}${
-      fluct_price !== 0 ? Math.abs(fluct_price) : ""
+    const fluctPrice = this.props.sidStockInfoMap[this.props.sid].fluct_price || 0;
+    return `${fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "-"}${
+      fluctPrice !== 0 ? Math.abs(fluctPrice) : ""
     }${
-      fluct_price !== 0
+      fluctPrice !== 0
         ? ` (${(
             Math.abs(
-              fluct_price /
-                (this.props.sidStockInfoMap[this.props.sid].close - fluct_price),
+              fluctPrice /
+                (this.props.sidStockInfoMap[this.props.sid].close - fluctPrice),
             ) * 100
           ).toFixed(2)}%)`
         : ""
     }`;
   }
 
-  private get rateOfReturn(): number {
-    return (
-      ((this.state.marketValue -
-        this.props.sidCashInvestedMap[this.props.sid] +
-        this.props.sidGainMap[this.props.sid] +
-        (this.props.sidTotalCashDividendMap[this.props.sid] || 0) -
-        this.props.sidHandlingFeeMap[this.props.sid]) /
-        this.props.sidCashInvestedMap[this.props.sid]) *
-      100
+  private get xirr(): number {
+    return Util.calculateXIRR(
+      this.props.sidTradeRecordsMap[this.props.sid] || [],
+      [],
+      this.props.cashDividendRecords.filter((record) => record.sid === this.props.sid),
+      this.state.marketValue,
     );
   }
 }

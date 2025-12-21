@@ -30,19 +30,21 @@ function mapStateToProps(rootState: RootState) {
     stockWarehouse,
     totalCashInvested,
     totalHandlingFee,
-    totalGain,
+    sidGainMap,
     cashInvestedChartData,
     averageCashInvested,
   } = rootState.tradeRecord;
-  const { totalCashDividend } = rootState.cashDividend;
+  const { cashDividendRecords } = rootState.cashDividend;
   const { sidStockInfoMap, tseIndexRealtimePrices, otcIndexRealtimePrices } =
     rootState.stockInfo;
+  const { handlingFeeDiscountRecords } = rootState.handlingFeeDiscount;
   return {
     tradeRecords,
-    totalCashDividend,
+    cashDividendRecords,
+    handlingFeeDiscountRecords,
     totalCashInvested,
     totalHandlingFee,
-    totalGain,
+    sidGainMap,
     cashInvestedChartData,
     averageCashInvested,
     sidStockInfoMap,
@@ -62,7 +64,9 @@ interface State {
   daysToShow: number;
   sidMarketValueMap: { [sid: string]: number };
   totalMarketValue: number;
+  totalEarning: number;
   animatedTotalCashInvested: number;
+  xirr: number;
 }
 
 class Dashboard extends React.Component<Props, State> {
@@ -78,21 +82,28 @@ class Dashboard extends React.Component<Props, State> {
       daysToShow: 30,
       sidMarketValueMap: {},
       totalMarketValue: 0,
+      totalEarning: 0,
       animatedTotalCashInvested: 0,
+      xirr: 0,
     };
   }
+
   public componentDidMount(): void {
     this.updateIndexLineCharts();
     this.updateCashInvestedLineChart();
-    this.updateMarketValueDataAndPieChart();
+    this.updateMarketRelatedData();
+    this.updateXIRR();
+    this.updateTotalEarning();
     this.animateTotalCashInvested();
   }
+
   public componentWillUnmount(): void {
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
   }
+
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
@@ -114,9 +125,24 @@ class Dashboard extends React.Component<Props, State> {
       prevProps.totalCashInvested !== this.props.totalCashInvested ||
       prevProps.sidStockInfoMap !== this.props.sidStockInfoMap
     ) {
-      this.updateMarketValueDataAndPieChart();
+      this.updateMarketRelatedData();
+    }
+    if (
+      prevProps.tradeRecords !== this.props.tradeRecords ||
+      prevProps.handlingFeeDiscountRecords !== this.props.handlingFeeDiscountRecords ||
+      prevProps.cashDividendRecords !== this.props.cashDividendRecords ||
+      prevState.totalMarketValue !== this.state.totalMarketValue
+    ) {
+      this.updateXIRR();
+    }
+    if (
+      prevProps.sidGainMap !== this.props.sidGainMap ||
+      prevProps.cashDividendRecords !== this.props.cashDividendRecords
+    ) {
+      this.updateTotalEarning();
     }
   }
+
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
@@ -233,13 +259,15 @@ class Dashboard extends React.Component<Props, State> {
               </div>
             </div>
           </div>
-          <SummaryCard title="報酬率">
-            {this.props.tradeRecords.length > 0 ? this.rateOfReturn.toFixed(2) : 0}
+          <SummaryCard title="年化報酬率">
+            {this.props.tradeRecords.length > 0
+              ? (this.state.xirr * 100).toFixed(2)
+              : 0}
             <PercentSign />
           </SummaryCard>
           <SummaryCard title="實現損益">
             <DollarSign />
-            {Math.round(this.totalEarning).toLocaleString()}
+            {Math.round(this.state.totalEarning).toLocaleString()}
           </SummaryCard>
           <SummaryCard title="手續費用" onClick={this.handleClickHandlingFee}>
             <DollarSign />
@@ -249,6 +277,7 @@ class Dashboard extends React.Component<Props, State> {
       </div>
     );
   }
+
   private get marketValuePieChartOption(): EChartsOption {
     const data = Object.entries(this.state.sidMarketValueMap)
       .map(([name, value]) => ({ name, value }))
@@ -283,24 +312,29 @@ class Dashboard extends React.Component<Props, State> {
       ],
     };
   }
+
   private get tseInfoDate(): string {
     return Object.values(this.props.tseIndexRealtimePrices)[0]?.date ?? "0000-00-00";
   }
+
   private get otcInfoDate(): string {
     return Object.values(this.props.otcIndexRealtimePrices)[0]?.date ?? "0000-00-00";
   }
+
   private get latestTsePriceInfo(): IndexPriceInfo | null {
     const maxNum = Math.max(
       ...Object.keys(this.props.tseIndexRealtimePrices).map((k) => parseInt(k)),
     );
     return this.props.tseIndexRealtimePrices[maxNum.toString()] ?? null;
   }
+
   private get latestOtcPriceInfo(): IndexPriceInfo | null {
     const maxNum = Math.max(
       ...Object.keys(this.props.otcIndexRealtimePrices).map((k) => parseInt(k)),
     );
     return this.props.otcIndexRealtimePrices[maxNum.toString()] ?? null;
   }
+
   private get latestTseFluctPercent(): number {
     const latestTseFluctPrice = this.latestTsePriceInfo?.fluct_price ?? 0;
     return (
@@ -311,6 +345,7 @@ class Dashboard extends React.Component<Props, State> {
       ) / 100
     );
   }
+
   private get latestOtcFluctPercent(): number {
     const latestOtcFluctPrice = this.latestOtcPriceInfo?.fluct_price ?? 0;
     return (
@@ -321,6 +356,7 @@ class Dashboard extends React.Component<Props, State> {
       ) / 100
     );
   }
+
   private getIndexPriceExtraClass(index: "tse" | "otc"): string {
     if (index === "tse") {
       const latestTsePrice = this.latestTsePriceInfo?.price ?? 0;
@@ -344,41 +380,46 @@ class Dashboard extends React.Component<Props, State> {
           : styles.gray;
     }
   }
+
   private getIndexFluctPriceText(fluctPrice: number): string {
     return (
       (fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "-") +
       (fluctPrice !== 0 ? Math.abs(fluctPrice) : "")
     );
   }
+
   private getIndexFluctPercentText(fluctPercent: number): string {
     return `(${fluctPercent !== 0 ? Math.abs(fluctPercent) + "%" : "-"})`;
   }
-  private get totalEarning(): number {
-    return this.props.totalGain + this.props.totalCashDividend;
+
+  private updateTotalEarning(): void {
+    this.setState({
+      totalEarning:
+        Object.values(this.props.sidGainMap).reduce((sum, gain) => sum + gain, 0) +
+        this.props.cashDividendRecords.reduce(
+          (sum, record) => sum + record.cash_dividend,
+          0,
+        ),
+    });
   }
+
   private getTimeSpanOptionClass(number: number): string {
     return this.state.daysToShow === number ? styles.active : "";
   }
+
   private getActiveOptionIndex(): number {
     const options = [30, 91, 365, Infinity];
     return options.indexOf(this.state.daysToShow);
   }
+
   private handleClickTimeSpanOption = (number: number): void => {
     this.setState({ daysToShow: number });
   };
+
   private handleClickHandlingFee = (): void => {
     this.props.router.navigate(`${Env.frontendRootPath}handling-fee`);
   };
-  private get rateOfReturn(): number {
-    return (
-      ((this.state.totalMarketValue -
-        this.props.totalCashInvested +
-        this.totalEarning -
-        this.props.totalHandlingFee) /
-        this.props.averageCashInvested) *
-      100
-    );
-  }
+
   private updateIndexLineCharts(): void {
     this.setState((state, props) => {
       const tseChartData: [number, number | null][] = [];
@@ -428,14 +469,13 @@ class Dashboard extends React.Component<Props, State> {
       };
     });
   }
+
   private updateCashInvestedLineChart(): void {
     this.setState((state, props) => {
-      const allData = props.cashInvestedChartData.slice(1).map((row) => {
+      const allData = props.cashInvestedChartData.map((row) => {
         const dateStr = row[0] as string;
-        const [year, month, day] = dateStr.split("-").map((e) => parseInt(e, 10));
-        return { date: new Date(year, month - 1, day), value: row[1] as number };
+        return { date: Util.dateStringToDate(dateStr), value: row[1] as number };
       });
-
       const daysToShow = Math.min(state.daysToShow, allData.length);
       const filteredData = allData.slice(-daysToShow);
       return {
@@ -448,7 +488,8 @@ class Dashboard extends React.Component<Props, State> {
       };
     });
   }
-  private updateMarketValueDataAndPieChart(): void {
+
+  private updateMarketRelatedData(): void {
     this.setState(
       (state, props) => {
         return {
@@ -474,6 +515,20 @@ class Dashboard extends React.Component<Props, State> {
       },
     );
   }
+
+  private updateXIRR(): void {
+    this.setState((state, props) => {
+      return {
+        xirr: Util.calculateXIRR(
+          props.tradeRecords,
+          props.handlingFeeDiscountRecords,
+          props.cashDividendRecords,
+          state.totalMarketValue,
+        ),
+      };
+    });
+  }
+
   private animateTotalCashInvested(): void {
     if (this.state.animatedTotalCashInvested === this.props.totalCashInvested) {
       if (this.animationFrameId !== null) {

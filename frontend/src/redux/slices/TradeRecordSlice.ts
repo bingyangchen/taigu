@@ -19,9 +19,8 @@ export interface TradeRecordState {
   stockWarehouse: StockWarehouse;
   totalCashInvested: number;
   totalHandlingFee: number;
-  totalGain: number;
-  cashInvestedChartData: (Date | string | number)[][];
-  tradeVolumeChartData: (Date | string | number)[][];
+  cashInvestedChartData: (string | number)[][];
+  tradeVolumeChartData: (string | number)[][];
   averageCashInvested: number;
   isWaiting: boolean;
 }
@@ -35,7 +34,6 @@ const initialState: TradeRecordState = {
   stockWarehouse: {},
   totalCashInvested: 0,
   totalHandlingFee: 0,
-  totalGain: 0,
   cashInvestedChartData: [],
   tradeVolumeChartData: [],
   averageCashInvested: 0,
@@ -67,10 +65,11 @@ export const createRecord = createAsyncThunk(
       response,
       ...rootState.tradeRecord.tradeRecords,
     ]);
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
@@ -93,10 +92,11 @@ export const updateRecord = createAsyncThunk(
         r.id === response.id ? response : r,
       ),
     );
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
@@ -113,10 +113,11 @@ export const deleteRecord = createAsyncThunk(
     const newState = await computeNewState(
       [...rootState.tradeRecord.tradeRecords].filter((r) => r.id !== id),
     );
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
@@ -129,10 +130,11 @@ export const refreshWithNonCacheResponse = createAsyncThunk(
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     const newState = await computeNewState(tradeRecords);
     const rootState = thunkAPI.getState() as RootState;
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
@@ -144,10 +146,11 @@ export const calculateTotalHandlingFee = createAsyncThunk(
     const baseTotalHandlingFee = Object.values(
       rootState.tradeRecord.sidHandlingFeeMap,
     ).reduce((sum, fee) => sum + fee, 0);
-    const totalDiscount = rootState.handlingFeeDiscount.discounts.reduce(
-      (sum, discount) => sum + discount.amount,
-      0,
-    );
+    const totalDiscount =
+      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+        (sum, discount) => sum + discount.amount,
+        0,
+      );
     return baseTotalHandlingFee - totalDiscount;
   },
 );
@@ -174,7 +177,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -196,7 +198,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -218,7 +219,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -240,7 +240,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -259,7 +258,6 @@ export const tradeRecordSlice = createSlice({
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
         state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.totalGain = action.payload.totalGain;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;

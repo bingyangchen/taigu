@@ -23,12 +23,13 @@ import styles from "./HandlingFee.module.scss";
 function mapStateToProps(rootState: RootState) {
   const { scrollTop } = rootState.mainPage;
   const { totalHandlingFee, tradeRecords } = rootState.tradeRecord;
-  const { discounts, isWaiting: isWaitingDiscount } = rootState.handlingFeeDiscount;
+  const { handlingFeeDiscountRecords, isWaiting: isWaitingDiscount } =
+    rootState.handlingFeeDiscount;
   return {
     mainScrollTop: scrollTop,
     totalHandlingFee,
     tradeRecords,
-    discounts,
+    handlingFeeDiscountRecords,
     isWaitingDiscount,
   };
 }
@@ -75,7 +76,7 @@ class HandlingFee extends React.Component<Props, State> {
     }
     if (
       prevProps.tradeRecords !== this.props.tradeRecords ||
-      prevProps.discounts !== this.props.discounts ||
+      prevProps.handlingFeeDiscountRecords !== this.props.handlingFeeDiscountRecords ||
       prevState.daysToShow !== this.state.daysToShow
     ) {
       this.updateHandlingFeeChart();
@@ -180,7 +181,7 @@ class HandlingFee extends React.Component<Props, State> {
                 </Button>
               </div>
               <div className={styles.record_list}>
-                {this.props.discounts
+                {this.props.handlingFeeDiscountRecords
                   .slice(0, this.state.numberToShow)
                   .map((discount: HandlingFeeDiscount) => (
                     <ListRow
@@ -199,7 +200,7 @@ class HandlingFee extends React.Component<Props, State> {
                       <span className={styles.date}>{discount.date}</span>
                     </ListRow>
                   ))}
-                {this.props.discounts.length > 0 && (
+                {this.props.handlingFeeDiscountRecords.length > 0 && (
                   <div className={styles.show_more_button_outer}>
                     <Button
                       className="transparent"
@@ -330,7 +331,6 @@ class HandlingFee extends React.Component<Props, State> {
 
     const monthlyMap: { [month: string]: number } = {};
 
-    // Calculate handling fees from trade records
     this.props.tradeRecords.forEach((record) => {
       const recordDate = new Date(record.deal_time);
       if (recordDate >= cutoffDate) {
@@ -339,8 +339,7 @@ class HandlingFee extends React.Component<Props, State> {
       }
     });
 
-    // Subtract handling fee discounts for each month
-    this.props.discounts.forEach((discount) => {
+    this.props.handlingFeeDiscountRecords.forEach((discount) => {
       const discountDate = new Date(discount.date);
       if (discountDate >= cutoffDate) {
         const monthKey = `${discountDate.getFullYear()}-${String(discountDate.getMonth() + 1).padStart(2, "0")}`;
@@ -382,7 +381,7 @@ class HandlingFee extends React.Component<Props, State> {
   };
 
   private get hasMoreToShow(): boolean {
-    return this.props.discounts.length > this.state.numberToShow;
+    return this.props.handlingFeeDiscountRecords.length > this.state.numberToShow;
   }
 
   private renderEditModal = (

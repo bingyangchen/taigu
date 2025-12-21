@@ -10,14 +10,12 @@ import Api from "../../utils/api";
 interface CashDividendRecordState {
   cashDividendRecords: CashDividendRecord[];
   sidTotalCashDividendMap: { [sid: string]: number };
-  totalCashDividend: number;
   isWaiting: boolean;
 }
 
 const initialState: CashDividendRecordState = {
   cashDividendRecords: [],
   sidTotalCashDividendMap: {},
-  totalCashDividend: 0,
   isWaiting: false,
 };
 
@@ -82,7 +80,6 @@ export const cashDividendRecordSlice = createSlice({
       state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
         state.cashDividendRecords,
       );
-      state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
     },
   },
   extraReducers: (builder) => {
@@ -97,7 +94,6 @@ export const cashDividendRecordSlice = createSlice({
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
           state.cashDividendRecords,
         );
-        state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
       })
       .addCase(fetchAllCashDividendRecords.rejected, (state) => {
@@ -114,7 +110,6 @@ export const cashDividendRecordSlice = createSlice({
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
           state.cashDividendRecords,
         );
-        state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
       })
       .addCase(createRecord.rejected, (state) => {
@@ -133,7 +128,6 @@ export const cashDividendRecordSlice = createSlice({
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
           state.cashDividendRecords,
         );
-        state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
       })
       .addCase(updateRecord.rejected, (state) => {
@@ -150,7 +144,6 @@ export const cashDividendRecordSlice = createSlice({
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
           state.cashDividendRecords,
         );
-        state.totalCashDividend = getTotalCashDividend(state.sidTotalCashDividendMap);
         state.isWaiting = false;
       })
       .addCase(deleteRecord.rejected, (state) => {
@@ -169,15 +162,6 @@ const getSidTotalCashDividendMap = (
     else result[sid] += record.cash_dividend;
   }
   return result;
-};
-
-const getTotalCashDividend = (sidCashDividendMap: {
-  [sid: string]: number;
-}): number => {
-  return Object.values(sidCashDividendMap).reduce(
-    (sum, cashDividend) => sum + cashDividend,
-    0,
-  );
 };
 
 export const { refreshCashDividendRecordsWithNonCacheResponse } =
