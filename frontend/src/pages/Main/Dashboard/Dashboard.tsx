@@ -81,18 +81,21 @@ class Dashboard extends React.Component<Props, State> {
       animatedTotalCashInvested: 0,
     };
   }
+
   public componentDidMount(): void {
     this.updateIndexLineCharts();
     this.updateCashInvestedLineChart();
     this.updateMarketValueDataAndPieChart();
     this.animateTotalCashInvested();
   }
+
   public componentWillUnmount(): void {
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
   }
+
   public componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
@@ -117,6 +120,7 @@ class Dashboard extends React.Component<Props, State> {
       this.updateMarketValueDataAndPieChart();
     }
   }
+
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
@@ -249,6 +253,7 @@ class Dashboard extends React.Component<Props, State> {
       </div>
     );
   }
+
   private get marketValuePieChartOption(): EChartsOption {
     const data = Object.entries(this.state.sidMarketValueMap)
       .map(([name, value]) => ({ name, value }))
@@ -283,24 +288,29 @@ class Dashboard extends React.Component<Props, State> {
       ],
     };
   }
+
   private get tseInfoDate(): string {
     return Object.values(this.props.tseIndexRealtimePrices)[0]?.date ?? "0000-00-00";
   }
+
   private get otcInfoDate(): string {
     return Object.values(this.props.otcIndexRealtimePrices)[0]?.date ?? "0000-00-00";
   }
+
   private get latestTsePriceInfo(): IndexPriceInfo | null {
     const maxNum = Math.max(
       ...Object.keys(this.props.tseIndexRealtimePrices).map((k) => parseInt(k)),
     );
     return this.props.tseIndexRealtimePrices[maxNum.toString()] ?? null;
   }
+
   private get latestOtcPriceInfo(): IndexPriceInfo | null {
     const maxNum = Math.max(
       ...Object.keys(this.props.otcIndexRealtimePrices).map((k) => parseInt(k)),
     );
     return this.props.otcIndexRealtimePrices[maxNum.toString()] ?? null;
   }
+
   private get latestTseFluctPercent(): number {
     const latestTseFluctPrice = this.latestTsePriceInfo?.fluct_price ?? 0;
     return (
@@ -311,6 +321,7 @@ class Dashboard extends React.Component<Props, State> {
       ) / 100
     );
   }
+
   private get latestOtcFluctPercent(): number {
     const latestOtcFluctPrice = this.latestOtcPriceInfo?.fluct_price ?? 0;
     return (
@@ -321,6 +332,7 @@ class Dashboard extends React.Component<Props, State> {
       ) / 100
     );
   }
+
   private getIndexPriceExtraClass(index: "tse" | "otc"): string {
     if (index === "tse") {
       const latestTsePrice = this.latestTsePriceInfo?.price ?? 0;
@@ -344,31 +356,39 @@ class Dashboard extends React.Component<Props, State> {
           : styles.gray;
     }
   }
+
   private getIndexFluctPriceText(fluctPrice: number): string {
     return (
       (fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "-") +
       (fluctPrice !== 0 ? Math.abs(fluctPrice) : "")
     );
   }
+
   private getIndexFluctPercentText(fluctPercent: number): string {
     return `(${fluctPercent !== 0 ? Math.abs(fluctPercent) + "%" : "-"})`;
   }
+
   private get totalEarning(): number {
     return this.props.totalGain + this.props.totalCashDividend;
   }
+
   private getTimeSpanOptionClass(number: number): string {
     return this.state.daysToShow === number ? styles.active : "";
   }
+
   private getActiveOptionIndex(): number {
     const options = [30, 91, 365, Infinity];
     return options.indexOf(this.state.daysToShow);
   }
+
   private handleClickTimeSpanOption = (number: number): void => {
     this.setState({ daysToShow: number });
   };
+
   private handleClickHandlingFee = (): void => {
     this.props.router.navigate(`${Env.frontendRootPath}handling-fee`);
   };
+
   private get rateOfReturn(): number {
     return (
       ((this.state.totalMarketValue -
@@ -379,6 +399,7 @@ class Dashboard extends React.Component<Props, State> {
       100
     );
   }
+
   private updateIndexLineCharts(): void {
     this.setState((state, props) => {
       const tseChartData: [number, number | null][] = [];
@@ -428,6 +449,7 @@ class Dashboard extends React.Component<Props, State> {
       };
     });
   }
+
   private updateCashInvestedLineChart(): void {
     this.setState((state, props) => {
       const allData = props.cashInvestedChartData.slice(1).map((row) => {
@@ -435,7 +457,6 @@ class Dashboard extends React.Component<Props, State> {
         const [year, month, day] = dateStr.split("-").map((e) => parseInt(e, 10));
         return { date: new Date(year, month - 1, day), value: row[1] as number };
       });
-
       const daysToShow = Math.min(state.daysToShow, allData.length);
       const filteredData = allData.slice(-daysToShow);
       return {
@@ -448,6 +469,7 @@ class Dashboard extends React.Component<Props, State> {
       };
     });
   }
+
   private updateMarketValueDataAndPieChart(): void {
     this.setState(
       (state, props) => {
@@ -474,6 +496,7 @@ class Dashboard extends React.Component<Props, State> {
       },
     );
   }
+
   private animateTotalCashInvested(): void {
     if (this.state.animatedTotalCashInvested === this.props.totalCashInvested) {
       if (this.animationFrameId !== null) {
