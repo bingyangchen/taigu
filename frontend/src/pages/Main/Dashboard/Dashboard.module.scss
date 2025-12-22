@@ -147,10 +147,40 @@
         flex-grow: 1;
         & > .empty_state {
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
+          flex-wrap: wrap;
           align-items: center;
           justify-content: center;
           flex-grow: 1;
+          padding: 0 20px 70px;
+          text-align: center;
+          color: _.$gray;
+          line-height: 1.6;
+          @media (max-width: _.$width-512) {
+            padding: 40px 20px;
+            font-size: 0.85 * _.$base-font-size;
+          }
+          & > .button {
+            position: relative;
+            display: inline-block;
+            color: _.$blue;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0 2px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            text-decoration: underline;
+            text-decoration-color: _.$blue;
+            text-underline-offset: 3px;
+            @media (hover: hover) {
+              &:hover {
+                opacity: 0.8;
+              }
+            }
+            &:active {
+              transform: scale(0.98);
+            }
+          }
         }
         & > .cash_invested_chart_container {
           flex-grow: 1;

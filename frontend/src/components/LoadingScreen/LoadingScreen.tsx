@@ -17,7 +17,7 @@ export default class LoadingScreen extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <FullLogo size="l" />
+        <FullLogo size="m" />
         <img className={styles.loading_spinner} src={loadingSpinner} alt="" />
       </div>
     );

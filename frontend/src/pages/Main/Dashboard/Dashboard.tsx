@@ -4,7 +4,6 @@ import React from "react";
 import { connect } from "react-redux";
 
 import {
-  Button,
   DollarSign,
   MarketIndexLineChart,
   PercentSign,
@@ -204,12 +203,14 @@ class Dashboard extends React.Component<Props, State> {
             <div className={styles.body}>
               {this.props.tradeRecords.length === 0 ? (
                 <div className={styles.empty_state}>
-                  <Button
-                    className="primary_fill xl"
+                  還沒有任何交易紀錄喔！快
+                  <span
+                    className={styles.button}
                     onClick={this.handleCreateTradeRecordClick}
                   >
-                    新增第一筆交易紀錄
-                  </Button>
+                    點這裡
+                  </span>
+                  新增你的第一筆交易，展開投資之旅吧！
                 </div>
               ) : (
                 <>
