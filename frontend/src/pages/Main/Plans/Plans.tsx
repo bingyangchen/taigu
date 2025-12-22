@@ -55,7 +55,7 @@ class Plans extends React.Component<Props, State> {
           />
         </div>
         {this.filteredAndSortedPlans.length === 0 ? (
-          <div className={styles.empty_section}>目前沒有交易計畫紀錄</div>
+          <div className={styles.empty_section}>目前沒有買賣計畫</div>
         ) : (
           <div className={styles.record_list}>
             {this.filteredAndSortedPlans
