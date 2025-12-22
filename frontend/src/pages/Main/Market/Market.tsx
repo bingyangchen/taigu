@@ -106,11 +106,12 @@ class Market extends React.Component<Props, State> {
               className={`${styles.tab_button} ${this.props.activeSubpageName === "favorites" ? styles.active : ""}`}
               onClick={this.handleFavoritesClick}
             >
-              觀察
+              最愛
             </button>
           </div>
         </div>
         <div className={styles.list}>
+          {this.emptySection}
           {(this.props.activeSubpageName === "holding"
             ? Object.keys(this.props.stockWarehouse)
             : this.props.favorites
@@ -132,6 +133,28 @@ class Market extends React.Component<Props, State> {
         {Util.isMobile && <SpeedDial />}
       </div>
     );
+  }
+
+  private get emptySection(): React.ReactNode {
+    if (
+      this.props.activeSubpageName === "holding" &&
+      Object.keys(this.props.stockWarehouse).length === 0
+    ) {
+      return (
+        <div className={styles.empty_section}>目前沒有任何持股，倉庫裡只剩落葉...</div>
+      );
+    }
+    if (
+      this.props.activeSubpageName === "favorites" &&
+      this.props.favorites.length === 0
+    ) {
+      return (
+        <div className={styles.empty_section}>
+          目前沒有任何最愛，點擊股票資訊頁右上角的愛心按鈕把它加入最愛吧！
+        </div>
+      );
+    }
+    return null;
   }
 }
 

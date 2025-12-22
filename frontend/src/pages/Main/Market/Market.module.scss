@@ -74,5 +74,20 @@
       gap: 10px;
       padding: 0 15px calc(125px + _.$footer-height);
     }
+    & > .empty_section {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      color: _.$gray;
+      line-height: 1.6;
+      font-size: 0.9 * _.$base-font-size;
+      @media (max-width: _.$width-780) {
+        padding: 40px 20px;
+        font-size: 0.85 * _.$base-font-size;
+      }
+    }
   }
 }
