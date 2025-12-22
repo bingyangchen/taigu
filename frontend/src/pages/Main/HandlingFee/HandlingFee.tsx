@@ -126,49 +126,55 @@ class HandlingFee extends React.Component<Props, State> {
                   {Math.round(this.state.animatedTotalHandlingFee).toLocaleString()}
                 </div>
               </div>
-              <div className={styles.chart_section}>
-                <div className={styles.chart_container}>
-                  {this.state.handlingFeeChart}
-                </div>
-                <div className={styles.controls}>
-                  <div className={styles.time_span_options}>
-                    <div
-                      className={styles.time_span_options_inner}
-                      style={
-                        {
-                          "--active-index": this.getActiveOptionIndex(),
-                        } as React.CSSProperties
-                      }
-                    >
-                      <div className={styles.sliding_background} />
-                      <span
-                        className={this.getTimeSpanOptionClass(182)}
-                        onClick={() => this.handleClickTimeSpanOption(182)}
+              {this.props.totalHandlingFee > 0 ? (
+                <div className={styles.chart_section}>
+                  <div className={styles.chart_container}>
+                    {this.state.handlingFeeChart}
+                  </div>
+                  <div className={styles.controls}>
+                    <div className={styles.time_span_options}>
+                      <div
+                        className={styles.time_span_options_inner}
+                        style={
+                          {
+                            "--active-index": this.getActiveOptionIndex(),
+                          } as React.CSSProperties
+                        }
                       >
-                        6M
-                      </span>
-                      <span
-                        className={this.getTimeSpanOptionClass(365)}
-                        onClick={() => this.handleClickTimeSpanOption(365)}
-                      >
-                        1Y
-                      </span>
-                      <span
-                        className={this.getTimeSpanOptionClass(1825)}
-                        onClick={() => this.handleClickTimeSpanOption(1825)}
-                      >
-                        5Y
-                      </span>
-                      <span
-                        className={this.getTimeSpanOptionClass(Infinity)}
-                        onClick={() => this.handleClickTimeSpanOption(Infinity)}
-                      >
-                        ALL
-                      </span>
+                        <div className={styles.sliding_background} />
+                        <span
+                          className={this.getTimeSpanOptionClass(182)}
+                          onClick={() => this.handleClickTimeSpanOption(182)}
+                        >
+                          6M
+                        </span>
+                        <span
+                          className={this.getTimeSpanOptionClass(365)}
+                          onClick={() => this.handleClickTimeSpanOption(365)}
+                        >
+                          1Y
+                        </span>
+                        <span
+                          className={this.getTimeSpanOptionClass(1825)}
+                          onClick={() => this.handleClickTimeSpanOption(1825)}
+                        >
+                          5Y
+                        </span>
+                        <span
+                          className={this.getTimeSpanOptionClass(Infinity)}
+                          onClick={() => this.handleClickTimeSpanOption(Infinity)}
+                        >
+                          ALL
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className={styles.hint}>
+                  手續費由交易紀錄產生，請先新增交易紀錄。
+                </div>
+              )}
             </div>
             <div className={styles.right_block}>
               <div className={styles.section_header}>
@@ -180,27 +186,29 @@ class HandlingFee extends React.Component<Props, State> {
                   新增折讓紀錄
                 </Button>
               </div>
-              <div className={styles.record_list}>
-                {this.props.handlingFeeDiscountRecords
-                  .slice(0, this.state.numberToShow)
-                  .map((discount: HandlingFeeDiscount) => (
-                    <ListRow
-                      key={discount.id}
-                      target={discount}
-                      editModal={this.renderEditModal(discount)}
-                      deleteModal={this.renderDeleteModal(discount)}
-                    >
-                      <span className={styles.company}>
-                        {discount.memo || "手續費折讓"}
-                      </span>
-                      <span className={styles.price}>
-                        <DollarSign />
-                        {discount.amount.toLocaleString()}
-                      </span>
-                      <span className={styles.date}>{discount.date}</span>
-                    </ListRow>
-                  ))}
-                {this.props.handlingFeeDiscountRecords.length > 0 && (
+              {this.props.handlingFeeDiscountRecords.length === 0 ? (
+                <div className={styles.empty_section}>目前沒有手續費折讓紀錄</div>
+              ) : (
+                <div className={styles.record_list}>
+                  {this.props.handlingFeeDiscountRecords
+                    .slice(0, this.state.numberToShow)
+                    .map((discount: HandlingFeeDiscount) => (
+                      <ListRow
+                        key={discount.id}
+                        target={discount}
+                        editModal={this.renderEditModal(discount)}
+                        deleteModal={this.renderDeleteModal(discount)}
+                      >
+                        <span className={styles.company}>
+                          {discount.memo || "手續費折讓"}
+                        </span>
+                        <span className={styles.price}>
+                          <DollarSign />
+                          {discount.amount.toLocaleString()}
+                        </span>
+                        <span className={styles.date}>{discount.date}</span>
+                      </ListRow>
+                    ))}
                   <div className={styles.show_more_button_outer}>
                     <Button
                       className="transparent"
@@ -210,8 +218,8 @@ class HandlingFee extends React.Component<Props, State> {
                       顯示更多
                     </Button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

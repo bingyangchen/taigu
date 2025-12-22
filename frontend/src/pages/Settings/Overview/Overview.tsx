@@ -209,7 +209,7 @@ class Overview extends React.Component<Props, State> {
                     登出
                   </div>
                   {/* <Button
-                  className="dangerous border p8-15"
+                  className="dangerous border"
                   onClick={() =>
                     this.props.router.navigate(
                       `${Env.frontendRootPath}${settingsPagePath}/delete-account`

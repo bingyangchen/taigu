@@ -54,47 +54,51 @@ class Plans extends React.Component<Props, State> {
             }
           />
         </div>
-        <div className={styles.record_list}>
-          {this.filteredAndSortedPlans
-            .slice(0, this.state.numberToShow)
-            .map((plan: TradePlan, idx) => {
-              return (
-                <ListRow
-                  key={idx}
-                  target={plan}
-                  editModal={this.renderEditModal(plan)}
-                  deleteModal={this.renderDeleteModal(plan)}
-                >
-                  <span className={styles.company}>
-                    {`${plan.sid} ${plan.company_name}`}
-                  </span>
-                  <span className={styles.price}>
-                    <DollarSign />
-                    {plan.target_price.toLocaleString()}
-                  </span>
-                  <span className={styles.quantity_outer}>
-                    <span
-                      className={`${styles.trade_type} ${
-                        plan.plan_type === "buy" ? styles.buy : styles.sell
-                      }`}
-                    >
-                      {plan.plan_type === "buy" ? "買" : "賣"}
+        {this.filteredAndSortedPlans.length === 0 ? (
+          <div className={styles.empty_section}>目前沒有買賣計畫</div>
+        ) : (
+          <div className={styles.record_list}>
+            {this.filteredAndSortedPlans
+              .slice(0, this.state.numberToShow)
+              .map((plan: TradePlan, idx) => {
+                return (
+                  <ListRow
+                    key={idx}
+                    target={plan}
+                    editModal={this.renderEditModal(plan)}
+                    deleteModal={this.renderDeleteModal(plan)}
+                  >
+                    <span className={styles.company}>
+                      {`${plan.sid} ${plan.company_name}`}
                     </span>
-                    <span className={styles.quantity}>{plan.target_quantity} 股</span>
-                  </span>
-                </ListRow>
-              );
-            })}
-          <div className={styles.show_more_button_outer}>
-            <Button
-              className="transparent"
-              onClick={this.handleClickShowMore}
-              disabled={!this.hasMoreToShow}
-            >
-              顯示更多
-            </Button>
+                    <span className={styles.price}>
+                      <DollarSign />
+                      {plan.target_price.toLocaleString()}
+                    </span>
+                    <span className={styles.quantity_outer}>
+                      <span
+                        className={`${styles.trade_type} ${
+                          plan.plan_type === "buy" ? styles.buy : styles.sell
+                        }`}
+                      >
+                        {plan.plan_type === "buy" ? "買" : "賣"}
+                      </span>
+                      <span className={styles.quantity}>{plan.target_quantity} 股</span>
+                    </span>
+                  </ListRow>
+                );
+              })}
+            <div className={styles.show_more_button_outer}>
+              <Button
+                className="transparent"
+                onClick={this.handleClickShowMore}
+                disabled={!this.hasMoreToShow}
+              >
+                顯示更多
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
         {Util.isMobile && <SpeedDial />}
       </div>
     );
