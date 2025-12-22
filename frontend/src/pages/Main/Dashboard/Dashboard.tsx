@@ -4,6 +4,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import {
+  Button,
   DollarSign,
   MarketIndexLineChart,
   PercentSign,
@@ -11,6 +12,7 @@ import {
   SimpleCashInvestedLineChart,
   SpeedDial,
   SummaryCard,
+  TradeRecordModal,
 } from "../../../components";
 import { IconFullScreen } from "../../../icons";
 import {
@@ -67,6 +69,7 @@ interface State {
   totalEarning: number;
   animatedTotalCashInvested: number;
   xirr: number;
+  activeModalName: "createTradeRecord" | null;
 }
 
 class Dashboard extends React.Component<Props, State> {
@@ -85,6 +88,7 @@ class Dashboard extends React.Component<Props, State> {
       totalEarning: 0,
       animatedTotalCashInvested: 0,
       xirr: 0,
+      activeModalName: null,
     };
   }
 
@@ -198,50 +202,63 @@ class Dashboard extends React.Component<Props, State> {
               </div>
             </div>
             <div className={styles.body}>
-              <div className={styles.cash_invested_chart_container}>
-                {this.state.cashInvestedLineChart}
-              </div>
-              <div className={styles.controls}>
-                <div className={styles.time_span_options}>
-                  <div
-                    className={styles.time_span_options_inner}
-                    style={
-                      {
-                        "--active-index": this.getActiveOptionIndex(),
-                      } as React.CSSProperties
-                    }
+              {this.props.tradeRecords.length === 0 ? (
+                <div className={styles.empty_state}>
+                  <Button
+                    className="primary_fill xl"
+                    onClick={this.handleCreateTradeRecordClick}
                   >
-                    <div className={styles.sliding_background} />
-                    <span
-                      className={this.getTimeSpanOptionClass(30)}
-                      onClick={() => this.handleClickTimeSpanOption(30)}
-                    >
-                      1M
-                    </span>
-                    <span
-                      className={this.getTimeSpanOptionClass(91)}
-                      onClick={() => this.handleClickTimeSpanOption(91)}
-                    >
-                      1Q
-                    </span>
-                    <span
-                      className={this.getTimeSpanOptionClass(365)}
-                      onClick={() => this.handleClickTimeSpanOption(365)}
-                    >
-                      1Y
-                    </span>
-                    <span
-                      className={this.getTimeSpanOptionClass(Infinity)}
-                      onClick={() => this.handleClickTimeSpanOption(Infinity)}
-                    >
-                      ALL
-                    </span>
-                  </div>
+                    新增第一筆交易紀錄
+                  </Button>
                 </div>
-                <RoundButton className="p-12" hint_text="查看詳情">
-                  <IconFullScreen sideLength="14" />
-                </RoundButton>
-              </div>
+              ) : (
+                <>
+                  <div className={styles.cash_invested_chart_container}>
+                    {this.state.cashInvestedLineChart}
+                  </div>
+                  <div className={styles.controls}>
+                    <div className={styles.time_span_options}>
+                      <div
+                        className={styles.time_span_options_inner}
+                        style={
+                          {
+                            "--active-index": this.getActiveOptionIndex(),
+                          } as React.CSSProperties
+                        }
+                      >
+                        <div className={styles.sliding_background} />
+                        <span
+                          className={this.getTimeSpanOptionClass(30)}
+                          onClick={() => this.handleClickTimeSpanOption(30)}
+                        >
+                          1M
+                        </span>
+                        <span
+                          className={this.getTimeSpanOptionClass(91)}
+                          onClick={() => this.handleClickTimeSpanOption(91)}
+                        >
+                          1Q
+                        </span>
+                        <span
+                          className={this.getTimeSpanOptionClass(365)}
+                          onClick={() => this.handleClickTimeSpanOption(365)}
+                        >
+                          1Y
+                        </span>
+                        <span
+                          className={this.getTimeSpanOptionClass(Infinity)}
+                          onClick={() => this.handleClickTimeSpanOption(Infinity)}
+                        >
+                          ALL
+                        </span>
+                      </div>
+                    </div>
+                    <RoundButton className="p-12" hint_text="查看詳情">
+                      <IconFullScreen sideLength="14" />
+                    </RoundButton>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -274,8 +291,16 @@ class Dashboard extends React.Component<Props, State> {
             {this.props.totalHandlingFee.toLocaleString()}
           </SummaryCard>
         </div>
+        {this.activeModal}
       </div>
     );
+  }
+
+  private get activeModal(): React.ReactElement | null {
+    if (this.state.activeModalName === "createTradeRecord") {
+      return <TradeRecordModal hideModal={Util.getHideModalCallback(this)} />;
+    }
+    return null;
   }
 
   private get marketValuePieChartOption(): EChartsOption {
@@ -418,6 +443,10 @@ class Dashboard extends React.Component<Props, State> {
 
   private handleClickHandlingFee = (): void => {
     this.props.router.navigate(`${Env.frontendRootPath}handling-fee`);
+  };
+
+  private handleCreateTradeRecordClick = (): void => {
+    this.setState({ activeModalName: "createTradeRecord" });
   };
 
   private updateIndexLineCharts(): void {
