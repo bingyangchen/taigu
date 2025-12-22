@@ -119,54 +119,62 @@ class Records extends React.Component<Props, State> {
             </div>
           </div>
         </div>
-        <div className={styles.record_list}>
-          {this.filteredRecords
-            .slice(0, this.state.numberToShow)
-            .map((record: TradeRecord | CashDividendRecord, idx) => {
-              return (
-                <ListRow
-                  key={idx}
-                  target={record}
-                  editModal={this.renderEditModal(record)}
-                  deleteModal={this.renderDeleteModal(record)}
-                >
-                  <span className={styles.company}>
-                    {`${record.sid} ${record.company_name}`}
-                  </span>
-                  <span className={styles.price}>
-                    <DollarSign />
-                    {Util.isTradeRecord(record)
-                      ? record.deal_price.toLocaleString()
-                      : record.cash_dividend.toLocaleString()}
-                  </span>
-                  {Util.isTradeRecord(record) && (
-                    <span className={styles.quantity_outer}>
-                      <span
-                        className={`${styles.trade_type} ${
-                          record.deal_quantity > 0 ? styles.buy : styles.sell
-                        }`}
-                      >
-                        {record.deal_quantity > 0 ? "買" : "賣"}
-                      </span>
-                      <span className={styles.quantity}>
-                        {Math.abs(record.deal_quantity)} 股
-                      </span>
-                    </span>
-                  )}
-                  <span className={styles.date}>{record.deal_time}</span>
-                </ListRow>
-              );
-            })}
-          <div className={styles.show_more_button_outer}>
-            <Button
-              className="transparent"
-              onClick={this.handleClickShowMore}
-              disabled={!this.hasMoreToShow}
-            >
-              顯示更多
-            </Button>
+        {this.filteredRecords.length === 0 ? (
+          <div className={styles.empty_section}>
+            目前沒有
+            {this.state.activeSubpageName === "trade" ? "交易" : "現金股利"}
+            紀錄
           </div>
-        </div>
+        ) : (
+          <div className={styles.record_list}>
+            {this.filteredRecords
+              .slice(0, this.state.numberToShow)
+              .map((record: TradeRecord | CashDividendRecord, idx) => {
+                return (
+                  <ListRow
+                    key={idx}
+                    target={record}
+                    editModal={this.renderEditModal(record)}
+                    deleteModal={this.renderDeleteModal(record)}
+                  >
+                    <span className={styles.company}>
+                      {`${record.sid} ${record.company_name}`}
+                    </span>
+                    <span className={styles.price}>
+                      <DollarSign />
+                      {Util.isTradeRecord(record)
+                        ? record.deal_price.toLocaleString()
+                        : record.cash_dividend.toLocaleString()}
+                    </span>
+                    {Util.isTradeRecord(record) && (
+                      <span className={styles.quantity_outer}>
+                        <span
+                          className={`${styles.trade_type} ${
+                            record.deal_quantity > 0 ? styles.buy : styles.sell
+                          }`}
+                        >
+                          {record.deal_quantity > 0 ? "買" : "賣"}
+                        </span>
+                        <span className={styles.quantity}>
+                          {Math.abs(record.deal_quantity)} 股
+                        </span>
+                      </span>
+                    )}
+                    <span className={styles.date}>{record.deal_time}</span>
+                  </ListRow>
+                );
+              })}
+            <div className={styles.show_more_button_outer}>
+              <Button
+                className="transparent"
+                onClick={this.handleClickShowMore}
+                disabled={!this.hasMoreToShow}
+              >
+                顯示更多
+              </Button>
+            </div>
+          </div>
+        )}
         {Util.isMobile && <SpeedDial />}
       </div>
     );

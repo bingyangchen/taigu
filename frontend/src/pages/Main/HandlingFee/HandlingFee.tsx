@@ -187,7 +187,7 @@ class HandlingFee extends React.Component<Props, State> {
                 </Button>
               </div>
               {this.props.handlingFeeDiscountRecords.length === 0 ? (
-                <div className={styles.no_records}>目前沒有手續費折讓紀錄</div>
+                <div className={styles.empty_section}>目前沒有手續費折讓紀錄</div>
               ) : (
                 <div className={styles.record_list}>
                   {this.props.handlingFeeDiscountRecords

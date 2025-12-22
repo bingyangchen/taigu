@@ -202,7 +202,7 @@ class Dashboard extends React.Component<Props, State> {
             </div>
             <div className={styles.body}>
               {this.props.tradeRecords.length === 0 ? (
-                <div className={styles.empty_state}>
+                <div className={styles.empty_section}>
                   還沒有任何交易紀錄喔！快
                   <span
                     className={styles.button}
