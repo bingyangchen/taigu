@@ -559,7 +559,7 @@
       padding: 20px 0;
       font-size: 0.9 * _.$base-font-size;
       @media (max-width: _.$width-512) {
-        gap: 20px
+        gap: 20px;
       }
       & > a {
         color: _.$deep-gray;
