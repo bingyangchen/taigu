@@ -16,6 +16,8 @@ class TestStockUrls:
             ("/api/stock/historical-prices/1234", stock_info.historical_prices),
             ("/api/stock/search/", stock_info.search),
             ("/api/stock/search", stock_info.search),
+            ("/api/stock/company-names/", stock_info.company_names),
+            ("/api/stock/company-names", stock_info.company_names),
             ("/api/stock/trade-records/", trade_record.list),
             ("/api/stock/trade-records", trade_record.list),
             ("/api/stock/trade-record/", trade_record.create),
@@ -38,8 +40,8 @@ class TestStockUrls:
         """Test that URL patterns are configured correctly with expected count and no duplicates."""
         from main.stock.urls import urlpatterns
 
-        # Should have exactly 10 active patterns
-        assert len(urlpatterns) == 10
+        # Should have exactly 11 active patterns
+        assert len(urlpatterns) == 11
 
         # Check for duplicate patterns
         patterns = []
@@ -58,6 +60,7 @@ class TestStockUrls:
             r"^current-stock-info[/]?$",
             r"^historical-prices/(?P<sid>\w+)[/]?$",
             r"^search[/]?$",
+            r"^company-names[/]?$",
             r"^trade-records[/]?$",
             r"^trade-record[/]?$",
             r"^trade-records/(?P<id>\w+)[/]?$",
