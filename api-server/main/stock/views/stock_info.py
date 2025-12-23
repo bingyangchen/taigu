@@ -80,3 +80,12 @@ def search(request: HttpRequest) -> JsonResponse:
                 }
             )
     return JsonResponse(result)
+
+
+@require_GET
+def company_names(request: HttpRequest) -> JsonResponse:
+    sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
+    result = dict.fromkeys(sids, None)
+    for company in Company.objects.filter(stock_id__in=sids):
+        result[company.stock_id] = company.name
+    return JsonResponse(result)
