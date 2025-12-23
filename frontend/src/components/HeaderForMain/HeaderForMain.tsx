@@ -32,7 +32,7 @@ class HeaderForMain extends React.Component<Props, State> {
   }
 
   private get logoTranslateX(): number {
-    if (Nav.isAtDetailsPage || Nav.isAtHandlingFeePage) {
+    if (Nav.isAtDetailsPage || Nav.isAtHandlingFeePage || Nav.isAtEarningAnalysisPage) {
       return 40;
     }
     return 0;

@@ -36,6 +36,7 @@
       color: _.$gray;
       opacity: 0.6;
       transition: all 150ms ease;
+      animation: chevronFloat 2s ease-in-out infinite;
     }
     @media (hover: hover) {
       &:hover {
@@ -45,8 +46,19 @@
           opacity: 1;
           transform: translateY(-50%) translateX(2px);
           color: _.$blue;
+          animation-play-state: paused;
         }
       }
     }
+  }
+}
+
+@keyframes chevronFloat {
+  0%,
+  100% {
+    transform: translateY(-50%) translateX(0);
+  }
+  50% {
+    transform: translateY(-50%) translateX(-3px);
   }
 }

@@ -280,11 +280,11 @@ class Dashboard extends React.Component<Props, State> {
               : 0}
             <PercentSign />
           </SummaryCard>
-          <SummaryCard title="實現損益">
+          <SummaryCard title="實現損益" onClick={this.handleClickTotalEarning}>
             <DollarSign />
             {Math.round(this.state.totalEarning).toLocaleString()}
           </SummaryCard>
-          <SummaryCard title="手續費用" onClick={this.handleClickHandlingFee}>
+          <SummaryCard title="手續費用(-)" onClick={this.handleClickHandlingFee}>
             <DollarSign />
             {this.props.totalHandlingFee.toLocaleString()}
           </SummaryCard>
@@ -402,6 +402,10 @@ class Dashboard extends React.Component<Props, State> {
 
   private handleClickTimeSpanOption = (number: number): void => {
     this.setState({ daysToShow: number });
+  };
+
+  private handleClickTotalEarning = (): void => {
+    this.props.router.navigate(`${Env.frontendRootPath}earning-analysis`);
   };
 
   private handleClickHandlingFee = (): void => {
