@@ -84,6 +84,7 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
         axisLabel: {
           color: "#aaa",
           margin: 3,
+          showMinLabel: false,
           formatter: (value: number) => {
             if (value >= 1_000_000) return (value / 1_000_000).toFixed(1) + "M";
             else if (value >= 1_000) return Math.round(value / 1_000) + "K";

@@ -1,7 +1,7 @@
 @use "../../../global_variables" as _;
 
 .main {
-  $border-radius: 20px;
+  $border-radius: 25px;
   display: grid;
   grid-template-columns: 3fr 1fr;
   width: 100%;
@@ -108,7 +108,7 @@
       flex-direction: column;
       justify-content: flex-end;
       border-radius: $border-radius;
-      padding: 25px;
+      padding: 25px 10px 25px 25px;
       background-color: #ffffff90;
       box-shadow: 0 0 15px -10px _.$transparent-black;
       @media (max-width: _.$width-1280) {
@@ -253,11 +253,9 @@
     gap: 10px;
     & > .upper {
       padding: 20px 20px 25px 20px;
-      border-radius: $border-radius;
       margin-bottom: 30px;
       @media (max-width: _.$width-512) {
         padding: 0;
-        border-radius: 0;
       }
       & > .title {
         color: _.$gray;

@@ -1,0 +1,141 @@
+@use "../../../global_variables" as _;
+
+.main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-height: 100%;
+  & > .mobile_back_button_container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    height: _.$header-height;
+    width: fit-content;
+    padding-left: 13px;
+    margin-right: auto;
+    z-index: 3;
+    transition: top 300ms ease;
+    &.scrolled {
+      top: 10px;
+      left: 10px;
+      height: auto;
+      padding-left: 0;
+      & > * {
+        border-radius: 50% !important;
+        background-color: _.$transparent-white !important;
+        backdrop-filter: blur(10px) saturate(150%) !important;
+        -webkit-backdrop-filter: blur(10px) saturate(150%) !important;
+        box-shadow:
+          0 4px 16px #0000001a,
+          0 2px 8px #00000014 !important;
+        border: 0.5px solid _.$noisy-white !important;
+        &:active {
+          background-color: #ffffffdd !important;
+        }
+        @media (hover: hover) {
+          &:hover {
+            background-color: #ffffffee !important;
+          }
+        }
+      }
+    }
+  }
+  & > .desktop_back_button_container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 3;
+    @media (max-width: _.$width-780) {
+      display: none;
+    }
+  }
+  & > .floating_pill_wrapper {
+    position: sticky;
+    top: 10px;
+    display: flex;
+    justify-content: center;
+    padding: 10px 16px 20px;
+    z-index: 2;
+    background-color: transparent;
+    @media (max-width: _.$width-512) {
+      padding-top: 5px;
+    }
+    & > .floating_pill {
+      position: relative;
+      display: flex;
+      gap: 3px;
+      padding: 4px;
+      border-radius: 20px;
+      background-color: #ffffffcc;
+      backdrop-filter: blur(10px) saturate(150%);
+      -webkit-backdrop-filter: blur(10px) saturate(150%);
+      box-shadow:
+        0 4px 16px #0000001a,
+        0 2px 8px #00000014;
+      border: 0.5px solid _.$noisy-white;
+      --option-width: 80px;
+      & > .active_indicator {
+        position: absolute;
+        top: 4px;
+        left: 0px;
+        width: var(--option-width);
+        height: calc(100% - 8px);
+        background-color: _.$white;
+        border-radius: 16px;
+        transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 0;
+        box-shadow: 0 2px 8px #0000001a;
+      }
+      & > .tab_button {
+        position: relative;
+        z-index: 1;
+        width: var(--option-width);
+        background-color: transparent;
+        border: none;
+        border-radius: 16px;
+        padding: 6px 12px;
+        font-size: 0.7 * _.$base-font-size;
+        color: _.$gray;
+        cursor: pointer;
+        transition: color 200ms;
+        &.active {
+          color: _.$deep-gray;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+  & > .chart_container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    @media (max-width: _.$width-780) {
+      padding: 10px;
+    }
+    & > .empty_section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      color: _.$gray;
+      line-height: 1.6;
+      font-size: 0.9 * _.$base-font-size;
+      @media (max-width: _.$width-780) {
+        padding: 40px 20px;
+        font-size: 0.85 * _.$base-font-size;
+      }
+    }
+  }
+  & > .mobile_padding {
+    height: _.$footer-height;
+  }
+}

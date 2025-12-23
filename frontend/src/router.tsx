@@ -15,6 +15,7 @@ import {
 import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Main/Dashboard/Dashboard";
 import Details from "./pages/Main/Details/Details";
+import EarningAnalysis from "./pages/Main/EarningAnalysis/EarningAnalysis";
 import HandlingFee from "./pages/Main/HandlingFee/HandlingFee";
 import Main from "./pages/Main/Main";
 import Market from "./pages/Main/Market/Market";
@@ -50,6 +51,7 @@ const myRouter = createBrowserRouter(
         <Route path="market/holding/:sid" element={<Details />} />
         <Route path="market/favorites/:sid" element={<Details />} />
         <Route path="plans" element={<Plans />}></Route>
+        <Route path="earning-analysis" element={<EarningAnalysis />}></Route>
         <Route path="handling-fee" element={<HandlingFee />}></Route>
       </Route>
       <Route path="privacy-policy" element={<PrivacyPolicy />}></Route>
