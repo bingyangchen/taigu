@@ -7,13 +7,11 @@ import {
   DollarSign,
   MarketIndexLineChart,
   PercentSign,
-  RoundButton,
   SimpleCashInvestedLineChart,
   SpeedDial,
   SummaryCard,
   TradeRecordModal,
 } from "../../../components";
-import { IconFullScreen } from "../../../icons";
 import {
   getSidMarketValueMap,
   getTotalMarketValue,
@@ -254,9 +252,9 @@ class Dashboard extends React.Component<Props, State> {
                         </span>
                       </div>
                     </div>
-                    <RoundButton className="p-12" hint_text="查看詳情">
+                    {/* <RoundButton className="p-12" hint_text="查看詳情">
                       <IconFullScreen sideLength="14" />
-                    </RoundButton>
+                    </RoundButton> */}
                   </div>
                 </>
               )}
