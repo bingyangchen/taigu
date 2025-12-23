@@ -1,11 +1,10 @@
-import type { EChartsOption } from "echarts";
-import ReactECharts from "echarts-for-react";
 import React from "react";
 import { connect } from "react-redux";
 
 import {
   DollarSign,
   MarketIndexLineChart,
+  MarketValuePieChart,
   PercentSign,
   SimpleCashInvestedLineChart,
   SpeedDial,
@@ -302,41 +301,6 @@ class Dashboard extends React.Component<Props, State> {
     return null;
   }
 
-  private get marketValuePieChartOption(): EChartsOption {
-    const data = Object.entries(this.state.sidMarketValueMap)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
-    return {
-      tooltip: {
-        trigger: "item",
-        formatter: (params: any) => {
-          const percentage =
-            this.state.totalMarketValue > 0
-              ? ((params.value / this.state.totalMarketValue) * 100).toFixed(2)
-              : "0.00";
-          return `${params.name}<br/>市值: $${params.value.toLocaleString()}<br/>占比: ${percentage}%`;
-        },
-      },
-      series: [
-        {
-          type: "pie",
-          radius: ["65%", "95%"],
-          padAngle: 5,
-          avoidLabelOverlap: false,
-          itemStyle: { borderRadius: 10 },
-          label: { show: false },
-          emphasis: { label: { show: false } },
-          data: data,
-        },
-      ],
-      // prettier-ignore
-      color: [
-        "#5470c6", "#91cc75", "#fac858", "#ee6666", "#73c0de", "#3ba272", "#fc8452",
-        "#9a60b4", "#ea7ccc",
-      ],
-    };
-  }
-
   private get tseInfoDate(): string {
     return Object.values(this.props.tseIndexRealtimePrices)[0]?.date ?? "0000-00-00";
   }
@@ -534,9 +498,9 @@ class Dashboard extends React.Component<Props, State> {
       () => {
         this.setState({
           marketValuePieChart: (
-            <ReactECharts
-              option={this.marketValuePieChartOption}
-              style={{ height: "100%", width: "100%" }}
+            <MarketValuePieChart
+              sidMarketValueMap={this.state.sidMarketValueMap}
+              totalMarketValue={this.state.totalMarketValue}
             />
           ),
         });

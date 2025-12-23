@@ -22,6 +22,7 @@ export { default as ListRowActionBar } from "./ListRowActionBar/ListRowActionBar
 export { default as LoadingScreen } from "./LoadingScreen/LoadingScreen";
 export { default as MainSideBar } from "./MainSideBar/MainSideBar";
 export { default as MarketIndexLineChart } from "./MarketIndexLineChart/MarketIndexLineChart";
+export { default as MarketValuePieChart } from "./MarketValuePieChart/MarketValuePieChart";
 export { default as Modal } from "./Modal/Modal";
 export { default as NavTab } from "./NavTab/NavTab";
 export { default as PercentSign } from "./PercentSign/PercentSign";
