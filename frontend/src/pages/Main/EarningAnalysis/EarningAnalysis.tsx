@@ -3,7 +3,7 @@ import ReactECharts from "echarts-for-react";
 import React from "react";
 import { connect } from "react-redux";
 
-import { RoundButton } from "../../../components";
+import { RoundButton, SpeedDial } from "../../../components";
 import { IconChevronLeft } from "../../../icons";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
@@ -72,6 +72,7 @@ class EarningAnalysis extends React.Component<Props, State> {
 
     return (
       <div className={styles.main}>
+        {Util.isMobile && <SpeedDial />}
         {Util.isMobile && (
           <div
             className={`${styles.mobile_back_button_container} ${
