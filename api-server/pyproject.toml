@@ -8,7 +8,7 @@ authors = [
 readme = "README.md"
 requires-python = "==3.13.3"
 dependencies = [
-    "django (==5.2.5)",
+    "django (==5.2.8)",
     "gunicorn (==22.0.0)",
     "requests (==2.32.2)",
     "pyquery (==1.4.3)",
@@ -24,6 +24,7 @@ dependencies = [
     "redis (==5.0.8)",
     "pydantic (==2.8.2)",
     "psycopg[binary] (==3.2.9)",
+    "urllib3 (==2.6.0)",
 ]
 
 [build-system]
