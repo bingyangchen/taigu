@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.test import RequestFactory
 
 from main.stock import Frequency, TradeType
+from main.stock.cache import TimeSeriesStockInfo
 from main.stock.models import Company, History, StockInfo
 from main.stock.views.stock_info import (
     current_stock_info,
@@ -33,19 +34,24 @@ class TestMarketIndexView:
             }
         }
 
-    @patch("main.stock.views.stock_info.TimeSeriesStockInfoCacheManager")
+    @patch("main.stock.views.stock_info.TimeSeriesStockInfoCacheManager.get")
     def test_market_index_with_cache_hit(
         self,
-        mock_cache_manager_class: Mock,
+        mock_get: Mock,
         request_factory: RequestFactory,
         mock_cache_data: dict[str, Any],
     ) -> None:
         # Setup cache manager mock
-        mock_cache_manager = Mock()
-        mock_cache_result = Mock()
-        mock_cache_result.model_dump.return_value = mock_cache_data
-        mock_cache_manager.get.return_value = mock_cache_result
-        mock_cache_manager_class.return_value = mock_cache_manager
+        # Create a real TimeSeriesStockInfo object for the cache result
+        cache_result = TimeSeriesStockInfo.model_validate(mock_cache_data)
+
+        # Mock get to return the cache result for both TSE and OTC
+        def get_side_effect(market_id: str) -> TimeSeriesStockInfo | None:
+            if market_id in (TradeType.TSE, TradeType.OTC):
+                return cache_result
+            return None
+
+        mock_get.side_effect = get_side_effect
 
         request = request_factory.get("/api/stock/market-index/")
 
@@ -66,24 +72,33 @@ class TestMarketIndexView:
         assert data[TradeType.TSE] == expected_data
         assert data[TradeType.OTC] == expected_data
 
-    @patch("main.stock.views.stock_info.TimeSeriesStockInfoCacheManager")
+    @patch("main.stock.views.stock_info.TimeSeriesStockInfoCacheManager.get")
+    @patch("main.stock.views.stock_info.TimeSeriesStockInfoCacheManager.set")
     @patch("main.stock.views.stock_info.MarketIndexPerMinute.objects.filter")
     def test_market_index_with_cache_miss(
         self,
         mock_filter: Mock,
-        mock_cache_manager_class: Mock,
+        mock_set: Mock,
+        mock_get: Mock,
         request_factory: RequestFactory,
     ) -> None:
         # Setup cache manager mock (cache miss)
-        mock_cache_manager = Mock()
-        mock_cache_manager.get.return_value = None
-        mock_cache_manager_class.return_value = mock_cache_manager
+        mock_get.return_value = None
 
-        # Setup database query mock
-        mock_market_data = [
-            Mock(number=30, date=date(2023, 12, 1), price=15000.0, fluct_price=50.0),
-            Mock(number=60, date=date(2023, 12, 1), price=15050.0, fluct_price=100.0),
-        ]
+        # Setup database query mock - create proper Mock objects with all needed attributes
+        mock_row_30 = Mock()
+        mock_row_30.number = 30
+        mock_row_30.date = date(2023, 12, 1)
+        mock_row_30.price = 15000.0
+        mock_row_30.fluct_price = 50.0
+
+        mock_row_60 = Mock()
+        mock_row_60.number = 60
+        mock_row_60.date = date(2023, 12, 1)
+        mock_row_60.price = 15050.0
+        mock_row_60.fluct_price = 100.0
+
+        mock_market_data = [mock_row_30, mock_row_60]
         mock_filter.return_value = mock_market_data
 
         request = request_factory.get("/api/stock/market-index/")
@@ -98,7 +113,7 @@ class TestMarketIndexView:
         assert TradeType.OTC in data
 
         # Verify cache.set was called for each market
-        assert mock_cache_manager.set.call_count == 2
+        assert mock_set.call_count == 2
 
     def test_market_index_method_not_allowed(
         self, request_factory: RequestFactory

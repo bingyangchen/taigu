@@ -18,7 +18,18 @@ check_triggered_by_make() {
 
 load_env_vars() {
     if [ -f .env ]; then
-        export $(cat .env | grep -v '^#' | xargs)
+        set -a
+        while IFS= read -r line || [ -n "$line" ]; do
+            case "$line" in
+                ''|\#*)
+                    continue
+                    ;;
+                *)
+                    export "$line" 2>/dev/null || true
+                    ;;
+            esac
+        done < .env
+        set +a
     else
         printf "${YELLOW}Warning: .env file not found, using default values${RESET}\n"
     fi

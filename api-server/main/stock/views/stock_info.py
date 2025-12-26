@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 def market_index(request: HttpRequest) -> JsonResponse:
     result = {}
     for market_id in (TradeType.TSE, TradeType.OTC):
-        cache_manager = TimeSeriesStockInfoCacheManager()
-        cache_result = cache_manager.get(market_id)
-        if cache_result is not None:
+        if (cache_result := TimeSeriesStockInfoCacheManager.get(market_id)) is not None:
             data = cache_result.model_dump()["data"]
         else:
             data = {
@@ -28,8 +26,8 @@ def market_index(request: HttpRequest) -> JsonResponse:
                 }
                 for row in MarketIndexPerMinute.objects.filter(market=market_id)
             }
-            cache_manager.set(
-                market_id, TimeSeriesStockInfo.model_validate({"data": data}), 180
+            TimeSeriesStockInfoCacheManager.set(
+                market_id, TimeSeriesStockInfo.model_validate({"data": data}), 300
             )
         result[market_id] = data
     return JsonResponse(result)

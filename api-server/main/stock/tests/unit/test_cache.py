@@ -125,8 +125,7 @@ class TestTimeSeriesStockInfoCacheManager:
     def test_cache_manager_initialization(
         self, cache_manager: TimeSeriesStockInfoCacheManager
     ) -> None:
-        assert cache_manager.cache_name == "time_series_stock_info"
-        assert cache_manager.value_validator_model == TimeSeriesStockInfo
+        assert cache_manager._value_validator_model == TimeSeriesStockInfo
 
     def test_cache_manager_inheritance(self) -> None:
         # Test that it inherits from BaseCacheManager
@@ -149,7 +148,7 @@ class TestTimeSeriesStockInfoCacheManager:
         cache_manager.set("test_stock_id", time_series, 300)  # 5 minutes TTL
 
         mock_cache.set.assert_called_once_with(
-            "time_series_stock_info:test_stock_id", time_series, 300
+            "TimeSeriesStockInfoCacheManager:test_stock_id", time_series, 300
         )
 
     @patch("main.core.cache.cache")
@@ -166,7 +165,9 @@ class TestTimeSeriesStockInfoCacheManager:
 
         result = cache_manager.get("test_stock_id")
 
-        mock_cache.get.assert_called_once_with("time_series_stock_info:test_stock_id")
+        mock_cache.get.assert_called_once_with(
+            "TimeSeriesStockInfoCacheManager:test_stock_id"
+        )
         assert result == expected_time_series
 
     @patch("main.core.cache.cache")
@@ -177,7 +178,9 @@ class TestTimeSeriesStockInfoCacheManager:
 
         result = cache_manager.get("test_stock_id")
 
-        mock_cache.get.assert_called_once_with("time_series_stock_info:test_stock_id")
+        mock_cache.get.assert_called_once_with(
+            "TimeSeriesStockInfoCacheManager:test_stock_id"
+        )
         assert result is None
 
     @patch("main.core.cache.cache")
@@ -187,7 +190,7 @@ class TestTimeSeriesStockInfoCacheManager:
         cache_manager.delete("test_stock_id")
 
         mock_cache.delete.assert_called_once_with(
-            "time_series_stock_info:test_stock_id"
+            "TimeSeriesStockInfoCacheManager:test_stock_id"
         )
 
     @patch("main.core.cache.cache")
@@ -218,15 +221,19 @@ class TestTimeSeriesStockInfoCacheManager:
         # Test set
         cache_manager.set(stock_id, time_series, 300)
         mock_cache.set.assert_called_once_with(
-            f"time_series_stock_info:{stock_id}", time_series, 300
+            f"TimeSeriesStockInfoCacheManager:{stock_id}", time_series, 300
         )
 
         # Test get
         mock_cache.get.return_value = time_series
         result = cache_manager.get(stock_id)
-        mock_cache.get.assert_called_once_with(f"time_series_stock_info:{stock_id}")
+        mock_cache.get.assert_called_once_with(
+            f"TimeSeriesStockInfoCacheManager:{stock_id}"
+        )
         assert result == time_series
 
         # Test delete
         cache_manager.delete(stock_id)
-        mock_cache.delete.assert_called_once_with(f"time_series_stock_info:{stock_id}")
+        mock_cache.delete.assert_called_once_with(
+            f"TimeSeriesStockInfoCacheManager:{stock_id}"
+        )

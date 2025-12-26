@@ -19,6 +19,4 @@ class TimeSeriesStockInfo(BaseModel):
     data: dict[int, TimeSeriesStockInfoPointData]
 
 
-class TimeSeriesStockInfoCacheManager(BaseCacheManager[TimeSeriesStockInfo]):
-    cache_name = "time_series_stock_info"
-    value_validator_model = TimeSeriesStockInfo
+class TimeSeriesStockInfoCacheManager(BaseCacheManager[TimeSeriesStockInfo]): ...
