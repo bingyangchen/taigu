@@ -73,34 +73,21 @@ class EarningAnalysis extends React.Component<Props, State> {
     return (
       <div className={styles.main}>
         {Util.isMobile && <SpeedDial />}
-        {Util.isMobile && (
-          <div
-            className={`${styles.mobile_back_button_container} ${
-              this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-                ? styles.scrolled
-                : ""
-            }`}
+        <div
+          className={`${styles.back_button_container} ${
+            this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
+              ? styles.scrolled
+              : ""
+          }`}
+        >
+          <RoundButton
+            onClick={() => this.props.router.navigate(-1)}
+            className="p-12"
+            hint_text="回儀表板"
           >
-            <RoundButton
-              onClick={() => this.props.router.navigate(-1)}
-              className="p-12"
-              hint_text="回儀表板"
-            >
-              <IconChevronLeft sideLength="16" />
-            </RoundButton>
-          </div>
-        )}
-        {!Util.isMobile && (
-          <div className={styles.desktop_back_button_container}>
-            <RoundButton
-              onClick={() => this.props.router.navigate(-1)}
-              className="p-12"
-              hint_text="回儀表板"
-            >
-              <IconChevronLeft sideLength="16" />
-            </RoundButton>
-          </div>
-        )}
+            <IconChevronLeft sideLength="16" />
+          </RoundButton>
+        </div>
         <div className={styles.floating_pill_wrapper}>
           <div ref={this.containerRef} className={styles.floating_pill}>
             <div

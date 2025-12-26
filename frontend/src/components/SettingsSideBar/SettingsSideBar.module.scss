@@ -6,8 +6,8 @@
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  width: _.$function-bar-width;
-  min-width: _.$function-bar-width;
+  width: _.$side-bar-width;
+  min-width: _.$side-bar-width;
   background-color: _.$white;
   overflow-y: auto;
   border-right: 0.5px solid _.$light-gray;
