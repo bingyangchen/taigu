@@ -29,7 +29,14 @@ def market_index(request: HttpRequest) -> JsonResponse:
             TimeSeriesStockInfoCacheManager.set(
                 market_id, TimeSeriesStockInfo.model_validate({"data": data}), 300
             )
-        result[market_id] = data
+        first = next(iter(data.values())) if data else None
+        last = next(reversed(data.values())) if data else None
+        result["date"] = first["date"] if first else None
+        result[market_id] = {k: v["price"] for k, v in data.items()}
+        result[market_id]["yesterday_price"] = (
+            first["price"] - first["fluct_price"] if first else 0
+        )
+        result[market_id]["last_fluct_price"] = last["fluct_price"] if last else 0
     return JsonResponse(result)
 
 

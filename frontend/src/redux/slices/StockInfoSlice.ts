@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import type { IndexPriceInfo, MarketIndex, StockInfo } from "../../types";
+import type { MarketIndex, StockInfo } from "../../types";
 import Api from "../../utils/api";
 
 interface StockInfoState {
@@ -13,14 +13,22 @@ interface StockInfoState {
     };
   };
   isWaitingHistoricalPrices: boolean;
-  tseIndexRealtimePrices: { [number: string]: IndexPriceInfo };
-  otcIndexRealtimePrices: { [number: string]: IndexPriceInfo };
+  realtimePriceDate: string;
+  tseIndexRealtimePrices: { [number: string]: number } & {
+    yesterday_price?: number;
+    last_fluct_price?: number;
+  };
+  otcIndexRealtimePrices: { [number: string]: number } & {
+    yesterday_price?: number;
+    last_fluct_price?: number;
+  };
 }
 
 const initialState: StockInfoState = {
   sidStockInfoMap: {},
   sidHistoricalPricesMap: {},
   isWaitingHistoricalPrices: false,
+  realtimePriceDate: "0000-00-00",
   tseIndexRealtimePrices: {},
   otcIndexRealtimePrices: {},
 };
@@ -85,6 +93,7 @@ export const stockInfoSlice = createSlice({
   initialState,
   reducers: {
     refreshMarketIndexWithNonCacheResponse(state, action: PayloadAction<MarketIndex>) {
+      state.realtimePriceDate = action.payload.date || "0000-00-00";
       state.tseIndexRealtimePrices = action.payload.tse;
       state.otcIndexRealtimePrices = action.payload.otc;
     },
@@ -93,6 +102,7 @@ export const stockInfoSlice = createSlice({
     builder
       .addCase(fetchRealtimeMarketIndex.pending, () => {})
       .addCase(fetchRealtimeMarketIndex.fulfilled, (state, action) => {
+        state.realtimePriceDate = action.payload.date || "0000-00-00";
         state.tseIndexRealtimePrices = action.payload.tse;
         state.otcIndexRealtimePrices = action.payload.otc;
       })

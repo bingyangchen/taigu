@@ -17,7 +17,6 @@ import {
 } from "../../../redux/slices/StockInfoSlice";
 import type { RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
-import { IndexPriceInfo } from "../../../types";
 import Env from "../../../utils/env";
 import Util from "../../../utils/util";
 import styles from "./Dashboard.module.scss";
@@ -33,8 +32,12 @@ function mapStateToProps(rootState: RootState) {
     averageCashInvested,
   } = rootState.tradeRecord;
   const { cashDividendRecords } = rootState.cashDividend;
-  const { sidStockInfoMap, tseIndexRealtimePrices, otcIndexRealtimePrices } =
-    rootState.stockInfo;
+  const {
+    sidStockInfoMap,
+    realtimePriceDate,
+    tseIndexRealtimePrices,
+    otcIndexRealtimePrices,
+  } = rootState.stockInfo;
   const { handlingFeeDiscountRecords } = rootState.handlingFeeDiscount;
   return {
     tradeRecords,
@@ -47,6 +50,7 @@ function mapStateToProps(rootState: RootState) {
     averageCashInvested,
     sidStockInfoMap,
     stockWarehouse,
+    realtimePriceDate,
     tseIndexRealtimePrices,
     otcIndexRealtimePrices,
   };
@@ -152,18 +156,16 @@ class Dashboard extends React.Component<Props, State> {
             <div className={styles.market_index}>
               <div className={styles.left}>
                 <div className={styles.title}>加權指數</div>
-                <div className={styles.date}>{this.tseInfoDate}</div>
+                <div className={styles.date}>{this.props.realtimePriceDate}</div>
               </div>
               <div className={styles.chart_container}>
                 {this.state.tseIndexLineChart}
               </div>
-              <div className={`${styles.price} ${this.getIndexPriceExtraClass("tse")}`}>
-                <div className={styles.price}>
-                  {this.latestTsePriceInfo?.price ?? 0}
-                </div>
+              <div className={`${styles.price} ${this.getIndexPriceClass("tse")}`}>
+                <div className={styles.price}>{this.latestTsePrice}</div>
                 <div className={styles.fluct_price}>
                   {this.getIndexFluctPriceText(
-                    this.latestTsePriceInfo?.fluct_price ?? 0,
+                    this.props.tseIndexRealtimePrices.last_fluct_price ?? 0,
                   )}{" "}
                   {this.getIndexFluctPercentText(this.latestTseFluctPercent)}
                 </div>
@@ -172,18 +174,16 @@ class Dashboard extends React.Component<Props, State> {
             <div className={styles.market_index}>
               <div className={styles.left}>
                 <div className={styles.title}>櫃買指數</div>
-                <div className={styles.date}>{this.otcInfoDate}</div>
+                <div className={styles.date}>{this.props.realtimePriceDate}</div>
               </div>
               <div className={styles.chart_container}>
                 {this.state.otcIndexLineChart}
               </div>
-              <div className={`${styles.price} ${this.getIndexPriceExtraClass("otc")}`}>
-                <div className={styles.price}>
-                  {this.latestOtcPriceInfo?.price ?? 0}
-                </div>
+              <div className={`${styles.price} ${this.getIndexPriceClass("otc")}`}>
+                <div className={styles.price}>{this.latestOtcPrice}</div>
                 <div className={styles.fluct_price}>
                   {this.getIndexFluctPriceText(
-                    this.latestOtcPriceInfo?.fluct_price ?? 0,
+                    this.props.otcIndexRealtimePrices.last_fluct_price ?? 0,
                   )}{" "}
                   {this.getIndexFluctPercentText(this.latestOtcFluctPercent)}
                 </div>
@@ -301,69 +301,55 @@ class Dashboard extends React.Component<Props, State> {
     return null;
   }
 
-  private get tseInfoDate(): string {
-    return Object.values(this.props.tseIndexRealtimePrices)[0]?.date ?? "0000-00-00";
+  private get latestTsePrice(): number {
+    const numbers = Object.keys(this.props.tseIndexRealtimePrices)
+      .map((k) => parseInt(k))
+      .filter((n) => !Number.isNaN(n));
+    if (numbers.length === 0) return 0;
+    const maxNum = Math.max(...numbers);
+    return this.props.tseIndexRealtimePrices[maxNum.toString()] ?? 0;
   }
 
-  private get otcInfoDate(): string {
-    return Object.values(this.props.otcIndexRealtimePrices)[0]?.date ?? "0000-00-00";
-  }
-
-  private get latestTsePriceInfo(): IndexPriceInfo | null {
-    const maxNum = Math.max(
-      ...Object.keys(this.props.tseIndexRealtimePrices).map((k) => parseInt(k)),
-    );
-    return this.props.tseIndexRealtimePrices[maxNum.toString()] ?? null;
-  }
-
-  private get latestOtcPriceInfo(): IndexPriceInfo | null {
-    const maxNum = Math.max(
-      ...Object.keys(this.props.otcIndexRealtimePrices).map((k) => parseInt(k)),
-    );
-    return this.props.otcIndexRealtimePrices[maxNum.toString()] ?? null;
+  private get latestOtcPrice(): number {
+    const numbers = Object.keys(this.props.otcIndexRealtimePrices)
+      .map((k) => parseInt(k))
+      .filter((n) => !Number.isNaN(n));
+    if (numbers.length === 0) return 0;
+    const maxNum = Math.max(...numbers);
+    return this.props.otcIndexRealtimePrices[maxNum.toString()] ?? 0;
   }
 
   private get latestTseFluctPercent(): number {
-    const latestTseFluctPrice = this.latestTsePriceInfo?.fluct_price ?? 0;
+    const latestTseFluctPrice = this.props.tseIndexRealtimePrices.last_fluct_price ?? 0;
     return (
       Math.round(
-        (latestTseFluctPrice /
-          ((this.latestTsePriceInfo?.price ?? 0) + latestTseFluctPrice)) *
-          10000,
+        (latestTseFluctPrice / (this.latestTsePrice + latestTseFluctPrice)) * 10000,
       ) / 100
     );
   }
 
   private get latestOtcFluctPercent(): number {
-    const latestOtcFluctPrice = this.latestOtcPriceInfo?.fluct_price ?? 0;
+    const latestOtcFluctPrice = this.props.otcIndexRealtimePrices.last_fluct_price ?? 0;
     return (
       Math.round(
-        (latestOtcFluctPrice /
-          ((this.latestOtcPriceInfo?.price ?? 0) + latestOtcFluctPrice)) *
-          10000,
+        (latestOtcFluctPrice / (this.latestOtcPrice + latestOtcFluctPrice)) * 10000,
       ) / 100
     );
   }
 
-  private getIndexPriceExtraClass(index: "tse" | "otc"): string {
+  private getIndexPriceClass(index: "tse" | "otc"): string {
     if (index === "tse") {
-      const latestTsePrice = this.latestTsePriceInfo?.price ?? 0;
-      const prevTseClosePrice =
-        (Object.values(this.props.tseIndexRealtimePrices)[0]?.price ?? 0) -
-        (Object.values(this.props.tseIndexRealtimePrices)[0]?.fluct_price ?? 0);
-      return latestTsePrice > prevTseClosePrice
+      return this.latestTsePrice >
+        (this.props.tseIndexRealtimePrices.yesterday_price ?? 0)
         ? styles.red
-        : latestTsePrice < prevTseClosePrice
+        : this.latestTsePrice < (this.props.tseIndexRealtimePrices.yesterday_price ?? 0)
           ? styles.green
           : styles.gray;
     } else {
-      const latestOtcPrice = this.latestOtcPriceInfo?.price ?? 0;
-      const prevOtcClosePrice =
-        (Object.values(this.props.otcIndexRealtimePrices)[0]?.price ?? 0) -
-        (Object.values(this.props.otcIndexRealtimePrices)[0]?.fluct_price ?? 0);
-      return latestOtcPrice > prevOtcClosePrice
+      return this.latestOtcPrice >
+        (this.props.otcIndexRealtimePrices.yesterday_price ?? 0)
         ? styles.red
-        : latestOtcPrice < prevOtcClosePrice
+        : this.latestOtcPrice < (this.props.otcIndexRealtimePrices.yesterday_price ?? 0)
           ? styles.green
           : styles.gray;
     }
@@ -426,7 +412,7 @@ class Dashboard extends React.Component<Props, State> {
             i.toString(),
           )
         ) {
-          tseChartData.push([i, props.tseIndexRealtimePrices[i].price]);
+          tseChartData.push([i, props.tseIndexRealtimePrices[i]]);
         } else tseChartData.push([i, null]);
       }
 
@@ -438,28 +424,21 @@ class Dashboard extends React.Component<Props, State> {
             i.toString(),
           )
         ) {
-          otcChartData.push([i, props.otcIndexRealtimePrices[i].price]);
+          otcChartData.push([i, props.otcIndexRealtimePrices[i]]);
         } else otcChartData.push([i, null]);
       }
-
-      const prevTseClosePrice =
-        (Object.values(this.props.tseIndexRealtimePrices)[0]?.price ?? 0) -
-        (Object.values(this.props.tseIndexRealtimePrices)[0]?.fluct_price ?? 0);
-      const prevOtcClosePrice =
-        (Object.values(this.props.otcIndexRealtimePrices)[0]?.price ?? 0) -
-        (Object.values(this.props.otcIndexRealtimePrices)[0]?.fluct_price ?? 0);
 
       return {
         tseIndexLineChart: (
           <MarketIndexLineChart
             data={tseChartData}
-            prevClosePrice={prevTseClosePrice}
+            prevClosePrice={this.props.tseIndexRealtimePrices.yesterday_price ?? 0}
           />
         ),
         otcIndexLineChart: (
           <MarketIndexLineChart
             data={otcChartData}
-            prevClosePrice={prevOtcClosePrice}
+            prevClosePrice={this.props.otcIndexRealtimePrices.yesterday_price ?? 0}
           />
         ),
       };
