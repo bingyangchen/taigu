@@ -81,8 +81,6 @@ export type StockInfo = {
   fluct_price: number;
 };
 
-export type IndexPriceInfo = { date: string; fluct_price: number; price: number };
-
 export type TradePlan = {
   id: string;
   sid: string;
@@ -123,6 +121,13 @@ export type UpdateHandlingFeeDiscountRequestBody = {
 };
 
 export type MarketIndex = {
-  tse: { [number: string]: { date: string; fluct_price: number; price: number } };
-  otc: { [number: string]: { date: string; fluct_price: number; price: number } };
+  date: string;
+  tse: { [number: string]: number } & {
+    yesterday_price?: number;
+    last_fluct_price?: number;
+  };
+  otc: { [number: string]: number } & {
+    yesterday_price?: number;
+    last_fluct_price?: number;
+  };
 };
