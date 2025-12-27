@@ -41,11 +41,8 @@ class TestMarketIndexView:
         request_factory: RequestFactory,
         mock_cache_data: dict[str, Any],
     ) -> None:
-        # Setup cache manager mock
-        # Create a real TimeSeriesStockInfo object for the cache result
         cache_result = TimeSeriesStockInfo.model_validate(mock_cache_data)
 
-        # Mock get to return the cache result for both TSE and OTC
         def get_side_effect(market_id: str) -> TimeSeriesStockInfo | None:
             if market_id in (TradeType.TSE, TradeType.OTC):
                 return cache_result
@@ -63,11 +60,14 @@ class TestMarketIndexView:
         data = json.loads(response.content)
         assert TradeType.TSE in data
         assert TradeType.OTC in data
+        assert "date" in data
+        assert data["date"] == "2023-12-01"
 
-        # JSON serialization converts integer keys to strings and dates to strings
         expected_data = {
-            "30": {"date": "2023-12-01", "price": 15000.0, "fluct_price": 50.0},
-            "60": {"date": "2023-12-01", "price": 15050.0, "fluct_price": 100.0},
+            "30": 15000.0,
+            "60": 15050.0,
+            "yesterday_price": 14950.0,
+            "last_fluct_price": 100.0,
         }
         assert data[TradeType.TSE] == expected_data
         assert data[TradeType.OTC] == expected_data
@@ -82,10 +82,8 @@ class TestMarketIndexView:
         mock_get: Mock,
         request_factory: RequestFactory,
     ) -> None:
-        # Setup cache manager mock (cache miss)
         mock_get.return_value = None
 
-        # Setup database query mock - create proper Mock objects with all needed attributes
         mock_row_30 = Mock()
         mock_row_30.number = 30
         mock_row_30.date = date(2023, 12, 1)
@@ -112,7 +110,6 @@ class TestMarketIndexView:
         assert TradeType.TSE in data
         assert TradeType.OTC in data
 
-        # Verify cache.set was called for each market
         assert mock_set.call_count == 2
 
     def test_market_index_method_not_allowed(
@@ -120,10 +117,8 @@ class TestMarketIndexView:
     ) -> None:
         request = request_factory.post("/api/stock/market-index/")
 
-        # The @require_GET decorator returns a 405 response for disallowed methods
         response = market_index(request)
 
-        # Django's require_GET returns HttpResponseNotAllowed, not JsonResponse
         assert response.status_code == 405
 
 
@@ -282,9 +277,8 @@ class TestHistoricalPricesView:
 
         data = json.loads(response.content)
         assert "data" in data
-        assert len(data["data"]) == 2  # Only daily records
+        assert len(data["data"]) == 2
 
-        # Check data structure
         for item in data["data"]:
             assert "date" in item
             assert "price" in item
@@ -303,7 +297,7 @@ class TestHistoricalPricesView:
 
         data = json.loads(response.content)
         assert "data" in data
-        assert len(data["data"]) == 1  # Only weekly record
+        assert len(data["data"]) == 1
 
     def test_historical_prices_with_monthly_frequency(
         self, request_factory: RequestFactory, history_records: list[History]
@@ -319,7 +313,7 @@ class TestHistoricalPricesView:
 
         data = json.loads(response.content)
         assert "data" in data
-        assert len(data["data"]) == 0  # No monthly records
+        assert len(data["data"]) == 0
 
     def test_historical_prices_nonexistent_company(
         self, request_factory: RequestFactory
@@ -425,7 +419,6 @@ class TestSearchView:
 
         data = json.loads(response.content)
         assert "data" in data
-        # Should match "2330" (stock ID containing "23")
         assert len(data["data"]) >= 1
         assert any(item["sid"] == "2330" for item in data["data"])
 
@@ -475,7 +468,6 @@ class TestSearchView:
         assert len(data["data"]) == 0
 
     def test_search_limit_results(self, request_factory: RequestFactory) -> None:
-        # Create more than 30 companies to test the limit
         for i in range(35):
             company = Company.objects.create(
                 stock_id=f"TEST{i:02d}",
@@ -500,5 +492,4 @@ class TestSearchView:
 
         data = json.loads(response.content)
         assert "data" in data
-        # Should be limited to 30 results
         assert len(data["data"]) == 30
