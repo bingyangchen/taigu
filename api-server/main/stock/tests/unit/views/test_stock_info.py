@@ -84,20 +84,24 @@ class TestMarketIndexView:
     ) -> None:
         mock_get.return_value = None
 
-        mock_row_30 = Mock()
-        mock_row_30.number = 30
-        mock_row_30.date = date(2023, 12, 1)
-        mock_row_30.price = 15000.0
-        mock_row_30.fluct_price = 50.0
+        mock_row_30 = {
+            "number": 30,
+            "date": date(2023, 12, 1),
+            "price": 15000.0,
+            "fluct_price": 50.0,
+        }
 
-        mock_row_60 = Mock()
-        mock_row_60.number = 60
-        mock_row_60.date = date(2023, 12, 1)
-        mock_row_60.price = 15050.0
-        mock_row_60.fluct_price = 100.0
+        mock_row_60 = {
+            "number": 60,
+            "date": date(2023, 12, 1),
+            "price": 15050.0,
+            "fluct_price": 100.0,
+        }
 
         mock_market_data = [mock_row_30, mock_row_60]
-        mock_filter.return_value = mock_market_data
+        mock_queryset = Mock()
+        mock_queryset.values.return_value.order_by.return_value = mock_market_data
+        mock_filter.return_value = mock_queryset
 
         request = request_factory.get("/api/stock/market-index/")
 
