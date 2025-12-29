@@ -3,5 +3,7 @@
 .avatar_preview {
   margin: 0 auto;
   width: 100px;
+  aspect-ratio: 1;
+  object-fit: cover;
   border-radius: 100px;
 }

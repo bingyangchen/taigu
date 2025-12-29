@@ -88,7 +88,7 @@ class Overview extends React.Component<Props, State> {
                     <div className={styles.avatar_container}>
                       <img
                         className={styles.avatar}
-                        src={this.props.avatar_url || imgPersonFill}
+                        src={this.props.avatar_url ?? imgPersonFill}
                         alt=""
                       />
                     </div>
