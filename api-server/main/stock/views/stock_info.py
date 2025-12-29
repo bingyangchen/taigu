@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 @require_GET
 def market_index(request: HttpRequest) -> JsonResponse:
-    result = {}
+    result: dict = {"date": None}
     for market_id in (TradeType.TSE, TradeType.OTC):
         if (cache_result := TimeSeriesStockInfoCacheManager.get(market_id)) is not None:
-            data = cache_result.model_dump()["data"]
+            data: dict = cache_result.model_dump()["data"]
         else:
             data = {
                 row["number"]: {
@@ -24,21 +24,21 @@ def market_index(request: HttpRequest) -> JsonResponse:
                     "price": row["price"],
                     "fluct_price": row["fluct_price"],
                 }
-                for row in MarketIndexPerMinute.objects.filter(market=market_id)
-                .values("number", "date", "price", "fluct_price")
-                .order_by("number")
+                for row in MarketIndexPerMinute.objects.filter(market=market_id).values(
+                    "number", "date", "price", "fluct_price"
+                )
             }
             TimeSeriesStockInfoCacheManager.set(
                 market_id, TimeSeriesStockInfo.model_validate({"data": data}), 300
             )
-        first = next(iter(data.values())) if data else None
-        last = next(reversed(data.values())) if data else None
-        result["date"] = first["date"] if first else None
+        data = dict(sorted(data.items(), key=lambda item: item[0], reverse=True))
         result[market_id] = {k: v["price"] for k, v in data.items()}
-        result[market_id]["yesterday_price"] = (
-            first["price"] - first["fluct_price"] if first else 0
-        )
-        result[market_id]["last_fluct_price"] = last["fluct_price"] if last else 0
+        result[market_id]["yesterday_price"] = 0
+        result[market_id]["last_fluct_price"] = 0
+        if last := (next(iter(data.values())) if data else None):
+            result["date"] = last["date"]
+            result[market_id]["yesterday_price"] = last["price"] - last["fluct_price"]
+            result[market_id]["last_fluct_price"] = last["fluct_price"]
     return JsonResponse(result)
 
 
