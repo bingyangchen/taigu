@@ -2,54 +2,13 @@
 
 .main {
   position: sticky;
-  top: -1 * _.$show-header-border-boundary;
-  display: block;
-  height: _.$header-height + _.$show-header-border-boundary;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: _.$header-height;
+  padding: 0 12px 0 8px;
+  font-weight: 500;
+  color: _.$black;
   z-index: 2;
-  backface-visibility: hidden;
-  &.gray {
-    & > .main_inner {
-      background-color: _.$noisy-white;
-    }
-    &::after {
-      background: _.$noisy-white;
-    }
-  }
-  &::before,
-  &::after {
-    content: "";
-    position: sticky;
-    display: block;
-    height: _.$show-header-border-boundary;
-  }
-  &::before {
-    top: _.$header-height - _.$show-header-border-boundary;
-    box-shadow: 0 0 0 1px _.$noisy-white;
-  }
-  &::after {
-    top: 0;
-    background: _.$white;
-    z-index: 3;
-  }
-  & > .main_inner {
-    position: sticky;
-    top: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    height: _.$header-height;
-    width: 100%;
-    margin-top: -1 * _.$show-header-border-boundary;
-    padding: 0 12px 0 8px;
-    background-color: _.$white;
-    font-weight: 500;
-    color: _.$black;
-    z-index: 4;
-    & > .left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-  }
 }

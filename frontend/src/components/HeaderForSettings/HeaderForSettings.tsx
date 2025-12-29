@@ -6,7 +6,6 @@ import { IconChevronLeft } from "../../icons";
 import type { RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
-import Nav from "../../utils/nav";
 import styles from "./HeaderForSettings.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -24,26 +23,22 @@ class HeaderForSettings extends React.Component<Props, State> {
     super(props);
     this.state = {};
   }
+
   public render(): React.ReactNode {
     return (
-      <header
-        className={`${styles.main} ${Nav.isAtSettingsOverviewPage ? styles.gray : ""}`}
-      >
-        <div className={styles.main_inner}>
-          <div className={styles.left}>
-            <RoundButton
-              className="p-12"
-              hint_text="上一頁"
-              onClick={this.goToParentDirectory}
-            >
-              <IconChevronLeft sideLength="16" />
-            </RoundButton>
-            {this.props.headerTitle}
-          </div>
-        </div>
+      <header className={styles.main}>
+        <RoundButton
+          className="p-12"
+          hint_text="上一頁"
+          onClick={this.goToParentDirectory}
+        >
+          <IconChevronLeft sideLength="16" />
+        </RoundButton>
+        {this.props.headerTitle}
       </header>
     );
   }
+
   private goToParentDirectory = (): void => {
     let currentPath = this.props.router.location.pathname;
     if (currentPath[currentPath.length - 1] === "/") {

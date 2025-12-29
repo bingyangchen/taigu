@@ -6,6 +6,7 @@
   border: 1px solid _.$light-gray;
   border-radius: 15px;
   padding: 10px 15px;
+  background-color: _.$white;
   & > .header {
     display: flex;
     align-items: center;
@@ -34,11 +35,5 @@
     margin-top: 20px;
     padding: 10px 8px;
     background-color: _.$white;
-  }
-}
-
-@media screen and (max-width: _.$width-780) {
-  .main {
-    border: none;
   }
 }
