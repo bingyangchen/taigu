@@ -172,8 +172,8 @@ def _store_market_per_minute_info(
     now = (datetime.now(UTC) + timedelta(hours=8)).time()
     minutes_after_opening = (now.hour - 9) * 60 + now.minute
 
-    # Do nothing during 13:30 ~ 13:58
-    if 269 < minutes_after_opening < 298:
+    # Do nothing when at 9:00 or during 13:30 ~ 13:58
+    if minutes_after_opening == 0 or (269 < minutes_after_opening < 298):
         return
 
     # Convert the last few minutes to 270

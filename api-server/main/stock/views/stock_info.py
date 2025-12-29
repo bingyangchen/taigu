@@ -19,12 +19,14 @@ def market_index(request: HttpRequest) -> JsonResponse:
             data = cache_result.model_dump()["data"]
         else:
             data = {
-                row.number: {
-                    "date": row.date,
-                    "price": row.price,
-                    "fluct_price": row.fluct_price,
+                row["number"]: {
+                    "date": row["date"],
+                    "price": row["price"],
+                    "fluct_price": row["fluct_price"],
                 }
                 for row in MarketIndexPerMinute.objects.filter(market=market_id)
+                .values("number", "date", "price", "fluct_price")
+                .order_by("number")
             }
             TimeSeriesStockInfoCacheManager.set(
                 market_id, TimeSeriesStockInfo.model_validate({"data": data}), 300
