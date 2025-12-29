@@ -5,26 +5,17 @@
   flex-direction: column;
   width: min(100%, 720px);
   height: fit-content;
-  border: 1px solid _.$light-gray;
-  border-radius: 15px;
   overflow-x: hidden;
-  @media (max-width: _.$width-780) {
-    border: none;
-  }
-  @media (max-width: _.$width-512) {
-    border-radius: 0;
-  }
   & > .title {
     font-size: 0.8 * _.$base-font-size;
-    font-weight: normal;
-    padding: 0 18px;
-    margin: 16px 0 10px;
+    font-weight: 500;
+    padding: 0 15px;
+    margin: 20px 0 10px;
     color: _.$gray;
-    @media (max-width: _.$width-780) {
-      padding: 0 10px;
-    }
-    @media (max-width: _.$width-512) {
-      display: none;
-    }
+  }
+  & > .content {
+    background-color: _.$white;
+    border-radius: 20px;
+    overflow: hidden;
   }
 }

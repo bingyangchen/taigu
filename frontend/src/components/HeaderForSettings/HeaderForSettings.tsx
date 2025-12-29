@@ -6,6 +6,7 @@ import { IconChevronLeft } from "../../icons";
 import type { RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
+import Nav from "../../utils/nav";
 import styles from "./HeaderForSettings.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -25,7 +26,9 @@ class HeaderForSettings extends React.Component<Props, State> {
   }
   public render(): React.ReactNode {
     return (
-      <header className={styles.main}>
+      <header
+        className={`${styles.main} ${Nav.isAtSettingsOverviewPage ? styles.gray : ""}`}
+      >
         <div className={styles.main_inner}>
           <div className={styles.left}>
             <RoundButton

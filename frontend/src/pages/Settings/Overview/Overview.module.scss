@@ -2,6 +2,7 @@
 
 .main {
   display: flex;
+  min-height: calc(100% - _.$header-height - _.$show-header-border-boundary);
   width: 100%;
   & > .body {
     position: relative;
@@ -11,9 +12,10 @@
     flex-grow: 1;
     padding-bottom: 50px;
     scroll-behavior: smooth;
+    background-color: _.$noisy-white;
     & > .section {
       width: min(93%, 720px);
-      padding: 20px 0;
+      padding: 5px 0;
       @media (max-width: _.$width-780) {
         padding: 0;
       }

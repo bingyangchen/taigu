@@ -9,19 +9,13 @@
   padding: 20px;
   gap: 20px;
   transition-duration: 150ms;
-  @media (max-width: _.$width-780) {
-    padding: 20px 10px;
-  }
   &:not(:last-child) {
     border-bottom: 1px solid _.$noisy-white;
-    @media (max-width: _.$width-780) {
-      border: none;
-    }
   }
   @media (hover: hover) {
     &.reactive:hover {
       cursor: pointer;
-      background-color: _.$transparent-black;
+      background-color: rgba(0, 0, 0, 0.015);
       & > .tail_mark {
         color: _.$gray;
       }

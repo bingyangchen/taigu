@@ -4,7 +4,7 @@ import styles from "./BeautifulBlock.module.scss";
 
 interface Props {
   title?: string;
-  children: any;
+  children: React.ReactNode;
 }
 
 interface State {}
@@ -19,7 +19,7 @@ export default class BeautifulBlock extends React.Component<Props, State> {
     return (
       <div className={styles.main}>
         {this.props.title && <h2 className={styles.title}>{this.props.title}</h2>}
-        {this.props.children}
+        <div className={styles.content}>{this.props.children}</div>
       </div>
     );
   }

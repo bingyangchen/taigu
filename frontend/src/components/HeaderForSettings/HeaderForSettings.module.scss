@@ -7,6 +7,14 @@
   height: _.$header-height + _.$show-header-border-boundary;
   z-index: 2;
   backface-visibility: hidden;
+  &.gray {
+    & > .main_inner {
+      background-color: _.$noisy-white;
+    }
+    &::after {
+      background: _.$noisy-white;
+    }
+  }
   &::before,
   &::after {
     content: "";
@@ -35,7 +43,6 @@
     margin-top: -1 * _.$show-header-border-boundary;
     padding: 0 12px 0 8px;
     background-color: _.$white;
-    font-size: 1.1 * _.$base-font-size;
     font-weight: 500;
     color: _.$black;
     z-index: 4;
