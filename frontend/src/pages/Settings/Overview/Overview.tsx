@@ -62,7 +62,7 @@ class Overview extends React.Component<Props, State> {
       //     path: "#notification",
       // },
       { icon: <IconInfoCircle sideLength="100%" />, name: "關於", path: "#about" },
-      { icon: <IconUser sideLength="100%" />, name: "登入", path: "#login" },
+      { icon: <IconUser sideLength="100%" />, name: "登出", path: "#logout" },
     ];
   }
   public componentDidMount(): void {
@@ -206,8 +206,8 @@ class Overview extends React.Component<Props, State> {
                 </BeautifulRow>
               </BeautifulBlock>
             </div>
-            <div id="login" className={styles.section}>
-              <BeautifulBlock title="登入">
+            <div id="logout" className={styles.section}>
+              <BeautifulBlock>
                 <BeautifulRow
                   onClick={() => {
                     this.setState({ activeModalName: "checkLogout" });

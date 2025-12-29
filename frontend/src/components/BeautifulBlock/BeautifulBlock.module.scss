@@ -6,11 +6,12 @@
   width: min(100%, 720px);
   height: fit-content;
   overflow-x: hidden;
+  padding-top: 20px;
   & > .title {
     font-size: 0.8 * _.$base-font-size;
     font-weight: 500;
     padding: 0 15px;
-    margin: 20px 0 10px;
+    margin: 0 0 10px;
     color: _.$gray;
   }
   & > .content {
