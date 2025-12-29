@@ -100,7 +100,7 @@ class TestMarketIndexView:
 
         mock_market_data = [mock_row_30, mock_row_60]
         mock_queryset = Mock()
-        mock_queryset.values.return_value.order_by.return_value = mock_market_data
+        mock_queryset.values.return_value = mock_market_data
         mock_filter.return_value = mock_queryset
 
         request = request_factory.get("/api/stock/market-index/")
