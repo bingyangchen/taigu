@@ -11,6 +11,7 @@ import {
   SettingsSideBar,
 } from "../../../components";
 import {
+  IconDatabaseManagement,
   IconEnvelope,
   IconExclamation,
   IconExit,
@@ -49,11 +50,7 @@ class Overview extends React.Component<Props, State> {
     super(props);
     this.state = { activeModalName: null };
     this.subpages = [
-      {
-        icon: <IconPersonVcard sideLength="100%" />,
-        name: "基本資訊",
-        path: "#basic-info",
-      },
+      { icon: <IconPersonVcard sideLength="100%" />, name: "帳號", path: "#account" },
       // {
       //     icon: <IconCreditCard sideLength="100%" />,
       //     name: "付款與方案",
@@ -65,7 +62,7 @@ class Overview extends React.Component<Props, State> {
       //     path: "#notification",
       // },
       { icon: <IconInfoCircle sideLength="100%" />, name: "關於", path: "#about" },
-      { icon: <IconUser sideLength="100%" />, name: "登入", path: "#account" },
+      { icon: <IconUser sideLength="100%" />, name: "登入", path: "#login" },
     ];
   }
   public componentDidMount(): void {
@@ -78,8 +75,8 @@ class Overview extends React.Component<Props, State> {
         <div className={styles.main}>
           {!Util.isMobile && <SettingsSideBar subpages={this.subpages} />}
           <div className={styles.body}>
-            <div id="basic-info" className={styles.section}>
-              <BeautifulBlock title="基本資訊">
+            <div id="account" className={styles.section}>
+              <BeautifulBlock title="帳號">
                 <BeautifulRow
                   onClick={() =>
                     this.props.router.navigate(
@@ -112,6 +109,18 @@ class Overview extends React.Component<Props, State> {
                       <div>{this.props.email}</div>
                     </div>
                     <img src={googleLogo} alt="" className={styles.google_logo} />
+                  </div>
+                </BeautifulRow>
+                <BeautifulRow
+                  onClick={() =>
+                    this.props.router.navigate(
+                      `${Env.frontendRootPath}${settingsPagePath}/data-controls`,
+                    )
+                  }
+                >
+                  <div className={`${styles.row_inner} ${styles.terms_of_service}`}>
+                    <IconDatabaseManagement sideLength="16px" />
+                    資料控制
                   </div>
                 </BeautifulRow>
               </BeautifulBlock>
@@ -197,7 +206,7 @@ class Overview extends React.Component<Props, State> {
                 </BeautifulRow>
               </BeautifulBlock>
             </div>
-            <div id="account" className={styles.section}>
+            <div id="login" className={styles.section}>
               <BeautifulBlock title="登入">
                 <BeautifulRow
                   onClick={() => {

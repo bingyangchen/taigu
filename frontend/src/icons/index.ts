@@ -10,6 +10,7 @@ export { default as IconClockHistory } from "./IconClockHistory";
 export { default as IconClockHistoryBold } from "./IconClockHistoryBold";
 export { default as IconCoin } from "./IconCoin";
 export { default as IconCreditCard } from "./IconCreditCard";
+export { default as IconDatabaseManagement } from "./IconDatabaseManagement";
 export { default as IconEnvelope } from "./IconEnvelope";
 export { default as IconExclamation } from "./IconExclamation";
 export { default as IconExit } from "./IconExit";

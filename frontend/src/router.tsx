@@ -24,6 +24,7 @@ import Records from "./pages/Main/Records/Records";
 import NotFound from "./pages/NotFound/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy";
 import AccountBinding from "./pages/Settings/AccountBinding/AccountBinding";
+import DataControls from "./pages/Settings/DataControls/DataControls";
 import Overview from "./pages/Settings/Overview/Overview";
 import Settings from "./pages/Settings/Settings";
 import UserInfo from "./pages/Settings/UserInfo/UserInfo";
@@ -42,6 +43,7 @@ const myRouter = createBrowserRouter(
         <Route path="" element={<Overview />}></Route>
         <Route path="user-info" element={<UserInfo />}></Route>
         <Route path="account-binding" element={<AccountBinding />}></Route>
+        <Route path="data-controls" element={<DataControls />}></Route>
       </Route>
       <Route path="" element={<Main />}>
         <Route path="" element={<Dashboard />}></Route>
