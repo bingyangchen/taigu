@@ -4,6 +4,7 @@
   width: 100%;
   height: 100%;
   overflow: auto;
+  background-color: _.$noisy-white;
   & > .subpage_main {
     display: flex;
     flex-direction: column;
@@ -12,10 +13,8 @@
     min-height: 100%;
     width: 100%;
     @media (max-width: _.$width-780) {
-      padding-top: 0;
-      min-height: calc(
-        100% - _.$header-height - _.$footer-height - _.$show-header-border-boundary
-      );
+      padding: 0 15px 0;
+      min-height: calc(100% - _.$header-height - _.$footer-height);
     }
   }
 }

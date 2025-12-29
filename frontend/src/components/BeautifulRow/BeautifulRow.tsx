@@ -5,7 +5,7 @@ import styles from "./BeautifulRow.module.scss";
 
 interface Props {
   label?: string;
-  children?: any;
+  children?: React.ReactNode | string;
   onClick?: MouseEventHandler;
 }
 
@@ -51,14 +51,16 @@ export default class BeautifulRow extends React.Component<Props, State> {
       const mask = e.currentTarget as HTMLElement;
       const diameter = Math.max(mask.clientWidth, mask.clientHeight);
       this.setState({ isRippling: true }, () => {
-        this.rippleRef.current!.style.width = `${diameter}px`;
-        this.rippleRef.current!.style.height = `${diameter}px`;
-        this.rippleRef.current!.style.left = `${
-          e.clientX - mask.getBoundingClientRect().left - diameter / 2
-        }px`;
-        this.rippleRef.current!.style.top = `${
-          e.clientY - mask.getBoundingClientRect().top - diameter / 2
-        }px`;
+        if (this.rippleRef.current) {
+          this.rippleRef.current.style.width = `${diameter}px`;
+          this.rippleRef.current.style.height = `${diameter}px`;
+          this.rippleRef.current.style.left = `${
+            e.clientX - mask.getBoundingClientRect().left - diameter / 2
+          }px`;
+          this.rippleRef.current.style.top = `${
+            e.clientY - mask.getBoundingClientRect().top - diameter / 2
+          }px`;
+        }
       });
       setTimeout(() => {
         this.setState({ isRippling: false });

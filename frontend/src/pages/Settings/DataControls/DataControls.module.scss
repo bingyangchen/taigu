@@ -1,0 +1,14 @@
+@use "../../../global_variables" as _;
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  .blue {
+    color: _.$blue;
+  }
+  .red {
+    color: _.$red;
+  }
+}
