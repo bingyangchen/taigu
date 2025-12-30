@@ -17,6 +17,7 @@ export { default as HeaderForSettings } from "./HeaderForSettings/HeaderForSetti
 export { default as HistoricalPriceLineChart } from "./HistoricalPriceLineChart/HistoricalPriceLineChart";
 export { default as InventoryHistogram } from "./InventoryHistogram/InventoryHistogram";
 export { default as LabeledInput } from "./LabeledInput/LabeledInput";
+export { default as LabeledInputV2 } from "./LabeledInputV2/LabeledInputV2";
 export { default as ListRow } from "./ListRow/ListRow";
 export { default as ListRowActionBar } from "./ListRowActionBar/ListRowActionBar";
 export { default as LoadingScreen } from "./LoadingScreen/LoadingScreen";

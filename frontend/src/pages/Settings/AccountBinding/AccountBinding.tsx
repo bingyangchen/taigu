@@ -32,6 +32,7 @@ class AccountBinding extends React.Component<Props, State> {
     super(props);
     this.state = { activeModalName: null };
   }
+
   public async componentDidMount(): Promise<void> {
     this.props.dispatch(updateHeaderTitle("帳號綁定"));
     if (this.props.router.search_params.get("code")) {
@@ -53,6 +54,7 @@ class AccountBinding extends React.Component<Props, State> {
       }
     }
   }
+
   public render(): React.ReactNode {
     return (
       <>

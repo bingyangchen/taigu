@@ -1,9 +1,94 @@
 @use "../../../global_variables" as _;
 
-.avatar_preview {
-  margin: 0 auto;
-  width: 100px;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 100px;
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  .avatar_preview {
+    margin: 0 auto;
+    width: min(20dvh, 150px);
+    aspect-ratio: 1;
+    object-fit: cover;
+    border: 1px solid _.$light-gray;
+    border-radius: 100%;
+  }
+  .gravatar_button {
+    margin: 0 auto;
+    color: _.$blue;
+    border: none;
+    font-size: 0.8 * _.$base-font-size;
+    letter-spacing: 0.5 * _.$base-letter-spacing;
+    border-radius: 100px;
+    padding: 5px 10px;
+    background-color: _.$transparent-blue;
+    cursor: pointer;
+    transition-duration: 150ms;
+    &:hover {
+      background-color: _.$transparent-black;
+    }
+  }
+}
+
+.gravatar_modal_content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  .gravatar_preview {
+    width: min(30dvh, 200px);
+    aspect-ratio: 1;
+    object-fit: cover;
+    border: 1px solid _.$light-gray;
+    border-radius: 100%;
+  }
+  .gravatar_bottom_sheet_buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+}
+
+.avatarInputWrapper {
+  position: relative;
+  border-bottom: 1px solid _.$noisy-white;
+  & > .blinkOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 10;
+    overflow: hidden;
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 123, 255, 0.2),
+        transparent
+      );
+      animation: shimmer 550ms ease-out;
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  30% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
 }
