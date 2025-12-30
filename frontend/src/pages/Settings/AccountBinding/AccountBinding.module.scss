@@ -1,5 +1,25 @@
 @use "../../../global_variables" as _;
 
+.main {
+  padding: 0 20px;
+  & > .logo_container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 50px 0;
+    & > .google_logo {
+      width: 60px;
+      height: 60px;
+      padding: 10px;
+      margin-left: 16px;
+    }
+  }
+  .beautiful_row_content {
+    color: _.$blue;
+    font-size: 1 * _.$base-font-size;
+  }
+}
+
 .bottom_sheet_row {
   display: flex;
   align-items: center;
@@ -15,30 +35,9 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  margin-bottom: 20px;
   .google_logo {
     height: 24px;
     margin-right: 5px;
-  }
-}
-
-.logo_container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  & > .google_logo {
-    width: 60px;
-    height: 60px;
-    padding: 10px;
-    margin-left: 16px;
-  }
-}
-.email_container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  & > .email_title {
-    font-size: 0.8 * _.$base-font-size;
-    color: _.$gray;
   }
 }

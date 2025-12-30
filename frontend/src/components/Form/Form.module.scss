@@ -1,12 +1,10 @@
 @use "../../global_variables" as _;
 
 .main {
-  width: min(100%, 400px);
+  width: 100%;
   height: calc(100% - env(keyboard-inset-height));
-  border: 1px solid _.$light-gray;
   border-radius: 15px;
   padding: 10px 15px;
-  background-color: _.$white;
   & > .header {
     display: flex;
     align-items: center;
@@ -34,6 +32,5 @@
     gap: 10px;
     margin-top: 20px;
     padding: 10px 8px;
-    background-color: _.$white;
   }
 }

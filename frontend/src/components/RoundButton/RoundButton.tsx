@@ -5,7 +5,7 @@ import React, { MouseEventHandler } from "react";
 import styles from "./RoundButton.module.scss";
 
 interface Props {
-  children: any;
+  children: React.ReactNode;
   onClick?: MouseEventHandler;
   className?: string;
   disabled?: boolean;

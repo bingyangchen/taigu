@@ -1,12 +1,11 @@
 import React from "react";
 import { connect } from "react-redux";
 
-import { BeautifulBlock, BeautifulRow, HeaderForSettings } from "../../../components";
+import { BeautifulBlock, BeautifulRow } from "../../../components";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Api from "../../../utils/api";
-import Util from "../../../utils/util";
 import styles from "./DataControls.module.scss";
 
 function mapStateToProps() {
@@ -32,27 +31,29 @@ class DataControls extends React.Component<Props, State> {
 
   public render(): React.ReactNode {
     return (
-      <>
-        {!Util.isMobile && <HeaderForSettings />}
-        <div className={styles.main}>
-          <BeautifulBlock>
-            <BeautifulRow onClick={this.handleExportAllTradeRecords}>
-              <div className={styles.blue}>匯出所有交易紀錄</div>
-            </BeautifulRow>
-            {/* <BeautifulRow>
+      <div className={styles.main}>
+        <BeautifulBlock title="交易紀錄">
+          <BeautifulRow onClick={this.handleExportAllTradeRecords}>
+            <div className={styles.blue}>匯出所有交易紀錄</div>
+          </BeautifulRow>
+          {/* <BeautifulRow>
             <div className={styles.red}>刪除所有交易紀錄</div>
           </BeautifulRow> */}
-          </BeautifulBlock>
-          <BeautifulBlock>
-            <BeautifulRow onClick={this.handleExportAllCashDividendRecords}>
-              <div className={styles.blue}>匯出所有現金股利紀錄</div>
-            </BeautifulRow>
-            {/* <BeautifulRow>
+        </BeautifulBlock>
+        <BeautifulBlock title="現金股利紀錄">
+          <BeautifulRow onClick={this.handleExportAllCashDividendRecords}>
+            <div className={styles.blue}>匯出所有現金股利紀錄</div>
+          </BeautifulRow>
+          {/* <BeautifulRow>
             <div className={styles.red}>刪除所有現金股利紀錄</div>
           </BeautifulRow> */}
-          </BeautifulBlock>
-        </div>
-      </>
+        </BeautifulBlock>
+        {/* <BeautifulBlock title="帳號">
+          <BeautifulRow onClick={this.handleClickDeleteAccount}>
+            <div className={styles.red}>刪除帳號</div>
+          </BeautifulRow>
+        </BeautifulBlock> */}
+      </div>
     );
   }
 

@@ -8,7 +8,9 @@
   gap: 10px;
   height: _.$header-height;
   padding: 0 12px 0 8px;
-  font-weight: 500;
-  color: _.$black;
+  font-size: 1.25 * _.$base-font-size;
+  @media (max-width: _.$width-512) {
+    font-size: 1.1 * _.$base-font-size;
+  }
   z-index: 2;
 }

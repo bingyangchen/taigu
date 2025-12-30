@@ -2,15 +2,21 @@ import React from "react";
 import { connect } from "react-redux";
 
 import googleLogo from "../../../assets/google.png";
-import { BottomSheet, Button, FullLogo, Modal } from "../../../components";
-import Form from "../../../components/Form/Form";
+import {
+  BeautifulBlock,
+  BeautifulRow,
+  BottomSheet,
+  Button,
+  FullLogo,
+  LabeledInputV2,
+  Modal,
+} from "../../../components";
 import { IconLink } from "../../../icons";
 import { changeAccountBinding } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, settingsPagePath, withRouter } from "../../../router";
+import { IRouter, withRouter } from "../../../router";
 import Api from "../../../utils/api";
-import Env from "../../../utils/env";
 import Util from "../../../utils/util";
 import styles from "./AccountBinding.module.scss";
 
@@ -33,6 +39,7 @@ class AccountBinding extends React.Component<Props, State> {
     super(props);
     this.state = { activeModalName: null };
   }
+
   public async componentDidMount(): Promise<void> {
     this.props.dispatch(updateHeaderTitle("帳號綁定"));
     if (this.props.router.search_params.get("code")) {
@@ -54,6 +61,7 @@ class AccountBinding extends React.Component<Props, State> {
       }
     }
   }
+
   public render(): React.ReactNode {
     return (
       <>
@@ -70,7 +78,7 @@ class AccountBinding extends React.Component<Props, State> {
             </BottomSheet>
           ) : (
             <Modal
-              title="綁定其它帳號"
+              title="更換綁定的帳號"
               noFooter
               discardButtonProps={{
                 children: null,
@@ -91,34 +99,28 @@ class AccountBinding extends React.Component<Props, State> {
               </div>
             </Modal>
           ))}
-        <Form
-          title="帳號綁定"
-          goBackHandler={() => {
-            this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
-              replace: true,
-            });
-          }}
-          primaryFooterButton={
-            <Button
-              className="primary l border"
-              disabled={this.props.isWaiting}
-              waiting={this.props.isWaiting}
-              onClick={this.handleClickChangeBinding}
-            >
-              綁定其它帳號
-            </Button>
-          }
-        >
+        <div className={styles.main}>
           <div className={styles.logo_container}>
             <FullLogo size="l" />
             <IconLink sideLength="16px" color="gray" />
             <img className={styles.google_logo} src={googleLogo} alt="" />
           </div>
-          <div className={styles.email_container}>
-            <div className={styles.email_title}>綁定的帳號</div>
-            <div className={styles.email_content}>{this.props.email}</div>
-          </div>
-        </Form>
+          <BeautifulBlock>
+            <LabeledInputV2
+              title="綁定的帳號"
+              type="text"
+              value={this.props.email}
+              disabled
+            />
+            <BeautifulRow
+              onClick={this.props.isWaiting ? undefined : this.handleClickChangeBinding}
+            >
+              <div className={styles.beautiful_row_content}>
+                {this.props.isWaiting ? "處理中..." : "更換綁定的帳號"}
+              </div>
+            </BeautifulRow>
+          </BeautifulBlock>
+        </div>
       </>
     );
   }
