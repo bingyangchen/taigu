@@ -56,62 +56,59 @@ class UserInfo extends React.Component<Props, State> {
 
   public render(): React.ReactNode {
     return (
-      <Form
-        title="頭像與名字"
-        goBackHandler={() => {
-          this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
-            replace: true,
-          });
-        }}
-        primaryFooterButton={
-          <Button
-            className="primary_fill l"
-            disabled={this.props.isWaiting}
-            waiting={this.props.isWaiting}
-            onClick={this.handleClickSave}
-          >
-            儲存
-          </Button>
-        }
-        secondaryFooterButton={
-          <Button
-            className="light l"
-            onClick={() =>
-              this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
-                replace: true,
-              })
-            }
-          >
-            捨棄
-          </Button>
-        }
-      >
-        {this.state.showDefaultAvatar ? (
-          <img className={styles.avatar_preview} src={imgPersonFill} alt="" />
-        ) : (
+      <div className={styles.main}>
+        <Form
+          primaryFooterButton={
+            <Button
+              className="primary_fill l"
+              disabled={this.props.isWaiting}
+              waiting={this.props.isWaiting}
+              onClick={this.handleClickSave}
+            >
+              儲存
+            </Button>
+          }
+          secondaryFooterButton={
+            <Button
+              className="light l"
+              onClick={() =>
+                this.props.router.navigate(
+                  `${Env.frontendRootPath}${settingsPagePath}`,
+                  { replace: true },
+                )
+              }
+            >
+              捨棄
+            </Button>
+          }
+        >
           <img
             className={styles.avatar_preview}
-            src={Util.validateAndSanitizeUrl(this.state.avatarUrl) ?? ""}
+            src={
+              this.state.showDefaultAvatar
+                ? imgPersonFill
+                : (Util.validateAndSanitizeUrl(this.state.avatarUrl) ?? imgPersonFill)
+            }
             alt=""
             onError={() => this.setState({ showDefaultAvatar: true })}
           />
-        )}
-        <LabeledInput
-          title="頭像 URL"
-          type="text"
-          value={this.state.avatarUrl || ""}
-          onChange={(avatarUrl: string) => {
-            this.setState({ avatarUrl: avatarUrl, showDefaultAvatar: false });
-          }}
-          autoFocus
-        />
-        <LabeledInput
-          title="名字"
-          type="text"
-          value={this.state.username}
-          onChange={(username: string) => this.setState({ username: username })}
-        />
-      </Form>
+          <LabeledInput
+            title="頭像 URL"
+            type="text"
+            value={this.state.avatarUrl || ""}
+            onChange={(avatarUrl: string) => {
+              this.setState({ avatarUrl: avatarUrl, showDefaultAvatar: false });
+            }}
+            autoFocus
+          />
+          <LabeledInput
+            title="名字"
+            type="text"
+            value={this.state.username}
+            onChange={(username: string) => this.setState({ username: username })}
+          />
+        </Form>
+      </div>
     );
   }
 

@@ -63,7 +63,8 @@ class Overview extends React.Component<Props, State> {
                     src={
                       this.state.showDefaultAvatar
                         ? imgPersonFill
-                        : (this.props.avatar_url ?? imgPersonFill)
+                        : (Util.validateAndSanitizeUrl(this.props.avatar_url ?? "") ??
+                          imgPersonFill)
                     }
                     alt=""
                     onError={() => this.setState({ showDefaultAvatar: true })}
@@ -213,10 +214,8 @@ class Overview extends React.Component<Props, State> {
             waiting: this.props.isWaiting,
             onClick: this.handleClickCheckLogout,
           }}
-          noX
-          silentBackground
         >
-          您確定要登出嗎？
+          確定要登出嗎？
         </Modal>
       );
     }

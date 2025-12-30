@@ -34,12 +34,6 @@ class DeleteAccount extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <Form
-        title="刪除帳號"
-        goBackHandler={() => {
-          this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
-            replace: true,
-          });
-        }}
         primaryFooterButton={
           <Button
             className="dangerous_fill l"

@@ -8,9 +8,8 @@ import { IconLink } from "../../../icons";
 import { changeAccountBinding } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, settingsPagePath, withRouter } from "../../../router";
+import { IRouter, withRouter } from "../../../router";
 import Api from "../../../utils/api";
-import Env from "../../../utils/env";
 import Util from "../../../utils/util";
 import styles from "./AccountBinding.module.scss";
 
@@ -92,12 +91,6 @@ class AccountBinding extends React.Component<Props, State> {
             </Modal>
           ))}
         <Form
-          title="帳號綁定"
-          goBackHandler={() => {
-            this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
-              replace: true,
-            });
-          }}
           primaryFooterButton={
             <Button
               className="primary l border"
