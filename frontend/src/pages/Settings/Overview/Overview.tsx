@@ -10,15 +10,12 @@ import {
   IconExclamation,
   IconExit,
   IconIncognito,
-  IconInfoCircle,
-  IconPersonVcard,
   IconTermsInfo,
 } from "../../../icons";
 import { logout } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, settingsPagePath, withRouter } from "../../../router";
-import type { Subpage } from "../../../types";
 import Env from "../../../utils/env";
 import Nav from "../../../utils/nav";
 import Util from "../../../utils/util";
@@ -34,28 +31,14 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 }
 interface State {
   activeModalName: "checkLogout" | null;
+  showDefaultAvatar: boolean;
 }
 
 class Overview extends React.Component<Props, State> {
   public state: State;
-  private subpages: Subpage[];
   public constructor(props: Props) {
     super(props);
-    this.state = { activeModalName: null };
-    this.subpages = [
-      { icon: <IconPersonVcard sideLength="100%" />, name: "帳號", path: "#account" },
-      // {
-      //     icon: <IconCreditCard sideLength="100%" />,
-      //     name: "付款與方案",
-      //     path: "#billing-and-plans",
-      // },
-      // {
-      //     icon: <IconBell sideLength="100%" />,
-      //     name: "通知",
-      //     path: "#notification",
-      // },
-      { icon: <IconInfoCircle sideLength="100%" />, name: "關於", path: "#about" },
-    ];
+    this.state = { activeModalName: null, showDefaultAvatar: false };
   }
   public componentDidMount(): void {
     this.props.dispatch(updateHeaderTitle("設定"));
@@ -77,8 +60,13 @@ class Overview extends React.Component<Props, State> {
                 <div className={styles.avatar_container}>
                   <img
                     className={styles.avatar}
-                    src={this.props.avatar_url ?? imgPersonFill}
+                    src={
+                      this.state.showDefaultAvatar
+                        ? imgPersonFill
+                        : (this.props.avatar_url ?? imgPersonFill)
+                    }
                     alt=""
+                    onError={() => this.setState({ showDefaultAvatar: true })}
                   />
                 </div>
                 <div className={styles.username}>{this.props.username}</div>
