@@ -55,6 +55,9 @@
       &:focus {
         color: _.$deep-gray;
       }
+      &:disabled {
+        color: _.$deep-gray;
+      }
     }
   }
 }
