@@ -19,8 +19,10 @@
     width: 100%;
     height: 100%;
     z-index: 1;
-    background-color: _.$transparent-white;
-    cursor: not-allowed;
+    background-color: _.$white;
+    opacity: 0.5;
+    cursor: default;
+    pointer-events: none;
   }
   &:not(:last-child) {
     border-bottom: 1px solid _.$noisy-white;
