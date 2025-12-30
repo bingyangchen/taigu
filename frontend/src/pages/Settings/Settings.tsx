@@ -11,7 +11,6 @@ import type { AppDispatch } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
 import Nav from "../../utils/nav";
-import Util from "../../utils/util";
 import styles from "./Settings.module.scss";
 
 interface Props extends IRouter {
@@ -30,9 +29,11 @@ class Settings extends React.Component<Props, State> {
     this.channel = new BroadcastChannel(Env.broadcastChannelName);
     this.channel.addEventListener("message", this.handleNonCacheResponse);
   }
+
   public async componentDidMount(): Promise<void> {
     this.props.dispatch(fetchAccountInfo());
   }
+
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     // Conditionally navigate back one more time
     if (prevProps.router.location.key !== this.props.router.location.key) {
@@ -49,24 +50,23 @@ class Settings extends React.Component<Props, State> {
       } else this.setState({ prevLocationPathname: null });
     }
   }
+
   public componentWillUnmount(): void {
     this.channel.close();
   }
+
   public render(): React.ReactNode {
     return (
       <main className={styles.main}>
         <ToastList />
-        {Util.isMobile && <HeaderForSettings />}
-        {Nav.isAtSettingsOverviewPage ? (
+        <div className={styles.body}>
+          <HeaderForSettings />
           <Outlet />
-        ) : (
-          <div className={styles.subpage_main}>
-            <Outlet />
-          </div>
-        )}
+        </div>
       </main>
     );
   }
+
   private handleNonCacheResponse = async (
     e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
   ): Promise<void> => {

@@ -1,20 +1,14 @@
 @use "../../global_variables" as _;
 
 .main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
   height: 100%;
-  overflow: auto;
   background-color: _.$noisy-white;
-  & > .subpage_main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 15dvh;
-    min-height: 100%;
-    width: 100%;
-    @media (max-width: _.$width-780) {
-      padding: 0 15px 0;
-      min-height: calc(100% - _.$header-height - _.$footer-height);
-    }
+  overflow: auto;
+  & > .body {
+    width: min(100%, 720px);
   }
 }
