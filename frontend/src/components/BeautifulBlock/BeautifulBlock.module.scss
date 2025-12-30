@@ -5,8 +5,8 @@
   flex-direction: column;
   width: min(100%, 720px);
   height: fit-content;
+  margin: 15px 0;
   overflow-x: hidden;
-  padding-top: 20px;
   & > .title {
     font-size: 0.8 * _.$base-font-size;
     font-weight: 500;
