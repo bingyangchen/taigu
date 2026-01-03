@@ -6,7 +6,7 @@ from django.http import HttpRequest, JsonResponse
 
 from main.account import OAuthOrganization
 from main.account.models import User
-from main.core.decorators import require_login
+from main.core.decorators.auth import require_login
 
 
 @pytest.mark.django_db

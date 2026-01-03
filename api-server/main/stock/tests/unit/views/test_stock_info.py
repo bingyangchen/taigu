@@ -4,10 +4,13 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.test import RequestFactory
 
+from main.account import OAuthOrganization
+from main.account.models import User
 from main.stock import Frequency, TradeType
 from main.stock.cache import TimeSeriesStockInfo
 from main.stock.models import Company, History, StockInfo
@@ -21,9 +24,25 @@ from main.stock.views.stock_info import (
 
 @pytest.mark.django_db
 class TestMarketIndexView:
+    @pytest.fixture(autouse=True)
+    def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
+        mock_lua_script = Mock(return_value=1)  # Allow all requests
+        monkeypatch.setattr(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", mock_lua_script
+        )
+
     @pytest.fixture
     def request_factory(self) -> RequestFactory:
         return RequestFactory()
+
+    @pytest.fixture
+    def user(self) -> User:
+        return User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="test_oauth_id",
+            email="test@example.com",
+            username="testuser",
+        )
 
     @pytest.fixture
     def mock_cache_data(self) -> dict[str, Any]:
@@ -40,6 +59,7 @@ class TestMarketIndexView:
         mock_get: Mock,
         request_factory: RequestFactory,
         mock_cache_data: dict[str, Any],
+        user: User,
     ) -> None:
         cache_result = TimeSeriesStockInfo.model_validate(mock_cache_data)
 
@@ -51,6 +71,7 @@ class TestMarketIndexView:
         mock_get.side_effect = get_side_effect
 
         request = request_factory.get("/api/stock/market-index/")
+        request.user = user
 
         response = market_index(request)
 
@@ -81,6 +102,7 @@ class TestMarketIndexView:
         mock_set: Mock,
         mock_get: Mock,
         request_factory: RequestFactory,
+        user: User,
     ) -> None:
         mock_get.return_value = None
 
@@ -104,6 +126,7 @@ class TestMarketIndexView:
         mock_filter.return_value = mock_queryset
 
         request = request_factory.get("/api/stock/market-index/")
+        request.user = user
 
         response = market_index(request)
 
@@ -128,9 +151,25 @@ class TestMarketIndexView:
 
 @pytest.mark.django_db
 class TestCurrentStockInfoView:
+    @pytest.fixture(autouse=True)
+    def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
+        mock_lua_script = Mock(return_value=1)  # Allow all requests
+        monkeypatch.setattr(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", mock_lua_script
+        )
+
     @pytest.fixture
     def request_factory(self) -> RequestFactory:
         return RequestFactory()
+
+    @pytest.fixture
+    def user(self) -> User:
+        return User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="test_oauth_id",
+            email="test@example.com",
+            username="testuser",
+        )
 
     @pytest.fixture
     def companies(self) -> list[Company]:
@@ -169,9 +208,10 @@ class TestCurrentStockInfoView:
         ]
 
     def test_current_stock_info_with_valid_sids(
-        self, request_factory: RequestFactory, stock_infos: list[StockInfo]
+        self, request_factory: RequestFactory, stock_infos: list[StockInfo], user: User
     ) -> None:
         request = request_factory.get("/api/stock/current-stock-info/?sids=1234,5678")
+        request.user = user
 
         response = current_stock_info(request)
 
@@ -189,9 +229,10 @@ class TestCurrentStockInfoView:
         assert data["1234"]["fluct_price"] == 2.3
 
     def test_current_stock_info_with_empty_sids(
-        self, request_factory: RequestFactory
+        self, request_factory: RequestFactory, user: User
     ) -> None:
         request = request_factory.get("/api/stock/current-stock-info/?sids=")
+        request.user = user
 
         response = current_stock_info(request)
 
@@ -202,9 +243,10 @@ class TestCurrentStockInfoView:
         assert data == {}
 
     def test_current_stock_info_with_nonexistent_sids(
-        self, request_factory: RequestFactory, stock_infos: list[StockInfo]
+        self, request_factory: RequestFactory, stock_infos: list[StockInfo], user: User
     ) -> None:
         request = request_factory.get("/api/stock/current-stock-info/?sids=9999,8888")
+        request.user = user
 
         response = current_stock_info(request)
 
@@ -215,9 +257,10 @@ class TestCurrentStockInfoView:
         assert data == {}
 
     def test_current_stock_info_no_sids_parameter(
-        self, request_factory: RequestFactory
+        self, request_factory: RequestFactory, user: User
     ) -> None:
         request = request_factory.get("/api/stock/current-stock-info/")
+        request.user = user
 
         response = current_stock_info(request)
 
@@ -230,9 +273,25 @@ class TestCurrentStockInfoView:
 
 @pytest.mark.django_db
 class TestHistoricalPricesView:
+    @pytest.fixture(autouse=True)
+    def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
+        mock_lua_script = Mock(return_value=1)  # Allow all requests
+        monkeypatch.setattr(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", mock_lua_script
+        )
+
     @pytest.fixture
     def request_factory(self) -> RequestFactory:
         return RequestFactory()
+
+    @pytest.fixture
+    def user(self) -> User:
+        return User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="test_oauth_id",
+            email="test@example.com",
+            username="testuser",
+        )
 
     @pytest.fixture
     def company(self) -> Company:
@@ -270,9 +329,13 @@ class TestHistoricalPricesView:
         ]
 
     def test_historical_prices_default_frequency(
-        self, request_factory: RequestFactory, history_records: list[History]
+        self,
+        request_factory: RequestFactory,
+        history_records: list[History],
+        user: User,
     ) -> None:
         request = request_factory.get("/api/stock/historical-prices/1234/")
+        request.user = user
 
         response = historical_prices(request, "1234")
 
@@ -288,11 +351,15 @@ class TestHistoricalPricesView:
             assert "price" in item
 
     def test_historical_prices_with_weekly_frequency(
-        self, request_factory: RequestFactory, history_records: list[History]
+        self,
+        request_factory: RequestFactory,
+        history_records: list[History],
+        user: User,
     ) -> None:
         request = request_factory.get(
             f"/api/stock/historical-prices/1234/?frequency={Frequency.WEEKLY}"
         )
+        request.user = user
 
         response = historical_prices(request, "1234")
 
@@ -304,11 +371,15 @@ class TestHistoricalPricesView:
         assert len(data["data"]) == 1
 
     def test_historical_prices_with_monthly_frequency(
-        self, request_factory: RequestFactory, history_records: list[History]
+        self,
+        request_factory: RequestFactory,
+        history_records: list[History],
+        user: User,
     ) -> None:
         request = request_factory.get(
             f"/api/stock/historical-prices/1234/?frequency={Frequency.MONTHLY}"
         )
+        request.user = user
 
         response = historical_prices(request, "1234")
 
@@ -320,17 +391,19 @@ class TestHistoricalPricesView:
         assert len(data["data"]) == 0
 
     def test_historical_prices_nonexistent_company(
-        self, request_factory: RequestFactory
+        self, request_factory: RequestFactory, user: User
     ) -> None:
         request = request_factory.get("/api/stock/historical-prices/9999/")
+        request.user = user
 
         with pytest.raises(ObjectDoesNotExist):
             historical_prices(request, "9999")
 
     def test_historical_prices_no_history_data(
-        self, request_factory: RequestFactory, company: Company
+        self, request_factory: RequestFactory, company: Company, user: User
     ) -> None:
         request = request_factory.get("/api/stock/historical-prices/1234/")
+        request.user = user
 
         response = historical_prices(request, "1234")
 
@@ -344,9 +417,25 @@ class TestHistoricalPricesView:
 
 @pytest.mark.django_db
 class TestSearchView:
+    @pytest.fixture(autouse=True)
+    def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
+        mock_lua_script = Mock(return_value=1)  # Allow all requests
+        monkeypatch.setattr(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", mock_lua_script
+        )
+
     @pytest.fixture
     def request_factory(self) -> RequestFactory:
         return RequestFactory()
+
+    @pytest.fixture
+    def user(self) -> User:
+        return User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="test_oauth_id",
+            email="test@example.com",
+            username="testuser",
+        )
 
     @pytest.fixture
     def companies_and_stock_infos(self) -> list[tuple[Company, StockInfo]]:
@@ -377,8 +466,10 @@ class TestSearchView:
         self,
         request_factory: RequestFactory,
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
+        user: User,
     ) -> None:
         request = request_factory.get("/api/stock/search/?keyword=1234")
+        request.user = user
 
         response = search(request)
 
@@ -395,8 +486,10 @@ class TestSearchView:
         self,
         request_factory: RequestFactory,
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
+        user: User,
     ) -> None:
         request = request_factory.get("/api/stock/search/?keyword=TSMC")
+        request.user = user
 
         response = search(request)
 
@@ -413,8 +506,10 @@ class TestSearchView:
         self,
         request_factory: RequestFactory,
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
+        user: User,
     ) -> None:
         request = request_factory.get("/api/stock/search/?keyword=23")
+        request.user = user
 
         response = search(request)
 
@@ -430,8 +525,10 @@ class TestSearchView:
         self,
         request_factory: RequestFactory,
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
+        user: User,
     ) -> None:
         request = request_factory.get("/api/stock/search/?keyword=taiwan")
+        request.user = user
 
         response = search(request)
 
@@ -443,8 +540,11 @@ class TestSearchView:
         assert len(data["data"]) == 1
         assert data["data"][0]["sid"] == "1234"
 
-    def test_search_no_keyword(self, request_factory: RequestFactory) -> None:
+    def test_search_no_keyword(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
         request = request_factory.get("/api/stock/search/")
+        request.user = user
 
         response = search(request)
 
@@ -459,8 +559,10 @@ class TestSearchView:
         self,
         request_factory: RequestFactory,
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
+        user: User,
     ) -> None:
         request = request_factory.get("/api/stock/search/?keyword=nonexistent")
+        request.user = user
 
         response = search(request)
 
@@ -471,7 +573,9 @@ class TestSearchView:
         assert "data" in data
         assert len(data["data"]) == 0
 
-    def test_search_limit_results(self, request_factory: RequestFactory) -> None:
+    def test_search_limit_results(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
         for i in range(35):
             company = Company.objects.create(
                 stock_id=f"TEST{i:02d}",
@@ -488,6 +592,7 @@ class TestSearchView:
             )
 
         request = request_factory.get("/api/stock/search/?keyword=TEST")
+        request.user = user
 
         response = search(request)
 
