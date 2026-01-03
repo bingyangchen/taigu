@@ -79,7 +79,6 @@ def _make_jwt(user_id: str) -> str:
     )
 
 
-@rate_limit(rate=1)
 @ensure_csrf_cookie
 @require_GET
 def get_authorization_url(request: HttpRequest) -> JsonResponse:
@@ -95,7 +94,6 @@ def get_authorization_url(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"authorization_url": authorization_url, "state": state})
 
 
-@rate_limit(rate=0.5)
 @require_POST
 def google_login(request: HttpRequest) -> JsonResponse:
     code, redirect_uri = request.POST.get("code"), request.POST.get("redirect_uri")
