@@ -12,6 +12,7 @@ import {
   TradeRecordModal,
 } from "../../../components";
 import { deleteRecord as deleteCashDividendRecord } from "../../../redux/slices/CashDividendRecordSlice";
+import { updateHeaderTitle } from "../../../redux/slices/MainPageSlice";
 import { deleteRecord as deleteTradeRecord } from "../../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
@@ -57,18 +58,24 @@ class Records extends React.Component<Props, State> {
       sliderPosition: 0,
     };
   }
+
   public componentDidMount(): void {
+    this.props.dispatch(updateHeaderTitle("歷史紀錄"));
     requestAnimationFrame(() => this.updateSliderPosition());
     window.addEventListener("resize", this.updateSliderPosition);
   }
+
   public componentWillUnmount(): void {
+    this.props.dispatch(updateHeaderTitle(null));
     window.removeEventListener("resize", this.updateSliderPosition);
   }
+
   public componentDidUpdate(prevProps: Props, prevState: State): void {
     if (prevState.activeSubpageName !== this.state.activeSubpageName) {
       this.updateSliderPosition();
     }
   }
+
   private updateSliderPosition = (): void => {
     const activeButton =
       this.state.activeSubpageName === "trade"
@@ -83,6 +90,7 @@ class Records extends React.Component<Props, State> {
       this.setState({ sliderPosition: position });
     }
   };
+
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
@@ -179,6 +187,7 @@ class Records extends React.Component<Props, State> {
       </div>
     );
   }
+
   private get filteredRecords(): (TradeRecord | CashDividendRecord)[] {
     if (this.state.activeSubpageName === "trade") {
       return this.props.tradeRecords.filter((record) => {
@@ -200,12 +209,15 @@ class Records extends React.Component<Props, State> {
       });
     }
   }
+
   private handleClickSwitchButton = (name: "trade" | "cashDividend"): void => {
     this.setState({ activeSubpageName: name, numberToShow: 15 });
   };
+
   private get hasMoreToShow(): boolean {
     return this.filteredRecords.length > this.state.numberToShow;
   }
+
   private handleClickShowMore = (): void => {
     this.setState((state) => {
       return { numberToShow: state.numberToShow * 2 };

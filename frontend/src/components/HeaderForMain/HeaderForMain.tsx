@@ -8,8 +8,8 @@ import Nav from "../../utils/nav";
 import styles from "./HeaderForMain.module.scss";
 
 function mapStateToProps(rootState: RootState) {
-  const { scrollTop } = rootState.mainPage;
-  return { mainScrollTop: scrollTop };
+  const { headerTitle } = rootState.mainPage;
+  return { headerTitle };
 }
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {}
@@ -26,7 +26,11 @@ class HeaderForMain extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <header className={styles.main}>
-        <FullLogo size="s" translateX={this.logoTranslateX} />
+        {this.props.headerTitle ? (
+          <div className={styles.title}>{this.props.headerTitle}</div>
+        ) : (
+          <FullLogo size="s" translateX={this.logoTranslateX} />
+        )}
       </header>
     );
   }
