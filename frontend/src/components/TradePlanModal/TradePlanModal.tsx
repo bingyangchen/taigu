@@ -111,6 +111,29 @@ class TradePlanModal extends React.Component<Props, State> {
               onChange={this.handleTargetQuantityChange}
             />
           </div>
+          <div className={styles.calculation_row}>
+            <div>
+              成交金額{" "}
+              {(
+                this.state.targetPrice * this.state.targetQuantity || "-"
+              ).toLocaleString()}{" "}
+              元
+            </div>
+            <div>
+              預估手續費{" "}
+              {(
+                Math.max(
+                  1,
+                  Math.floor(
+                    this.state.targetPrice *
+                      this.state.targetQuantity *
+                      (this.state.planType === "buy" ? 0.001425 : 0.004425),
+                  ),
+                ) || "-"
+              ).toLocaleString()}{" "}
+              元
+            </div>
+          </div>
         </div>
       </Modal>
     );

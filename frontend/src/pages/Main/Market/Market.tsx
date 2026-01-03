@@ -2,7 +2,10 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { DetailCard, SpeedDial } from "../../../components";
-import { changeMarketPageSubpage } from "../../../redux/slices/MainPageSlice";
+import {
+  changeMarketPageSubpage,
+  updateHeaderTitle,
+} from "../../../redux/slices/MainPageSlice";
 import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
@@ -39,6 +42,7 @@ class Market extends React.Component<Props, State> {
     this.fetchFavoriteStockInfoTimer = null;
   }
   public componentDidMount(): void {
+    this.props.dispatch(updateHeaderTitle("市場"));
     requestAnimationFrame(() => this.updateSliderPosition());
     window.addEventListener("resize", this.updateSliderPosition);
     if (this.props.activeSubpageName === "favorites") {
@@ -50,18 +54,22 @@ class Market extends React.Component<Props, State> {
       }
     }, 15000);
   }
+
   public componentWillUnmount(): void {
+    this.props.dispatch(updateHeaderTitle(null));
     window.removeEventListener("resize", this.updateSliderPosition);
     if (this.fetchFavoriteStockInfoTimer) {
       clearInterval(this.fetchFavoriteStockInfoTimer);
       this.fetchFavoriteStockInfoTimer = null;
     }
   }
+
   public componentDidUpdate(prevProps: Props): void {
     if (prevProps.activeSubpageName !== this.props.activeSubpageName) {
       this.updateSliderPosition();
     }
   }
+
   private updateSliderPosition = (): void => {
     const activeButton =
       this.props.activeSubpageName === "holding"
@@ -76,15 +84,18 @@ class Market extends React.Component<Props, State> {
       this.setState({ sliderPosition: position });
     }
   };
+
   private fetchFavoriteStockInfo = async (): Promise<void> => {
     if (this.props.favorites.length > 0) {
       await this.props.dispatch(fetchStockInfo(this.props.favorites)).unwrap();
     }
   };
+
   private handleFavoritesClick = async (): Promise<void> => {
     this.props.dispatch(changeMarketPageSubpage("favorites"));
     await this.fetchFavoriteStockInfo();
   };
+
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>

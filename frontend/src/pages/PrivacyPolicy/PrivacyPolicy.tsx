@@ -38,7 +38,7 @@ class PrivacyPolicy extends React.Component<Props, State> {
           <h1>隱私權政策</h1>
         </div>
         <div className={styles.body}>
-          <div className={styles.effective_date}>生效日期：2024 年 1 月 1 日</div>
+          <div className={styles.effective_date}>最後更新日期：2026/01/03</div>
           <h2>適用範圍</h2>
           <p>
             本隱私權政策適用於您在 Taigu
@@ -48,11 +48,7 @@ class PrivacyPolicy extends React.Component<Props, State> {
           <p>
             本網站會蒐集您在使用本網站服務時所提供或產生的個人資料，包括但不限於：
             <ul>
-              <li>您的姓名、電子郵件地址等基本資料。</li>
-              <li>
-                您在本網站瀏覽時所留下的軌跡資料，例如：您的 IP
-                位址、瀏覽器類型、造訪時間等。
-              </li>
+              <li>您手動建立的交易紀錄、股利收益等資料。</li>
               <li>
                 您在本網站使用第三方服務時所提供的資料，例如：您使用 Google
                 登入本網站時所提供的 Google 帳號資料。
@@ -65,7 +61,6 @@ class PrivacyPolicy extends React.Component<Props, State> {
             <ul>
               <li>提供您本網站的服務。</li>
               <li>回應您的詢問或要求。</li>
-              <li>進行統計分析，以改善本網站的服務品質。</li>
               <li>與您聯繫，提供您最新的資訊或服務。</li>
             </ul>
           </p>
@@ -105,8 +100,15 @@ class PrivacyPolicy extends React.Component<Props, State> {
           </p>
           <h2>聯絡我們</h2>
           <p>
-            如果您對我們的隱私權政策有任何疑問或意見，請透過客服信箱
-            trade.smartly.official@gmail.com 聯絡我們。
+            如果您對我們的隱私權政策有任何疑問或意見，請透過
+            <a
+              target="_blank"
+              href="https://github.com/bingyangchen/taigu/issues"
+              rel="noreferrer"
+            >
+              問題回報網頁
+            </a>
+            提出 ，或透過客服信箱 trade.smartly.official@gmail.com 聯絡我們。
           </p>
         </div>
       </div>

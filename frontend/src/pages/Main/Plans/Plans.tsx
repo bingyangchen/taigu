@@ -10,6 +10,7 @@ import {
   SpeedDial,
   TradePlanModal,
 } from "../../../components";
+import { updateHeaderTitle } from "../../../redux/slices/MainPageSlice";
 import { deletePlan } from "../../../redux/slices/TradePlanSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
@@ -41,7 +42,15 @@ class Plans extends React.Component<Props, State> {
       numberToShow: 15,
     };
   }
-  public componentDidMount(): void {}
+
+  public componentDidMount(): void {
+    this.props.dispatch(updateHeaderTitle("買賣計畫"));
+  }
+
+  public componentWillUnmount(): void {
+    this.props.dispatch(updateHeaderTitle(null));
+  }
+
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
@@ -103,6 +112,7 @@ class Plans extends React.Component<Props, State> {
       </div>
     );
   }
+
   private get filteredAndSortedPlans(): TradePlan[] {
     return this.props.tradePlans
       .filter((plan) => {
@@ -133,11 +143,13 @@ class Plans extends React.Component<Props, State> {
         return Math.abs(a.target_price - pa) / pa - Math.abs(b.target_price - pb) / pb;
       });
   }
+
   private handleClickShowMore = (): void => {
     this.setState((state) => {
       return { numberToShow: state.numberToShow * 2 };
     });
   };
+
   private get hasMoreToShow(): boolean {
     return this.filteredAndSortedPlans.length > this.state.numberToShow;
   }

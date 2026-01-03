@@ -31,7 +31,11 @@
     padding-bottom: 15dvh;
     line-height: 2rem;
     text-align: justify;
+    & * {
+      user-select: text !important;
+    }
     & > .effective_date {
+      color: _.$gray;
       font-size: 0.9 * _.$base-font-size;
     }
     & > h2 {
@@ -47,7 +51,11 @@
       }
       & > ul {
         margin: 0;
-        padding-left: 20px;
+        padding: 10px 0 0 20px;
+      }
+      & > a {
+        color: _.$blue;
+        text-decoration: underline;
       }
     }
   }
