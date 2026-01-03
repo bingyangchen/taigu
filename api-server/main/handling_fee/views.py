@@ -5,7 +5,7 @@ from datetime import datetime
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from main.core.decorators import require_login
+from main.core.decorators.auth import require_login
 from main.handling_fee.models import HandlingFeeDiscountRecord
 
 logger = logging.getLogger(__name__)

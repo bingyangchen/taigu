@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
-from main.core.decorators import require_login
+from main.core.decorators.auth import require_login
 from main.memo.models import Favorite, StockMemo, TradePlan
 from main.stock.models import Company
 
