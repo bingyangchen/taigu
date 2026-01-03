@@ -2,7 +2,7 @@
 import json
 from json.decoder import JSONDecodeError
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -60,9 +60,11 @@ class TestGetAuthorizationUrlView:
             include_granted_scopes="true"
         )
 
+    @patch("main.core.decorators.rate_limit.LUA_SCRIPT")
     def test_get_authorization_url_missing_redirect_uri(
-        self, request_obj: HttpRequest
+        self, mock_lua_script: Mock, request_obj: HttpRequest
     ) -> None:
+        mock_lua_script.return_value = 1  # Allow request
         request_obj.method = "GET"
         request_obj.GET = QueryDict("")
 
@@ -134,13 +136,16 @@ class TestGoogleLoginView:
         assert AUTH_COOKIE_NAME in response.cookies
         assert response.cookies[AUTH_COOKIE_NAME].value == "test_jwt_token"
 
+    @patch("main.core.decorators.rate_limit.LUA_SCRIPT")
     def test_google_login_post_success_existing_user(
         self,
+        mock_lua_script: Mock,
         monkeypatch: Any,
         request_obj: HttpRequest,
         mock_flow: Any,
         mock_verify_result: dict[str, Any],
     ) -> None:
+        mock_lua_script.return_value = 1  # Allow request
         # Create existing user
         User.objects.create_user(
             oauth_org=OAuthOrganization.GOOGLE,
@@ -175,7 +180,11 @@ class TestGoogleLoginView:
         assert response["is-log-in"] == "yes"
         assert AUTH_COOKIE_NAME in response.cookies
 
-    def test_google_login_insufficient_data(self, request_obj: HttpRequest) -> None:
+    @patch("main.core.decorators.rate_limit.LUA_SCRIPT")
+    def test_google_login_insufficient_data(
+        self, mock_lua_script: Mock, request_obj: HttpRequest
+    ) -> None:
+        mock_lua_script.return_value = 1  # Allow request
         request_obj.method = "POST"
         request_obj.POST = {"code": "auth_code"}  # Missing redirect_uri
 
@@ -185,7 +194,11 @@ class TestGoogleLoginView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
-    def test_google_login_missing_code(self, request_obj: HttpRequest) -> None:
+    @patch("main.core.decorators.rate_limit.LUA_SCRIPT")
+    def test_google_login_missing_code(
+        self, mock_lua_script: Mock, request_obj: HttpRequest
+    ) -> None:
+        mock_lua_script.return_value = 1  # Allow request
         request_obj.method = "POST"
         request_obj.POST = {
             "redirect_uri": "https://example.com/callback"

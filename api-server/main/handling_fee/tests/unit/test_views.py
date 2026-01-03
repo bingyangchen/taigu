@@ -11,11 +11,11 @@ from main.account import OAuthOrganization
 from main.account.models import User
 from main.handling_fee.models import HandlingFeeDiscountRecord
 from main.handling_fee.views import (
-    create_discount,
+    _create_discount,
+    _delete_discount,
+    _list_discounts,
+    _update_discount,
     create_or_list_discount,
-    delete_discount,
-    list_discounts,
-    update_discount,
     update_or_delete_discount,
 )
 
@@ -132,7 +132,7 @@ class TestCreateDiscountView:
         )
         request.user = user
 
-        response = create_discount(request)
+        response = _create_discount(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -164,7 +164,7 @@ class TestCreateDiscountView:
         )
         request.user = user
 
-        response = create_discount(request)
+        response = _create_discount(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -187,7 +187,7 @@ class TestCreateDiscountView:
         )
         request.user = user
 
-        response = create_discount(request)
+        response = _create_discount(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 400
@@ -210,7 +210,7 @@ class TestCreateDiscountView:
         )
         request.user = user
 
-        response = create_discount(request)
+        response = _create_discount(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 400
@@ -234,7 +234,7 @@ class TestCreateDiscountView:
         )
         request.user = user
 
-        response = create_discount(request)
+        response = _create_discount(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 400
@@ -258,7 +258,7 @@ class TestCreateDiscountView:
         )
         request.user = user
 
-        response = create_discount(request)
+        response = _create_discount(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -282,7 +282,7 @@ class TestCreateDiscountView:
         )
         request.user = user
 
-        response = create_discount(request)
+        response = _create_discount(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 400
@@ -306,7 +306,7 @@ class TestCreateDiscountView:
         )
         request.user = user
 
-        response = create_discount(request)
+        response = _create_discount(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 400
@@ -326,7 +326,7 @@ class TestCreateDiscountView:
         request.user = user
 
         with pytest.raises(JSONDecodeError):
-            create_discount(request)
+            _create_discount(request)
 
 
 @pytest.mark.django_db
@@ -368,7 +368,7 @@ class TestListDiscountsView:
         request = request_factory.get("/api/handling-fee/discount/")
         request.user = user
 
-        response = list_discounts(request)
+        response = _list_discounts(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -393,7 +393,7 @@ class TestListDiscountsView:
         request = request_factory.get("/api/handling-fee/discount/")
         request.user = user
 
-        response = list_discounts(request)
+        response = _list_discounts(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -420,7 +420,7 @@ class TestListDiscountsView:
         request = request_factory.get("/api/handling-fee/discount/")
         request.user = user
 
-        response = list_discounts(request)
+        response = _list_discounts(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -562,7 +562,7 @@ class TestUpdateDiscountView:
         )
         request.user = user
 
-        response = update_discount(request, str(discount.pk))
+        response = _update_discount(request, str(discount.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -596,7 +596,7 @@ class TestUpdateDiscountView:
         )
         request.user = user
 
-        response = update_discount(request, str(discount.pk))
+        response = _update_discount(request, str(discount.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -624,7 +624,7 @@ class TestUpdateDiscountView:
         )
         request.user = user
 
-        response = update_discount(request, str(discount.pk))
+        response = _update_discount(request, str(discount.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -652,7 +652,7 @@ class TestUpdateDiscountView:
         )
         request.user = user
 
-        response = update_discount(request, str(discount.pk))
+        response = _update_discount(request, str(discount.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -678,7 +678,7 @@ class TestUpdateDiscountView:
         )
         request.user = user
 
-        response = update_discount(request, str(discount.pk))
+        response = _update_discount(request, str(discount.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -706,7 +706,7 @@ class TestUpdateDiscountView:
         )
         request.user = user
 
-        response = update_discount(request, str(discount.pk))
+        response = _update_discount(request, str(discount.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 400
@@ -732,7 +732,7 @@ class TestUpdateDiscountView:
         )
         request.user = user
 
-        response = update_discount(request, str(discount.pk))
+        response = _update_discount(request, str(discount.pk))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 400
@@ -756,7 +756,7 @@ class TestUpdateDiscountView:
         request.user = user
 
         with pytest.raises(ObjectDoesNotExist):
-            update_discount(request, "99999")
+            _update_discount(request, "99999")
 
     def test_update_discount_other_users_record(
         self, request_factory: RequestFactory, discount: HandlingFeeDiscountRecord
@@ -781,7 +781,7 @@ class TestUpdateDiscountView:
         request.user = other_user
 
         with pytest.raises(ObjectDoesNotExist):
-            update_discount(request, str(discount.pk))
+            _update_discount(request, str(discount.pk))
 
     def test_update_discount_invalid_json(
         self,
@@ -798,7 +798,7 @@ class TestUpdateDiscountView:
         request.user = user
 
         with pytest.raises(JSONDecodeError):
-            update_discount(request, str(discount.pk))
+            _update_discount(request, str(discount.pk))
 
 
 @pytest.mark.django_db
@@ -834,7 +834,7 @@ class TestDeleteDiscountView:
         request = request_factory.delete(f"/api/handling-fee/discount/{record_id}/")
         request.user = user
 
-        response = delete_discount(request, str(record_id))
+        response = _delete_discount(request, str(record_id))
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -853,7 +853,7 @@ class TestDeleteDiscountView:
         request.user = user
 
         with pytest.raises(ObjectDoesNotExist):
-            delete_discount(request, "99999")
+            _delete_discount(request, "99999")
 
     def test_delete_discount_other_users_record(
         self, request_factory: RequestFactory, discount: HandlingFeeDiscountRecord
@@ -870,4 +870,4 @@ class TestDeleteDiscountView:
         request.user = other_user
 
         with pytest.raises(ObjectDoesNotExist):
-            delete_discount(request, str(discount.pk))
+            _delete_discount(request, str(discount.pk))

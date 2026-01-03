@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest
 
@@ -11,17 +12,17 @@ from main.account import OAuthOrganization
 from main.account.models import User
 from main.memo.models import Favorite, StockMemo, TradePlan
 from main.memo.views import (
-    create_favorite,
+    _create_favorite,
+    _delete_favorite,
+    _delete_trade_plan,
+    _update_trade_plan,
     create_or_delete_favorite,
     create_trade_plan,
-    delete_favorite,
-    delete_trade_plan,
     list_company_info,
     list_favorites,
     list_trade_plans,
     update_or_create_stock_memo,
     update_or_delete_trade_plan,
-    update_trade_plan,
 )
 from main.stock.models import Company
 
@@ -639,7 +640,7 @@ class TestUpdateTradePlanView:
         body_data = json.dumps(update_data).encode()
         request_obj._body = body_data
 
-        response = update_trade_plan(request_obj, trade_plan.id)
+        response = _update_trade_plan(request_obj, trade_plan.id)
 
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -666,7 +667,7 @@ class TestUpdateTradePlanView:
         body_data = json.dumps(update_data).encode()
         request_obj._body = body_data
 
-        response = update_trade_plan(request_obj, trade_plan.id)
+        response = _update_trade_plan(request_obj, trade_plan.id)
 
         assert response.status_code == 400
         data = json.loads(response.content)
@@ -684,7 +685,7 @@ class TestUpdateTradePlanView:
         body_data = json.dumps(update_data).encode()
         request_obj._body = body_data
 
-        response = update_trade_plan(request_obj, trade_plan.id)
+        response = _update_trade_plan(request_obj, trade_plan.id)
 
         assert response.status_code == 400
         data = json.loads(response.content)
@@ -728,7 +729,7 @@ class TestDeleteTradePlanView:
     ) -> None:
         plan_id = trade_plan.id
 
-        response = delete_trade_plan(request_obj, plan_id)
+        response = _delete_trade_plan(request_obj, plan_id)
 
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -752,7 +753,7 @@ class TestDeleteTradePlanView:
 
         # Should raise an exception because the plan doesn't belong to this user
         with pytest.raises(TradePlan.DoesNotExist):
-            delete_trade_plan(request, trade_plan.id)
+            _delete_trade_plan(request, trade_plan.id)
 
 
 @pytest.mark.django_db
@@ -835,7 +836,7 @@ class TestCreateFavoriteView:
     def test_create_favorite_success(
         self, request_obj: HttpRequest, company: Company
     ) -> None:
-        response = create_favorite(request_obj, company.pk)
+        response = _create_favorite(request_obj, company.pk)
 
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -853,7 +854,7 @@ class TestCreateFavoriteView:
             owner=request_obj.user, company=company
         )
 
-        response = create_favorite(request_obj, company.pk)
+        response = _create_favorite(request_obj, company.pk)
 
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -871,7 +872,7 @@ class TestCreateFavoriteView:
 
     def test_create_favorite_unknown_company(self, request_obj: HttpRequest) -> None:
         with pytest.raises(ObjectDoesNotExist):
-            create_favorite(request_obj, "unknown_sid")
+            _create_favorite(request_obj, "unknown_sid")
 
 
 @pytest.mark.django_db
@@ -903,7 +904,7 @@ class TestDeleteFavoriteView:
     def test_delete_favorite_success(
         self, request_obj: HttpRequest, favorite: Favorite, company: Company
     ) -> None:
-        response = delete_favorite(request_obj, company.pk)
+        response = _delete_favorite(request_obj, company.pk)
 
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -917,11 +918,11 @@ class TestDeleteFavoriteView:
     ) -> None:
         # No favorite exists
         with pytest.raises(ObjectDoesNotExist):
-            delete_favorite(request_obj, company.pk)
+            _delete_favorite(request_obj, company.pk)
 
     def test_delete_favorite_unknown_company(self, request_obj: HttpRequest) -> None:
         with pytest.raises(ObjectDoesNotExist):
-            delete_favorite(request_obj, "unknown_sid")
+            _delete_favorite(request_obj, "unknown_sid")
 
 
 @pytest.mark.django_db
@@ -1002,6 +1003,13 @@ class TestListFavoritesView:
 @pytest.mark.django_db
 class TestMemoViewsIntegration:
     """Integration tests that test view interactions and edge cases."""
+
+    @pytest.fixture(autouse=True)
+    def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
+        mock_lua_script = Mock(return_value=1)  # Allow all requests
+        monkeypatch.setattr(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", mock_lua_script
+        )
 
     @pytest.fixture
     def user(self) -> User:
@@ -1085,7 +1093,7 @@ class TestMemoViewsIntegration:
         plan_id = json.loads(plan_response.content)["id"]
 
         # 3. Create a favorite
-        favorite_response = create_favorite(request, company.pk)
+        favorite_response = _create_favorite(request, company.pk)
         assert favorite_response.status_code == 200
 
         # 4. List company info (should include memo)
@@ -1117,11 +1125,11 @@ class TestMemoViewsIntegration:
 
         # 8. Delete the trade plan
         request.method = "DELETE"
-        delete_plan_response = delete_trade_plan(request, plan_id)
+        delete_plan_response = _delete_trade_plan(request, plan_id)
         assert delete_plan_response.status_code == 200
 
         # 9. Delete the favorite
-        delete_favorite_response = delete_favorite(request, company.pk)
+        delete_favorite_response = _delete_favorite(request, company.pk)
         assert delete_favorite_response.status_code == 200
 
         # Verify final state

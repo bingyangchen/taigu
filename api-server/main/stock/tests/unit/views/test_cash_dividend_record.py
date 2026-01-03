@@ -3,9 +3,10 @@ from datetime import date
 from unittest.mock import Mock, patch
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
+from django.http import HttpResponseNotAllowed, JsonResponse
 from django.test import RequestFactory
 
 from main.account import OAuthOrganization
@@ -181,7 +182,7 @@ class TestCashDividendRecordListView:
         with pytest.raises(ValueError):  # Should raise JSON decode error
             list_view(request)
 
-    @patch("main.core.decorators.require_login")
+    @patch("main.core.decorators.auth.require_login")
     def test_list_unauthorized_user(
         self, mock_require_login: Mock, request_factory: RequestFactory
     ) -> None:
@@ -195,6 +196,13 @@ class TestCashDividendRecordListView:
 
 @pytest.mark.django_db
 class TestCashDividendRecordCreateView:
+    @pytest.fixture(autouse=True)
+    def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
+        mock_lua_script = Mock(return_value=1)  # Allow all requests
+        monkeypatch.setattr(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", mock_lua_script
+        )
+
     @pytest.fixture
     def request_factory(self) -> RequestFactory:
         return RequestFactory()
@@ -366,6 +374,13 @@ class TestCashDividendRecordCreateView:
 
 @pytest.mark.django_db
 class TestCashDividendRecordUpdateOrDeleteView:
+    @pytest.fixture(autouse=True)
+    def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
+        mock_lua_script = Mock(return_value=1)  # Allow all requests
+        monkeypatch.setattr(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", mock_lua_script
+        )
+
     @pytest.fixture
     def request_factory(self) -> RequestFactory:
         return RequestFactory()
@@ -511,11 +526,8 @@ class TestCashDividendRecordUpdateOrDeleteView:
 
         response = update_or_delete(request, str(cash_dividend_record.pk))
 
-        assert isinstance(response, JsonResponse)
+        assert isinstance(response, HttpResponseNotAllowed)
         assert response.status_code == 405
-
-        data = json.loads(response.content)
-        assert data["message"] == "Method Not Allowed"
 
     def test_nonexistent_record(
         self, request_factory: RequestFactory, user: User

@@ -3,12 +3,14 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from main.core.decorators import require_login
+from main.core.decorators.auth import require_login
+from main.core.decorators.rate_limit import rate_limit
 from main.stock.models import CashDividendRecord, Company
 
 
+@rate_limit(rate=2)
 @require_GET
 @require_login
 def list(request: HttpRequest) -> JsonResponse:
@@ -45,6 +47,7 @@ def list(request: HttpRequest) -> JsonResponse:
     )
 
 
+@rate_limit(rate=1)
 @require_POST
 @require_login
 def create(request: HttpRequest) -> JsonResponse:
@@ -84,17 +87,19 @@ def create(request: HttpRequest) -> JsonResponse:
     )
 
 
+@rate_limit(rate=1)
 @require_login
+@require_http_methods(["POST", "DELETE"])
 def update_or_delete(request: HttpRequest, id: str | int) -> JsonResponse:
     if request.method == "POST":
-        return update(request, id)
+        return _update(request, id)
     elif request.method == "DELETE":
-        return delete(request, id)
+        return _delete(request, id)
     else:
         return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
-def update(request: HttpRequest, id: str | int) -> JsonResponse:
+def _update(request: HttpRequest, id: str | int) -> JsonResponse:
     payload = json.loads(request.body)
     if (
         (not (deal_time := payload.get("deal_time")))
@@ -128,6 +133,6 @@ def update(request: HttpRequest, id: str | int) -> JsonResponse:
     )
 
 
-def delete(request: HttpRequest, id: str | int) -> JsonResponse:
+def _delete(request: HttpRequest, id: str | int) -> JsonResponse:
     CashDividendRecord.objects.get(pk=int(id), owner=request.user).delete()
     return JsonResponse({})

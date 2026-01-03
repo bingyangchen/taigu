@@ -1,9 +1,29 @@
 from typing import TypeVar, get_args
 
+import redis
 from django.core.cache import cache
 from pydantic import BaseModel
+from redis.backoff import ExponentialBackoff
+from redis.retry import Retry
+
+from main.env import env
 
 T = TypeVar("T", bound=BaseModel)
+
+
+redis_connection_pool = redis.ConnectionPool(
+    host=env.REDIS_HOST,
+    port=env.REDIS_PORT,
+    decode_responses=True,
+    max_connections=1000,
+    socket_connect_timeout=10,  # TCP connection
+    socket_timeout=10,  # Socket I/O
+)
+redis_retry_policy = Retry(backoff=ExponentialBackoff(), retries=5)
+
+
+def get_redis_connection() -> redis.Redis:
+    return redis.Redis(retry=redis_retry_policy).from_pool(redis_connection_pool)
 
 
 class BaseCacheManager[T: BaseModel]:
