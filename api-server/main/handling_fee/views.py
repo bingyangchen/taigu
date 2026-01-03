@@ -6,34 +6,37 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_http_methods
 
 from main.core.decorators.auth import require_login
+from main.core.decorators.rate_limit import rate_limit
 from main.handling_fee.models import HandlingFeeDiscountRecord
 
 logger = logging.getLogger(__name__)
 
 
+@rate_limit(rate=2)
 @require_http_methods(["POST", "GET"])
 @require_login
 def create_or_list_discount(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
-        return create_discount(request)
+        return _create_discount(request)
     elif request.method == "GET":
-        return list_discounts(request)
+        return _list_discounts(request)
     else:
         return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
+@rate_limit(rate=1)
 @require_http_methods(["PUT", "DELETE"])
 @require_login
 def update_or_delete_discount(request: HttpRequest, id: str | int) -> JsonResponse:
     if request.method == "PUT":
-        return update_discount(request, id)
+        return _update_discount(request, id)
     elif request.method == "DELETE":
-        return delete_discount(request, id)
+        return _delete_discount(request, id)
     else:
         return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
-def create_discount(request: HttpRequest) -> JsonResponse:
+def _create_discount(request: HttpRequest) -> JsonResponse:
     payload = json.loads(request.body)
 
     if (date := payload.get("date")) is None or (
@@ -62,7 +65,7 @@ def create_discount(request: HttpRequest) -> JsonResponse:
     )
 
 
-def list_discounts(request: HttpRequest) -> JsonResponse:
+def _list_discounts(request: HttpRequest) -> JsonResponse:
     discounts = (
         HandlingFeeDiscountRecord.objects.filter(owner=request.user)
         .values("id", "date", "amount", "memo")
@@ -71,7 +74,7 @@ def list_discounts(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"data": list(discounts)})
 
 
-def update_discount(request: HttpRequest, id: str | int) -> JsonResponse:
+def _update_discount(request: HttpRequest, id: str | int) -> JsonResponse:
     payload = json.loads(request.body)
     if (date := payload.get("date")) is not None:
         try:
@@ -100,6 +103,6 @@ def update_discount(request: HttpRequest, id: str | int) -> JsonResponse:
     )
 
 
-def delete_discount(request: HttpRequest, id: str | int) -> JsonResponse:
+def _delete_discount(request: HttpRequest, id: str | int) -> JsonResponse:
     HandlingFeeDiscountRecord.objects.get(pk=int(id), owner=request.user).delete()
     return JsonResponse({})

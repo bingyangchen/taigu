@@ -4,6 +4,8 @@ from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
 
+from main.core.decorators.auth import require_login
+from main.core.decorators.rate_limit import rate_limit
 from main.stock import Frequency, TradeType
 from main.stock.cache import TimeSeriesStockInfo, TimeSeriesStockInfoCacheManager
 from main.stock.models import Company, History, MarketIndexPerMinute, StockInfo
@@ -11,7 +13,9 @@ from main.stock.models import Company, History, MarketIndexPerMinute, StockInfo
 logger = logging.getLogger(__name__)
 
 
+@rate_limit(rate=2)
 @require_GET
+@require_login
 def market_index(request: HttpRequest) -> JsonResponse:
     result: dict = {"date": None}
     for market_id in (TradeType.TSE, TradeType.OTC):
@@ -42,7 +46,9 @@ def market_index(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
+@rate_limit(rate=3)
 @require_GET
+@require_login
 def current_stock_info(request: HttpRequest) -> JsonResponse:
     result = {}
     sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
@@ -59,7 +65,9 @@ def current_stock_info(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
+@rate_limit(rate=3)
 @require_GET
+@require_login
 def historical_prices(request: HttpRequest, sid: str) -> JsonResponse:
     result = {"data": []}
     for h in History.objects.filter(
@@ -70,7 +78,9 @@ def historical_prices(request: HttpRequest, sid: str) -> JsonResponse:
     return JsonResponse(result)
 
 
+@rate_limit(rate=3)
 @require_GET
+@require_login
 def search(request: HttpRequest) -> JsonResponse:
     result = {"data": []}
     if keyword := request.GET.get("keyword"):
@@ -89,7 +99,9 @@ def search(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
+@rate_limit(rate=2)
 @require_GET
+@require_login
 def company_names(request: HttpRequest) -> JsonResponse:
     sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
     result = dict.fromkeys(sids, None)

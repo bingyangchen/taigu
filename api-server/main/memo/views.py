@@ -3,15 +3,17 @@ import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from main.core.decorators.auth import require_login
+from main.core.decorators.rate_limit import rate_limit
 from main.memo.models import Favorite, StockMemo, TradePlan
 from main.stock.models import Company
 
 logger = logging.getLogger(__name__)
 
 
+@rate_limit(rate=1)
 @require_POST
 @require_login
 def update_or_create_stock_memo(request: HttpRequest, sid: str) -> JsonResponse:
@@ -35,6 +37,7 @@ def update_or_create_stock_memo(request: HttpRequest, sid: str) -> JsonResponse:
     )
 
 
+@rate_limit(rate=3)
 @require_GET
 @require_login
 def list_company_info(request: HttpRequest) -> JsonResponse:
@@ -72,6 +75,7 @@ def list_company_info(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
+@rate_limit(rate=1)
 @require_POST
 @require_login
 def create_trade_plan(request: HttpRequest) -> JsonResponse:
@@ -113,6 +117,7 @@ def create_trade_plan(request: HttpRequest) -> JsonResponse:
     )
 
 
+@rate_limit(rate=2)
 @require_GET
 @require_login
 def list_trade_plans(request: HttpRequest) -> JsonResponse:
@@ -141,17 +146,19 @@ def list_trade_plans(request: HttpRequest) -> JsonResponse:
     )
 
 
+@rate_limit(rate=1)
 @require_login
+@require_http_methods(["POST", "DELETE"])
 def update_or_delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
     if request.method == "POST":
-        return update_trade_plan(request, id)
+        return _update_trade_plan(request, id)
     elif request.method == "DELETE":
-        return delete_trade_plan(request, id)
+        return _delete_trade_plan(request, id)
     else:
         return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
-def update_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
+def _update_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
     payload = json.loads(request.body)
 
     if (
@@ -189,33 +196,36 @@ def update_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
     )
 
 
-def delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
+def _delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
     TradePlan.objects.get(pk=int(id), owner=request.user).delete()
     return JsonResponse({})
 
 
+@rate_limit(rate=1)
 @require_login
+@require_http_methods(["POST", "DELETE"])
 def create_or_delete_favorite(request: HttpRequest, sid: str) -> JsonResponse:
     if request.method == "POST":
-        return create_favorite(request, sid)
+        return _create_favorite(request, sid)
     elif request.method == "DELETE":
-        return delete_favorite(request, sid)
+        return _delete_favorite(request, sid)
     else:
         return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
-def create_favorite(request: HttpRequest, sid: str) -> JsonResponse:
+def _create_favorite(request: HttpRequest, sid: str) -> JsonResponse:
     company = Company.objects.get(pk=sid)
     Favorite.objects.get_or_create(owner=request.user, company=company)
     return JsonResponse({"sid": sid})
 
 
-def delete_favorite(request: HttpRequest, sid: str) -> JsonResponse:
+def _delete_favorite(request: HttpRequest, sid: str) -> JsonResponse:
     company = Company.objects.get(pk=sid)
     Favorite.objects.get(owner=request.user, company=company).delete()
     return JsonResponse({"sid": sid})
 
 
+@rate_limit(rate=2)
 @require_GET
 @require_login
 def list_favorites(request: HttpRequest) -> JsonResponse:

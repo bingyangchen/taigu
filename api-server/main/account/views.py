@@ -17,7 +17,8 @@ from pydantic import BaseModel
 from main.account import OAuthOrganization
 from main.account.models import User
 from main.account.utils import delete_auth_cookie, set_auth_cookie
-from main.core.decorators import require_login
+from main.core.decorators.auth import require_login
+from main.core.decorators.rate_limit import rate_limit
 from main.env import env
 
 logger = logging.getLogger(__name__)
@@ -78,6 +79,7 @@ def _make_jwt(user_id: str) -> str:
     )
 
 
+@rate_limit(rate=1)
 @ensure_csrf_cookie
 @require_GET
 def get_authorization_url(request: HttpRequest) -> JsonResponse:
@@ -93,6 +95,7 @@ def get_authorization_url(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"authorization_url": authorization_url, "state": state})
 
 
+@rate_limit(rate=0.5)
 @require_POST
 def google_login(request: HttpRequest) -> JsonResponse:
     code, redirect_uri = request.POST.get("code"), request.POST.get("redirect_uri")
@@ -117,6 +120,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
     return response
 
 
+@rate_limit(rate=0.5)
 @require_POST
 @require_login
 def change_google_binding(request: HttpRequest) -> JsonResponse:
@@ -159,6 +163,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
     return response
 
 
+@rate_limit(rate=5)
 @require_GET
 @require_login
 def me(request: HttpRequest) -> JsonResponse:
@@ -180,6 +185,7 @@ def logout(request: HttpRequest) -> JsonResponse:
     return response
 
 
+@rate_limit(rate=0.5)
 @require_POST
 @require_login
 def update(request: HttpRequest) -> JsonResponse:
