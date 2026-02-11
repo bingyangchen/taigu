@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
 
 jobs:
   detect-changes:
@@ -18,7 +17,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Check for backend changes
         uses: dorny/paths-filter@v3
         id: filter
@@ -35,9 +34,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - name: Install codespell
@@ -52,9 +51,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - name: Install Ruff
@@ -69,7 +68,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
@@ -95,7 +94,7 @@ jobs:
     environment: Test
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build Docker image for testing
         run: |
           cd api-server
