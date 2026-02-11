@@ -32,7 +32,7 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
-poetry = "2.0"
+poetry = "2.3.2"
 codespell = "2.4.1"
 ruff = "0.12.8"
 

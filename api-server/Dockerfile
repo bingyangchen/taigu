@@ -4,7 +4,7 @@ FROM python:3.13.3-slim-bookworm AS python_base
 
 FROM python_base AS package_manager
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install poetry==2.0 && \
+    pip install poetry==2.3.2 && \
     poetry self add poetry-plugin-export
 COPY pyproject.toml poetry.lock ./
 
