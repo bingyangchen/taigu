@@ -1,6 +1,5 @@
 SHELL := /usr/bin/env bash
 .SILENT:
-.ONESHELL:
 
 .PHONY: build-dev
 build-dev:
