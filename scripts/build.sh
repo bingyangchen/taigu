@@ -24,13 +24,8 @@ else
     for service in api-server frontend scheduler; do
         echo "Building $service..."
         cd ./$service
-        if [ "$1" == "prod" ]; then
-            docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final \
-                -f ./Dockerfile --platform linux/x86_64 .
-        else
-            docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final \
-                -f ./Dockerfile --platform linux/$arch .
-        fi
+        docker build -t "$DOCKER_USERNAME/$service:$1" --target "$1"_final \
+            -f ./Dockerfile --platform linux/$arch .
         cd ..
     done
 fi
