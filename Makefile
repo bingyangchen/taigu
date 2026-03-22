@@ -1,6 +1,9 @@
 SHELL := /usr/bin/env bash
 .SILENT:
 
+image_tag ?=
+export image_tag
+
 .PHONY: build-dev
 build-dev:
 	$(SHELL) ./scripts/build.sh dev
