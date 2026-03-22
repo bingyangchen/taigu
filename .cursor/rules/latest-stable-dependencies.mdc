@@ -1,0 +1,15 @@
+---
+description: When installing dependencies, search for and use the latest stable version
+alwaysApply: false
+---
+# Latest Stable Dependencies
+
+This project uses **Python** and **React**. When adding or updating dependencies:
+
+1. **Search for the latest stable version** (PyPI for Python, npm registry for JavaScript/React) before writing version numbers or running install commands.
+2. **Prefer the latest stable release** unless the project explicitly requires a specific version for compatibility.
+3. **Avoid placeholders** like `any`, `*`, or guessed versions; use a concrete stable version once verified.
+
+**Python** (`pyproject.toml`): Look up the package on PyPI, then pin it (e.g. `package==1.2.3`).
+
+**React** (`frontend/package.json`): Look up the package on [npm](https://www.npmjs.com/), then set the version (e.g. `"package": "^1.2.3"` or exact `"1.2.3"`).
