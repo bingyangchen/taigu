@@ -6,6 +6,16 @@ source "$(dirname "$(realpath "$0")")/common.sh"
 check_triggered_by_make
 load_env_vars
 
+if [ "${ENV:-}" = "prod" ]; then
+    if [[ -n "${image_tag:-}" ]]; then
+        export IMAGE_TAG="$image_tag"
+    fi
+    if [[ -z "${IMAGE_TAG:-}" ]]; then
+        printf "${RED} ✗ Production requires IMAGE_TAG (pass image_tag=<full git SHA> to make)${RESET}\n" >&2
+        exit 1
+    fi
+fi
+
 RECYCLE=false
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -27,6 +37,7 @@ docker compose -f $file_name up -d --force-recreate
 if [ "$RECYCLE" = true ]; then
     printf "\n${BLUE}Removing unused containers, networks and images...${RESET}\n"
     docker system prune -f
+    docker images --filter "reference=${DOCKER_USERNAME}/*" -q | while read -r id; do docker rmi "$id" 2>/dev/null || true; done
 fi
 
 printf "${GREEN} ✔ All services restarted${RESET}\n"

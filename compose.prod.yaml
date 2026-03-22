@@ -1,6 +1,6 @@
 services:
   api-server:
-    image: taigutw/api-server:prod
+    image: ${DOCKER_USERNAME}/api-server:${IMAGE_TAG}
     volumes:
       - ./api-server/google_client_secret.json:/app/google_client_secret.json:ro
     command: ["gunicorn"]
@@ -67,7 +67,7 @@ services:
         max-size: "2m"
         max-file: "1"
   scheduler:
-    image: taigutw/scheduler:prod
+    image: ${DOCKER_USERNAME}/scheduler:${IMAGE_TAG}
     command: ["python", "-u", "main.py"]
     env_file: .env
     depends_on:
