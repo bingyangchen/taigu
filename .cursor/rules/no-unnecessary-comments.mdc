@@ -1,0 +1,35 @@
+---
+description: Avoid unnecessary comments and doc strings
+alwaysApply: false
+---
+# Minimal Comments and Doc Strings
+
+Do not write comments or doc strings unless they are necessary.
+
+## When to Add
+
+- **Non-obvious logic**: Complex algorithms, workarounds, or non-intuitive behavior
+- **Public API surface**: Exported functions/classes that consumers rely on
+- **Safety/constraints**: Critical invariants, preconditions, or why something must not change
+
+## When to Skip
+
+- **Self-explanatory code**: Clear variable names and function names make comments redundant
+- **Trivial getters/setters**: A docstring like “Returns the name” adds no value over a clearly named `get_name()`
+- **Obvious code**: Don't comment what the code obviously does
+
+## Examples
+
+```python
+from math import floor
+
+# ❌ Unnecessary
+def get_balance(self) -> float:
+    """Returns the account balance."""
+    return self._balance
+
+
+# ✅ Necessary - explains non-obvious behavior
+# Round down to avoid floating-point errors when comparing amounts
+display_amount = floor(raw_amount * 100) / 100
+```

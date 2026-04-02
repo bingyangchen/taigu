@@ -1,0 +1,43 @@
+---
+description: Avoid abbreviations in identifiers; use full words
+alwaysApply: false
+---
+# No Abbreviation When Coding
+
+Use full, readable names for variables, functions, parameters, and types. Avoid abbreviations and single-letter names except for very common conventions (e.g. `i`, `j` in tight loops, `e` for event).
+
+## Examples
+
+```python
+# ❌ Abbreviated
+usr = get_current_user()
+acct_bal = account.balance
+
+
+def on_btn_tap() -> None:
+    ...
+
+
+def calc_amt(o: Order) -> int:
+    return len(o.items)
+
+
+# ✅ Full words
+user = get_current_user()
+account_balance = account.balance
+
+
+def on_button_tap() -> None:
+    ...
+
+
+def calculate_amount(order: Order) -> int:
+    return len(order.items)
+```
+
+## Exceptions
+
+- **Loop indices**: `i`, `j`, `k` in short loops are fine.
+- **Domain terms**: Use the team’s established shorthand if it’s the standard (e.g. `db` for database only if the codebase already uses it consistently).
+
+When in doubt, prefer the longer, clearer name.

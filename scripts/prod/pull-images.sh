@@ -12,10 +12,17 @@ if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
     exit 1
 fi
 
+if [ "$1" == "prod" ]; then
+    if [[ -n "${image_tag:-}" ]]; then
+        export IMAGE_TAG="$image_tag"
+    fi
+fi
+
 echo "$DOCKER_ACCESS_TOKEN" | docker login --username "$DOCKER_USERNAME" --password-stdin
 
 if [ "$1" == "prod" ]; then
-    remote_images=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/scheduler:$1")
+    tag="$(resolve_prod_pull_image_tag)"
+    remote_images=("$DOCKER_USERNAME/api-server:$tag" "$DOCKER_USERNAME/scheduler:$tag")
 else
     remote_images=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/frontend:$1" "$DOCKER_USERNAME/scheduler:$1")
 fi
