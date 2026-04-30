@@ -7,11 +7,8 @@ check_triggered_by_make
 load_env_vars
 
 if [ "${ENV:-}" = "prod" ]; then
-    if [[ -n "${image_tag:-}" ]]; then
-        export IMAGE_TAG="$image_tag"
-    fi
     if [[ -z "${IMAGE_TAG:-}" ]]; then
-        printf "${RED} ✗ Production requires IMAGE_TAG (pass image_tag=<full git SHA> to make)${RESET}\n" >&2
+        printf "${RED} ✗ Production requires IMAGE_TAG (pass IMAGE_TAG=<full git SHA> to make)${RESET}\n" >&2
         exit 1
     fi
 fi

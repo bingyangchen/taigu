@@ -7,10 +7,6 @@ check_triggered_by_make
 load_env_vars
 check_env prod
 
-if [[ -n "${image_tag:-}" ]]; then
-    export IMAGE_TAG="$image_tag"
-fi
-
 if [[ -n $(git status -s) ]]; then
     printf "${RED} ✗ Working directory has uncommitted changes.${RESET}\n" >&2
     exit 1

@@ -4,7 +4,8 @@ set -e
 source "$(dirname "$(realpath "$0")")/common.sh"
 
 check_triggered_by_make
-validate_service $1
+service="${1:-}"
+validate_service "$service"
 load_env_vars
 clear_screen
 
@@ -12,10 +13,10 @@ clear_screen
 # For db and redis, a newly created container would not be able to connect to the
 # running postgres/redis. So we use 'exec' to get a shell in the existing container
 # instead of creating a new one.
-if [ "$1" = "db" ]; then
-    docker compose -f compose.$ENV.yaml --progress quiet exec $1 bash
-elif [ "$1" = "redis" ]; then
-    docker compose -f compose.$ENV.yaml --progress quiet exec $1 sh
+if [ "$service" = "db" ]; then
+    docker compose -f "compose.$ENV.yaml" --progress quiet exec "$service" bash
+elif [ "$service" = "redis" ]; then
+    docker compose -f "compose.$ENV.yaml" --progress quiet exec "$service" sh
 else
-    docker compose -f compose.$ENV.yaml --progress quiet run --rm $1 bash
+    docker compose -f "compose.$ENV.yaml" --progress quiet run --rm "$service" bash
 fi

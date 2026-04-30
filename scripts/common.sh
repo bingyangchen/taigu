@@ -63,7 +63,7 @@ validate_service() {
     fi
 }
 
-validate_deployment_environment() {
+validate_environment() {
     local environment="${1:-}"
     local valid_environment
     local usage="${DEPLOYMENT_ENVIRONMENTS[*]}"
@@ -78,7 +78,7 @@ validate_deployment_environment() {
 }
 
 resolve_prod_build_image_tag() {
-    local tag="${image_tag:-${IMAGE_TAG:-}}"
+    local tag="${IMAGE_TAG:-}"
     if [ -z "$tag" ]; then
         tag=$(git rev-parse main 2>/dev/null || git rev-parse HEAD)
     fi
@@ -86,12 +86,12 @@ resolve_prod_build_image_tag() {
 }
 
 resolve_prod_pull_image_tag() {
-    local tag="${image_tag:-${IMAGE_TAG:-}}"
+    local tag="${IMAGE_TAG:-}"
     if [ -z "$tag" ]; then
         tag=$(git rev-parse HEAD 2>/dev/null || true)
     fi
     if [ -z "$tag" ]; then
-        printf "${RED} ✗ Set image_tag=<full git SHA> or IMAGE_TAG (not via .env)${RESET}\n" >&2
+        printf "${RED} ✗ Set IMAGE_TAG=<full git SHA> (not via .env)${RESET}\n" >&2
         exit 1
     fi
     echo "$tag"
