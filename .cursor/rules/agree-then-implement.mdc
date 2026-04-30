@@ -1,0 +1,27 @@
+---
+description: When the user raises a valid concern, implement the fix, do not stop at agreement
+alwaysApply: true
+---
+
+# Agree, Then Implement
+
+When the user questions a design choice, redundancy, bug, or inconsistency—and you **agree** the concern is valid—**do not end with verbal agreement only**.
+
+## Do
+
+- **Apply the change** in the codebase (or the concrete next step) toward the **ideal outcome** the user is pointing at.
+- If scope is large, implement the **highest-value slice** now and briefly note what remains.
+
+## Don’t
+
+- Reply with only “you’re right” / “good catch” / “there’s no strong reason…” without **acting** when a fix is straightforward.
+- Defer with “say the word if you want me to…” when you already endorse the direction—**unless** the user must choose between real alternatives (then summarize options and still offer a default implementation).
+
+## Examples
+
+| Situation | ❌ Weak | ✅ Strong |
+| ----------- | --------- | ----------- |
+| Duplicate constants across files | “Yes, we should DRY that.” | Extract shared constant, update imports, run analyzer. |
+| Redundant haystack fields | “Agreed, mostly redundant.” | Remove redundancy in code and verify behavior. |
+
+This does not override explicit user instructions to **only explain** or **not edit**—follow those when given.

@@ -6,22 +6,16 @@ source "$(dirname "$(realpath "$0")")/../common.sh"
 check_triggered_by_make
 load_env_vars
 
-if [[ -n "${image_tag:-}" ]]; then
-    export IMAGE_TAG="$image_tag"
-fi
-
-if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
-    printf "${RED} ✗ Usage: $0 <dev|prod>${RESET}\n" >&2
-    exit 1
-fi
+target_env="${1:-}"
+validate_environment "$target_env"
 
 echo "$DOCKER_ACCESS_TOKEN" | docker login --username "$DOCKER_USERNAME" --password-stdin
 
-if [ "$1" == "prod" ]; then
+if [ "$target_env" == "prod" ]; then
     tag="$(resolve_prod_build_image_tag)"
     local_images=("$DOCKER_USERNAME/api-server:$tag" "$DOCKER_USERNAME/scheduler:$tag")
 else
-    local_images=("$DOCKER_USERNAME/api-server:$1" "$DOCKER_USERNAME/frontend:$1" "$DOCKER_USERNAME/scheduler:$1")
+    local_images=("$DOCKER_USERNAME/api-server:$target_env" "$DOCKER_USERNAME/frontend:$target_env" "$DOCKER_USERNAME/scheduler:$target_env")
 fi
 
 for image in "${local_images[@]}"; do

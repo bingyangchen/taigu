@@ -6,6 +6,7 @@ source "$(dirname "$(realpath "$0")")/../common.sh"
 # NOTE: Do not call check_triggered_by_make because this script is also called by
 #       post-merge hook.
 
+load_env_vars
 check_env dev
 echo "Installing git hooks..."
 
