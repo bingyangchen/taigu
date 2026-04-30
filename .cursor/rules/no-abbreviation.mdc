@@ -1,6 +1,5 @@
 ---
-description: Avoid abbreviations in identifiers; use full words
-alwaysApply: false
+alwaysApply: true
 ---
 # No Abbreviation When Coding
 

@@ -1,6 +1,5 @@
 ---
-description: Avoid unnecessary comments and doc strings
-alwaysApply: false
+alwaysApply: true
 ---
 # Minimal Comments and Doc Strings
 

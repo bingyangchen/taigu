@@ -1,6 +1,5 @@
 ---
-description: When installing dependencies, search for and use the latest stable version
-alwaysApply: false
+alwaysApply: true
 ---
 # Latest Stable Dependencies
 
