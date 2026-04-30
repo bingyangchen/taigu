@@ -78,11 +78,11 @@ push-images-prod:
 
 .PHONY: pull-images-dev
 pull-images-dev:
-	$(SHELL) ./scripts/prod/pull-images.sh dev
+	$(SHELL) ./scripts/pull-images.sh dev
 
 .PHONY: pull-images-prod
 pull-images-prod:
-	$(SHELL) ./scripts/prod/pull-images.sh prod
+	$(SHELL) ./scripts/pull-images.sh prod
 
 .PHONY: deploy
 deploy:

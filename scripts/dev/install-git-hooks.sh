@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 source "$(dirname "$(realpath "$0")")/../common.sh"
 
 # NOTE: Do not call check_triggered_by_make because this script is also called by

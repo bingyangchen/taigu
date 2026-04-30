@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 branch_name=$(git symbolic-ref --short HEAD)
 if [ "$branch_name" = "main" ]; then
