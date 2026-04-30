@@ -1,6 +1,6 @@
 先使用 `git push -u origin <branch_name>` 將現在這個分支推送到遠端。
 
-然後使用 `gh pr create --base <base> --title <title> --body <body> --assignee @me --reviewer @taigutw` 來建立一個 PR。
+然後使用 `gh pr create --base <base> --title <title> --body <body> --assignee @me --reviewer taigutw` 來建立一個 PR。
 
 其中：
 
