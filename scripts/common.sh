@@ -37,7 +37,6 @@ load_env_vars() {
 }
 
 check_env() {
-    load_env_vars
     if [ "$ENV" != "$1" ]; then
         printf "${RED} ✗ This is a $1-only script, aborting...${RESET}\n" >&2
         exit 1

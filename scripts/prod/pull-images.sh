@@ -4,8 +4,8 @@ set -e
 source "$(dirname "$(realpath "$0")")/../common.sh"
 
 check_triggered_by_make
-check_env prod
 load_env_vars
+check_env prod
 validate_deployment_environment "$1"
 
 if [ "$1" == "prod" ]; then
