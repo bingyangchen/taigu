@@ -10,10 +10,7 @@ if [[ -n "${image_tag:-}" ]]; then
     export IMAGE_TAG="$image_tag"
 fi
 
-if [ "$1" != "dev" ] && [ "$1" != "prod" ]; then
-    printf "${RED} ✗ Usage: $0 <dev|prod>${RESET}\n" >&2
-    exit 1
-fi
+validate_deployment_environment "$1"
 
 if [ "$1" == "prod" ]; then
     tag="$(resolve_prod_build_image_tag)"

@@ -8,6 +8,7 @@ BLUE='\033[0;34m'
 RESET='\033[0m'
 
 SERVICES=(api-server frontend reverse-proxy db redis scheduler)
+DEPLOYMENT_ENVIRONMENTS=(dev prod)
 
 check_triggered_by_make() {
     if [ -z "$MAKELEVEL" ]; then
@@ -61,6 +62,20 @@ validate_service() {
         printf "${RED} ✗ Error: '$service' is not a valid service.\nMust be one of: ${SERVICES[*]}${RESET}\n" >&2
         exit 1
     fi
+}
+
+validate_deployment_environment() {
+    local environment="${1:-}"
+    local valid_environment
+    local usage="${DEPLOYMENT_ENVIRONMENTS[*]}"
+    for valid_environment in "${DEPLOYMENT_ENVIRONMENTS[@]}"; do
+        if [ "$environment" == "$valid_environment" ]; then
+            return
+        fi
+    done
+
+    printf "${RED} ✗ Usage: $0 <${usage// /|}>${RESET}\n" >&2
+    exit 1
 }
 
 resolve_prod_build_image_tag() {
