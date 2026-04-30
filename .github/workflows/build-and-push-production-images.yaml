@@ -16,11 +16,10 @@ jobs:
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-      IMAGE_TAG: ${{ github.sha }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
       - name: Build
-        run: make build-prod
+        run: make build-prod IMAGE_TAG=${{ github.sha }}
       - name: Push
-        run: make push-images-prod
+        run: make push-images-prod IMAGE_TAG=${{ github.sha }}

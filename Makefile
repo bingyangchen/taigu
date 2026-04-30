@@ -1,8 +1,8 @@
 SHELL := /usr/bin/env bash
 .SILENT:
 
-image_tag ?=
-export image_tag
+IMAGE_TAG ?=
+export IMAGE_TAG
 
 .PHONY: build-dev
 build-dev:

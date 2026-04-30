@@ -1,0 +1,16 @@
+---
+description: No redundant suffix in file names when directory already indicates functionality
+alwaysApply: true
+---
+
+# No Redundant Filename Suffix
+
+If the directory already specifies the functionality, do not repeat that same suffix in the file name.
+
+**Examples:**
+
+- In `models/` → use `achievement.py`, not `achievement_model.py`
+- In `services/` → use `achievement.py`, not `achievement_service.py`
+- In `schemas/` → use `achievement.py`, not `achievement_schema.py`
+
+Apply the same idea for other directory names that already describe the role (e.g. `tests/`, `utils/`, `models/`).

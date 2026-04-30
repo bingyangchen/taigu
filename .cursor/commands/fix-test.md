@@ -1,1 +1,8 @@
-Keep running `make test` and fix the testing scripts (don't change the code, just fix the testing scripts) until all tests pass. The only command you can use is `make test`.
+請嚴格遵守以下流程操作：
+
+- Step 1: 執行 `make test`。
+- Step 2: 如果測試失敗，請判斷失敗的原因是因為測試腳本寫錯了，還是因為實作程式碼真的有問題。
+- Step 3-1: 如果失敗的原因是因為實作程式碼真的有問題，請「不要」修改實作程式碼，而是告訴我你發現的問題，然後停下來。
+- Step 3-2: 如果失敗的原因是因為測試腳本寫錯了，請修改測試腳本，然後重複執行 Step 1。
+
+如果失敗的原因有多個，其中有一些屬於 Step 3-1，有一些屬於 Step 3-2，請只處理屬於 Step 3-1 的問題，然後停下來；如果全部的問題都屬於 Step 3-2，請修復全部的問題，然後重複執行 Step 1 直到所有測試通過為止。

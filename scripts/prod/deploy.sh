@@ -4,11 +4,8 @@ set -e
 source "$(dirname "$(realpath "$0")")/../common.sh"
 
 check_triggered_by_make
+load_env_vars
 check_env prod
-
-if [[ -n "${image_tag:-}" ]]; then
-    export IMAGE_TAG="$image_tag"
-fi
 
 if [[ -n $(git status -s) ]]; then
     printf "${RED} ✗ Working directory has uncommitted changes.${RESET}\n" >&2
@@ -18,9 +15,7 @@ fi
 git switch main
 git pull origin main
 
-if [[ -z "${IMAGE_TAG:-}" ]]; then
-    export IMAGE_TAG="$(git rev-parse HEAD)"
-fi
+export IMAGE_TAG="$(resolve_prod_pull_image_tag)"
 
 make pull-images-prod
 make restart-and-recycle
