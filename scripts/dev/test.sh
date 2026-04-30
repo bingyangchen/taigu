@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 source "$(dirname "$(realpath "$0")")/../common.sh"
 
 # NOTE: Do not call check_triggered_by_make because this script is also called by
@@ -10,7 +10,7 @@ load_env_vars
 check_env dev
 
 T=""
-if [ -z "$MAKELEVEL" ]; then
+if [ -z "${MAKELEVEL:-}" ]; then
     T="-T"  # For colorizing output
 fi
 

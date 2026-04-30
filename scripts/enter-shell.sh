@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 source "$(dirname "$(realpath "$0")")/common.sh"
 
 check_triggered_by_make
@@ -9,7 +9,8 @@ validate_service "$service"
 load_env_vars
 clear_screen
 
-if [ "${ENV:-}" = "prod" ]; then
+deployment_environment="${ENV:?Set ENV=dev or prod in .env or environment}"
+if [ "$deployment_environment" = "prod" ]; then
     export IMAGE_TAG="$(resolve_prod_pull_image_tag)"
 fi
 
@@ -18,9 +19,9 @@ fi
 # running postgres/redis. So we use 'exec' to get a shell in the existing container
 # instead of creating a new one.
 if [ "$service" = "db" ]; then
-    docker compose -f "compose.$ENV.yaml" --progress quiet exec "$service" bash
+    docker compose -f "compose.$deployment_environment.yaml" --progress quiet exec "$service" bash
 elif [ "$service" = "redis" ]; then
-    docker compose -f "compose.$ENV.yaml" --progress quiet exec "$service" sh
+    docker compose -f "compose.$deployment_environment.yaml" --progress quiet exec "$service" sh
 else
-    docker compose -f "compose.$ENV.yaml" --progress quiet run --rm "$service" bash
+    docker compose -f "compose.$deployment_environment.yaml" --progress quiet run --rm "$service" bash
 fi

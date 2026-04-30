@@ -11,7 +11,7 @@ SERVICES=(api-server frontend reverse-proxy db redis scheduler)
 DEPLOYMENT_ENVIRONMENTS=(dev prod)
 
 check_triggered_by_make() {
-    if [ -z "$MAKELEVEL" ]; then
+    if [ -z "${MAKELEVEL:-}" ]; then
         printf "${YELLOW}This script can only be run from a Makefile.${RESET}\n"
         exit 1
     fi
@@ -19,6 +19,7 @@ check_triggered_by_make() {
 
 load_env_vars() {
     if [ -f .env ]; then
+        local line
         set -a
         while IFS= read -r line || [ -n "$line" ]; do
             case "$line" in
@@ -37,8 +38,10 @@ load_env_vars() {
 }
 
 check_env() {
-    if [ "$ENV" != "$1" ]; then
-        printf "${RED} ✗ This is a $1-only script, aborting...${RESET}\n" >&2
+    local environment="${ENV:-}"
+    local expected_environment="${1:-}"
+    if [ "$environment" != "$expected_environment" ]; then
+        printf "${RED} ✗ This is a $expected_environment-only script, aborting...${RESET}\n" >&2
         exit 1
     fi
 }
@@ -56,7 +59,7 @@ clear_previous_line() {
 }
 
 validate_service() {
-    local service=$1
+    local service="${1:-}"
     if ! echo "${SERVICES[@]}" | grep -w "$service" >/dev/null; then
         printf "${RED} ✗ Error: '$service' is not a valid service.\nMust be one of: ${SERVICES[*]}${RESET}\n" >&2
         exit 1
