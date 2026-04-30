@@ -9,6 +9,10 @@ validate_service "$service"
 load_env_vars
 clear_screen
 
+if [ "${ENV:-}" = "prod" ]; then
+    export IMAGE_TAG="$(resolve_prod_pull_image_tag)"
+fi
+
 # NOTE:
 # For db and redis, a newly created container would not be able to connect to the
 # running postgres/redis. So we use 'exec' to get a shell in the existing container

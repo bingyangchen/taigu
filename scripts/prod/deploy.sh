@@ -15,9 +15,7 @@ fi
 git switch main
 git pull origin main
 
-if [[ -z "${IMAGE_TAG:-}" ]]; then
-    export IMAGE_TAG="$(git rev-parse HEAD)"
-fi
+export IMAGE_TAG="$(resolve_prod_pull_image_tag)"
 
 make pull-images-prod
 make restart-and-recycle

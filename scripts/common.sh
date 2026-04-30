@@ -78,11 +78,7 @@ validate_environment() {
 }
 
 resolve_prod_build_image_tag() {
-    local tag="${IMAGE_TAG:-}"
-    if [ -z "$tag" ]; then
-        tag=$(git rev-parse main 2>/dev/null || git rev-parse HEAD)
-    fi
-    echo "$tag"
+    echo "${IMAGE_TAG:-$(git rev-parse main 2>/dev/null || git rev-parse HEAD)}"
 }
 
 resolve_prod_pull_image_tag() {
