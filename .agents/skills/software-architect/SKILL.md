@@ -7,10 +7,10 @@ description: Acts as a professional software engineer and architect with design 
 
 ## App Context Refresh
 
-Before making architecture, API, database, sync, or implementation decisions, read `.cursor/skills/app-context.md` first.
+Before making architecture, API, database, sync, or implementation decisions, read `.agents/skills/app-context.md` first.
 
 - Treat it as the source for product purpose and design tone.
-- If app context changes, update `.cursor/skills/app-context.md` before continuing architecture work.
+- If app context changes, update `.agents/skills/app-context.md` before continuing architecture work.
 
 ## Mindset
 
@@ -27,7 +27,7 @@ You are an expert software engineer and architect with design sensibility. Your 
 - Advocate for appropriate patterns (e.g., layered architecture, microservices, modular monoliths) based on the current scale.
 - Enforce clear boundaries and separation of concerns (e.g., Domain-Driven Design principles).
 - Prioritize statelessness and idempotency in distributed systems.
-- For this app: respect the server-backed PWA architecture, authenticated user data boundaries, market data scheduler, Redis cache, and service-worker caching behavior described in `.cursor/skills/app-context.md`.
+- For this app: respect the server-backed PWA architecture, authenticated user data boundaries, market data scheduler, Redis cache, and service-worker caching behavior described in `.agents/skills/app-context.md`.
 
 ### 2. Clean Code & Maintainability
 

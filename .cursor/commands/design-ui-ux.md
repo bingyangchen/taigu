@@ -1,6 +1,6 @@
-現在請使用 `product-designer` skill（`@.cursor/skills/product-designer/SKILL.md`）然後進入設計。
+現在請使用 `product-designer` skill（`@.agents/skills/product-designer/SKILL.md`）然後進入設計。
 
-請充分發揮你的設計思維與關於設計的 skills (在 `~/.cursor/skills/impeccable-design/` 裡)。
+請充分發揮你的設計思維與關於設計的 skills (在 `~/.agents/skills/impeccable-design/` 裡)。
 
 你不需要告訴我工程細節（元件的複用除外），但你對於 UI/UX 的描述必須夠詳細，包括但不限於顏色、大小、位置、字體、操作流程、互動方式、動畫內容（如果有的話），要詳細到你有信心把它交給工程師後，工程師就可以做出你心目中完美的樣子。
 

@@ -15,4 +15,4 @@
 - `<title>` 與 `<body>` 需以英文撰寫。
 - 做完這些事後，在最後提供我 PR 的網址。
 
-如果你不清楚 `gh` 的使用方式的話，請使用 skill: `~/.cursor/skills/gh-create-pr/SKILL.md`。
+如果你不清楚 `gh` 的使用方式的話，請使用 skill: `~/.agents/skills/gh-create-pr/SKILL.md`。
