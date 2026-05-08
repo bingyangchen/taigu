@@ -1,11 +1,10 @@
-# AGENTS.md
+# Agent Instructions
 
 This file defines project-level guidance for coding agents working in this repository.
 
 ## Scope
 
 - Treat this file as the cross-tool baseline for agent behavior.
-- Keep Cursor-specific automation or file-pattern rules in `.cursor/rules/`.
 - When guidance appears in multiple places, prefer following the more specific instruction for the current tool and task.
 
 ## Core Behavior

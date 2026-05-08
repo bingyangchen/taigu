@@ -1,4 +1,4 @@
-請你使用 `software-architect` skill（`@.cursor/skills/software-architect/SKILL.md`），然後根據上面的設計描述開發。
+請你使用 `software-architect` skill（`@.agents/skills/software-architect/SKILL.md`），然後根據上面的設計描述開發。
 
 請務必百分之百遵從設計描述。
 
