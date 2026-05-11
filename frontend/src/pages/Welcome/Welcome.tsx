@@ -27,7 +27,8 @@ type InstallPromptEvent = Event & { prompt: () => Promise<void> };
 const featureHighlights = [
   {
     title: "交易與股利一次記好",
-    description: "買進、賣出、現金股利與手續費都回到同一份紀錄，不必再維護分散的試算表。",
+    description:
+      "買進、賣出、現金股利與手續費都回到同一份紀錄，不必再維護分散的試算表。",
     icon: <IconDatabaseManagement sideLength="22" />,
   },
   {
@@ -60,7 +61,8 @@ export default function Welcome(): React.ReactElement {
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () =>
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
   }, []);
 
   const canInstallPWA = installPrompt !== null && !Util.isPWA;
@@ -103,7 +105,8 @@ export default function Welcome(): React.ReactElement {
             <span>投資工作台。</span>
           </h1>
           <p className={styles.heroDescription}>
-            Taigu 讓台股投資者告別 Excel：快速記錄交易與現金股利，追蹤持股與最愛股票，並用清楚圖表掌握自己的投資表現。
+            Taigu 讓台股投資者告別
+            Excel：快速記錄交易與現金股利，追蹤持股與最愛股票，並用清楚圖表掌握自己的投資表現。
           </p>
           <div className={styles.heroActions}>
             {canInstallPWA ? (
@@ -111,7 +114,10 @@ export default function Welcome(): React.ReactElement {
                 {primaryActionLabel}
               </button>
             ) : (
-              <Link to={`${Env.frontendRootPath}login`} className={styles.primaryAction}>
+              <Link
+                to={`${Env.frontendRootPath}login`}
+                className={styles.primaryAction}
+              >
                 {primaryActionLabel}
               </Link>
             )}
@@ -132,7 +138,11 @@ export default function Welcome(): React.ReactElement {
         <div className={styles.productStage} aria-label="Taigu app preview">
           <div className={styles.screenCluster}>
             <img className={styles.primaryScreen} src={demo01} alt="Taigu 儀表板畫面" />
-            <img className={styles.secondaryScreen} src={demo05} alt="Taigu 績效分析畫面" />
+            <img
+              className={styles.secondaryScreen}
+              src={demo05}
+              alt="Taigu 績效分析畫面"
+            />
           </div>
         </div>
       </section>
@@ -142,7 +152,8 @@ export default function Welcome(): React.ReactElement {
           <p className={styles.eyebrow}>從記錄到判斷</p>
           <h2>核心工作流不多，但每一步都要快。</h2>
           <p>
-            Welcome page 的責任不是把功能全列完，而是讓新使用者立即理解：Taigu 是台股投資紀錄的日常工具，不是券商、不給投資建議，只把你的資料整理清楚。
+            Welcome page 的責任不是把功能全列完，而是讓新使用者立即理解：Taigu
+            是台股投資紀錄的日常工具，不是券商、不給投資建議，只把你的資料整理清楚。
           </p>
         </div>
         <div className={styles.featureGrid}>
@@ -198,7 +209,8 @@ export default function Welcome(): React.ReactElement {
           <IconShieldCheck sideLength="34" />
           <h2>你的投資紀錄應該清楚，也應該被妥善保護。</h2>
           <p>
-            Taigu 使用 Google 登入與伺服器端帳戶資料邊界，讓交易紀錄、股利與個人設定能跨裝置延續，同時保持資料歸屬清楚。
+            Taigu 使用 Google
+            登入與伺服器端帳戶資料邊界，讓交易紀錄、股利與個人設定能跨裝置延續，同時保持資料歸屬清楚。
           </p>
         </div>
         <div className={styles.devicePanel}>
