@@ -6,6 +6,7 @@ import {
   MarketIndexLineChart,
   MarketValuePieChart,
   PercentSign,
+  SegmentedControl,
   SimpleCashInvestedLineChart,
   SpeedDial,
   SummaryCard,
@@ -215,42 +216,17 @@ class Dashboard extends React.Component<Props, State> {
                     {this.state.cashInvestedLineChart}
                   </div>
                   <div className={styles.controls}>
-                    <div className={styles.time_span_options}>
-                      <div
-                        className={styles.time_span_options_inner}
-                        style={
-                          {
-                            "--active-index": this.getActiveOptionIndex(),
-                          } as React.CSSProperties
-                        }
-                      >
-                        <div className={styles.sliding_background} />
-                        <span
-                          className={this.getTimeSpanOptionClass(30)}
-                          onClick={() => this.handleClickTimeSpanOption(30)}
-                        >
-                          1M
-                        </span>
-                        <span
-                          className={this.getTimeSpanOptionClass(91)}
-                          onClick={() => this.handleClickTimeSpanOption(91)}
-                        >
-                          1Q
-                        </span>
-                        <span
-                          className={this.getTimeSpanOptionClass(365)}
-                          onClick={() => this.handleClickTimeSpanOption(365)}
-                        >
-                          1Y
-                        </span>
-                        <span
-                          className={this.getTimeSpanOptionClass(Infinity)}
-                          onClick={() => this.handleClickTimeSpanOption(Infinity)}
-                        >
-                          ALL
-                        </span>
-                      </div>
-                    </div>
+                    <SegmentedControl
+                      label="投入金額圖表時間區間"
+                      options={[
+                        { label: "1M", value: "30" },
+                        { label: "1Q", value: "91" },
+                        { label: "1Y", value: "365" },
+                        { label: "ALL", value: "Infinity" },
+                      ]}
+                      value={String(this.state.daysToShow)}
+                      onChange={this.handleTimeSpanSegmentChange}
+                    />
                     {/* <RoundButton className="p-12" hint_text="查看詳情">
                       <IconFullScreen sideLength="14" />
                     </RoundButton> */}
@@ -377,17 +353,8 @@ class Dashboard extends React.Component<Props, State> {
     });
   }
 
-  private getTimeSpanOptionClass(number: number): string {
-    return this.state.daysToShow === number ? styles.active : "";
-  }
-
-  private getActiveOptionIndex(): number {
-    const options = [30, 91, 365, Infinity];
-    return options.indexOf(this.state.daysToShow);
-  }
-
-  private handleClickTimeSpanOption = (number: number): void => {
-    this.setState({ daysToShow: number });
+  private handleTimeSpanSegmentChange = (value: string): void => {
+    this.setState({ daysToShow: value === "Infinity" ? Infinity : Number(value) });
   };
 
   private handleClickTotalEarning = (): void => {
