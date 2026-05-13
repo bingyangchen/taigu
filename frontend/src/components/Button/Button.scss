@@ -17,6 +17,22 @@
   transition-duration: $transition-duration;
   letter-spacing: 1.2 * _.$base-letter-spacing;
   cursor: pointer;
+  outline: none;
+
+  &:focus-visible {
+    box-shadow:
+      0 0 0 2px _.$white,
+      0 0 0 5px _.$transparent-blue;
+  }
+
+  & > .button__content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: inherit;
+    opacity: 1;
+  }
+
   &::before {
     content: "";
     position: absolute;
@@ -42,6 +58,9 @@
     &.waiting::before {
       background: no-repeat center/20px url("../../assets/loading.svg");
       background-color: _.$noisy-white;
+    }
+    &.waiting > .button__content {
+      opacity: 0;
     }
   }
   &.transparent {
