@@ -1,5 +1,20 @@
 @use "global_variables" as _;
 
+:root {
+  --color-surface: #{_.$white};
+  --color-surface-muted: #{_.$noisy-white};
+  --color-border: #{_.$light-gray};
+  --color-text: #{_.$deep-gray};
+  --color-text-muted: #{_.$gray};
+  --color-brand: #{_.$blue};
+  --color-danger: #{_.$red};
+  --color-success: #{_.$green};
+  --color-warning: #{_.$yellow};
+  --radius-control: 8px;
+  --radius-panel: 20px;
+  --focus-ring: 0 0 0 2px #{_.$white}, 0 0 0 5px #{_.$transparent-blue};
+}
+
 body {
   margin: 0;
   height: 100dvh;
