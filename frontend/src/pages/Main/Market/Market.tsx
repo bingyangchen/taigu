@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 
-import { DetailCard, SpeedDial } from "../../../components";
+import { DetailCard, SegmentedControl, SpeedDial } from "../../../components";
 import {
   changeMarketPageSubpage,
   updateHeaderTitle,
@@ -26,25 +26,19 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {
   numberToShow: number;
-  sliderPosition: number;
 }
 
 class Market extends React.Component<Props, State> {
-  private holdingButtonRef = React.createRef<HTMLButtonElement>();
-  private favoritesButtonRef = React.createRef<HTMLButtonElement>();
-  private containerRef = React.createRef<HTMLDivElement>();
   private fetchFavoriteStockInfoTimer: ReturnType<typeof setInterval> | null;
 
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = { numberToShow: 15, sliderPosition: 0 };
+    this.state = { numberToShow: 15 };
     this.fetchFavoriteStockInfoTimer = null;
   }
   public componentDidMount(): void {
     this.props.dispatch(updateHeaderTitle("市場"));
-    requestAnimationFrame(() => this.updateSliderPosition());
-    window.addEventListener("resize", this.updateSliderPosition);
     if (this.props.activeSubpageName === "favorites") {
       this.fetchFavoriteStockInfo();
     }
@@ -57,33 +51,11 @@ class Market extends React.Component<Props, State> {
 
   public componentWillUnmount(): void {
     this.props.dispatch(updateHeaderTitle(null));
-    window.removeEventListener("resize", this.updateSliderPosition);
     if (this.fetchFavoriteStockInfoTimer) {
       clearInterval(this.fetchFavoriteStockInfoTimer);
       this.fetchFavoriteStockInfoTimer = null;
     }
   }
-
-  public componentDidUpdate(prevProps: Props): void {
-    if (prevProps.activeSubpageName !== this.props.activeSubpageName) {
-      this.updateSliderPosition();
-    }
-  }
-
-  private updateSliderPosition = (): void => {
-    const activeButton =
-      this.props.activeSubpageName === "holding"
-        ? this.holdingButtonRef.current
-        : this.favoritesButtonRef.current;
-    const container = this.containerRef.current;
-
-    if (activeButton && container) {
-      const containerRect = container.getBoundingClientRect();
-      const buttonRect = activeButton.getBoundingClientRect();
-      const position = buttonRect.left - containerRect.left;
-      this.setState({ sliderPosition: position });
-    }
-  };
 
   private fetchFavoriteStockInfo = async (): Promise<void> => {
     if (this.props.favorites.length > 0) {
@@ -96,30 +68,29 @@ class Market extends React.Component<Props, State> {
     await this.fetchFavoriteStockInfo();
   };
 
+  private handleSubpageChange = (value: string): void => {
+    if (value === "favorites") {
+      this.handleFavoritesClick().catch(() => {});
+      return;
+    }
+    this.props.dispatch(changeMarketPageSubpage("holding"));
+  };
+
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
         <div className={styles.floating_pill_wrapper}>
-          <div ref={this.containerRef} className={styles.floating_pill}>
-            <div
-              className={styles.active_indicator}
-              style={{ transform: `translateX(${this.state.sliderPosition}px)` }}
-            />
-            <button
-              ref={this.holdingButtonRef}
-              className={`${styles.tab_button} ${this.props.activeSubpageName === "holding" ? styles.active : ""}`}
-              onClick={() => this.props.dispatch(changeMarketPageSubpage("holding"))}
-            >
-              持股
-            </button>
-            <button
-              ref={this.favoritesButtonRef}
-              className={`${styles.tab_button} ${this.props.activeSubpageName === "favorites" ? styles.active : ""}`}
-              onClick={this.handleFavoritesClick}
-            >
-              最愛
-            </button>
-          </div>
+          <SegmentedControl
+            label="市場資料分類"
+            optionWidth="50px"
+            options={[
+              { label: "持股", value: "holding" },
+              { label: "最愛", value: "favorites" },
+            ]}
+            value={this.props.activeSubpageName}
+            variant="floating"
+            onChange={this.handleSubpageChange}
+          />
         </div>
         <div className={styles.list}>
           {this.emptySection}
