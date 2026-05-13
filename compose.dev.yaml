@@ -19,8 +19,8 @@ services:
   frontend:
     image: taigutw/frontend:dev
     volumes:
-      - frontend_node_modules:/app/node_modules # This also prevents node_modules/ from being synced back to the code base
-      - ./frontend:/app:cached
+      - ./frontend/src:/app/src:cached
+      - ./frontend/public:/app/public:cached
     command: ["npm", "run", "dev"]
     depends_on:
       - api-server
