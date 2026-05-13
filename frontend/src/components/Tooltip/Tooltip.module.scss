@@ -1,0 +1,28 @@
+@use "../../global_variables" as _;
+
+.content {
+  max-width: min(260px, calc(100vw - 32px));
+  border-radius: 6px;
+  padding: 4px 9px 5px;
+  background-color: _.$deep-gray;
+  color: _.$white;
+  font-size: 0.8 * _.$base-font-size;
+  line-height: 1.4;
+  z-index: 10;
+  animation: fadein 160ms ease;
+}
+
+.arrow {
+  fill: _.$deep-gray;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
