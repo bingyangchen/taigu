@@ -1,5 +1,6 @@
+import * as Dialog from "@radix-ui/react-dialog";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import React, { MouseEvent, MouseEventHandler } from "react";
-import ReactDOM from "react-dom";
 
 import { IRouter, withRouter } from "../../router";
 import Util from "../../utils/util";
@@ -21,12 +22,11 @@ interface State {
 
 class BottomSheet extends React.Component<Props, State> {
   public state: State;
-  private modalRoot: HTMLElement;
   private maximizeThreshold: number = 100;
   private minimizeThreshold: number = 100;
   private transitionDuration: number = 150;
   private mainRef: React.RefObject<HTMLDivElement>;
-  private headerRef: React.RefObject<HTMLDivElement>;
+  private isClosing: boolean = false;
   public constructor(props: Props) {
     super(props);
     this.state = {
@@ -36,9 +36,7 @@ class BottomSheet extends React.Component<Props, State> {
       isMaximized: false,
       initialMainHeight: 0,
     };
-    this.modalRoot = document.getElementById("modal-root")!;
     this.mainRef = React.createRef();
-    this.headerRef = React.createRef();
   }
   public componentDidMount(): void {
     setTimeout(() => {
@@ -47,12 +45,7 @@ class BottomSheet extends React.Component<Props, State> {
       document.body.style.overscrollBehaviorY = "contain";
     });
 
-    // Do not write this using React inline event handling
-    this.headerRef.current!.addEventListener("touchstart", this.handleTouchStart);
-    this.headerRef.current!.addEventListener("touchmove", this.handleTouchMove);
-    this.headerRef.current!.addEventListener("touchend", this.handleTouchEnd);
-
-    this.setState({ initialMainHeight: this.mainRef.current!.clientHeight });
+    this.setState({ initialMainHeight: this.mainRef.current?.clientHeight ?? 0 });
   }
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (
@@ -65,36 +58,44 @@ class BottomSheet extends React.Component<Props, State> {
   public componentWillUnmount(): void {
     Util.changePWAThemeColor("#d1eeff");
     document.body.style.overscrollBehaviorY = "initial";
-    this.headerRef.current!.removeEventListener("touchstart", this.handleTouchStart);
-    this.headerRef.current!.removeEventListener("touchmove", this.handleTouchMove);
-    this.headerRef.current!.removeEventListener("touchend", this.handleTouchEnd);
   }
   public render(): React.ReactNode {
-    return ReactDOM.createPortal(
-      <>
-        <div className={styles.background} onClick={this.handleClickBackground} />
-        <div
-          ref={this.mainRef}
-          className={styles.main}
-          style={{
-            top:
-              this.isTouchingAndMoving || this.isTransitioning
-                ? `${this.state.touchEndY}px`
-                : undefined,
-            transitionDuration: this.isTouchingAndMoving
-              ? "0ms"
-              : `${this.transitionDuration}ms`,
-            maxHeight:
-              this.state.isMaximized || this.isTouchingAndMoving || this.isTransitioning
-                ? "unset"
-                : `${window.visualViewport!.height * 0.618}px`,
-          }}
-        >
-          <div ref={this.headerRef} className={styles.header} />
-          <div className={styles.body}>{this.props.children}</div>
-        </div>
-      </>,
-      this.modalRoot,
+    return (
+      <Dialog.Root open onOpenChange={this.handleOpenChange}>
+        <Dialog.Portal container={document.getElementById("modal-root") ?? undefined}>
+          <Dialog.Overlay className={styles.background} />
+          <Dialog.Content
+            ref={this.mainRef}
+            className={styles.main}
+            style={{
+              top:
+                this.isTouchingAndMoving || this.isTransitioning
+                  ? `${this.state.touchEndY}px`
+                  : undefined,
+              transitionDuration: this.isTouchingAndMoving
+                ? "0ms"
+                : `${this.transitionDuration}ms`,
+              maxHeight:
+                this.state.isMaximized ||
+                this.isTouchingAndMoving ||
+                this.isTransitioning
+                  ? "unset"
+                  : `${this.viewportHeight * 0.618}px`,
+            }}
+          >
+            <VisuallyHidden.Root asChild>
+              <Dialog.Title>操作選單</Dialog.Title>
+            </VisuallyHidden.Root>
+            <div
+              className={styles.header}
+              onTouchStart={this.handleTouchStart}
+              onTouchMove={this.handleTouchMove}
+              onTouchEnd={this.handleTouchEnd}
+            />
+            <div className={styles.body}>{this.props.children}</div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     );
   }
   private get isTouchingAndMoving(): boolean {
@@ -103,17 +104,27 @@ class BottomSheet extends React.Component<Props, State> {
   private get isTransitioning(): boolean {
     return this.state.touchDiffY === null && this.state.touchEndY !== null;
   }
+  private get viewportHeight(): number {
+    return window.visualViewport?.height ?? window.innerHeight;
+  }
+  private handleOpenChange = (open: boolean): void => {
+    if (!open) {
+      this.handleClickBackground({} as MouseEvent);
+    }
+  };
   private handleClickBackground = (e: MouseEvent): void => {
+    if (this.isClosing) return;
+    this.isClosing = true;
     if (this.props.router.location.hash === "#!") {
       this.props.router.navigate(-1);
     }
     setTimeout(() => this.props.onClickBackground(e));
   };
-  private handleTouchStart = (e: TouchEvent) => {
+  private handleTouchStart = (e: React.TouchEvent<HTMLDivElement>): void => {
     const touch = e.touches[0];
     this.setState({ touchStartY: touch.clientY });
   };
-  private handleTouchMove = (e: TouchEvent): void => {
+  private handleTouchMove = (e: React.TouchEvent<HTMLDivElement>): void => {
     const touch = e.changedTouches[0];
     this.setState((state) => {
       return {
@@ -122,12 +133,13 @@ class BottomSheet extends React.Component<Props, State> {
       };
     });
   };
-  private handleTouchEnd = () => {
+  private handleTouchEnd = (): void => {
+    const touchDiffY = this.state.touchDiffY ?? 0;
     if (!this.state.isMaximized) {
-      if (this.props.canMaximize && -this.state.touchDiffY! > this.maximizeThreshold) {
+      if (this.props.canMaximize && -touchDiffY > this.maximizeThreshold) {
         this.setState({ touchEndY: 20, isMaximized: true });
-      } else if (this.state.touchDiffY! > this.state.initialMainHeight * 0.382) {
-        this.setState({ touchEndY: window.visualViewport!.height }, () => {
+      } else if (touchDiffY > this.state.initialMainHeight * 0.382) {
+        this.setState({ touchEndY: this.viewportHeight }, () => {
           setTimeout(
             () => this.handleClickBackground({} as MouseEvent),
             this.transitionDuration,
@@ -135,7 +147,7 @@ class BottomSheet extends React.Component<Props, State> {
         });
       } else {
         this.setState(
-          { touchEndY: window.visualViewport!.height - this.state.initialMainHeight },
+          { touchEndY: this.viewportHeight - this.state.initialMainHeight },
           () => {
             setTimeout(
               () => this.setState({ touchEndY: null }),
@@ -145,9 +157,9 @@ class BottomSheet extends React.Component<Props, State> {
         );
       }
     } else {
-      if (this.state.touchDiffY! > this.minimizeThreshold) {
+      if (touchDiffY > this.minimizeThreshold) {
         this.setState(
-          { touchEndY: window.visualViewport!.height - this.state.initialMainHeight },
+          { touchEndY: this.viewportHeight - this.state.initialMainHeight },
           () => {
             setTimeout(() => {
               this.setState({ touchEndY: null, isMaximized: false });
