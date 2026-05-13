@@ -135,58 +135,10 @@
         }
         & > .controls {
           display: flex;
+          justify-content: center;
           align-items: center;
           gap: 10px;
           padding: 25px 15px 0;
-          & > .time_span_options {
-            display: flex;
-            justify-content: center;
-            flex-grow: 1;
-            & > .time_span_options_inner {
-              --active-index: 0;
-              --option-width: 65px;
-              position: relative;
-              display: flex;
-              align-items: center;
-              height: 40px;
-              width: fit-content;
-              border-radius: 100px;
-              background-color: _.$transparent-black;
-              overflow: hidden;
-              & > .sliding_background {
-                position: absolute;
-                height: 40px;
-                width: var(--option-width);
-                border-radius: 100px;
-                background-color: _.$transparent-black;
-                transition: transform 0.3s ease;
-                z-index: 0;
-                transform: translateX(calc(var(--active-index) * var(--option-width)));
-              }
-              & > span {
-                position: relative;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100%;
-                width: var(--option-width);
-                border-radius: 100px;
-                font-size: 0.8 * _.$base-font-size;
-                color: _.$gray;
-                z-index: 1;
-                transition: color 0.3s ease;
-                cursor: pointer;
-                @media (hover: hover) {
-                  &:hover {
-                    color: _.$white;
-                  }
-                }
-                &.active {
-                  color: _.$white;
-                }
-              }
-            }
-          }
         }
       }
       & > .hint {

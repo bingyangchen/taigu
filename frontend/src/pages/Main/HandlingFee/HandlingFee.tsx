@@ -10,6 +10,7 @@ import {
   HandlingFeeDiscountModal,
   ListRow,
   RoundButton,
+  SegmentedControl,
   SpeedDial,
 } from "../../../components";
 import { IconChevronLeft } from "../../../icons";
@@ -132,42 +133,17 @@ class HandlingFee extends React.Component<Props, State> {
                     {this.state.handlingFeeChart}
                   </div>
                   <div className={styles.controls}>
-                    <div className={styles.time_span_options}>
-                      <div
-                        className={styles.time_span_options_inner}
-                        style={
-                          {
-                            "--active-index": this.getActiveOptionIndex(),
-                          } as React.CSSProperties
-                        }
-                      >
-                        <div className={styles.sliding_background} />
-                        <span
-                          className={this.getTimeSpanOptionClass(182)}
-                          onClick={() => this.handleClickTimeSpanOption(182)}
-                        >
-                          6M
-                        </span>
-                        <span
-                          className={this.getTimeSpanOptionClass(365)}
-                          onClick={() => this.handleClickTimeSpanOption(365)}
-                        >
-                          1Y
-                        </span>
-                        <span
-                          className={this.getTimeSpanOptionClass(1825)}
-                          onClick={() => this.handleClickTimeSpanOption(1825)}
-                        >
-                          5Y
-                        </span>
-                        <span
-                          className={this.getTimeSpanOptionClass(Infinity)}
-                          onClick={() => this.handleClickTimeSpanOption(Infinity)}
-                        >
-                          ALL
-                        </span>
-                      </div>
-                    </div>
+                    <SegmentedControl
+                      label="手續費圖表時間區間"
+                      options={[
+                        { label: "6M", value: "182" },
+                        { label: "1Y", value: "365" },
+                        { label: "5Y", value: "1825" },
+                        { label: "ALL", value: "Infinity" },
+                      ]}
+                      value={String(this.state.daysToShow)}
+                      onChange={this.handleTimeSpanSegmentChange}
+                    />
                   </div>
                 </div>
               ) : (
@@ -370,16 +346,8 @@ class HandlingFee extends React.Component<Props, State> {
     return result;
   }
 
-  private getTimeSpanOptionClass(number: number): string {
-    return this.state.daysToShow === number ? styles.active : "";
-  }
-
-  private getActiveOptionIndex(): number {
-    return this.TIME_SPAN_OPTIONS_IN_DAYS.indexOf(this.state.daysToShow);
-  }
-
-  private handleClickTimeSpanOption = (number: number): void => {
-    this.setState({ daysToShow: number });
+  private handleTimeSpanSegmentChange = (value: string): void => {
+    this.setState({ daysToShow: value === "Infinity" ? Infinity : Number(value) });
   };
 
   private handleClickShowMore = (): void => {
