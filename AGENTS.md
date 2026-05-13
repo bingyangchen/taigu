@@ -44,3 +44,9 @@ This file defines project-level guidance for coding agents working in this repos
 - Do not invent, guess, or leave placeholder versions.
 - For Python dependencies, verify the version on PyPI, then pin it in `api-server/pyproject.toml`.
 - For React or frontend dependencies, verify the version on the npm registry, then use it in `frontend/package.json`.
+
+## Local Development
+
+- Use `make build-dev` to rebuild the development images if you modify the dependencies of the API server or frontend.
+- Restart the local app from the repository root with `make restart`.
+- After starting the app, access the web app at `https://localhost`.
