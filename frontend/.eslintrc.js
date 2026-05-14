@@ -116,6 +116,13 @@ module.exports = {
   },
   settings: {
     react: { version: "detect" },
+    "import/core-modules": [
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-slot",
+      "@radix-ui/react-tabs",
+      "@radix-ui/react-tooltip",
+      "@radix-ui/react-visually-hidden",
+    ],
     "import/resolver": { node: { extensions: [".js", ".jsx", ".ts", ".tsx"] } },
     "simple-import-sort": {
       groups: [

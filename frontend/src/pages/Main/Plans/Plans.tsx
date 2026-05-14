@@ -6,6 +6,7 @@ import {
   CheckDeleteModal,
   DollarSign,
   ListRow,
+  ScrollAwareFloatingControls,
   SearchKeywordInput,
   SpeedDial,
   TradePlanModal,
@@ -44,7 +45,7 @@ class Plans extends React.Component<Props, State> {
   }
 
   public componentDidMount(): void {
-    this.props.dispatch(updateHeaderTitle("買賣計畫"));
+    this.props.dispatch(updateHeaderTitle(null));
   }
 
   public componentWillUnmount(): void {
@@ -54,7 +55,12 @@ class Plans extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <div className={styles.floating_pill}>
+        <ScrollAwareFloatingControls
+          activeClassName={styles.active}
+          className={styles.floating_pill}
+          hiddenClassName={styles.hidden}
+          noTransitionClassName={styles.no_transition}
+        >
           <SearchKeywordInput
             placeholder="輸入證券代號或名稱"
             keyword={this.state.searchKeyword ?? ""}
@@ -62,7 +68,7 @@ class Plans extends React.Component<Props, State> {
               this.setState({ searchKeyword: searchKeyword })
             }
           />
-        </div>
+        </ScrollAwareFloatingControls>
         {this.filteredAndSortedPlans.length === 0 ? (
           <div className={styles.empty_section}>目前沒有買賣計畫</div>
         ) : (
@@ -77,23 +83,36 @@ class Plans extends React.Component<Props, State> {
                     editModal={this.renderEditModal(plan)}
                     deleteModal={this.renderDeleteModal(plan)}
                   >
-                    <span className={styles.company}>
-                      {`${plan.sid} ${plan.company_name}`}
-                    </span>
-                    <span className={styles.price}>
-                      <DollarSign />
-                      {plan.target_price.toLocaleString()}
-                    </span>
-                    <span className={styles.quantity_outer}>
-                      <span
-                        className={`${styles.trade_type} ${
-                          plan.plan_type === "buy" ? styles.buy : styles.sell
-                        }`}
-                      >
-                        {plan.plan_type === "buy" ? "買" : "賣"}
+                    <div className={styles.plan_row}>
+                      <span className={styles.identity}>
+                        <span className={styles.company}>
+                          <span className={styles.sid}>{plan.sid}</span>
+                          <span className={styles.company_name}>
+                            {plan.company_name}
+                          </span>
+                        </span>
+                        <span className={styles.plan_hint}>買賣計畫</span>
                       </span>
-                      <span className={styles.quantity}>{plan.target_quantity} 股</span>
-                    </span>
+                      <span className={styles.plan_metrics}>
+                        <span
+                          className={`${styles.plan_type} ${
+                            plan.plan_type === "buy" ? styles.buy : styles.sell
+                          }`}
+                        >
+                          {plan.plan_type === "buy" ? "買入" : "賣出"}
+                        </span>
+                        <span className={styles.quantity}>
+                          {plan.target_quantity.toLocaleString()} 股
+                        </span>
+                        <span className={styles.price_group}>
+                          <span className={styles.price_label}>目標價</span>
+                          <span className={styles.price}>
+                            <DollarSign />
+                            {plan.target_price.toLocaleString()}
+                          </span>
+                        </span>
+                      </span>
+                    </div>
                   </ListRow>
                 );
               })}

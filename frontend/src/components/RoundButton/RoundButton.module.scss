@@ -9,14 +9,23 @@
   width: min-content;
   height: min-content;
   aspect-ratio: 1;
+  border: none;
   padding: 6px;
   margin: 0;
+  background: transparent;
   color: _.$gray;
+  font: inherit;
   transition-duration: 150ms;
   cursor: pointer;
+  outline: none;
   &.disabled {
     color: _.$light-gray;
     cursor: default;
+  }
+  &:focus-visible {
+    box-shadow:
+      0 0 0 2px _.$white,
+      0 0 0 5px _.$transparent-blue;
   }
   &:active {
     &:not(.disabled) {
@@ -29,35 +38,6 @@
         color: _.$deep-gray;
         background-color: _.$transparent-black;
       }
-      & > .hint_text {
-        display: initial;
-        animation: fadein 400ms ease;
-      }
-      @keyframes fadein {
-        from {
-          opacity: 0;
-        }
-        50% {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
     }
-  }
-  & > .hint_text {
-    position: absolute;
-    bottom: -2px;
-    left: 50%;
-    display: none;
-    transform: translate(-50%, 100%);
-    width: max-content;
-    padding: 3px 8px 4px;
-    background-color: _.$deep-gray;
-    color: _.$white;
-    font-size: 0.8 * _.$base-font-size;
-    border-radius: 5px;
-    z-index: 1;
   }
 }

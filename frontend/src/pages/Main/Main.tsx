@@ -143,7 +143,7 @@ class Main extends React.Component<Props, State> {
             className={styles.user_avatar}
           />
         ),
-        name: "設定",
+        name: "帳號",
         path: `${Env.frontendRootPath}settings`,
       },
     ];
@@ -184,7 +184,12 @@ class Main extends React.Component<Props, State> {
   }
   public render(): React.ReactNode {
     return (
-      <main className={styles.main} ref={this.mainRef}>
+      <main
+        className={`${styles.main} ${
+          this.shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
+        }`}
+        ref={this.mainRef}
+      >
         <ToastList />
         {this.state.isLoading && <LoadingScreen />}
         {Util.isMobile && <HeaderForMain />}
@@ -205,6 +210,12 @@ class Main extends React.Component<Props, State> {
   private handleScroll = (): void => {
     this.props.dispatch(updateScrollTop(this.mainRef.current!.scrollTop));
   };
+  private get shouldUseWhiteMobileShell(): boolean {
+    return (
+      this.props.router.location.pathname === `${Env.frontendRootPath}records` ||
+      this.props.router.location.pathname === `${Env.frontendRootPath}plans`
+    );
+  }
   private handleNonCacheResponse = async (
     e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
   ): Promise<void> => {

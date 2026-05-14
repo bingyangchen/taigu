@@ -23,6 +23,10 @@
   border-radius: var(--border-radius) var(--border-radius) 0 0;
   animation: flyin 0.3s ease;
   z-index: 7;
+  outline: none;
+  &:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
   & > .header {
     position: relative;
     width: 100%;
@@ -52,7 +56,7 @@
   }
   & > .body {
     overflow: auto;
-    padding-bottom: 25px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
 }
 

@@ -10,6 +10,7 @@
   @media (max-width: _.$width-780) {
     height: fit-content;
     padding: 0;
+    background-color: _.$white;
   }
   & > .floating_pill_wrapper {
     position: sticky;
@@ -19,57 +20,84 @@
     padding: 15px 16px 20px;
     z-index: 2;
     background-color: transparent;
-    & > .floating_pill {
+    transition:
+      transform 0.22s ease,
+      opacity 0.18s ease;
+    will-change: transform;
+
+    &.hidden {
+      transform: translateY(calc(-100% - 12px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &.no_transition {
+      transition: none;
+    }
+
+    @media (max-width: _.$width-780) {
+      position: relative;
+      top: 0;
+      padding: 12px 16px 14px;
+      background-color: _.$white;
+
+      &.active {
+        position: sticky;
+      }
+    }
+
+    & > .floating_controls_row {
       position: relative;
       display: flex;
-      align-items: center;
-      padding: 4px;
-      border-radius: 25px;
-      background-color: #ffffffcc;
-      backdrop-filter: blur(10px) saturate(150%);
-      -webkit-backdrop-filter: blur(10px) saturate(150%);
-      box-shadow:
-        0 4px 16px #0000001a,
-        0 2px 8px #00000014;
-      border: 0.5px solid _.$noisy-white;
-      & > .switch_button_container {
-        position: relative;
+      align-items: stretch;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-width: calc(100vw - 32px);
+
+      & > .segmented_slot {
+        align-self: flex-start;
+      }
+
+      & > .search_pill {
+        flex: 1 1 180px;
+        min-width: 0;
         display: flex;
-        gap: 3px;
-        padding: 0;
-        --option-width: 70px;
-        & > .active_indicator {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: var(--option-width);
-          height: 100%;
-          background-color: _.$white;
-          border-radius: 16px;
-          transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-          z-index: 0;
-          box-shadow: 0 2px 8px #0000001a;
-        }
-        & > .tab_button {
-          position: relative;
-          z-index: 1;
-          width: var(--option-width);
-          background-color: transparent;
-          border: none;
-          border-radius: 16px;
-          padding: 6px 8px;
-          font-size: 0.7 * _.$base-font-size;
-          color: _.$gray;
-          cursor: pointer;
-          transition: color 200ms;
-          &.active {
-            color: _.$deep-gray;
-            font-weight: 500;
-          }
+        align-items: stretch;
+        padding: 4px 4px 4px 8px;
+        border-radius: 20px;
+        background-color: #ffffffcc;
+        backdrop-filter: blur(10px) saturate(150%);
+        -webkit-backdrop-filter: blur(10px) saturate(150%);
+        box-shadow:
+          0 4px 16px #0000001a,
+          0 2px 8px #00000014;
+        border: 0.5px solid _.$noisy-white;
+
+        & > .search_input_container {
+          flex: 1;
+          min-width: 0;
+          min-height: 0;
+          display: flex;
+          align-items: stretch;
         }
       }
-      & > .search_input_container {
-        padding: 0;
+
+      @media (max-width: _.$width-780) {
+        align-items: center;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        width: 100%;
+
+        & > .segmented_slot {
+          align-self: center;
+        }
+
+        & > .search_pill {
+          flex: 0 0 auto;
+          align-self: stretch;
+          height: 44px;
+        }
       }
     }
   }
@@ -87,6 +115,7 @@
     opacity: 0.7;
     @media (max-width: _.$width-780) {
       border-radius: 0;
+      background-color: transparent;
       box-shadow: none;
     }
   }
@@ -101,6 +130,7 @@
     overflow: auto;
     @media (max-width: _.$width-780) {
       border-radius: 0;
+      background-color: transparent;
       padding-bottom: calc(20px + _.$footer-height);
       box-shadow: none;
     }
@@ -109,40 +139,127 @@
       display: flex;
       justify-content: center;
     }
+    .record_row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: 26px;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      padding-right: 104px;
+
+      @media (max-width: _.$width-780) {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-right: 0;
+        padding-right: 0;
+      }
+    }
+    .identity {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+    }
     .company {
-      display: block;
-      width: 30%;
-      min-width: 150px;
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      min-width: 0;
+    }
+    .sid {
+      flex: 0 0 auto;
+      color: _.$deep-gray;
+      font-size: 0.95 * _.$base-font-size;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+    .company_name {
+      min-width: 0;
       overflow: hidden;
+      color: _.$deep-gray;
+      font-weight: 500;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .price {
-      justify-content: flex-end;
-      align-items: flex-end;
-      width: 60px;
+    .date {
+      color: _.$gray;
+      font-size: 0.75 * _.$base-font-size;
+      letter-spacing: 0;
       white-space: nowrap;
     }
-    .quantity_outer {
-      & > .trade_type {
-        font-weight: bold;
-        margin: 0 5px;
-        &.buy {
-          color: _.$red;
-        }
-        &.sell {
-          color: _.$blue;
-        }
-      }
-      & > .quantity {
-        text-align: right;
-        width: 60px;
-        white-space: nowrap;
+    .record_metrics {
+      display: grid;
+      grid-template-columns: auto minmax(72px, auto) minmax(92px, auto);
+      align-items: center;
+      justify-content: end;
+      gap: 14px;
+
+      @media (max-width: _.$width-780) {
+        grid-template-columns: auto 1fr auto;
+        justify-content: stretch;
+        gap: 10px;
       }
     }
-    .date {
+    .record_type {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 26px;
+      padding: 0 9px;
+      border-radius: 999px;
       font-size: 0.75 * _.$base-font-size;
+      font-weight: 700;
+      letter-spacing: 0;
+      white-space: nowrap;
+      &.buy {
+        color: _.$red;
+        background-color: rgba(_.$red, 0.1);
+      }
+      &.sell {
+        color: _.$blue;
+        background-color: rgba(_.$blue, 0.1);
+      }
+      &.dividend {
+        color: _.$green;
+        background-color: rgba(_.$green, 0.1);
+      }
+    }
+    .quantity {
+      color: _.$deep-gray;
+      font-weight: 600;
+      text-align: right;
+      white-space: nowrap;
+
+      @media (max-width: _.$width-780) {
+        text-align: left;
+      }
+    }
+    .price_group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+    .price_label {
       color: _.$gray;
+      font-size: 0.68 * _.$base-font-size;
+      letter-spacing: 0;
+    }
+    .price {
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      color: _.$deep-gray;
+      font-size: 1.02 * _.$base-font-size;
+      font-weight: 700;
+      letter-spacing: 0;
       white-space: nowrap;
     }
   }

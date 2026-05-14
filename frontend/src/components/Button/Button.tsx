@@ -1,51 +1,72 @@
 import "./Button.scss";
 
-import React, { EventHandler } from "react";
+import { Slot } from "@radix-ui/react-slot";
+import React from "react";
 
-export interface Props {
-  children: any;
-  onClick?: EventHandler<any>;
-  className: string;
+export interface Props
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
+  children: React.ReactNode;
+  className?: string;
   disabled?: boolean;
   waiting?: boolean;
   canTriggerByEnter?: boolean;
+  asChild?: boolean;
 }
 
-interface State {}
-
-export default class Button extends React.Component<Props, State> {
-  public state: State;
+export default class Button extends React.Component<Props> {
   public constructor(props: Props) {
     super(props);
-    this.state = {};
   }
-  public async componentDidMount(): Promise<void> {
-    window.addEventListener("keypress", this.handleHitEnter);
+  public componentDidMount(): void {
+    window.addEventListener("keydown", this.handleHitEnter);
   }
   public componentWillUnmount(): void {
-    window.removeEventListener("keypress", this.handleHitEnter);
+    window.removeEventListener("keydown", this.handleHitEnter);
   }
   public render(): React.ReactNode {
+    const {
+      asChild,
+      canTriggerByEnter,
+      children,
+      className = "",
+      disabled = false,
+      onClick,
+      waiting = false,
+      ...buttonProps
+    } = this.props;
+    void canTriggerByEnter;
+    const Component = asChild ? Slot : "button";
+
     return (
-      <button
-        className={`button ${this.props.className} ${
-          this.props.waiting ? "waiting" : ""
-        }`}
-        onClick={this.props.onClick ?? (() => {})}
-        disabled={this.props.disabled ?? false}
+      <Component
+        {...buttonProps}
+        aria-busy={waiting || undefined}
+        className={`button ${className} ${waiting ? "waiting" : ""}`}
+        data-waiting={waiting ? "" : undefined}
+        disabled={disabled || waiting}
+        onClick={onClick}
       >
-        {this.props.children}
-      </button>
+        <span className="button__content">{children}</span>
+      </Component>
     );
   }
   private handleHitEnter = (e: KeyboardEvent): void => {
-    if (this.props.canTriggerByEnter && e.key === "Enter") {
+    if (
+      this.props.canTriggerByEnter &&
+      e.key === "Enter" &&
+      !this.props.disabled &&
+      !this.props.waiting
+    ) {
       try {
-        const result = this.props.onClick?.(e);
+        const result = this.props.onClick?.(
+          e as unknown as React.MouseEvent<HTMLButtonElement, MouseEvent>,
+        );
         if (result && typeof result === "object" && "catch" in result) {
           (result as Promise<unknown>).catch(() => {});
         }
-      } catch (error) {}
+      } catch (error) {
+        return;
+      }
     }
   };
 }

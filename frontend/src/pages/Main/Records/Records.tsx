@@ -7,7 +7,9 @@ import {
   CheckDeleteModal,
   DollarSign,
   ListRow,
+  ScrollAwareFloatingControls,
   SearchKeywordInput,
+  SegmentedControl,
   SpeedDial,
   TradeRecordModal,
 } from "../../../components";
@@ -40,14 +42,9 @@ interface State {
   activeSubpageName: "trade" | "cashDividend";
   searchKeyword: string | null;
   numberToShow: number;
-  sliderPosition: number;
 }
 
 class Records extends React.Component<Props, State> {
-  private tradeButtonRef = React.createRef<HTMLButtonElement>();
-  private cashDividendButtonRef = React.createRef<HTMLButtonElement>();
-  private containerRef = React.createRef<HTMLDivElement>();
-
   public state: State;
   public constructor(props: Props) {
     super(props);
@@ -55,78 +52,55 @@ class Records extends React.Component<Props, State> {
       activeSubpageName: "trade",
       searchKeyword: this.props.router.search_params.get("sid"),
       numberToShow: 15,
-      sliderPosition: 0,
     };
   }
 
   public componentDidMount(): void {
-    this.props.dispatch(updateHeaderTitle("歷史紀錄"));
-    requestAnimationFrame(() => this.updateSliderPosition());
-    window.addEventListener("resize", this.updateSliderPosition);
+    this.props.dispatch(updateHeaderTitle(null));
   }
 
   public componentWillUnmount(): void {
     this.props.dispatch(updateHeaderTitle(null));
-    window.removeEventListener("resize", this.updateSliderPosition);
   }
-
-  public componentDidUpdate(prevProps: Props, prevState: State): void {
-    if (prevState.activeSubpageName !== this.state.activeSubpageName) {
-      this.updateSliderPosition();
-    }
-  }
-
-  private updateSliderPosition = (): void => {
-    const activeButton =
-      this.state.activeSubpageName === "trade"
-        ? this.tradeButtonRef.current
-        : this.cashDividendButtonRef.current;
-    const container = this.containerRef.current;
-
-    if (activeButton && container) {
-      const containerRect = container.getBoundingClientRect();
-      const buttonRect = activeButton.getBoundingClientRect();
-      const position = buttonRect.left - containerRect.left;
-      this.setState({ sliderPosition: position });
-    }
-  };
 
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <div className={styles.floating_pill_wrapper}>
-          <div className={styles.floating_pill}>
-            <div ref={this.containerRef} className={styles.switch_button_container}>
-              <div
-                className={styles.active_indicator}
-                style={{ transform: `translateX(${this.state.sliderPosition}px)` }}
-              />
-              <button
-                ref={this.tradeButtonRef}
-                className={`${styles.tab_button} ${this.state.activeSubpageName === "trade" ? styles.active : ""}`}
-                onClick={() => this.handleClickSwitchButton("trade")}
-              >
-                交易紀錄
-              </button>
-              <button
-                ref={this.cashDividendButtonRef}
-                className={`${styles.tab_button} ${this.state.activeSubpageName === "cashDividend" ? styles.active : ""}`}
-                onClick={() => this.handleClickSwitchButton("cashDividend")}
-              >
-                現金股利
-              </button>
-            </div>
-            <div className={styles.search_input_container}>
-              <SearchKeywordInput
-                placeholder="輸入證券代號或名稱"
-                keyword={this.state.searchKeyword ?? ""}
-                onChange={(searchKeyword) =>
-                  this.setState({ searchKeyword: searchKeyword })
+        <ScrollAwareFloatingControls
+          activeClassName={styles.active}
+          className={styles.floating_pill_wrapper}
+          hiddenClassName={styles.hidden}
+          noTransitionClassName={styles.no_transition}
+        >
+          <div className={styles.floating_controls_row}>
+            <div className={styles.segmented_slot}>
+              <SegmentedControl
+                label="歷史紀錄分類"
+                optionWidth="84px"
+                options={[
+                  { label: "交易紀錄", value: "trade" },
+                  { label: "現金股利", value: "cashDividend" },
+                ]}
+                value={this.state.activeSubpageName}
+                variant="floating"
+                onChange={(value) =>
+                  this.handleClickSwitchButton(value as "trade" | "cashDividend")
                 }
               />
             </div>
+            <div className={styles.search_pill}>
+              <div className={styles.search_input_container}>
+                <SearchKeywordInput
+                  placeholder="輸入證券代號或名稱"
+                  keyword={this.state.searchKeyword ?? ""}
+                  onChange={(searchKeyword) =>
+                    this.setState({ searchKeyword: searchKeyword })
+                  }
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        </ScrollAwareFloatingControls>
         {this.filteredRecords.length === 0 ? (
           <div className={styles.empty_section}>
             目前沒有
@@ -145,30 +119,50 @@ class Records extends React.Component<Props, State> {
                     editModal={this.renderEditModal(record)}
                     deleteModal={this.renderDeleteModal(record)}
                   >
-                    <span className={styles.company}>
-                      {`${record.sid} ${record.company_name}`}
-                    </span>
-                    <span className={styles.price}>
-                      <DollarSign />
-                      {Util.isTradeRecord(record)
-                        ? record.deal_price.toLocaleString()
-                        : record.cash_dividend.toLocaleString()}
-                    </span>
-                    {Util.isTradeRecord(record) && (
-                      <span className={styles.quantity_outer}>
+                    <div className={styles.record_row}>
+                      <span className={styles.identity}>
+                        <span className={styles.company}>
+                          <span className={styles.sid}>{record.sid}</span>
+                          <span className={styles.company_name}>
+                            {record.company_name}
+                          </span>
+                        </span>
+                        <span className={styles.date}>{record.deal_time}</span>
+                      </span>
+                      <span className={styles.record_metrics}>
                         <span
-                          className={`${styles.trade_type} ${
-                            record.deal_quantity > 0 ? styles.buy : styles.sell
+                          className={`${styles.record_type} ${
+                            Util.isTradeRecord(record)
+                              ? record.deal_quantity > 0
+                                ? styles.buy
+                                : styles.sell
+                              : styles.dividend
                           }`}
                         >
-                          {record.deal_quantity > 0 ? "買" : "賣"}
+                          {Util.isTradeRecord(record)
+                            ? record.deal_quantity > 0
+                              ? "買入"
+                              : "賣出"
+                            : "股利"}
                         </span>
-                        <span className={styles.quantity}>
-                          {Math.abs(record.deal_quantity)} 股
+                        {Util.isTradeRecord(record) && (
+                          <span className={styles.quantity}>
+                            {Math.abs(record.deal_quantity).toLocaleString()} 股
+                          </span>
+                        )}
+                        <span className={styles.price_group}>
+                          <span className={styles.price_label}>
+                            {Util.isTradeRecord(record) ? "成交價" : "現金股利"}
+                          </span>
+                          <span className={styles.price}>
+                            <DollarSign />
+                            {Util.isTradeRecord(record)
+                              ? record.deal_price.toLocaleString()
+                              : record.cash_dividend.toLocaleString()}
+                          </span>
                         </span>
                       </span>
-                    )}
-                    <span className={styles.date}>{record.deal_time}</span>
+                    </div>
                   </ListRow>
                 );
               })}

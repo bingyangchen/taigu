@@ -3,7 +3,7 @@ import ReactECharts from "echarts-for-react";
 import React from "react";
 import { connect } from "react-redux";
 
-import { RoundButton, SpeedDial } from "../../../components";
+import { RoundButton, SegmentedControl, SpeedDial } from "../../../components";
 import { IconChevronLeft } from "../../../icons";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
@@ -24,32 +24,24 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {
   activeChartType: "gain" | "cashDividend";
-  sliderPosition: number;
   companyNamesMap: { [sid: string]: string | null };
 }
 
 class EarningAnalysis extends React.Component<Props, State> {
-  private gainButtonRef = React.createRef<HTMLButtonElement>();
-  private cashDividendButtonRef = React.createRef<HTMLButtonElement>();
-  private containerRef = React.createRef<HTMLDivElement>();
   private readonly SHOW_FLOATING_INFO_THRESHOLD: number = 120;
 
   public state: State;
 
   public constructor(props: Props) {
     super(props);
-    this.state = { activeChartType: "gain", sliderPosition: 0, companyNamesMap: {} };
+    this.state = { activeChartType: "gain", companyNamesMap: {} };
   }
 
   public componentDidMount(): void {
-    requestAnimationFrame(() => this.updateSliderPosition());
     this.fetchCompanyNames();
   }
 
-  public componentDidUpdate(prevProps: Props, prevState: State): void {
-    if (prevState.activeChartType !== this.state.activeChartType) {
-      this.updateSliderPosition();
-    }
+  public componentDidUpdate(prevProps: Props): void {
     if (
       prevProps.sidGainMap !== this.props.sidGainMap ||
       prevProps.sidTotalCashDividendMap !== this.props.sidTotalCashDividendMap
@@ -89,26 +81,19 @@ class EarningAnalysis extends React.Component<Props, State> {
           </RoundButton>
         </div>
         <div className={styles.floating_pill_wrapper}>
-          <div ref={this.containerRef} className={styles.floating_pill}>
-            <div
-              className={styles.active_indicator}
-              style={{ transform: `translateX(${this.state.sliderPosition}px)` }}
-            />
-            <button
-              ref={this.gainButtonRef}
-              className={`${styles.tab_button} ${this.state.activeChartType === "gain" ? styles.active : ""}`}
-              onClick={() => this.setState({ activeChartType: "gain" })}
-            >
-              資本利得
-            </button>
-            <button
-              ref={this.cashDividendButtonRef}
-              className={`${styles.tab_button} ${this.state.activeChartType === "cashDividend" ? styles.active : ""}`}
-              onClick={() => this.setState({ activeChartType: "cashDividend" })}
-            >
-              現金股利
-            </button>
-          </div>
+          <SegmentedControl
+            label="收益分析分類"
+            optionWidth="88px"
+            options={[
+              { label: "資本利得", value: "gain" },
+              { label: "現金股利", value: "cashDividend" },
+            ]}
+            value={this.state.activeChartType}
+            variant="floating"
+            onChange={(value) =>
+              this.setState({ activeChartType: value as "gain" | "cashDividend" })
+            }
+          />
         </div>
         <div className={styles.chart_container}>
           {chartData.length === 0 ? (
@@ -129,20 +114,6 @@ class EarningAnalysis extends React.Component<Props, State> {
       </div>
     );
   }
-
-  private updateSliderPosition = (): void => {
-    const activeButton =
-      this.state.activeChartType === "gain"
-        ? this.gainButtonRef.current
-        : this.cashDividendButtonRef.current;
-    const container = this.containerRef.current;
-    if (activeButton && container) {
-      const containerRect = container.getBoundingClientRect();
-      const buttonRect = activeButton.getBoundingClientRect();
-      const position = buttonRect.left - containerRect.left;
-      this.setState({ sliderPosition: position });
-    }
-  };
 
   private fetchCompanyNames = async (): Promise<void> => {
     const { sidGainMap, sidTotalCashDividendMap } = this.props;

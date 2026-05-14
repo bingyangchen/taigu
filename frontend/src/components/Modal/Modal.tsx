@@ -1,5 +1,6 @@
-import React, { MouseEvent } from "react";
-import ReactDOM from "react-dom";
+import * as Dialog from "@radix-ui/react-dialog";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import React from "react";
 
 import { Button, RoundButton } from "../../components";
 import { IconXLarge } from "../../icons";
@@ -25,14 +26,11 @@ interface State {}
 
 class Modal extends React.Component<Props, State> {
   public state: State;
-  private modalRoot: HTMLElement;
   public constructor(props: Props) {
     super(props);
     this.state = {};
-    this.modalRoot = document.getElementById("modal-root")!;
   }
   public componentDidMount(): void {
-    window.addEventListener("keydown", this.handleHitEsc);
     setTimeout(() => {
       this.props.router.navigate("##");
       if (this.props.layout !== "fullScreen" || this.props.transparent) {
@@ -46,11 +44,10 @@ class Modal extends React.Component<Props, State> {
       prevProps.router.location.hash === "##" &&
       this.props.router.location.hash === ""
     ) {
-      this.handleClickDiscard({} as MouseEvent);
+      this.handleClickDiscard({} as React.MouseEvent<Element>);
     }
   }
   public componentWillUnmount(): void {
-    window.removeEventListener("keydown", this.handleHitEsc);
     document.body.style.overscrollBehaviorY = "initial";
     Util.changePWAThemeColor("#d1eeff");
     if (this.props.router.location.hash === "##") {
@@ -58,82 +55,103 @@ class Modal extends React.Component<Props, State> {
     }
   }
   public render(): React.ReactNode {
-    return ReactDOM.createPortal(
-      <div className={styles.background} onClick={this.handleClickBackground}>
-        <div
-          className={`${styles.main} ${
-            this.props.layout === "auto"
-              ? styles.auto
-              : this.props.layout === "fullScreen"
-                ? styles.full_screen
-                : styles.compact
-          } ${this.props.transparent ? styles.transparent : ""}`}
-        >
-          <div className={styles.header} onClick={(e) => e.stopPropagation()}>
-            {this.props.title && (
-              <div className={styles.header_title}>{this.props.title}</div>
-            )}
-            {!this.props.noX && (
-              <RoundButton className="p-12" onClick={this.handleClickDiscard}>
-                <IconXLarge sideLength="16" />
-              </RoundButton>
-            )}
-          </div>
-          <div className={styles.body} onClick={(e) => e.stopPropagation()}>
-            {this.props.description && (
-              <div className={styles.description}>{this.props.description}</div>
-            )}
-            {this.props.children}
-          </div>
-          {!this.props.noFooter && (
-            <div className={styles.footer} onClick={(e) => e.stopPropagation()}>
-              {this.props.discardButtonProps && (
-                <Button
-                  className={this.props.discardButtonProps.className}
-                  disabled={this.props.discardButtonProps.disabled}
-                  waiting={this.props.discardButtonProps.waiting}
-                  canTriggerByEnter={this.props.discardButtonProps.canTriggerByEnter}
+    return (
+      <Dialog.Root open onOpenChange={this.handleOpenChange}>
+        <Dialog.Portal container={document.getElementById("modal-root") ?? undefined}>
+          <Dialog.Overlay className={styles.background} />
+          <Dialog.Content
+            className={`${styles.main} ${
+              this.props.layout === "auto"
+                ? styles.auto
+                : this.props.layout === "fullScreen"
+                  ? styles.full_screen
+                  : styles.compact
+            } ${this.props.transparent ? styles.transparent : ""}`}
+            onEscapeKeyDown={this.handleEscapeKeyDown}
+            onInteractOutside={this.handleInteractOutside}
+          >
+            <div className={styles.header}>
+              {this.props.title && (
+                <Dialog.Title asChild>
+                  <div className={styles.header_title}>{this.props.title}</div>
+                </Dialog.Title>
+              )}
+              {!this.props.title && (
+                <VisuallyHidden.Root asChild>
+                  <Dialog.Title>對話視窗</Dialog.Title>
+                </VisuallyHidden.Root>
+              )}
+              {!this.props.noX && (
+                <RoundButton
+                  aria-label="關閉"
+                  className="p-12"
                   onClick={this.handleClickDiscard}
                 >
-                  {this.props.discardButtonProps.children}
-                </Button>
-              )}
-              {this.props.submitButtonProps && (
-                <Button
-                  className={this.props.submitButtonProps.className}
-                  disabled={this.props.submitButtonProps.disabled}
-                  waiting={this.props.submitButtonProps.waiting}
-                  canTriggerByEnter={this.props.submitButtonProps.canTriggerByEnter}
-                  onClick={this.handleClickSubmit}
-                >
-                  {this.props.submitButtonProps.children}
-                </Button>
+                  <IconXLarge sideLength="16" />
+                </RoundButton>
               )}
             </div>
-          )}
-        </div>
-      </div>,
-      this.modalRoot,
+            <div className={styles.body}>
+              {this.props.description && (
+                <Dialog.Description asChild>
+                  <div className={styles.description}>{this.props.description}</div>
+                </Dialog.Description>
+              )}
+              {this.props.children}
+            </div>
+            {!this.props.noFooter && (
+              <div className={styles.footer}>
+                {this.props.discardButtonProps && (
+                  <Button
+                    className={this.props.discardButtonProps.className}
+                    disabled={this.props.discardButtonProps.disabled}
+                    waiting={this.props.discardButtonProps.waiting}
+                    canTriggerByEnter={this.props.discardButtonProps.canTriggerByEnter}
+                    onClick={this.handleClickDiscard}
+                  >
+                    {this.props.discardButtonProps.children}
+                  </Button>
+                )}
+                {this.props.submitButtonProps && (
+                  <Button
+                    className={this.props.submitButtonProps.className}
+                    disabled={this.props.submitButtonProps.disabled}
+                    waiting={this.props.submitButtonProps.waiting}
+                    canTriggerByEnter={this.props.submitButtonProps.canTriggerByEnter}
+                    onClick={this.handleClickSubmit}
+                  >
+                    {this.props.submitButtonProps.children}
+                  </Button>
+                )}
+              </div>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     );
   }
-  private handleClickSubmit = async (e: MouseEvent): Promise<void> => {
-    await this.props.submitButtonProps?.onClick?.(e);
+  private handleOpenChange = (open: boolean): void => {
+    if (!open) {
+      this.handleClickDiscard({} as React.MouseEvent<Element>).catch(() => {});
+    }
   };
-  private handleClickDiscard = async (e: MouseEvent): Promise<void> => {
-    await this.props.discardButtonProps?.onClick?.(e);
+  private handleClickSubmit = async (e: React.MouseEvent<Element>): Promise<void> => {
+    await this.props.submitButtonProps?.onClick?.(
+      e as React.MouseEvent<HTMLButtonElement>,
+    );
   };
-  private handleClickBackground = (e: MouseEvent): void => {
-    e.stopPropagation();
-    if (!this.props.silentBackground) this.handleClickDiscard(e);
+  private handleClickDiscard = async (e: React.MouseEvent<Element>): Promise<void> => {
+    await this.props.discardButtonProps?.onClick?.(
+      e as React.MouseEvent<HTMLButtonElement>,
+    );
   };
-  private handleHitEsc = (e: KeyboardEvent): void => {
-    if (e.key === "Escape") {
-      try {
-        const result = this.handleClickDiscard({} as MouseEvent);
-        if (result && typeof result === "object" && "catch" in result) {
-          (result as Promise<unknown>).catch(() => {});
-        }
-      } catch (error) {}
+  private handleEscapeKeyDown = (e: KeyboardEvent): void => {
+    e.preventDefault();
+    this.handleClickDiscard({} as React.MouseEvent<Element>).catch(() => {});
+  };
+  private handleInteractOutside = (e: Event): void => {
+    if (this.props.silentBackground) {
+      e.preventDefault();
     }
   };
 }

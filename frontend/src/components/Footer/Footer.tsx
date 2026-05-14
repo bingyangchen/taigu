@@ -32,10 +32,12 @@ class Footer extends React.Component<Props, State> {
             <div // prevent auto navigate one more time
               key={idx}
               className={`${styles.icon_outer} ${styles.active}`}
+              aria-current="page"
             >
               <div className={styles.icon_inner}>
                 {subpage.icon_bold ?? subpage.icon}
               </div>
+              <div className={styles.label}>{subpage.name}</div>
             </div>
           ) : (
             <NavLink
@@ -46,6 +48,7 @@ class Footer extends React.Component<Props, State> {
               replace={this.shouldReplacePath(subpage)}
             >
               <div className={styles.icon_inner}>{subpage.icon}</div>
+              <div className={styles.label}>{subpage.name}</div>
             </NavLink>
           );
         })}

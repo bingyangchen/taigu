@@ -1,0 +1,116 @@
+@use "../../global_variables" as _;
+
+.main {
+  display: flex;
+  justify-content: center;
+  width: fit-content;
+}
+
+.list {
+  --active-index: 0;
+  --option-count: 1;
+  --option-gap: 0px;
+  --option-width: 65px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  width: calc(var(--option-count) * var(--option-width));
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.subtle .list {
+  background-color: _.$transparent-black;
+}
+
+.floating .list {
+  --option-gap: 3px;
+  gap: 3px;
+  height: auto;
+  width: fit-content;
+  padding: 4px;
+  border: 0.5px solid _.$noisy-white;
+  border-radius: 20px;
+  background-color: #ffffffcc;
+  box-shadow:
+    0 4px 16px #0000001a,
+    0 2px 8px #00000014;
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+}
+
+.sliding_background {
+  position: absolute;
+  height: 40px;
+  width: var(--option-width);
+  border-radius: 100px;
+  background-color: _.$transparent-black;
+  transition: transform 0.3s ease;
+  z-index: 0;
+  transform: translateX(
+    calc(var(--active-index) * (var(--option-width) + var(--option-gap)))
+  );
+}
+
+.floating .sliding_background {
+  top: 4px;
+  left: 4px;
+  height: calc(100% - 8px);
+  background-color: _.$white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px #0000001a;
+}
+
+.trigger {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: max-content;
+  min-width: var(--option-width);
+  border: none;
+  border-radius: 100px;
+  background: transparent;
+  color: _.$gray;
+  font: inherit;
+  font-size: 0.8 * _.$base-font-size;
+  letter-spacing: inherit;
+  z-index: 1;
+  transition: color 0.3s ease;
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+
+  &[data-state="active"] {
+    color: _.$deep-gray;
+  }
+
+  &:focus-visible {
+    box-shadow: inset var(--focus-ring);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: _.$white;
+    }
+  }
+}
+
+.floating .trigger {
+  padding: 6px 8px;
+  border-radius: 16px;
+  font-size: 0.7 * _.$base-font-size;
+
+  &[data-state="active"] {
+    color: _.$deep-gray;
+    font-weight: 500;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: _.$deep-gray;
+    }
+  }
+}
