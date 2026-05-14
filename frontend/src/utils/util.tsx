@@ -57,12 +57,6 @@ export default class Util {
     };
   };
 
-  public static changePWAThemeColor(colorCode: string): void {
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", colorCode);
-  }
-
   public static isTradeRecord(
     target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount,
   ): target is TradeRecord {

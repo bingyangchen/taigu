@@ -145,14 +145,12 @@ class SpeedDial extends React.Component<Props, State> {
           if (this.props.router.location.hash === "#@") {
             this.props.router.navigate(-1);
           }
-          Util.changePWAThemeColor("#d1eeff");
           document.body.style.overscrollBehaviorY = "initial";
         });
       } else {
         document.body.style.overscrollBehaviorY = "contain";
         setTimeout(() => {
           this.props.router.navigate("#@");
-          Util.changePWAThemeColor("#888");
         });
       }
       return { isActive: !state.isActive };
@@ -161,7 +159,6 @@ class SpeedDial extends React.Component<Props, State> {
   private hide = (): void => {
     if (this.props.router.location.hash === "#@") this.props.router.navigate(-1);
     document.body.style.overscrollBehaviorY = "initial";
-    Util.changePWAThemeColor("#d1eeff");
     this.setState({ isActive: false });
   };
 }
