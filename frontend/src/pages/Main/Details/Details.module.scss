@@ -1,6 +1,10 @@
 @use "../../../global_variables" as _;
 
-$block-body-width: min(450px, 87vw);
+$desktop-sidebar-width: clamp(260px, 24vw, 320px);
+$detail-layout-width: 1120px;
+$block-body-width: 100%;
+$mobile-block-body-width: min(450px, 87vw);
+$switch-single-column-width: 760px;
 
 .main {
   position: relative;
@@ -8,10 +12,29 @@ $block-body-width: min(450px, 87vw);
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  box-sizing: border-box;
   width: 100%;
+  max-width: 760px;
   min-height: 100%;
-  padding: 30px;
+  padding: 30px 28px 90px;
+  margin: 0 auto;
+  @media (min-width: (_.$width-1280 + 1px)) {
+    display: grid;
+    grid-template-columns: minmax(0, 760px) $desktop-sidebar-width;
+    grid-template-areas:
+      "hero summary"
+      "hero actions"
+      "inventory inventory"
+      "inventory inventory";
+    align-items: start;
+    justify-content: center;
+    max-width: $detail-layout-width;
+  }
   @media (max-width: _.$width-780) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
     padding: 0 0 calc(_.$footer-height + 100px) 0;
     @media (max-width: _.$width-512) {
       gap: 6dvh;
@@ -106,8 +129,9 @@ $block-body-width: min(450px, 87vw);
     align-items: center;
     justify-content: center;
     width: $block-body-width;
-    padding: $padding-y $padding-x;
-    border-radius: 20px;
+    box-sizing: border-box;
+    padding: 24px 28px;
+    border-radius: 18px;
     background-color: _.$transparent-white;
     box-shadow: 0 0 15px -10px _.$semi-transparent-black;
     @media (max-width: _.$width-780) {
@@ -117,19 +141,52 @@ $block-body-width: min(450px, 87vw);
       background-color: transparent;
       box-shadow: none;
     }
+    &.hero_block {
+      grid-area: hero;
+      align-items: stretch;
+      padding: 22px 28px 28px;
+      @media (max-width: _.$width-780) {
+        align-items: center;
+        padding: 0;
+      }
+    }
+    &.summary_block {
+      @media (min-width: (_.$width-1280 + 1px)) {
+        grid-area: summary;
+      }
+    }
+    &.inventory_block {
+      @media (min-width: (_.$width-1280 + 1px)) {
+        grid-area: inventory;
+      }
+    }
+    &.action_block {
+      @media (min-width: (_.$width-1280 + 1px)) {
+        grid-area: actions;
+      }
+    }
+    & > .section_title {
+      align-self: flex-start;
+      padding-bottom: 18px;
+      font-weight: 600;
+      letter-spacing: 0;
+      color: _.$black;
+      @media (max-width: _.$width-780) {
+        display: none;
+      }
+    }
     & > .desktop_back_button_container {
       position: absolute;
-      top: $padding-y;
-      left: $padding-x;
-      padding-left: 10px;
+      top: 22px;
+      left: 22px;
     }
     & > .add_to_fav {
       position: absolute;
-      top: 40px;
-      right: 40px;
+      top: 66px;
+      right: 34px;
       @media (max-width: _.$width-1280) {
-        top: 27px;
-        right: 40px;
+        top: 66px;
+        right: 34px;
         @media (max-width: _.$width-512) {
           top: calc(10dvh + 3px);
           right: 50px;
@@ -163,25 +220,103 @@ $block-body-width: min(450px, 87vw);
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      margin-top: 10px;
+      margin-top: 18px;
+      @media (min-width: (_.$width-780 + 1px)) {
+        align-items: flex-start;
+        margin-top: 46px;
+        padding-right: 54px;
+      }
       @media (max-width: _.$width-512) {
         margin-top: 10dvh;
       }
-      & > .company_name {
-        font-size: 1.1 * _.$base-font-size;
-        font-weight: bold;
-      }
-      & > .sid {
-        font-size: 0.8 * _.$base-font-size;
-        color: _.$gray;
+      & > .stock_heading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 100%;
+        min-width: 0;
+        @media (min-width: (_.$width-780 + 1px)) {
+          align-items: flex-start;
+        }
+        & > .identity {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          max-width: 100%;
+          min-width: 0;
+          @media (min-width: (_.$width-780 + 1px)) {
+            justify-content: flex-start;
+          }
+          @media (max-width: _.$width-780) {
+            display: contents;
+          }
+          & > .company_name {
+            min-width: 0;
+            max-width: 100%;
+            font-size: 1.4 * _.$base-font-size;
+            font-weight: bold;
+            letter-spacing: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            @media (max-width: _.$width-780) {
+              order: 1;
+              font-size: 1.1 * _.$base-font-size;
+            }
+          }
+          & > .inline_actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            @media (max-width: _.$width-780) {
+              order: 3;
+              margin-top: 8px;
+            }
+            & > .icon_action {
+              width: 30px;
+              height: 30px;
+              padding: 6px;
+            }
+          }
+        }
+        & > .sid {
+          margin-top: 4px;
+          font-size: 0.8 * _.$base-font-size;
+          color: _.$gray;
+          @media (max-width: _.$width-780) {
+            order: 2;
+          }
+        }
       }
       & > .price {
         font-weight: bold;
-        font-size: 1.5 * _.$base-font-size;
+        font-size: 2.3 * _.$base-font-size;
         color: _.$black;
-        margin: 10px 0;
+        margin: 12px 0 8px;
+        @media (max-width: _.$width-780) {
+          font-size: 1.5 * _.$base-font-size;
+          margin: 10px 0;
+        }
       }
-      & > .price_fluctuation {
+      & > .price_meta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        @media (min-width: (_.$width-780 + 1px)) {
+          flex-direction: row;
+          align-items: center;
+          gap: 10px;
+          & > .trade_quantity::before {
+            content: "·";
+            margin-right: 10px;
+            color: _.$gray;
+          }
+        }
+      }
+      .price_fluctuation {
         font-size: 0.9 * _.$base-font-size;
         &.red {
           color: _.$red;
@@ -193,15 +328,22 @@ $block-body-width: min(450px, 87vw);
           color: _.$gray;
         }
       }
-      & > .trade_quantity {
+      .trade_quantity {
         font-size: 0.9 * _.$base-font-size;
-        margin-top: 10px;
+        @media (max-width: _.$width-780) {
+          margin-top: 10px;
+        }
       }
     }
     & > .historical_price_chart_container {
       position: relative;
       width: 100%;
-      aspect-ratio: 3 / 2;
+      aspect-ratio: 16 / 9;
+      margin-top: 22px;
+      @media (max-width: _.$width-780) {
+        aspect-ratio: 3 / 2;
+        margin-top: 0;
+      }
       &.is_waiting {
         &::before {
           content: "更新股價中...";
@@ -220,10 +362,15 @@ $block-body-width: min(450px, 87vw);
     }
     & > .investment_info {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
       width: 100%;
-      padding: 20px 0;
+      padding: 4px 0 2px;
+      @media (max-width: _.$width-780) {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        padding: 20px 0;
+      }
       & > .cube {
         display: flex;
         flex-direction: column;
@@ -241,6 +388,15 @@ $block-body-width: min(450px, 87vw);
           display: flex;
           align-items: center;
           gap: 2px;
+          &.red {
+            color: _.$red;
+          }
+          &.green {
+            color: _.$green;
+          }
+          &.gray {
+            color: _.$gray;
+          }
           @media (max-width: _.$width-512) {
             font-size: 1.2 * _.$base-font-size;
           }
@@ -253,58 +409,59 @@ $block-body-width: min(450px, 87vw);
         }
       }
     }
+    &.summary_block > .investment_info {
+      @media (min-width: (_.$width-780 + 1px)) {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 0;
+        & > .cube {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          gap: 18px;
+          padding-bottom: 14px;
+          border-bottom: 1px solid _.$noisy-white;
+          &:last-child {
+            padding-bottom: 0;
+            border-bottom: none;
+          }
+          & > .upper {
+            white-space: nowrap;
+          }
+          & > .lower {
+            justify-content: flex-end;
+            min-width: 0;
+            text-align: right;
+            font-size: 1.05 * _.$base-font-size;
+          }
+        }
+      }
+    }
     & > .inventory_title {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
       width: 100%;
-      font-weight: normal;
+      font-weight: 600;
       font-size: _.$base-font-size;
-      color: _.$gray;
-      padding: 20px 5px;
+      color: _.$black;
+      padding: 0 0 18px;
       margin: 0;
+      letter-spacing: 0;
       @media (max-width: _.$width-780) {
-        width: $block-body-width;
+        width: $mobile-block-body-width;
+        color: _.$gray;
+        font-weight: normal;
+        padding: 20px 5px;
       }
     }
     & > .inventory_histogram_container {
       width: 100%;
-      height: 250px;
+      height: 280px;
       @media (max-width: _.$width-780) {
+        height: 250px;
         padding: 0 10px;
-      }
-    }
-    & > .performance {
-      display: flex;
-      justify-content: space-evenly;
-      width: 100%;
-      @media (max-width: _.$width-780) {
-        padding: 20px 0;
-      }
-      & > .cube {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        & > .upper {
-          color: _.$gray;
-          font-size: 0.75 * _.$base-font-size;
-          font-weight: 300;
-        }
-        & > .lower {
-          font-size: 1.5 * _.$base-font-size;
-          font-weight: bold;
-          &.red {
-            color: _.$red;
-          }
-          &.green {
-            color: _.$green;
-          }
-          &.gray {
-            color: _.$gray;
-          }
-        }
       }
     }
     & > .cube_list {
@@ -312,6 +469,7 @@ $block-body-width: min(450px, 87vw);
       display: flex;
       width: 100%;
       justify-content: space-evenly;
+      gap: 14px;
       @media (max-width: _.$width-780) {
         display: grid;
         grid-template-columns: repeat(auto-fit, $cube-width);
@@ -319,6 +477,12 @@ $block-body-width: min(450px, 87vw);
         padding: 0 30px;
       }
       & > .cube {
+        appearance: none;
+        border: none;
+        background-color: transparent;
+        color: inherit;
+        font-family: inherit;
+        text-decoration: none;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -330,6 +494,10 @@ $block-body-width: min(450px, 87vw);
         font-size: 0.7 * _.$base-font-size;
         font-weight: 300;
         cursor: pointer;
+        @media (min-width: (_.$width-780 + 1px)) {
+          background-color: #ffffff80;
+          border: 0.5px solid _.$noisy-white;
+        }
         @media (hover: hover) {
           &:hover {
             background-color: _.$transparent-black;
@@ -337,18 +505,59 @@ $block-body-width: min(450px, 87vw);
         }
       }
     }
+    &.action_block > .cube_list {
+      @media (min-width: (_.$width-780 + 1px)) {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        & > .cube {
+          flex-direction: row;
+          justify-content: flex-start;
+          gap: 12px;
+          width: 100%;
+          height: auto;
+          min-height: 46px;
+          aspect-ratio: auto;
+          padding: 10px 12px;
+          font-size: 0.85 * _.$base-font-size;
+        }
+      }
+      @media (min-width: (_.$width-1280 + 1px)) {
+        flex-direction: column;
+        gap: 10px;
+        & > .cube {
+          justify-content: flex-start;
+          min-height: 50px;
+        }
+      }
+    }
   }
   .switch_hint_icon_container_for_desktop {
-    position: absolute;
+    position: fixed;
     top: 0;
     height: 100dvh;
-    width: 65px;
-    overflow: hidden;
+    width: 48px;
+    overflow: visible;
+    z-index: 2;
     &.left {
-      left: 0;
+      left: calc(
+        _.$side-bar-width +
+          max(0px, (100vw - _.$side-bar-width - $switch-single-column-width) / 2)
+      );
     }
     &.right {
-      right: 0;
+      right: max(0px, (100vw - _.$side-bar-width - $switch-single-column-width) / 2);
+    }
+    @media (min-width: (_.$width-1280 + 1px)) {
+      &.left {
+        left: calc(
+          _.$side-bar-width +
+            max(0px, (100vw - _.$side-bar-width - $detail-layout-width) / 2)
+        );
+      }
+      &.right {
+        right: max(0px, (100vw - _.$side-bar-width - $detail-layout-width) / 2);
+      }
     }
     & > .switch_hint_icon {
       position: absolute;
@@ -379,7 +588,7 @@ $block-body-width: min(450px, 87vw);
         transform-origin: top;
       }
       &.left {
-        left: -20%;
+        left: -34px;
         &::before {
           left: 30%;
         }
@@ -388,7 +597,7 @@ $block-body-width: min(450px, 87vw);
         }
       }
       &.right {
-        right: -20%;
+        right: -34px;
         &::before {
           left: 70%;
         }
@@ -406,7 +615,7 @@ $block-body-width: min(450px, 87vw);
             transition-duration: 300ms;
           }
           &.left {
-            transform: translate(30px, -50%);
+            transform: translate(16px, -50%);
             &::before {
               transform: rotate(30deg) translateY(0.1px);
             }
@@ -415,7 +624,7 @@ $block-body-width: min(450px, 87vw);
             }
           }
           &.right {
-            transform: translate(-30px, -50%);
+            transform: translate(-16px, -50%);
             &::before {
               transform: rotate(-30deg) translateY(0.1px);
             }
