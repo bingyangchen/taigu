@@ -16,7 +16,7 @@ import { StaleWhileRevalidate } from "workbox-strategies";
 
 declare const self: ServiceWorkerGlobalScope;
 
-const VERSION = "10.0.0";
+const VERSION = "2026.05.14.01";
 console.log(`Service worker version: ${VERSION}`);
 
 clientsClaim();
