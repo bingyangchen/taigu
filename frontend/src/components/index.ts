@@ -28,6 +28,7 @@ export { default as Modal } from "./Modal/Modal";
 export { default as NavTab } from "./NavTab/NavTab";
 export { default as PercentSign } from "./PercentSign/PercentSign";
 export { default as RoundButton } from "./RoundButton/RoundButton";
+export { default as ScrollAwareFloatingControls } from "./ScrollAwareFloatingControls/ScrollAwareFloatingControls";
 export { default as SearchKeywordInput } from "./SearchKeywordInput/SearchKeywordInput";
 export { default as SegmentedControl } from "./SegmentedControl/SegmentedControl";
 export { default as SettingsSideBar } from "./SettingsSideBar/SettingsSideBar";

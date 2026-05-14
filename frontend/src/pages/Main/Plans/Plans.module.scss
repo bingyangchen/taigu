@@ -10,6 +10,7 @@
   @media (max-width: _.$width-780) {
     height: fit-content;
     padding: 0;
+    background-color: _.$white;
   }
   & > .floating_pill {
     position: sticky;
@@ -30,6 +31,34 @@
       0 2px 8px #00000014;
     border: 0.5px solid _.$noisy-white;
     width: fit-content;
+    transition:
+      transform 0.22s ease,
+      opacity 0.18s ease;
+    will-change: transform;
+
+    &.hidden {
+      transform: translateY(calc(-100% - 12px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &.no_transition {
+      transition: none;
+    }
+
+    @media (max-width: _.$width-780) {
+      position: relative;
+      top: 0;
+      height: 44px;
+      width: calc(100% - 32px);
+      margin: 12px 16px 14px;
+
+      &.active {
+        position: sticky;
+        top: 18px;
+      }
+    }
+
     & > * {
       width: 100%;
     }
@@ -48,6 +77,7 @@
     opacity: 0.7;
     @media (max-width: _.$width-780) {
       border-radius: 0;
+      background-color: transparent;
       box-shadow: none;
     }
   }
@@ -62,6 +92,7 @@
     overflow: auto;
     @media (max-width: _.$width-780) {
       border-radius: 0;
+      background-color: transparent;
       padding-bottom: calc(20px + _.$footer-height);
       box-shadow: none;
     }

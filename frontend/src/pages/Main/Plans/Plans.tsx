@@ -6,6 +6,7 @@ import {
   CheckDeleteModal,
   DollarSign,
   ListRow,
+  ScrollAwareFloatingControls,
   SearchKeywordInput,
   SpeedDial,
   TradePlanModal,
@@ -54,7 +55,12 @@ class Plans extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <div className={styles.floating_pill}>
+        <ScrollAwareFloatingControls
+          activeClassName={styles.active}
+          className={styles.floating_pill}
+          hiddenClassName={styles.hidden}
+          noTransitionClassName={styles.no_transition}
+        >
           <SearchKeywordInput
             placeholder="輸入證券代號或名稱"
             keyword={this.state.searchKeyword ?? ""}
@@ -62,7 +68,7 @@ class Plans extends React.Component<Props, State> {
               this.setState({ searchKeyword: searchKeyword })
             }
           />
-        </div>
+        </ScrollAwareFloatingControls>
         {this.filteredAndSortedPlans.length === 0 ? (
           <div className={styles.empty_section}>目前沒有買賣計畫</div>
         ) : (

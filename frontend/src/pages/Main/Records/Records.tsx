@@ -7,6 +7,7 @@ import {
   CheckDeleteModal,
   DollarSign,
   ListRow,
+  ScrollAwareFloatingControls,
   SearchKeywordInput,
   SegmentedControl,
   SpeedDial,
@@ -65,7 +66,12 @@ class Records extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
-        <div className={styles.floating_pill_wrapper}>
+        <ScrollAwareFloatingControls
+          activeClassName={styles.active}
+          className={styles.floating_pill_wrapper}
+          hiddenClassName={styles.hidden}
+          noTransitionClassName={styles.no_transition}
+        >
           <div className={styles.floating_controls_row}>
             <div className={styles.segmented_slot}>
               <SegmentedControl
@@ -94,7 +100,7 @@ class Records extends React.Component<Props, State> {
               </div>
             </div>
           </div>
-        </div>
+        </ScrollAwareFloatingControls>
         {this.filteredRecords.length === 0 ? (
           <div className={styles.empty_section}>
             目前沒有

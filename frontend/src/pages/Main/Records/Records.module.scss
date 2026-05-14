@@ -10,6 +10,7 @@
   @media (max-width: _.$width-780) {
     height: fit-content;
     padding: 0;
+    background-color: _.$white;
   }
   & > .floating_pill_wrapper {
     position: sticky;
@@ -19,6 +20,32 @@
     padding: 15px 16px 20px;
     z-index: 2;
     background-color: transparent;
+    transition:
+      transform 0.22s ease,
+      opacity 0.18s ease;
+    will-change: transform;
+
+    &.hidden {
+      transform: translateY(calc(-100% - 12px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &.no_transition {
+      transition: none;
+    }
+
+    @media (max-width: _.$width-780) {
+      position: relative;
+      top: 0;
+      padding: 12px 16px 14px;
+      background-color: _.$white;
+
+      &.active {
+        position: sticky;
+      }
+    }
+
     & > .floating_controls_row {
       position: relative;
       display: flex;
@@ -69,7 +96,7 @@
         & > .search_pill {
           flex: 0 0 auto;
           align-self: stretch;
-          height: 48px;
+          height: 44px;
         }
       }
     }
@@ -88,6 +115,7 @@
     opacity: 0.7;
     @media (max-width: _.$width-780) {
       border-radius: 0;
+      background-color: transparent;
       box-shadow: none;
     }
   }
@@ -102,6 +130,7 @@
     overflow: auto;
     @media (max-width: _.$width-780) {
       border-radius: 0;
+      background-color: transparent;
       padding-bottom: calc(20px + _.$footer-height);
       box-shadow: none;
     }

@@ -6,6 +6,12 @@
   overflow: auto;
   background: linear-gradient(180deg, #d1eeff 0%, #feedff 100%);
 
+  &.white_mobile_shell {
+    @media (max-width: _.$width-780) {
+      background: _.$white;
+    }
+  }
+
   & > .body {
     position: relative;
     display: flex;
