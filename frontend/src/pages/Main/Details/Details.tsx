@@ -264,7 +264,7 @@ class Details extends React.Component<Props, State> {
               <div className={styles.sid}>{this.sid}</div>
             </div>
           )}
-          <div className={styles.block}>
+          <div className={`${styles.block} ${styles.hero_block}`}>
             {!Util.isMobile && (
               <div className={styles.desktop_back_button_container}>
                 <RoundButton
@@ -290,21 +290,49 @@ class Details extends React.Component<Props, State> {
               </div>
             </div>
             <div className={styles.stock_info}>
-              <div className={styles.company_name}>
-                {this.props.sidStockInfoMap[this.sid]?.name || "-"}
+              <div className={styles.stock_heading}>
+                <div className={styles.identity}>
+                  <div className={styles.company_name}>
+                    {this.props.sidStockInfoMap[this.sid]?.name || "-"}
+                  </div>
+                  <div className={styles.inline_actions}>
+                    <RoundButton
+                      className={styles.icon_action}
+                      aria-label="公司資訊"
+                      hint_text="公司資訊"
+                      onClick={() => {
+                        this.setState({ activeModalName: "companyInfo" });
+                      }}
+                    >
+                      <IconBriefcase sideLength="18" />
+                    </RoundButton>
+                    <RoundButton
+                      className={styles.icon_action}
+                      aria-label="備註"
+                      hint_text="備註"
+                      onClick={() => {
+                        this.setState({ activeModalName: "updateOrCreateNote" });
+                      }}
+                    >
+                      <IconMemo sideLength="18" />
+                    </RoundButton>
+                  </div>
+                </div>
+                <div className={styles.sid}>{this.sid}</div>
               </div>
-              <div className={styles.sid}>{this.sid}</div>
               <div className={styles.price}>
                 <DollarSign />
                 {this.props.sidStockInfoMap[this.sid]?.close || 0}
               </div>
-              <div className={this.fluctPriceClass}>{this.fluctPriceString}</div>
-              <div className={styles.trade_quantity}>
-                成交{" "}
-                {Math.round(
-                  (this.props.sidStockInfoMap[this.sid]?.quantity || 0) / 1000,
-                ).toLocaleString()}{" "}
-                張
+              <div className={styles.price_meta}>
+                <div className={this.fluctPriceClass}>{this.fluctPriceString}</div>
+                <div className={styles.trade_quantity}>
+                  成交{" "}
+                  {Math.round(
+                    (this.props.sidStockInfoMap[this.sid]?.quantity || 0) / 1000,
+                  ).toLocaleString()}{" "}
+                  張
+                </div>
               </div>
             </div>
             <div
@@ -325,7 +353,8 @@ class Details extends React.Component<Props, State> {
               />
             </div>
           </div>
-          <div className={styles.block}>
+          <div className={`${styles.block} ${styles.summary_block}`}>
+            <div className={styles.section_title}>投資摘要</div>
             <div className={styles.investment_info}>
               <div className={styles.cube}>
                 <span className={styles.upper}>現金投入</span>
@@ -346,7 +375,7 @@ class Details extends React.Component<Props, State> {
               <div className={styles.cube}>
                 <span className={styles.upper}>庫存</span>
                 <span className={styles.lower}>
-                  {(this.props.stockWarehouse[this.sid] || []).length}
+                  {(this.props.stockWarehouse[this.sid] || []).length.toLocaleString()}
                   <span className={styles.text}>股</span>
                 </span>
               </div>
@@ -361,18 +390,6 @@ class Details extends React.Component<Props, State> {
                   ).toFixed(2)}
                 </span>
               </div>
-            </div>
-            {this.hasInventory && (
-              <>
-                <div className={styles.inventory_title}>庫存分佈</div>
-                <div className={styles.inventory_histogram_container}>
-                  {this.state.inventoryHistogram}
-                </div>
-              </>
-            )}
-          </div>
-          <div className={styles.block}>
-            <div className={styles.performance}>
               <div className={styles.cube}>
                 <span className={styles.upper}>實現損益</span>
                 <span
@@ -405,7 +422,16 @@ class Details extends React.Component<Props, State> {
               </div>
             </div>
           </div>
-          <div className={styles.block}>
+          {this.hasInventory && (
+            <div className={`${styles.block} ${styles.inventory_block}`}>
+              <div className={styles.inventory_title}>庫存分佈</div>
+              <div className={styles.inventory_histogram_container}>
+                {this.state.inventoryHistogram}
+              </div>
+            </div>
+          )}
+          <div className={`${styles.block} ${styles.action_block}`}>
+            <div className={styles.section_title}>紀錄與計畫</div>
             <div className={styles.cube_list}>
               <Link
                 to={`${Env.frontendRootPath}records?sid=${this.sid}`}
@@ -421,24 +447,6 @@ class Details extends React.Component<Props, State> {
                 <IconThumbtack sideLength="30" color="#444" />
                 買賣計畫
               </Link>
-              <div
-                className={styles.cube}
-                onClick={() => {
-                  this.setState({ activeModalName: "companyInfo" });
-                }}
-              >
-                <IconBriefcase sideLength="30" color="#444" />
-                公司資訊
-              </div>
-              <div
-                className={styles.cube}
-                onClick={() => {
-                  this.setState({ activeModalName: "updateOrCreateNote" });
-                }}
-              >
-                <IconMemo sideLength="30" color="#444" />
-                備註
-              </div>
             </div>
           </div>
           {Util.isMobile ? (

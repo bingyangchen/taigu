@@ -3,7 +3,6 @@ import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import React, { MouseEvent, MouseEventHandler } from "react";
 
 import { IRouter, withRouter } from "../../router";
-import Util from "../../utils/util";
 import styles from "./BottomSheet.module.scss";
 
 interface Props extends IRouter {
@@ -41,7 +40,6 @@ class BottomSheet extends React.Component<Props, State> {
   public componentDidMount(): void {
     setTimeout(() => {
       this.props.router.navigate("#!");
-      Util.changePWAThemeColor("#888");
       document.body.style.overscrollBehaviorY = "contain";
     });
 
@@ -56,7 +54,6 @@ class BottomSheet extends React.Component<Props, State> {
     }
   }
   public componentWillUnmount(): void {
-    Util.changePWAThemeColor("#d1eeff");
     document.body.style.overscrollBehaviorY = "initial";
   }
   public render(): React.ReactNode {

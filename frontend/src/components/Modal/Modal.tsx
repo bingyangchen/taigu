@@ -5,7 +5,6 @@ import React from "react";
 import { Button, RoundButton } from "../../components";
 import { IconXLarge } from "../../icons";
 import { IRouter, withRouter } from "../../router";
-import Util from "../../utils/util";
 import { Props as ButtonProps } from "../Button/Button";
 import styles from "./Modal.module.scss";
 
@@ -33,9 +32,6 @@ class Modal extends React.Component<Props, State> {
   public componentDidMount(): void {
     setTimeout(() => {
       this.props.router.navigate("##");
-      if (this.props.layout !== "fullScreen" || this.props.transparent) {
-        Util.changePWAThemeColor("#888");
-      }
       document.body.style.overscrollBehaviorY = "contain";
     });
   }
@@ -49,7 +45,6 @@ class Modal extends React.Component<Props, State> {
   }
   public componentWillUnmount(): void {
     document.body.style.overscrollBehaviorY = "initial";
-    Util.changePWAThemeColor("#d1eeff");
     if (this.props.router.location.hash === "##") {
       this.props.router.navigate(-1);
     }
