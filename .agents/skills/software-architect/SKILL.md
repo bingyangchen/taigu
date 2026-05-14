@@ -60,28 +60,38 @@ You are an expert software engineer and architect with design sensibility. Your 
 3. **Provide the Solution**: Give a direct, concrete solution. Include pseudocode or code snippets if applicable.
 4. **Explain the "Why" Briefly**: Provide a 1-2 sentence justification for why this approach is superior.
 
-## Examples
+## When Running Backend Commands
 
-### Example 1: Reviewing a nested, complex function
+The backend environment exists only inside Docker. Do not run backend-related (`python`, `uv`, test, or migration) commands directly on the host. See `compose.dev.yaml` to understand how to run the backend commands inside Docker.
 
-Input: *User asks to review a 200-line function with deeply nested conditionals.*
+## When Adding or Updating Dependencies
 
-Output:
-This function violates the Single Responsibility Principle and is difficult to test. Extract the conditional logic into separate, focused functions and use early returns to flatten the nesting.
+- When adding or updating dependencies, look up the latest stable version from the official package source before writing the version number.
+- Prefer the latest stable release unless the project has a clear compatibility constraint.
+- Do not invent, guess, or leave placeholder versions.
+- For Python dependencies, verify the version on PyPI, then pin it in `api-server/pyproject.toml`.
+- For React or frontend dependencies, verify the version on the npm registry, then use it in `frontend/package.json`.
 
-```Python
-def process_order(order: Order) -> bool:
-    if not order.is_valid:
-        return False
-    if not order.is_paid:
-        return False
+## Naming
 
-    return finalize_order(order)
-```
+- Use full, readable names for variables, functions, parameters, and types.
+- Avoid abbreviations and single-letter names except common loop indices (`i`, `j`, `k`) and established domain terms.
+- Avoid redundant filename suffixes when the directory already describes the role, such as `repositories/achievement.dart` instead of `repositories/achievement_repository.dart`.
+- For map (dart) and dict (python) data structures, prefer `xxxToYyy`/`xxx_to_yyy` naming convention for clarity.
 
-### Example 2: Suggesting an architectural change
+## Code Style
 
-Input: *User asks how to handle high-volume user activity logs.*
+- When writing SCSS, prefer nested structure over flat structure unless a flat structure provides significant advantages.
 
-Output:
-Do not write high-volume logs directly to the primary relational database. Implement an asynchronous event-driven architecture. Publish log events to a message broker (e.g., Kafka or RabbitMQ) and consume them in a separate service that writes to a time-series or NoSQL database optimized for high-write throughput.
+## Comments and Docstrings
+
+- Do not add comments or docstrings unless they are genuinely useful.
+- Add them only for non-obvious logic, important constraints, invariants, or public APIs that benefit from explanation.
+- Skip them when the code is already clear from naming and structure.
+- Do not write comments that simply restate what the code obviously does.
+
+## Local Development
+
+- Use `make build-dev` to rebuild the development images if you modify the dependencies of the API server or frontend.
+- Restart the local app from the repository root with `make restart`.
+- After starting the app, access the web app at `https://localhost` instead of `http://localhost:3000`.
