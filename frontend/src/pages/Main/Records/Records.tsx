@@ -113,30 +113,50 @@ class Records extends React.Component<Props, State> {
                     editModal={this.renderEditModal(record)}
                     deleteModal={this.renderDeleteModal(record)}
                   >
-                    <span className={styles.company}>
-                      {`${record.sid} ${record.company_name}`}
-                    </span>
-                    <span className={styles.price}>
-                      <DollarSign />
-                      {Util.isTradeRecord(record)
-                        ? record.deal_price.toLocaleString()
-                        : record.cash_dividend.toLocaleString()}
-                    </span>
-                    {Util.isTradeRecord(record) && (
-                      <span className={styles.quantity_outer}>
+                    <div className={styles.record_row}>
+                      <span className={styles.identity}>
+                        <span className={styles.company}>
+                          <span className={styles.sid}>{record.sid}</span>
+                          <span className={styles.company_name}>
+                            {record.company_name}
+                          </span>
+                        </span>
+                        <span className={styles.date}>{record.deal_time}</span>
+                      </span>
+                      <span className={styles.record_metrics}>
                         <span
-                          className={`${styles.trade_type} ${
-                            record.deal_quantity > 0 ? styles.buy : styles.sell
+                          className={`${styles.record_type} ${
+                            Util.isTradeRecord(record)
+                              ? record.deal_quantity > 0
+                                ? styles.buy
+                                : styles.sell
+                              : styles.dividend
                           }`}
                         >
-                          {record.deal_quantity > 0 ? "買" : "賣"}
+                          {Util.isTradeRecord(record)
+                            ? record.deal_quantity > 0
+                              ? "買入"
+                              : "賣出"
+                            : "股利"}
                         </span>
-                        <span className={styles.quantity}>
-                          {Math.abs(record.deal_quantity)} 股
+                        {Util.isTradeRecord(record) && (
+                          <span className={styles.quantity}>
+                            {Math.abs(record.deal_quantity).toLocaleString()} 股
+                          </span>
+                        )}
+                        <span className={styles.price_group}>
+                          <span className={styles.price_label}>
+                            {Util.isTradeRecord(record) ? "成交價" : "現金股利"}
+                          </span>
+                          <span className={styles.price}>
+                            <DollarSign />
+                            {Util.isTradeRecord(record)
+                              ? record.deal_price.toLocaleString()
+                              : record.cash_dividend.toLocaleString()}
+                          </span>
                         </span>
                       </span>
-                    )}
-                    <span className={styles.date}>{record.deal_time}</span>
+                    </div>
                   </ListRow>
                 );
               })}
