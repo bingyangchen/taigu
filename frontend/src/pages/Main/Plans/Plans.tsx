@@ -44,7 +44,7 @@ class Plans extends React.Component<Props, State> {
   }
 
   public componentDidMount(): void {
-    this.props.dispatch(updateHeaderTitle("買賣計畫"));
+    this.props.dispatch(updateHeaderTitle(null));
   }
 
   public componentWillUnmount(): void {

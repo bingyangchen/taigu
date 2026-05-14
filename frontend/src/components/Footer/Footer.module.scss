@@ -7,9 +7,10 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
-  height: _.$footer-height;
+  box-sizing: border-box;
+  height: calc(_.$footer-height + env(safe-area-inset-bottom));
   width: 100%;
-  padding: 0 5px 30px 5px;
+  padding: 7px 5px calc(8px + env(safe-area-inset-bottom)) 5px;
   background-color: #ffffffdd;
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%) !important;
@@ -18,20 +19,34 @@
   z-index: 2;
   & > .icon_outer {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     width: 100%;
     height: 100%;
     color: _.$black;
+    font-size: 0.68 * _.$base-font-size;
+    line-height: 1;
+    white-space: nowrap;
     &:not(.active) {
       color: _.$gray;
+    }
+    &.active {
+      color: _.$blue;
     }
     & > .icon_inner {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 25px;
+      width: 24px;
+      height: 24px;
       padding: 1px;
+    }
+    & > .label {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }

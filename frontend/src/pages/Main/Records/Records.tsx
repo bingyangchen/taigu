@@ -55,7 +55,7 @@ class Records extends React.Component<Props, State> {
   }
 
   public componentDidMount(): void {
-    this.props.dispatch(updateHeaderTitle("歷史紀錄"));
+    this.props.dispatch(updateHeaderTitle(null));
   }
 
   public componentWillUnmount(): void {

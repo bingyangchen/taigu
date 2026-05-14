@@ -143,7 +143,7 @@ class Main extends React.Component<Props, State> {
             className={styles.user_avatar}
           />
         ),
-        name: "設定",
+        name: "帳號",
         path: `${Env.frontendRootPath}settings`,
       },
     ];

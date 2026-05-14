@@ -38,7 +38,7 @@ class Market extends React.Component<Props, State> {
     this.fetchFavoriteStockInfoTimer = null;
   }
   public componentDidMount(): void {
-    this.props.dispatch(updateHeaderTitle("市場"));
+    this.props.dispatch(updateHeaderTitle(null));
     if (this.props.activeSubpageName === "favorites") {
       this.fetchFavoriteStockInfo();
     }
@@ -50,7 +50,6 @@ class Market extends React.Component<Props, State> {
   }
 
   public componentWillUnmount(): void {
-    this.props.dispatch(updateHeaderTitle(null));
     if (this.fetchFavoriteStockInfoTimer) {
       clearInterval(this.fetchFavoriteStockInfoTimer);
       this.fetchFavoriteStockInfoTimer = null;
