@@ -56,7 +56,7 @@
   }
   & > .body {
     overflow: auto;
-    padding-bottom: 25px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
 }
 
