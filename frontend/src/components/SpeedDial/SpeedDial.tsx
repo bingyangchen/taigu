@@ -131,7 +131,9 @@ class SpeedDial extends React.Component<Props, State> {
         />
       );
     } else if (this.state.activeModalName === "search") {
-      return <StockSearchModal hideModal={Util.getHideModalCallback(this)} />;
+      return (
+        <StockSearchModal hideModal={Util.getHideModalCallback(this)} fullScreenPage />
+      );
     }
     return null;
   }

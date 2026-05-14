@@ -1,7 +1,8 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { DollarSign, Modal, SearchKeywordInput } from "../../components";
+import { DollarSign, Modal, RoundButton, SearchKeywordInput } from "../../components";
+import { IconChevronLeft, IconMagnifier } from "../../icons";
 import type { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import type { StockInfo } from "../../types";
@@ -43,12 +44,14 @@ function mapStateToProps(rootState: RootState) {
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
   hideModal: MouseEventHandler;
+  fullScreenPage?: boolean;
   dispatch: AppDispatch;
 }
 
 interface State {
   searchKeyword: string;
   searchResults: StockInfo[];
+  completedSearchKeyword: string | null;
 }
 
 class StockSearchModal extends React.Component<Props, State> {
@@ -57,15 +60,59 @@ class StockSearchModal extends React.Component<Props, State> {
 
   public constructor(props: Props) {
     super(props);
-    this.state = { searchKeyword: "", searchResults: [] };
+    this.state = { searchKeyword: "", searchResults: [], completedSearchKeyword: null };
     this.stockSearchCache = new StockSearchLRUCache();
   }
 
   public componentDidMount(): void {
+    if (this.props.fullScreenPage) {
+      setTimeout(() => {
+        this.props.router.navigate("##");
+        document.body.style.overscrollBehaviorY = "contain";
+      });
+    }
     if (this.state.searchKeyword === "") this.loadCachedItems();
   }
 
+  public componentDidUpdate(prevProps: Readonly<Props>): void {
+    if (
+      this.props.fullScreenPage &&
+      prevProps.router.location.hash === "##" &&
+      this.props.router.location.hash === ""
+    ) {
+      this.props.hideModal({} as MouseEvent);
+    }
+  }
+
+  public componentWillUnmount(): void {
+    if (!this.props.fullScreenPage) return;
+    document.body.style.overscrollBehaviorY = "initial";
+    if (this.props.router.location.hash === "##") {
+      this.props.router.navigate(-1);
+    }
+  }
+
   public render(): React.ReactNode {
+    if (this.props.fullScreenPage) {
+      return (
+        <div className={styles.page}>
+          <div className={styles.page_header}>
+            <RoundButton
+              aria-label="返回"
+              className="p-12"
+              onClick={this.props.hideModal}
+            >
+              <IconChevronLeft sideLength="18" />
+            </RoundButton>
+            <div className={styles.page_search_input_outer}>
+              {this.renderSearchInput()}
+            </div>
+          </div>
+          {this.renderFullScreenPageBody()}
+        </div>
+      );
+    }
+
     return (
       <Modal
         discardButtonProps={{
@@ -79,67 +126,102 @@ class StockSearchModal extends React.Component<Props, State> {
         noX
       >
         <div className={styles.modal_inner}>
-          <div className={styles.search_input_outer}>
-            <SearchKeywordInput
-              placeholder="輸入證券代號或名稱"
-              keyword={this.state.searchKeyword}
-              autoFocus
-              size="l"
-              onChange={(searchKeyword) => {
-                this.setState({ searchKeyword: searchKeyword });
-                this.debouncedSearch(searchKeyword);
-              }}
-            />
-          </div>
-          {this.state.searchResults.length > 0 && (
-            <div className={styles.result}>
-              {this.state.searchResults.map((stockInfo, idx) => {
-                return (
-                  <div
-                    className={this.getRowClassName(stockInfo.fluct_price)}
-                    key={idx}
-                    onClick={(e) => this.handleClickResult(e, stockInfo.sid)}
-                  >
-                    <div className={styles.company}>
-                      <div className={styles.name}>{stockInfo.name}</div>
-                      <div className={styles.sid}>{stockInfo.sid}</div>
-                    </div>
-                    <div className={styles.price}>
-                      <div className={styles.price}>
-                        <DollarSign />
-                        {stockInfo.close}
-                      </div>
-                      <div className={styles.price_fluct}>
-                        {`${
-                          stockInfo.fluct_price > 0
-                            ? "▲"
-                            : stockInfo.fluct_price < 0
-                              ? "▼"
-                              : "-"
-                        }
-                        ${
-                          stockInfo.fluct_price !== 0
-                            ? Math.abs(stockInfo.fluct_price)
-                            : ""
-                        }
-                        ${
-                          stockInfo.fluct_price !== 0
-                            ? "(" +
-                              (
-                                Math.abs(stockInfo.fluct_price / stockInfo.close) * 100
-                              ).toFixed(1) +
-                              "%)"
-                            : ""
-                        }`}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <div className={styles.search_input_outer}>{this.renderSearchInput()}</div>
+          {this.renderResults()}
         </div>
       </Modal>
+    );
+  }
+
+  private renderSearchInput(): React.ReactNode {
+    return (
+      <SearchKeywordInput
+        placeholder="輸入證券代號或名稱"
+        keyword={this.state.searchKeyword}
+        autoFocus
+        size="l"
+        onChange={(searchKeyword) => {
+          this.setState({ searchKeyword: searchKeyword });
+          this.debouncedSearch(searchKeyword);
+        }}
+      />
+    );
+  }
+
+  private renderResults(): React.ReactNode {
+    if (this.state.searchResults.length === 0) return null;
+
+    return (
+      <div className={styles.result}>
+        {this.state.searchResults.map((stockInfo, idx) => {
+          return (
+            <div
+              className={this.getRowClassName(stockInfo.fluct_price)}
+              key={idx}
+              onClick={(e) => this.handleClickResult(e, stockInfo.sid)}
+            >
+              <div className={styles.company}>
+                <div className={styles.name}>{stockInfo.name}</div>
+                <div className={styles.sid}>{stockInfo.sid}</div>
+              </div>
+              <div className={styles.price}>
+                <div className={styles.price}>
+                  <DollarSign />
+                  {stockInfo.close}
+                </div>
+                <div className={styles.price_fluct}>
+                  {`${
+                    stockInfo.fluct_price > 0
+                      ? "▲"
+                      : stockInfo.fluct_price < 0
+                        ? "▼"
+                        : "-"
+                  }
+                  ${stockInfo.fluct_price !== 0 ? Math.abs(stockInfo.fluct_price) : ""}
+                  ${
+                    stockInfo.fluct_price !== 0
+                      ? "(" +
+                        (
+                          Math.abs(stockInfo.fluct_price / stockInfo.close) * 100
+                        ).toFixed(1) +
+                        "%)"
+                      : ""
+                  }`}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  private renderFullScreenPageBody(): React.ReactNode {
+    if (this.state.searchResults.length > 0) return this.renderResults();
+    return this.renderEmptyState();
+  }
+
+  private renderEmptyState(): React.ReactNode {
+    const hasCompletedKeyword =
+      this.state.completedSearchKeyword !== null &&
+      this.state.completedSearchKeyword.trim().length > 0;
+
+    return (
+      <div className={styles.empty_state}>
+        <div className={styles.empty_state_icon}>
+          <IconMagnifier sideLength="24" />
+        </div>
+        <div className={styles.empty_state_text}>
+          <div className={styles.empty_state_title}>
+            {hasCompletedKeyword ? "找不到符合的股票" : "搜尋台股"}
+          </div>
+          <div className={styles.empty_state_description}>
+            {hasCompletedKeyword
+              ? "請確認證券代號或名稱是否正確，或換個關鍵字再試一次。"
+              : "輸入證券代號或名稱，快速前往個股頁查看價格、持股與相關紀錄。"}
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -151,29 +233,38 @@ class StockSearchModal extends React.Component<Props, State> {
     );
   }
 
-  private loadCachedItems = async (): Promise<void> => {
+  private loadCachedItems = async (requestedKeyword = ""): Promise<void> => {
     const cachedSids = this.stockSearchCache.getAll();
     if (cachedSids.length === 0) {
-      this.setState({ searchResults: [] });
+      if (this.state.searchKeyword !== requestedKeyword) return;
+      this.setState({ searchResults: [], completedSearchKeyword: requestedKeyword });
       return;
     }
     const stockInfoMap = await Api.sendRequest(
       `stock/current-stock-info?sids=${cachedSids.join(",")}`,
       "get",
     );
+    if (this.state.searchKeyword !== requestedKeyword) return;
+
     const stockInfoList: StockInfo[] = [];
     for (const sid of cachedSids) {
       const stockInfo = stockInfoMap[sid];
       if (stockInfo) stockInfoList.push(stockInfo);
     }
-    this.setState({ searchResults: stockInfoList });
+    this.setState({
+      searchResults: stockInfoList,
+      completedSearchKeyword: requestedKeyword,
+    });
   };
 
   private search = async (value: string): Promise<void> => {
-    if (value === "") this.loadCachedItems();
+    if (this.state.searchKeyword !== value) return;
+
+    if (value.trim() === "") this.loadCachedItems(value);
     else {
       const response = await Api.sendRequest(`stock/search?keyword=${value}`, "get");
-      this.setState({ searchResults: response.data });
+      if (this.state.searchKeyword !== value) return;
+      this.setState({ searchResults: response.data, completedSearchKeyword: value });
     }
   };
 
