@@ -2,7 +2,7 @@ from django.db.models import CASCADE, PROTECT, ForeignKey
 
 from main.account.models import User
 from main.core.models import CreateUpdateDateModel
-from main.stock.models import Company
+from main.market.models import Company
 
 
 class Favorite(CreateUpdateDateModel):

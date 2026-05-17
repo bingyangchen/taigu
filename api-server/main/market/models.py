@@ -7,8 +7,6 @@ import requests
 import urllib3
 from django.db.models import (
     CASCADE,
-    PROTECT,
-    BigIntegerField,
     CharField,
     DateField,
     DateTimeField,
@@ -23,9 +21,8 @@ from django.db.models import (
 )
 from pyquery import PyQuery
 
-from main.account.models import User
 from main.core.models import CreateUpdateDateModel
-from main.stock import Frequency, ThirdPartyApi, TradeType, UnknownStockIdError
+from main.market import Frequency, ThirdPartyApi, TradeType, UnknownStockIdError
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +33,18 @@ class CompanyManager(Manager):
         defaults: MutableMapping[str, Any] | None = None,
         **kwargs,  # noqa: ANN003
     ) -> tuple["Company", bool]:
-        pk = kwargs.get("pk") or kwargs.get("stock_id")
-        if pk is None:
+        primary_key = kwargs.get("pk") or kwargs.get("stock_id")
+        if primary_key is None:
             raise TypeError("missing 1 required argument: 'stock_id' ('pk')")
         try:
-            return (self.get(pk=pk), False)
+            return (self.get(pk=primary_key), False)
         except self.model.DoesNotExist:
             defaults = (
-                CompanyManager.fetch_company_info(pk) if defaults is None else defaults
+                CompanyManager.fetch_company_info(primary_key)
+                if defaults is None
+                else defaults
             )
-            return (super().create(pk=pk, **defaults), True)
+            return (super().create(pk=primary_key, **defaults), True)
 
     @classmethod
     def fetch_company_info(cls, sid: str) -> dict:
@@ -172,38 +171,3 @@ class MaterialFact(CreateUpdateDateModel):
 
     def __str__(self) -> str:
         return f"{self.company.pk}({self.date_time})"
-
-
-class TradeRecord(CreateUpdateDateModel):
-    owner: User = ForeignKey(  # type: ignore
-        User, on_delete=CASCADE, related_name="trade_records", db_index=True
-    )
-    company: Company = ForeignKey(Company, on_delete=PROTECT, db_index=True)  # type: ignore
-    deal_time = DateField()
-    deal_price = FloatField()
-    deal_quantity = BigIntegerField()
-    handling_fee = PositiveBigIntegerField()
-
-    class Meta:
-        db_table = "trade_record"
-
-    def __str__(self) -> str:
-        return f"{self.owner.username}_{self.deal_time}_{self.company.pk}"
-
-
-class CashDividendRecord(CreateUpdateDateModel):
-    owner: User = ForeignKey(  # type: ignore
-        User,
-        on_delete=CASCADE,
-        related_name="cash_dividend_records",
-        db_index=True,
-    )
-    company: Company = ForeignKey(Company, on_delete=PROTECT, db_index=True)  # type: ignore
-    deal_time = DateField()
-    cash_dividend = PositiveBigIntegerField()
-
-    class Meta:
-        db_table = "cash_dividend_record"
-
-    def __str__(self) -> str:
-        return f"{self.owner.username}_{self.deal_time}_{self.company.pk}"
