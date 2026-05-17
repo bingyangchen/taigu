@@ -5,6 +5,7 @@ import { BeautifulBlock, BeautifulRow } from "../../../components";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
+import type { TradeRecordSyncResponse } from "../../../types";
 import Api from "../../../utils/api";
 import styles from "./DataControls.module.scss";
 
@@ -71,8 +72,11 @@ class DataControls extends React.Component<Props, State> {
   };
 
   private handleExportAllTradeRecords = async (): Promise<void> => {
-    const response = await Api.sendRequest("trade-records", "get");
-    this.downloadJsonFile(response, "trade-records.json");
+    const response = (await Api.sendRequest(
+      "trade-records",
+      "get",
+    )) as TradeRecordSyncResponse;
+    this.downloadJsonFile(response.updates, "trade-records.json");
   };
 
   private handleExportAllCashDividendRecords = async (): Promise<void> => {

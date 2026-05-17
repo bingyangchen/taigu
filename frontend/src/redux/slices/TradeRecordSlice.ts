@@ -1,9 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+import LocalDatabase from "../../storage/localDatabase";
 import type {
   CreateTradeRecordRequestBody,
   StockWarehouse,
   TradeRecord,
+  TradeRecordSyncResponse,
   UpdateTradeRecordRequestBody,
 } from "../../types";
 import Api from "../../utils/api";
@@ -42,9 +44,20 @@ const initialState: TradeRecordState = {
 
 export const fetchAllTradeRecords = createAsyncThunk(
   "tradeRecord/fetchAllTradeRecords",
-  async (): Promise<Omit<TradeRecordState, "isWaiting">> => {
-    const response = await Api.sendRequest("trade-records", "get");
-    return await computeNewState(response.data);
+  async (accountId: string): Promise<Omit<TradeRecordState, "isWaiting">> => {
+    await LocalDatabase.prepareForAccount(accountId);
+    const cachedTradeRecords = await LocalDatabase.getTradeRecords();
+    const lastRevision = await LocalDatabase.getTradeRecordsLastRevision();
+    const endpoint =
+      cachedTradeRecords.length > 0 || lastRevision > 0
+        ? `trade-records?since_revision=${lastRevision}`
+        : "trade-records";
+    const response = (await Api.sendRequest(
+      endpoint,
+      "get",
+    )) as TradeRecordSyncResponse;
+    const tradeRecords = await LocalDatabase.applyTradeRecordSyncResponse(response);
+    return await computeNewState(tradeRecords);
   },
 );
 
@@ -60,6 +73,7 @@ export const createRecord = createAsyncThunk(
       JSON.stringify(requestBody),
     );
     // if (navigator.vibrate) navigator.vibrate(20);
+    await LocalDatabase.upsertTradeRecord(response);
     const rootState = thunkAPI.getState() as RootState;
     const newState = await computeNewState([
       response,
@@ -86,6 +100,7 @@ export const updateRecord = createAsyncThunk(
       JSON.stringify(requestBody),
     );
     // if (navigator.vibrate) navigator.vibrate(20);
+    await LocalDatabase.upsertTradeRecord(response);
     const rootState = thunkAPI.getState() as RootState;
     const newState = await computeNewState(
       rootState.tradeRecord.tradeRecords.map((r) =>
@@ -109,27 +124,11 @@ export const deleteRecord = createAsyncThunk(
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     await Api.sendRequest(`trade-records/${id}`, "delete");
     // if (navigator.vibrate) navigator.vibrate(20);
+    await LocalDatabase.deleteTradeRecord(id);
     const rootState = thunkAPI.getState() as RootState;
     const newState = await computeNewState(
       [...rootState.tradeRecord.tradeRecords].filter((r) => r.id !== id),
     );
-    const totalDiscount =
-      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
-        (sum, discount) => sum + discount.amount,
-        0,
-      );
-    return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
-  },
-);
-
-export const refreshWithNonCacheResponse = createAsyncThunk(
-  "tradeRecord/refreshWithNonCacheResponse",
-  async (
-    tradeRecords: TradeRecord[],
-    thunkAPI,
-  ): Promise<Omit<TradeRecordState, "isWaiting">> => {
-    const newState = await computeNewState(tradeRecords);
-    const rootState = thunkAPI.getState() as RootState;
     const totalDiscount =
       rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
         (sum, discount) => sum + discount.amount,
@@ -247,20 +246,6 @@ export const tradeRecordSlice = createSlice({
       })
       .addCase(deleteRecord.rejected, (state) => {
         state.isWaiting = false;
-      })
-
-      .addCase(refreshWithNonCacheResponse.fulfilled, (state, action) => {
-        state.tradeRecords = action.payload.tradeRecords;
-        state.sidTradeRecordsMap = action.payload.sidTradeRecordsMap;
-        state.sidHandlingFeeMap = action.payload.sidHandlingFeeMap;
-        state.sidGainMap = action.payload.sidGainMap;
-        state.stockWarehouse = action.payload.stockWarehouse;
-        state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
-        state.totalCashInvested = action.payload.totalCashInvested;
-        state.totalHandlingFee = action.payload.totalHandlingFee;
-        state.cashInvestedChartData = action.payload.cashInvestedChartData;
-        state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
-        state.averageCashInvested = action.payload.averageCashInvested;
       })
 
       .addCase(calculateTotalHandlingFee.fulfilled, (state, action) => {

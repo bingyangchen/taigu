@@ -109,7 +109,6 @@ self.addEventListener("fetch", (event) => {
   if (/^http/gs.test(requestUrl)) {
     if (
       (/account\/me[/]?$/gs.test(requestUrl) ||
-        /trade-records[/]?$/gs.test(requestUrl) ||
         /cash-dividends[/]?$/gs.test(requestUrl) ||
         /market\/market-index[/]?$/gs.test(requestUrl) ||
         /trade-plans[/]?$/gs.test(requestUrl) ||

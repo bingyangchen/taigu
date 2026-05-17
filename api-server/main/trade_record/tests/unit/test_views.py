@@ -10,6 +10,7 @@ from django.test import RequestFactory
 
 from main.account import OAuthOrganization
 from main.account.models import User
+from main.core.models import DataChangeLog
 from main.market import TradeType
 from main.market.models import Company
 from main.trade_record.models import TradeRecord
@@ -86,11 +87,13 @@ class TestTradeRecordListView:
         assert response.status_code == 200
 
         data = json.loads(response.content)
-        assert "data" in data
-        assert len(data["data"]) == 2
+        assert data["last_revision"] == 0
+        assert data["deletes"] == []
+        assert data["is_full_snapshot"] is True
+        assert len(data["updates"]) == 2
 
         # Check data structure
-        record = data["data"][0]
+        record = data["updates"][0]
         expected_keys = {
             "id",
             "deal_time",
@@ -102,92 +105,132 @@ class TestTradeRecordListView:
         }
         assert set(record.keys()) == expected_keys
 
-    def test_list_filter_by_deal_times(
+    def test_list_incremental_records(
         self,
         request_factory: RequestFactory,
         user: User,
         trade_records: list[TradeRecord],
     ) -> None:
-        request = request_factory.get('/api/trade-records/?deal_times=["2023-12-01"]')
-        request.user = user
-
-        response = list_view(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert "data" in data
-        assert len(data["data"]) == 1
-        assert data["data"][0]["deal_time"] == "2023-12-01"
-
-    def test_list_filter_by_sids(
-        self,
-        request_factory: RequestFactory,
-        user: User,
-        trade_records: list[TradeRecord],
-    ) -> None:
-        request = request_factory.get('/api/trade-records/?sids=["1234"]')
-        request.user = user
-
-        response = list_view(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert "data" in data
-        assert len(data["data"]) == 1
-        assert data["data"][0]["sid"] == "1234"
-
-    def test_list_filter_by_deal_times_and_sids(
-        self,
-        request_factory: RequestFactory,
-        user: User,
-        trade_records: list[TradeRecord],
-    ) -> None:
-        request = request_factory.get(
-            '/api/trade-records/?deal_times=["2023-12-01"]&sids=["1234"]'
+        DataChangeLog.objects.create(
+            user=user,
+            subject=DataChangeLog.Subject.TRADE_RECORD,
+            subject_id=str(trade_records[0].pk),
+            revision=1,
+            operation=DataChangeLog.Operation.UPSERT,
         )
+        DataChangeLog.objects.create(
+            user=user,
+            subject=DataChangeLog.Subject.TRADE_RECORD,
+            subject_id=str(trade_records[1].pk),
+            revision=2,
+            operation=DataChangeLog.Operation.DELETE,
+        )
+        request = request_factory.get("/api/trade-records/?since_revision=0")
         request.user = user
 
         response = list_view(request)
 
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
         data = json.loads(response.content)
-        assert "data" in data
-        assert len(data["data"]) == 1
-        assert data["data"][0]["sid"] == "1234"
-        assert data["data"][0]["deal_time"] == "2023-12-01"
+        assert data["last_revision"] == 2
+        assert data["is_full_snapshot"] is False
+        assert [record["id"] for record in data["updates"]] == [trade_records[0].pk]
+        assert data["deletes"] == [trade_records[1].pk]
 
-    def test_list_no_filters_empty_params(
+    def test_list_incremental_skips_cursor_record(
         self,
         request_factory: RequestFactory,
         user: User,
         trade_records: list[TradeRecord],
     ) -> None:
-        request = request_factory.get("/api/trade-records/?deal_times=[]&sids=[]")
+        DataChangeLog.objects.create(
+            user=user,
+            subject=DataChangeLog.Subject.TRADE_RECORD,
+            subject_id=str(trade_records[0].pk),
+            revision=1,
+            operation=DataChangeLog.Operation.UPSERT,
+        )
+        DataChangeLog.objects.create(
+            user=user,
+            subject=DataChangeLog.Subject.TRADE_RECORD,
+            subject_id=str(trade_records[1].pk),
+            revision=2,
+            operation=DataChangeLog.Operation.UPSERT,
+        )
+        request = request_factory.get("/api/trade-records/?since_revision=1")
         request.user = user
 
         response = list_view(request)
 
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
         data = json.loads(response.content)
-        assert "data" in data
-        assert len(data["data"]) == 2  # Should return all records
+        assert data["last_revision"] == 2
+        assert data["is_full_snapshot"] is False
+        assert [record["id"] for record in data["updates"]] == [trade_records[1].pk]
+        assert data["deletes"] == []
 
-    def test_list_invalid_json_params(
-        self, request_factory: RequestFactory, user: User
+    def test_list_incremental_returns_empty_when_cursor_is_latest(
+        self,
+        request_factory: RequestFactory,
+        user: User,
+        trade_records: list[TradeRecord],
     ) -> None:
-        request = request_factory.get("/api/trade-records/?deal_times=invalid")
+        DataChangeLog.objects.create(
+            user=user,
+            subject=DataChangeLog.Subject.TRADE_RECORD,
+            subject_id=str(trade_records[0].pk),
+            revision=1,
+            operation=DataChangeLog.Operation.UPSERT,
+        )
+        request = request_factory.get("/api/trade-records/?since_revision=1")
         request.user = user
 
-        with pytest.raises(ValueError):  # Should raise JSON decode error
-            list_view(request)
+        response = list_view(request)
+
+        data = json.loads(response.content)
+        assert data["last_revision"] == 1
+        assert data["is_full_snapshot"] is False
+        assert data["updates"] == []
+        assert data["deletes"] == []
+
+    def test_list_incremental_returns_full_snapshot_when_logs_were_pruned(
+        self,
+        request_factory: RequestFactory,
+        user: User,
+        trade_records: list[TradeRecord],
+    ) -> None:
+        DataChangeLog.objects.create(
+            user=user,
+            subject=DataChangeLog.Subject.TRADE_RECORD,
+            subject_id=str(trade_records[0].pk),
+            revision=5,
+            operation=DataChangeLog.Operation.UPSERT,
+        )
+        request = request_factory.get("/api/trade-records/?since_revision=3")
+        request.user = user
+
+        response = list_view(request)
+
+        data = json.loads(response.content)
+        assert data["last_revision"] == 5
+        assert data["is_full_snapshot"] is True
+        assert len(data["updates"]) == 2
+        assert data["deletes"] == []
+
+    def test_list_incremental_returns_full_snapshot_when_no_logs_exist(
+        self,
+        request_factory: RequestFactory,
+        user: User,
+        trade_records: list[TradeRecord],
+    ) -> None:
+        request = request_factory.get("/api/trade-records/?since_revision=3")
+        request.user = user
+
+        response = list_view(request)
+
+        data = json.loads(response.content)
+        assert data["last_revision"] == 3
+        assert data["is_full_snapshot"] is True
+        assert len(data["updates"]) == 2
+        assert data["deletes"] == []
 
     @patch("main.core.decorators.auth.require_login")
     def test_list_unauthorized_user(
@@ -256,7 +299,14 @@ class TestTradeRecordCreateView:
         assert data["handling_fee"] == 50
 
         # Verify record was created in database
-        assert TradeRecord.objects.filter(owner=user, company=company).exists()
+        record = TradeRecord.objects.get(owner=user, company=company)
+        change_log = DataChangeLog.objects.get(
+            user=user,
+            subject=DataChangeLog.Subject.TRADE_RECORD,
+            subject_id=str(record.pk),
+        )
+        assert change_log.revision == 1
+        assert change_log.operation == DataChangeLog.Operation.UPSERT
 
     def test_create_missing_deal_time(
         self, request_factory: RequestFactory, user: User
@@ -464,6 +514,13 @@ class TestTradeRecordUpdateOrDeleteView:
         data = json.loads(response.content)
         assert data["deal_price"] == 200.0
         assert data["deal_quantity"] == 2000
+        change_log = DataChangeLog.objects.get(
+            user=user,
+            subject=DataChangeLog.Subject.TRADE_RECORD,
+            subject_id=str(trade_record.pk),
+        )
+        assert change_log.revision == 1
+        assert change_log.operation == DataChangeLog.Operation.UPSERT
 
     def test_update_or_delete_delete_method(
         self,
@@ -486,6 +543,13 @@ class TestTradeRecordUpdateOrDeleteView:
 
         # Verify record was deleted
         assert not TradeRecord.objects.filter(pk=record_id).exists()
+        change_log = DataChangeLog.objects.get(
+            user=user,
+            subject=DataChangeLog.Subject.TRADE_RECORD,
+            subject_id=str(record_id),
+        )
+        assert change_log.revision == 1
+        assert change_log.operation == DataChangeLog.Operation.DELETE
 
     def test_update_or_delete_invalid_method(
         self, request_factory: RequestFactory, user: User, trade_record: TradeRecord
