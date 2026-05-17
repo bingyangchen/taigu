@@ -11,13 +11,13 @@ import urllib3
 from dateutil.relativedelta import relativedelta
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
-from main.stock import Frequency, ThirdPartyApi, TradeType
-from main.stock.cache import (
+from main.market import Frequency, ThirdPartyApi, TradeType
+from main.market.cache import (
     TimeSeriesStockInfo,
     TimeSeriesStockInfoCacheManager,
     TimeSeriesStockInfoPointData,
 )
-from main.stock.models import (
+from main.market.models import (
     Company,
     History,
     MarketIndexPerMinute,
