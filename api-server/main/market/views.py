@@ -6,9 +6,9 @@ from django.views.decorators.http import require_GET
 
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
-from main.stock import Frequency, TradeType
-from main.stock.cache import TimeSeriesStockInfo, TimeSeriesStockInfoCacheManager
-from main.stock.models import Company, History, MarketIndexPerMinute, StockInfo
+from main.market import Frequency, TradeType
+from main.market.cache import TimeSeriesStockInfo, TimeSeriesStockInfoCacheManager
+from main.market.models import Company, History, MarketIndexPerMinute, StockInfo
 
 logger = logging.getLogger(__name__)
 
