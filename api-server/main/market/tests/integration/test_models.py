@@ -1,7 +1,7 @@
 import pytest
 
-from main.stock import UnknownStockIdError
-from main.stock.models import Company, CompanyManager
+from main.market import UnknownStockIdError
+from main.market.models import Company, CompanyManager
 
 
 class TestCompanyManager:

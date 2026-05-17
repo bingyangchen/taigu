@@ -7,7 +7,7 @@ from django.db import DataError, IntegrityError
 from django.db.models.deletion import ProtectedError
 
 from main.account.models import User
-from main.stock.models import Company
+from main.market.models import Company
 from main.trade_plan.models import TradePlan
 
 

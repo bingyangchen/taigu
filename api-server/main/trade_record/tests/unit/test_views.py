@@ -10,10 +10,12 @@ from django.test import RequestFactory
 
 from main.account import OAuthOrganization
 from main.account.models import User
-from main.stock import TradeType
-from main.stock.models import Company, TradeRecord
-from main.stock.views.trade_record import create, update_or_delete
-from main.stock.views.trade_record import list as list_view
+from main.market import TradeType
+from main.market.models import Company
+from main.trade_record.models import TradeRecord
+from main.trade_record.views import _create as create
+from main.trade_record.views import _list as list_view
+from main.trade_record.views import update_or_delete
 
 
 @pytest.mark.django_db
@@ -75,7 +77,7 @@ class TestTradeRecordListView:
         user: User,
         trade_records: list[TradeRecord],
     ) -> None:
-        request = request_factory.get("/api/stock/trade-records/")
+        request = request_factory.get("/api/trade-records/")
         request.user = user
 
         response = list_view(request)
@@ -106,9 +108,7 @@ class TestTradeRecordListView:
         user: User,
         trade_records: list[TradeRecord],
     ) -> None:
-        request = request_factory.get(
-            '/api/stock/trade-records/?deal_times=["2023-12-01"]'
-        )
+        request = request_factory.get('/api/trade-records/?deal_times=["2023-12-01"]')
         request.user = user
 
         response = list_view(request)
@@ -127,7 +127,7 @@ class TestTradeRecordListView:
         user: User,
         trade_records: list[TradeRecord],
     ) -> None:
-        request = request_factory.get('/api/stock/trade-records/?sids=["1234"]')
+        request = request_factory.get('/api/trade-records/?sids=["1234"]')
         request.user = user
 
         response = list_view(request)
@@ -147,7 +147,7 @@ class TestTradeRecordListView:
         trade_records: list[TradeRecord],
     ) -> None:
         request = request_factory.get(
-            '/api/stock/trade-records/?deal_times=["2023-12-01"]&sids=["1234"]'
+            '/api/trade-records/?deal_times=["2023-12-01"]&sids=["1234"]'
         )
         request.user = user
 
@@ -168,7 +168,7 @@ class TestTradeRecordListView:
         user: User,
         trade_records: list[TradeRecord],
     ) -> None:
-        request = request_factory.get("/api/stock/trade-records/?deal_times=[]&sids=[]")
+        request = request_factory.get("/api/trade-records/?deal_times=[]&sids=[]")
         request.user = user
 
         response = list_view(request)
@@ -183,7 +183,7 @@ class TestTradeRecordListView:
     def test_list_invalid_json_params(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.get("/api/stock/trade-records/?deal_times=invalid")
+        request = request_factory.get("/api/trade-records/?deal_times=invalid")
         request.user = user
 
         with pytest.raises(ValueError):  # Should raise JSON decode error
@@ -193,7 +193,7 @@ class TestTradeRecordListView:
     def test_list_unauthorized_user(
         self, mock_require_login: Mock, request_factory: RequestFactory
     ) -> None:
-        request = request_factory.get("/api/stock/trade-records/")
+        request = request_factory.get("/api/trade-records/")
         request.user = AnonymousUser()
 
         # The decorator should handle this, but we can test the decorator is applied
@@ -237,7 +237,7 @@ class TestTradeRecordCreateView:
         }
 
         request = request_factory.post(
-            "/api/stock/trade-record/",
+            "/api/trade-records/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -269,7 +269,7 @@ class TestTradeRecordCreateView:
         }
 
         request = request_factory.post(
-            "/api/stock/trade-record/",
+            "/api/trade-records/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -294,7 +294,7 @@ class TestTradeRecordCreateView:
         }
 
         request = request_factory.post(
-            "/api/stock/trade-record/",
+            "/api/trade-records/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -320,7 +320,7 @@ class TestTradeRecordCreateView:
         }
 
         request = request_factory.post(
-            "/api/stock/trade-record/",
+            "/api/trade-records/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -346,7 +346,7 @@ class TestTradeRecordCreateView:
         }
 
         request = request_factory.post(
-            "/api/stock/trade-record/",
+            "/api/trade-records/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -372,7 +372,7 @@ class TestTradeRecordCreateView:
         }
 
         request = request_factory.post(
-            "/api/stock/trade-record/",
+            "/api/trade-records/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -450,7 +450,7 @@ class TestTradeRecordUpdateOrDeleteView:
         }
 
         request = request_factory.post(
-            f"/api/stock/trade-records/{trade_record.pk}/",
+            f"/api/trade-records/{trade_record.pk}/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -473,7 +473,7 @@ class TestTradeRecordUpdateOrDeleteView:
     ) -> None:
         record_id = trade_record.pk
 
-        request = request_factory.delete(f"/api/stock/trade-records/{record_id}/")
+        request = request_factory.delete(f"/api/trade-records/{record_id}/")
         request.user = user
 
         response = update_or_delete(request, str(record_id))
@@ -490,7 +490,7 @@ class TestTradeRecordUpdateOrDeleteView:
     def test_update_or_delete_invalid_method(
         self, request_factory: RequestFactory, user: User, trade_record: TradeRecord
     ) -> None:
-        request = request_factory.get(f"/api/stock/trade-records/{trade_record.pk}/")
+        request = request_factory.get(f"/api/trade-records/{trade_record.pk}/")
         request.user = user
 
         response = update_or_delete(request, str(trade_record.pk))
@@ -514,7 +514,7 @@ class TestTradeRecordUpdateOrDeleteView:
         }
 
         request = request_factory.post(
-            f"/api/stock/trade-records/{trade_record.pk}/",
+            f"/api/trade-records/{trade_record.pk}/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -547,7 +547,7 @@ class TestTradeRecordUpdateOrDeleteView:
         }
 
         request = request_factory.post(
-            f"/api/stock/trade-records/{trade_record.pk}/",
+            f"/api/trade-records/{trade_record.pk}/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -573,7 +573,7 @@ class TestTradeRecordUpdateOrDeleteView:
         }
 
         request = request_factory.post(
-            f"/api/stock/trade-records/{trade_record.pk}/",
+            f"/api/trade-records/{trade_record.pk}/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -599,7 +599,7 @@ class TestTradeRecordUpdateOrDeleteView:
         }
 
         request = request_factory.post(
-            "/api/stock/trade-records/99999/",
+            "/api/trade-records/99999/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -611,7 +611,7 @@ class TestTradeRecordUpdateOrDeleteView:
     def test_delete_nonexistent_record(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.delete("/api/stock/trade-records/99999/")
+        request = request_factory.delete("/api/trade-records/99999/")
         request.user = user
 
         with pytest.raises(ObjectDoesNotExist):
@@ -631,7 +631,7 @@ class TestTradeRecordUpdateOrDeleteView:
             username="otheruser",
         )
 
-        request = request_factory.delete(f"/api/stock/trade-records/{trade_record.pk}/")
+        request = request_factory.delete(f"/api/trade-records/{trade_record.pk}/")
         request.user = other_user
 
         with pytest.raises(ObjectDoesNotExist):

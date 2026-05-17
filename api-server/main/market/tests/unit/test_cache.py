@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 from pydantic import ValidationError
 
-from main.stock.cache import (
+from main.market.cache import (
     TimeSeriesStockInfo,
     TimeSeriesStockInfoCacheManager,
     TimeSeriesStockInfoPointData,

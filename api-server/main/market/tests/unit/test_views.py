@@ -11,10 +11,10 @@ from django.test import RequestFactory
 
 from main.account import OAuthOrganization
 from main.account.models import User
-from main.stock import Frequency, TradeType
-from main.stock.cache import TimeSeriesStockInfo
-from main.stock.models import Company, History, StockInfo
-from main.stock.views.stock_info import (
+from main.market import Frequency, TradeType
+from main.market.cache import TimeSeriesStockInfo
+from main.market.models import Company, History, StockInfo
+from main.market.views import (
     current_stock_info,
     historical_prices,
     market_index,
@@ -53,7 +53,7 @@ class TestMarketIndexView:
             }
         }
 
-    @patch("main.stock.views.stock_info.TimeSeriesStockInfoCacheManager.get")
+    @patch("main.market.views.TimeSeriesStockInfoCacheManager.get")
     def test_market_index_with_cache_hit(
         self,
         mock_get: Mock,
@@ -70,7 +70,7 @@ class TestMarketIndexView:
 
         mock_get.side_effect = get_side_effect
 
-        request = request_factory.get("/api/stock/market-index/")
+        request = request_factory.get("/api/market/market-index/")
         request.user = user
 
         response = market_index(request)
@@ -93,9 +93,9 @@ class TestMarketIndexView:
         assert data[TradeType.TSE] == expected_data
         assert data[TradeType.OTC] == expected_data
 
-    @patch("main.stock.views.stock_info.TimeSeriesStockInfoCacheManager.get")
-    @patch("main.stock.views.stock_info.TimeSeriesStockInfoCacheManager.set")
-    @patch("main.stock.views.stock_info.MarketIndexPerMinute.objects.filter")
+    @patch("main.market.views.TimeSeriesStockInfoCacheManager.get")
+    @patch("main.market.views.TimeSeriesStockInfoCacheManager.set")
+    @patch("main.market.views.MarketIndexPerMinute.objects.filter")
     def test_market_index_with_cache_miss(
         self,
         mock_filter: Mock,
@@ -125,7 +125,7 @@ class TestMarketIndexView:
         mock_queryset.values.return_value = mock_market_data
         mock_filter.return_value = mock_queryset
 
-        request = request_factory.get("/api/stock/market-index/")
+        request = request_factory.get("/api/market/market-index/")
         request.user = user
 
         response = market_index(request)
@@ -142,7 +142,7 @@ class TestMarketIndexView:
     def test_market_index_method_not_allowed(
         self, request_factory: RequestFactory
     ) -> None:
-        request = request_factory.post("/api/stock/market-index/")
+        request = request_factory.post("/api/market/market-index/")
 
         response = market_index(request)
 
@@ -210,7 +210,7 @@ class TestCurrentStockInfoView:
     def test_current_stock_info_with_valid_sids(
         self, request_factory: RequestFactory, stock_infos: list[StockInfo], user: User
     ) -> None:
-        request = request_factory.get("/api/stock/current-stock-info/?sids=1234,5678")
+        request = request_factory.get("/api/market/current-stock-info/?sids=1234,5678")
         request.user = user
 
         response = current_stock_info(request)
@@ -231,7 +231,7 @@ class TestCurrentStockInfoView:
     def test_current_stock_info_with_empty_sids(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.get("/api/stock/current-stock-info/?sids=")
+        request = request_factory.get("/api/market/current-stock-info/?sids=")
         request.user = user
 
         response = current_stock_info(request)
@@ -245,7 +245,7 @@ class TestCurrentStockInfoView:
     def test_current_stock_info_with_nonexistent_sids(
         self, request_factory: RequestFactory, stock_infos: list[StockInfo], user: User
     ) -> None:
-        request = request_factory.get("/api/stock/current-stock-info/?sids=9999,8888")
+        request = request_factory.get("/api/market/current-stock-info/?sids=9999,8888")
         request.user = user
 
         response = current_stock_info(request)
@@ -259,7 +259,7 @@ class TestCurrentStockInfoView:
     def test_current_stock_info_no_sids_parameter(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.get("/api/stock/current-stock-info/")
+        request = request_factory.get("/api/market/current-stock-info/")
         request.user = user
 
         response = current_stock_info(request)
@@ -334,7 +334,7 @@ class TestHistoricalPricesView:
         history_records: list[History],
         user: User,
     ) -> None:
-        request = request_factory.get("/api/stock/historical-prices/1234/")
+        request = request_factory.get("/api/market/historical-prices/1234/")
         request.user = user
 
         response = historical_prices(request, "1234")
@@ -357,7 +357,7 @@ class TestHistoricalPricesView:
         user: User,
     ) -> None:
         request = request_factory.get(
-            f"/api/stock/historical-prices/1234/?frequency={Frequency.WEEKLY}"
+            f"/api/market/historical-prices/1234/?frequency={Frequency.WEEKLY}"
         )
         request.user = user
 
@@ -377,7 +377,7 @@ class TestHistoricalPricesView:
         user: User,
     ) -> None:
         request = request_factory.get(
-            f"/api/stock/historical-prices/1234/?frequency={Frequency.MONTHLY}"
+            f"/api/market/historical-prices/1234/?frequency={Frequency.MONTHLY}"
         )
         request.user = user
 
@@ -393,7 +393,7 @@ class TestHistoricalPricesView:
     def test_historical_prices_nonexistent_company(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.get("/api/stock/historical-prices/9999/")
+        request = request_factory.get("/api/market/historical-prices/9999/")
         request.user = user
 
         with pytest.raises(ObjectDoesNotExist):
@@ -402,7 +402,7 @@ class TestHistoricalPricesView:
     def test_historical_prices_no_history_data(
         self, request_factory: RequestFactory, company: Company, user: User
     ) -> None:
-        request = request_factory.get("/api/stock/historical-prices/1234/")
+        request = request_factory.get("/api/market/historical-prices/1234/")
         request.user = user
 
         response = historical_prices(request, "1234")
@@ -468,7 +468,7 @@ class TestSearchView:
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
         user: User,
     ) -> None:
-        request = request_factory.get("/api/stock/search/?keyword=1234")
+        request = request_factory.get("/api/market/search/?keyword=1234")
         request.user = user
 
         response = search(request)
@@ -488,7 +488,7 @@ class TestSearchView:
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
         user: User,
     ) -> None:
-        request = request_factory.get("/api/stock/search/?keyword=TSMC")
+        request = request_factory.get("/api/market/search/?keyword=TSMC")
         request.user = user
 
         response = search(request)
@@ -508,7 +508,7 @@ class TestSearchView:
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
         user: User,
     ) -> None:
-        request = request_factory.get("/api/stock/search/?keyword=23")
+        request = request_factory.get("/api/market/search/?keyword=23")
         request.user = user
 
         response = search(request)
@@ -527,7 +527,7 @@ class TestSearchView:
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
         user: User,
     ) -> None:
-        request = request_factory.get("/api/stock/search/?keyword=taiwan")
+        request = request_factory.get("/api/market/search/?keyword=taiwan")
         request.user = user
 
         response = search(request)
@@ -543,7 +543,7 @@ class TestSearchView:
     def test_search_no_keyword(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.get("/api/stock/search/")
+        request = request_factory.get("/api/market/search/")
         request.user = user
 
         response = search(request)
@@ -561,7 +561,7 @@ class TestSearchView:
         companies_and_stock_infos: list[tuple[Company, StockInfo]],
         user: User,
     ) -> None:
-        request = request_factory.get("/api/stock/search/?keyword=nonexistent")
+        request = request_factory.get("/api/market/search/?keyword=nonexistent")
         request.user = user
 
         response = search(request)
@@ -591,7 +591,7 @@ class TestSearchView:
                 fluct_price=1.0,
             )
 
-        request = request_factory.get("/api/stock/search/?keyword=TEST")
+        request = request_factory.get("/api/market/search/?keyword=TEST")
         request.user = user
 
         response = search(request)

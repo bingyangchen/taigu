@@ -13,7 +13,7 @@ from main.favorite.views import (
     create_or_delete_favorite,
     list_favorites,
 )
-from main.stock.models import Company
+from main.market.models import Company
 
 
 @pytest.mark.django_db

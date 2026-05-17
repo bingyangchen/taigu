@@ -6,7 +6,7 @@ from django.http import HttpRequest
 from django.test import RequestFactory
 
 from main.account.models import User
-from main.stock.models import Company, MaterialFact
+from main.market.models import Company, MaterialFact
 from main.stock_memo.models import StockMemo
 from main.stock_memo.views import list_company_info, update_or_create_stock_memo
 

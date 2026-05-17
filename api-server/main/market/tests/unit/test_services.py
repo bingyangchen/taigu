@@ -5,9 +5,9 @@ from unittest.mock import Mock, patch
 import pytest
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
-from main.stock import Frequency, TradeType
-from main.stock.models import Company, StockInfo
-from main.stock.services import (
+from main.market import Frequency, TradeType
+from main.market.models import Company, StockInfo
+from main.market.services import (
     _fetch_and_store_historical_info_from_yahoo,
     _store_market_per_minute_info,
     fetch_and_store_realtime_stock_info,
@@ -62,11 +62,11 @@ class TestFetchAndStoreRealtimeStockInfo:
             ]
         }
 
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services._store_market_per_minute_info")
-    @patch("main.stock.services.StockInfo.objects.bulk_create")
-    @patch("main.stock.services.Company.objects.filter")
-    @patch("main.stock.services.logger")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services._store_market_per_minute_info")
+    @patch("main.market.services.StockInfo.objects.bulk_create")
+    @patch("main.market.services.Company.objects.filter")
+    @patch("main.market.services.logger")
     def test_fetch_and_store_realtime_stock_info_success(
         self,
         mock_logger: Mock,
@@ -87,7 +87,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_get.return_value = mock_response
 
         # Mock date.today() to match test data
-        with patch("main.stock.services.date") as mock_date:
+        with patch("main.market.services.date") as mock_date:
             mock_date.today.return_value = date(2023, 12, 1)
 
             fetch_and_store_realtime_stock_info()
@@ -104,9 +104,9 @@ class TestFetchAndStoreRealtimeStockInfo:
         # Verify bulk create was called
         mock_bulk_create.assert_called_once()
 
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.Company.objects.filter")
-    @patch("main.stock.services.logger")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services.Company.objects.filter")
+    @patch("main.market.services.logger")
     def test_fetch_and_store_realtime_stock_info_error_handling(
         self, mock_logger: Mock, mock_filter: Mock, mock_get: Mock
     ) -> None:
@@ -128,9 +128,9 @@ class TestFetchAndStoreRealtimeStockInfo:
             # Verify error was logged
             assert mock_logger.warning.called or mock_logger.error.called
 
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.Company.objects.filter")
-    @patch("main.stock.services.logger")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services.Company.objects.filter")
+    @patch("main.market.services.logger")
     def test_fetch_and_store_realtime_stock_info_invalid_row_data(
         self, mock_logger: Mock, mock_filter: Mock, mock_get: Mock
     ) -> None:
@@ -154,9 +154,9 @@ class TestFetchAndStoreRealtimeStockInfo:
 
 @pytest.mark.django_db
 class TestStoreMarketPerMinuteInfo:
-    @patch("main.stock.services.TimeSeriesStockInfoCacheManager")
-    @patch("main.stock.services.MarketIndexPerMinute.objects.get_or_create")
-    @patch("main.stock.services.MarketIndexPerMinute.objects.filter")
+    @patch("main.market.services.TimeSeriesStockInfoCacheManager")
+    @patch("main.market.services.MarketIndexPerMinute.objects.get_or_create")
+    @patch("main.market.services.MarketIndexPerMinute.objects.filter")
     def test_store_market_per_minute_info_tse(
         self,
         mock_filter: Mock,
@@ -174,7 +174,7 @@ class TestStoreMarketPerMinuteInfo:
         test_date = date(2023, 12, 1)
 
         # Mock the datetime computation to return 10:30 (90 minutes after 9:00)
-        with patch("main.stock.services.datetime") as mock_datetime:
+        with patch("main.market.services.datetime") as mock_datetime:
             mock_time_result = Mock()
             mock_time_result.time.return_value = time(10, 30)
             mock_datetime.now.return_value.__add__.return_value = mock_time_result
@@ -188,9 +188,9 @@ class TestStoreMarketPerMinuteInfo:
             defaults={"price": 15000.0, "fluct_price": 50.0},
         )
 
-    @patch("main.stock.services.TimeSeriesStockInfoCacheManager")
-    @patch("main.stock.services.MarketIndexPerMinute.objects.get_or_create")
-    @patch("main.stock.services.MarketIndexPerMinute.objects.filter")
+    @patch("main.market.services.TimeSeriesStockInfoCacheManager")
+    @patch("main.market.services.MarketIndexPerMinute.objects.get_or_create")
+    @patch("main.market.services.MarketIndexPerMinute.objects.filter")
     def test_store_market_per_minute_info_otc(
         self,
         mock_filter: Mock,
@@ -208,7 +208,7 @@ class TestStoreMarketPerMinuteInfo:
         test_date = date(2023, 12, 1)
 
         # Mock the datetime computation to return 10:30 (90 minutes after 9:00)
-        with patch("main.stock.services.datetime") as mock_datetime:
+        with patch("main.market.services.datetime") as mock_datetime:
             mock_time_result = Mock()
             mock_time_result.time.return_value = time(10, 30)
             mock_datetime.now.return_value.__add__.return_value = mock_time_result
@@ -225,12 +225,12 @@ class TestStoreMarketPerMinuteInfo:
 
 @pytest.mark.django_db
 class TestUpdateCompanyList:
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.Company.objects.get_or_create")
-    @patch("main.stock.services.Company.objects.filter")
-    @patch("main.stock.services.StockInfo.objects.bulk_create")
-    @patch("main.stock.services.logger")
-    @patch("main.stock.services.sleep")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services.Company.objects.get_or_create")
+    @patch("main.market.services.Company.objects.filter")
+    @patch("main.market.services.StockInfo.objects.bulk_create")
+    @patch("main.market.services.logger")
+    @patch("main.market.services.sleep")
     def test_update_company_list_success(
         self,
         mock_sleep: Mock,
@@ -272,8 +272,8 @@ class TestUpdateCompanyList:
         mock_logger.info.assert_any_call("Start updating company list.")
         mock_logger.info.assert_any_call("Company list updated!")
 
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.logger")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services.logger")
     def test_update_company_list_api_error(
         self, mock_logger: Mock, mock_get: Mock
     ) -> None:
@@ -296,9 +296,9 @@ class TestFetchAndStoreHistoricalInfoFromYahoo:
             business="Test business",
         )
 
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.History.objects.filter")
-    @patch("main.stock.services.History.objects.bulk_create")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services.History.objects.filter")
+    @patch("main.market.services.History.objects.bulk_create")
     def test_fetch_and_store_historical_info_from_yahoo_daily(
         self,
         mock_bulk_create: Mock,
@@ -321,9 +321,9 @@ class TestFetchAndStoreHistoricalInfoFromYahoo:
         # Verify bulk_create was called
         mock_bulk_create.assert_called_once()
 
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.History.objects.filter")
-    @patch("main.stock.services.History.objects.bulk_create")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services.History.objects.filter")
+    @patch("main.market.services.History.objects.bulk_create")
     def test_fetch_and_store_historical_info_otc_company(
         self, mock_bulk_create: Mock, mock_filter: Mock, mock_get: Mock
     ) -> None:
@@ -366,9 +366,9 @@ class TestUpdateAllStocksHistory:
             fluct_price=2.3,
         )
 
-    @patch("main.stock.services.History.objects.bulk_create")
-    @patch("main.stock.services.History.objects.filter")
-    @patch("main.stock.services.StockInfo.objects.filter")
+    @patch("main.market.services.History.objects.bulk_create")
+    @patch("main.market.services.History.objects.filter")
+    @patch("main.market.services.StockInfo.objects.filter")
     def test_update_all_stocks_history(
         self,
         mock_stock_filter: Mock,
@@ -387,13 +387,13 @@ class TestUpdateAllStocksHistory:
 
 @pytest.mark.django_db
 class TestUpdateMaterialFacts:
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.Company.objects.get_or_create")
-    @patch("main.stock.services.Company.objects.filter")
-    @patch("main.stock.services.MaterialFact.objects.bulk_create")
-    @patch("main.stock.services.MaterialFact.objects.filter")
-    @patch("main.stock.services.logger")
-    @patch("main.stock.services.sleep")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services.Company.objects.get_or_create")
+    @patch("main.market.services.Company.objects.filter")
+    @patch("main.market.services.MaterialFact.objects.bulk_create")
+    @patch("main.market.services.MaterialFact.objects.filter")
+    @patch("main.market.services.logger")
+    @patch("main.market.services.sleep")
     def test_update_material_facts_success(
         self,
         mock_sleep: Mock,
@@ -445,8 +445,8 @@ class TestUpdateMaterialFacts:
         mock_logger.info.assert_any_call("Start fetching material facts.")
         mock_logger.info.assert_any_call("Material facts updated!")
 
-    @patch("main.stock.services.requests.get")
-    @patch("main.stock.services.logger")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services.logger")
     def test_update_material_facts_api_error(
         self, mock_logger: Mock, mock_get: Mock
     ) -> None:

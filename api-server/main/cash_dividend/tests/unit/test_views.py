@@ -11,10 +11,12 @@ from django.test import RequestFactory
 
 from main.account import OAuthOrganization
 from main.account.models import User
-from main.stock import TradeType
-from main.stock.models import CashDividendRecord, Company
-from main.stock.views.cash_dividend_record import create, update_or_delete
-from main.stock.views.cash_dividend_record import list as list_view
+from main.cash_dividend.models import CashDividendRecord
+from main.cash_dividend.views import _create as create
+from main.cash_dividend.views import _list as list_view
+from main.cash_dividend.views import update_or_delete
+from main.market import TradeType
+from main.market.models import Company
 
 
 @pytest.mark.django_db
@@ -74,7 +76,7 @@ class TestCashDividendRecordListView:
         user: User,
         cash_dividend_records: list[CashDividendRecord],
     ) -> None:
-        request = request_factory.get("/api/stock/cash-dividends/")
+        request = request_factory.get("/api/cash-dividends/")
         request.user = user
 
         response = list_view(request)
@@ -97,9 +99,7 @@ class TestCashDividendRecordListView:
         user: User,
         cash_dividend_records: list[CashDividendRecord],
     ) -> None:
-        request = request_factory.get(
-            '/api/stock/cash-dividends/?deal_times=["2023-12-01"]'
-        )
+        request = request_factory.get('/api/cash-dividends/?deal_times=["2023-12-01"]')
         request.user = user
 
         response = list_view(request)
@@ -118,7 +118,7 @@ class TestCashDividendRecordListView:
         user: User,
         cash_dividend_records: list[CashDividendRecord],
     ) -> None:
-        request = request_factory.get('/api/stock/cash-dividends/?sids=["1234"]')
+        request = request_factory.get('/api/cash-dividends/?sids=["1234"]')
         request.user = user
 
         response = list_view(request)
@@ -138,7 +138,7 @@ class TestCashDividendRecordListView:
         cash_dividend_records: list[CashDividendRecord],
     ) -> None:
         request = request_factory.get(
-            '/api/stock/cash-dividends/?deal_times=["2023-12-01"]&sids=["1234"]'
+            '/api/cash-dividends/?deal_times=["2023-12-01"]&sids=["1234"]'
         )
         request.user = user
 
@@ -159,9 +159,7 @@ class TestCashDividendRecordListView:
         user: User,
         cash_dividend_records: list[CashDividendRecord],
     ) -> None:
-        request = request_factory.get(
-            "/api/stock/cash-dividends/?deal_times=[]&sids=[]"
-        )
+        request = request_factory.get("/api/cash-dividends/?deal_times=[]&sids=[]")
         request.user = user
 
         response = list_view(request)
@@ -176,7 +174,7 @@ class TestCashDividendRecordListView:
     def test_list_invalid_json_params(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.get("/api/stock/cash-dividends/?deal_times=invalid")
+        request = request_factory.get("/api/cash-dividends/?deal_times=invalid")
         request.user = user
 
         with pytest.raises(ValueError):  # Should raise JSON decode error
@@ -186,7 +184,7 @@ class TestCashDividendRecordListView:
     def test_list_unauthorized_user(
         self, mock_require_login: Mock, request_factory: RequestFactory
     ) -> None:
-        request = request_factory.get("/api/stock/cash-dividends/")
+        request = request_factory.get("/api/cash-dividends/")
         request.user = AnonymousUser()
 
         # The decorator should handle this, but we can test the decorator is applied
@@ -235,7 +233,7 @@ class TestCashDividendRecordCreateView:
         }
 
         request = request_factory.post(
-            "/api/stock/cash-dividend/",
+            "/api/cash-dividends/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -261,7 +259,7 @@ class TestCashDividendRecordCreateView:
         # Test missing deal_time
         payload = {"sid": "1234", "cash_dividend": 1500}
         request = request_factory.post(
-            "/api/stock/cash-dividend/",
+            "/api/cash-dividends/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -274,7 +272,7 @@ class TestCashDividendRecordCreateView:
         # Test missing sid
         payload = {"deal_time": "2023-12-01", "cash_dividend": 1500}
         request = request_factory.post(
-            "/api/stock/cash-dividend/",
+            "/api/cash-dividends/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -287,7 +285,7 @@ class TestCashDividendRecordCreateView:
         # Test missing cash_dividend
         payload = {"deal_time": "2023-12-01", "sid": "1234"}
         request = request_factory.post(
-            "/api/stock/cash-dividend/",
+            "/api/cash-dividends/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -303,7 +301,7 @@ class TestCashDividendRecordCreateView:
         # Test zero cash dividend
         payload = {"deal_time": "2023-12-01", "sid": "1234", "cash_dividend": 0}
         request = request_factory.post(
-            "/api/stock/cash-dividend/",
+            "/api/cash-dividends/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -316,7 +314,7 @@ class TestCashDividendRecordCreateView:
         # Test negative cash dividend
         payload = {"deal_time": "2023-12-01", "sid": "1234", "cash_dividend": -500}
         request = request_factory.post(
-            "/api/stock/cash-dividend/",
+            "/api/cash-dividends/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -338,7 +336,7 @@ class TestCashDividendRecordCreateView:
         }
 
         request = request_factory.post(
-            "/api/stock/cash-dividend/",
+            "/api/cash-dividends/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -362,7 +360,7 @@ class TestCashDividendRecordCreateView:
         }
 
         request = request_factory.post(
-            "/api/stock/cash-dividend/",
+            "/api/cash-dividends/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -426,7 +424,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         }
 
         request = request_factory.post(
-            f"/api/stock/cash-dividend/{cash_dividend_record.pk}/",
+            f"/api/cash-dividends/{cash_dividend_record.pk}/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -450,7 +448,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         payload = {"deal_time": "2023-12-05"}  # Missing other required fields
 
         request = request_factory.post(
-            f"/api/stock/cash-dividend/{cash_dividend_record.pk}/",
+            f"/api/cash-dividends/{cash_dividend_record.pk}/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -477,7 +475,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         }
 
         request = request_factory.post(
-            f"/api/stock/cash-dividend/{cash_dividend_record.pk}/",
+            f"/api/cash-dividends/{cash_dividend_record.pk}/",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -499,7 +497,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
     ) -> None:
         record_id = cash_dividend_record.pk
 
-        request = request_factory.delete(f"/api/stock/cash-dividend/{record_id}/")
+        request = request_factory.delete(f"/api/cash-dividends/{record_id}/")
         request.user = user
 
         response = update_or_delete(request, str(record_id))
@@ -519,9 +517,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         user: User,
         cash_dividend_record: CashDividendRecord,
     ) -> None:
-        request = request_factory.get(
-            f"/api/stock/cash-dividend/{cash_dividend_record.pk}/"
-        )
+        request = request_factory.get(f"/api/cash-dividends/{cash_dividend_record.pk}/")
         request.user = user
 
         response = update_or_delete(request, str(cash_dividend_record.pk))
@@ -533,7 +529,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         request = request_factory.post(
-            "/api/stock/cash-dividend/99999/",
+            "/api/cash-dividends/99999/",
             data=json.dumps(
                 {"deal_time": "2023-12-05", "sid": "1234", "cash_dividend": 2500}
             ),
@@ -567,7 +563,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         )
 
         request = request_factory.delete(
-            f"/api/stock/cash-dividend/{cash_dividend_record.pk}/"
+            f"/api/cash-dividends/{cash_dividend_record.pk}/"
         )
         request.user = other_user
 

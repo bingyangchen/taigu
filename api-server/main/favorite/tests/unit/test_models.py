@@ -7,7 +7,7 @@ from django.db.models.deletion import ProtectedError
 
 from main.account.models import User
 from main.favorite.models import Favorite
-from main.stock.models import Company
+from main.market.models import Company
 
 
 @pytest.mark.django_db

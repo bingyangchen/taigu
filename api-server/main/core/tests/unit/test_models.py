@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 
 from main.core.models import CreateUpdateDateModel
-from main.stock.models import Company, StockInfo
+from main.market.models import Company, StockInfo
 
 
 @pytest.mark.django_db

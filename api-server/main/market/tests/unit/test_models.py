@@ -7,17 +7,17 @@ from django.db import DataError, IntegrityError
 
 from main.account import OAuthOrganization
 from main.account.models import User
-from main.stock import Frequency, TradeType, UnknownStockIdError
-from main.stock.models import (
-    CashDividendRecord,
+from main.cash_dividend.models import CashDividendRecord
+from main.market import Frequency, TradeType, UnknownStockIdError
+from main.market.models import (
     Company,
     CompanyManager,
     History,
     MarketIndexPerMinute,
     MaterialFact,
     StockInfo,
-    TradeRecord,
 )
+from main.trade_record.models import TradeRecord
 
 
 @pytest.mark.django_db
@@ -47,7 +47,7 @@ class TestCompanyManager:
         with pytest.raises(TypeError, match="missing 1 required argument: 'stock_id'"):
             manager.get_or_create()
 
-    @patch("main.stock.models.CompanyManager.fetch_company_info")
+    @patch("main.market.models.CompanyManager.fetch_company_info")
     def test_get_or_create_new_company(
         self, mock_fetch: Mock, manager: CompanyManager
     ) -> None:
@@ -66,7 +66,7 @@ class TestCompanyManager:
         assert company.business == "New business"
         mock_fetch.assert_called_once_with("5678")
 
-    @patch("main.stock.models.CompanyManager.fetch_company_info")
+    @patch("main.market.models.CompanyManager.fetch_company_info")
     def test_get_or_create_with_custom_defaults(
         self, mock_fetch: Mock, manager: CompanyManager
     ) -> None:
@@ -92,7 +92,7 @@ class TestCompanyManager:
         mock_fetch.assert_not_called()
 
     @patch("requests.post")
-    @patch("main.stock.models.PyQuery")
+    @patch("main.market.models.PyQuery")
     def test_fetch_company_info_success(
         self, mock_pyquery: Mock, mock_post: Mock
     ) -> None:
@@ -127,7 +127,7 @@ class TestCompanyManager:
         }
 
     @patch("requests.post")
-    @patch("main.stock.models.PyQuery")
+    @patch("main.market.models.PyQuery")
     def test_fetch_company_info_unknown_stock_id(
         self, mock_pyquery: Mock, mock_post: Mock
     ) -> None:
@@ -146,8 +146,8 @@ class TestCompanyManager:
             CompanyManager.fetch_company_info("1234")
 
     @patch("requests.post")
-    @patch("main.stock.models.PyQuery")
-    @patch("main.stock.models.logger")
+    @patch("main.market.models.PyQuery")
+    @patch("main.market.models.logger")
     def test_fetch_company_info_business_request_fails(
         self, mock_logger: Mock, mock_pyquery: Mock, mock_post: Mock
     ) -> None:
