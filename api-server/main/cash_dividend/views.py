@@ -3,17 +3,27 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from django.views.decorators.http import require_http_methods
 
+from main.cash_dividend.models import CashDividendRecord
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
-from main.stock.models import CashDividendRecord, Company
+from main.market.models import Company
 
 
 @rate_limit(rate=2)
-@require_GET
 @require_login
-def list(request: HttpRequest) -> JsonResponse:
+@require_http_methods(["GET", "POST"])
+def create_or_list(request: HttpRequest) -> JsonResponse:
+    if request.method == "GET":
+        return _list(request)
+    elif request.method == "POST":
+        return _create(request)
+    else:
+        return JsonResponse({"message": "Method Not Allowed"}, status=405)
+
+
+def _list(request: HttpRequest) -> JsonResponse:
     deal_times = json.loads(request.GET.get("deal_times", "[]"))  # type: ignore
     sids = json.loads(request.GET.get("sids", "[]"))  # type: ignore
     if deal_times or sids:
@@ -47,10 +57,7 @@ def list(request: HttpRequest) -> JsonResponse:
     )
 
 
-@rate_limit(rate=1)
-@require_POST
-@require_login
-def create(request: HttpRequest) -> JsonResponse:
+def _create(request: HttpRequest) -> JsonResponse:
     payload = json.loads(request.body)
 
     if (
