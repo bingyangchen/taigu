@@ -31,39 +31,10 @@ def create_or_list(request: HttpRequest) -> JsonResponse:
 
 def _list(request: HttpRequest) -> JsonResponse:
     since_revision = request.GET.get("since_revision")
-    deal_times = [
-        datetime.strptime(d, "%Y-%m-%d").date()
-        for d in json.loads(request.GET.get("deal_times", "[]"))  # type: ignore
-    ]
-    sids = json.loads(request.GET.get("sids", "[]"))  # type: ignore
-
-    if since_revision is not None and not deal_times and not sids:
+    if since_revision is not None:
         return _list_incremental(request, int(since_revision))
-
-    if deal_times or sids:
-        if deal_times and sids:
-            query_set = request.user.trade_records.filter(
-                deal_time__in=deal_times
-            ).filter(company__pk__in=sids)
-        elif not deal_times:
-            query_set = request.user.trade_records.filter(company__pk__in=sids)
-        else:
-            query_set = request.user.trade_records.filter(deal_time__in=deal_times)
-    else:
-        query_set = request.user.trade_records.all()
-
-    query_set = query_set.select_related("company").order_by(
-        "-deal_time", "-created_at"
-    )
     last_revision = _get_last_revision(request.user)
-    return JsonResponse(
-        {
-            "last_revision": last_revision,
-            "updates": [_serialize_trade_record(record) for record in query_set],
-            "deletes": [],
-            "is_full_snapshot": True,
-        }
-    )
+    return _full_snapshot_response(request, last_revision)
 
 
 def _list_incremental(request: HttpRequest, since_revision: int) -> JsonResponse:

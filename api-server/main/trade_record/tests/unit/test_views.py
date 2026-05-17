@@ -105,80 +105,6 @@ class TestTradeRecordListView:
         }
         assert set(record.keys()) == expected_keys
 
-    def test_list_filter_by_deal_times(
-        self,
-        request_factory: RequestFactory,
-        user: User,
-        trade_records: list[TradeRecord],
-    ) -> None:
-        request = request_factory.get('/api/trade-records/?deal_times=["2023-12-01"]')
-        request.user = user
-
-        response = list_view(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert len(data["updates"]) == 1
-        assert data["updates"][0]["deal_time"] == "2023-12-01"
-
-    def test_list_filter_by_sids(
-        self,
-        request_factory: RequestFactory,
-        user: User,
-        trade_records: list[TradeRecord],
-    ) -> None:
-        request = request_factory.get('/api/trade-records/?sids=["1234"]')
-        request.user = user
-
-        response = list_view(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert len(data["updates"]) == 1
-        assert data["updates"][0]["sid"] == "1234"
-
-    def test_list_filter_by_deal_times_and_sids(
-        self,
-        request_factory: RequestFactory,
-        user: User,
-        trade_records: list[TradeRecord],
-    ) -> None:
-        request = request_factory.get(
-            '/api/trade-records/?deal_times=["2023-12-01"]&sids=["1234"]'
-        )
-        request.user = user
-
-        response = list_view(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert len(data["updates"]) == 1
-        assert data["updates"][0]["sid"] == "1234"
-        assert data["updates"][0]["deal_time"] == "2023-12-01"
-
-    def test_list_no_filters_empty_params(
-        self,
-        request_factory: RequestFactory,
-        user: User,
-        trade_records: list[TradeRecord],
-    ) -> None:
-        request = request_factory.get("/api/trade-records/?deal_times=[]&sids=[]")
-        request.user = user
-
-        response = list_view(request)
-
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        data = json.loads(response.content)
-        assert len(data["updates"]) == 2
-
     def test_list_incremental_records(
         self,
         request_factory: RequestFactory,
@@ -305,15 +231,6 @@ class TestTradeRecordListView:
         assert data["is_full_snapshot"] is True
         assert len(data["updates"]) == 2
         assert data["deletes"] == []
-
-    def test_list_invalid_json_params(
-        self, request_factory: RequestFactory, user: User
-    ) -> None:
-        request = request_factory.get("/api/trade-records/?deal_times=invalid")
-        request.user = user
-
-        with pytest.raises(ValueError):  # Should raise JSON decode error
-            list_view(request)
 
     @patch("main.core.decorators.auth.require_login")
     def test_list_unauthorized_user(
