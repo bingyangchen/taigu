@@ -66,6 +66,16 @@ def update_material_facts() -> None:
         logger.error(f"Error in update_material_facts: {e}")
 
 
+def cleanup_data_change_logs() -> None:
+    try:
+        subprocess.run(  # noqa: S603
+            ["python", "manage.py", "cleanup_data_change_logs"],  # noqa: S607
+            check=True,
+        )
+    except Exception as e:
+        logger.error(f"Error in cleanup_data_change_logs: {e}")
+
+
 ########################################################################################
 
 
@@ -118,6 +128,11 @@ if __name__ == "__main__":
         update_material_facts,
         CronTrigger.from_crontab("0 * * * *"),
         name="update_material_facts",
+    )
+    scheduler.add_job(
+        cleanup_data_change_logs,
+        CronTrigger.from_crontab("20 3 * * *"),
+        name="cleanup_data_change_logs",
     )
 
     try:
