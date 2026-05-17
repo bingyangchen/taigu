@@ -1,6 +1,7 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+import LocalDatabase from "../../storage/localDatabase";
 import type { Account, UpdateAccountInfoRequestBody } from "../../types";
 import Api from "../../utils/api";
 import { pushToast } from "./ToastSlice";
@@ -54,6 +55,7 @@ export const deleteAccount = createAsyncThunk(
   "account/deleteAccount",
   async (requestBody: { password: string }): Promise<void> => {
     await Api.sendRequest("account/delete", "delete", JSON.stringify(requestBody));
+    await LocalDatabase.clearAll();
   },
 );
 
@@ -73,6 +75,7 @@ export const loginWithGoogle = createAsyncThunk(
 
 export const logout = createAsyncThunk("account/logout", async (): Promise<void> => {
   await Api.sendRequest("account/logout", "get");
+  await LocalDatabase.clearAll();
 });
 
 export const accountSlice = createSlice({

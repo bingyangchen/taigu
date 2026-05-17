@@ -100,6 +100,13 @@ export type TradeRecord = {
   handling_fee: number;
 };
 
+export type TradeRecordSyncResponse = {
+  last_revision: number;
+  updates: TradeRecord[];
+  deletes: number[];
+  is_full_snapshot: boolean;
+};
+
 export type HandlingFeeDiscount = {
   id: number;
   date: string;

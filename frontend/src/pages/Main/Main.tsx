@@ -50,7 +50,6 @@ import {
 import {
   calculateTotalHandlingFee,
   fetchAllTradeRecords,
-  refreshWithNonCacheResponse as refreshTradeRecordsWithNonCacheResponse,
 } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
@@ -95,9 +94,9 @@ class Main extends React.Component<Props, State> {
     this.mainRef.current?.addEventListener("scroll", this.handleScroll);
 
     try {
+      const account = await this.props.dispatch(fetchAccountInfo()).unwrap();
       await Promise.all([
-        this.props.dispatch(fetchAccountInfo()).unwrap(),
-        this.props.dispatch(fetchAllTradeRecords()).unwrap(),
+        this.props.dispatch(fetchAllTradeRecords(account.id)).unwrap(),
         this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
         this.props.dispatch(fetchAllFavorites()).unwrap(),
         this.props.dispatch(fetchAllTradePlans()).unwrap(),
@@ -222,11 +221,6 @@ class Main extends React.Component<Props, State> {
     if (e.data.authorized) {
       if (/account\/me[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshAccountInfoWithNonCacheResponse(e.data.data));
-      } else if (/trade-records[/]?$/gs.test(e.data.url)) {
-        await this.props
-          .dispatch(refreshTradeRecordsWithNonCacheResponse(e.data.data.data))
-          .unwrap();
-        this.fetchHoldingStockInfo();
       } else if (/cash-dividends[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(
           refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
