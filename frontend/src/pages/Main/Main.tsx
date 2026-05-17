@@ -233,11 +233,11 @@ class Main extends React.Component<Props, State> {
         );
       } else if (/stock\/market-index[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
-      } else if (/memo\/trade-plans[/]?$/gs.test(e.data.url)) {
+      } else if (/trade-plans[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshTradePlansWithNonCacheResponse(e.data.data.data));
-      } else if (/memo\/company-info[/]?$/gs.test(e.data.url)) {
+      } else if (/stock-memo\/company-info[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
-      } else if (/memo\/favorites[/]?$/gs.test(e.data.url)) {
+      } else if (/favorites[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
       } else if (/handling-fee\/discount[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshDiscountsWithNonCacheResponse(e.data.data.data));

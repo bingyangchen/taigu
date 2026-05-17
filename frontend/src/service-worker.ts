@@ -112,9 +112,9 @@ self.addEventListener("fetch", (event) => {
         /stock\/trade-records[/]?$/gs.test(requestUrl) ||
         /stock\/cash-dividends[/]?$/gs.test(requestUrl) ||
         /stock\/market-index[/]?$/gs.test(requestUrl) ||
-        /memo\/trade-plans[/]?$/gs.test(requestUrl) ||
-        /memo\/company-info[/]?$/gs.test(requestUrl) ||
-        /memo\/favorites[/]?$/gs.test(requestUrl) ||
+        /trade-plans[/]?$/gs.test(requestUrl) ||
+        /stock-memo\/company-info[/]?$/gs.test(requestUrl) ||
+        /favorites[/]?$/gs.test(requestUrl) ||
         /handling-fee\/discount[/]?$/gs.test(requestUrl)) &&
       method === "get"
     ) {
