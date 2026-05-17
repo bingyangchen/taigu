@@ -40,10 +40,13 @@ INSTALLED_APPS = [
     "main.core",
     "main.account",
     "main.stock",
+    "main.market",
     "main.memo",
     "main.stock_memo",
     "main.trade_plan",
     "main.favorite",
+    "main.trade_record",
+    "main.cash_dividend",
     "main.handling_fee",
 ]
 
