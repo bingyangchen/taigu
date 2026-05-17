@@ -6,7 +6,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
-from main.stock.models import Company
+from main.market.models import Company
 from main.trade_plan.models import TradePlan
 
 
