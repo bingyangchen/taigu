@@ -241,7 +241,7 @@ class StockSearchModal extends React.Component<Props, State> {
       return;
     }
     const stockInfoMap = await Api.sendRequest(
-      `stock/current-stock-info?sids=${cachedSids.join(",")}`,
+      `market/current-stock-info?sids=${cachedSids.join(",")}`,
       "get",
     );
     if (this.state.searchKeyword !== requestedKeyword) return;
@@ -262,7 +262,7 @@ class StockSearchModal extends React.Component<Props, State> {
 
     if (value.trim() === "") this.loadCachedItems(value);
     else {
-      const response = await Api.sendRequest(`stock/search?keyword=${value}`, "get");
+      const response = await Api.sendRequest(`market/search?keyword=${value}`, "get");
       if (this.state.searchKeyword !== value) return;
       this.setState({ searchResults: response.data, completedSearchKeyword: value });
     }

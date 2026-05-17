@@ -222,22 +222,22 @@ class Main extends React.Component<Props, State> {
     if (e.data.authorized) {
       if (/account\/me[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshAccountInfoWithNonCacheResponse(e.data.data));
-      } else if (/stock\/trade-records[/]?$/gs.test(e.data.url)) {
+      } else if (/trade-records[/]?$/gs.test(e.data.url)) {
         await this.props
           .dispatch(refreshTradeRecordsWithNonCacheResponse(e.data.data.data))
           .unwrap();
         this.fetchHoldingStockInfo();
-      } else if (/stock\/cash-dividends[/]?$/gs.test(e.data.url)) {
+      } else if (/cash-dividends[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(
           refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
         );
-      } else if (/stock\/market-index[/]?$/gs.test(e.data.url)) {
+      } else if (/market\/market-index[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
-      } else if (/memo\/trade-plans[/]?$/gs.test(e.data.url)) {
+      } else if (/trade-plans[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshTradePlansWithNonCacheResponse(e.data.data.data));
-      } else if (/memo\/company-info[/]?$/gs.test(e.data.url)) {
+      } else if (/stock-memo\/company-info[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
-      } else if (/memo\/favorites[/]?$/gs.test(e.data.url)) {
+      } else if (/favorites[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
       } else if (/handling-fee\/discount[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(refreshDiscountsWithNonCacheResponse(e.data.data.data));

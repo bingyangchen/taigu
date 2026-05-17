@@ -64,6 +64,16 @@ You are an expert software engineer and architect with design sensibility. Your 
 
 The backend environment exists only inside Docker. Do not run backend-related (`python`, `uv`, test, or migration) commands directly on the host. See `compose.dev.yaml` to understand how to run the backend commands inside Docker.
 
+For Django management commands, use the container runtime Python directly.
+
+e.g.
+
+```bash
+docker compose -f compose.dev.yaml exec api-server python manage.py migrate
+```
+
+Do not use `poetry run python manage.py ...` inside the API server container. In this project, `poetry run` can create or select a separate virtualenv that does not contain the runtime-installed Django dependencies, causing misleading `ModuleNotFoundError: No module named 'django'` failures even though the container runtime Python works.
+
 ## When Adding or Updating Dependencies
 
 - When adding or updating dependencies, look up the latest stable version from the official package source before writing the version number.

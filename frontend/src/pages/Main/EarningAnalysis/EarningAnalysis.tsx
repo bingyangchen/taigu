@@ -126,7 +126,7 @@ class EarningAnalysis extends React.Component<Props, State> {
 
     try {
       const response = await Api.sendRequest(
-        `stock/company-names?sids=${sids.join(",")}`,
+        `market/company-names?sids=${sids.join(",")}`,
         "get",
       );
       this.setState({ companyNamesMap: response });

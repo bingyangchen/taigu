@@ -19,7 +19,10 @@ const initialState: MemoState = {
 export const fetchCompanyInfo = createAsyncThunk(
   "memo/fetchCompanyInfo",
   async (sid: string): Promise<CompanyInfo | undefined> => {
-    const response = await Api.sendRequest(`memo/company-info?sids=${sid}`, "get");
+    const response = await Api.sendRequest(
+      `stock-memo/company-info?sids=${sid}`,
+      "get",
+    );
     return response[sid];
   },
 );
@@ -28,7 +31,7 @@ export const updateOrCreateMemo = createAsyncThunk(
   "memo/updateOrCreateMemo",
   async (requestBody: UpdateOrCreateMemoRequestBody): Promise<CompanyInfo> => {
     const response = await Api.sendRequest(
-      `memo/stock-memo/${requestBody.sid}`,
+      `stock-memo/${requestBody.sid}`,
       "post",
       JSON.stringify(requestBody),
     );
@@ -40,7 +43,7 @@ export const updateOrCreateMemo = createAsyncThunk(
 export const fetchAllFavorites = createAsyncThunk(
   "memo/fetchAllFavorites",
   async (): Promise<string[]> => {
-    const response = await Api.sendRequest("memo/favorites", "get");
+    const response = await Api.sendRequest("favorites", "get");
     return response.data;
   },
 );
@@ -49,7 +52,7 @@ export const addToFavorites = createAsyncThunk(
   "memo/addToFavorite",
   async (sid: string): Promise<string> => {
     const response = await Api.sendRequest(
-      `memo/favorite/${sid}`,
+      `favorites/${sid}`,
       "post",
       JSON.stringify({}),
     );
@@ -60,7 +63,7 @@ export const addToFavorites = createAsyncThunk(
 export const removeFromFavorites = createAsyncThunk(
   "memo/removeFromFavorites",
   async (sid: string): Promise<string> => {
-    const response = await Api.sendRequest(`memo/favorite/${sid}`, "delete");
+    const response = await Api.sendRequest(`favorites/${sid}`, "delete");
     return response.sid;
   },
 );
