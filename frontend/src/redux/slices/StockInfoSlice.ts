@@ -37,7 +37,7 @@ const initialState: StockInfoState = {
 export const fetchRealtimeMarketIndex = createAsyncThunk(
   "stockInfo/fetchRealtimeMarketIndex",
   async (): Promise<MarketIndex> => {
-    return await Api.sendRequest("stock/market-index", "get");
+    return await Api.sendRequest("market/market-index", "get");
   },
 );
 
@@ -45,7 +45,7 @@ export const fetchStockInfo = createAsyncThunk(
   "stockInfo/fetchStockInfo",
   async (sids: string[]): Promise<{ [sid: string]: StockInfo }> => {
     return await Api.sendRequest(
-      `stock/current-stock-info${sids.length > 0 ? `?sids=${sids.join(",")}` : ""}`,
+      `market/current-stock-info${sids.length > 0 ? `?sids=${sids.join(",")}` : ""}`,
       "get",
     );
   },
@@ -55,7 +55,7 @@ export const fetchSingleStockInfo = createAsyncThunk(
   "stockInfo/fetchSingleStockInfo",
   async (sid: string): Promise<StockInfo> => {
     const response = await Api.sendRequest(
-      `stock/current-stock-info?sids=${sid}`,
+      `market/current-stock-info?sids=${sid}`,
       "get",
     );
     return response[sid];
@@ -74,7 +74,7 @@ export const fetchSingleStockHistoricalPrices = createAsyncThunk(
   }> => {
     const { sid, frequency } = payload;
     const response = await Api.sendRequest(
-      `stock/historical-prices/${sid}?frequency=${frequency}`,
+      `market/historical-prices/${sid}?frequency=${frequency}`,
       "get",
     );
     const data: { date: string; price: number }[] = response.data.map(

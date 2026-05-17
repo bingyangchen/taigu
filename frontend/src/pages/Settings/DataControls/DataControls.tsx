@@ -71,12 +71,12 @@ class DataControls extends React.Component<Props, State> {
   };
 
   private handleExportAllTradeRecords = async (): Promise<void> => {
-    const response = await Api.sendRequest("stock/trade-records", "get");
+    const response = await Api.sendRequest("trade-records", "get");
     this.downloadJsonFile(response, "trade-records.json");
   };
 
   private handleExportAllCashDividendRecords = async (): Promise<void> => {
-    const response = await Api.sendRequest("stock/cash-dividends", "get");
+    const response = await Api.sendRequest("cash-dividends", "get");
     this.downloadJsonFile(response, "cash-dividend-records.json");
   };
 }

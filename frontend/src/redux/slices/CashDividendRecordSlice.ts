@@ -23,7 +23,7 @@ const initialState: CashDividendRecordState = {
 export const fetchAllCashDividendRecords = createAsyncThunk(
   "cashDividendRecord/fetchAllCashDividendRecords",
   async (): Promise<CashDividendRecord[]> => {
-    const response = await Api.sendRequest("stock/cash-dividends", "get");
+    const response = await Api.sendRequest("cash-dividends", "get");
     return response.data;
   },
 );
@@ -34,7 +34,7 @@ export const createRecord = createAsyncThunk(
     requestBody: CreateCashDividendRecordRequestBody,
   ): Promise<CashDividendRecord> => {
     const response = await Api.sendRequest(
-      "stock/cash-dividend",
+      "cash-dividends",
       "post",
       JSON.stringify(requestBody),
     );
@@ -49,7 +49,7 @@ export const updateRecord = createAsyncThunk(
     requestBody: UpdateCashDividendRecordRequestBody,
   ): Promise<CashDividendRecord> => {
     const response = await Api.sendRequest(
-      `stock/cash-dividend/${requestBody.id}`,
+      `cash-dividends/${requestBody.id}`,
       "post",
       JSON.stringify(requestBody),
     );
@@ -61,7 +61,7 @@ export const updateRecord = createAsyncThunk(
 export const deleteRecord = createAsyncThunk(
   "cashDividendRecord/deleteRecord",
   async (id: string | number): Promise<string | number> => {
-    await Api.sendRequest(`stock/cash-dividend/${id}`, "delete");
+    await Api.sendRequest(`cash-dividends/${id}`, "delete");
     // if (navigator.vibrate) navigator.vibrate(20);
     return id;
   },

@@ -43,7 +43,7 @@ const initialState: TradeRecordState = {
 export const fetchAllTradeRecords = createAsyncThunk(
   "tradeRecord/fetchAllTradeRecords",
   async (): Promise<Omit<TradeRecordState, "isWaiting">> => {
-    const response = await Api.sendRequest("stock/trade-records", "get");
+    const response = await Api.sendRequest("trade-records", "get");
     return await computeNewState(response.data);
   },
 );
@@ -55,7 +55,7 @@ export const createRecord = createAsyncThunk(
     thunkAPI,
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     const response = await Api.sendRequest(
-      "stock/trade-record",
+      "trade-records",
       "post",
       JSON.stringify(requestBody),
     );
@@ -81,7 +81,7 @@ export const updateRecord = createAsyncThunk(
     thunkAPI,
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
     const response = await Api.sendRequest(
-      `stock/trade-records/${requestBody.id}`,
+      `trade-records/${requestBody.id}`,
       "post",
       JSON.stringify(requestBody),
     );
@@ -107,7 +107,7 @@ export const deleteRecord = createAsyncThunk(
     id: string | number,
     thunkAPI,
   ): Promise<Omit<TradeRecordState, "isWaiting">> => {
-    await Api.sendRequest(`stock/trade-records/${id}`, "delete");
+    await Api.sendRequest(`trade-records/${id}`, "delete");
     // if (navigator.vibrate) navigator.vibrate(20);
     const rootState = thunkAPI.getState() as RootState;
     const newState = await computeNewState(
