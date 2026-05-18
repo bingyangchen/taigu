@@ -6,6 +6,12 @@ import Nav from "./nav";
 export default class Api {
   private static safeMethods = ["get", "head", "options"];
 
+  public static async clearCache(): Promise<void> {
+    if ("caches" in window) {
+      await caches.delete(Env.cacheKey);
+    }
+  }
+
   private static getCookie(name: string): string | null {
     const cookies = document.cookie.split(";").map((c) => c.trim());
     for (const cookie of cookies) {
@@ -71,7 +77,7 @@ export default class Api {
       if (url.pathname !== "/api/account/logout") {
         await Api.sendRequest("account/logout", "get");
       }
-      caches.delete(Env.cacheKey);
+      await Api.clearCache();
       if (!Nav.isAtLoginPage) {
         Nav.goToWelcomePage(window.location.pathname + window.location.search);
       }
