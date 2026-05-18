@@ -35,19 +35,44 @@ export default class Button extends React.Component<Props> {
       ...buttonProps
     } = this.props;
     void canTriggerByEnter;
-    const Component = asChild ? Slot : "button";
+    const isDisabled = disabled || waiting;
+    const classNames = `button ${className} ${waiting ? "waiting" : ""}`;
+    const handleClick: React.MouseEventHandler<HTMLElement> = (e): void => {
+      if (isDisabled) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      onClick?.(e as unknown as React.MouseEvent<HTMLButtonElement, MouseEvent>);
+    };
+
+    if (asChild) {
+      return (
+        <Slot
+          {...buttonProps}
+          aria-busy={waiting || undefined}
+          aria-disabled={isDisabled || undefined}
+          className={classNames}
+          data-disabled={isDisabled ? "" : undefined}
+          data-waiting={waiting ? "" : undefined}
+          onClick={handleClick}
+        >
+          {children}
+        </Slot>
+      );
+    }
 
     return (
-      <Component
+      <button
         {...buttonProps}
         aria-busy={waiting || undefined}
-        className={`button ${className} ${waiting ? "waiting" : ""}`}
+        className={classNames}
         data-waiting={waiting ? "" : undefined}
-        disabled={disabled || waiting}
-        onClick={onClick}
+        disabled={isDisabled}
+        onClick={handleClick}
       >
         <span className="button__content">{children}</span>
-      </Component>
+      </button>
     );
   }
   private handleHitEnter = (e: KeyboardEvent): void => {

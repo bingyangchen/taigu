@@ -1,6 +1,7 @@
 @use "../../global_variables" as _;
 
 .main {
+  min-height: 100vh;
   height: 100%;
   width: 100%;
   background-color: _.$white;
@@ -8,4 +9,58 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 32px 24px;
+  box-sizing: border-box;
+}
+
+.content {
+  width: min(100%, 440px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.status {
+  margin: 0 0 16px;
+  padding: 5px 12px;
+  color: _.$deep-gray;
+  background-color: _.$noisy-white;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.title {
+  margin: 0;
+  color: _.$deep-gray;
+  font-size: 1.75rem;
+  line-height: 1.3;
+}
+
+.description {
+  margin: 14px 0 28px;
+  color: _.$gray;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.homeButton {
+  min-width: 160px;
+  text-decoration: none;
+}
+
+@media (max-width: _.$width-512) {
+  .main {
+    padding: 24px 20px;
+  }
+
+  .status {
+    margin-bottom: 14px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
 }

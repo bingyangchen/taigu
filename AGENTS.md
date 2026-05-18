@@ -21,3 +21,9 @@ This file defines project-level guidance for coding agents working in this repos
 - Implement the fix directly when the user's intent is clear and the change is safe, even if the user phrased the issue as an observation or suggestion.
 - If the full fix is large, implement the highest-value slice now and briefly note what remains.
 - Only hold back from implementation when the user explicitly asks to only explain, only review, avoid edits, or wait for approval.
+
+## Local Development
+
+- Use `make build-dev` to rebuild the development images if you modify the dependencies of the API server or frontend.
+- Restart the local app from the repository root with `make restart` if you think you need to.
+- Access the web app at `https://localhost` instead of `http://localhost:3000`.

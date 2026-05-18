@@ -60,19 +60,17 @@ You are an expert software engineer and architect with design sensibility. Your 
 3. **Provide the Solution**: Give a direct, concrete solution. Include pseudocode or code snippets if applicable.
 4. **Explain the "Why" Briefly**: Provide a 1-2 sentence justification for why this approach is superior.
 
-## When Running Backend Commands
+## When Running Backend Commands and Frontend Commands
 
-The backend environment exists only inside Docker. Do not run backend-related (`python`, `uv`, test, or migration) commands directly on the host. See `compose.dev.yaml` to understand how to run the backend commands inside Docker.
+The backend and frontend environments exist only inside Docker. Do not run commands such as `python`, `poetry`, `npm` directly on the host. See `compose.dev.yaml` to understand how to run the backend and frontend commands inside Docker.
 
-For Django management commands, use the container runtime Python directly.
+For Django management commands, use the container runtime Python instead of using `poetry run`.
 
 e.g.
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py migrate
 ```
-
-Do not use `poetry run python manage.py ...` inside the API server container. In this project, `poetry run` can create or select a separate virtualenv that does not contain the runtime-installed Django dependencies, causing misleading `ModuleNotFoundError: No module named 'django'` failures even though the container runtime Python works.
 
 ## When Adding or Updating Dependencies
 
@@ -99,9 +97,3 @@ Do not use `poetry run python manage.py ...` inside the API server container. In
 - Add them only for non-obvious logic, important constraints, invariants, or public APIs that benefit from explanation.
 - Skip them when the code is already clear from naming and structure.
 - Do not write comments that simply restate what the code obviously does.
-
-## Local Development
-
-- Use `make build-dev` to rebuild the development images if you modify the dependencies of the API server or frontend.
-- Restart the local app from the repository root with `make restart`.
-- After starting the app, access the web app at `https://localhost` instead of `http://localhost:3000`.
