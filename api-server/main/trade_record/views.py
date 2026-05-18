@@ -6,8 +6,7 @@ from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from main.core.data_change import append_data_change_log
-from main.core.data_change import get_last_revision as get_data_change_last_revision
+from main.core.data_change import append_data_change_log, get_last_revision
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 from main.core.models import DataChangeLog
@@ -33,7 +32,7 @@ def _list(request: HttpRequest) -> JsonResponse:
     since_revision = request.GET.get("since_revision")
     if since_revision is not None:
         return _list_incremental(request, int(since_revision))
-    last_revision = _get_last_revision(request.user)
+    last_revision = get_last_revision(user=request.user, subject=TRADE_RECORD_SUBJECT)
     return _full_snapshot_response(request, last_revision)
 
 
@@ -51,6 +50,7 @@ def _list_incremental(request: HttpRequest, since_revision: int) -> JsonResponse
 
     first_revision = change_logs[0].revision
     last_revision = change_logs[-1].revision
+
     # The requested cursor is older than the retained change log window, so
     # deltas would be incomplete. Send a full snapshot to rebuild the client cache.
     if since_revision > 0 and first_revision != since_revision:
@@ -58,6 +58,7 @@ def _list_incremental(request: HttpRequest, since_revision: int) -> JsonResponse
 
     if since_revision != 0:
         change_logs = change_logs[1:]
+
     if not change_logs:
         return JsonResponse(
             {
@@ -200,10 +201,6 @@ def _delete(request: HttpRequest, id: str | int) -> JsonResponse:
             operation=DataChangeLog.Operation.DELETE,
         )
     return JsonResponse({})
-
-
-def _get_last_revision(user) -> int:  # noqa: ANN001
-    return get_data_change_last_revision(user=user, subject=TRADE_RECORD_SUBJECT)
 
 
 def _full_snapshot_response(request: HttpRequest, last_revision: int) -> JsonResponse:

@@ -15,6 +15,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options) -> None:  # noqa: ANN002, ANN003
         cutoff = timezone.now() - timedelta(days=options["days"])
+
+        # NOTE:
+        # Always keep the newest row per (user, subject), even past the retention cutoff,
+        # so monotonic numbering and incremental sync stay anchored.
         latest_log_ids = (
             DataChangeLog.objects.filter(
                 user=OuterRef("user"),
