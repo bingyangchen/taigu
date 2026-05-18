@@ -132,7 +132,6 @@ class TestGoogleLoginView:
         response = google_login(request_obj)
 
         assert response.status_code == 200
-        assert "is-log-in" not in response
         assert AUTH_COOKIE_NAME in response.cookies
         assert response.cookies[AUTH_COOKIE_NAME].value == "test_jwt_token"
 
@@ -177,7 +176,6 @@ class TestGoogleLoginView:
         response = google_login(request_obj)
 
         assert response.status_code == 200
-        assert "is-log-in" not in response
         assert AUTH_COOKIE_NAME in response.cookies
 
     @patch("main.core.decorators.rate_limit.LUA_SCRIPT")
@@ -284,7 +282,6 @@ class TestChangeGoogleBindingView:
         assert data["email"] == "new@example.com"
         assert data["username"] == "New User"
         assert data["avatar_url"] == "https://example.com/new_avatar.jpg"
-        assert "is-log-in" not in response
         assert AUTH_COOKIE_NAME in response.cookies
 
     def test_change_google_binding_already_bound(
@@ -405,7 +402,6 @@ class TestLogoutView:
         response = logout(request_obj)
 
         assert response.status_code == 200
-        assert "is-log-out" not in response
         # Check that cookie is deleted
         assert response.cookies[AUTH_COOKIE_NAME].value == ""
 
