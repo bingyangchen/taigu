@@ -55,6 +55,7 @@ export const deleteAccount = createAsyncThunk(
   "account/deleteAccount",
   async (requestBody: { password: string }): Promise<void> => {
     await Api.sendRequest("account/delete", "delete", JSON.stringify(requestBody));
+    await Api.clearCache();
     await LocalDatabase.clearAll();
   },
 );
@@ -63,6 +64,7 @@ export const login = createAsyncThunk(
   "account/login",
   async (requestBody: URLSearchParams): Promise<void> => {
     await Api.sendRequest("account/login", "post", requestBody);
+    await Api.clearCache();
   },
 );
 
@@ -70,11 +72,13 @@ export const loginWithGoogle = createAsyncThunk(
   "account/loginWithGoogle",
   async (requestBody: URLSearchParams): Promise<void> => {
     await Api.sendRequest("account/google-login", "post", requestBody);
+    await Api.clearCache();
   },
 );
 
 export const logout = createAsyncThunk("account/logout", async (): Promise<void> => {
   await Api.sendRequest("account/logout", "get");
+  await Api.clearCache();
   await LocalDatabase.clearAll();
 });
 

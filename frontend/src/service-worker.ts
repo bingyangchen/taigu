@@ -122,13 +122,24 @@ self.addEventListener("fetch", (event) => {
           return cache.match(request).then(async (cacheResponse) => {
             const fetchPromise = fetch(request).then((networkResponse) => {
               if (networkResponse.status < 400) {
-                cache.put(request, networkResponse.clone());
-                networkResponse.json().then((data) => {
-                  channel.postMessage({ authorized: true, url: requestUrl, data });
-                });
+                event.waitUntil(
+                  Promise.all([
+                    cache.put(request, networkResponse.clone()),
+                    networkResponse
+                      .clone()
+                      .json()
+                      .then((data) => {
+                        channel.postMessage({
+                          authorized: true,
+                          url: requestUrl,
+                          data,
+                        });
+                      }),
+                  ]).then(() => undefined),
+                );
               } else if (networkResponse.status === 401) {
                 // Same logic as src/utils/api.tsx
-                caches.delete("taigu");
+                event.waitUntil(caches.delete("taigu"));
                 channel.postMessage({ authorized: false });
               }
               return networkResponse;
@@ -141,7 +152,7 @@ self.addEventListener("fetch", (event) => {
       (/account\/logout[/]?$/gs.test(requestUrl) && method === "get") ||
       (/account\/delete[/]?$/gs.test(requestUrl) && method === "delete")
     ) {
-      caches.delete("taigu");
+      event.waitUntil(caches.delete("taigu"));
     }
   }
   return;
