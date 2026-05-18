@@ -113,7 +113,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
         },
     )
     request.user = user  # type: ignore
-    response = JsonResponse({}, headers={"is-log-in": "yes"})
+    response = JsonResponse({})
     response = set_auth_cookie(response, _make_jwt(str(user.id)))
     return response
 
@@ -155,7 +155,6 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
             "username": user.username,
             "avatar_url": user.avatar_url,
         },
-        headers={"is-log-in": "yes"},
     )
     response = set_auth_cookie(response, _make_jwt(str(user.id)))
     return response
@@ -178,7 +177,7 @@ def me(request: HttpRequest) -> JsonResponse:
 @require_GET
 @require_login
 def logout(request: HttpRequest) -> JsonResponse:
-    response = JsonResponse({}, headers={"is-log-out": "yes"})
+    response = JsonResponse({})
     response = delete_auth_cookie(response)
     return response
 

@@ -4,7 +4,11 @@ from django.contrib.auth import authenticate
 from django.http import HttpRequest, HttpResponse
 
 from main.account import AUTH_COOKIE_NAME
-from main.account.utils import delete_auth_cookie, set_auth_cookie
+from main.account.utils import (
+    delete_auth_cookie,
+    has_auth_cookie_been_handled,
+    set_auth_cookie,
+)
 
 
 def check_login_status_middleware(
@@ -19,16 +23,13 @@ def check_login_status_middleware(
 
         if response.status_code == 401:
             response = delete_auth_cookie(response)
-        elif response.get("is-log-out") != "yes" and response.get("is-log-in") != "yes":
+        elif not has_auth_cookie_been_handled(response):
             if token:
                 # refresh the max_age of the auth cookie every time
                 response = set_auth_cookie(response, token)
             else:
                 response = delete_auth_cookie(response)
 
-        # Delete all the custom headers that may appear (KeyError won't be raised)
-        del response["is-log-out"]
-        del response["is-log-in"]
         return response
 
     return middleware
