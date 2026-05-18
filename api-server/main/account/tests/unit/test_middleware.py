@@ -11,6 +11,7 @@ from jose.constants import ALGORITHMS
 from main.account import AUTH_COOKIE_NAME, OAuthOrganization
 from main.account.middleware import check_login_status_middleware
 from main.account.models import User
+from main.account.utils import delete_auth_cookie, set_auth_cookie
 from main.env import Env, env
 
 
@@ -129,13 +130,12 @@ class TestCheckLoginStatusMiddleware:
         assert AUTH_COOKIE_NAME in response.cookies
         assert response.cookies[AUTH_COOKIE_NAME].value == ""
 
-    def test_middleware_login_response(
+    def test_middleware_auth_cookie_response(
         self, request_obj: HttpRequest, user: User
     ) -> None:
         def mock_get_response_login(request: HttpRequest) -> HttpResponse:
             response = HttpResponse("Login response")
-            response["is-log-in"] = "yes"
-            return response
+            return set_auth_cookie(response, "new_token")
 
         middleware = check_login_status_middleware(mock_get_response_login)
         token = self.create_valid_token(user)
@@ -144,18 +144,14 @@ class TestCheckLoginStatusMiddleware:
         response = middleware(request_obj)
 
         assert response.status_code == 200
-        # Should not modify cookie on login response
-        assert AUTH_COOKIE_NAME not in response.cookies
-        # Custom header should be removed
-        assert "is-log-in" not in response
+        assert response.cookies[AUTH_COOKIE_NAME].value == "new_token"
 
-    def test_middleware_logout_response(
+    def test_middleware_deleted_auth_cookie_response(
         self, request_obj: HttpRequest, user: User
     ) -> None:
         def mock_get_response_logout(request: HttpRequest) -> HttpResponse:
             response = HttpResponse("Logout response")
-            response["is-log-out"] = "yes"
-            return response
+            return delete_auth_cookie(response)
 
         middleware = check_login_status_middleware(mock_get_response_logout)
         token = self.create_valid_token(user)
@@ -164,10 +160,7 @@ class TestCheckLoginStatusMiddleware:
         response = middleware(request_obj)
 
         assert response.status_code == 200
-        # Should not modify cookie on logout response
-        assert AUTH_COOKIE_NAME not in response.cookies
-        # Custom header should be removed
-        assert "is-log-out" not in response
+        assert response.cookies[AUTH_COOKIE_NAME].value == ""
 
     def test_middleware_refresh_cookie(
         self,
@@ -187,6 +180,7 @@ class TestCheckLoginStatusMiddleware:
         assert cookie["max-age"] == 432_000
         assert cookie["secure"] is True
         assert cookie["httponly"] is True
-        assert cookie["samesite"] == "None" if env.ENV == Env.PROD else "Strict"
+        expected_samesite = "Lax" if env.ENV == Env.PROD else "Strict"
+        assert cookie["samesite"] == expected_samesite
         if env.ENV == Env.PROD:
             assert cookie["domain"] == "taigu.tw"
