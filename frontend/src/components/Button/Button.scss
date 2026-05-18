@@ -51,7 +51,8 @@
       }
     }
   }
-  &:disabled {
+  &:disabled,
+  &[data-disabled] {
     cursor: not-allowed !important;
     color: _.$light-gray !important;
     background-color: _.$noisy-white !important;

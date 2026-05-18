@@ -99,9 +99,3 @@ Do not use `poetry run python manage.py ...` inside the API server container. In
 - Add them only for non-obvious logic, important constraints, invariants, or public APIs that benefit from explanation.
 - Skip them when the code is already clear from naming and structure.
 - Do not write comments that simply restate what the code obviously does.
-
-## Local Development
-
-- Use `make build-dev` to rebuild the development images if you modify the dependencies of the API server or frontend.
-- Restart the local app from the repository root with `make restart`.
-- After starting the app, access the web app at `https://localhost` instead of `http://localhost:3000`.
