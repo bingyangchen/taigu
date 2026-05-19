@@ -1,4 +1,4 @@
-import type { EChartsOption } from "echarts";
+import type { CallbackDataParams, EChartsOption } from "echarts/types/dist/shared";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 import { connect } from "react-redux";
@@ -123,7 +123,7 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
       tooltip: {
         trigger: "axis",
         axisPointer: { type: "line" },
-        formatter: (params: any) => {
+        formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
           if (!Array.isArray(params) || params.length === 0) {
             return "";
           }

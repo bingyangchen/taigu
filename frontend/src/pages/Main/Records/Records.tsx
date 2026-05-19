@@ -220,7 +220,7 @@ class Records extends React.Component<Props, State> {
 
   private renderEditModal = (
     record: TradeRecord | CashDividendRecord,
-  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+  ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const EditModalComponent = (hideModal: MouseEventHandler) => {
       return Util.isTradeRecord(record) ? (
         <TradeRecordModal record={record} hideModal={hideModal} />
@@ -234,7 +234,7 @@ class Records extends React.Component<Props, State> {
 
   private renderDeleteModal = (
     record: TradeRecord | CashDividendRecord,
-  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+  ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const DeleteModalComponent = (hideModal: MouseEventHandler) => {
       return (
         <CheckDeleteModal

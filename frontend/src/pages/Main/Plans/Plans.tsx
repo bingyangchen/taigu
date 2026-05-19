@@ -175,7 +175,7 @@ class Plans extends React.Component<Props, State> {
 
   private renderEditModal = (
     plan: TradePlan,
-  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+  ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const EditModalComponent = (hideModal: MouseEventHandler) => {
       return <TradePlanModal plan={plan} hideModal={hideModal} />;
     };
@@ -185,7 +185,7 @@ class Plans extends React.Component<Props, State> {
 
   private renderDeleteModal = (
     plan: TradePlan,
-  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+  ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const DeleteModalComponent = (hideModal: MouseEventHandler) => {
       return (
         <CheckDeleteModal

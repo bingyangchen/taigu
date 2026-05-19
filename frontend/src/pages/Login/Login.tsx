@@ -55,7 +55,7 @@ class Login extends React.Component<Props, State> {
         window.history.replaceState({}, "", currentUrl.href);
 
         const pathAndQueryString =
-          window.localStorage.getItem("pathAndQueryString") || Env.frontendRootPath;
+          window.localStorage.getItem("pathAndQueryString") ?? Env.frontendRootPath;
         window.localStorage.removeItem("pathAndQueryString");
         this.props.router.navigate(pathAndQueryString, { replace: true });
       } catch (error) {

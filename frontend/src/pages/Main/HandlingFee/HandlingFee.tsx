@@ -243,6 +243,7 @@ class HandlingFee extends React.Component<Props, State> {
       tooltip: {
         trigger: "axis",
         axisPointer: { type: "shadow" },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         formatter: (params: any) => {
           const param = params[0];
           return `${param.name}<br/>${param.seriesName}: $${param.value.toLocaleString()}`;
@@ -362,7 +363,7 @@ class HandlingFee extends React.Component<Props, State> {
 
   private renderEditModal = (
     discount: HandlingFeeDiscount,
-  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+  ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const EditModalComponent = (hideModal: MouseEventHandler) => {
       return <HandlingFeeDiscountModal record={discount} hideModal={hideModal} />;
     };
@@ -372,7 +373,7 @@ class HandlingFee extends React.Component<Props, State> {
 
   private renderDeleteModal = (
     discount: HandlingFeeDiscount,
-  ): ((hideModal: MouseEventHandler) => React.ReactNode) => {
+  ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const DeleteModalComponent = (hideModal: MouseEventHandler) => {
       return (
         <CheckDeleteModal

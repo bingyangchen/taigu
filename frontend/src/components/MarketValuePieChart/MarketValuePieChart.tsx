@@ -40,6 +40,7 @@ class MarketValuePieChart extends React.Component<Props, State> {
     return {
       tooltip: {
         trigger: "item",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         formatter: (params: any) => {
           const percentage =
             totalMarketValue > 0

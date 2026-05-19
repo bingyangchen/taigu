@@ -19,6 +19,7 @@ root.render(
   // </React.StrictMode>
 );
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const navigator: Navigator & Record<"virtualKeyboard", any>;
 
 if ("virtualKeyboard" in navigator) {

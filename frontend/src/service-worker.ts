@@ -88,7 +88,7 @@ self.addEventListener("message", (event) => {
 
 // Any other custom service worker logic can go here.
 
-self.addEventListener("install", (event) => {
+self.addEventListener("install", () => {
   // Forces the waiting service worker to become the active service worker
   self.skipWaiting();
 });
@@ -144,7 +144,7 @@ self.addEventListener("fetch", (event) => {
               }
               return networkResponse;
             });
-            return cacheResponse || (await fetchPromise);
+            return cacheResponse ?? (await fetchPromise);
           });
         }),
       );

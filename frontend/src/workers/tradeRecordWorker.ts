@@ -102,7 +102,8 @@ const getSidGainMap = (sidTradeRecordsMap: {
     const queue: { q: number; p: number }[] = [];
     result[sid] = 0;
 
-    for (let { deal_quantity: q, deal_price: p } of tradeRecords) {
+    for (const { deal_quantity, deal_price: p } of tradeRecords) {
+      let q = deal_quantity;
       // Check if the last q in `queue` is of the same sign as the incoming q
       if (queue.length === 0 || queue[queue.length - 1].q * q > 0) {
         queue.push({ q, p });

@@ -47,9 +47,9 @@ export default class Util {
   }
 
   public static debounce = <T,>(
-    func: (...args: T[]) => void,
+    func: (..._args: T[]) => void,
     delay: number,
-  ): ((...args: T[]) => any) => {
+  ): ((..._args: T[]) => void) => {
     let timer: ReturnType<typeof setTimeout>;
     return (...params: T[]) => {
       if (timer) clearTimeout(timer);
