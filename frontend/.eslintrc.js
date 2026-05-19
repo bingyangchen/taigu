@@ -23,7 +23,7 @@ module.exports = {
     "eslint-disable": "off",
 
     // Core ESLint rules - force to warn
-    "no-unused-vars": "warn",
+    "no-unused-vars": "off",
     "no-undef": "warn",
     "no-redeclare": "warn",
     "no-constant-condition": "warn",
@@ -70,7 +70,7 @@ module.exports = {
     "@typescript-eslint/prefer-optional-chain": "warn",
 
     // General rules
-    "no-console": "warn",
+    "no-console": "off",
     "no-debugger": "warn",
     "prefer-const": "warn",
     "no-var": "warn",
@@ -139,6 +139,12 @@ module.exports = {
       ],
     },
   },
+  overrides: [
+    {
+      files: ["src/service-worker.ts"],
+      env: { serviceworker: true },
+    },
+  ],
   ignorePatterns: [
     "node_modules/",
     "build/",

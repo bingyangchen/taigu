@@ -1,10 +1,8 @@
 import React from "react";
+import type { Location, NavigateFunction, Params } from "react-router-dom";
 import {
   createBrowserRouter,
   createRoutesFromElements,
-  Location,
-  NavigateFunction,
-  Params,
   Route,
   useLocation,
   useNavigate,

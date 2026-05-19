@@ -68,6 +68,7 @@ class Settings extends React.Component<Props, State> {
   }
 
   private handleNonCacheResponse = async (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
   ): Promise<void> => {
     if (e.data.authorized) {

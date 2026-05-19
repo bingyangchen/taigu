@@ -25,7 +25,11 @@ class ToastList extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {};
-    this.toastRoot = document.getElementById("toast-root")!;
+    const toastRoot = document.getElementById("toast-root");
+    if (!toastRoot) {
+      throw new Error("Missing #toast-root element");
+    }
+    this.toastRoot = toastRoot;
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {

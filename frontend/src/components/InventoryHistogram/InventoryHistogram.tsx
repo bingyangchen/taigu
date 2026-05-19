@@ -4,6 +4,7 @@ import ReactECharts from "echarts-for-react";
 import * as ecStat from "echarts-stat";
 import React from "react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 echarts.registerTransform((ecStat as any).transform.histogram);
 
 interface Props {

@@ -8,7 +8,7 @@ interface Props {
   keyword: string;
   autoFocus?: boolean;
   size?: "m" | "l";
-  onChange?: (value: string) => void;
+  onChange?: (_value: string) => void;
 }
 
 interface State {}

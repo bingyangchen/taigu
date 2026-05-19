@@ -31,6 +31,7 @@ export default class Api {
     endpoint: string,
     method: string,
     requestBody?: URLSearchParams | string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     method = method.toLowerCase();
     if (method === "post" && requestBody === undefined) {
@@ -69,6 +70,7 @@ export default class Api {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static async handleResponse(response: Response): Promise<any> {
     if (response.status === 404) Nav.goTo404Page();
     else if ([401, 403].includes(response.status)) {

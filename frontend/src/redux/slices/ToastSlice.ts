@@ -40,7 +40,7 @@ export const toastSlice = createSlice({
       .addCase(pushToast.fulfilled, (state, action: PayloadAction<ToastMessage>) => {
         state.toasts.push(action.payload);
       })
-      .addCase(setAutoRemoveToastTimer.fulfilled, (state, action) => {
+      .addCase(setAutoRemoveToastTimer.fulfilled, (state) => {
         state.toasts.splice(0, 1);
       });
   },

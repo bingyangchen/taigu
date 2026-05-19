@@ -119,16 +119,16 @@ export const stockInfoSlice = createSlice({
 
       .addCase(fetchSingleStockInfo.pending, () => {})
       .addCase(fetchSingleStockInfo.fulfilled, (state, action) => {
-        state.sidStockInfoMap[action.payload.sid] = action.payload;
-        if (!(action.payload.sid in state.sidHistoricalPricesMap)) {
-          state.sidHistoricalPricesMap[action.payload.sid] = {};
+        const { sid, close } = action.payload;
+        state.sidStockInfoMap[sid] = action.payload;
+        if (!(sid in state.sidHistoricalPricesMap)) {
+          state.sidHistoricalPricesMap[sid] = {};
         }
-        if (!state.sidHistoricalPricesMap[action.payload.sid].daily) {
-          state.sidHistoricalPricesMap[action.payload.sid].daily = {};
+        const historicalPrices = state.sidHistoricalPricesMap[sid];
+        if (!historicalPrices.daily) {
+          historicalPrices.daily = {};
         }
-        state.sidHistoricalPricesMap[action.payload.sid].daily![
-          new Date().toLocaleDateString("af")
-        ] = action.payload.close;
+        historicalPrices.daily[new Date().toLocaleDateString("af")] = close;
       })
       .addCase(fetchSingleStockInfo.rejected, () => {})
 
@@ -140,26 +140,30 @@ export const stockInfoSlice = createSlice({
         if (!(sid in state.sidHistoricalPricesMap)) {
           state.sidHistoricalPricesMap[sid] = {};
         }
+        const historicalPrices = state.sidHistoricalPricesMap[sid];
         if (frequency === "DAILY") {
-          if (!state.sidHistoricalPricesMap[sid].daily) {
-            state.sidHistoricalPricesMap[sid].daily = {};
+          if (!historicalPrices.daily) {
+            historicalPrices.daily = {};
           }
+          const daily = historicalPrices.daily;
           data.forEach((row) => {
-            state.sidHistoricalPricesMap[sid].daily![row.date] = row.price;
+            daily[row.date] = row.price;
           });
         } else if (frequency === "WEEKLY") {
-          if (!state.sidHistoricalPricesMap[sid].weekly) {
-            state.sidHistoricalPricesMap[sid].weekly = {};
+          if (!historicalPrices.weekly) {
+            historicalPrices.weekly = {};
           }
+          const weekly = historicalPrices.weekly;
           data.forEach((row) => {
-            state.sidHistoricalPricesMap[sid].weekly![row.date] = row.price;
+            weekly[row.date] = row.price;
           });
         } else if (frequency === "MONTHLY") {
-          if (!state.sidHistoricalPricesMap[sid].monthly) {
-            state.sidHistoricalPricesMap[sid].monthly = {};
+          if (!historicalPrices.monthly) {
+            historicalPrices.monthly = {};
           }
+          const monthly = historicalPrices.monthly;
           data.forEach((row) => {
-            state.sidHistoricalPricesMap[sid].monthly![row.date] = row.price;
+            monthly[row.date] = row.price;
           });
         }
         state.isWaitingHistoricalPrices = false;

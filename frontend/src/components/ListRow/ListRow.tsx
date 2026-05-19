@@ -14,8 +14,8 @@ import styles from "./ListRow.module.scss";
 interface Props extends IRouter {
   target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount;
   children: ReactNode;
-  editModal: ((hideModal: MouseEventHandler) => ReactNode) | null;
-  deleteModal: ((hideModal: MouseEventHandler) => ReactNode) | null;
+  editModal: ((_hideModal: MouseEventHandler) => ReactNode) | null;
+  deleteModal: ((_hideModal: MouseEventHandler) => ReactNode) | null;
 }
 
 interface State {

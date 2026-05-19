@@ -107,7 +107,9 @@ class Main extends React.Component<Props, State> {
         this.props.dispatch(calculateTotalHandlingFee()).unwrap(),
         this.fetchHoldingStockInfo(),
       ]);
-    } catch (e) {}
+    } catch {
+      // Initial load failures are non-fatal; the shell still renders with partial data.
+    }
 
     this.subpages = [
       {
@@ -137,7 +139,7 @@ class Main extends React.Component<Props, State> {
       {
         icon: (
           <img
-            src={this.props.avatar_url || imgPersonFill}
+            src={this.props.avatar_url ? this.props.avatar_url : imgPersonFill}
             alt=""
             className={styles.user_avatar}
           />
@@ -154,7 +156,7 @@ class Main extends React.Component<Props, State> {
   }
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (prevProps.router.location.pathname !== this.props.router.location.pathname) {
-      this.mainRef.current!.scrollTo(0, 0);
+      this.mainRef.current?.scrollTo(0, 0);
       this.props.dispatch(fetchAccountInfo());
     }
 
@@ -195,7 +197,7 @@ class Main extends React.Component<Props, State> {
         <div className={styles.body}>
           {!Util.isMobile && (
             <MainSideBar
-              avatarUrl={this.props.avatar_url || imgPersonFill}
+              avatarUrl={this.props.avatar_url ? this.props.avatar_url : imgPersonFill}
               username={this.props.username}
               subpages={Util.isMobile ? this.subpages : this.subpages.slice(0, 4)}
             />
@@ -207,7 +209,10 @@ class Main extends React.Component<Props, State> {
     );
   }
   private handleScroll = (): void => {
-    this.props.dispatch(updateScrollTop(this.mainRef.current!.scrollTop));
+    const mainElement = this.mainRef.current;
+    if (!mainElement) return;
+
+    this.props.dispatch(updateScrollTop(mainElement.scrollTop));
   };
   private get shouldUseWhiteMobileShell(): boolean {
     return (
@@ -216,6 +221,7 @@ class Main extends React.Component<Props, State> {
     );
   }
   private handleNonCacheResponse = async (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
   ): Promise<void> => {
     if (e.data.authorized) {
@@ -244,8 +250,8 @@ class Main extends React.Component<Props, State> {
   };
   private fetchHoldingStockInfo = async (): Promise<void> => {
     const hodlingSids = Object.entries(this.props.stockWarehouse)
-      .filter(([sid, warehouse]) => warehouse.length > 0)
-      .map(([sid, warehouse]) => sid);
+      .filter(([, warehouse]) => warehouse.length > 0)
+      .map(([sid]) => sid);
     await this.props.dispatch(fetchStockInfo(hodlingSids)).unwrap();
     this.setState({ isLoading: false });
   };
