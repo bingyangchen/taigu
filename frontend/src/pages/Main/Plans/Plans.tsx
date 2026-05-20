@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 
 import {
   CheckDeleteModal,
+  DeletePreview,
   DollarSign,
   InfiniteScrollSentinel,
   ListRow,
@@ -185,24 +186,32 @@ class Plans extends React.Component<Props, State> {
       return (
         <CheckDeleteModal
           hideModal={hideModal}
+          title="刪除買賣計畫？"
+          description="刪除後，這個目標價提醒不會再出現在買賣計畫中。"
+          submitLabel="刪除買賣計畫"
           isWaiting={this.props.isWaitingTradePlan}
           onDelete={this.getDeleteHandler(plan)}
         >
-          <div className={styles.modal_inner}>
-            <span className={styles.company}>{`${plan.sid} ${plan.company_name}`}</span>
-            <span className={styles.price}>
-              <DollarSign />
-              {plan.target_price.toLocaleString()}
-            </span>
-            <span
-              className={`${styles.trade_type} ${
-                plan.plan_type === "buy" ? styles.buy : styles.sell
-              }`}
-            >
-              {plan.plan_type === "buy" ? "買" : "賣"}
-            </span>
-            <span className={styles.quantity}>{plan.target_quantity} 股</span>
-          </div>
+          <DeletePreview
+            title={`${plan.sid} ${plan.company_name}`}
+            details={[
+              {
+                label: "目標價",
+                value: (
+                  <>
+                    <DollarSign />
+                    {plan.target_price.toLocaleString()}
+                  </>
+                ),
+              },
+              {
+                label: "類型",
+                value: plan.plan_type === "buy" ? "買入" : "賣出",
+                tone: plan.plan_type === "buy" ? "buy" : "sell",
+              },
+              { label: "股數", value: `${plan.target_quantity.toLocaleString()} 股` },
+            ]}
+          />
         </CheckDeleteModal>
       );
     };

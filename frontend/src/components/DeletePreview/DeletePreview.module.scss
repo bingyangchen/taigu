@@ -1,0 +1,89 @@
+@use "../../global_variables" as _;
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid _.$noisy-white;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%), _.$white;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.title {
+  overflow: hidden;
+  color: _.$deep-gray;
+  font-size: 0.95 * _.$base-font-size;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  color: _.$gray;
+  font-size: 0.75 * _.$base-font-size;
+  letter-spacing: 0;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
+  gap: 10px;
+}
+
+.detail {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.label {
+  color: _.$gray;
+  font-size: 0.7 * _.$base-font-size;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.value {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 24px;
+  overflow: hidden;
+  color: _.$deep-gray;
+  font-size: 0.85 * _.$base-font-size;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.buy,
+  &.sell {
+    min-width: 36px;
+    justify-content: center;
+    padding: 0 9px;
+    border-radius: 999px;
+    font-size: 0.75 * _.$base-font-size;
+    font-weight: 700;
+  }
+
+  &.buy {
+    color: _.$red;
+    background-color: rgba(_.$red, 0.1);
+  }
+
+  &.sell {
+    color: _.$blue;
+    background-color: rgba(_.$blue, 0.1);
+  }
+}

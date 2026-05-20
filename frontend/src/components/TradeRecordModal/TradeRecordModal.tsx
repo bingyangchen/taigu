@@ -1,9 +1,20 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { LabeledInput, Modal } from "../../components";
+import {
+  CheckDeleteModal,
+  DeletePreview,
+  DestructiveActionSection,
+  DollarSign,
+  LabeledInput,
+  Modal,
+} from "../../components";
 import { fetchSingleStockInfo } from "../../redux/slices/StockInfoSlice";
-import { createRecord, updateRecord } from "../../redux/slices/TradeRecordSlice";
+import {
+  createRecord,
+  deleteRecord,
+  updateRecord,
+} from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { TradeRecord } from "../../types";
 import Util from "../../utils/util";
@@ -30,10 +41,12 @@ interface State {
   isBuying: boolean;
   absDealQuantity: number;
   handlingFee: number;
+  isCheckingDelete: boolean;
 }
 
 class TradeRecordModal extends React.Component<Props, State> {
   public state: State;
+  private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
     super(props);
     if (props.record) {
@@ -45,6 +58,7 @@ class TradeRecordModal extends React.Component<Props, State> {
         isBuying: props.record.deal_quantity > 0 ? true : false,
         absDealQuantity: Math.abs(props.record.deal_quantity),
         handlingFee: props.record.handling_fee,
+        isCheckingDelete: false,
       };
     } else {
       this.state = {
@@ -55,98 +69,149 @@ class TradeRecordModal extends React.Component<Props, State> {
         isBuying: true,
         absDealQuantity: NaN,
         handlingFee: 0,
+        isCheckingDelete: false,
       };
     }
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
     return (
-      <Modal
-        title={`${this.props.record ? "編輯" : "新增"}交易紀錄`}
-        discardButtonProps={{
-          children: "捨棄",
-          className: "transparent l",
-          onClick: this.props.hideModal,
-        }}
-        submitButtonProps={{
-          children: "送出",
-          className: "primary_fill l",
-          disabled: !this.canSubmit,
-          waiting: this.props.isWaiting,
-          onClick: this.handleClickSubmit,
-          canTriggerByEnter: true,
-        }}
-        layout={Util.isMobile ? "fullScreen" : "compact"}
-        noX
-        silentBackground
-      >
-        <div className={styles.modal_inner}>
-          <LabeledInput
-            title="交易日期"
-            type="date"
-            value={this.state.dealTime}
-            onChange={(dealTime: string) => this.setState({ dealTime: dealTime })}
-          />
-          <LabeledInput
-            title="證券代號"
-            value={this.state.sid}
-            onChange={(sid: string) => this.setState({ sid: sid })}
-            autoFocus={!this.state.sid}
-          />
-          <div className={styles.row}>
+      <>
+        <Modal
+          title={`${this.props.record ? "編輯" : "新增"}交易紀錄`}
+          discardButtonProps={{
+            children: "捨棄",
+            className: "transparent l",
+            onClick: this.props.hideModal,
+          }}
+          submitButtonProps={{
+            children: "送出",
+            className: "primary_fill l",
+            disabled: !this.canSubmit,
+            waiting: this.props.isWaiting,
+            onClick: this.handleClickSubmit,
+            canTriggerByEnter: true,
+          }}
+          layout={Util.isMobile ? "fullScreen" : "compact"}
+          noX
+          silentBackground
+        >
+          <div className={styles.modal_inner}>
             <LabeledInput
-              title="成交單價"
-              type="number"
-              inputMode="decimal"
-              value={
-                this.state.dealPrice || this.state.dealPrice === 0
-                  ? this.state.dealPrice.toString()
-                  : ""
-              }
-              onChange={this.handleDealPriceChange}
-              autoFocus={Boolean(this.state.sid)}
+              title="交易日期"
+              type="date"
+              value={this.state.dealTime}
+              onChange={(dealTime: string) => this.setState({ dealTime: dealTime })}
             />
-            <div className={styles.buy_or_sell}>
-              <span>買</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={this.state.isBuying}
-                aria-label={this.state.isBuying ? "買" : "賣"}
-                className={`${styles.switch} ${
-                  this.state.isBuying ? styles.buy : styles.sell
-                }`}
-                onClick={this.handleClickToggle}
-              >
-                <span className={styles.switch_thumb} />
-              </button>
-              <span>賣</span>
+            <LabeledInput
+              title="證券代號"
+              value={this.state.sid}
+              onChange={(sid: string) => this.setState({ sid: sid })}
+              autoFocus={!this.state.sid}
+            />
+            <div className={styles.row}>
+              <LabeledInput
+                title="成交單價"
+                type="number"
+                inputMode="decimal"
+                value={
+                  this.state.dealPrice || this.state.dealPrice === 0
+                    ? this.state.dealPrice.toString()
+                    : ""
+                }
+                onChange={this.handleDealPriceChange}
+                autoFocus={Boolean(this.state.sid)}
+              />
+              <div className={styles.buy_or_sell}>
+                <span>買</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={this.state.isBuying}
+                  aria-label={this.state.isBuying ? "買" : "賣"}
+                  className={`${styles.switch} ${
+                    this.state.isBuying ? styles.buy : styles.sell
+                  }`}
+                  onClick={this.handleClickToggle}
+                >
+                  <span className={styles.switch_thumb} />
+                </button>
+                <span>賣</span>
+              </div>
+              <LabeledInput
+                title="成交股數"
+                type="number"
+                inputMode="numeric"
+                value={
+                  this.state.absDealQuantity || this.state.absDealQuantity === 0
+                    ? this.state.absDealQuantity.toString()
+                    : ""
+                }
+                onChange={this.handleAbsDealQuantityChange}
+              />
             </div>
             <LabeledInput
-              title="成交股數"
+              title="手續費用"
               type="number"
               inputMode="numeric"
               value={
-                this.state.absDealQuantity || this.state.absDealQuantity === 0
-                  ? this.state.absDealQuantity.toString()
+                this.state.handlingFee || this.state.handlingFee === 0
+                  ? this.state.handlingFee.toString()
                   : ""
               }
-              onChange={this.handleAbsDealQuantityChange}
+              onChange={this.handleHandlingFeeChange}
             />
+            {this.props.record && (
+              <DestructiveActionSection
+                buttonLabel="刪除交易紀錄"
+                description="刪除後無法復原，投資績效、持股與手續費統計會同步更新。"
+                onClick={this.handleClickDelete}
+              />
+            )}
           </div>
-          <LabeledInput
-            title="手續費用"
-            type="number"
-            inputMode="numeric"
-            value={
-              this.state.handlingFee || this.state.handlingFee === 0
-                ? this.state.handlingFee.toString()
-                : ""
-            }
-            onChange={this.handleHandlingFeeChange}
-          />
-        </div>
-      </Modal>
+        </Modal>
+        {this.state.isCheckingDelete && this.renderDeleteModal()}
+      </>
+    );
+  }
+
+  private renderDeleteModal(): React.ReactNode {
+    if (!this.props.record) return null;
+    return (
+      <CheckDeleteModal
+        hideModal={this.hideDeleteModal}
+        title="刪除交易紀錄？"
+        description="刪除後，這筆紀錄會從投資績效、持股與手續費統計中移除。"
+        submitLabel="刪除交易紀錄"
+        isWaiting={this.props.isWaiting}
+        nested
+        onDelete={this.handleConfirmDelete}
+      >
+        <DeletePreview
+          title={`${this.props.record.sid} ${this.props.record.company_name}`}
+          meta={this.props.record.deal_time}
+          details={[
+            {
+              label: "成交價",
+              value: (
+                <>
+                  <DollarSign />
+                  {this.props.record.deal_price.toLocaleString()}
+                </>
+              ),
+            },
+            {
+              label: "類型",
+              value: this.props.record.deal_quantity > 0 ? "買入" : "賣出",
+              tone: this.props.record.deal_quantity > 0 ? "buy" : "sell",
+            },
+            {
+              label: "股數",
+              value: `${Math.abs(this.props.record.deal_quantity).toLocaleString()} 股`,
+            },
+          ]}
+        />
+      </CheckDeleteModal>
     );
   }
 
@@ -207,6 +272,25 @@ class TradeRecordModal extends React.Component<Props, State> {
     const parsedFee =
       handlingFee === "" ? NaN : parseInt(handlingFee) < 0 ? 0 : parseInt(handlingFee);
     this.setState({ handlingFee: parsedFee });
+  };
+
+  private handleClickDelete = (): void => {
+    this.setState({ isCheckingDelete: true });
+  };
+
+  private hideDeleteModal = (e: MouseEvent): void => {
+    if (this.shouldCloseAfterDelete) {
+      this.shouldCloseAfterDelete = false;
+      this.props.hideModal(e);
+      return;
+    }
+    this.setState({ isCheckingDelete: false });
+  };
+
+  private handleConfirmDelete = async (): Promise<void> => {
+    if (!this.props.record) return;
+    await this.props.dispatch(deleteRecord(this.props.record.id)).unwrap();
+    this.shouldCloseAfterDelete = true;
   };
 
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {

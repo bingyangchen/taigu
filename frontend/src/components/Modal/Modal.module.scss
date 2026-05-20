@@ -9,6 +9,12 @@
   background-color: _.$semi-transparent-black;
   z-index: 6;
   animation: 300ms fadein ease;
+
+  &.nested_background {
+    background-color: #0005;
+    z-index: 8;
+    animation: 180ms fadein ease;
+  }
 }
 
 .main {
@@ -30,6 +36,14 @@
     box-shadow:
       0 0 0 2px _.$white,
       0 0 0 5px _.$transparent-blue;
+  }
+
+  &.nested {
+    z-index: 9;
+    box-shadow:
+      0 28px 80px #00000040,
+      0 10px 30px #00000024;
+    animation: 180ms nestedscalein ease;
   }
 
   &.compact {
@@ -153,6 +167,17 @@
   from {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes nestedscalein {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.98);
   }
   to {
     opacity: 1;

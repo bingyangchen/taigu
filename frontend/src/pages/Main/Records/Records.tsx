@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import {
   CashDividendRecordModal,
   CheckDeleteModal,
+  DeletePreview,
   DollarSign,
   InfiniteScrollSentinel,
   ListRow,
@@ -234,6 +235,13 @@ class Records extends React.Component<Props, State> {
       return (
         <CheckDeleteModal
           hideModal={hideModal}
+          title={Util.isTradeRecord(record) ? "刪除交易紀錄？" : "刪除現金股利？"}
+          description={
+            Util.isTradeRecord(record)
+              ? "刪除後，這筆紀錄會從投資績效、持股與手續費統計中移除。"
+              : "刪除後，這筆現金股利不會再計入收益分析。"
+          }
+          submitLabel={Util.isTradeRecord(record) ? "刪除交易紀錄" : "刪除現金股利"}
           isWaiting={
             Util.isTradeRecord(record)
               ? this.props.isWaitingTradeRecord
@@ -241,33 +249,44 @@ class Records extends React.Component<Props, State> {
           }
           onDelete={this.getDeleteHandler(record)}
         >
-          <div className={styles.modal_inner}>
-            <span
-              className={styles.company}
-            >{`${record.sid} ${record.company_name}`}</span>
-            <span className={styles.price}>
-              <DollarSign />
-              {(Util.isTradeRecord(record)
-                ? record.deal_price
-                : record.cash_dividend
-              ).toLocaleString()}
-            </span>
-            {Util.isTradeRecord(record) && (
-              <>
-                <span
-                  className={`${styles.trade_type} ${
-                    record.deal_quantity > 0 ? styles.buy : styles.sell
-                  }`}
-                >
-                  {record.deal_quantity > 0 ? "買" : "賣"}
-                </span>
-                <span className={styles.quantity}>
-                  {Math.abs(record.deal_quantity)} 股
-                </span>
-              </>
-            )}
-            <span className={styles.date}>{record.deal_time}</span>
-          </div>
+          <DeletePreview
+            title={`${record.sid} ${record.company_name}`}
+            meta={record.deal_time}
+            details={
+              Util.isTradeRecord(record)
+                ? [
+                    {
+                      label: "成交價",
+                      value: (
+                        <>
+                          <DollarSign />
+                          {record.deal_price.toLocaleString()}
+                        </>
+                      ),
+                    },
+                    {
+                      label: "類型",
+                      value: record.deal_quantity > 0 ? "買入" : "賣出",
+                      tone: record.deal_quantity > 0 ? "buy" : "sell",
+                    },
+                    {
+                      label: "股數",
+                      value: `${Math.abs(record.deal_quantity).toLocaleString()} 股`,
+                    },
+                  ]
+                : [
+                    {
+                      label: "現金股利",
+                      value: (
+                        <>
+                          <DollarSign />
+                          {record.cash_dividend.toLocaleString()}
+                        </>
+                      ),
+                    },
+                  ]
+            }
+          />
         </CheckDeleteModal>
       );
     };

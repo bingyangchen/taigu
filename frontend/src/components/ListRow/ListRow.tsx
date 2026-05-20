@@ -49,6 +49,7 @@ class ListRow extends React.Component<Props, State> {
         >
           <span
             className={styles.mask}
+            onClick={this.handleClickRow}
             onTouchStart={this.onTouchStart}
             onTouchEnd={this.onTouchEnd}
             onTouchMove={this.onTouchMove}
@@ -101,6 +102,10 @@ class ListRow extends React.Component<Props, State> {
 
   private handleClickDelete = (): void => {
     this.setState({ activeModalName: "checkDelete" });
+  };
+
+  private handleClickRow = (): void => {
+    if (Util.isMobile) this.handleClickEdit();
   };
 
   private handleClickButtonInBottomSheet = (callback: Function): MouseEventHandler => {

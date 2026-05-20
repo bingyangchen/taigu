@@ -1,9 +1,17 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { LabeledInput, Modal } from "../../components";
+import {
+  CheckDeleteModal,
+  DeletePreview,
+  DestructiveActionSection,
+  DollarSign,
+  LabeledInput,
+  Modal,
+} from "../../components";
 import {
   createDiscount,
+  deleteDiscount,
   updateDiscount,
 } from "../../redux/slices/HandlingFeeDiscountSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
@@ -28,10 +36,12 @@ interface State {
   date: string;
   amount: number;
   memo: string;
+  isCheckingDelete: boolean;
 }
 
 class HandlingFeeDiscountModal extends React.Component<Props, State> {
   public state: State;
+  private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
     super(props);
     this.state = {
@@ -39,57 +49,99 @@ class HandlingFeeDiscountModal extends React.Component<Props, State> {
       date: props.record?.date ?? new Date().toLocaleDateString("af"),
       amount: props.record ? props.record.amount : NaN,
       memo: props.record?.memo ?? "",
+      isCheckingDelete: false,
     };
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
     return (
-      <Modal
-        title={`${this.props.record ? "編輯" : "新增"}折讓紀錄`}
-        discardButtonProps={{
-          children: "捨棄",
-          className: "transparent l",
-          onClick: this.props.hideModal,
-        }}
-        submitButtonProps={{
-          children: "送出",
-          className: "primary_fill l",
-          disabled: !this.canSubmit,
-          waiting: this.props.isWaiting,
-          onClick: this.handleClickSubmit,
-          canTriggerByEnter: true,
-        }}
-        layout={Util.isMobile ? "fullScreen" : "compact"}
-        noX
-        silentBackground
+      <>
+        <Modal
+          title={`${this.props.record ? "編輯" : "新增"}折讓紀錄`}
+          discardButtonProps={{
+            children: "捨棄",
+            className: "transparent l",
+            onClick: this.props.hideModal,
+          }}
+          submitButtonProps={{
+            children: "送出",
+            className: "primary_fill l",
+            disabled: !this.canSubmit,
+            waiting: this.props.isWaiting,
+            onClick: this.handleClickSubmit,
+            canTriggerByEnter: true,
+          }}
+          layout={Util.isMobile ? "fullScreen" : "compact"}
+          noX
+          silentBackground
+        >
+          <div className={styles.modal_inner}>
+            <LabeledInput
+              title="日期"
+              type="date"
+              value={this.state.date}
+              onChange={(date: string) => this.setState({ date: date })}
+            />
+            <LabeledInput
+              title="折讓金額"
+              type="number"
+              inputMode="numeric"
+              value={
+                this.state.amount || this.state.amount === 0
+                  ? this.state.amount.toString()
+                  : ""
+              }
+              onChange={this.handleAmountChange}
+              autoFocus={Boolean(this.state.date)}
+            />
+            <LabeledInput
+              title="備註"
+              type="text"
+              value={this.state.memo}
+              onChange={(memo: string) => this.setState({ memo: memo })}
+            />
+            {this.props.record && (
+              <DestructiveActionSection
+                buttonLabel="刪除折讓紀錄"
+                description="刪除後無法復原，手續費分析會同步更新。"
+                onClick={this.handleClickDelete}
+              />
+            )}
+          </div>
+        </Modal>
+        {this.state.isCheckingDelete && this.renderDeleteModal()}
+      </>
+    );
+  }
+
+  private renderDeleteModal(): React.ReactNode {
+    if (!this.props.record) return null;
+    return (
+      <CheckDeleteModal
+        hideModal={this.hideDeleteModal}
+        title="刪除手續費折讓？"
+        description="刪除後，這筆折讓不會再計入手續費分析。"
+        submitLabel="刪除折讓紀錄"
+        isWaiting={this.props.isWaiting}
+        nested
+        onDelete={this.handleConfirmDelete}
       >
-        <div className={styles.modal_inner}>
-          <LabeledInput
-            title="日期"
-            type="date"
-            value={this.state.date}
-            onChange={(date: string) => this.setState({ date: date })}
-          />
-          <LabeledInput
-            title="折讓金額"
-            type="number"
-            inputMode="numeric"
-            value={
-              this.state.amount || this.state.amount === 0
-                ? this.state.amount.toString()
-                : ""
-            }
-            onChange={this.handleAmountChange}
-            autoFocus={Boolean(this.state.date)}
-          />
-          <LabeledInput
-            title="備註"
-            type="text"
-            value={this.state.memo}
-            onChange={(memo: string) => this.setState({ memo: memo })}
-          />
-        </div>
-      </Modal>
+        <DeletePreview
+          title={this.props.record.memo || "手續費折讓"}
+          meta={this.props.record.date}
+          details={[
+            {
+              label: "折讓金額",
+              value: (
+                <>
+                  <DollarSign />
+                  {this.props.record.amount.toLocaleString()}
+                </>
+              ),
+            },
+          ]}
+        />
+      </CheckDeleteModal>
     );
   }
   private get canSubmit(): boolean {
@@ -101,6 +153,22 @@ class HandlingFeeDiscountModal extends React.Component<Props, State> {
     this.setState({
       amount: amount === "" ? NaN : parseInt(amount) < 0 ? 0 : parseInt(amount),
     });
+  };
+  private handleClickDelete = (): void => {
+    this.setState({ isCheckingDelete: true });
+  };
+  private hideDeleteModal = (e: MouseEvent): void => {
+    if (this.shouldCloseAfterDelete) {
+      this.shouldCloseAfterDelete = false;
+      this.props.hideModal(e);
+      return;
+    }
+    this.setState({ isCheckingDelete: false });
+  };
+  private handleConfirmDelete = async (): Promise<void> => {
+    if (!this.props.record) return;
+    await this.props.dispatch(deleteDiscount(this.props.record.id)).unwrap();
+    this.shouldCloseAfterDelete = true;
   };
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {
     if (!this.canSubmit) throw Error("Cannot submit!");

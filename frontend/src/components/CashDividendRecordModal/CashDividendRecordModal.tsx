@@ -1,8 +1,19 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { LabeledInput, Modal } from "../../components";
-import { createRecord, updateRecord } from "../../redux/slices/CashDividendRecordSlice";
+import {
+  CheckDeleteModal,
+  DeletePreview,
+  DestructiveActionSection,
+  DollarSign,
+  LabeledInput,
+  Modal,
+} from "../../components";
+import {
+  createRecord,
+  deleteRecord,
+  updateRecord,
+} from "../../redux/slices/CashDividendRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { CashDividendRecord } from "../../types";
 import Util from "../../utils/util";
@@ -26,10 +37,12 @@ interface State {
   dealTime: string;
   sid: string;
   cashDividend: number;
+  isCheckingDelete: boolean;
 }
 
 class CashDividendRecordModal extends React.Component<Props, State> {
   public state: State;
+  private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
     super(props);
     this.state = {
@@ -37,57 +50,99 @@ class CashDividendRecordModal extends React.Component<Props, State> {
       dealTime: props.record?.deal_time ?? new Date().toLocaleDateString("af"),
       sid: props.defaultSid ?? props.record?.sid ?? "",
       cashDividend: props.record ? props.record.cash_dividend : NaN,
+      isCheckingDelete: false,
     };
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
     return (
-      <Modal
-        title={`${this.props.record ? "編輯" : "新增"}現金股利`}
-        discardButtonProps={{
-          children: "捨棄",
-          className: "transparent l",
-          onClick: this.props.hideModal,
-        }}
-        submitButtonProps={{
-          children: "送出",
-          className: "primary_fill l",
-          disabled: !this.canSubmit,
-          waiting: this.props.isWaiting,
-          onClick: this.handleClickSubmit,
-          canTriggerByEnter: true,
-        }}
-        layout={Util.isMobile ? "fullScreen" : "compact"}
-        noX
-        silentBackground
+      <>
+        <Modal
+          title={`${this.props.record ? "編輯" : "新增"}現金股利`}
+          discardButtonProps={{
+            children: "捨棄",
+            className: "transparent l",
+            onClick: this.props.hideModal,
+          }}
+          submitButtonProps={{
+            children: "送出",
+            className: "primary_fill l",
+            disabled: !this.canSubmit,
+            waiting: this.props.isWaiting,
+            onClick: this.handleClickSubmit,
+            canTriggerByEnter: true,
+          }}
+          layout={Util.isMobile ? "fullScreen" : "compact"}
+          noX
+          silentBackground
+        >
+          <div className={styles.modal_inner}>
+            <LabeledInput
+              title="交易日期"
+              type="date"
+              value={this.state.dealTime}
+              onChange={(dealTime: string) => this.setState({ dealTime: dealTime })}
+            />
+            <LabeledInput
+              title="證券代號"
+              value={this.state.sid}
+              onChange={(sid: string) => this.setState({ sid: sid })}
+              autoFocus={!this.state.sid}
+            />
+            <LabeledInput
+              title="現金股利"
+              type="number"
+              inputMode="numeric"
+              value={
+                this.state.cashDividend || this.state.cashDividend === 0
+                  ? this.state.cashDividend.toString()
+                  : ""
+              }
+              onChange={this.handleCashDividendChange}
+              autoFocus={Boolean(this.state.sid)}
+            />
+            {this.props.record && (
+              <DestructiveActionSection
+                buttonLabel="刪除現金股利"
+                description="刪除後無法復原，收益分析會同步更新。"
+                onClick={this.handleClickDelete}
+              />
+            )}
+          </div>
+        </Modal>
+        {this.state.isCheckingDelete && this.renderDeleteModal()}
+      </>
+    );
+  }
+
+  private renderDeleteModal(): React.ReactNode {
+    if (!this.props.record) return null;
+    return (
+      <CheckDeleteModal
+        hideModal={this.hideDeleteModal}
+        title="刪除現金股利？"
+        description="刪除後，這筆現金股利不會再計入收益分析。"
+        submitLabel="刪除現金股利"
+        isWaiting={this.props.isWaiting}
+        nested
+        onDelete={this.handleConfirmDelete}
       >
-        <div className={styles.modal_inner}>
-          <LabeledInput
-            title="交易日期"
-            type="date"
-            value={this.state.dealTime}
-            onChange={(dealTime: string) => this.setState({ dealTime: dealTime })}
-          />
-          <LabeledInput
-            title="證券代號"
-            value={this.state.sid}
-            onChange={(sid: string) => this.setState({ sid: sid })}
-            autoFocus={!this.state.sid}
-          />
-          <LabeledInput
-            title="現金股利"
-            type="number"
-            inputMode="numeric"
-            value={
-              this.state.cashDividend || this.state.cashDividend === 0
-                ? this.state.cashDividend.toString()
-                : ""
-            }
-            onChange={this.handleCashDividendChange}
-            autoFocus={Boolean(this.state.sid)}
-          />
-        </div>
-      </Modal>
+        <DeletePreview
+          title={`${this.props.record.sid} ${this.props.record.company_name}`}
+          meta={this.props.record.deal_time}
+          details={[
+            {
+              label: "現金股利",
+              value: (
+                <>
+                  <DollarSign />
+                  {this.props.record.cash_dividend.toLocaleString()}
+                </>
+              ),
+            },
+          ]}
+        />
+      </CheckDeleteModal>
     );
   }
 
@@ -108,6 +163,25 @@ class CashDividendRecordModal extends React.Component<Props, State> {
           ? 0
           : parseInt(cashDividend);
     this.setState({ cashDividend: parsedDividend });
+  };
+
+  private handleClickDelete = (): void => {
+    this.setState({ isCheckingDelete: true });
+  };
+
+  private hideDeleteModal = (e: MouseEvent): void => {
+    if (this.shouldCloseAfterDelete) {
+      this.shouldCloseAfterDelete = false;
+      this.props.hideModal(e);
+      return;
+    }
+    this.setState({ isCheckingDelete: false });
+  };
+
+  private handleConfirmDelete = async (): Promise<void> => {
+    if (!this.props.record) return;
+    await this.props.dispatch(deleteRecord(this.props.record.id)).unwrap();
+    this.shouldCloseAfterDelete = true;
   };
 
   private handleClickSubmit = async (e: MouseEvent): Promise<void> => {
