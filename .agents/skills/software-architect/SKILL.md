@@ -87,10 +87,6 @@ docker compose -f compose.dev.yaml exec api-server python manage.py migrate
 - Avoid redundant filename suffixes when the directory already describes the role, such as `repositories/achievement.dart` instead of `repositories/achievement_repository.dart`.
 - For map (dart) and dict (python) data structures, prefer `xxxToYyy`/`xxx_to_yyy` naming convention for clarity.
 
-## Code Style
-
-- When writing SCSS, prefer nested structure over flat structure unless a flat structure provides significant advantages.
-
 ## Comments and Docstrings
 
 - Do not add comments or docstrings unless they are genuinely useful.
