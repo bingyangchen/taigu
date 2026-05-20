@@ -2,10 +2,10 @@ import React, { MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
 import {
-  Button,
   CashDividendRecordModal,
   CheckDeleteModal,
   DollarSign,
+  InfiniteScrollSentinel,
   ListRow,
   ScrollAwareFloatingControls,
   SearchKeywordInput,
@@ -166,15 +166,10 @@ class Records extends React.Component<Props, State> {
                   </ListRow>
                 );
               })}
-            <div className={styles.show_more_button_outer}>
-              <Button
-                className="transparent"
-                onClick={this.handleClickShowMore}
-                disabled={!this.hasMoreToShow}
-              >
-                顯示更多
-              </Button>
-            </div>
+            <InfiniteScrollSentinel
+              hasMore={this.hasMoreToShow}
+              onLoadMore={this.handleLoadMore}
+            />
           </div>
         )}
         {Util.isMobile && <SpeedDial />}
@@ -212,7 +207,7 @@ class Records extends React.Component<Props, State> {
     return this.filteredRecords.length > this.state.numberToShow;
   }
 
-  private handleClickShowMore = (): void => {
+  private handleLoadMore = (): void => {
     this.setState((state) => {
       return { numberToShow: state.numberToShow * 2 };
     });

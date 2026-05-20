@@ -96,11 +96,6 @@
       padding-bottom: calc(20px + _.$footer-height);
       box-shadow: none;
     }
-    & > .show_more_button_outer {
-      margin: 15px 0 50px 0;
-      display: flex;
-      justify-content: center;
-    }
     .plan_row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;

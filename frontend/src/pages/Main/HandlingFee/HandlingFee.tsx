@@ -8,6 +8,7 @@ import {
   CheckDeleteModal,
   DollarSign,
   HandlingFeeDiscountModal,
+  InfiniteScrollSentinel,
   ListRow,
   RoundButton,
   SegmentedControl,
@@ -185,15 +186,10 @@ class HandlingFee extends React.Component<Props, State> {
                         <span className={styles.date}>{discount.date}</span>
                       </ListRow>
                     ))}
-                  <div className={styles.show_more_button_outer}>
-                    <Button
-                      className="transparent"
-                      onClick={this.handleClickShowMore}
-                      disabled={!this.hasMoreToShow}
-                    >
-                      顯示更多
-                    </Button>
-                  </div>
+                  <InfiniteScrollSentinel
+                    hasMore={this.hasMoreToShow}
+                    onLoadMore={this.handleLoadMore}
+                  />
                 </div>
               )}
             </div>
@@ -351,7 +347,7 @@ class HandlingFee extends React.Component<Props, State> {
     this.setState({ daysToShow: value === "Infinity" ? Infinity : Number(value) });
   };
 
-  private handleClickShowMore = (): void => {
+  private handleLoadMore = (): void => {
     this.setState((state) => {
       return { numberToShow: state.numberToShow * 2 };
     });

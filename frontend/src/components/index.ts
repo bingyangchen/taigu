@@ -15,6 +15,7 @@ export { default as HandlingFeeDiscountModal } from "./HandlingFeeDiscountModal/
 export { default as HeaderForMain } from "./HeaderForMain/HeaderForMain";
 export { default as HeaderForSettings } from "./HeaderForSettings/HeaderForSettings";
 export { default as HistoricalPriceLineChart } from "./HistoricalPriceLineChart/HistoricalPriceLineChart";
+export { default as InfiniteScrollSentinel } from "./InfiniteScrollSentinel/InfiniteScrollSentinel";
 export { default as InventoryHistogram } from "./InventoryHistogram/InventoryHistogram";
 export { default as LabeledInput } from "./LabeledInput/LabeledInput";
 export { default as LabeledInputV2 } from "./LabeledInputV2/LabeledInputV2";
