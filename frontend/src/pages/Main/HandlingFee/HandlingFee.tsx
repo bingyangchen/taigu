@@ -6,8 +6,10 @@ import { connect } from "react-redux";
 import {
   Button,
   CheckDeleteModal,
+  DeletePreview,
   DollarSign,
   HandlingFeeDiscountModal,
+  InfiniteScrollSentinel,
   ListRow,
   RoundButton,
   SegmentedControl,
@@ -185,15 +187,10 @@ class HandlingFee extends React.Component<Props, State> {
                         <span className={styles.date}>{discount.date}</span>
                       </ListRow>
                     ))}
-                  <div className={styles.show_more_button_outer}>
-                    <Button
-                      className="transparent"
-                      onClick={this.handleClickShowMore}
-                      disabled={!this.hasMoreToShow}
-                    >
-                      顯示更多
-                    </Button>
-                  </div>
+                  <InfiniteScrollSentinel
+                    hasMore={this.hasMoreToShow}
+                    onLoadMore={this.handleLoadMore}
+                  />
                 </div>
               )}
             </div>
@@ -351,7 +348,7 @@ class HandlingFee extends React.Component<Props, State> {
     this.setState({ daysToShow: value === "Infinity" ? Infinity : Number(value) });
   };
 
-  private handleClickShowMore = (): void => {
+  private handleLoadMore = (): void => {
     this.setState((state) => {
       return { numberToShow: state.numberToShow * 2 };
     });
@@ -378,17 +375,27 @@ class HandlingFee extends React.Component<Props, State> {
       return (
         <CheckDeleteModal
           hideModal={hideModal}
+          title="刪除手續費折讓？"
+          description="刪除後，這筆折讓不會再計入手續費分析。"
+          submitLabel="刪除折讓紀錄"
           isWaiting={this.props.isWaitingDiscount}
           onDelete={this.getDeleteHandler(discount)}
         >
-          <div className={styles.modal_inner}>
-            <span className={styles.company}>{discount.memo || "手續費折讓"}</span>
-            <span className={styles.price}>
-              <DollarSign />
-              {discount.amount.toLocaleString()}
-            </span>
-            <span className={styles.date}>{discount.date}</span>
-          </div>
+          <DeletePreview
+            title={discount.memo || "手續費折讓"}
+            meta={discount.date}
+            details={[
+              {
+                label: "折讓金額",
+                value: (
+                  <>
+                    <DollarSign />
+                    {discount.amount.toLocaleString()}
+                  </>
+                ),
+              },
+            ]}
+          />
         </CheckDeleteModal>
       );
     };

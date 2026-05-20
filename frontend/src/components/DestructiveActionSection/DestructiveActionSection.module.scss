@@ -1,0 +1,37 @@
+@use "../../global_variables" as _;
+
+.main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 8px;
+  padding-top: 22px;
+  border-top: 1px solid _.$noisy-white;
+
+  @media (max-width: _.$width-780) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.title {
+  color: _.$deep-gray;
+  font-size: 0.85 * _.$base-font-size;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.description {
+  color: _.$gray;
+  font-size: 0.78 * _.$base-font-size;
+  line-height: 1.55;
+  letter-spacing: 0;
+}

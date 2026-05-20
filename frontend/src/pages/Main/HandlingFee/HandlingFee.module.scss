@@ -214,11 +214,6 @@
           box-shadow: none;
           max-height: none;
         }
-        & > .show_more_button_outer {
-          margin: 15px 0;
-          display: flex;
-          justify-content: center;
-        }
         .company {
           display: block;
           width: 30%;
@@ -240,29 +235,5 @@
         }
       }
     }
-  }
-}
-
-.modal_inner {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.85 * _.$base-font-size;
-  & > .company {
-    width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  & > .price {
-    width: 60px;
-    white-space: nowrap;
-  }
-  & > .date {
-    font-size: 0.75 * _.$base-font-size;
-    color: _.$gray;
-    white-space: nowrap;
   }
 }

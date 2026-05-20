@@ -19,6 +19,9 @@ interface Props extends IRouter {
   noFooter?: boolean;
   layout?: "compact" | "auto" | "fullScreen";
   transparent?: boolean;
+  manageHistory?: boolean;
+  manageBodyScroll?: boolean;
+  visualLayer?: "base" | "nested";
 }
 
 interface State {}
@@ -31,11 +34,14 @@ class Modal extends React.Component<Props, State> {
   }
   public componentDidMount(): void {
     setTimeout(() => {
-      this.props.router.navigate("##");
-      document.body.style.overscrollBehaviorY = "contain";
+      if (this.shouldManageHistory) this.props.router.navigate("##");
+      if (this.shouldManageBodyScroll) {
+        document.body.style.overscrollBehaviorY = "contain";
+      }
     });
   }
   public componentDidUpdate(prevProps: Readonly<Props>): void {
+    if (!this.shouldManageHistory) return;
     if (
       prevProps.router.location.hash === "##" &&
       this.props.router.location.hash === ""
@@ -44,8 +50,10 @@ class Modal extends React.Component<Props, State> {
     }
   }
   public componentWillUnmount(): void {
-    document.body.style.overscrollBehaviorY = "initial";
-    if (this.props.router.location.hash === "##") {
+    if (this.shouldManageBodyScroll) {
+      document.body.style.overscrollBehaviorY = "initial";
+    }
+    if (this.shouldManageHistory && this.props.router.location.hash === "##") {
       this.props.router.navigate(-1);
     }
   }
@@ -53,7 +61,11 @@ class Modal extends React.Component<Props, State> {
     return (
       <Dialog.Root open onOpenChange={this.handleOpenChange}>
         <Dialog.Portal container={document.getElementById("modal-root") ?? undefined}>
-          <Dialog.Overlay className={styles.background} />
+          <Dialog.Overlay
+            className={`${styles.background} ${
+              this.props.visualLayer === "nested" ? styles.nested_background : ""
+            }`}
+          />
           <Dialog.Content
             className={`${styles.main} ${
               this.props.layout === "auto"
@@ -61,7 +73,9 @@ class Modal extends React.Component<Props, State> {
                 : this.props.layout === "fullScreen"
                   ? styles.full_screen
                   : styles.compact
-            } ${this.props.transparent ? styles.transparent : ""}`}
+            } ${this.props.transparent ? styles.transparent : ""} ${
+              this.props.visualLayer === "nested" ? styles.nested : ""
+            }`}
             onEscapeKeyDown={this.handleEscapeKeyDown}
             onInteractOutside={this.handleInteractOutside}
           >
@@ -130,6 +144,12 @@ class Modal extends React.Component<Props, State> {
       this.handleClickDiscard({} as React.MouseEvent<Element>).catch(() => {});
     }
   };
+  private get shouldManageHistory(): boolean {
+    return this.props.manageHistory !== false;
+  }
+  private get shouldManageBodyScroll(): boolean {
+    return this.props.manageBodyScroll !== false;
+  }
   private handleClickSubmit = async (e: React.MouseEvent<Element>): Promise<void> => {
     await this.props.submitButtonProps?.onClick?.(
       e as React.MouseEvent<HTMLButtonElement>,
