@@ -1,7 +1,7 @@
 import React, { MouseEventHandler } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { StockSearchModal } from "../../../components";
+import { StockSearchContent } from "../../../components";
 import Env from "../../../utils/env";
 
 export default function Search(): React.ReactElement {
@@ -17,6 +17,12 @@ export default function Search(): React.ReactElement {
   };
 
   return (
-    <StockSearchModal hideModal={closeSearch} fullScreenPage manageHistory={false} />
+    <StockSearchContent
+      variant="page"
+      onClose={closeSearch}
+      onSelectStock={(sid) =>
+        navigate(`${Env.frontendRootPath}market/${sid}`, { replace: true })
+      }
+    />
   );
 }
