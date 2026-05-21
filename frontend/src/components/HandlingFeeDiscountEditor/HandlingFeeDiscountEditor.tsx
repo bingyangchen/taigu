@@ -88,7 +88,7 @@ class HandlingFeeDiscountEditor extends React.Component<Props, State> {
               : ""
           }
           onChange={this.handleAmountChange}
-          autoFocus={Boolean(this.state.date)}
+          autoFocus={!Util.isMobile && !this.props.record && Boolean(this.state.date)}
         />
         <LabeledInput
           title="備註"

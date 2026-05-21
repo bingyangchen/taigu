@@ -83,7 +83,7 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
           title="證券代號"
           value={this.state.sid}
           onChange={(sid: string) => this.setState({ sid: sid })}
-          autoFocus={!this.state.sid}
+          autoFocus={!Util.isMobile && !this.props.record && !this.state.sid}
         />
         <LabeledInput
           title="現金股利"
@@ -95,7 +95,7 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
               : ""
           }
           onChange={this.handleCashDividendChange}
-          autoFocus={Boolean(this.state.sid)}
+          autoFocus={!Util.isMobile && !this.props.record && Boolean(this.state.sid)}
         />
         {this.props.record && (
           <DestructiveActionSection

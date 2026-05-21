@@ -103,7 +103,7 @@ class TradeRecordEditor extends React.Component<Props, State> {
           title="證券代號"
           value={this.state.sid}
           onChange={(sid: string) => this.setState({ sid: sid })}
-          autoFocus={!this.state.sid}
+          autoFocus={!Util.isMobile && !this.props.record && !this.state.sid}
         />
         <div className={styles.row}>
           <LabeledInput
@@ -116,7 +116,7 @@ class TradeRecordEditor extends React.Component<Props, State> {
                 : ""
             }
             onChange={this.handleDealPriceChange}
-            autoFocus={Boolean(this.state.sid)}
+            autoFocus={!Util.isMobile && !this.props.record && Boolean(this.state.sid)}
           />
           <div className={styles.buy_or_sell}>
             <span>買</span>
