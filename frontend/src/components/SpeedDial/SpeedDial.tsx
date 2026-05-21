@@ -74,14 +74,7 @@ class SpeedDial extends React.Component<Props, State> {
               <IconThumbtack sideLength="20" />
               <div className={styles.hint_text}>新增買賣計畫</div>
             </div>
-            <div
-              className={styles.button}
-              onClick={(e: MouseEvent) => {
-                e.stopPropagation();
-                this.hide();
-                this.setState({ activeModalName: "search" });
-              }}
-            >
+            <div className={styles.button} onClick={this.handleSearch}>
               <IconMagnifier sideLength="20" />
               <div className={styles.hint_text}>搜尋</div>
             </div>
@@ -114,9 +107,7 @@ class SpeedDial extends React.Component<Props, State> {
         />
       );
     } else if (this.state.activeModalName === "search") {
-      return (
-        <StockSearchModal hideModal={Util.getHideModalCallback(this)} fullScreenPage />
-      );
+      return <StockSearchModal hideModal={Util.getHideModalCallback(this)} />;
     }
     return null;
   }
@@ -164,6 +155,19 @@ class SpeedDial extends React.Component<Props, State> {
       `${Env.frontendRootPath}plans/new${this.defaultSidSearch}`,
       "createTradePlan",
     );
+  };
+  private handleSearch = (e: MouseEvent): void => {
+    e.stopPropagation();
+    if (Util.isMobile) {
+      document.body.style.overscrollBehaviorY = "initial";
+      this.setState({ isActive: false, activeModalName: null });
+      this.props.router.navigate(`${Env.frontendRootPath}search`, {
+        replace: this.props.router.location.hash === "#@",
+      });
+      return;
+    }
+    this.hide();
+    this.setState({ activeModalName: "search" });
   };
   private openEditorRouteOrModal = (
     mobilePath: string,

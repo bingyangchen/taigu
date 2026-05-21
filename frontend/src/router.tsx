@@ -29,6 +29,7 @@ import Main from "./pages/Main/Main";
 import Market from "./pages/Main/Market/Market";
 import Plans from "./pages/Main/Plans/Plans";
 import Records from "./pages/Main/Records/Records";
+import Search from "./pages/Main/Search/Search";
 import NotFound from "./pages/NotFound/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy";
 import AccountBinding from "./pages/Settings/AccountBinding/AccountBinding";
@@ -70,6 +71,7 @@ const myRouter = createBrowserRouter(
           element={<CashDividendRecordEditRoute />}
         ></Route>
         <Route path="market" element={<Market />}></Route>
+        <Route path="search" element={<Search />}></Route>
         <Route path="market/:sid" element={<Details />} />
         <Route path="market/holding/:sid" element={<Details />} />
         <Route path="market/favorites/:sid" element={<Details />} />

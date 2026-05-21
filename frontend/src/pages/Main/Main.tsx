@@ -240,6 +240,7 @@ class Main extends React.Component<Props, State> {
       /^\/records\/(trade|cash-dividend)\/(new|\d+\/edit)$/u,
       /^\/plans\/(new|[^/]+\/edit)$/u,
       /^\/handling-fee\/discounts\/(new|\d+\/edit)$/u,
+      /^\/search$/u,
     ].some((pattern) => pattern.test(this.props.router.location.pathname));
   }
   private handleNonCacheResponse = async (

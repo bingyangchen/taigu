@@ -45,6 +45,7 @@ function mapStateToProps(rootState: RootState) {
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
   hideModal: MouseEventHandler;
   fullScreenPage?: boolean;
+  manageHistory?: boolean;
   dispatch: AppDispatch;
 }
 
@@ -65,7 +66,7 @@ class StockSearchModal extends React.Component<Props, State> {
   }
 
   public componentDidMount(): void {
-    if (this.props.fullScreenPage) {
+    if (this.shouldManagePageHistory) {
       setTimeout(() => {
         this.props.router.navigate("##");
         document.body.style.overscrollBehaviorY = "contain";
@@ -76,7 +77,7 @@ class StockSearchModal extends React.Component<Props, State> {
 
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (
-      this.props.fullScreenPage &&
+      this.shouldManagePageHistory &&
       prevProps.router.location.hash === "##" &&
       this.props.router.location.hash === ""
     ) {
@@ -85,7 +86,7 @@ class StockSearchModal extends React.Component<Props, State> {
   }
 
   public componentWillUnmount(): void {
-    if (!this.props.fullScreenPage) return;
+    if (!this.shouldManagePageHistory) return;
     document.body.style.overscrollBehaviorY = "initial";
     if (this.props.router.location.hash === "##") {
       this.props.router.navigate(-1);
@@ -131,6 +132,14 @@ class StockSearchModal extends React.Component<Props, State> {
         </div>
       </Modal>
     );
+  }
+
+  private get shouldManagePageHistory(): boolean {
+    return Boolean(this.props.fullScreenPage && this.props.manageHistory !== false);
+  }
+
+  private get isRoutePage(): boolean {
+    return Boolean(this.props.fullScreenPage && this.props.manageHistory === false);
   }
 
   private renderSearchInput(): React.ReactNode {
@@ -272,6 +281,12 @@ class StockSearchModal extends React.Component<Props, State> {
 
   private handleClickResult = async (e: MouseEvent, sid: string): Promise<void> => {
     this.stockSearchCache.add(sid);
+    if (this.isRoutePage) {
+      this.props.router.navigate(`${Env.frontendRootPath}market/${sid}`, {
+        replace: true,
+      });
+      return;
+    }
     this.props.hideModal(e);
     setTimeout(() => {
       this.props.router.navigate(`${Env.frontendRootPath}market/${sid}`);
