@@ -1,1 +1,32 @@
 @use "../../global_variables" as _;
+
+.sheet_content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sheet_header {
+  padding: 0 25px;
+
+  & > h2 {
+    margin: 0;
+    color: _.$gray;
+    font-size: _.$base-font-size;
+    font-weight: normal;
+  }
+}
+
+.sheet_body {
+  padding: 0 25px;
+}
+
+.sheet_footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  padding: 3px 25px 15px;
+  background-color: _.$white;
+}

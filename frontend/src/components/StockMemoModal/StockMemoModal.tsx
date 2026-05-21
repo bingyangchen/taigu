@@ -1,10 +1,11 @@
 import React, { ChangeEvent, MouseEvent, MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
-import { AutoResizeTextarea, Modal } from "../../components";
+import { AutoResizeTextarea, BottomSheet, Button, Modal } from "../../components";
 import { updateOrCreateMemo } from "../../redux/slices/MemoSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import Util from "../../utils/util";
+import styles from "./StockMemoModal.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.memo;
@@ -31,6 +32,32 @@ class StockMemoModal extends React.Component<Props, State> {
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
+    if (Util.isMobile) {
+      return (
+        <BottomSheet onClickBackground={this.props.hideModal} canMaximize>
+          <div className={styles.sheet_content}>
+            <div className={styles.sheet_header}>
+              <h2>備註</h2>
+            </div>
+            <div className={styles.sheet_body}>{this.memoTextarea}</div>
+            <div className={styles.sheet_footer}>
+              <Button className="transparent l" onClick={this.props.hideModal}>
+                捨棄
+              </Button>
+              <Button
+                className="primary_fill l"
+                disabled={!this.canSubmit}
+                waiting={this.props.isWaiting}
+                onClick={this.handleClickSubmit}
+              >
+                送出
+              </Button>
+            </div>
+          </div>
+        </BottomSheet>
+      );
+    }
+
     return (
       <Modal
         title="備註"
@@ -46,16 +73,21 @@ class StockMemoModal extends React.Component<Props, State> {
           waiting: this.props.isWaiting,
           onClick: this.handleClickSubmit,
         }}
-        layout={Util.isMobile ? "fullScreen" : "compact"}
+        layout="compact"
         noX
         silentBackground
       >
-        <AutoResizeTextarea
-          value={this.state.value}
-          onChange={this.handleValueChange}
-          autoFocus
-        />
+        {this.memoTextarea}
       </Modal>
+    );
+  }
+  private get memoTextarea(): React.ReactNode {
+    return (
+      <AutoResizeTextarea
+        value={this.state.value}
+        onChange={this.handleValueChange}
+        autoFocus
+      />
     );
   }
   private get canSubmit(): boolean {
