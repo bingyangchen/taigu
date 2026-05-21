@@ -165,8 +165,14 @@ class Records extends React.Component<Props, State> {
       !this.state.searchKeyword ||
       record.sid.includes(this.state.searchKeyword) ||
       record.company_name.includes(this.state.searchKeyword) ||
-      record.deal_time.includes(this.state.searchKeyword)
+      record.deal_time.includes(this.state.searchKeyword) ||
+      this.getRecordTypeLabel(record).includes(this.state.searchKeyword)
     );
+  }
+
+  private getRecordTypeLabel(record: TradeRecord | CashDividendRecord): string {
+    if (!Util.isTradeRecord(record)) return "股利";
+    return record.deal_quantity > 0 ? "買入" : "賣出";
   }
 
   private get hasMoreToShow(): boolean {
