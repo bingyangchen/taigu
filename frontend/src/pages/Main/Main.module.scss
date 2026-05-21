@@ -21,6 +21,12 @@
       min-height: calc(100% - _.$header-height - _.$footer-height);
     }
   }
+
+  &.mobile_editor_shell > .body {
+    @media (max-width: _.$width-780) {
+      min-height: 100%;
+    }
+  }
 }
 
 .user_avatar {

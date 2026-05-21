@@ -8,7 +8,7 @@ import {
   CheckDeleteModal,
   DeletePreview,
   DollarSign,
-  HandlingFeeDiscountModal,
+  HandlingFeeDiscountEditor,
   InfiniteScrollSentinel,
   ListRow,
   RoundButton,
@@ -20,6 +20,7 @@ import { deleteDiscount } from "../../../redux/slices/HandlingFeeDiscountSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { HandlingFeeDiscount } from "../../../types";
+import Env from "../../../utils/env";
 import Util from "../../../utils/util";
 import styles from "./HandlingFee.module.scss";
 
@@ -157,10 +158,7 @@ class HandlingFee extends React.Component<Props, State> {
             <div className={styles.right_block}>
               <div className={styles.section_header}>
                 <div className={styles.title}>手續費折讓</div>
-                <Button
-                  className="light"
-                  onClick={() => this.setState({ activeModalName: "discountModal" })}
-                >
+                <Button className="light" onClick={this.handleCreateDiscount}>
                   新增折讓紀錄
                 </Button>
               </div>
@@ -176,6 +174,7 @@ class HandlingFee extends React.Component<Props, State> {
                         target={discount}
                         editModal={this.renderEditModal(discount)}
                         deleteModal={this.renderDeleteModal(discount)}
+                        editPath={`${Env.frontendRootPath}handling-fee/discounts/${discount.id}/edit`}
                       >
                         <span className={styles.company}>
                           {discount.memo || "手續費折讓"}
@@ -201,10 +200,10 @@ class HandlingFee extends React.Component<Props, State> {
   }
 
   private get activeModal(): React.ReactElement<
-    typeof HandlingFeeDiscountModal
+    typeof HandlingFeeDiscountEditor
   > | null {
     if (this.state.activeModalName === "discountModal") {
-      return <HandlingFeeDiscountModal hideModal={Util.getHideModalCallback(this)} />;
+      return <HandlingFeeDiscountEditor hideModal={Util.getHideModalCallback(this)} />;
     }
     return null;
   }
@@ -358,11 +357,19 @@ class HandlingFee extends React.Component<Props, State> {
     return this.props.handlingFeeDiscountRecords.length > this.state.numberToShow;
   }
 
+  private handleCreateDiscount = (): void => {
+    if (Util.isMobile) {
+      this.props.router.navigate(`${Env.frontendRootPath}handling-fee/discounts/new`);
+      return;
+    }
+    this.setState({ activeModalName: "discountModal" });
+  };
+
   private renderEditModal = (
     discount: HandlingFeeDiscount,
   ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const EditModalComponent = (hideModal: MouseEventHandler) => {
-      return <HandlingFeeDiscountModal record={discount} hideModal={hideModal} />;
+      return <HandlingFeeDiscountEditor record={discount} hideModal={hideModal} />;
     };
     EditModalComponent.displayName = "EditModalComponent";
     return EditModalComponent;

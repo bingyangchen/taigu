@@ -10,7 +10,7 @@ import {
   SimpleCashInvestedLineChart,
   SpeedDial,
   SummaryCard,
-  TradeRecordModal,
+  TradeRecordEditor,
 } from "../../../components";
 import {
   getSidMarketValueMap,
@@ -272,7 +272,7 @@ class Dashboard extends React.Component<Props, State> {
 
   private get activeModal(): React.ReactElement | null {
     if (this.state.activeModalName === "createTradeRecord") {
-      return <TradeRecordModal hideModal={Util.getHideModalCallback(this)} />;
+      return <TradeRecordEditor hideModal={Util.getHideModalCallback(this)} />;
     }
     return null;
   }
@@ -366,6 +366,10 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   private handleCreateTradeRecordClick = (): void => {
+    if (Util.isMobile) {
+      this.props.router.navigate(`${Env.frontendRootPath}records/trade/new`);
+      return;
+    }
     this.setState({ activeModalName: "createTradeRecord" });
   };
 

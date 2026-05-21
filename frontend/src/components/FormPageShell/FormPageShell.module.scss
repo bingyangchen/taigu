@@ -1,0 +1,63 @@
+@use "../../global_variables" as _;
+
+.main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  background-color: _.$white;
+  user-select: none;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  min-height: 60px;
+  padding: 0 13px;
+  background-color: _.$white;
+
+  & > h1 {
+    margin: 0;
+    color: _.$gray;
+    font-size: _.$base-font-size;
+    font-weight: normal;
+    text-align: center;
+  }
+}
+
+.header_action {
+  display: flex;
+  align-items: center;
+  min-width: 48px;
+
+  &:last-child {
+    justify-content: flex-end;
+  }
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 25px 5px;
+  overflow: auto;
+}
+
+.submit_button {
+  min-width: 48px;
+  min-height: 44px;
+  padding: 8px 6px;
+  color: _.$blue !important;
+  font-weight: 600;
+
+  &:disabled,
+  &[data-disabled] {
+    color: _.$light-gray !important;
+    background-color: transparent !important;
+  }
+}

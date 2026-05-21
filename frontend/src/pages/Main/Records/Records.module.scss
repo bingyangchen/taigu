@@ -131,7 +131,7 @@
     @media (max-width: _.$width-780) {
       border-radius: 0;
       background-color: transparent;
-      padding-bottom: calc(20px + _.$footer-height);
+      padding-bottom: calc(80px + _.$footer-height);
       box-shadow: none;
     }
     .record_row {

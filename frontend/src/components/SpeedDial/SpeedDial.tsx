@@ -1,11 +1,11 @@
 import React, { MouseEvent } from "react";
 
 import {
-  CashDividendRecordModal,
+  CashDividendRecordEditor,
   Modal,
   StockSearchModal,
-  TradePlanModal,
-  TradeRecordModal,
+  TradePlanEditor,
+  TradeRecordEditor,
 } from "../../components";
 import {
   IconCoin,
@@ -15,6 +15,7 @@ import {
   IconThumbtack,
 } from "../../icons";
 import { IRouter, withRouter } from "../../router";
+import Env from "../../utils/env";
 import Util from "../../utils/util";
 import styles from "./SpeedDial.module.scss";
 
@@ -58,47 +59,22 @@ class SpeedDial extends React.Component<Props, State> {
         >
           <IconPlus sideLength="26" />
           <div className={styles.button_container}>
-            <div
-              className={styles.button}
-              onClick={(e: MouseEvent) => {
-                e.stopPropagation();
-                this.hide();
-                this.setState({ activeModalName: "createTradeRecord" });
-              }}
-            >
+            <div className={styles.button} onClick={this.handleCreateTradeRecord}>
               <IconPencilSquare sideLength="20" />
               <div className={styles.hint_text}>新增交易紀錄</div>
             </div>
             <div
               className={styles.button}
-              onClick={(e: MouseEvent) => {
-                e.stopPropagation();
-                this.hide();
-                this.setState({ activeModalName: "createCashDividendRecord" });
-              }}
+              onClick={this.handleCreateCashDividendRecord}
             >
               <IconCoin sideLength="20" />
               <div className={styles.hint_text}>新增現金股利</div>
             </div>
-            <div
-              className={styles.button}
-              onClick={(e: MouseEvent) => {
-                e.stopPropagation();
-                this.hide();
-                this.setState({ activeModalName: "createTradePlan" });
-              }}
-            >
+            <div className={styles.button} onClick={this.handleCreateTradePlan}>
               <IconThumbtack sideLength="20" />
               <div className={styles.hint_text}>新增買賣計畫</div>
             </div>
-            <div
-              className={styles.button}
-              onClick={(e: MouseEvent) => {
-                e.stopPropagation();
-                this.hide();
-                this.setState({ activeModalName: "search" });
-              }}
-            >
+            <div className={styles.button} onClick={this.handleSearch}>
               <IconMagnifier sideLength="20" />
               <div className={styles.hint_text}>搜尋</div>
             </div>
@@ -111,29 +87,27 @@ class SpeedDial extends React.Component<Props, State> {
   private get activeModal(): React.ReactElement<typeof Modal> | null {
     if (this.state.activeModalName === "createTradeRecord") {
       return (
-        <TradeRecordModal
+        <TradeRecordEditor
           defaultSid={this.props.defaultSid}
           hideModal={Util.getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "createCashDividendRecord") {
       return (
-        <CashDividendRecordModal
+        <CashDividendRecordEditor
           defaultSid={this.props.defaultSid}
           hideModal={Util.getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "createTradePlan") {
       return (
-        <TradePlanModal
+        <TradePlanEditor
           defaultSid={this.props.defaultSid}
           hideModal={Util.getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "search") {
-      return (
-        <StockSearchModal hideModal={Util.getHideModalCallback(this)} fullScreenPage />
-      );
+      return <StockSearchModal hideModal={Util.getHideModalCallback(this)} />;
     }
     return null;
   }
@@ -161,6 +135,60 @@ class SpeedDial extends React.Component<Props, State> {
     document.body.style.overscrollBehaviorY = "initial";
     this.setState({ isActive: false });
   };
+  private handleCreateTradeRecord = (e: MouseEvent): void => {
+    e.stopPropagation();
+    this.openEditorRouteOrModal(
+      `${Env.frontendRootPath}records/trade/new${this.defaultSidSearch}`,
+      "createTradeRecord",
+    );
+  };
+  private handleCreateCashDividendRecord = (e: MouseEvent): void => {
+    e.stopPropagation();
+    this.openEditorRouteOrModal(
+      `${Env.frontendRootPath}records/cash-dividend/new${this.defaultSidSearch}`,
+      "createCashDividendRecord",
+    );
+  };
+  private handleCreateTradePlan = (e: MouseEvent): void => {
+    e.stopPropagation();
+    this.openEditorRouteOrModal(
+      `${Env.frontendRootPath}plans/new${this.defaultSidSearch}`,
+      "createTradePlan",
+    );
+  };
+  private handleSearch = (e: MouseEvent): void => {
+    e.stopPropagation();
+    if (Util.isMobile) {
+      document.body.style.overscrollBehaviorY = "initial";
+      this.setState({ isActive: false, activeModalName: null });
+      this.props.router.navigate(`${Env.frontendRootPath}search`, {
+        replace: this.props.router.location.hash === "#@",
+      });
+      return;
+    }
+    this.hide();
+    this.setState({ activeModalName: "search" });
+  };
+  private openEditorRouteOrModal = (
+    mobilePath: string,
+    modalName: Exclude<State["activeModalName"], "search" | null>,
+  ): void => {
+    if (Util.isMobile) {
+      document.body.style.overscrollBehaviorY = "initial";
+      this.setState({ isActive: false, activeModalName: null });
+      this.props.router.navigate(mobilePath, {
+        replace: this.props.router.location.hash === "#@",
+      });
+      return;
+    }
+    this.hide();
+    this.setState({ activeModalName: modalName });
+  };
+  private get defaultSidSearch(): string {
+    return this.props.defaultSid
+      ? `?sid=${encodeURIComponent(this.props.defaultSid)}`
+      : "";
+  }
 }
 
 export default withRouter(SpeedDial);

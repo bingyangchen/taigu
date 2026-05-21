@@ -11,7 +11,7 @@ import {
   PercentSign,
   RoundButton,
   SpeedDial,
-  StockMemoModal,
+  StockMemoEditor,
 } from "../../../components";
 import {
   IconBriefcase,
@@ -495,7 +495,7 @@ class Details extends React.Component<Props, State> {
   private get activeModal(): React.ReactElement<typeof Modal> | null {
     if (this.state.activeModalName === "updateOrCreateNote") {
       return (
-        <StockMemoModal
+        <StockMemoEditor
           sid={this.sid}
           defaultValue={this.props.sidCompanyInfoMap[this.sid]?.note || ""}
           hideModal={Util.getHideModalCallback(this)}
