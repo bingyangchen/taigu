@@ -22,6 +22,7 @@ import {
 } from "../../icons";
 import {
   fetchAccountInfo,
+  openSession,
   refreshAccountInfoWithNonCacheResponse,
 } from "../../redux/slices/AccountSlice";
 import {
@@ -95,6 +96,7 @@ class Main extends React.Component<Props, State> {
 
     try {
       const account = await this.props.dispatch(fetchAccountInfo()).unwrap();
+      this.props.dispatch(openSession());
       await Promise.all([
         this.props.dispatch(fetchAllTradeRecords(account.id)).unwrap(),
         this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),

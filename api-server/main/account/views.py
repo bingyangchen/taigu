@@ -4,7 +4,9 @@ from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
+from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from google.auth.transport.requests import Request as GoogleRequest
@@ -46,6 +48,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 JWT_COOKIE_MAX_AGE = 5 * 24 * 60 * 60  # 5 days
+OPEN_SESSION_LAST_LOGIN_UPDATE_INTERVAL = timedelta(minutes=5)
 
 
 class TokenVerificationResult(BaseModel):
@@ -161,6 +164,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
 
 
 @rate_limit(rate=5)
+@ensure_csrf_cookie
 @require_GET
 @require_login
 def me(request: HttpRequest) -> JsonResponse:
@@ -172,6 +176,17 @@ def me(request: HttpRequest) -> JsonResponse:
             "avatar_url": request.user.avatar_url or None,  # type: ignore
         }
     )
+
+
+@require_POST
+@require_login
+def open_session(request: HttpRequest) -> JsonResponse:
+    now = timezone.now()
+    update_before = now - OPEN_SESSION_LAST_LOGIN_UPDATE_INTERVAL
+    User.objects.filter(pk=request.user.pk).filter(
+        Q(last_login__isnull=True) | Q(last_login__lt=update_before)
+    ).update(last_login=now)
+    return JsonResponse({})
 
 
 @require_GET
