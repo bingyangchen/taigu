@@ -10,7 +10,7 @@
   @media (max-width: _.$width-780) {
     height: fit-content;
     padding: 0;
-    background-color: _.$white;
+    background-color: transparent;
   }
   & > .floating_pill {
     position: sticky;
