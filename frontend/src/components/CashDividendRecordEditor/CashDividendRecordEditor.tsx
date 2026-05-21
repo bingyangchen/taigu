@@ -42,18 +42,21 @@ interface State {
   isCheckingDelete: boolean;
 }
 
+type CashDividendRecordFormState = Omit<State, "isCheckingDelete">;
+
 class CashDividendRecordEditor extends React.Component<Props, State> {
   public state: State;
+  private initialFormState: CashDividendRecordFormState;
   private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
     super(props);
-    this.state = {
+    this.initialFormState = {
       recordId: props.record?.id.toString() ?? null,
       dealTime: props.record?.deal_time ?? new Date().toLocaleDateString("af"),
       sid: props.defaultSid ?? props.record?.sid ?? "",
       cashDividend: props.record ? props.record.cash_dividend : NaN,
-      isCheckingDelete: false,
     };
+    this.state = { ...this.initialFormState, isCheckingDelete: false };
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
@@ -112,6 +115,7 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
           <FormPageShell
             title={title}
             discardButtonProps={discardButtonProps}
+            isDirty={this.isDirty}
             submitButtonProps={submitButtonProps}
           >
             {body}
@@ -170,6 +174,15 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
         this.state.sid &&
         !Object.is(this.state.cashDividend, NaN) &&
         !this.props.isWaiting,
+    );
+  }
+
+  private get isDirty(): boolean {
+    return (
+      this.state.recordId !== this.initialFormState.recordId ||
+      this.state.dealTime !== this.initialFormState.dealTime ||
+      this.state.sid !== this.initialFormState.sid ||
+      !Object.is(this.state.cashDividend, this.initialFormState.cashDividend)
     );
   }
 

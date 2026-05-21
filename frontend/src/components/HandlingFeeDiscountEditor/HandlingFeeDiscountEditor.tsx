@@ -41,18 +41,21 @@ interface State {
   isCheckingDelete: boolean;
 }
 
+type HandlingFeeDiscountFormState = Omit<State, "isCheckingDelete">;
+
 class HandlingFeeDiscountEditor extends React.Component<Props, State> {
   public state: State;
+  private initialFormState: HandlingFeeDiscountFormState;
   private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
     super(props);
-    this.state = {
+    this.initialFormState = {
       recordId: props.record?.id ?? null,
       date: props.record?.date ?? new Date().toLocaleDateString("af"),
       amount: props.record ? props.record.amount : NaN,
       memo: props.record?.memo ?? "",
-      isCheckingDelete: false,
     };
+    this.state = { ...this.initialFormState, isCheckingDelete: false };
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
@@ -111,6 +114,7 @@ class HandlingFeeDiscountEditor extends React.Component<Props, State> {
           <FormPageShell
             title={title}
             discardButtonProps={discardButtonProps}
+            isDirty={this.isDirty}
             submitButtonProps={submitButtonProps}
           >
             {body}
@@ -165,6 +169,14 @@ class HandlingFeeDiscountEditor extends React.Component<Props, State> {
   private get canSubmit(): boolean {
     return Boolean(
       this.state.date && !Object.is(this.state.amount, NaN) && !this.props.isWaiting,
+    );
+  }
+  private get isDirty(): boolean {
+    return (
+      this.state.recordId !== this.initialFormState.recordId ||
+      this.state.date !== this.initialFormState.date ||
+      !Object.is(this.state.amount, this.initialFormState.amount) ||
+      this.state.memo !== this.initialFormState.memo
     );
   }
   private handleAmountChange = (amount: string): void => {

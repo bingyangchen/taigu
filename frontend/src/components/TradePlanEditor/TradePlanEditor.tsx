@@ -39,19 +39,22 @@ interface State {
   isCheckingDelete: boolean;
 }
 
+type TradePlanFormState = Omit<State, "isCheckingDelete">;
+
 class TradePlanEditor extends React.Component<Props, State> {
   public state: State;
+  private initialFormState: TradePlanFormState;
   private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
     super(props);
-    this.state = {
+    this.initialFormState = {
       planId: props.plan?.id.toString() ?? null,
       sid: props.plan?.sid ?? props.defaultSid ?? "",
       targetPrice: props.plan ? props.plan.target_price : NaN,
       planType: props.plan?.plan_type ?? "buy",
       targetQuantity: props.plan ? props.plan.target_quantity : NaN,
-      isCheckingDelete: false,
     };
+    this.state = { ...this.initialFormState, isCheckingDelete: false };
   }
 
   public render(): React.ReactNode {
@@ -156,6 +159,7 @@ class TradePlanEditor extends React.Component<Props, State> {
           <FormPageShell
             title={title}
             discardButtonProps={discardButtonProps}
+            isDirty={this.isDirty}
             submitButtonProps={submitButtonProps}
           >
             {body}
@@ -222,6 +226,16 @@ class TradePlanEditor extends React.Component<Props, State> {
         !Object.is(this.state.targetPrice, NaN) &&
         !Object.is(this.state.targetQuantity, NaN) &&
         !this.props.isWaiting,
+    );
+  }
+
+  private get isDirty(): boolean {
+    return (
+      this.state.planId !== this.initialFormState.planId ||
+      this.state.sid !== this.initialFormState.sid ||
+      !Object.is(this.state.targetPrice, this.initialFormState.targetPrice) ||
+      this.state.planType !== this.initialFormState.planType ||
+      !Object.is(this.state.targetQuantity, this.initialFormState.targetQuantity)
     );
   }
 

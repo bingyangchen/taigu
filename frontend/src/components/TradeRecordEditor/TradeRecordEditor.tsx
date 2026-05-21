@@ -46,13 +46,16 @@ interface State {
   isCheckingDelete: boolean;
 }
 
+type TradeRecordFormState = Omit<State, "isCheckingDelete">;
+
 class TradeRecordEditor extends React.Component<Props, State> {
   public state: State;
+  private initialFormState: TradeRecordFormState;
   private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
     super(props);
     if (props.record) {
-      this.state = {
+      this.initialFormState = {
         recordId: props.record.id.toString(),
         dealTime: props.record.deal_time,
         sid: props.record.sid,
@@ -60,10 +63,9 @@ class TradeRecordEditor extends React.Component<Props, State> {
         isBuying: props.record.deal_quantity > 0 ? true : false,
         absDealQuantity: Math.abs(props.record.deal_quantity),
         handlingFee: props.record.handling_fee,
-        isCheckingDelete: false,
       };
     } else {
-      this.state = {
+      this.initialFormState = {
         recordId: null,
         dealTime: new Date().toLocaleDateString("af"),
         sid: props.defaultSid ?? "",
@@ -71,9 +73,9 @@ class TradeRecordEditor extends React.Component<Props, State> {
         isBuying: true,
         absDealQuantity: NaN,
         handlingFee: 0,
-        isCheckingDelete: false,
       };
     }
+    this.state = { ...this.initialFormState, isCheckingDelete: false };
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
@@ -172,6 +174,7 @@ class TradeRecordEditor extends React.Component<Props, State> {
           <FormPageShell
             title={title}
             discardButtonProps={discardButtonProps}
+            isDirty={this.isDirty}
             submitButtonProps={submitButtonProps}
           >
             {body}
@@ -252,6 +255,18 @@ class TradeRecordEditor extends React.Component<Props, State> {
         !Object.is(this.state.absDealQuantity, NaN) &&
         !Object.is(this.state.handlingFee, NaN) &&
         !this.props.isWaiting,
+    );
+  }
+
+  private get isDirty(): boolean {
+    return (
+      this.state.recordId !== this.initialFormState.recordId ||
+      this.state.dealTime !== this.initialFormState.dealTime ||
+      this.state.sid !== this.initialFormState.sid ||
+      !Object.is(this.state.dealPrice, this.initialFormState.dealPrice) ||
+      this.state.isBuying !== this.initialFormState.isBuying ||
+      !Object.is(this.state.absDealQuantity, this.initialFormState.absDealQuantity) ||
+      !Object.is(this.state.handlingFee, this.initialFormState.handlingFee)
     );
   }
 
