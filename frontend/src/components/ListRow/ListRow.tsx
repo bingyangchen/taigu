@@ -16,6 +16,7 @@ interface Props extends IRouter {
   children: ReactNode;
   editModal: ((_hideModal: MouseEventHandler) => ReactNode) | null;
   deleteModal: ((_hideModal: MouseEventHandler) => ReactNode) | null;
+  editPath?: string;
 }
 
 interface State {
@@ -97,6 +98,10 @@ class ListRow extends React.Component<Props, State> {
   }
 
   private handleClickEdit = (): void => {
+    if (Util.isMobile && this.props.editPath) {
+      this.props.router.navigate(this.props.editPath);
+      return;
+    }
     this.setState({ activeModalName: "edit" });
   };
 

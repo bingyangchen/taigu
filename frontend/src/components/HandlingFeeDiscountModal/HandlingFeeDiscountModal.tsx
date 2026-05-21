@@ -6,6 +6,7 @@ import {
   DeletePreview,
   DestructiveActionSection,
   DollarSign,
+  FormPageShell,
   LabeledInput,
   Modal,
 } from "../../components";
@@ -28,6 +29,7 @@ interface Props extends ReturnType<typeof mapStateToProps> {
   record?: HandlingFeeDiscount;
   hideModal: MouseEventHandler;
   onSave?: () => void;
+  presentation?: "modal" | "page";
   dispatch: AppDispatch;
 }
 
@@ -54,61 +56,77 @@ class HandlingFeeDiscountModal extends React.Component<Props, State> {
   }
   public componentDidMount(): void {}
   public render(): React.ReactNode {
+    const title = `${this.props.record ? "編輯" : "新增"}折讓紀錄`;
+    const discardButtonProps = {
+      children: "捨棄",
+      className: "transparent l",
+      onClick: this.props.hideModal,
+    };
+    const submitButtonProps = {
+      children: "送出",
+      className: "primary_fill l",
+      disabled: !this.canSubmit,
+      waiting: this.props.isWaiting,
+      onClick: this.handleClickSubmit,
+      canTriggerByEnter: true,
+    };
+    const body = (
+      <div className={styles.modal_inner}>
+        <LabeledInput
+          title="日期"
+          type="date"
+          value={this.state.date}
+          onChange={(date: string) => this.setState({ date: date })}
+        />
+        <LabeledInput
+          title="折讓金額"
+          type="number"
+          inputMode="numeric"
+          value={
+            this.state.amount || this.state.amount === 0
+              ? this.state.amount.toString()
+              : ""
+          }
+          onChange={this.handleAmountChange}
+          autoFocus={Boolean(this.state.date)}
+        />
+        <LabeledInput
+          title="備註"
+          type="text"
+          value={this.state.memo}
+          onChange={(memo: string) => this.setState({ memo: memo })}
+        />
+        {this.props.record && (
+          <DestructiveActionSection
+            buttonLabel="刪除折讓紀錄"
+            description="刪除後無法復原，手續費分析會同步更新。"
+            onClick={this.handleClickDelete}
+          />
+        )}
+      </div>
+    );
     return (
       <>
-        <Modal
-          title={`${this.props.record ? "編輯" : "新增"}折讓紀錄`}
-          discardButtonProps={{
-            children: "捨棄",
-            className: "transparent l",
-            onClick: this.props.hideModal,
-          }}
-          submitButtonProps={{
-            children: "送出",
-            className: "primary_fill l",
-            disabled: !this.canSubmit,
-            waiting: this.props.isWaiting,
-            onClick: this.handleClickSubmit,
-            canTriggerByEnter: true,
-          }}
-          layout={Util.isMobile ? "fullScreen" : "compact"}
-          noX
-          silentBackground
-        >
-          <div className={styles.modal_inner}>
-            <LabeledInput
-              title="日期"
-              type="date"
-              value={this.state.date}
-              onChange={(date: string) => this.setState({ date: date })}
-            />
-            <LabeledInput
-              title="折讓金額"
-              type="number"
-              inputMode="numeric"
-              value={
-                this.state.amount || this.state.amount === 0
-                  ? this.state.amount.toString()
-                  : ""
-              }
-              onChange={this.handleAmountChange}
-              autoFocus={Boolean(this.state.date)}
-            />
-            <LabeledInput
-              title="備註"
-              type="text"
-              value={this.state.memo}
-              onChange={(memo: string) => this.setState({ memo: memo })}
-            />
-            {this.props.record && (
-              <DestructiveActionSection
-                buttonLabel="刪除折讓紀錄"
-                description="刪除後無法復原，手續費分析會同步更新。"
-                onClick={this.handleClickDelete}
-              />
-            )}
-          </div>
-        </Modal>
+        {this.props.presentation === "page" ? (
+          <FormPageShell
+            title={title}
+            discardButtonProps={discardButtonProps}
+            submitButtonProps={submitButtonProps}
+          >
+            {body}
+          </FormPageShell>
+        ) : (
+          <Modal
+            title={title}
+            discardButtonProps={discardButtonProps}
+            submitButtonProps={submitButtonProps}
+            layout={Util.isMobile ? "fullScreen" : "compact"}
+            noX
+            silentBackground
+          >
+            {body}
+          </Modal>
+        )}
         {this.state.isCheckingDelete && this.renderDeleteModal()}
       </>
     );

@@ -20,6 +20,7 @@ import { deleteRecord as deleteTradeRecord } from "../../../redux/slices/TradeRe
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { CashDividendRecord, TradeRecord } from "../../../types";
+import Env from "../../../utils/env";
 import Util from "../../../utils/util";
 import styles from "./Records.module.scss";
 
@@ -119,6 +120,7 @@ class Records extends React.Component<Props, State> {
                     target={record}
                     editModal={this.renderEditModal(record)}
                     deleteModal={this.renderDeleteModal(record)}
+                    editPath={this.getEditPath(record)}
                   >
                     <div className={styles.record_row}>
                       <span className={styles.identity}>
@@ -227,6 +229,12 @@ class Records extends React.Component<Props, State> {
     EditModalComponent.displayName = "EditModalComponent";
     return EditModalComponent;
   };
+
+  private getEditPath(record: TradeRecord | CashDividendRecord): string {
+    return Util.isTradeRecord(record)
+      ? `${Env.frontendRootPath}records/trade/${record.id}/edit`
+      : `${Env.frontendRootPath}records/cash-dividend/${record.id}/edit`;
+  }
 
   private renderDeleteModal = (
     record: TradeRecord | CashDividendRecord,

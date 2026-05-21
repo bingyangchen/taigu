@@ -200,12 +200,12 @@ class Main extends React.Component<Props, State> {
       <main
         className={`${styles.main} ${
           this.shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
-        }`}
+        } ${this.isMobileEditorRoute ? styles.mobile_editor_shell : ""}`}
         ref={this.mainRef}
       >
         <ToastList />
         {this.state.isLoading && <LoadingScreen />}
-        {Util.isMobile && <HeaderForMain />}
+        {Util.isMobile && !this.isMobileEditorRoute && <HeaderForMain />}
         <div className={styles.body}>
           {!Util.isMobile && (
             <MainSideBar
@@ -216,7 +216,9 @@ class Main extends React.Component<Props, State> {
           )}
           <Outlet />
         </div>
-        {Util.isMobile && <Footer subpages={this.subpages} />}
+        {Util.isMobile && !this.isMobileEditorRoute && (
+          <Footer subpages={this.subpages} />
+        )}
       </main>
     );
   }
@@ -228,9 +230,17 @@ class Main extends React.Component<Props, State> {
   };
   private get shouldUseWhiteMobileShell(): boolean {
     return (
+      this.isMobileEditorRoute ||
       this.props.router.location.pathname === `${Env.frontendRootPath}records` ||
       this.props.router.location.pathname === `${Env.frontendRootPath}plans`
     );
+  }
+  private get isMobileEditorRoute(): boolean {
+    return [
+      /^\/records\/(trade|cash-dividend)\/(new|\d+\/edit)$/u,
+      /^\/plans\/(new|[^/]+\/edit)$/u,
+      /^\/handling-fee\/discounts\/(new|\d+\/edit)$/u,
+    ].some((pattern) => pattern.test(this.props.router.location.pathname));
   }
   private handleNonCacheResponse = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

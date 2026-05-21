@@ -366,6 +366,10 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   private handleCreateTradeRecordClick = (): void => {
+    if (Util.isMobile) {
+      this.props.router.navigate(`${Env.frontendRootPath}records/trade/new`);
+      return;
+    }
     this.setState({ activeModalName: "createTradeRecord" });
   };
 

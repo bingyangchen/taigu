@@ -12,6 +12,7 @@ export { default as DetailCard } from "./DetailCard/DetailCard";
 export { default as DollarSign } from "./DollarSign/DollarSign";
 export { default as Footer } from "./Footer/Footer";
 export { default as Form } from "./Form/Form";
+export { default as FormPageShell } from "./FormPageShell/FormPageShell";
 export { default as FullLogo } from "./FullLogo/FullLogo";
 export { default as HandlingFeeDiscountModal } from "./HandlingFeeDiscountModal/HandlingFeeDiscountModal";
 export { default as HeaderForMain } from "./HeaderForMain/HeaderForMain";

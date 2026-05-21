@@ -6,6 +6,7 @@ import {
   DeletePreview,
   DestructiveActionSection,
   DollarSign,
+  FormPageShell,
   LabeledInput,
   Modal,
 } from "../../components";
@@ -25,6 +26,7 @@ interface Props extends ReturnType<typeof mapStateToProps> {
   plan?: TradePlan;
   hideModal: MouseEventHandler;
   onSave?: () => void;
+  presentation?: "modal" | "page";
   dispatch: AppDispatch;
 }
 
@@ -53,107 +55,123 @@ class TradePlanModal extends React.Component<Props, State> {
   }
 
   public render(): React.ReactNode {
+    const title = `${this.props.plan ? "編輯" : "新增"}買賣計畫`;
+    const discardButtonProps = {
+      children: "捨棄",
+      className: "transparent l",
+      onClick: this.props.hideModal,
+    };
+    const submitButtonProps = {
+      children: "送出",
+      className: "primary_fill l",
+      disabled: !this.canSubmit,
+      waiting: this.props.isWaiting,
+      onClick: this.handleClickSubmit,
+      canTriggerByEnter: true,
+    };
+    const body = (
+      <div className={styles.modal_inner}>
+        <LabeledInput
+          title="證券代號"
+          value={this.state.sid}
+          onChange={(sid: string) => this.setState({ sid: sid })}
+          autoFocus={!this.state.sid}
+        />
+        <div className={styles.row}>
+          <LabeledInput
+            title="目標價格"
+            type="number"
+            inputMode="decimal"
+            value={
+              this.state.targetPrice || this.state.targetPrice === 0
+                ? this.state.targetPrice.toString()
+                : ""
+            }
+            onChange={this.handleTargetPriceChange}
+            autoFocus={Boolean(this.state.sid)}
+          />
+          <div className={styles.buy_or_sell}>
+            <span>買</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={this.state.planType === "buy"}
+              aria-label={this.state.planType === "buy" ? "買" : "賣"}
+              className={`${styles.switch} ${
+                this.state.planType === "buy" ? styles.buy : styles.sell
+              }`}
+              onClick={this.handleClickToggle}
+            >
+              <span className={styles.switch_thumb} />
+            </button>
+            <span>賣</span>
+          </div>
+          <LabeledInput
+            title="目標股數"
+            type="number"
+            inputMode="numeric"
+            value={
+              this.state.targetQuantity || this.state.targetQuantity === 0
+                ? this.state.targetQuantity.toString()
+                : ""
+            }
+            onChange={this.handleTargetQuantityChange}
+          />
+        </div>
+        <div className={styles.calculation_row}>
+          <div>
+            成交金額{" "}
+            {(
+              this.state.targetPrice * this.state.targetQuantity || "-"
+            ).toLocaleString()}{" "}
+            元
+          </div>
+          <div>
+            預估手續費{" "}
+            {(
+              Math.max(
+                1,
+                Math.floor(
+                  this.state.targetPrice *
+                    this.state.targetQuantity *
+                    (this.state.planType === "buy" ? 0.001425 : 0.004425),
+                ),
+              ) || "-"
+            ).toLocaleString()}{" "}
+            元
+          </div>
+        </div>
+        {this.props.plan && (
+          <DestructiveActionSection
+            buttonLabel="刪除買賣計畫"
+            description="刪除後無法復原，這個目標價提醒會從買賣計畫中移除。"
+            onClick={this.handleClickDelete}
+          />
+        )}
+      </div>
+    );
     return (
       <>
-        <Modal
-          title={`${this.props.plan ? "編輯" : "新增"}買賣計畫`}
-          discardButtonProps={{
-            children: "捨棄",
-            className: "transparent l",
-            onClick: this.props.hideModal,
-          }}
-          submitButtonProps={{
-            children: "送出",
-            className: "primary_fill l",
-            disabled: !this.canSubmit,
-            waiting: this.props.isWaiting,
-            onClick: this.handleClickSubmit,
-            canTriggerByEnter: true,
-          }}
-          layout={Util.isMobile ? "fullScreen" : "compact"}
-          noX
-          silentBackground
-        >
-          <div className={styles.modal_inner}>
-            <LabeledInput
-              title="證券代號"
-              value={this.state.sid}
-              onChange={(sid: string) => this.setState({ sid: sid })}
-              autoFocus={!this.state.sid}
-            />
-            <div className={styles.row}>
-              <LabeledInput
-                title="目標價格"
-                type="number"
-                inputMode="decimal"
-                value={
-                  this.state.targetPrice || this.state.targetPrice === 0
-                    ? this.state.targetPrice.toString()
-                    : ""
-                }
-                onChange={this.handleTargetPriceChange}
-                autoFocus={Boolean(this.state.sid)}
-              />
-              <div className={styles.buy_or_sell}>
-                <span>買</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={this.state.planType === "buy"}
-                  aria-label={this.state.planType === "buy" ? "買" : "賣"}
-                  className={`${styles.switch} ${
-                    this.state.planType === "buy" ? styles.buy : styles.sell
-                  }`}
-                  onClick={this.handleClickToggle}
-                >
-                  <span className={styles.switch_thumb} />
-                </button>
-                <span>賣</span>
-              </div>
-              <LabeledInput
-                title="目標股數"
-                type="number"
-                inputMode="numeric"
-                value={
-                  this.state.targetQuantity || this.state.targetQuantity === 0
-                    ? this.state.targetQuantity.toString()
-                    : ""
-                }
-                onChange={this.handleTargetQuantityChange}
-              />
-            </div>
-            <div className={styles.calculation_row}>
-              <div>
-                成交金額{" "}
-                {(
-                  this.state.targetPrice * this.state.targetQuantity || "-"
-                ).toLocaleString()}{" "}
-                元
-              </div>
-              <div>
-                預估手續費{" "}
-                {(
-                  Math.max(
-                    1,
-                    Math.floor(
-                      this.state.targetPrice *
-                        this.state.targetQuantity *
-                        (this.state.planType === "buy" ? 0.001425 : 0.004425),
-                    ),
-                  ) || "-"
-                ).toLocaleString()}{" "}
-                元
-              </div>
-            </div>
-            {this.props.plan && (
-              <DestructiveActionSection
-                buttonLabel="刪除買賣計畫"
-                description="刪除後無法復原，這個目標價提醒會從買賣計畫中移除。"
-                onClick={this.handleClickDelete}
-              />
-            )}
-          </div>
-        </Modal>
+        {this.props.presentation === "page" ? (
+          <FormPageShell
+            title={title}
+            discardButtonProps={discardButtonProps}
+            submitButtonProps={submitButtonProps}
+          >
+            {body}
+          </FormPageShell>
+        ) : (
+          <Modal
+            title={title}
+            discardButtonProps={discardButtonProps}
+            submitButtonProps={submitButtonProps}
+            layout={Util.isMobile ? "fullScreen" : "compact"}
+            noX
+            silentBackground
+          >
+            {body}
+          </Modal>
+        )}
         {this.state.isCheckingDelete && this.renderDeleteModal()}
       </>
     );

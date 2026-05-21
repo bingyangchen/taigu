@@ -17,6 +17,7 @@ import { deletePlan } from "../../../redux/slices/TradePlanSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { TradePlan } from "../../../types";
+import Env from "../../../utils/env";
 import Util from "../../../utils/util";
 import styles from "./Plans.module.scss";
 
@@ -83,6 +84,7 @@ class Plans extends React.Component<Props, State> {
                     target={plan}
                     editModal={this.renderEditModal(plan)}
                     deleteModal={this.renderDeleteModal(plan)}
+                    editPath={`${Env.frontendRootPath}plans/${plan.id}/edit`}
                   >
                     <div className={styles.plan_row}>
                       <span className={styles.identity}>
