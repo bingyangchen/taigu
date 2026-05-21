@@ -427,7 +427,7 @@ class TestOpenSessionView:
     def test_open_session_keeps_recent_last_login(
         self, request_obj: HttpRequest, user: User
     ) -> None:
-        recent_last_login = timezone.now() - timedelta(minutes=14)
+        recent_last_login = timezone.now() - timedelta(minutes=4)
         user.last_login = recent_last_login
         user.save()
 
