@@ -54,7 +54,7 @@ import {
 } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
-import type { Subpage } from "../../types";
+import type { StockWarehouse, Subpage } from "../../types";
 import Env from "../../utils/env";
 import Nav from "../../utils/nav";
 import Util from "../../utils/util";
@@ -94,23 +94,33 @@ class Main extends React.Component<Props, State> {
     oncontextmenu = (e) => e.preventDefault();
     this.mainRef.current?.addEventListener("scroll", this.handleScroll);
 
+    const independentPromises = Promise.allSettled([
+      this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
+      this.props.dispatch(fetchAllFavorites()).unwrap(),
+      this.props.dispatch(fetchAllTradePlans()).unwrap(),
+      this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
+      this.props.dispatch(fetchAllDiscounts()).unwrap(),
+    ]);
+
+    this.props.dispatch(openSession());
+
     try {
       const account = await this.props.dispatch(fetchAccountInfo()).unwrap();
-      this.props.dispatch(openSession());
-      await Promise.all([
-        this.props.dispatch(fetchAllTradeRecords(account.id)).unwrap(),
-        this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
-        this.props.dispatch(fetchAllFavorites()).unwrap(),
-        this.props.dispatch(fetchAllTradePlans()).unwrap(),
-        this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
-        this.props.dispatch(fetchAllDiscounts()).unwrap(),
-      ]);
-      await Promise.all([
+      const tradeRecordsResult = await this.props
+        .dispatch(fetchAllTradeRecords(account.id))
+        .unwrap();
+      await Promise.allSettled([
         this.props.dispatch(calculateTotalHandlingFee()).unwrap(),
-        this.fetchHoldingStockInfo(),
+        this.fetchHoldingStockInfo(tradeRecordsResult.stockWarehouse),
       ]);
-    } catch {
-      // Initial load failures are non-fatal; the shell still renders with partial data.
+    } catch (error) {
+      console.error(
+        "Failed to load critical user or trade records in componentDidMount:",
+        error,
+      );
+    } finally {
+      await independentPromises;
+      this.setState({ isLoading: false });
     }
 
     this.subpages = [
@@ -250,8 +260,11 @@ class Main extends React.Component<Props, State> {
       );
     }
   };
-  private fetchHoldingStockInfo = async (): Promise<void> => {
-    const hodlingSids = Object.entries(this.props.stockWarehouse)
+  private fetchHoldingStockInfo = async (
+    warehouseFromStore?: StockWarehouse,
+  ): Promise<void> => {
+    const warehouse = warehouseFromStore ?? this.props.stockWarehouse;
+    const hodlingSids = Object.entries(warehouse)
       .filter(([, warehouse]) => warehouse.length > 0)
       .map(([sid]) => sid);
     await this.props.dispatch(fetchStockInfo(hodlingSids)).unwrap();
