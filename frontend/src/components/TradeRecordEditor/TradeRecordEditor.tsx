@@ -19,7 +19,7 @@ import {
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { TradeRecord } from "../../types";
 import Util from "../../utils/util";
-import styles from "./TradeRecordModal.module.scss";
+import styles from "./TradeRecordEditor.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.tradeRecord;
@@ -46,7 +46,7 @@ interface State {
   isCheckingDelete: boolean;
 }
 
-class TradeRecordModal extends React.Component<Props, State> {
+class TradeRecordEditor extends React.Component<Props, State> {
   public state: State;
   private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
@@ -355,4 +355,4 @@ class TradeRecordModal extends React.Component<Props, State> {
   };
 }
 
-export default connect(mapStateToProps)(TradeRecordModal);
+export default connect(mapStateToProps)(TradeRecordEditor);

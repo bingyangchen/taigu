@@ -8,7 +8,7 @@ import {
   CheckDeleteModal,
   DeletePreview,
   DollarSign,
-  HandlingFeeDiscountModal,
+  HandlingFeeDiscountEditor,
   InfiniteScrollSentinel,
   ListRow,
   RoundButton,
@@ -200,10 +200,10 @@ class HandlingFee extends React.Component<Props, State> {
   }
 
   private get activeModal(): React.ReactElement<
-    typeof HandlingFeeDiscountModal
+    typeof HandlingFeeDiscountEditor
   > | null {
     if (this.state.activeModalName === "discountModal") {
-      return <HandlingFeeDiscountModal hideModal={Util.getHideModalCallback(this)} />;
+      return <HandlingFeeDiscountEditor hideModal={Util.getHideModalCallback(this)} />;
     }
     return null;
   }
@@ -369,7 +369,7 @@ class HandlingFee extends React.Component<Props, State> {
     discount: HandlingFeeDiscount,
   ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const EditModalComponent = (hideModal: MouseEventHandler) => {
-      return <HandlingFeeDiscountModal record={discount} hideModal={hideModal} />;
+      return <HandlingFeeDiscountEditor record={discount} hideModal={hideModal} />;
     };
     EditModalComponent.displayName = "EditModalComponent";
     return EditModalComponent;

@@ -18,7 +18,7 @@ import {
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { CashDividendRecord } from "../../types";
 import Util from "../../utils/util";
-import styles from "./CashDividendRecordModal.module.scss";
+import styles from "./CashDividendRecordEditor.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.cashDividend;
@@ -42,7 +42,7 @@ interface State {
   isCheckingDelete: boolean;
 }
 
-class CashDividendRecordModal extends React.Component<Props, State> {
+class CashDividendRecordEditor extends React.Component<Props, State> {
   public state: State;
   private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
@@ -237,4 +237,4 @@ class CashDividendRecordModal extends React.Component<Props, State> {
   };
 }
 
-export default connect(mapStateToProps)(CashDividendRecordModal);
+export default connect(mapStateToProps)(CashDividendRecordEditor);

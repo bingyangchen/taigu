@@ -10,7 +10,7 @@ import {
   ScrollAwareFloatingControls,
   SearchKeywordInput,
   SpeedDial,
-  TradePlanModal,
+  TradePlanEditor,
 } from "../../../components";
 import { updateHeaderTitle } from "../../../redux/slices/MainPageSlice";
 import { deletePlan } from "../../../redux/slices/TradePlanSlice";
@@ -175,7 +175,7 @@ class Plans extends React.Component<Props, State> {
     plan: TradePlan,
   ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const EditModalComponent = (hideModal: MouseEventHandler) => {
-      return <TradePlanModal plan={plan} hideModal={hideModal} />;
+      return <TradePlanEditor plan={plan} hideModal={hideModal} />;
     };
     EditModalComponent.displayName = "EditModalComponent";
     return EditModalComponent;

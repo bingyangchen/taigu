@@ -2,11 +2,11 @@ import React, { MouseEventHandler } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import {
-  CashDividendRecordModal,
+  CashDividendRecordEditor,
   FormPageShell,
-  HandlingFeeDiscountModal,
-  TradePlanModal,
-  TradeRecordModal,
+  HandlingFeeDiscountEditor,
+  TradePlanEditor,
+  TradeRecordEditor,
 } from "../../../components";
 import { useAppSelector } from "../../../redux/hooks";
 import Env from "../../../utils/env";
@@ -50,7 +50,7 @@ export function TradeRecordCreateRoute(): React.ReactElement {
   const [searchParams] = useSearchParams();
   const closeEditor = useCloseEditor(`${Env.frontendRootPath}records`);
   return (
-    <TradeRecordModal
+    <TradeRecordEditor
       defaultSid={searchParams.get("sid") ?? undefined}
       hideModal={closeEditor}
       presentation="page"
@@ -74,7 +74,7 @@ export function TradeRecordEditRoute(): React.ReactElement {
     );
   }
   return (
-    <TradeRecordModal record={record} hideModal={closeEditor} presentation="page" />
+    <TradeRecordEditor record={record} hideModal={closeEditor} presentation="page" />
   );
 }
 
@@ -82,7 +82,7 @@ export function CashDividendRecordCreateRoute(): React.ReactElement {
   const [searchParams] = useSearchParams();
   const closeEditor = useCloseEditor(`${Env.frontendRootPath}records`);
   return (
-    <CashDividendRecordModal
+    <CashDividendRecordEditor
       defaultSid={searchParams.get("sid") ?? undefined}
       hideModal={closeEditor}
       presentation="page"
@@ -108,7 +108,7 @@ export function CashDividendRecordEditRoute(): React.ReactElement {
     );
   }
   return (
-    <CashDividendRecordModal
+    <CashDividendRecordEditor
       record={record}
       hideModal={closeEditor}
       presentation="page"
@@ -120,7 +120,7 @@ export function TradePlanCreateRoute(): React.ReactElement {
   const [searchParams] = useSearchParams();
   const closeEditor = useCloseEditor(`${Env.frontendRootPath}plans`);
   return (
-    <TradePlanModal
+    <TradePlanEditor
       defaultSid={searchParams.get("sid") ?? undefined}
       hideModal={closeEditor}
       presentation="page"
@@ -143,12 +143,12 @@ export function TradePlanEditRoute(): React.ReactElement {
       />
     );
   }
-  return <TradePlanModal plan={plan} hideModal={closeEditor} presentation="page" />;
+  return <TradePlanEditor plan={plan} hideModal={closeEditor} presentation="page" />;
 }
 
 export function HandlingFeeDiscountCreateRoute(): React.ReactElement {
   const closeEditor = useCloseEditor(`${Env.frontendRootPath}handling-fee`);
-  return <HandlingFeeDiscountModal hideModal={closeEditor} presentation="page" />;
+  return <HandlingFeeDiscountEditor hideModal={closeEditor} presentation="page" />;
 }
 
 export function HandlingFeeDiscountEditRoute(): React.ReactElement {
@@ -169,7 +169,7 @@ export function HandlingFeeDiscountEditRoute(): React.ReactElement {
     );
   }
   return (
-    <HandlingFeeDiscountModal
+    <HandlingFeeDiscountEditor
       record={discount}
       hideModal={closeEditor}
       presentation="page"

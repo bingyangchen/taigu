@@ -2,7 +2,7 @@ import React, { MouseEventHandler } from "react";
 import { connect } from "react-redux";
 
 import {
-  CashDividendRecordModal,
+  CashDividendRecordEditor,
   CheckDeleteModal,
   DeletePreview,
   DollarSign,
@@ -12,7 +12,7 @@ import {
   SearchKeywordInput,
   SegmentedControl,
   SpeedDial,
-  TradeRecordModal,
+  TradeRecordEditor,
 } from "../../../components";
 import { deleteRecord as deleteCashDividendRecord } from "../../../redux/slices/CashDividendRecordSlice";
 import { updateHeaderTitle } from "../../../redux/slices/MainPageSlice";
@@ -221,9 +221,9 @@ class Records extends React.Component<Props, State> {
   ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const EditModalComponent = (hideModal: MouseEventHandler) => {
       return Util.isTradeRecord(record) ? (
-        <TradeRecordModal record={record} hideModal={hideModal} />
+        <TradeRecordEditor record={record} hideModal={hideModal} />
       ) : (
-        <CashDividendRecordModal record={record} hideModal={hideModal} />
+        <CashDividendRecordEditor record={record} hideModal={hideModal} />
       );
     };
     EditModalComponent.displayName = "EditModalComponent";

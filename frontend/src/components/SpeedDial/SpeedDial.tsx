@@ -1,11 +1,11 @@
 import React, { MouseEvent } from "react";
 
 import {
-  CashDividendRecordModal,
+  CashDividendRecordEditor,
   Modal,
   StockSearchModal,
-  TradePlanModal,
-  TradeRecordModal,
+  TradePlanEditor,
+  TradeRecordEditor,
 } from "../../components";
 import {
   IconCoin,
@@ -94,21 +94,21 @@ class SpeedDial extends React.Component<Props, State> {
   private get activeModal(): React.ReactElement<typeof Modal> | null {
     if (this.state.activeModalName === "createTradeRecord") {
       return (
-        <TradeRecordModal
+        <TradeRecordEditor
           defaultSid={this.props.defaultSid}
           hideModal={Util.getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "createCashDividendRecord") {
       return (
-        <CashDividendRecordModal
+        <CashDividendRecordEditor
           defaultSid={this.props.defaultSid}
           hideModal={Util.getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "createTradePlan") {
       return (
-        <TradePlanModal
+        <TradePlanEditor
           defaultSid={this.props.defaultSid}
           hideModal={Util.getHideModalCallback(this)}
         />

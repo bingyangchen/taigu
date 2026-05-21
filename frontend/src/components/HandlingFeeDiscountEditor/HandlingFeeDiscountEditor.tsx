@@ -18,7 +18,7 @@ import {
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { HandlingFeeDiscount } from "../../types";
 import Util from "../../utils/util";
-import styles from "./HandlingFeeDiscountModal.module.scss";
+import styles from "./HandlingFeeDiscountEditor.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.handlingFeeDiscount;
@@ -41,7 +41,7 @@ interface State {
   isCheckingDelete: boolean;
 }
 
-class HandlingFeeDiscountModal extends React.Component<Props, State> {
+class HandlingFeeDiscountEditor extends React.Component<Props, State> {
   public state: State;
   private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
@@ -223,4 +223,4 @@ class HandlingFeeDiscountModal extends React.Component<Props, State> {
   };
 }
 
-export default connect(mapStateToProps)(HandlingFeeDiscountModal);
+export default connect(mapStateToProps)(HandlingFeeDiscountEditor);

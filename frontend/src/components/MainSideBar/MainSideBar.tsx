@@ -3,12 +3,12 @@ import { connect } from "react-redux";
 import { NavLink } from "react-router-dom";
 
 import {
-  CashDividendRecordModal,
+  CashDividendRecordEditor,
   FullLogo,
   NavTab,
   StockSearchModal,
-  TradePlanModal,
-  TradeRecordModal,
+  TradePlanEditor,
+  TradeRecordEditor,
 } from "../../components";
 import { IconMagnifier, IconPlus } from "../../icons";
 import { AppDispatch, RootState } from "../../redux/store";
@@ -197,11 +197,11 @@ class MainSideBar extends React.Component<Props, State> {
   }
   private get activeModal(): React.ReactElement | null {
     if (this.state.activeModalName === "createTradeRecord") {
-      return <TradeRecordModal hideModal={Util.getHideModalCallback(this)} />;
+      return <TradeRecordEditor hideModal={Util.getHideModalCallback(this)} />;
     } else if (this.state.activeModalName === "createCashDividendRecord") {
-      return <CashDividendRecordModal hideModal={Util.getHideModalCallback(this)} />;
+      return <CashDividendRecordEditor hideModal={Util.getHideModalCallback(this)} />;
     } else if (this.state.activeModalName === "createTradePlan") {
-      return <TradePlanModal hideModal={Util.getHideModalCallback(this)} />;
+      return <TradePlanEditor hideModal={Util.getHideModalCallback(this)} />;
     } else if (this.state.activeModalName === "search") {
       return <StockSearchModal hideModal={Util.getHideModalCallback(this)} />;
     }

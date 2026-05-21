@@ -14,7 +14,7 @@ import { createPlan, deletePlan, updatePlan } from "../../redux/slices/TradePlan
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { TradePlan } from "../../types";
 import Util from "../../utils/util";
-import styles from "./TradePlanModal.module.scss";
+import styles from "./TradePlanEditor.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.tradePlan;
@@ -39,7 +39,7 @@ interface State {
   isCheckingDelete: boolean;
 }
 
-class TradePlanModal extends React.Component<Props, State> {
+class TradePlanEditor extends React.Component<Props, State> {
   public state: State;
   private shouldCloseAfterDelete: boolean = false;
   public constructor(props: Props) {
@@ -309,4 +309,4 @@ class TradePlanModal extends React.Component<Props, State> {
   };
 }
 
-export default connect(mapStateToProps)(TradePlanModal);
+export default connect(mapStateToProps)(TradePlanEditor);
