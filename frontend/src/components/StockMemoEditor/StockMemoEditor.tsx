@@ -5,7 +5,7 @@ import { AutoResizeTextarea, BottomSheet, Button, Modal } from "../../components
 import { updateOrCreateMemo } from "../../redux/slices/MemoSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import Util from "../../utils/util";
-import styles from "./StockMemoModal.module.scss";
+import styles from "./StockMemoEditor.module.scss";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.memo;
@@ -24,7 +24,7 @@ interface State {
   value: string;
 }
 
-class StockMemoModal extends React.Component<Props, State> {
+class StockMemoEditor extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
@@ -107,4 +107,4 @@ class StockMemoModal extends React.Component<Props, State> {
   };
 }
 
-export default connect(mapStateToProps)(StockMemoModal);
+export default connect(mapStateToProps)(StockMemoEditor);
