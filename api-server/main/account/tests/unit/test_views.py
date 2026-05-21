@@ -1,5 +1,6 @@
 # ruff: noqa: ANN401, S105
 import json
+from datetime import timedelta
 from json.decoder import JSONDecodeError
 from typing import Any
 from unittest.mock import Mock, patch
@@ -7,6 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest, QueryDict
+from django.utils import timezone
 
 from main.account import AUTH_COOKIE_NAME, OAuthOrganization
 from main.account.models import User
@@ -16,6 +18,7 @@ from main.account.views import (
     google_login,
     logout,
     me,
+    open_session,
     update,
 )
 
@@ -378,6 +381,61 @@ class TestMeView:
         assert response.status_code == 200
         data = json.loads(response.content)
         assert data["avatar_url"] is None
+
+
+@pytest.mark.django_db
+class TestOpenSessionView:
+    @pytest.fixture
+    def user(self) -> User:
+        return User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="test_oauth_id",
+            email="test@example.com",
+            username="Test User",
+        )
+
+    @pytest.fixture
+    def request_obj(self, user: User) -> HttpRequest:
+        request = HttpRequest()
+        request.user = user
+        request.method = "POST"
+        return request
+
+    def test_open_session_sets_last_login_when_empty(
+        self, request_obj: HttpRequest, user: User
+    ) -> None:
+        response = open_session(request_obj)
+
+        assert response.status_code == 200
+        user.refresh_from_db()
+        assert user.last_login is not None
+
+    def test_open_session_updates_old_last_login(
+        self, request_obj: HttpRequest, user: User
+    ) -> None:
+        old_last_login = timezone.now() - timedelta(minutes=16)
+        user.last_login = old_last_login
+        user.save()
+
+        response = open_session(request_obj)
+
+        assert response.status_code == 200
+        user.refresh_from_db()
+        assert user.last_login is not None
+        assert user.last_login > old_last_login
+
+    def test_open_session_keeps_recent_last_login(
+        self, request_obj: HttpRequest, user: User
+    ) -> None:
+        recent_last_login = timezone.now() - timedelta(minutes=4)
+        user.last_login = recent_last_login
+        user.save()
+
+        response = open_session(request_obj)
+
+        assert response.status_code == 200
+        user.refresh_from_db()
+        assert user.last_login == recent_last_login
 
 
 @pytest.mark.django_db

@@ -16,6 +16,8 @@ class TestAccountUrls:
             ("/api/account/logout", views.logout),
             ("/api/account/me/", views.me),
             ("/api/account/me", views.me),
+            ("/api/account/open-session/", views.open_session),
+            ("/api/account/open-session", views.open_session),
             ("/api/account/update/", views.update),
             ("/api/account/update", views.update),
             ("/api/account/change-binding/", views.change_google_binding),
@@ -30,8 +32,8 @@ class TestAccountUrls:
         """Test that URL patterns are configured correctly with expected count and no duplicates."""
         from main.account.urls import urlpatterns
 
-        # Should have exactly 6 active patterns
-        assert len(urlpatterns) == 6
+        # Should have exactly 7 active patterns
+        assert len(urlpatterns) == 7
 
         # Check for duplicate patterns
         patterns = []
@@ -50,6 +52,7 @@ class TestAccountUrls:
             r"^google-login[/]?$",
             r"^logout[/]?$",
             r"^me[/]?$",
+            r"^open-session[/]?$",
             r"^update[/]?$",
             r"^change-binding[/]?$",
         ]

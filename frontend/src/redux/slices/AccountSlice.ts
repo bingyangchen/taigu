@@ -38,6 +38,13 @@ export const updateAccountInfo = createAsyncThunk(
   },
 );
 
+export const openSession = createAsyncThunk(
+  "account/openSession",
+  async (): Promise<void> => {
+    await Api.sendRequest("account/open-session", "post", new URLSearchParams());
+  },
+);
+
 export const changeAccountBinding = createAsyncThunk(
   "account/changeAccountBinding",
   async (requestBody: URLSearchParams, thunkAPI): Promise<Account> => {
