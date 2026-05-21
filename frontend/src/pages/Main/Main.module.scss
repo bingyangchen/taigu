@@ -18,7 +18,10 @@
     min-height: 100%;
     width: 100%;
     @media (max-width: _.$width-780) {
-      min-height: calc(100% - _.$header-height - _.$footer-height);
+      min-height: calc(
+        100% - _.$header-height - env(safe-area-inset-top) -
+          _.$footer-height - env(safe-area-inset-bottom)
+      );
     }
   }
 

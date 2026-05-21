@@ -10,7 +10,6 @@ import {
   ListRow,
   ScrollAwareFloatingControls,
   SearchKeywordInput,
-  SegmentedControl,
   SpeedDial,
   TradeRecordEditor,
 } from "../../../components";
@@ -41,7 +40,6 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 }
 
 interface State {
-  activeSubpageName: "trade" | "cashDividend";
   searchKeyword: string | null;
   numberToShow: number;
 }
@@ -51,7 +49,6 @@ class Records extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {
-      activeSubpageName: "trade",
       searchKeyword: this.props.router.search_params.get("sid"),
       numberToShow: 15,
     };
@@ -70,53 +67,30 @@ class Records extends React.Component<Props, State> {
       <div className={styles.main}>
         <ScrollAwareFloatingControls
           activeClassName={styles.active}
-          className={styles.floating_pill_wrapper}
+          className={styles.floating_pill}
           hiddenClassName={styles.hidden}
           noTransitionClassName={styles.no_transition}
         >
-          <div className={styles.floating_controls_row}>
-            <div className={styles.segmented_slot}>
-              <SegmentedControl
-                label="歷史紀錄分類"
-                optionWidth="84px"
-                options={[
-                  { label: "交易紀錄", value: "trade" },
-                  { label: "現金股利", value: "cashDividend" },
-                ]}
-                value={this.state.activeSubpageName}
-                variant="floating"
-                onChange={(value) =>
-                  this.handleClickSwitchButton(value as "trade" | "cashDividend")
-                }
-              />
-            </div>
-            <div className={styles.search_pill}>
-              <div className={styles.search_input_container}>
-                <SearchKeywordInput
-                  placeholder="輸入證券代號或名稱"
-                  keyword={this.state.searchKeyword ?? ""}
-                  onChange={(searchKeyword) =>
-                    this.setState({ searchKeyword: searchKeyword })
-                  }
-                />
-              </div>
-            </div>
-          </div>
+          <SearchKeywordInput
+            placeholder="輸入證券代號或名稱"
+            keyword={this.state.searchKeyword ?? ""}
+            onChange={(searchKeyword) =>
+              this.setState({ searchKeyword: searchKeyword })
+            }
+          />
         </ScrollAwareFloatingControls>
         {this.filteredRecords.length === 0 ? (
-          <div className={styles.empty_section}>
-            目前沒有
-            {this.state.activeSubpageName === "trade" ? "交易" : "現金股利"}
-            紀錄
-          </div>
+          <div className={styles.empty_section}>目前沒有紀錄</div>
         ) : (
           <div className={styles.record_list}>
             {this.filteredRecords
               .slice(0, this.state.numberToShow)
-              .map((record: TradeRecord | CashDividendRecord, idx) => {
+              .map((record: TradeRecord | CashDividendRecord) => {
                 return (
                   <ListRow
-                    key={idx}
+                    key={`${
+                      Util.isTradeRecord(record) ? "trade" : "cash-dividend"
+                    }-${record.id}`}
                     target={record}
                     editModal={this.renderEditModal(record)}
                     deleteModal={this.renderDeleteModal(record)}
@@ -181,30 +155,25 @@ class Records extends React.Component<Props, State> {
   }
 
   private get filteredRecords(): (TradeRecord | CashDividendRecord)[] {
-    if (this.state.activeSubpageName === "trade") {
-      return this.props.tradeRecords.filter((record) => {
-        return (
-          !this.state.searchKeyword ||
-          record.sid.includes(this.state.searchKeyword) ||
-          record.company_name.includes(this.state.searchKeyword) ||
-          record.deal_time.includes(this.state.searchKeyword)
-        );
-      });
-    } else {
-      return this.props.cashDividendRecords.filter((record) => {
-        return (
-          !this.state.searchKeyword ||
-          record.sid.includes(this.state.searchKeyword) ||
-          record.company_name.includes(this.state.searchKeyword) ||
-          record.deal_time.includes(this.state.searchKeyword)
-        );
-      });
-    }
+    return [...this.props.tradeRecords, ...this.props.cashDividendRecords]
+      .sort((a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time))
+      .filter((record) => this.matchesSearchKeyword(record));
   }
 
-  private handleClickSwitchButton = (name: "trade" | "cashDividend"): void => {
-    this.setState({ activeSubpageName: name, numberToShow: 15 });
-  };
+  private matchesSearchKeyword(record: TradeRecord | CashDividendRecord): boolean {
+    return (
+      !this.state.searchKeyword ||
+      record.sid.includes(this.state.searchKeyword) ||
+      record.company_name.includes(this.state.searchKeyword) ||
+      record.deal_time.includes(this.state.searchKeyword) ||
+      this.getRecordTypeLabel(record).includes(this.state.searchKeyword)
+    );
+  }
+
+  private getRecordTypeLabel(record: TradeRecord | CashDividendRecord): string {
+    if (!Util.isTradeRecord(record)) return "股利";
+    return record.deal_quantity > 0 ? "買入" : "賣出";
+  }
 
   private get hasMoreToShow(): boolean {
     return this.filteredRecords.length > this.state.numberToShow;
