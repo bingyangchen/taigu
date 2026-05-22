@@ -35,8 +35,8 @@ GOOGLE_CLIENT_CONFIG = {
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
         "client_secret": env.GOOGLE_CLIENT_SECRET,
         "redirect_uris": [
-            "https://localhost/login",
-            "https://localhost/settings/account-binding",
+            "https://local.taigu.tw/login",
+            "https://local.taigu.tw/settings/account-binding",
             "https://taigu.tw/login",
             "https://taigu.tw/settings/account-binding",
         ],

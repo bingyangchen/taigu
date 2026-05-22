@@ -128,26 +128,25 @@ gitGraph
   make build-dev
   ```
 
-- Step 3: Install Git hooks
+- Step 3: Initialize Development Environment
 
   ```bash
-  make install-git-hooks
+  make setup-dev
   ```
 
-  This command will add some essential scripts into the .git/hooks/ directory.
+  This command will:
+  - Add `local.taigu.tw` to your `/etc/hosts` file (requires `sudo`) so you can access the local server via domain name.
+  - Generate development SSL certificates and keys under `reverse-proxy/` matching `local.taigu.tw`.
+  - Install Git hooks in `.git/hooks/` to run automatic pre-commit linting and testing.
 
-- Step 4: Generate SSL certificates and keys for development
-
-  ```bash
-  make cert-dev
-  ```
-
-- Step 5: Run the Development Server
+- Step 4: Run the Development Server
 
   ```bash
   make start
   # To stop the server, run `make stop`
   ```
+
+  Once started, the application will automatically open or be accessible at `https://local.taigu.tw` in your browser.
 
 ### The Development Workflow
 

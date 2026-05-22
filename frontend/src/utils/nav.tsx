@@ -3,6 +3,7 @@ import Env from "./env";
 export default class Nav {
   public static isLocalhost = Boolean(
     (window.location.hostname === "localhost" ||
+      window.location.hostname === "local.taigu.tw" ||
       window.location.hostname.endsWith(".localhost") ||
       // [::1] is the IPv6 localhost address.
       window.location.hostname === "[::1]" ||

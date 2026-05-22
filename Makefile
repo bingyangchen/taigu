@@ -60,6 +60,12 @@ ipython:
 test:
 	$(SHELL) ./scripts/dev/test.sh
 
+.PHONY: setup-dev
+setup-dev:
+	$(MAKE) install-git-hooks
+	$(MAKE) cert-dev
+	$(MAKE) setup-hosts
+
 .PHONY: install-git-hooks
 install-git-hooks:
 	$(SHELL) ./scripts/dev/install-git-hooks.sh
@@ -67,6 +73,10 @@ install-git-hooks:
 .PHONY: cert-dev
 cert-dev:
 	$(SHELL) ./scripts/dev/cert.sh
+
+.PHONY: setup-hosts
+setup-hosts:
+	$(SHELL) ./scripts/dev/setup-hosts.sh
 
 .PHONY: push-images-dev
 push-images-dev:

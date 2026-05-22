@@ -15,13 +15,13 @@ DEBUG = env.ENV == Env.DEV
 ALLOWED_HOSTS = ["*"] if env.ENV == Env.DEV else ["api.taigu.tw"]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = (
-    ["https://localhost"] if env.ENV == Env.DEV else ["https://taigu.tw"]
+    ["https://local.taigu.tw"] if env.ENV == Env.DEV else ["https://taigu.tw"]
 )
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_DOMAIN = None if env.ENV == Env.DEV else ".taigu.tw"
 CSRF_TRUSTED_ORIGINS = (
-    ["https://localhost"] if env.ENV == Env.DEV else ["https://taigu.tw"]
+    ["https://local.taigu.tw"] if env.ENV == Env.DEV else ["https://taigu.tw"]
 )
 
 ROOT_URLCONF = "main.urls"
