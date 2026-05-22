@@ -152,8 +152,8 @@ export default function Welcome(): React.ReactElement {
           <p className={styles.eyebrow}>從記錄到判斷</p>
           <h2>核心工作流不多，但每一步都要快。</h2>
           <p>
-            Welcome page 的責任不是把功能全列完，而是讓新使用者立即理解：Taigu
-            是台股投資紀錄的日常工具，不是券商、不給投資建議，只把你的資料整理清楚。
+            Taigu
+            專注於整理你的投資軌跡。我們不提供投資建議，也不是券商交易平台，而是你最安靜、最可靠的資產記錄與績效分析助手。
           </p>
         </div>
         <div className={styles.featureGrid}>
@@ -209,8 +209,8 @@ export default function Welcome(): React.ReactElement {
           <IconShieldCheck sideLength="34" />
           <h2>你的投資紀錄應該清楚，也應該被妥善保護。</h2>
           <p>
-            Taigu 使用 Google
-            登入與伺服器端帳戶資料邊界，讓交易紀錄、股利與個人設定能跨裝置延續，同時保持資料歸屬清楚。
+            Taigu 採用 Google
+            安全登入並建立嚴格的帳戶資料隔離。你的交易紀錄、股利與個人設定不僅能安全地跨裝置同步，更確保資產隱私完全屬於你。
           </p>
         </div>
         <div className={styles.devicePanel}>
