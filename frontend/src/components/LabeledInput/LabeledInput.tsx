@@ -44,6 +44,9 @@ export default class LabeledInput extends React.Component<Props, State> {
   public componentDidMount(): void {
     this.autoFocusIfNeeded();
   }
+  public componentDidUpdate(previousProps: Readonly<Props>): void {
+    if (!previousProps.autoFocus && this.props.autoFocus) this.autoFocusIfNeeded();
+  }
   public render(): React.ReactNode {
     return (
       <fieldset

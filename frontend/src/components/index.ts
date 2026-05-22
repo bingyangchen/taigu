@@ -39,6 +39,7 @@ export { default as SettingsSideBar } from "./SettingsSideBar/SettingsSideBar";
 export { default as SimpleCashInvestedLineChart } from "./SimpleCashInvestedLineChart/SimpleCashInvestedLineChart";
 export { default as SpeedDial } from "./SpeedDial/SpeedDial";
 export { default as StockMemoEditor } from "./StockMemoEditor/StockMemoEditor";
+export { default as StockPicker } from "./StockPicker/StockPicker";
 export { default as StockSearchContent } from "./StockSearchContent/StockSearchContent";
 export { default as StockSearchModal } from "./StockSearchModal/StockSearchModal";
 export { default as SummaryCard } from "./SummaryCard/SummaryCard";
