@@ -69,6 +69,18 @@ a {
     height: auto;
   }
 
+  body.settings-page-document-scroll {
+    min-height: 100dvh;
+    height: auto;
+    overflow: auto;
+    background-color: _.$noisy-white;
+  }
+
+  body.settings-page-document-scroll #root {
+    min-height: 100dvh;
+    height: auto;
+  }
+
   ::-webkit-scrollbar {
     display: none;
   }

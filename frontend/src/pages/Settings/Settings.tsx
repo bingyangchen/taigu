@@ -11,6 +11,7 @@ import type { AppDispatch } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
 import Nav from "../../utils/nav";
+import Util from "../../utils/util";
 import styles from "./Settings.module.scss";
 
 interface Props extends IRouter {
@@ -31,6 +32,7 @@ class Settings extends React.Component<Props, State> {
   }
 
   public async componentDidMount(): Promise<void> {
+    document.body.classList.toggle("settings-page-document-scroll", Util.isMobile);
     this.props.dispatch(fetchAccountInfo());
   }
 
@@ -52,6 +54,7 @@ class Settings extends React.Component<Props, State> {
   }
 
   public componentWillUnmount(): void {
+    document.body.classList.remove("settings-page-document-scroll");
     this.channel.close();
   }
 

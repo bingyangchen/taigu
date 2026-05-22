@@ -11,4 +11,10 @@
   & > .body {
     width: min(100%, 720px);
   }
+
+  @media (max-width: _.$width-780) {
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+  }
 }
