@@ -124,6 +124,14 @@
   box-shadow: 0 12px 30px #0000001a;
 }
 
+.desktop_search_panel {
+  position: absolute;
+  z-index: 2;
+  top: 100%;
+  right: 0;
+  left: 0;
+}
+
 .selection_prompt {
   padding: 5px 10px 0;
   color: _.$red;

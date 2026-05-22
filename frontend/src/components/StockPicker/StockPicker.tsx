@@ -76,7 +76,9 @@ export default class StockPicker extends React.Component<Props, State> {
     return (
       <div className={styles.main}>
         {this.renderStockField()}
-        {this.state.isOpen && this.renderSearchPanel()}
+        {this.state.isOpen && (
+          <div className={styles.desktop_search_panel}>{this.renderSearchPanel()}</div>
+        )}
         {this.renderSelectionPrompt()}
       </div>
     );
