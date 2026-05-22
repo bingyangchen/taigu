@@ -54,6 +54,13 @@ a {
 }
 
 @media screen and (max-width: _.$width-780) {
+  html,
+  body.main-page-document-scroll,
+  body.settings-page-document-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   body.main-page-document-scroll {
     min-height: 100dvh;
     height: auto;
@@ -83,5 +90,12 @@ a {
 
   ::-webkit-scrollbar {
     display: none;
+  }
+
+  html::-webkit-scrollbar,
+  body.main-page-document-scroll::-webkit-scrollbar,
+  body.settings-page-document-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 }
