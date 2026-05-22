@@ -9,10 +9,11 @@ import {
   FormPageShell,
   LabeledInput,
   Modal,
+  StockPicker,
 } from "../../components";
 import { createPlan, deletePlan, updatePlan } from "../../redux/slices/TradePlanSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
-import type { TradePlan } from "../../types";
+import type { SelectedStock, TradePlan } from "../../types";
 import Util from "../../utils/util";
 import styles from "./TradePlanEditor.module.scss";
 
@@ -32,7 +33,7 @@ interface Props extends ReturnType<typeof mapStateToProps> {
 
 interface State {
   planId: string | null;
-  sid: string;
+  selectedStock: SelectedStock | null;
   targetPrice: number;
   planType: "buy" | "sell";
   targetQuantity: number;
@@ -49,7 +50,11 @@ class TradePlanEditor extends React.Component<Props, State> {
     super(props);
     this.initialFormState = {
       planId: props.plan?.id.toString() ?? null,
-      sid: props.plan?.sid ?? props.defaultSid ?? "",
+      selectedStock: props.plan
+        ? { sid: props.plan.sid, name: props.plan.company_name }
+        : props.defaultSid
+          ? { sid: props.defaultSid }
+          : null,
       targetPrice: props.plan ? props.plan.target_price : NaN,
       planType: props.plan?.plan_type ?? "buy",
       targetQuantity: props.plan ? props.plan.target_quantity : NaN,
@@ -74,11 +79,10 @@ class TradePlanEditor extends React.Component<Props, State> {
     };
     const body = (
       <div className={styles.modal_inner}>
-        <LabeledInput
-          title="證券代號"
-          value={this.state.sid}
-          onChange={(sid: string) => this.setState({ sid: sid })}
-          autoFocus={!Util.isMobile && !this.props.plan && !this.state.sid}
+        <StockPicker
+          selectedStock={this.state.selectedStock}
+          onChange={(selectedStock) => this.setState({ selectedStock })}
+          autoFocus={!Util.isMobile && !this.props.plan && !this.state.selectedStock}
         />
         <div className={styles.row}>
           <LabeledInput
@@ -91,7 +95,9 @@ class TradePlanEditor extends React.Component<Props, State> {
                 : ""
             }
             onChange={this.handleTargetPriceChange}
-            autoFocus={!Util.isMobile && !this.props.plan && Boolean(this.state.sid)}
+            autoFocus={
+              !Util.isMobile && !this.props.plan && Boolean(this.state.selectedStock)
+            }
           />
           <div className={styles.buy_or_sell}>
             <span>買</span>
@@ -222,7 +228,7 @@ class TradePlanEditor extends React.Component<Props, State> {
 
   private get canSubmit(): boolean {
     return Boolean(
-      this.state.sid &&
+      this.state.selectedStock?.name &&
         !Object.is(this.state.targetPrice, NaN) &&
         !Object.is(this.state.targetQuantity, NaN) &&
         !this.props.isWaiting,
@@ -232,7 +238,7 @@ class TradePlanEditor extends React.Component<Props, State> {
   private get isDirty(): boolean {
     return (
       this.state.planId !== this.initialFormState.planId ||
-      this.state.sid !== this.initialFormState.sid ||
+      this.state.selectedStock?.sid !== this.initialFormState.selectedStock?.sid ||
       !Object.is(this.state.targetPrice, this.initialFormState.targetPrice) ||
       this.state.planType !== this.initialFormState.planType ||
       !Object.is(this.state.targetQuantity, this.initialFormState.targetQuantity)
@@ -295,7 +301,7 @@ class TradePlanEditor extends React.Component<Props, State> {
           .dispatch(
             updatePlan({
               id: this.state.planId ?? "",
-              sid: this.state.sid,
+              sid: this.state.selectedStock?.sid ?? "",
               target_price: this.state.targetPrice,
               plan_type: this.state.planType,
               target_quantity: this.state.targetQuantity,
@@ -307,7 +313,7 @@ class TradePlanEditor extends React.Component<Props, State> {
         await this.props
           .dispatch(
             createPlan({
-              sid: this.state.sid,
+              sid: this.state.selectedStock?.sid ?? "",
               target_price: this.state.targetPrice,
               target_quantity: this.state.targetQuantity,
               plan_type: this.state.planType,
@@ -318,7 +324,7 @@ class TradePlanEditor extends React.Component<Props, State> {
       this.props.hideModal(e);
       this.props.onSave?.();
     } catch (reason) {
-      this.props.hideModal(e);
+      return;
     }
   };
 }

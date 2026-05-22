@@ -9,6 +9,7 @@ import {
   FormPageShell,
   LabeledInput,
   Modal,
+  StockPicker,
 } from "../../components";
 import {
   createRecord,
@@ -16,7 +17,7 @@ import {
   updateRecord,
 } from "../../redux/slices/CashDividendRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
-import type { CashDividendRecord } from "../../types";
+import type { CashDividendRecord, SelectedStock } from "../../types";
 import Util from "../../utils/util";
 import styles from "./CashDividendRecordEditor.module.scss";
 
@@ -37,7 +38,7 @@ interface Props extends ReturnType<typeof mapStateToProps> {
 interface State {
   recordId: string | null;
   dealTime: string;
-  sid: string;
+  selectedStock: SelectedStock | null;
   cashDividend: number;
   isCheckingDelete: boolean;
 }
@@ -53,7 +54,11 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
     this.initialFormState = {
       recordId: props.record?.id.toString() ?? null,
       dealTime: props.record?.deal_time ?? new Date().toLocaleDateString("af"),
-      sid: props.defaultSid ?? props.record?.sid ?? "",
+      selectedStock: props.record
+        ? { sid: props.record.sid, name: props.record.company_name }
+        : props.defaultSid
+          ? { sid: props.defaultSid }
+          : null,
       cashDividend: props.record ? props.record.cash_dividend : NaN,
     };
     this.state = { ...this.initialFormState, isCheckingDelete: false };
@@ -82,11 +87,10 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
           value={this.state.dealTime}
           onChange={(dealTime: string) => this.setState({ dealTime: dealTime })}
         />
-        <LabeledInput
-          title="證券代號"
-          value={this.state.sid}
-          onChange={(sid: string) => this.setState({ sid: sid })}
-          autoFocus={!Util.isMobile && !this.props.record && !this.state.sid}
+        <StockPicker
+          selectedStock={this.state.selectedStock}
+          onChange={(selectedStock) => this.setState({ selectedStock })}
+          autoFocus={!Util.isMobile && !this.props.record && !this.state.selectedStock}
         />
         <LabeledInput
           title="現金股利"
@@ -98,7 +102,9 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
               : ""
           }
           onChange={this.handleCashDividendChange}
-          autoFocus={!Util.isMobile && !this.props.record && Boolean(this.state.sid)}
+          autoFocus={
+            !Util.isMobile && !this.props.record && Boolean(this.state.selectedStock)
+          }
         />
         {this.props.record && (
           <DestructiveActionSection
@@ -171,7 +177,7 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
   private get canSubmit(): boolean {
     return Boolean(
       this.state.dealTime &&
-        this.state.sid &&
+        this.state.selectedStock?.name &&
         !Object.is(this.state.cashDividend, NaN) &&
         !this.props.isWaiting,
     );
@@ -181,7 +187,7 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
     return (
       this.state.recordId !== this.initialFormState.recordId ||
       this.state.dealTime !== this.initialFormState.dealTime ||
-      this.state.sid !== this.initialFormState.sid ||
+      this.state.selectedStock?.sid !== this.initialFormState.selectedStock?.sid ||
       !Object.is(this.state.cashDividend, this.initialFormState.cashDividend)
     );
   }
@@ -224,7 +230,7 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
           .dispatch(
             updateRecord({
               id: this.state.recordId,
-              sid: this.state.sid,
+              sid: this.state.selectedStock?.sid ?? "",
               deal_time: this.state.dealTime,
               cash_dividend: this.state.cashDividend,
             }),
@@ -235,7 +241,7 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
         await this.props
           .dispatch(
             createRecord({
-              sid: this.state.sid,
+              sid: this.state.selectedStock?.sid ?? "",
               deal_time: this.state.dealTime,
               cash_dividend: this.state.cashDividend,
             }),
@@ -245,7 +251,7 @@ class CashDividendRecordEditor extends React.Component<Props, State> {
       this.props.hideModal(e);
       this.props.onSave?.();
     } catch (reason) {
-      this.props.hideModal(e);
+      return;
     }
   };
 }

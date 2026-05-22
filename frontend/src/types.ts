@@ -81,6 +81,8 @@ export type StockInfo = {
   fluct_price: number;
 };
 
+export type SelectedStock = { sid: string; name?: string };
+
 export type TradePlan = {
   id: string;
   sid: string;

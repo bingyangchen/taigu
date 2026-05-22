@@ -9,6 +9,7 @@ import {
   FormPageShell,
   LabeledInput,
   Modal,
+  StockPicker,
 } from "../../components";
 import { fetchSingleStockInfo } from "../../redux/slices/StockInfoSlice";
 import {
@@ -17,7 +18,7 @@ import {
   updateRecord,
 } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
-import type { TradeRecord } from "../../types";
+import type { SelectedStock, TradeRecord } from "../../types";
 import Util from "../../utils/util";
 import styles from "./TradeRecordEditor.module.scss";
 
@@ -38,7 +39,7 @@ interface Props extends ReturnType<typeof mapStateToProps> {
 interface State {
   recordId: string | null;
   dealTime: string;
-  sid: string;
+  selectedStock: SelectedStock | null;
   dealPrice: number;
   isBuying: boolean;
   absDealQuantity: number;
@@ -58,7 +59,7 @@ class TradeRecordEditor extends React.Component<Props, State> {
       this.initialFormState = {
         recordId: props.record.id.toString(),
         dealTime: props.record.deal_time,
-        sid: props.record.sid,
+        selectedStock: { sid: props.record.sid, name: props.record.company_name },
         dealPrice: props.record.deal_price,
         isBuying: props.record.deal_quantity > 0 ? true : false,
         absDealQuantity: Math.abs(props.record.deal_quantity),
@@ -68,7 +69,7 @@ class TradeRecordEditor extends React.Component<Props, State> {
       this.initialFormState = {
         recordId: null,
         dealTime: new Date().toLocaleDateString("af"),
-        sid: props.defaultSid ?? "",
+        selectedStock: props.defaultSid ? { sid: props.defaultSid } : null,
         dealPrice: NaN,
         isBuying: true,
         absDealQuantity: NaN,
@@ -101,11 +102,10 @@ class TradeRecordEditor extends React.Component<Props, State> {
           value={this.state.dealTime}
           onChange={(dealTime: string) => this.setState({ dealTime: dealTime })}
         />
-        <LabeledInput
-          title="證券代號"
-          value={this.state.sid}
-          onChange={(sid: string) => this.setState({ sid: sid })}
-          autoFocus={!Util.isMobile && !this.props.record && !this.state.sid}
+        <StockPicker
+          selectedStock={this.state.selectedStock}
+          onChange={(selectedStock) => this.setState({ selectedStock })}
+          autoFocus={!Util.isMobile && !this.props.record && !this.state.selectedStock}
         />
         <div className={styles.row}>
           <LabeledInput
@@ -118,7 +118,9 @@ class TradeRecordEditor extends React.Component<Props, State> {
                 : ""
             }
             onChange={this.handleDealPriceChange}
-            autoFocus={!Util.isMobile && !this.props.record && Boolean(this.state.sid)}
+            autoFocus={
+              !Util.isMobile && !this.props.record && Boolean(this.state.selectedStock)
+            }
           />
           <div className={styles.buy_or_sell}>
             <span>買</span>
@@ -250,7 +252,7 @@ class TradeRecordEditor extends React.Component<Props, State> {
   private get canSubmit(): boolean {
     return Boolean(
       this.state.dealTime &&
-        this.state.sid &&
+        this.state.selectedStock?.name &&
         !Object.is(this.state.dealPrice, NaN) &&
         !Object.is(this.state.absDealQuantity, NaN) &&
         !Object.is(this.state.handlingFee, NaN) &&
@@ -262,7 +264,7 @@ class TradeRecordEditor extends React.Component<Props, State> {
     return (
       this.state.recordId !== this.initialFormState.recordId ||
       this.state.dealTime !== this.initialFormState.dealTime ||
-      this.state.sid !== this.initialFormState.sid ||
+      this.state.selectedStock?.sid !== this.initialFormState.selectedStock?.sid ||
       !Object.is(this.state.dealPrice, this.initialFormState.dealPrice) ||
       this.state.isBuying !== this.initialFormState.isBuying ||
       !Object.is(this.state.absDealQuantity, this.initialFormState.absDealQuantity) ||
@@ -335,7 +337,7 @@ class TradeRecordEditor extends React.Component<Props, State> {
           .dispatch(
             updateRecord({
               id: this.state.recordId ?? "",
-              sid: this.state.sid,
+              sid: this.state.selectedStock?.sid ?? "",
               deal_time: this.state.dealTime,
               deal_price: this.state.dealPrice,
               deal_quantity: this.state.isBuying
@@ -350,7 +352,7 @@ class TradeRecordEditor extends React.Component<Props, State> {
         await this.props
           .dispatch(
             createRecord({
-              sid: this.state.sid,
+              sid: this.state.selectedStock?.sid ?? "",
               deal_time: this.state.dealTime,
               deal_price: this.state.dealPrice,
               deal_quantity: this.state.isBuying
@@ -362,10 +364,10 @@ class TradeRecordEditor extends React.Component<Props, State> {
           .unwrap();
       }
       this.props.hideModal(e);
-      this.props.dispatch(fetchSingleStockInfo(this.state.sid));
+      this.props.dispatch(fetchSingleStockInfo(this.state.selectedStock?.sid ?? ""));
       this.props.onSave?.();
     } catch (reason) {
-      this.props.hideModal(e);
+      return;
     }
   };
 }
