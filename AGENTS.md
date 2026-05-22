@@ -26,4 +26,4 @@ This file defines project-level guidance for coding agents working in this repos
 
 - Use `make build-dev` to rebuild the development images if you modify the dependencies of the API server or frontend.
 - Restart the local app from the repository root with `make restart` if you think you need to.
-- Access the web app at `https://localhost` instead of `http://localhost:3000`.
+- Access the web app at `https://local.taigu.tw` instead of `http://localhost:3000`.

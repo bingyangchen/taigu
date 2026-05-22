@@ -15,5 +15,5 @@ file_name="compose.$deployment_environment.yaml"
 docker compose -f "$file_name" up -d
 
 if [ "$deployment_environment" = "dev" ]; then
-  xdg-open https://localhost 2>/dev/null || open https://localhost 2>/dev/null || echo "Please open https://localhost in your browser"
+  xdg-open https://local.taigu.tw 2>/dev/null || open https://local.taigu.tw 2>/dev/null || echo "Please open https://local.taigu.tw in your browser"
 fi
