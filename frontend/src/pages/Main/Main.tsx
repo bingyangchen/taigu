@@ -92,7 +92,9 @@ class Main extends React.Component<Props, State> {
   }
   public async componentDidMount(): Promise<void> {
     oncontextmenu = (e) => e.preventDefault();
+    this.syncMobileScrollMode();
     this.mainRef.current?.addEventListener("scroll", this.handleScroll);
+    window.addEventListener("scroll", this.handleScroll);
 
     const independentPromises = Promise.allSettled([
       this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
@@ -168,7 +170,9 @@ class Main extends React.Component<Props, State> {
   }
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (prevProps.router.location.pathname !== this.props.router.location.pathname) {
-      this.mainRef.current?.scrollTo(0, 0);
+      this.syncMobileScrollMode();
+      if (this.shouldUseDocumentScroll) window.scrollTo(0, 0);
+      else this.mainRef.current?.scrollTo(0, 0);
       this.props.dispatch(fetchAccountInfo());
     }
 
@@ -189,6 +193,9 @@ class Main extends React.Component<Props, State> {
   }
   public componentWillUnmount(): void {
     this.mainRef.current?.removeEventListener("scroll", this.handleScroll);
+    window.removeEventListener("scroll", this.handleScroll);
+    document.body.classList.remove("main-page-document-scroll");
+    document.body.classList.remove("main-page-gradient-scroll");
     if (this.fetchStockInfoTimer) {
       clearInterval(this.fetchStockInfoTimer);
       this.fetchStockInfoTimer = null;
@@ -223,11 +230,26 @@ class Main extends React.Component<Props, State> {
     );
   }
   private handleScroll = (): void => {
-    const mainElement = this.mainRef.current;
-    if (!mainElement) return;
+    const scrollTop = this.shouldUseDocumentScroll
+      ? window.scrollY
+      : this.mainRef.current?.scrollTop;
+    if (scrollTop === undefined) return;
 
-    this.props.dispatch(updateScrollTop(mainElement.scrollTop));
+    this.props.dispatch(updateScrollTop(scrollTop));
   };
+  private syncMobileScrollMode(): void {
+    document.body.classList.toggle(
+      "main-page-document-scroll",
+      this.shouldUseDocumentScroll,
+    );
+    document.body.classList.toggle(
+      "main-page-gradient-scroll",
+      this.shouldUseDocumentScroll && !this.shouldUseWhiteMobileShell,
+    );
+  }
+  private get shouldUseDocumentScroll(): boolean {
+    return Util.isMobile && !this.isMobileEditorRoute;
+  }
   private get shouldUseWhiteMobileShell(): boolean {
     return (
       this.isMobileEditorRoute ||
