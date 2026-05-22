@@ -330,7 +330,6 @@ export default class StockPicker extends React.Component<Props, State> {
   private debouncedSearch = Util.debounce(this.search, 300);
 
   private handleChangeStock = (): void => {
-    this.props.onChange(null);
     this.setState(
       {
         searchKeyword: "",
