@@ -4,7 +4,6 @@ import pytest
 from django.conf import settings
 from django.http import HttpRequest
 from jose import jwt
-from jose.constants import ALGORITHMS
 
 from main.account import OAuthOrganization
 from main.account.backends import MyBackend
@@ -38,7 +37,7 @@ class TestMyBackend:
             "id": str(user.id),
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
         authenticated_user = backend.authenticate(request_obj, token)
 
@@ -52,7 +51,7 @@ class TestMyBackend:
             "id": str(user.id),
             "exp": int((datetime.now() - timedelta(days=1)).timestamp()),
         }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
         authenticated_user = backend.authenticate(request_obj, token)
 
@@ -74,7 +73,7 @@ class TestMyBackend:
             "id": str(user.id),
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
-        token = jwt.encode(payload, "wrong_secret_key", algorithm=ALGORITHMS.HS256)
+        token = jwt.encode(payload, "wrong_secret_key", algorithm=settings.JWT_ALGORITHM)
 
         authenticated_user = backend.authenticate(request_obj, token)
 
@@ -84,7 +83,7 @@ class TestMyBackend:
         self, backend: MyBackend, request_obj: HttpRequest, user: User
     ) -> None:
         payload = {"exp": int((datetime.now() + timedelta(days=30)).timestamp())}
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
         authenticated_user = backend.authenticate(request_obj, token)
 
@@ -94,7 +93,7 @@ class TestMyBackend:
         self, backend: MyBackend, request_obj: HttpRequest, user: User
     ) -> None:
         payload = {"id": str(user.id)}
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
         authenticated_user = backend.authenticate(request_obj, token)
 
@@ -107,7 +106,7 @@ class TestMyBackend:
             "id": "00000000-0000-0000-0000-000000000000",
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
         authenticated_user = backend.authenticate(request_obj, token)
 
@@ -123,7 +122,7 @@ class TestMyBackend:
             "id": str(user.id),
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
         authenticated_user = backend.authenticate(request_obj, token)
 

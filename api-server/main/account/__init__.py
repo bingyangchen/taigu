@@ -5,4 +5,5 @@ class OAuthOrganization:
     CHOICES = [(GOOGLE, GOOGLE), (FACEGOOK, FACEGOOK)]
 
 
-AUTH_COOKIE_NAME = "token"
+ACCESS_COOKIE_NAME = "access_token"
+REFRESH_COOKIE_NAME = "refresh_token"

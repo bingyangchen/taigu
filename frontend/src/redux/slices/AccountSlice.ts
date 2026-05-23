@@ -84,7 +84,7 @@ export const loginWithGoogle = createAsyncThunk(
 );
 
 export const logout = createAsyncThunk("account/logout", async (): Promise<void> => {
-  await Api.sendRequest("account/logout", "get");
+  await Api.sendRequest("account/logout", "post", new URLSearchParams());
   await Api.clearCache();
   await LocalDatabase.clearAll();
 });

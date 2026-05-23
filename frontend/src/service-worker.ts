@@ -137,10 +137,6 @@ self.addEventListener("fetch", (event) => {
                       }),
                   ]).then(() => undefined),
                 );
-              } else if (networkResponse.status === 401) {
-                // Same logic as src/utils/api.tsx
-                event.waitUntil(caches.delete("taigu"));
-                channel.postMessage({ authorized: false });
               }
               return networkResponse;
             });
@@ -149,7 +145,7 @@ self.addEventListener("fetch", (event) => {
         }),
       );
     } else if (
-      (/account\/logout[/]?$/gs.test(requestUrl) && method === "get") ||
+      (/account\/logout[/]?$/gs.test(requestUrl) && method === "post") ||
       (/account\/delete[/]?$/gs.test(requestUrl) && method === "delete")
     ) {
       event.waitUntil(caches.delete("taigu"));

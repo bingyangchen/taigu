@@ -1,8 +1,7 @@
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
@@ -12,13 +11,17 @@ from django.views.decorators.http import require_GET, require_POST
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2 import id_token
 from google_auth_oauthlib import flow as google_oauth_flow
-from jose import jwt
-from jose.constants import ALGORITHMS
 from pydantic import BaseModel
 
-from main.account import OAuthOrganization
+from main.account import REFRESH_COOKIE_NAME, OAuthOrganization
+from main.account.cookies import delete_auth_cookies, set_auth_cookies
 from main.account.models import User
-from main.account.utils import delete_auth_cookie, set_auth_cookie
+from main.account.tokens import (
+    InvalidRefreshTokenError,
+    issue_token_pair,
+    revoke_refresh_token,
+    rotate_refresh_token,
+)
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 from main.env import env
@@ -47,7 +50,6 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
-JWT_COOKIE_MAX_AGE = 5 * 24 * 60 * 60  # 5 days
 OPEN_SESSION_LAST_LOGIN_UPDATE_INTERVAL = timedelta(minutes=5)
 
 
@@ -74,12 +76,9 @@ def _verify_with_code_flow(code: str, redirect_uri: str) -> TokenVerificationRes
     return TokenVerificationResult.model_validate(verified_result)
 
 
-def _make_jwt(user_id: str) -> str:
-    return jwt.encode(
-        {"id": user_id, "exp": int((datetime.now() + timedelta(days=30)).timestamp())},
-        key=settings.SECRET_KEY,
-        algorithm=ALGORITHMS.HS256,
-    )
+def _set_new_token_pair(response: JsonResponse, user: User) -> JsonResponse:
+    token_pair = issue_token_pair(user)
+    return set_auth_cookies(response, token_pair.access_token, token_pair.refresh_token)
 
 
 @ensure_csrf_cookie
@@ -116,9 +115,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
         },
     )
     request.user = user  # type: ignore
-    response = JsonResponse({})
-    response = set_auth_cookie(response, _make_jwt(str(user.id)))
-    return response
+    return _set_new_token_pair(JsonResponse({}), user)
 
 
 @rate_limit(rate=0.5)
@@ -159,8 +156,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
             "avatar_url": user.avatar_url,
         },
     )
-    response = set_auth_cookie(response, _make_jwt(str(user.id)))
-    return response
+    return _set_new_token_pair(response, user)
 
 
 @rate_limit(rate=5)
@@ -189,12 +185,21 @@ def open_session(request: HttpRequest) -> JsonResponse:
     return JsonResponse({})
 
 
-@require_GET
-@require_login
+@require_POST
+def refresh_token(request: HttpRequest) -> JsonResponse:
+    try:
+        token_pair = rotate_refresh_token(request.COOKIES.get(REFRESH_COOKIE_NAME, ""))
+    except InvalidRefreshTokenError:
+        return delete_auth_cookies(JsonResponse({}, status=401))
+    return set_auth_cookies(
+        JsonResponse({}), token_pair.access_token, token_pair.refresh_token
+    )
+
+
+@require_POST
 def logout(request: HttpRequest) -> JsonResponse:
-    response = JsonResponse({})
-    response = delete_auth_cookie(response)
-    return response
+    revoke_refresh_token(request.COOKIES.get(REFRESH_COOKIE_NAME, ""))
+    return delete_auth_cookies(JsonResponse({}))
 
 
 @rate_limit(rate=0.5)

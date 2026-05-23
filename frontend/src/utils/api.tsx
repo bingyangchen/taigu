@@ -5,6 +5,7 @@ import Nav from "./nav";
 
 export default class Api {
   private static safeMethods = ["get", "head", "options"];
+  private static refreshRequest: Promise<boolean> | null = null;
 
   public static async clearCache(): Promise<void> {
     if ("caches" in window) {
@@ -55,7 +56,12 @@ export default class Api {
       credentials: "include",
     };
     try {
-      const response = await fetch(`${Env.backendUrl}${endpoint}`, options);
+      let response = await fetch(`${Env.backendUrl}${endpoint}`, options);
+      if (response.status === 401 && !Api.isSessionEndpoint(endpoint)) {
+        if (await Api.refreshAccessToken()) {
+          response = await fetch(`${Env.backendUrl}${endpoint}`, options);
+        }
+      }
       return await Api.handleResponse(response);
     } catch (error) {
       if (method !== "get") {
@@ -70,6 +76,35 @@ export default class Api {
     }
   }
 
+  private static isSessionEndpoint(endpoint: string): boolean {
+    return ["account/refresh-token", "account/logout"].includes(
+      endpoint.replace(/\/$/, ""),
+    );
+  }
+
+  private static async refreshAccessToken(): Promise<boolean> {
+    if (Api.refreshRequest === null) {
+      Api.refreshRequest = Api.sendRefreshRequest().finally(() => {
+        Api.refreshRequest = null;
+      });
+    }
+    return await Api.refreshRequest;
+  }
+
+  private static async sendRefreshRequest(): Promise<boolean> {
+    const header = new Headers({ Accept: "application/json" });
+    const csrfToken = Api.getCookie("csrftoken") ?? "";
+    if (csrfToken) header.append("X-CSRFToken", csrfToken);
+    const response = await fetch(`${Env.backendUrl}account/refresh-token`, {
+      method: "post",
+      headers: header,
+      body: new URLSearchParams(),
+      credentials: "include",
+    });
+    if (response.status === 403) Api.deleteCookie("csrftoken");
+    return response.ok;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static async handleResponse(response: Response): Promise<any> {
     if (response.status === 404) Nav.goTo404Page();
@@ -77,7 +112,7 @@ export default class Api {
       if (response.status === 403) Api.deleteCookie("csrftoken");
       const url = new URL(response.url);
       if (url.pathname !== "/api/account/logout") {
-        await Api.sendRequest("account/logout", "get");
+        await Api.sendRequest("account/logout", "post", new URLSearchParams());
       }
       await Api.clearCache();
       if (!Nav.isAtLoginPage) {

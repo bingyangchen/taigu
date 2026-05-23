@@ -11,6 +11,7 @@ logging.basicConfig(
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env.SECRET_KEY
 DEBUG = env.ENV == Env.DEV
+JWT_ALGORITHM = "HS256"
 
 ALLOWED_HOSTS = ["*"] if env.ENV == Env.DEV else ["api.taigu.tw"]
 CORS_ALLOW_CREDENTIALS = True
