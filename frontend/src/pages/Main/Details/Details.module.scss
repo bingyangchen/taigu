@@ -114,7 +114,10 @@ $switch-single-column-width: 760px;
   padding: 22px 28px 26px;
 
   @media (max-width: _.$width-780) {
-    min-height: min(78dvh, calc(100dvh - _.$footer-height - env(safe-area-inset-bottom) - 40px));
+    min-height: min(
+      78dvh,
+      calc(100dvh - _.$footer-height - env(safe-area-inset-bottom) - 40px)
+    );
     padding: calc(env(safe-area-inset-top) + 68px) 14px 6px;
   }
 }
@@ -353,7 +356,9 @@ $switch-single-column-width: 760px;
         transparent 54px,
         #dce5ef 55px
       );
-    background-size: 220% 100%, 100% 100%;
+    background-size:
+      220% 100%,
+      100% 100%;
     animation:
       shimmer 1300ms ease-in-out infinite,
       skeleton-fade 160ms ease-out both;

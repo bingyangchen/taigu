@@ -475,7 +475,9 @@ class Details extends React.Component<Props, State> {
               {this.summaryRows.map((row) => (
                 <div className={styles.summary_row} key={row.label}>
                   <span className={styles.upper}>{row.label}</span>
-                  <span className={`${styles.lower} ${row.tone ? styles[row.tone] : ""}`}>
+                  <span
+                    className={`${styles.lower} ${row.tone ? styles[row.tone] : ""}`}
+                  >
                     {row.value}
                   </span>
                 </div>
@@ -715,10 +717,7 @@ class Details extends React.Component<Props, State> {
         label: "庫存",
         value: `${(this.props.stockWarehouse[this.sid] || []).length.toLocaleString()} 股`,
       },
-      {
-        label: "平均成本",
-        value: this.averageCostText,
-      },
+      { label: "平均成本", value: this.averageCostText },
       {
         label: "實現損益",
         value: (
@@ -768,7 +767,10 @@ class Details extends React.Component<Props, State> {
     );
   }
 
-  private getHistoricalPriceChartData(sid = this.sid): { dates: string[]; values: number[] } {
+  private getHistoricalPriceChartData(sid = this.sid): {
+    dates: string[];
+    values: number[];
+  } {
     const dates: string[] = [];
     const values: number[] = [];
     if (sid in this.props.sidHistoricalPricesMap) {
