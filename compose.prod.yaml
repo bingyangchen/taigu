@@ -1,8 +1,6 @@
 services:
   api-server:
     image: ${DOCKER_USERNAME}/api-server:${IMAGE_TAG}
-    volumes:
-      - ./api-server/google_client_secret.json:/app/google_client_secret.json:ro
     command: ["gunicorn"]
     env_file: .env
     expose:

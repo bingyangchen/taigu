@@ -20,11 +20,7 @@ import {
   IconThumbtack,
   IconThumbtackBold,
 } from "../../icons";
-import {
-  fetchAccountInfo,
-  openSession,
-  refreshAccountInfoWithNonCacheResponse,
-} from "../../redux/slices/AccountSlice";
+import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
 import {
   fetchAllCashDividendRecords,
   refreshCashDividendRecordsWithNonCacheResponse,
@@ -270,9 +266,7 @@ class Main extends React.Component<Props, State> {
     e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
   ): Promise<void> => {
     if (e.data.authorized) {
-      if (/account\/me[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshAccountInfoWithNonCacheResponse(e.data.data));
-      } else if (/cash-dividends[/]?$/gs.test(e.data.url)) {
+      if (/cash-dividends[/]?$/gs.test(e.data.url)) {
         this.props.dispatch(
           refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
         );

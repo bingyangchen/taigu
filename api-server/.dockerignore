@@ -8,4 +8,3 @@ __pycache__/
 .DS_Store
 Dockerfile
 README.md
-google_client_secret.json

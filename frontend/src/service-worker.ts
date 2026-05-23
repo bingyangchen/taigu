@@ -108,8 +108,7 @@ self.addEventListener("fetch", (event) => {
   // Filter request
   if (/^http/gs.test(requestUrl)) {
     if (
-      (/account\/me[/]?$/gs.test(requestUrl) ||
-        /cash-dividends[/]?$/gs.test(requestUrl) ||
+      (/cash-dividends[/]?$/gs.test(requestUrl) ||
         /market\/market-index[/]?$/gs.test(requestUrl) ||
         /trade-plans[/]?$/gs.test(requestUrl) ||
         /stock-memo\/company-info[/]?$/gs.test(requestUrl) ||
