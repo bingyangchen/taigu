@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 
 import { AutoResizeTextarea, BottomSheet, Button, Modal } from "../../components";
 import { updateOrCreateMemo } from "../../redux/slices/MemoSlice";
+import { pushToast } from "../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import Util from "../../utils/util";
 import styles from "./StockMemoEditor.module.scss";
@@ -50,7 +51,7 @@ class StockMemoEditor extends React.Component<Props, State> {
                 waiting={this.props.isWaiting}
                 onClick={this.handleClickSubmit}
               >
-                送出
+                {this.props.defaultValue ? "送出" : "新增備註"}
               </Button>
             </div>
           </div>
@@ -67,7 +68,7 @@ class StockMemoEditor extends React.Component<Props, State> {
           onClick: this.props.hideModal,
         }}
         submitButtonProps={{
-          children: "送出",
+          children: this.props.defaultValue ? "送出" : "新增備註",
           className: "primary l",
           disabled: !this.canSubmit,
           waiting: this.props.isWaiting,
@@ -86,6 +87,7 @@ class StockMemoEditor extends React.Component<Props, State> {
       <AutoResizeTextarea
         value={this.state.value}
         onChange={this.handleValueChange}
+        placeholder="還沒有備註，可以記下你的觀察或交易想法。"
         autoFocus
       />
     );
@@ -103,6 +105,7 @@ class StockMemoEditor extends React.Component<Props, State> {
         updateOrCreateMemo({ sid: this.state.sid, note: this.state.value.trim() }),
       )
       .unwrap();
+    this.props.dispatch(pushToast({ type: "success", text: "備註已更新" }));
     this.props.hideModal(e);
   };
 }
