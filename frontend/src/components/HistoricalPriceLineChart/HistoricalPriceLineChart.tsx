@@ -48,10 +48,10 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
     return {
       backgroundColor: "transparent",
       grid: {
-        left: 0,
-        top: 0,
-        right: 40,
-        bottom: 25,
+        left: 6,
+        top: 12,
+        right: 38,
+        bottom: 24,
         containLabel: false,
         outerBoundsMode: "none",
       },
@@ -97,7 +97,7 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
             },
             axisLine: { show: false },
             axisTick: { show: false },
-            splitLine: { show: false },
+            splitLine: { lineStyle: { color: "#e9eef5", width: 1 } },
             splitNumber: 3,
           },
       series: this.props.isWaiting
@@ -111,7 +111,7 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
         : {
             type: "line",
             data: values,
-            lineStyle: { width: 2.5, color: "#4c8bf5", join: "round" },
+            lineStyle: { width: 2, color: "#4c8bf5", join: "round" },
             symbol: "circle",
             symbolSize: Util.isMobile ? 5 : 8,
             showSymbol: false,
@@ -132,7 +132,11 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
       tooltip: {
         show: !this.props.isWaiting,
         trigger: "axis",
-        axisPointer: { type: "line" },
+        axisPointer: { type: "line", lineStyle: { color: "#9fb8dc", width: 1 } },
+        backgroundColor: "rgba(255, 255, 255, 0.96)",
+        borderColor: "#dbe4ef",
+        borderWidth: 1,
+        textStyle: { color: "#334155", fontSize: 12 },
         formatter: (params: unknown) => {
           if (!Array.isArray(params) || params.length === 0) {
             return "";
@@ -140,10 +144,20 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
           const param = params[0];
           const dateStr = param.name;
           const value = param.value;
-          return `${dateStr}<br/>$${value.toLocaleString()}`;
+          const dataIndex = param.dataIndex;
+          const previousValue =
+            typeof dataIndex === "number" && dataIndex > 0
+              ? values[dataIndex - 1]
+              : null;
+          const fluctPercent =
+            previousValue && previousValue !== 0
+              ? (((value - previousValue) / previousValue) * 100).toFixed(2)
+              : "-";
+          return `${dateStr}<br/>收盤價 $${value.toLocaleString()}<br/>漲跌幅 ${fluctPercent}%`;
         },
       },
-      animationDurationUpdate: 0,
+      animationDuration: 300,
+      animationDurationUpdate: 160,
     };
   }
 

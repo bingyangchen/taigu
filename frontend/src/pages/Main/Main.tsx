@@ -203,12 +203,16 @@ class Main extends React.Component<Props, State> {
       <main
         className={`${styles.main} ${
           this.shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
-        } ${this.isMobileEditorRoute ? styles.mobile_editor_shell : ""}`}
+        } ${this.isMobileEditorRoute ? styles.mobile_editor_shell : ""} ${
+          Nav.isAtDetailsPage ? styles.mobile_detail_shell : ""
+        }`}
         ref={this.mainRef}
       >
         <ToastList />
         {this.state.isLoading && <LoadingScreen />}
-        {Util.isMobile && !this.isMobileEditorRoute && <HeaderForMain />}
+        {Util.isMobile && !this.isMobileEditorRoute && !Nav.isAtDetailsPage && (
+          <HeaderForMain />
+        )}
         <div className={styles.body}>
           {!Util.isMobile && (
             <MainSideBar

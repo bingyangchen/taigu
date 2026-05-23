@@ -34,6 +34,18 @@
     }
   }
 
+  &.mobile_detail_shell > .body {
+    background: #f6f9fc;
+
+    @media (max-width: _.$width-780) {
+      min-height: calc(100dvh - _.$footer-height - env(safe-area-inset-bottom));
+    }
+  }
+
+  &.mobile_detail_shell {
+    background: #f6f9fc;
+  }
+
   &:not(.mobile_editor_shell) {
     @media (max-width: _.$width-780) {
       min-height: 100dvh;
