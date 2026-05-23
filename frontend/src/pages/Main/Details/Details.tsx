@@ -317,7 +317,7 @@ class Details extends React.Component<Props, State> {
                   : ""
               } ${this.isFavorite ? styles.active : ""}`}
               onClick={this.changeFavStatus}
-              aria-label={this.isFavorite ? "取消最愛" : "加入最愛"}
+              aria-label={this.isFavorite ? "取消關注" : "加入關注"}
             >
               {this.isFavorite ? (
                 <IconHeartFill sideLength="20" />
@@ -371,7 +371,7 @@ class Details extends React.Component<Props, State> {
                     this.isFavorite ? styles.active : ""
                   }`}
                   onClick={this.changeFavStatus}
-                  aria-label={this.isFavorite ? "取消最愛" : "加入最愛"}
+                  aria-label={this.isFavorite ? "取消關注" : "加入關注"}
                 >
                   {this.isFavorite ? (
                     <IconHeartFill sideLength="18" />

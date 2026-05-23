@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import { SegmentedControl, SpeedDial } from "../../../components";
 import {
   IconBriefcase,
-  IconChevronRight,
   IconExclamation,
   IconHeart,
   IconMagnifier,
@@ -157,7 +156,7 @@ class Market extends React.Component<Props, State> {
       <div className={styles.main}>
         <section className={styles.summary_panel}>
           <div className={styles.summary_copy}>
-            <h1>市場</h1>
+            <h1>{this.getTitle(activeTab)}</h1>
             <p>{this.getSubtitle(activeTab)}</p>
           </div>
           <div className={styles.metrics}>{this.renderMetrics(activeTab)}</div>
@@ -169,11 +168,8 @@ class Market extends React.Component<Props, State> {
               label="市場資料分類"
               optionWidth="86px"
               options={[
-                {
-                  label: `持股 ${Object.keys(this.props.stockWarehouse).length}`,
-                  value: "holding",
-                },
-                { label: `最愛 ${this.props.favorites.length}`, value: "favorites" },
+                { label: "持股", value: "holding" },
+                { label: "關注", value: "favorites" },
               ]}
               value={activeTab}
               onChange={this.handleSubpageChange}
@@ -240,17 +236,12 @@ class Market extends React.Component<Props, State> {
     const downCount = allSids.filter(
       (sid) => (this.props.sidStockInfoMap[sid]?.fluct_price ?? 0) < 0,
     ).length;
-    const favoriteTradePlanCount = this.props.tradePlans.filter((plan) =>
-      this.props.favorites.includes(plan.sid),
-    ).length;
-
     if (activeTab === "favorites") {
       return (
         <>
           {this.renderMetric("最愛檔數", this.props.favorites.length.toLocaleString())}
           {this.renderMetric("今日上漲", upCount.toLocaleString(), "up")}
           {this.renderMetric("今日下跌", downCount.toLocaleString(), "down")}
-          {this.renderMetric("買賣計畫", favoriteTradePlanCount.toLocaleString())}
         </>
       );
     }
@@ -261,7 +252,6 @@ class Market extends React.Component<Props, State> {
           "持股檔數",
           Object.keys(this.props.stockWarehouse).length.toLocaleString(),
         )}
-        {this.renderMetric("總市值", this.formatMoney(this.getTotalMarketValue()))}
         {this.renderMetric("今日上漲", upCount.toLocaleString(), "up")}
         {this.renderMetric("今日下跌", downCount.toLocaleString(), "down")}
       </>
@@ -325,17 +315,8 @@ class Market extends React.Component<Props, State> {
             <span>{this.formatChange(fluctPrice, changePercent)}</span>
           </div>
         </div>
-        {activeTab === "holding"
-          ? this.renderHoldingChips(sid, stockInfo)
-          : this.renderFavoriteStatus(sid, stockInfo)}
-        <div className={styles.card_meta}>
-          <span>
-            {activeTab === "holding"
-              ? `市值 ${this.formatMoney(this.getMarketValue(sid))}`
-              : this.getTradePlanCountText(sid)}
-          </span>
-          <IconChevronRight sideLength="14" />
-        </div>
+        {activeTab === "holding" && this.renderHoldingChips(sid, stockInfo)}
+        {this.renderMarketSignals(sid, stockInfo)}
       </button>
     );
   }
@@ -371,18 +352,14 @@ class Market extends React.Component<Props, State> {
     );
   }
 
-  private renderFavoriteStatus(
+  private renderMarketSignals(
     sid: string,
     stockInfo: StockInfo | undefined,
   ): React.ReactNode {
     const planText = this.getNearestPlanText(sid, stockInfo);
     return (
-      <div className={styles.favorite_status}>
-        <span className={styles.favorite_volume}>
-          {stockInfo?.quantity
-            ? `成交量 ${this.formatVolume(stockInfo.quantity)}`
-            : "加入最愛後會持續追蹤最新價格"}
-        </span>
+      <div className={styles.market_signals}>
+        <span className={styles.volume_text}>{this.getVolumeText(stockInfo)}</span>
         {planText && <strong className={styles.plan_chip}>{planText}</strong>}
       </div>
     );
@@ -568,7 +545,7 @@ class Market extends React.Component<Props, State> {
     tab: MarketTab,
     searchText: string,
     sortKey: SortKey,
-    replace = false,
+    replace = true,
   ): void {
     const nextParams = new URLSearchParams();
     nextParams.set("tab", tab);
@@ -602,7 +579,11 @@ class Market extends React.Component<Props, State> {
   private getSubtitle(activeTab: MarketTab): string {
     return activeTab === "holding"
       ? "追蹤你的持股現況、報酬率與最新價格。"
-      : "觀察你關注的股票，等待適合的紀錄時機。";
+      : "觀察你關注的股票，等待適合的進場時機。";
+  }
+
+  private getTitle(activeTab: MarketTab): string {
+    return activeTab === "holding" ? "持股追蹤" : "關注";
   }
 
   private getFallbackStockName(sid: string): string {
@@ -617,13 +598,6 @@ class Market extends React.Component<Props, State> {
     return calculateMarketValue(
       this.props.sidStockInfoMap[sid],
       this.props.stockWarehouse[sid] ?? [],
-    );
-  }
-
-  private getTotalMarketValue(): number {
-    return Object.keys(this.props.stockWarehouse).reduce(
-      (sum, sid) => sum + this.getMarketValue(sid),
-      0,
     );
   }
 
@@ -694,13 +668,14 @@ class Market extends React.Component<Props, State> {
     const priceText = stockInfo?.close
       ? `目前價格 ${stockInfo.close.toLocaleString()}`
       : "尚未取得價格";
+    const planText = this.getNearestPlanText(sid, stockInfo);
     return `${this.getFallbackStockName(sid)} ${sid}，${priceText}，${this.getAccessibleChangeText(
       stockInfo,
     )}，庫存 ${inventory.toLocaleString()} 股，平均成本 ${averageCost.toFixed(
       2,
-    )}，報酬率 ${this.formatPercent(returnRate)}，市值 ${this.formatMoney(
-      this.getMarketValue(sid),
-    )}，${stockInfo ? "可查看詳情" : "尚未取得價格"}`;
+    )}，報酬率 ${this.formatPercent(returnRate)}，${this.getVolumeText(
+      stockInfo,
+    )}${planText ? `，${planText}` : ""}，${stockInfo ? "可查看詳情" : "尚未取得價格"}`;
   }
 
   private getFavoriteAccessibleLabel(
@@ -711,29 +686,17 @@ class Market extends React.Component<Props, State> {
       ? `目前價格 ${stockInfo.close.toLocaleString()}`
       : "尚未取得價格";
     const volumeText = stockInfo?.quantity
-      ? `成交量 ${this.formatVolume(stockInfo.quantity)}`
+      ? this.getVolumeText(stockInfo)
       : "尚未取得成交量";
     const planText = this.getNearestPlanText(sid, stockInfo);
-    const tradePlanCountText = this.getTradePlanCountText(sid);
     return `${this.getFallbackStockName(sid)} ${sid}，${priceText}，${this.getAccessibleChangeText(
       stockInfo,
-    )}，${volumeText}，${tradePlanCountText}${planText ? `，${planText}` : ""}`;
-  }
-
-  private getTradePlanCountText(sid: string): string {
-    const tradePlanCount = this.props.tradePlans.filter(
-      (plan) => plan.sid === sid,
-    ).length;
-    return tradePlanCount > 0 ? `買賣計畫 ${tradePlanCount} 筆` : "無買賣計畫";
+    )}，${volumeText}${planText ? `，${planText}` : ""}`;
   }
 
   private formatPercent(value: number): string {
     if (!Number.isFinite(value)) return "-";
     return `${value > 0 ? "+" : ""}${(value * 100).toFixed(2)}%`;
-  }
-
-  private formatMoney(value: number): string {
-    return `$${Math.round(value).toLocaleString()}`;
   }
 
   private formatVolume(quantity: number): string {
@@ -742,6 +705,12 @@ class Market extends React.Component<Props, State> {
       return `${(lots / 10000).toFixed(1)} 萬張`;
     }
     return `${Math.round(lots).toLocaleString()} 張`;
+  }
+
+  private getVolumeText(stockInfo: StockInfo | undefined): string {
+    return stockInfo?.quantity
+      ? `成交量 ${this.formatVolume(stockInfo.quantity)}`
+      : "成交量 --";
   }
 
   private navigateToDetail(activeTab: MarketTab, sid: string): void {
