@@ -531,7 +531,7 @@
   }
 }
 
-.favorite_status {
+.market_signals {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -560,10 +560,6 @@
   }
 
   @media (max-width: _.$width-780) {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 6px;
-
     span,
     strong {
       font-size: 13px;
@@ -572,7 +568,7 @@
   }
 }
 
-.favorite_volume {
+.volume_text {
   display: inline-flex;
   align-items: center;
   min-width: 0;
@@ -586,28 +582,6 @@
   border-radius: 999px;
   background: rgba(76, 139, 245, 0.12);
   color: _.$deep-gray;
-}
-
-.card_meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
-  color: #666;
-  font-size: 12px;
-  line-height: 16px;
-
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  @media (max-width: _.$width-780) {
-    font-size: 12px;
-    line-height: 17px;
-  }
 }
 
 .up {
