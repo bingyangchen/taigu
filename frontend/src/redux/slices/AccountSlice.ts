@@ -1,4 +1,3 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import LocalDatabase from "../../storage/localDatabase";
@@ -92,14 +91,7 @@ export const logout = createAsyncThunk("account/logout", async (): Promise<void>
 export const accountSlice = createSlice({
   name: "account",
   initialState,
-  reducers: {
-    refreshAccountInfoWithNonCacheResponse(state, action: PayloadAction<Account>) {
-      state.id = action.payload.id;
-      state.email = action.payload.email;
-      state.username = action.payload.username;
-      state.avatar_url = action.payload.avatar_url;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchAccountInfo.pending, (state) => {
@@ -189,5 +181,4 @@ export const accountSlice = createSlice({
   },
 });
 
-export const { refreshAccountInfoWithNonCacheResponse } = accountSlice.actions;
 export default accountSlice.reducer;

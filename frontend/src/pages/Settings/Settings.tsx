@@ -3,10 +3,7 @@ import { connect } from "react-redux";
 import { Outlet } from "react-router-dom";
 
 import { HeaderForSettings, ToastList } from "../../components";
-import {
-  fetchAccountInfo,
-  refreshAccountInfoWithNonCacheResponse,
-} from "../../redux/slices/AccountSlice";
+import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
 import type { AppDispatch } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
@@ -74,11 +71,7 @@ class Settings extends React.Component<Props, State> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
   ): Promise<void> => {
-    if (e.data.authorized) {
-      if (/account\/me[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshAccountInfoWithNonCacheResponse(e.data.data));
-      }
-    } else {
+    if (!e.data.authorized) {
       Nav.goToWelcomePage(
         this.props.router.location.pathname + this.props.router.location.search,
       );
