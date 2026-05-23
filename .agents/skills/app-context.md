@@ -22,7 +22,7 @@ The product positions itself as "專為台股設計，你的專業記帳幫手" 
 
 - The primary audience is Taiwan stock investors, including students and office workers who want a cleaner alternative to spreadsheets.
 - The app is mobile-first and installable as a PWA, but also supports desktop layouts with sidebars.
-- The language and market context are zh-TW by default; use Taiwan stock terms such as 台股, 證券代號, 交易紀錄, 現金股利, 持股, 最愛, 買賣計畫, and 手續費.
+- The language and market context are zh-TW by default; use Taiwan stock terms such as 台股, 證券代號, 交易紀錄, 現金股利, 持股, 關注, 買賣計畫, and 手續費.
 - The app supports cross-device continuity through server-side accounts, not through a local-first sync architecture.
 - Real-time information matters, but the app is primarily a journaling and analysis tool, not a trading execution platform.
 
