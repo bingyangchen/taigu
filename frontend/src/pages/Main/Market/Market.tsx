@@ -211,7 +211,6 @@ class Market extends React.Component<Props, State> {
               >
                 {(Object.keys(sortLabels) as SortKey[]).map((sortKey) => (
                   <option key={sortKey} value={sortKey}>
-                    {sortKey === this.state.sortKey ? "✓ " : ""}
                     {sortLabels[sortKey]}
                   </option>
                 ))}
