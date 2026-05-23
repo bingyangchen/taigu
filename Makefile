@@ -28,6 +28,14 @@ restart:
 restart-and-recycle:
 	$(SHELL) ./scripts/restart.sh --recycle
 
+.PHONY: migrate
+migrate:
+	$(SHELL) ./scripts/migrate.sh
+
+.PHONY: migrate-prod
+migrate-prod:
+	$(SHELL) ./scripts/migrate.sh prod
+
 .PHONY: shell-api-server
 shell-api-server:
 	$(SHELL) ./scripts/enter-shell.sh api-server

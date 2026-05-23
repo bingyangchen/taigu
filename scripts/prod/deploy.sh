@@ -18,6 +18,7 @@ git pull origin main
 export IMAGE_TAG="$(resolve_prod_pull_image_tag)"
 
 make pull-images-prod
+make migrate-prod
 make restart-and-recycle
 
 printf "${GREEN} ✔ Deploy completed${RESET}\n"
