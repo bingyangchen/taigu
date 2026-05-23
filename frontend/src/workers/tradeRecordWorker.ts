@@ -127,27 +127,6 @@ const getSidGainMap = (sidTradeRecordsMap: {
   return result;
 };
 
-// const getCashInvestedChartDataWithAverageCashInvested = (
-//     timeSeriesTradeRecords: TradeRecord[]
-// ): (string | number)[][] => {
-//     const chartData = getChartData(timeSeriesTradeRecords);
-//     chartData.forEach((row, i) => {
-//         if (i === 0) row.push("平均投入");
-//         else {
-//             const denominator = ((i + 1) * i) / 2;
-//             let total = 0;
-//             chartData
-//                 .slice(1, i + 1)
-//                 .map((row) => row[2] as number)
-//                 .forEach((val, j) => {
-//                     total += val * ((j + 1) / denominator);
-//                 });
-//             row.push(Math.round(total));
-//         }
-//     });
-//     return chartData;
-// };
-
 const getChartData = (orderedTradeRecords: TradeRecord[]): (string | number)[][] => {
   // return columns: date, cashInvested, tradeVolume
   if (orderedTradeRecords.length === 0) return [];
