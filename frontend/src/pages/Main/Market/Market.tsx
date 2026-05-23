@@ -156,7 +156,7 @@ class Market extends React.Component<Props, State> {
       <div className={styles.main}>
         <section className={styles.summary_panel}>
           <div className={styles.summary_copy}>
-            <h1>市場</h1>
+            <h1>{this.getTitle(activeTab)}</h1>
             <p>{this.getSubtitle(activeTab)}</p>
           </div>
           <div className={styles.metrics}>{this.renderMetrics(activeTab)}</div>
@@ -169,7 +169,7 @@ class Market extends React.Component<Props, State> {
               optionWidth="86px"
               options={[
                 { label: "持股", value: "holding" },
-                { label: "最愛", value: "favorites" },
+                { label: "關注", value: "favorites" },
               ]}
               value={activeTab}
               onChange={this.handleSubpageChange}
@@ -579,7 +579,11 @@ class Market extends React.Component<Props, State> {
   private getSubtitle(activeTab: MarketTab): string {
     return activeTab === "holding"
       ? "追蹤你的持股現況、報酬率與最新價格。"
-      : "觀察你關注的股票，等待適合的紀錄時機。";
+      : "觀察你關注的股票，等待適合的進場時機。";
+  }
+
+  private getTitle(activeTab: MarketTab): string {
+    return activeTab === "holding" ? "持股追蹤" : "關注";
   }
 
   private getFallbackStockName(sid: string): string {

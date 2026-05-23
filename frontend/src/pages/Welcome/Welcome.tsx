@@ -38,14 +38,14 @@ const featureHighlights = [
   },
   {
     title: "市場資訊貼近台股習慣",
-    description: "支援上市、上櫃、興櫃與 ETF，追蹤持股、最愛清單與即時行情。",
+    description: "支援上市、上櫃、興櫃與 ETF，追蹤持股、關注清單與即時行情。",
     icon: <IconClockHistory sideLength="22" />,
   },
 ];
 
 const workflowItems = [
   { label: "新增交易紀錄", value: "30 秒" },
-  { label: "追蹤持股與最愛", value: "2000+ 檔" },
+  { label: "追蹤持股與關注", value: "2000+ 檔" },
   { label: "分析現金股利", value: "自動彙整" },
 ];
 
@@ -106,7 +106,7 @@ export default function Welcome(): React.ReactElement {
           </h1>
           <p className={styles.heroDescription}>
             Taigu 讓台股投資者告別
-            Excel：快速記錄交易與現金股利，追蹤持股與最愛股票，並用清楚圖表掌握自己的投資表現。
+            Excel：快速記錄交易與現金股利，追蹤持股與關注股票，並用清楚圖表掌握自己的投資表現。
           </p>
           <div className={styles.heroActions}>
             {canInstallPWA ? (
@@ -193,7 +193,7 @@ export default function Welcome(): React.ReactElement {
         </div>
         <div className={styles.marketCopy}>
           <p className={styles.eyebrow}>台股資料脈絡</p>
-          <h2>股票、ETF、持股與最愛清單，放在同一個市場視圖。</h2>
+          <h2>股票、ETF、持股與關注清單，放在同一個市場視圖。</h2>
           <p>
             找證券代號、看即時資訊、追蹤重大訊息與個人筆記，都用投資者熟悉的台股語彙呈現，少一層轉換成本。
           </p>
