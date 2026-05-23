@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth.backends import BaseBackend
 from django.http import HttpRequest
 from jose import jwt
-from jose.constants import ALGORITHMS
 
 from main.account.models import User
 
@@ -15,7 +14,7 @@ class MyBackend(BaseBackend):
         user: User | None = None
         with suppress(Exception):
             claims = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=[ALGORITHMS.HS256]
+                token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
             )
             if claims["exp"] > datetime.now().timestamp():
                 # TODO: read from cache

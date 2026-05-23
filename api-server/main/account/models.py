@@ -1,7 +1,16 @@
 import uuid
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db.models import BooleanField, CharField, EmailField, UUIDField
+from django.db.models import (
+    BooleanField,
+    CharField,
+    DateTimeField,
+    EmailField,
+    ForeignKey,
+    Model,
+    UUIDField,
+)
+from django.db.models.deletion import CASCADE
 
 from main.account import OAuthOrganization
 
@@ -63,3 +72,15 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return str(self.username)
+
+
+class RefreshToken(Model):
+    token_hash = CharField(primary_key=True, max_length=64)
+    user = ForeignKey(User, on_delete=CASCADE, related_name="refresh_tokens")
+    family_id = UUIDField(default=uuid.uuid4, db_index=True)
+    created_at = DateTimeField(auto_now_add=True)
+    expires_at = DateTimeField()
+    revoked_at = DateTimeField(blank=True, null=True)
+
+    class Meta:
+        db_table = "refresh_token"

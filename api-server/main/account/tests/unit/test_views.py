@@ -10,8 +10,9 @@ from django.core.exceptions import ValidationError
 from django.http import HttpRequest, QueryDict
 from django.utils import timezone
 
-from main.account import AUTH_COOKIE_NAME, OAuthOrganization
+from main.account import ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, OAuthOrganization
 from main.account.models import User
+from main.account.tokens import issue_token_pair
 from main.account.views import (
     change_google_binding,
     get_authorization_url,
@@ -19,6 +20,7 @@ from main.account.views import (
     logout,
     me,
     open_session,
+    refresh_token,
     update,
 )
 
@@ -124,7 +126,7 @@ class TestGoogleLoginView:
         monkeypatch.setattr(
             "main.account.views.id_token.verify_oauth2_token", mock_verify_token
         )
-        monkeypatch.setattr("main.account.views.jwt.encode", mock_jwt_encode)
+        monkeypatch.setattr("main.account.tokens.jwt.encode", mock_jwt_encode)
 
         request_obj.method = "POST"
         request_obj.POST = {
@@ -135,8 +137,8 @@ class TestGoogleLoginView:
         response = google_login(request_obj)
 
         assert response.status_code == 200
-        assert AUTH_COOKIE_NAME in response.cookies
-        assert response.cookies[AUTH_COOKIE_NAME].value == "test_jwt_token"
+        assert ACCESS_COOKIE_NAME in response.cookies
+        assert response.cookies[ACCESS_COOKIE_NAME].value == "test_jwt_token"
 
     @patch("main.core.decorators.rate_limit.LUA_SCRIPT")
     def test_google_login_post_success_existing_user(
@@ -168,7 +170,7 @@ class TestGoogleLoginView:
         monkeypatch.setattr(
             "main.account.views.id_token.verify_oauth2_token", mock_verify_token
         )
-        monkeypatch.setattr("main.account.views.jwt.encode", mock_jwt_encode)
+        monkeypatch.setattr("main.account.tokens.jwt.encode", mock_jwt_encode)
 
         request_obj.method = "POST"
         request_obj.POST = {
@@ -179,7 +181,7 @@ class TestGoogleLoginView:
         response = google_login(request_obj)
 
         assert response.status_code == 200
-        assert AUTH_COOKIE_NAME in response.cookies
+        assert ACCESS_COOKIE_NAME in response.cookies
 
     @patch("main.core.decorators.rate_limit.LUA_SCRIPT")
     def test_google_login_insufficient_data(
@@ -269,7 +271,7 @@ class TestChangeGoogleBindingView:
         monkeypatch.setattr(
             "main.account.views.id_token.verify_oauth2_token", mock_verify_token
         )
-        monkeypatch.setattr("main.account.views.jwt.encode", mock_jwt_encode)
+        monkeypatch.setattr("main.account.tokens.jwt.encode", mock_jwt_encode)
 
         request_obj.method = "POST"
         request_obj.POST = {
@@ -285,7 +287,7 @@ class TestChangeGoogleBindingView:
         assert data["email"] == "new@example.com"
         assert data["username"] == "New User"
         assert data["avatar_url"] == "https://example.com/new_avatar.jpg"
-        assert AUTH_COOKIE_NAME in response.cookies
+        assert ACCESS_COOKIE_NAME in response.cookies
 
     def test_change_google_binding_already_bound(
         self,
@@ -456,12 +458,46 @@ class TestLogoutView:
         return request
 
     def test_logout_success(self, request_obj: HttpRequest) -> None:
-        request_obj.method = "GET"
+        request_obj.method = "POST"
         response = logout(request_obj)
 
         assert response.status_code == 200
         # Check that cookie is deleted
-        assert response.cookies[AUTH_COOKIE_NAME].value == ""
+        assert response.cookies[ACCESS_COOKIE_NAME].value == ""
+
+
+@pytest.mark.django_db
+class TestRefreshView:
+    @pytest.fixture
+    def user(self) -> User:
+        return User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="test_oauth_id",
+            email="test@example.com",
+            username="Test User",
+        )
+
+    def test_refresh_rotates_browser_tokens(self, user: User) -> None:
+        request = HttpRequest()
+        request.method = "POST"
+        request.COOKIES = {REFRESH_COOKIE_NAME: issue_token_pair(user).refresh_token}
+
+        response = refresh_token(request)
+
+        assert response.status_code == 200
+        assert ACCESS_COOKIE_NAME in response.cookies
+        assert REFRESH_COOKIE_NAME in response.cookies
+
+    def test_refresh_rejects_missing_refresh_token(self) -> None:
+        request = HttpRequest()
+        request.method = "POST"
+        request.COOKIES = {}
+
+        response = refresh_token(request)
+
+        assert response.status_code == 401
+        assert response.cookies[ACCESS_COOKIE_NAME].value == ""
+        assert response.cookies[REFRESH_COOKIE_NAME].value == ""
 
 
 @pytest.mark.django_db

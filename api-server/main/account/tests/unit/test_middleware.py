@@ -6,13 +6,11 @@ import pytest
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from jose import jwt
-from jose.constants import ALGORITHMS
 
-from main.account import AUTH_COOKIE_NAME, OAuthOrganization
+from main.account import ACCESS_COOKIE_NAME, OAuthOrganization
+from main.account.cookies import delete_auth_cookies, set_access_cookie
 from main.account.middleware import check_login_status_middleware
 from main.account.models import User
-from main.account.utils import delete_auth_cookie, set_auth_cookie
-from main.env import Env, env
 
 
 @pytest.mark.django_db
@@ -42,7 +40,7 @@ class TestCheckLoginStatusMiddleware:
             "id": str(user.id),
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
-        return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256)
+        return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
     def test_middleware_no_token(
         self,
@@ -54,8 +52,7 @@ class TestCheckLoginStatusMiddleware:
         response = middleware(request_obj)
 
         assert response.status_code == 200
-        assert AUTH_COOKIE_NAME in response.cookies
-        assert response.cookies[AUTH_COOKIE_NAME].value == ""
+        assert ACCESS_COOKIE_NAME not in response.cookies
 
     def test_middleware_valid_token(
         self,
@@ -64,30 +61,29 @@ class TestCheckLoginStatusMiddleware:
         user: User,
     ) -> None:
         token = self.create_valid_token(user)
-        request_obj.COOKIES = {AUTH_COOKIE_NAME: token}
+        request_obj.COOKIES = {ACCESS_COOKIE_NAME: token}
 
         response = middleware(request_obj)
 
         assert response.status_code == 200
         assert request_obj.user == user
-        # Should refresh the cookie
-        assert AUTH_COOKIE_NAME in response.cookies
-        assert response.cookies[AUTH_COOKIE_NAME].value == token
+        # A short-lived access token must not be extended by normal API traffic.
+        assert ACCESS_COOKIE_NAME not in response.cookies
 
     def test_middleware_invalid_token(
         self,
         middleware: Callable[[HttpRequest], HttpResponse],
         request_obj: HttpRequest,
     ) -> None:
-        request_obj.COOKIES = {AUTH_COOKIE_NAME: "invalid_token"}
+        request_obj.COOKIES = {ACCESS_COOKIE_NAME: "invalid_token"}
 
         response = middleware(request_obj)
 
         assert response.status_code == 200
         assert request_obj.user is None
         # Should delete the invalid cookie
-        assert AUTH_COOKIE_NAME in response.cookies
-        assert response.cookies[AUTH_COOKIE_NAME].value == ""
+        assert ACCESS_COOKIE_NAME in response.cookies
+        assert response.cookies[ACCESS_COOKIE_NAME].value == ""
 
     def test_middleware_expired_token(
         self,
@@ -100,17 +96,17 @@ class TestCheckLoginStatusMiddleware:
             "exp": int((datetime.now() - timedelta(days=1)).timestamp()),
         }
         expired_token = jwt.encode(
-            payload, settings.SECRET_KEY, algorithm=ALGORITHMS.HS256
+            payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
         )
-        request_obj.COOKIES = {AUTH_COOKIE_NAME: expired_token}
+        request_obj.COOKIES = {ACCESS_COOKIE_NAME: expired_token}
 
         response = middleware(request_obj)
 
         assert response.status_code == 200
         assert request_obj.user is None
         # Should delete the expired cookie
-        assert AUTH_COOKIE_NAME in response.cookies
-        assert response.cookies[AUTH_COOKIE_NAME].value == ""
+        assert ACCESS_COOKIE_NAME in response.cookies
+        assert response.cookies[ACCESS_COOKIE_NAME].value == ""
 
     def test_middleware_401_response(
         self, request_obj: HttpRequest, user: User
@@ -121,66 +117,57 @@ class TestCheckLoginStatusMiddleware:
 
         middleware = check_login_status_middleware(mock_get_response_401)
         token = self.create_valid_token(user)
-        request_obj.COOKIES = {AUTH_COOKIE_NAME: token}
+        request_obj.COOKIES = {ACCESS_COOKIE_NAME: token}
 
         response = middleware(request_obj)
 
         assert response.status_code == 401
         # Should delete the cookie on 401
-        assert AUTH_COOKIE_NAME in response.cookies
-        assert response.cookies[AUTH_COOKIE_NAME].value == ""
+        assert ACCESS_COOKIE_NAME in response.cookies
+        assert response.cookies[ACCESS_COOKIE_NAME].value == ""
 
     def test_middleware_auth_cookie_response(
         self, request_obj: HttpRequest, user: User
     ) -> None:
         def mock_get_response_login(request: HttpRequest) -> HttpResponse:
             response = HttpResponse("Login response")
-            return set_auth_cookie(response, "new_token")
+            return set_access_cookie(response, "new_token")
 
         middleware = check_login_status_middleware(mock_get_response_login)
         token = self.create_valid_token(user)
-        request_obj.COOKIES = {AUTH_COOKIE_NAME: token}
+        request_obj.COOKIES = {ACCESS_COOKIE_NAME: token}
 
         response = middleware(request_obj)
 
         assert response.status_code == 200
-        assert response.cookies[AUTH_COOKIE_NAME].value == "new_token"
+        assert response.cookies[ACCESS_COOKIE_NAME].value == "new_token"
 
     def test_middleware_deleted_auth_cookie_response(
         self, request_obj: HttpRequest, user: User
     ) -> None:
         def mock_get_response_logout(request: HttpRequest) -> HttpResponse:
             response = HttpResponse("Logout response")
-            return delete_auth_cookie(response)
+            return delete_auth_cookies(response)
 
         middleware = check_login_status_middleware(mock_get_response_logout)
         token = self.create_valid_token(user)
-        request_obj.COOKIES = {AUTH_COOKIE_NAME: token}
+        request_obj.COOKIES = {ACCESS_COOKIE_NAME: token}
 
         response = middleware(request_obj)
 
         assert response.status_code == 200
-        assert response.cookies[AUTH_COOKIE_NAME].value == ""
+        assert response.cookies[ACCESS_COOKIE_NAME].value == ""
 
-    def test_middleware_refresh_cookie(
+    def test_middleware_does_not_refresh_access_cookie(
         self,
         middleware: Callable[[HttpRequest], HttpResponse],
         request_obj: HttpRequest,
         user: User,
     ) -> None:
         token = self.create_valid_token(user)
-        request_obj.COOKIES = {AUTH_COOKIE_NAME: token}
+        request_obj.COOKIES = {ACCESS_COOKIE_NAME: token}
 
         response = middleware(request_obj)
 
         assert response.status_code == 200
-        assert AUTH_COOKIE_NAME in response.cookies
-        cookie = response.cookies[AUTH_COOKIE_NAME]
-        assert cookie.value == token
-        assert cookie["max-age"] == 432_000
-        assert cookie["secure"] is True
-        assert cookie["httponly"] is True
-        expected_samesite = "Lax" if env.ENV == Env.PROD else "Strict"
-        assert cookie["samesite"] == expected_samesite
-        if env.ENV == Env.PROD:
-            assert cookie["domain"] == "taigu.tw"
+        assert ACCESS_COOKIE_NAME not in response.cookies
