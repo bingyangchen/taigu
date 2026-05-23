@@ -169,11 +169,8 @@ class Market extends React.Component<Props, State> {
               label="市場資料分類"
               optionWidth="86px"
               options={[
-                {
-                  label: `持股 ${Object.keys(this.props.stockWarehouse).length}`,
-                  value: "holding",
-                },
-                { label: `最愛 ${this.props.favorites.length}`, value: "favorites" },
+                { label: "持股", value: "holding" },
+                { label: "最愛", value: "favorites" },
               ]}
               value={activeTab}
               onChange={this.handleSubpageChange}
@@ -240,17 +237,12 @@ class Market extends React.Component<Props, State> {
     const downCount = allSids.filter(
       (sid) => (this.props.sidStockInfoMap[sid]?.fluct_price ?? 0) < 0,
     ).length;
-    const favoriteTradePlanCount = this.props.tradePlans.filter((plan) =>
-      this.props.favorites.includes(plan.sid),
-    ).length;
-
     if (activeTab === "favorites") {
       return (
         <>
           {this.renderMetric("最愛檔數", this.props.favorites.length.toLocaleString())}
           {this.renderMetric("今日上漲", upCount.toLocaleString(), "up")}
           {this.renderMetric("今日下跌", downCount.toLocaleString(), "down")}
-          {this.renderMetric("買賣計畫", favoriteTradePlanCount.toLocaleString())}
         </>
       );
     }
@@ -261,7 +253,6 @@ class Market extends React.Component<Props, State> {
           "持股檔數",
           Object.keys(this.props.stockWarehouse).length.toLocaleString(),
         )}
-        {this.renderMetric("總市值", this.formatMoney(this.getTotalMarketValue()))}
         {this.renderMetric("今日上漲", upCount.toLocaleString(), "up")}
         {this.renderMetric("今日下跌", downCount.toLocaleString(), "down")}
       </>
@@ -568,7 +559,7 @@ class Market extends React.Component<Props, State> {
     tab: MarketTab,
     searchText: string,
     sortKey: SortKey,
-    replace = false,
+    replace = true,
   ): void {
     const nextParams = new URLSearchParams();
     nextParams.set("tab", tab);
