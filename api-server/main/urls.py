@@ -2,6 +2,7 @@ from django.urls import include, re_path
 
 urlpatterns = [
     re_path(r"^api/account/", include("main.account.urls")),
+    re_path(r"^api/billing/", include("main.billing.urls")),
     re_path(r"^api/market/", include("main.market.urls")),
     re_path(r"^api/stock-memo/", include("main.stock_memo.urls")),
     re_path(r"^api/trade-plans/?", include("main.trade_plan.urls")),

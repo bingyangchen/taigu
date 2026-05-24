@@ -33,6 +33,7 @@ import Search from "./pages/Main/Search/Search";
 import NotFound from "./pages/NotFound/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy";
 import AccountBinding from "./pages/Settings/AccountBinding/AccountBinding";
+import CurrentPlan from "./pages/Settings/CurrentPlan/CurrentPlan";
 import DataControls from "./pages/Settings/DataControls/DataControls";
 import Overview from "./pages/Settings/Overview/Overview";
 import Settings from "./pages/Settings/Settings";
@@ -52,6 +53,7 @@ const myRouter = createBrowserRouter(
         <Route path="" element={<Overview />}></Route>
         <Route path="user-info" element={<UserInfo />}></Route>
         <Route path="account-binding" element={<AccountBinding />}></Route>
+        <Route path="current-plan" element={<CurrentPlan />}></Route>
         <Route path="data-controls" element={<DataControls />}></Route>
       </Route>
       <Route path="" element={<Main />}>

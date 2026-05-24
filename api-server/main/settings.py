@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     # Local
     "main.core",
     "main.account",
+    "main.billing",
     "main.market",
     "main.stock_memo",
     "main.trade_plan",
