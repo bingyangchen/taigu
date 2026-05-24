@@ -52,11 +52,11 @@ const workflowItems = [
 const demoImages = [demo01, demo02, demo03, demo04, demo05, demo06];
 
 const standardBenefits = [
-  "交易紀錄與現金股利不限筆數",
-  "買賣計畫不限筆數",
-  "持股與關注清單不限檔數",
-  "股價約每 30 秒更新",
-  "適合長期追蹤完整績效",
+  { label: "交易紀錄與現金股利不限筆數" },
+  { label: "買賣計畫不限筆數" },
+  { label: "持股與關注清單不限檔數" },
+  { label: "股價約每", emphasis: "30 秒", suffix: "更新" },
+  { label: "適合長期追蹤完整績效" },
 ];
 
 const freeLimits = [
@@ -266,14 +266,19 @@ export default function Welcome(): React.ReactElement {
                 <h4>包含：</h4>
                 <ul className={styles.standardList}>
                   {standardBenefits.map((benefit) => (
-                    <li key={benefit}>{benefit}</li>
+                    <li key={`${benefit.label}${benefit.emphasis ?? ""}`}>
+                      <span>{benefit.label}</span>
+                      {benefit.emphasis ? " " : ""}
+                      {benefit.emphasis ? <strong>{benefit.emphasis}</strong> : null}
+                      {benefit.suffix ? benefit.suffix : ""}
+                    </li>
                   ))}
                 </ul>
               </div>
 
-              <p className={styles.planNote}>
-                實際股價更新時間可能受資料源與系統狀態影響。
-              </p>
+              <div className={styles.planFit}>
+                適合持續記錄交易、股利與績效的使用者。
+              </div>
             </article>
 
             <article className={`${styles.pricingCard} ${styles.freeCard}`}>
@@ -296,8 +301,9 @@ export default function Welcome(): React.ReactElement {
                   to={`${Env.frontendRootPath}login`}
                   className={`${styles.secondaryAction} ${styles.planAction} ${styles.freeAction}`}
                 >
-                  免費開始
+                  先建立免費帳戶
                 </Link>
+                <p>新帳戶仍會先套用 Standard 試用。</p>
               </div>
 
               <div className={styles.planListGroup}>
@@ -308,21 +314,24 @@ export default function Welcome(): React.ReactElement {
                       <span>{limit.label}</span>
                       {limit.suffix ? " " : ""}
                       <strong>{limit.emphasis}</strong>
-                      {limit.suffix ? ` ${limit.suffix}` : ""}
+                      {limit.suffix ? limit.suffix : ""}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <p className={styles.planNote}>
-                既有資料不會因方案變更被刪除；超過 Free
-                額度時，需升級或整理到額度內才能新增。
-              </p>
+              <div className={styles.planFit}>
+                適合偶爾記錄、先熟悉 Taigu 的使用者。
+              </div>
             </article>
           </div>
 
+          <div className={styles.pricingAssurance}>
+            <p>既有資料不會因方案變更被刪除；超過 Free 額度時，只會限制新增。</p>
+          </div>
+
           <p className={styles.pricingHint}>
-            不知道怎麼選？先建立帳戶，Taigu 會先讓你 <span>試用 Standard 一個月。</span>
+            新帳戶會先試用 Standard 一個月，試用結束後可繼續使用 Free 或升級訂閱。
           </p>
         </div>
       </section>

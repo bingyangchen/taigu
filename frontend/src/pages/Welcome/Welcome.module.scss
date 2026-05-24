@@ -637,6 +637,10 @@
 }
 
 .standardList {
+  strong {
+    font-weight: 820;
+  }
+
   li::before {
     content: "";
     position: absolute;
@@ -686,17 +690,32 @@
   line-height: 1.65;
 }
 
+.planFit {
+  margin: auto 0 0;
+  padding-top: 24px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.pricingAssurance {
+  margin-top: 24px;
+  text-align: center;
+
+  p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+}
+
 .pricingHint {
-  margin: 24px 0 0;
+  margin: 14px 0 0;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.7;
   text-align: center;
-
-  span {
-    color: var(--blue);
-    font-weight: 800;
-  }
 }
 
 .trustSection {
@@ -967,6 +986,11 @@
 
   .planAction {
     width: 100%;
+  }
+
+  .pricingAssurance {
+    margin-top: 20px;
+    text-align: left;
   }
 
   .pricingHint {
