@@ -51,6 +51,22 @@ const workflowItems = [
 
 const demoImages = [demo01, demo02, demo03, demo04, demo05, demo06];
 
+const standardBenefits = [
+  "交易紀錄與現金股利不限筆數",
+  "買賣計畫不限筆數",
+  "持股與關注清單不限檔數",
+  "股價約每 30 秒更新",
+  "適合長期追蹤完整績效",
+];
+
+const freeLimits = [
+  { label: "交易紀錄 + 現金股利：", emphasis: "20 筆" },
+  { label: "買賣計畫：", emphasis: "10 筆" },
+  { label: "持股：", emphasis: "10 檔" },
+  { label: "關注：", emphasis: "10 檔" },
+  { label: "股價約每", emphasis: "10 分鐘", suffix: "更新" },
+];
+
 export default function Welcome(): React.ReactElement {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
 
@@ -83,6 +99,7 @@ export default function Welcome(): React.ReactElement {
         <nav className={styles.nav} aria-label="Welcome page navigation">
           <a href="#workflow">功能</a>
           <a href="#market">台股資料</a>
+          <a href="#pricing">方案</a>
           <a href="#trust">安全性</a>
         </nav>
         {canInstallPWA ? (
@@ -201,6 +218,112 @@ export default function Welcome(): React.ReactElement {
             <video src={demoManyStocks} autoPlay muted loop playsInline />
             <span>快速搜尋與追蹤上千檔台股標的</span>
           </div>
+        </div>
+      </section>
+
+      <section id="pricing" className={styles.pricingSection}>
+        <div className={styles.pricingInner}>
+          <div className={styles.pricingIntro}>
+            <p className={styles.eyebrow}>方案</p>
+            <h2>先免費開始，準備好再完整記錄。</h2>
+            <p>
+              新註冊帳戶可試用 Standard 一個月。Free 適合輕量追蹤，Standard
+              適合長期整理交易、股利、持股與關注清單。
+            </p>
+          </div>
+
+          <div className={styles.pricingCards}>
+            <article className={`${styles.pricingCard} ${styles.standardCard}`}>
+              <div className={styles.planHeader}>
+                <div>
+                  <h3>Standard</h3>
+                  <p>完整記錄你的台股投資歷程。</p>
+                </div>
+                <span className={styles.recommendedBadge}>推薦長期記錄</span>
+              </div>
+
+              <div className={styles.priceBlock}>
+                <div className={styles.mainPrice}>
+                  <span>NT$65</span>
+                  <small>/月</small>
+                </div>
+                <p className={styles.yearlyPrice}>
+                  或 NT$700 / 年<span className={styles.savingBadge}>省 NT$80</span>
+                </p>
+              </div>
+
+              <div className={styles.planActionGroup}>
+                <Link
+                  to={`${Env.frontendRootPath}login`}
+                  className={`${styles.primaryAction} ${styles.planAction}`}
+                >
+                  開始一個月試用
+                </Link>
+                <p>試用期間可使用 Standard 所有功能。</p>
+              </div>
+
+              <div className={styles.planListGroup}>
+                <h4>包含：</h4>
+                <ul className={styles.standardList}>
+                  {standardBenefits.map((benefit) => (
+                    <li key={benefit}>{benefit}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <p className={styles.planNote}>
+                實際股價更新時間可能受資料源與系統狀態影響。
+              </p>
+            </article>
+
+            <article className={`${styles.pricingCard} ${styles.freeCard}`}>
+              <div className={styles.planHeader}>
+                <div>
+                  <h3>Free</h3>
+                  <p>適合先整理少量紀錄與熟悉工作流。</p>
+                </div>
+              </div>
+
+              <div className={styles.priceBlock}>
+                <div className={`${styles.mainPrice} ${styles.freePrice}`}>
+                  <span>NT$0</span>
+                  <small>永久免費</small>
+                </div>
+              </div>
+
+              <div className={styles.planActionGroup}>
+                <Link
+                  to={`${Env.frontendRootPath}login`}
+                  className={`${styles.secondaryAction} ${styles.planAction} ${styles.freeAction}`}
+                >
+                  免費開始
+                </Link>
+              </div>
+
+              <div className={styles.planListGroup}>
+                <h4>每月可使用：</h4>
+                <ul className={styles.freeList}>
+                  {freeLimits.map((limit) => (
+                    <li key={`${limit.label}${limit.emphasis}`}>
+                      <span>{limit.label}</span>
+                      {limit.suffix ? " " : ""}
+                      <strong>{limit.emphasis}</strong>
+                      {limit.suffix ? ` ${limit.suffix}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <p className={styles.planNote}>
+                既有資料不會因方案變更被刪除；超過 Free
+                額度時，需升級或整理到額度內才能新增。
+              </p>
+            </article>
+          </div>
+
+          <p className={styles.pricingHint}>
+            不知道怎麼選？先建立帳戶，Taigu 會先讓你 <span>試用 Standard 一個月。</span>
+          </p>
         </div>
       </section>
 
