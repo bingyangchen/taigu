@@ -25,6 +25,7 @@ from main.account.tokens import (
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 from main.env import env
+from main.origins import build_frontend_urls
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +38,10 @@ GOOGLE_CLIENT_CONFIG = {
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
         "client_secret": env.GOOGLE_CLIENT_SECRET,
-        "redirect_uris": [
-            "https://local.taigu.tw/login",
-            "https://local.taigu.tw/settings/account-binding",
-            "https://taigu.tw/login",
-            "https://taigu.tw/settings/account-binding",
-        ],
+        "redirect_uris": build_frontend_urls(
+            "/login",
+            "/settings/account-binding",
+        ),
     }
 }
 SCOPES = [

@@ -3,8 +3,8 @@ from django.http import HttpResponse
 from main.account import ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME
 from main.account.tokens import ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE
 from main.env import Env, env
+from main.origins import get_public_frontend_host
 
-PRODUCTION_DOMAIN = "taigu.tw"
 AUTH_COOKIE_HANDLED_ATTRIBUTE = "_auth_cookie_handled"
 REFRESH_COOKIE_PATH = "/api/account"
 
@@ -26,7 +26,9 @@ def set_access_cookie(response: HttpResponse, access_token: str) -> HttpResponse
         "httponly": True,
     }
     if env.ENV == Env.PROD:
-        response.set_cookie(**cookie_options, domain=PRODUCTION_DOMAIN, samesite="Lax")
+        response.set_cookie(
+            **cookie_options, domain=get_public_frontend_host(), samesite="Lax"
+        )
     else:
         response.set_cookie(**cookie_options, samesite="Strict")
     _mark_auth_cookie_as_handled(response)
@@ -43,7 +45,9 @@ def set_refresh_cookie(response: HttpResponse, refresh_token: str) -> HttpRespon
         "path": REFRESH_COOKIE_PATH,
     }
     if env.ENV == Env.PROD:
-        response.set_cookie(**cookie_options, domain=PRODUCTION_DOMAIN, samesite="Lax")
+        response.set_cookie(
+            **cookie_options, domain=get_public_frontend_host(), samesite="Lax"
+        )
     else:
         response.set_cookie(**cookie_options, samesite="Strict")
     _mark_auth_cookie_as_handled(response)
@@ -60,7 +64,7 @@ def set_auth_cookies(
 def delete_access_cookie(response: HttpResponse) -> HttpResponse:
     if env.ENV == Env.PROD:
         response.delete_cookie(
-            ACCESS_COOKIE_NAME, domain=PRODUCTION_DOMAIN, samesite="Lax"
+            ACCESS_COOKIE_NAME, domain=get_public_frontend_host(), samesite="Lax"
         )
     else:
         response.delete_cookie(ACCESS_COOKIE_NAME)
@@ -73,7 +77,7 @@ def delete_refresh_cookie(response: HttpResponse) -> HttpResponse:
         response.delete_cookie(
             REFRESH_COOKIE_NAME,
             path=REFRESH_COOKIE_PATH,
-            domain=PRODUCTION_DOMAIN,
+            domain=get_public_frontend_host(),
             samesite="Lax",
         )
     else:
