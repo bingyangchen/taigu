@@ -57,9 +57,9 @@ import Util from "../../utils/util";
 import styles from "./Main.module.scss";
 
 function mapStateToProps(rootState: RootState) {
-  const { username, avatar_url } = rootState.account;
+  const { username, avatar_url, subscription } = rootState.account;
   const { stockWarehouse } = rootState.tradeRecord;
-  return { username, avatar_url, stockWarehouse };
+  return { username, avatar_url, stockWarehouse, subscription };
 }
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
@@ -162,7 +162,7 @@ class Main extends React.Component<Props, State> {
     this.fetchStockInfoTimer = setInterval(() => {
       this.fetchHoldingStockInfo();
       this.props.dispatch(fetchRealtimeMarketIndex());
-    }, 15000);
+    }, this.marketRefreshIntervalMs);
   }
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (prevProps.router.location.pathname !== this.props.router.location.pathname) {
@@ -301,6 +301,10 @@ class Main extends React.Component<Props, State> {
     await this.props.dispatch(fetchStockInfo(hodlingSids)).unwrap();
     this.setState({ isLoading: false });
   };
+
+  private get marketRefreshIntervalMs(): number {
+    return this.props.subscription.market_refresh_interval_seconds * 1000;
+  }
 }
 
 export default connect(mapStateToProps)(withRouter(Main));

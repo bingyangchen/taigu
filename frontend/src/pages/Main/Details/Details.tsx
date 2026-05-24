@@ -58,6 +58,7 @@ function mapStateToProps(rootState: RootState) {
   const { sidCompanyInfoMap, favorites } = rootState.memo;
   const { tradePlans } = rootState.tradePlan;
   const { scrollTop } = rootState.mainPage;
+  const { subscription } = rootState.account;
   return {
     cashDividendRecords,
     sidStockInfoMap,
@@ -74,6 +75,7 @@ function mapStateToProps(rootState: RootState) {
     isWaitingHistoricalPrices,
     isWaitingTradeRecord,
     mainScrollTop: scrollTop,
+    subscription,
   };
 }
 
@@ -202,7 +204,7 @@ class Details extends React.Component<Props, State> {
         .catch(() => {
           if (sid === this.sid) this.setState({ didStockInfoFail: true });
         });
-    }, 15000);
+    }, this.props.subscription.market_refresh_interval_seconds * 1000);
   }
 
   public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {

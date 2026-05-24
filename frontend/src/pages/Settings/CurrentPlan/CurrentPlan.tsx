@@ -1,0 +1,642 @@
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+
+import { BeautifulBlock, BeautifulRow, Button } from "../../../components";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { fetchAccountInfo } from "../../../redux/slices/AccountSlice";
+import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
+import { pushToast } from "../../../redux/slices/ToastSlice";
+import type { BillingCard, SubscriptionEntitlements } from "../../../types";
+import Api from "../../../utils/api";
+import styles from "./CurrentPlan.module.scss";
+
+declare global {
+  interface Window {
+    ECPay?: {
+      initialize: (
+        environment: "Stage" | "Prod",
+        displayMode: 1,
+        callback: (errorMessage: string | null) => void,
+      ) => void;
+      addBindingCard: (
+        token: string,
+        language: "zh-TW" | "en-US",
+        callback: (errorMessage: string | null) => void,
+      ) => void;
+      getBindCardPayToken: (
+        callback: (
+          result: { BindCardPayToken: string },
+          errorMessage: string | null,
+        ) => void,
+      ) => void;
+    };
+  }
+}
+
+type BillingResponse = {
+  subscription: SubscriptionEntitlements;
+  card: BillingCard | null;
+  prices: { month: number; year: number };
+};
+
+type BindTokenResponse = {
+  token: string;
+  sdk_environment: "Stage" | "Prod";
+  sdk_url: string;
+};
+
+const scriptUrls = [
+  "https://code.jquery.com/jquery-3.7.1.min.js",
+  "https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js",
+];
+
+export default function CurrentPlan(): React.ReactElement {
+  const dispatch = useAppDispatch();
+  const accountSubscription = useAppSelector((state) => state.account.subscription);
+  const [searchParams] = useSearchParams();
+  const [billing, setBilling] = useState<BillingResponse | null>(null);
+  const [isWaiting, setIsWaiting] = useState(false);
+  const [isBindingCard, setIsBindingCard] = useState(false);
+  const [isCardBindingPanelOpen, setIsCardBindingPanelOpen] = useState(false);
+  const [notice, setNotice] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
+
+  const subscription = billing?.subscription ?? accountSubscription;
+  const card = billing?.card ?? null;
+  const isStandard = subscription.plan === "standard";
+  const isTrialing = subscription.status === "trialing";
+  const isActiveStandard = isStandard && subscription.status === "active";
+  const hasCard = Boolean(card);
+  const showUpgradeOptions = !isActiveStandard;
+  const priceMonth = billing?.prices.month ?? 65;
+  const priceYear = billing?.prices.year ?? 700;
+  const yearlySavings = Math.max(priceMonth * 12 - priceYear, 0);
+  const activePrice = subscription.billing_interval === "year" ? priceYear : priceMonth;
+  const activeIntervalLabel =
+    subscription.billing_interval === "year" ? "年繳" : "月繳";
+  const keyDate = getKeyDate(subscription);
+
+  const refreshBilling = useCallback(async (): Promise<void> => {
+    const response = (await Api.sendRequest(
+      "billing/subscription",
+      "get",
+    )) as BillingResponse;
+    setBilling(response);
+    await dispatch(fetchAccountInfo()).unwrap();
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(updateHeaderTitle("付款與方案"));
+    void refreshBilling();
+    const bindResult = searchParams.get("bind");
+    if (bindResult === "success") {
+      setIsCardBindingPanelOpen(false);
+      setNotice({ type: "success", text: "信用卡綁定成功，可以繼續選擇方案。" });
+      dispatch(pushToast({ type: "success", text: "信用卡綁定成功" }));
+    } else if (bindResult === "failed") {
+      const text = "信用卡綁定未完成，請確認卡號或稍後再試。";
+      setNotice({ type: "error", text });
+      dispatch(pushToast({ type: "error", text }));
+    }
+  }, [dispatch, refreshBilling, searchParams]);
+
+  const quotaRows = useMemo<[string, number, number | null][]>(
+    () => [
+      [
+        "交易與股利",
+        subscription.usage.monthly_records,
+        subscription.quota.monthly_records,
+      ],
+      [
+        "買賣計畫",
+        subscription.usage.monthly_trade_plans,
+        subscription.quota.monthly_trade_plans,
+      ],
+      ["持股", subscription.usage.holdings, subscription.quota.holdings],
+      ["關注", subscription.usage.favorites, subscription.quota.favorites],
+    ],
+    [subscription],
+  );
+
+  return (
+    <div className={styles.main}>
+      {notice && (
+        <div className={`${styles.notice} ${styles[notice.type]}`}>{notice.text}</div>
+      )}
+
+      <BeautifulBlock title="目前方案">
+        <div className={styles.summary}>
+          <div className={styles.summaryHeader}>
+            <span className={styles.planBadge}>{getPlanBadge(subscription)}</span>
+            <strong>{getPlanTitle(subscription)}</strong>
+          </div>
+          <p>{getPlanDescription(subscription)}</p>
+          <div className={styles.summaryGrid}>
+            {isActiveStandard && (
+              <div>
+                <span>付款週期</span>
+                <strong>
+                  {activeIntervalLabel} NT${activePrice}
+                </strong>
+              </div>
+            )}
+            {keyDate && (
+              <div>
+                <span>{keyDate.label}</span>
+                <strong>{keyDate.value}</strong>
+              </div>
+            )}
+            {isActiveStandard && (
+              <div>
+                <span>付款方式</span>
+                <strong>
+                  {card?.card_4_no ? `•••• ${card.card_4_no}` : "尚未綁定"}
+                </strong>
+              </div>
+            )}
+            <div>
+              <span>行情更新</span>
+              <strong>約每 {subscription.market_refresh_interval_seconds} 秒</strong>
+            </div>
+          </div>
+          {isStandard && (
+            <div className={styles.quotaInline}>
+              <span>額度</span>
+              <strong>交易與股利、買賣計畫、持股、關注皆不限量</strong>
+            </div>
+          )}
+          {isActiveStandard ? (
+            <div className={styles.currentPlanState}>已使用目前方案</div>
+          ) : isTrialing ? (
+            !hasCard && (
+              <div className={styles.upgradeHint}>
+                綁定信用卡後可選擇月繳或年繳續用。
+              </div>
+            )
+          ) : (
+            <div className={styles.upgradeHint}>升級前需先綁定信用卡。</div>
+          )}
+        </div>
+      </BeautifulBlock>
+
+      {showUpgradeOptions && (
+        <BeautifulBlock title="方案選擇">
+          {hasCard ? (
+            <>
+              <div className={styles.planSummary}>
+                <strong>
+                  {isTrialing ? "試用後繼續使用 Standard" : "升級 Standard"}
+                </strong>
+              </div>
+              <PlanActionGroup
+                cardLast4={card?.card_4_no ?? null}
+                isWaiting={isWaiting}
+                primaryLabels={{
+                  month: isTrialing
+                    ? `續用月繳 NT$${priceMonth}`
+                    : `升級月繳 NT$${priceMonth}`,
+                  year: isTrialing
+                    ? `續用年繳 NT$${priceYear}`
+                    : `升級年繳 NT$${priceYear}`,
+                }}
+                secondaryLabels={{
+                  month: isTrialing ? "彈性按月付款" : "彈性按月付款",
+                  year: yearlySavings > 0 ? `約省 NT$${yearlySavings}` : "一次付款一年",
+                }}
+                onSelect={handleStartSubscription}
+              />
+              {isTrialing && card && (
+                <CompactPaymentMethodSection
+                  card={card}
+                  isBindingCard={isBindingCard}
+                  isExpanded={isCardBindingPanelOpen}
+                  onBindCard={handleBindCard}
+                  onCancel={handleCancelCardBinding}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              <div className={styles.planSummary}>
+                <strong>{isTrialing ? "試用後繼續使用 Standard" : "Standard"}</strong>
+                <span>
+                  解除額度限制，取得更即時的行情更新。月繳 NT${priceMonth}，年繳 NT$
+                  {priceYear}。
+                </span>
+              </div>
+              <div className={styles.stepList}>
+                <div className={styles.stepRow}>
+                  <span>1</span>
+                  <div>
+                    <strong>綁定信用卡</strong>
+                    <p>綁定後才能選擇月繳或年繳。</p>
+                  </div>
+                </div>
+                <div className={styles.stepRow}>
+                  <span>2</span>
+                  <div>
+                    <strong>選擇月繳或年繳</strong>
+                    <p>確認方案後才會扣款。</p>
+                  </div>
+                </div>
+              </div>
+              <div className={styles.buttonGroup}>
+                <Button
+                  className="primary l"
+                  waiting={isBindingCard}
+                  onClick={handleBindCard}
+                >
+                  先綁定信用卡
+                </Button>
+              </div>
+            </>
+          )}
+        </BeautifulBlock>
+      )}
+
+      {!(isTrialing && hasCard) && (
+        <PaymentMethodBlock
+          card={card}
+          isBindingCard={isBindingCard}
+          onBindCard={handleBindCard}
+        />
+      )}
+
+      {!isStandard && (
+        <BeautifulBlock title="額度使用">
+          <div className={styles.quotaList}>
+            {quotaRows.map(([label, used, quota]) => (
+              <div className={styles.quotaRow} key={label.toString()}>
+                <div className={styles.quotaMeta}>
+                  <span>{label}</span>
+                  <strong>
+                    {quota === null
+                      ? "不限量"
+                      : `本月 ${used.toLocaleString()} / ${quota}`}
+                  </strong>
+                </div>
+                {quota !== null && (
+                  <div className={styles.progressTrack}>
+                    <div
+                      className={styles.progressBar}
+                      style={{ width: `${Math.min((used / quota) * 100, 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </BeautifulBlock>
+      )}
+    </div>
+  );
+
+  async function handleBindCard(): Promise<void> {
+    setIsBindingCard(true);
+    setNotice(null);
+    try {
+      if (isTrialing && hasCard) {
+        setIsCardBindingPanelOpen(true);
+        await waitForNextPaint();
+      }
+      const response = (await Api.sendRequest(
+        "billing/bind-card-token",
+        "post",
+        new URLSearchParams(),
+      )) as BindTokenResponse;
+      await loadEcpayScripts(response.sdk_url);
+      await initializeEcpay(response.sdk_environment, response.token);
+    } catch (error) {
+      const text = getUserFacingError(
+        error,
+        "信用卡綁定未完成，請確認卡號或稍後再試。",
+      );
+      setNotice({ type: "error", text });
+      dispatch(pushToast({ type: "error", text }));
+    } finally {
+      setIsBindingCard(false);
+    }
+  }
+
+  async function handleStartSubscription(interval: "month" | "year"): Promise<void> {
+    setIsWaiting(true);
+    setNotice(null);
+    try {
+      await Api.sendRequest(
+        "billing/standard-subscription",
+        "post",
+        JSON.stringify({ billing_interval: interval }),
+      );
+      dispatch(pushToast({ type: "success", text: "Standard 訂閱已啟用" }));
+      await refreshBilling();
+    } catch (error) {
+      const text = getUserFacingError(
+        error,
+        "訂閱未完成，請確認信用卡狀態或稍後再試。",
+      );
+      setNotice({ type: "error", text });
+      dispatch(pushToast({ type: "error", text }));
+    } finally {
+      setIsWaiting(false);
+    }
+  }
+
+  function handleCancelCardBinding(): void {
+    clearEcpayPayment();
+    setIsCardBindingPanelOpen(false);
+    setNotice(null);
+  }
+
+  async function initializeEcpay(
+    environment: "Stage" | "Prod",
+    token: string,
+  ): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      if (!window.ECPay) {
+        reject(new Error("綠界付款元件尚未載入"));
+        return;
+      }
+      window.ECPay.initialize(environment, 1, (errorMessage) => {
+        if (errorMessage) reject(new Error(errorMessage));
+        else resolve();
+      });
+    });
+    await new Promise<void>((resolve, reject) => {
+      if (!window.ECPay) {
+        reject(new Error("綠界付款元件尚未載入"));
+        return;
+      }
+      window.ECPay.addBindingCard(token, "zh-TW", (errorMessage) => {
+        if (errorMessage) reject(new Error(errorMessage));
+        else resolve();
+      });
+    });
+    document.querySelector(`.${styles.hiddenSdkButton}`)?.remove();
+    document.querySelector(`.${styles.submitHint}`)?.remove();
+    const submitButton = document.createElement("button");
+    submitButton.className = `button primary_fill l ${styles.hiddenSdkButton}`;
+    submitButton.type = "button";
+    submitButton.textContent = "送出信用卡綁定";
+    submitButton.onclick = () => void submitBindCardPayToken();
+    const submitHint = document.createElement("p");
+    submitHint.className = styles.submitHint;
+    submitHint.textContent = "送出後可能需要完成 3D 驗證。";
+    const paymentElement = document.getElementById("ECPayPayment");
+    paymentElement?.appendChild(submitButton);
+    paymentElement?.appendChild(submitHint);
+  }
+
+  async function submitBindCardPayToken(): Promise<void> {
+    setIsWaiting(true);
+    setNotice(null);
+    try {
+      const bindCardPayToken = await new Promise<string>((resolve, reject) => {
+        if (!window.ECPay) {
+          reject(new Error("綠界付款元件尚未載入"));
+          return;
+        }
+        window.ECPay.getBindCardPayToken((result, errorMessage) => {
+          if (errorMessage) reject(new Error(errorMessage));
+          else resolve(result.BindCardPayToken);
+        });
+      });
+      const response = await Api.sendRequest(
+        "billing/bind-card",
+        "post",
+        JSON.stringify({ bind_card_pay_token: bindCardPayToken }),
+      );
+      if (response.three_d_url) {
+        window.location.href = response.three_d_url;
+        return;
+      }
+      await refreshBilling();
+      setIsCardBindingPanelOpen(false);
+      setNotice({ type: "success", text: "信用卡綁定成功，可以繼續選擇方案。" });
+      dispatch(pushToast({ type: "success", text: "信用卡綁定成功" }));
+    } catch (error) {
+      const text = getUserFacingError(
+        error,
+        "信用卡綁定未完成，請確認卡號或稍後再試。",
+      );
+      setNotice({ type: "error", text });
+      dispatch(pushToast({ type: "error", text }));
+    } finally {
+      setIsWaiting(false);
+    }
+  }
+}
+
+function PlanActionGroup({
+  cardLast4,
+  isWaiting,
+  primaryLabels,
+  secondaryLabels,
+  onSelect,
+}: {
+  cardLast4: string | null;
+  isWaiting: boolean;
+  primaryLabels: { month: string; year: string };
+  secondaryLabels: { month: string; year: string };
+  onSelect: (interval: "month" | "year") => Promise<void>;
+}): React.ReactElement {
+  const cardLabel = cardLast4 ? `•••• ${cardLast4}` : "已綁定信用卡";
+
+  return (
+    <div className={`${styles.planActionGroup} ${styles.planActions}`}>
+      <div className={styles.planButtons}>
+        <Button
+          className="primary_fill l"
+          waiting={isWaiting}
+          onClick={() => onSelect("month")}
+        >
+          <span className={styles.planButtonMain}>{primaryLabels.month}</span>
+          <span className={styles.planButtonSub}>{secondaryLabels.month}</span>
+        </Button>
+        <Button
+          className="primary_fill l"
+          waiting={isWaiting}
+          onClick={() => onSelect("year")}
+        >
+          <span className={styles.planButtonMain}>{primaryLabels.year}</span>
+          <span className={styles.savingsBadge}>{secondaryLabels.year}</span>
+        </Button>
+      </div>
+      <p>{`使用信用卡 ${cardLabel}。確認方案後才會扣款。`}</p>
+    </div>
+  );
+}
+
+function CompactPaymentMethodSection({
+  card,
+  isBindingCard,
+  isExpanded,
+  onBindCard,
+  onCancel,
+}: {
+  card: BillingCard;
+  isBindingCard: boolean;
+  isExpanded: boolean;
+  onBindCard: () => Promise<void>;
+  onCancel: () => void;
+}): React.ReactElement {
+  const cardLabel = card.card_4_no ? `•••• ${card.card_4_no}` : "已綁定信用卡";
+
+  return (
+    <div className={styles.compactPaymentSection}>
+      <div className={styles.compactPaymentRow}>
+        <div>
+          <span>付款方式</span>
+          <strong>{cardLabel}</strong>
+        </div>
+        <Button
+          className="transparent s"
+          waiting={isBindingCard}
+          onClick={isExpanded ? onCancel : onBindCard}
+        >
+          {isExpanded ? "取消更換" : "更換"}
+        </Button>
+      </div>
+      {isExpanded && (
+        <div className={styles.cardBindingPanel}>
+          <div className={styles.cardBindingHeader}>
+            <strong>更換信用卡</strong>
+            <p>請輸入新的信用卡資訊。綁定成功後會取代目前付款方式。</p>
+          </div>
+          <div id="ECPayPayment" className={styles.ecpayPayment}></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PaymentMethodBlock({
+  card,
+  isBindingCard,
+  onBindCard,
+}: {
+  card: BillingCard | null;
+  isBindingCard: boolean;
+  onBindCard: () => Promise<void>;
+}): React.ReactElement {
+  const cardLabel = card?.card_4_no ? `•••• ${card.card_4_no}` : "尚未綁定";
+
+  return (
+    <BeautifulBlock title="付款方式">
+      <BeautifulRow label="信用卡">{cardLabel}</BeautifulRow>
+      <p className={styles.paymentHint}>
+        信用卡資料由綠界科技安全處理，Taigu 不會保存完整卡號。
+      </p>
+      <div className={styles.actionPanel}>
+        <Button className="secondary l" waiting={isBindingCard} onClick={onBindCard}>
+          {card ? "更換信用卡" : "綁定信用卡"}
+        </Button>
+        <div id="ECPayPayment" className={styles.ecpayPayment}></div>
+      </div>
+    </BeautifulBlock>
+  );
+}
+
+function getPlanBadge(subscription: SubscriptionEntitlements): string {
+  if (subscription.plan === "standard" && subscription.status === "trialing") {
+    return "試用中";
+  }
+  return subscription.plan === "standard" ? "Standard" : "Free";
+}
+
+function getPlanTitle(subscription: SubscriptionEntitlements): string {
+  if (subscription.plan === "standard" && subscription.status === "trialing") {
+    return "Standard";
+  }
+  if (subscription.plan === "standard" && subscription.status === "active") {
+    return subscription.cancel_at_period_end
+      ? "Standard 將於到期後停止"
+      : "Standard 已啟用";
+  }
+  if (subscription.status === "past_due") {
+    return "付款待處理";
+  }
+  return "Free 方案";
+}
+
+function getPlanDescription(subscription: SubscriptionEntitlements): string {
+  if (subscription.plan === "standard" && subscription.status === "trialing") {
+    return "試用期間可使用 Standard 全部額度。試用結束後會回到 Free。";
+  }
+  if (subscription.plan === "standard" && subscription.status === "active") {
+    return subscription.cancel_at_period_end
+      ? `目前方案可使用至 ${formatDate(subscription.current_period_ends_at)}。`
+      : "已啟用自動續訂，以下是目前的帳務摘要。";
+  }
+  if (subscription.status === "past_due") {
+    return "付款未完成，更新付款方式後可恢復 Standard 權益。";
+  }
+  return "適合開始記錄台股交易；升級後可解除額度限制並取得更即時的行情更新。";
+}
+
+function getKeyDate(
+  subscription: SubscriptionEntitlements,
+): { label: string; value: string } | null {
+  if (subscription.status === "trialing" && subscription.trial_ends_at) {
+    return { label: "試用至", value: formatDate(subscription.trial_ends_at) };
+  }
+  if (subscription.status === "active" && subscription.current_period_ends_at) {
+    return {
+      label: subscription.cancel_at_period_end ? "有效至" : "下次續費",
+      value: formatDate(subscription.current_period_ends_at),
+    };
+  }
+  if (subscription.status === "canceled" && subscription.current_period_ends_at) {
+    return { label: "有效至", value: formatDate(subscription.current_period_ends_at) };
+  }
+  return null;
+}
+
+function formatDate(value: string | null): string {
+  if (!value) return "";
+  return new Date(value).toLocaleDateString("zh-TW");
+}
+
+function getUserFacingError(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    if (error.message.includes("綠界付款元件")) return error.message;
+  }
+  return fallback;
+}
+
+function waitForNextPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
+}
+
+function clearEcpayPayment(): void {
+  document.querySelector(`.${styles.hiddenSdkButton}`)?.remove();
+  document.querySelector(`.${styles.submitHint}`)?.remove();
+  const paymentElement = document.getElementById("ECPayPayment");
+  if (paymentElement) {
+    paymentElement.replaceChildren();
+  }
+}
+
+async function loadEcpayScripts(sdkUrl: string): Promise<void> {
+  for (const url of [...scriptUrls, sdkUrl]) {
+    await loadScript(url);
+  }
+}
+
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = false;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("無法載入綠界付款元件"));
+    document.body.appendChild(script);
+  });
+}

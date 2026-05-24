@@ -22,8 +22,8 @@ import Util from "../../../utils/util";
 import styles from "./Overview.module.scss";
 
 function mapStateToProps(rootState: RootState) {
-  const { email, username, avatar_url, isWaiting } = rootState.account;
-  return { email, username, avatar_url, isWaiting };
+  const { email, username, avatar_url, isWaiting, subscription } = rootState.account;
+  return { email, username, avatar_url, isWaiting, subscription };
 }
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
@@ -102,40 +102,18 @@ class Overview extends React.Component<Props, State> {
               </div>
             </BeautifulRow>
           </BeautifulBlock>
-          {/* <BeautifulBlock id="billing-and-plans" title="付款與方案">
-              <BeautifulRow
-                label="目前方案"
-                onClick={() =>
-                  this.props.router.navigate(
-                    `${Env.frontendRootPath}${settingsPagePath}/current-plan`,
-                  )
-                }
-              >
-                Premium
-              </BeautifulRow>
-              <BeautifulRow
-                label="付款資訊"
-                onClick={() =>
-                  this.props.router.navigate(
-                    `${Env.frontendRootPath}${settingsPagePath}/payment-information`,
-                  )
-                }
-              >
-                無
-              </BeautifulRow>
-            </BeautifulBlock>
-            <BeautifulBlock id="notification" title="通知">
-              <BeautifulRow
-                label="交易通知"
-                onClick={() =>
-                  this.props.router.navigate(
-                    `${Env.frontendRootPath}${settingsPagePath}/notification`,
-                  )
-                }
-              >
-                當商品價格觸及你的目標價格時，發送通知給你
-              </BeautifulRow>
-            </BeautifulBlock> */}
+          <BeautifulBlock id="billing-and-plans" title="付款與方案">
+            <BeautifulRow
+              label="目前方案"
+              onClick={() =>
+                this.props.router.navigate(
+                  `${Env.frontendRootPath}${settingsPagePath}/current-plan`,
+                )
+              }
+            >
+              {this.props.subscription.plan === "standard" ? "Standard" : "Free"}
+            </BeautifulRow>
+          </BeautifulBlock>
           <BeautifulBlock id="about" title="關於">
             <BeautifulRow
               onClick={() =>

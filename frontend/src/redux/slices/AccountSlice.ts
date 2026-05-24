@@ -14,6 +14,27 @@ const initialState: AccountState = {
   email: "",
   username: "",
   avatar_url: "",
+  subscription: {
+    plan: "free",
+    status: "canceled",
+    billing_interval: "month",
+    trial_ends_at: null,
+    current_period_ends_at: null,
+    cancel_at_period_end: false,
+    market_refresh_interval_seconds: 600,
+    quota: {
+      monthly_records: 20,
+      monthly_trade_plans: 10,
+      holdings: 10,
+      favorites: 10,
+    },
+    usage: {
+      monthly_records: 0,
+      monthly_trade_plans: 0,
+      holdings: 0,
+      favorites: 0,
+    },
+  },
   isWaiting: false,
 };
 
@@ -102,6 +123,7 @@ export const accountSlice = createSlice({
         state.email = action.payload.email;
         state.username = action.payload.username;
         state.avatar_url = action.payload.avatar_url;
+        state.subscription = action.payload.subscription;
 
         state.isWaiting = false;
       })
@@ -117,6 +139,7 @@ export const accountSlice = createSlice({
         state.email = action.payload.email;
         state.username = action.payload.username;
         state.avatar_url = action.payload.avatar_url;
+        state.subscription = action.payload.subscription;
 
         state.isWaiting = false;
       })
@@ -132,6 +155,7 @@ export const accountSlice = createSlice({
         state.email = action.payload.email;
         state.username = action.payload.username;
         state.avatar_url = action.payload.avatar_url;
+        state.subscription = action.payload.subscription;
 
         state.isWaiting = false;
       })
