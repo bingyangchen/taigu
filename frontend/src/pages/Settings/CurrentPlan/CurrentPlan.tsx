@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { BeautifulBlock, BeautifulRow, Button } from "../../../components";
@@ -50,6 +50,10 @@ const scriptUrls = [
   "https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js",
 ];
 
+let isEcpayInitialized = false;
+
+const paymentMethodHighlightDurationMs = 1500;
+
 export default function CurrentPlan(): React.ReactElement {
   const dispatch = useAppDispatch();
   const accountSubscription = useAppSelector((state) => state.account.subscription);
@@ -62,6 +66,9 @@ export default function CurrentPlan(): React.ReactElement {
     type: "success" | "error" | "info";
     text: string;
   } | null>(null);
+  const [isPaymentMethodHighlighted, setIsPaymentMethodHighlighted] = useState(false);
+  const paymentMethodSectionRef = useRef<HTMLDivElement>(null);
+  const paymentMethodHighlightTimeoutRef = useRef<number | null>(null);
 
   const subscription = billing?.subscription ?? accountSubscription;
   const card = billing?.card ?? null;
@@ -101,6 +108,14 @@ export default function CurrentPlan(): React.ReactElement {
       dispatch(pushToast({ type: "error", text }));
     }
   }, [dispatch, refreshBilling, searchParams]);
+
+  useEffect(() => {
+    return () => {
+      if (paymentMethodHighlightTimeoutRef.current !== null) {
+        window.clearTimeout(paymentMethodHighlightTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const quotaRows = useMemo<[string, number, number | null][]>(
     () => [
@@ -243,12 +258,8 @@ export default function CurrentPlan(): React.ReactElement {
                 </div>
               </div>
               <div className={styles.buttonGroup}>
-                <Button
-                  className="primary l"
-                  waiting={isBindingCard}
-                  onClick={handleBindCard}
-                >
-                  先綁定信用卡
+                <Button className="primary l" onClick={handleScrollToPaymentMethod}>
+                  前往綁定信用卡
                 </Button>
               </div>
             </>
@@ -257,11 +268,20 @@ export default function CurrentPlan(): React.ReactElement {
       )}
 
       {!(isTrialing && hasCard) && (
-        <PaymentMethodBlock
-          card={card}
-          isBindingCard={isBindingCard}
-          onBindCard={handleBindCard}
-        />
+        <div
+          ref={paymentMethodSectionRef}
+          className={`${styles.paymentMethodSection} ${
+            isPaymentMethodHighlighted ? styles.paymentMethodHighlight : ""
+          }`}
+        >
+          <PaymentMethodBlock
+            card={card}
+            isBindingCard={isBindingCard}
+            isExpanded={isCardBindingPanelOpen}
+            onBindCard={handleBindCard}
+            onCancel={handleCancelCardBinding}
+          />
+        </div>
       )}
 
       {!isStandard && (
@@ -293,12 +313,27 @@ export default function CurrentPlan(): React.ReactElement {
     </div>
   );
 
+  function handleScrollToPaymentMethod(): void {
+    paymentMethodSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    setIsPaymentMethodHighlighted(true);
+    if (paymentMethodHighlightTimeoutRef.current !== null) {
+      window.clearTimeout(paymentMethodHighlightTimeoutRef.current);
+    }
+    paymentMethodHighlightTimeoutRef.current = window.setTimeout(() => {
+      setIsPaymentMethodHighlighted(false);
+      paymentMethodHighlightTimeoutRef.current = null;
+    }, paymentMethodHighlightDurationMs);
+  }
+
   async function handleBindCard(): Promise<void> {
     setIsBindingCard(true);
     setNotice(null);
     try {
+      setIsCardBindingPanelOpen(true);
       if (isTrialing && hasCard) {
-        setIsCardBindingPanelOpen(true);
         await waitForNextPaint();
       }
       const response = (await Api.sendRequest(
@@ -309,6 +344,8 @@ export default function CurrentPlan(): React.ReactElement {
       await loadEcpayScripts(response.sdk_url);
       await initializeEcpay(response.sdk_environment, response.token);
     } catch (error) {
+      clearEcpayPayment();
+      setIsCardBindingPanelOpen(false);
       const text = getUserFacingError(
         error,
         "信用卡綁定未完成，請確認卡號或稍後再試。",
@@ -353,16 +390,23 @@ export default function CurrentPlan(): React.ReactElement {
     environment: "Stage" | "Prod",
     token: string,
   ): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-      if (!window.ECPay) {
-        reject(new Error("綠界付款元件尚未載入"));
-        return;
-      }
-      window.ECPay.initialize(environment, 1, (errorMessage) => {
-        if (errorMessage) reject(new Error(errorMessage));
-        else resolve();
+    if (!isEcpayInitialized) {
+      await new Promise<void>((resolve, reject) => {
+        if (!window.ECPay) {
+          reject(new Error("綠界付款元件尚未載入"));
+          return;
+        }
+        window.ECPay.initialize(environment, 1, (errorMessage) => {
+          if (errorMessage) reject(new Error(errorMessage));
+          else resolve();
+        });
       });
-    });
+      isEcpayInitialized = true;
+    }
+
+    clearEcpayPayment();
+    await waitForNextPaint();
+
     await new Promise<void>((resolve, reject) => {
       if (!window.ECPay) {
         reject(new Error("綠界付款元件尚未載入"));
@@ -514,11 +558,15 @@ function CompactPaymentMethodSection({
 function PaymentMethodBlock({
   card,
   isBindingCard,
+  isExpanded,
   onBindCard,
+  onCancel,
 }: {
   card: BillingCard | null;
   isBindingCard: boolean;
+  isExpanded: boolean;
   onBindCard: () => Promise<void>;
+  onCancel: () => void;
 }): React.ReactElement {
   const cardLabel = card?.card_4_no ? `•••• ${card.card_4_no}` : "尚未綁定";
 
@@ -529,8 +577,18 @@ function PaymentMethodBlock({
         信用卡資料由綠界科技安全處理，Taigu 不會保存完整卡號。
       </p>
       <div className={styles.actionPanel}>
-        <Button className="secondary l" waiting={isBindingCard} onClick={onBindCard}>
-          {card ? "更換信用卡" : "綁定信用卡"}
+        <Button
+          className="secondary l"
+          waiting={isBindingCard}
+          onClick={isExpanded ? onCancel : onBindCard}
+        >
+          {isExpanded
+            ? card
+              ? "取消更換"
+              : "取消"
+            : card
+              ? "更換信用卡"
+              : "綁定信用卡"}
         </Button>
         <div id="ECPayPayment" className={styles.ecpayPayment}></div>
       </div>
@@ -600,14 +658,17 @@ function formatDate(value: string | null): string {
 
 function getUserFacingError(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) {
-    if (error.message.includes("綠界付款元件")) return error.message;
+    return error.message;
   }
   return fallback;
 }
 
 function waitForNextPaint(): Promise<void> {
+  // ECPay renders into #ECPayPayment only after layout; double rAF waits for paint.
   return new Promise((resolve) => {
-    window.requestAnimationFrame(() => resolve());
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
   });
 }
 
