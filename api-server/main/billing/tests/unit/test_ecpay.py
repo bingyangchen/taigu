@@ -1,4 +1,14 @@
-from main.billing.ecpay import EcpayClient, EcpayConfig, aes_decrypt, aes_encrypt
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+from main.billing.ecpay import (
+    EcpayClient,
+    EcpayConfig,
+    aes_decrypt,
+    aes_encrypt,
+    next_period_end,
+)
+from main.billing.models import BillingInterval
 
 
 class CapturingEcpayClient(EcpayClient):
@@ -47,3 +57,21 @@ def test_binding_token_uses_ecpay_verification_amount() -> None:
 
     assert client.data is not None
     assert client.data["OrderInfo"]["TotalAmount"] == "10"
+
+
+def test_next_period_end_uses_calendar_month(monkeypatch) -> None:
+    fixed_now = datetime(2024, 1, 31, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
+    monkeypatch.setattr("main.billing.ecpay.timezone.now", lambda: fixed_now)
+
+    period_end = next_period_end(BillingInterval.MONTH)
+
+    assert period_end == datetime(2024, 2, 29, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
+
+
+def test_next_period_end_uses_calendar_year(monkeypatch) -> None:
+    fixed_now = datetime(2024, 2, 29, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
+    monkeypatch.setattr("main.billing.ecpay.timezone.now", lambda: fixed_now)
+
+    period_end = next_period_end(BillingInterval.YEAR)
+
+    assert period_end == datetime(2025, 2, 28, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))

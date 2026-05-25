@@ -1,6 +1,8 @@
+import threading
 from datetime import timedelta
 
 import pytest
+from django.db import connection
 from django.utils import timezone
 
 from main.account import OAuthOrganization
@@ -27,6 +29,19 @@ class FakeEcpayClient:
                 "TradeNo": "ecpay-trade-no",
             },
         }
+
+
+class BlockingEcpayClient(FakeEcpayClient):
+    def __init__(self) -> None:
+        self.started = threading.Event()
+        self.release = threading.Event()
+        self.calls = 0
+
+    def create_payment_with_card_id(self, **kwargs) -> dict:  # noqa: ANN003
+        self.calls += 1
+        self.started.set()
+        assert self.release.wait(timeout=5)
+        return super().create_payment_with_card_id(**kwargs)
 
 
 @pytest.mark.django_db
@@ -84,3 +99,49 @@ class TestRenewSubscriptions:
         assert summary == {"renewed": 0, "past_due": 0, "canceled": 1}
         assert profile.plan == Plan.FREE
         assert profile.subscription_status == SubscriptionStatus.CANCELED
+
+    @pytest.mark.django_db(transaction=True)
+    def test_concurrent_renewal_skips_locked_profile(self, user: User) -> None:
+        due_at = timezone.now() - timedelta(minutes=1)
+        BillingProfile.objects.create(
+            user=user,
+            plan=Plan.STANDARD,
+            subscription_status=SubscriptionStatus.ACTIVE,
+            billing_interval=BillingInterval.MONTH,
+            current_period_started_at=due_at - timedelta(days=31),
+            current_period_ends_at=due_at,
+        )
+        CardBinding.objects.create(
+            user=user,
+            provider=PaymentProvider.ECPAY,
+            provider_member_id="member",
+            provider_request_id="B123",
+            provider_binding_id="bind-card-id",
+            status=CardStatus.ACTIVE,
+        )
+        client = BlockingEcpayClient()
+        thread_summary: list[dict[str, int]] = []
+        thread_error: list[BaseException] = []
+
+        def renew_in_thread() -> None:
+            try:
+                thread_summary.append(renew_due_subscriptions(client=client))
+            except BaseException as error:
+                thread_error.append(error)
+            finally:
+                connection.close()
+
+        thread = threading.Thread(target=renew_in_thread)
+        thread.start()
+        assert client.started.wait(timeout=5)
+
+        concurrent_summary = renew_due_subscriptions(client=client)
+
+        client.release.set()
+        thread.join(timeout=5)
+
+        assert not thread_error
+        assert not thread.is_alive()
+        assert thread_summary == [{"renewed": 1, "past_due": 0, "canceled": 0}]
+        assert concurrent_summary == {"renewed": 0, "past_due": 0, "canceled": 0}
+        assert client.calls == 1
