@@ -128,13 +128,13 @@
   }
 
   span {
-    color: _.$gray;
-    font-size: 0.82 * _.$base-font-size;
+    color: _.$deep-gray;
+    font-size: 0.75 * _.$base-font-size;
   }
 
   strong {
     color: _.$gray;
-    font-size: 0.92 * _.$base-font-size;
+    font-size: 0.9 * _.$base-font-size;
     font-weight: 400;
     line-height: 1.4;
     text-align: right;
@@ -151,13 +151,13 @@
   border-bottom: 1px solid _.$noisy-white;
 
   span {
-    color: _.$gray;
-    font-size: 0.82 * _.$base-font-size;
+    color: _.$deep-gray;
+    font-size: 0.75 * _.$base-font-size;
   }
 
   strong {
     color: _.$gray;
-    font-size: 0.92 * _.$base-font-size;
+    font-size: 0.9 * _.$base-font-size;
     font-weight: 400;
     line-height: 1.5;
     text-align: right;
@@ -224,7 +224,7 @@
 
 .paymentHint {
   margin: 12px 18px 0;
-  font-size: 0.92 * _.$base-font-size;
+  font-size: 0.88 * _.$base-font-size;
 }
 
 .quotaList {
@@ -237,7 +237,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 58px;
+  min-height: 0;
+  padding: 13px 0;
   color: _.$deep-gray;
   border-bottom: 1px solid _.$noisy-white;
 
@@ -252,16 +253,23 @@
   justify-content: space-between;
   gap: 16px;
 
-  & > strong {
+  & > span {
     color: _.$deep-gray;
-    font-size: 0.92 * _.$base-font-size;
+    font-size: 0.75 * _.$base-font-size;
+    font-weight: 400;
+  }
+
+  & > strong {
+    color: _.$gray;
+    font-size: 0.9 * _.$base-font-size;
+    font-weight: 400;
     white-space: nowrap;
   }
 }
 
 .progressTrack {
   height: 4px;
-  margin-top: 9px;
+  margin-top: 11px;
   overflow: hidden;
   background: _.$noisy-white;
   border-radius: 999px;
@@ -332,7 +340,7 @@
     min-width: 0;
     padding-left: 14px;
     color: _.$gray;
-    font-size: 0.86 * _.$base-font-size;
+    font-size: 0.88 * _.$base-font-size;
     line-height: 1.5;
 
     &::before {
@@ -532,7 +540,7 @@
 .submitHint {
   margin: 8px 0 0;
   color: _.$gray;
-  font-size: 0.84 * _.$base-font-size;
+  font-size: 0.88 * _.$base-font-size;
   line-height: 1.5;
   text-align: center;
 }
@@ -559,14 +567,14 @@
   }
 
   span {
-    color: _.$gray;
-    font-size: 0.84 * _.$base-font-size;
+    color: _.$deep-gray;
+    font-size: 0.75 * _.$base-font-size;
   }
 
   strong {
     min-width: 0;
-    color: _.$deep-gray;
-    font-size: 0.94 * _.$base-font-size;
+    color: _.$gray;
+    font-size: 0.9 * _.$base-font-size;
     line-height: 1.45;
     text-align: right;
     overflow-wrap: anywhere;
