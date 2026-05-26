@@ -8,6 +8,9 @@ import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { BillingCard, SubscriptionEntitlements } from "../../../types";
 import Api from "../../../utils/api";
+import CancelSubscriptionDialog, {
+  type CancelSubscriptionFeedback,
+} from "./CancelSubscriptionDialog";
 import styles from "./CurrentPlan.module.scss";
 
 declare global {
@@ -61,6 +64,13 @@ export default function CurrentPlan(): React.ReactElement {
   const [billing, setBilling] = useState<BillingResponse | null>(null);
   const [isWaiting, setIsWaiting] = useState(false);
   const [isBindingCard, setIsBindingCard] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isCancelingSubscription, setIsCancelingSubscription] = useState(false);
+  const [cancelSubscriptionError, setCancelSubscriptionError] = useState<string | null>(
+    null,
+  );
+  const [cancelSubscriptionFeedback, setCancelSubscriptionFeedback] =
+    useState<CancelSubscriptionFeedback>({ reason: "", detail: "" });
   const [isCardBindingPanelOpen, setIsCardBindingPanelOpen] = useState(false);
   const [notice, setNotice] = useState<{
     type: "success" | "error" | "info";
@@ -69,6 +79,7 @@ export default function CurrentPlan(): React.ReactElement {
   const [isPaymentMethodHighlighted, setIsPaymentMethodHighlighted] = useState(false);
   const paymentMethodSectionRef = useRef<HTMLDivElement>(null);
   const paymentMethodHighlightTimeoutRef = useRef<number | null>(null);
+  const isSubmittingCardBindingRef = useRef(false);
 
   const subscription = billing?.subscription ?? accountSubscription;
   const card = billing?.card ?? null;
@@ -76,20 +87,22 @@ export default function CurrentPlan(): React.ReactElement {
   const isTrialing = subscription.status === "trialing";
   const isActiveStandard = isStandard && subscription.status === "active";
   const hasCard = Boolean(card);
+  const canCancelAutoRenewal =
+    subscription.plan === "standard" &&
+    subscription.status === "active" &&
+    !subscription.cancel_at_period_end;
+  const hasStoppedAutoRenewal =
+    subscription.plan === "standard" &&
+    subscription.status === "active" &&
+    subscription.cancel_at_period_end;
   const showUpgradeOptions = !isActiveStandard;
   const priceMonth = billing?.prices.month ?? 65;
   const priceYear = billing?.prices.year ?? 700;
   const yearlySavings = Math.max(priceMonth * 12 - priceYear, 0);
-  const activePrice = subscription.billing_interval === "year" ? priceYear : priceMonth;
-  const activeIntervalLabel =
-    subscription.billing_interval === "year" ? "年繳" : "月繳";
   const keyDate = getKeyDate(subscription);
 
   const refreshBilling = useCallback(async (): Promise<void> => {
-    const response = (await Api.sendRequest(
-      "billing/subscription",
-      "get",
-    )) as BillingResponse;
+    const response = (await Api.sendRequest("billing/me", "get")) as BillingResponse;
     setBilling(response);
     await dispatch(fetchAccountInfo()).unwrap();
   }, [dispatch]);
@@ -144,31 +157,26 @@ export default function CurrentPlan(): React.ReactElement {
       <BeautifulBlock title="目前方案">
         <div className={styles.summary}>
           <div className={styles.summaryHeader}>
-            <span className={styles.planBadge}>{getPlanBadge(subscription)}</span>
-            <strong>{getPlanTitle(subscription)}</strong>
+            <div className={styles.planIdentity}>
+              <strong>{getPlanName(subscription)}</strong>
+              <span
+                className={`${styles.planBadge} ${
+                  styles[getPlanBadgeTone(subscription)]
+                }`}
+              >
+                {getPlanBadgeLabel(subscription)}
+              </span>
+              <span className={styles.planPrice}>
+                {getPlanPriceLabel(subscription, priceMonth, priceYear)}
+              </span>
+            </div>
           </div>
           <p>{getPlanDescription(subscription)}</p>
           <div className={styles.summaryGrid}>
-            {isActiveStandard && (
-              <div>
-                <span>付款週期</span>
-                <strong>
-                  {activeIntervalLabel} NT${activePrice}
-                </strong>
-              </div>
-            )}
             {keyDate && (
               <div>
                 <span>{keyDate.label}</span>
                 <strong>{keyDate.value}</strong>
-              </div>
-            )}
-            {isActiveStandard && (
-              <div>
-                <span>付款方式</span>
-                <strong>
-                  {card?.card_4_no ? `•••• ${card.card_4_no}` : "尚未綁定"}
-                </strong>
               </div>
             )}
             <div>
@@ -182,17 +190,16 @@ export default function CurrentPlan(): React.ReactElement {
               <strong>交易與股利、買賣計畫、持股、關注皆不限量</strong>
             </div>
           )}
-          {isActiveStandard ? (
-            <div className={styles.currentPlanState}>已使用目前方案</div>
-          ) : isTrialing ? (
-            !hasCard && (
-              <div className={styles.upgradeHint}>
-                綁定信用卡後可選擇月繳或年繳續用。
-              </div>
-            )
-          ) : (
-            <div className={styles.upgradeHint}>升級前需先綁定信用卡。</div>
-          )}
+          {!isActiveStandard &&
+            (isTrialing ? (
+              !hasCard && (
+                <div className={styles.upgradeHint}>
+                  綁定信用卡後可選擇月繳或年繳續用。
+                </div>
+              )
+            ) : (
+              <div className={styles.upgradeHint}>升級前需先綁定信用卡。</div>
+            ))}
         </div>
       </BeautifulBlock>
 
@@ -310,6 +317,26 @@ export default function CurrentPlan(): React.ReactElement {
           </div>
         </BeautifulBlock>
       )}
+
+      {(canCancelAutoRenewal || hasStoppedAutoRenewal) && (
+        <BeautifulBlock title="訂閱管理">
+          {canCancelAutoRenewal ? (
+            <SubscriptionManagementPanel onStopAutoRenewal={handleOpenCancelDialog} />
+          ) : (
+            <SubscriptionStoppedPanel />
+          )}
+        </BeautifulBlock>
+      )}
+
+      <CancelSubscriptionDialog
+        subscription={subscription}
+        isOpen={isCancelDialogOpen}
+        isWaiting={isCancelingSubscription}
+        errorMessage={cancelSubscriptionError}
+        onClose={handleCloseCancelDialog}
+        onConfirm={handleCancelSubscription}
+        onReasonChange={setCancelSubscriptionFeedback}
+      />
     </div>
   );
 
@@ -337,7 +364,7 @@ export default function CurrentPlan(): React.ReactElement {
         await waitForNextPaint();
       }
       const response = (await Api.sendRequest(
-        "billing/bind-card-token",
+        "billing/card-binding/init",
         "post",
         new URLSearchParams(),
       )) as BindTokenResponse;
@@ -377,6 +404,42 @@ export default function CurrentPlan(): React.ReactElement {
       dispatch(pushToast({ type: "error", text }));
     } finally {
       setIsWaiting(false);
+    }
+  }
+
+  function handleOpenCancelDialog(): void {
+    setCancelSubscriptionError(null);
+    setIsCancelDialogOpen(true);
+  }
+
+  function handleCloseCancelDialog(): void {
+    if (isCancelingSubscription) return;
+    setIsCancelDialogOpen(false);
+    setCancelSubscriptionError(null);
+  }
+
+  async function handleCancelSubscription(): Promise<void> {
+    setIsCancelingSubscription(true);
+    setCancelSubscriptionError(null);
+    try {
+      await Api.sendRequest(
+        "billing/cancel-subscription",
+        "post",
+        JSON.stringify({
+          reason: cancelSubscriptionFeedback.reason || null,
+          reason_detail: cancelSubscriptionFeedback.detail || null,
+        }),
+      );
+      setIsCancelDialogOpen(false);
+      await refreshBilling();
+      const periodEnd = formatDate(subscription.current_period_ends_at);
+      const text = `已停止自動續訂，Standard 權益會保留到 ${periodEnd}。`;
+      setNotice({ type: "success", text });
+      dispatch(pushToast({ type: "success", text: "已停止自動續訂" }));
+    } catch (error) {
+      setCancelSubscriptionError(getCancelSubscriptionError(error));
+    } finally {
+      setIsCancelingSubscription(false);
     }
   }
 
@@ -422,7 +485,10 @@ export default function CurrentPlan(): React.ReactElement {
     const submitButton = document.createElement("button");
     submitButton.className = `button primary_fill l ${styles.hiddenSdkButton}`;
     submitButton.type = "button";
-    submitButton.textContent = "送出信用卡綁定";
+    const submitButtonContent = document.createElement("span");
+    submitButtonContent.className = "button__content";
+    submitButtonContent.textContent = "送出信用卡綁定";
+    submitButton.appendChild(submitButtonContent);
     submitButton.onclick = () => void submitBindCardPayToken();
     const submitHint = document.createElement("p");
     submitHint.className = styles.submitHint;
@@ -433,8 +499,12 @@ export default function CurrentPlan(): React.ReactElement {
   }
 
   async function submitBindCardPayToken(): Promise<void> {
+    if (isSubmittingCardBindingRef.current) return;
+    isSubmittingCardBindingRef.current = true;
     setIsWaiting(true);
+    setSdkSubmitButtonWaiting(true);
     setNotice(null);
+    let isRedirectingToThreeD = false;
     try {
       const bindCardPayToken = await new Promise<string>((resolve, reject) => {
         if (!window.ECPay) {
@@ -447,11 +517,12 @@ export default function CurrentPlan(): React.ReactElement {
         });
       });
       const response = await Api.sendRequest(
-        "billing/bind-card",
+        "billing/card-binding/confirm",
         "post",
         JSON.stringify({ bind_card_pay_token: bindCardPayToken }),
       );
       if (response.three_d_url) {
+        isRedirectingToThreeD = true;
         window.location.href = response.three_d_url;
         return;
       }
@@ -467,9 +538,48 @@ export default function CurrentPlan(): React.ReactElement {
       setNotice({ type: "error", text });
       dispatch(pushToast({ type: "error", text }));
     } finally {
-      setIsWaiting(false);
+      if (!isRedirectingToThreeD) {
+        isSubmittingCardBindingRef.current = false;
+        setSdkSubmitButtonWaiting(false);
+        setIsWaiting(false);
+      }
     }
   }
+}
+
+function SubscriptionManagementPanel({
+  onStopAutoRenewal,
+}: {
+  onStopAutoRenewal: () => void;
+}): React.ReactElement {
+  return (
+    <div className={styles.subscriptionManagement}>
+      <div>
+        <strong>自動續訂</strong>
+        <p>
+          目前 Standard
+          會在下次續費日自動續訂。你可以停止下次扣款，權益會保留到本期結束。
+        </p>
+      </div>
+      <Button
+        className={`dangerous l border ${styles.stopAutoRenewalButton}`}
+        onClick={onStopAutoRenewal}
+      >
+        停止自動續訂
+      </Button>
+    </div>
+  );
+}
+
+function SubscriptionStoppedPanel(): React.ReactElement {
+  return (
+    <div className={`${styles.subscriptionManagement} ${styles.subscriptionStopped}`}>
+      <div>
+        <strong>已停止自動續訂</strong>
+        <p>Standard 權益會保留到本期結束。到期後會切換為 Free，不會再自動扣款。</p>
+      </div>
+    </div>
+  );
 }
 
 function PlanActionGroup({
@@ -596,26 +706,41 @@ function PaymentMethodBlock({
   );
 }
 
-function getPlanBadge(subscription: SubscriptionEntitlements): string {
-  if (subscription.plan === "standard" && subscription.status === "trialing") {
-    return "試用中";
-  }
+function getPlanName(subscription: SubscriptionEntitlements): string {
   return subscription.plan === "standard" ? "Standard" : "Free";
 }
 
-function getPlanTitle(subscription: SubscriptionEntitlements): string {
+function getPlanBadgeLabel(subscription: SubscriptionEntitlements): string {
   if (subscription.plan === "standard" && subscription.status === "trialing") {
-    return "Standard";
+    return "試用中";
   }
-  if (subscription.plan === "standard" && subscription.status === "active") {
-    return subscription.cancel_at_period_end
-      ? "Standard 將於到期後停止"
-      : "Standard 已啟用";
+  if (subscription.plan === "standard") {
+    return subscription.billing_interval === "year" ? "年繳" : "月繳";
   }
-  if (subscription.status === "past_due") {
-    return "付款待處理";
+  return "使用中";
+}
+
+function getPlanBadgeTone(subscription: SubscriptionEntitlements): string {
+  if (subscription.plan === "free") {
+    return "planBadgeCurrent";
   }
-  return "Free 方案";
+  if (subscription.status === "trialing") {
+    return "planBadgeTrial";
+  }
+  return "planBadgeBilling";
+}
+
+function getPlanPriceLabel(
+  subscription: SubscriptionEntitlements,
+  priceMonth: number,
+  priceYear: number,
+): string {
+  if (subscription.plan === "free" || subscription.status === "trialing") {
+    return "NT$0";
+  }
+  return subscription.billing_interval === "year"
+    ? `NT$${priceYear}/年`
+    : `NT$${priceMonth}/月`;
 }
 
 function getPlanDescription(subscription: SubscriptionEntitlements): string {
@@ -624,7 +749,7 @@ function getPlanDescription(subscription: SubscriptionEntitlements): string {
   }
   if (subscription.plan === "standard" && subscription.status === "active") {
     return subscription.cancel_at_period_end
-      ? `目前方案可使用至 ${formatDate(subscription.current_period_ends_at)}。`
+      ? `目前方案可使用至 ${formatDate(subscription.current_period_ends_at)}。到期後會切換為 Free，不會再自動扣款。`
       : "已啟用自動續訂，以下是目前的帳務摘要。";
   }
   if (subscription.status === "past_due") {
@@ -653,7 +778,11 @@ function getKeyDate(
 
 function formatDate(value: string | null): string {
   if (!value) return "";
-  return new Date(value).toLocaleDateString("zh-TW");
+  return new Date(value).toLocaleDateString("zh-TW", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 }
 
 function getUserFacingError(error: unknown, fallback: string): string {
@@ -661,6 +790,17 @@ function getUserFacingError(error: unknown, fallback: string): string {
     return error.message;
   }
   return fallback;
+}
+
+function getCancelSubscriptionError(error: unknown): string {
+  if (
+    error instanceof TypeError ||
+    (error instanceof Error && /fetch|network/i.test(error.message)) ||
+    (typeof navigator !== "undefined" && !navigator.onLine)
+  ) {
+    return "網路連線不穩，尚未完成變更。請確認連線後再試一次。";
+  }
+  return getUserFacingError(error, "暫時無法停止自動續訂，請稍後再試。");
 }
 
 function waitForNextPaint(): Promise<void> {
@@ -678,6 +818,22 @@ function clearEcpayPayment(): void {
   const paymentElement = document.getElementById("ECPayPayment");
   if (paymentElement) {
     paymentElement.replaceChildren();
+  }
+}
+
+function setSdkSubmitButtonWaiting(isWaiting: boolean): void {
+  const submitButton = document.querySelector<HTMLButtonElement>(
+    `.${styles.hiddenSdkButton}`,
+  );
+  if (!submitButton) return;
+  submitButton.disabled = isWaiting;
+  submitButton.setAttribute("aria-busy", isWaiting ? "true" : "false");
+  submitButton.classList.toggle("waiting", isWaiting);
+  if (isWaiting) {
+    submitButton.setAttribute("data-waiting", "");
+  } else {
+    submitButton.removeAttribute("data-waiting");
+    submitButton.removeAttribute("aria-busy");
   }
 }
 

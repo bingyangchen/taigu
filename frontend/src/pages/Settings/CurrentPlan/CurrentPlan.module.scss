@@ -37,6 +37,7 @@
 .success {
   border-color: rgba(_.$green, 0.28);
   background: rgba(_.$green, 0.08);
+  animation: noticeEnter 180ms ease;
 }
 
 .error {
@@ -54,21 +55,37 @@
   padding: 18px;
 
   & > p {
-    margin: 12px 0 0;
-    color: _.$deep-gray;
-    line-height: 1.7;
+    margin: 8px 0 0;
+    color: _.$gray;
+    font-size: 0.88 * _.$base-font-size;
+    line-height: 1.6;
   }
 }
 
 .summaryHeader {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.planIdentity {
+  display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 10px;
 
   & > strong {
     color: _.$deep-gray;
-    font-size: 1.15 * _.$base-font-size;
+    font-size: 1.18 * _.$base-font-size;
+    line-height: 1.35;
   }
+}
+
+.planPrice {
+  color: _.$gray;
+  font-size: 0.88 * _.$base-font-size;
+  line-height: 1.35;
 }
 
 .planBadge {
@@ -83,22 +100,31 @@
   border-radius: 999px;
 }
 
+.planBadgeBilling,
+.planBadgeTrial {
+  color: _.$blue;
+  background: _.$transparent-blue;
+}
+
+.planBadgeCurrent {
+  color: _.$green;
+  background: rgba(_.$green, 0.1);
+}
+
 .summaryGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 16px;
+  grid-template-columns: 1fr;
+  margin-top: 14px;
+  border-top: 1px solid _.$noisy-white;
 
   & > div {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 14px;
     min-width: 0;
-    padding: 12px;
-    background: _.$noisy-white;
-    border-radius: 8px;
-  }
-
-  span,
-  strong {
-    display: block;
+    align-items: baseline;
+    padding: 11px 0;
+    border-bottom: 1px solid _.$noisy-white;
   }
 
   span {
@@ -107,22 +133,22 @@
   }
 
   strong {
-    margin-top: 4px;
-    color: _.$deep-gray;
+    color: _.$gray;
+    font-size: 0.92 * _.$base-font-size;
+    font-weight: 400;
     line-height: 1.4;
+    text-align: right;
   }
 }
 
 .quotaInline {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 10px;
+  gap: 14px;
   align-items: baseline;
-  margin-top: 12px;
-  padding: 12px;
+  padding: 11px 0;
   color: _.$deep-gray;
-  background: _.$noisy-white;
-  border-radius: 8px;
+  border-bottom: 1px solid _.$noisy-white;
 
   span {
     color: _.$gray;
@@ -130,28 +156,71 @@
   }
 
   strong {
+    color: _.$gray;
     font-size: 0.92 * _.$base-font-size;
+    font-weight: 400;
     line-height: 1.5;
+    text-align: right;
   }
 }
 
-.currentPlanState,
 .upgradeHint,
 .paymentHint {
   color: _.$gray;
   line-height: 1.6;
 }
 
-.currentPlanState,
 .upgradeHint {
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid _.$noisy-white;
 }
 
-.currentPlanState {
-  color: _.$green;
-  font-weight: 700;
+.subscriptionManagement {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  background: _.$white;
+  border: 1px solid _.$noisy-white;
+  border-radius: 8px;
+
+  strong {
+    display: block;
+    color: _.$deep-gray;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: _.$gray;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+.stopAutoRenewalButton {
+  min-width: 128px;
+  min-height: 40px;
+  color: _.$red !important;
+  background: transparent !important;
+  border-color: rgba(_.$red, 0.28) !important;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled):not(.waiting) {
+      background: rgba(_.$red, 0.06) !important;
+    }
+  }
+
+  &:focus-visible {
+    box-shadow:
+      0 0 0 2px _.$white,
+      0 0 0 5px rgba(_.$blue, 0.42);
+  }
 }
 
 .paymentHint {
@@ -431,12 +500,71 @@
 }
 
 @media (max-width: _.$width-512) {
+  .summaryHeader {
+    gap: 10px;
+  }
+
   .summaryGrid {
     grid-template-columns: 1fr;
+
+    & > div {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+
+    strong {
+      text-align: left;
+    }
   }
 
   .quotaInline,
   .planButtons {
     grid-template-columns: 1fr;
+  }
+
+  .quotaInline {
+    gap: 4px;
+
+    strong {
+      text-align: left;
+    }
+  }
+
+  .subscriptionManagement {
+    grid-template-columns: 1fr;
+    padding: 14px;
+
+    :global(.button) {
+      width: 100%;
+      min-width: 0;
+      min-height: 44px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .success {
+    animation-duration: 100ms;
+    animation-name: noticeFadeIn;
+  }
+}
+
+@keyframes noticeEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes noticeFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

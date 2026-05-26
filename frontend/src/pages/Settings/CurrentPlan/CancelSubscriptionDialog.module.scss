@@ -1,0 +1,315 @@
+@use "../../../global_variables" as _;
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  background: rgba(_.$black, 0.36);
+  animation: cancelDialogFadeIn 160ms ease;
+}
+
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 24px;
+  overflow: auto;
+  color: _.$deep-gray;
+  background: _.$white;
+  border-radius: 8px;
+  outline: none;
+  transform: translate(-50%, -50%);
+  z-index: 9;
+  animation: cancelDialogEnter 220ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  &:focus-visible {
+    box-shadow:
+      0 0 0 2px _.$white,
+      0 0 0 5px rgba(_.$blue, 0.45);
+  }
+}
+
+.header {
+  h2 {
+    margin: 0;
+    color: _.$deep-gray;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 28px;
+    outline: none;
+  }
+}
+
+.description {
+  margin: 6px 0 0;
+  color: _.$gray;
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.retentionNotice {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 9px;
+  align-items: flex-start;
+  margin-top: 20px;
+  padding: 12px;
+  color: _.$blue;
+  background: rgba(_.$blue, 0.08);
+  border-radius: 8px;
+
+  p {
+    margin: 0;
+    color: _.$deep-gray;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.impactSection {
+  margin-top: 22px;
+
+  h3 {
+    margin: 0 0 12px;
+    color: _.$deep-gray;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 22px;
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 10px;
+    align-items: flex-start;
+    color: _.$deep-gray;
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+.impactIcon {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: _.$blue;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  background: rgba(_.$blue, 0.1);
+  border-radius: 50%;
+  place-items: center;
+}
+
+.reasonSection {
+  margin-top: 22px;
+}
+
+.reasonHeader {
+  span {
+    color: _.$deep-gray;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 22px;
+  }
+
+  p {
+    margin: 3px 0 0;
+    color: _.$gray;
+    font-size: 13px;
+    line-height: 19px;
+  }
+}
+
+.reasonList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.reasonOption {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 38px;
+  color: _.$deep-gray;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+
+  input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: _.$blue;
+  }
+}
+
+.reasonDetail {
+  box-sizing: border-box;
+  width: 100%;
+  height: 88px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  color: _.$deep-gray;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.45;
+  resize: vertical;
+  background: _.$white;
+  border: 1px solid _.$light-gray;
+  border-radius: 8px;
+  outline: none;
+  animation: reasonDetailEnter 180ms ease;
+
+  &:focus-visible {
+    border-color: _.$blue;
+    box-shadow: 0 0 0 3px rgba(_.$blue, 0.16);
+  }
+}
+
+.footer {
+  margin-top: 22px;
+}
+
+.refundHint {
+  margin: 0 0 10px;
+  color: _.$gray;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.inlineError {
+  margin-bottom: 12px;
+  padding: 12px;
+  color: _.$red;
+  font-size: 14px;
+  line-height: 20px;
+  background: rgba(_.$red, 0.08);
+  border: 1px solid rgba(_.$red, 0.22);
+  border-radius: 8px;
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  :global(.button) {
+    min-height: 44px;
+  }
+}
+
+.keepButton {
+  background: _.$blue !important;
+}
+
+.stopButton {
+  min-width: 128px;
+  color: _.$red !important;
+  background: _.$white !important;
+  border-color: rgba(_.$red, 0.28) !important;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled):not(.waiting) {
+      background: rgba(_.$red, 0.06) !important;
+    }
+  }
+}
+
+@media (max-width: _.$width-512) {
+  .dialog {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: calc(100dvh - 32px);
+    padding: 20px;
+    border-radius: 8px 8px 0 0;
+    transform: none;
+    animation: cancelSheetEnter 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .footerActions {
+    flex-direction: column;
+
+    :global(.button) {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  .stopButton {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .dialog,
+  .reasonDetail {
+    animation-duration: 100ms;
+    animation-name: cancelDialogFadeIn;
+  }
+}
+
+@keyframes cancelDialogFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cancelDialogEnter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 8px)) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes cancelSheetEnter {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes reasonDetailEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
