@@ -10,7 +10,9 @@
 
 .quotaList,
 .actionPanel,
+.benefitSummary,
 .buttonGroup,
+.confirmBenefits,
 .paymentMethodSection,
 .planActionGroup,
 .planSummary,
@@ -169,9 +171,8 @@
 }
 
 .upgradeHint {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid _.$noisy-white;
+  margin-top: 12px;
+  font-size: 0.88 * _.$base-font-size;
 }
 
 .subscriptionManagement {
@@ -292,12 +293,73 @@
   color: _.$deep-gray;
 
   & > strong {
-    font-size: 1.2 * _.$base-font-size;
+    font-size: 1.04 * _.$base-font-size;
+    font-weight: 600;
+    line-height: 1.45;
   }
 
   & > span {
     color: _.$gray;
+    font-size: 0.88 * _.$base-font-size;
     line-height: 1.6;
+  }
+}
+
+.benefitSummary,
+.confirmBenefits {
+  box-sizing: border-box;
+  color: _.$deep-gray;
+
+  & > strong {
+    display: block;
+    color: _.$deep-gray;
+    font-size: 0.92 * _.$base-font-size;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 14px;
+    padding: 0;
+    margin: 10px 0 0;
+    list-style: none;
+  }
+
+  li {
+    position: relative;
+    min-width: 0;
+    padding-left: 14px;
+    color: _.$gray;
+    font-size: 0.86 * _.$base-font-size;
+    line-height: 1.5;
+
+    &::before {
+      position: absolute;
+      top: 0.72em;
+      left: 0;
+      width: 5px;
+      height: 5px;
+      content: "";
+      background: _.$blue;
+      border-radius: 50%;
+      transform: translateY(-50%);
+    }
+  }
+}
+
+.benefitSummary {
+  padding: 14px 18px 0;
+}
+
+.confirmBenefits {
+  padding: 14px;
+  border: 1px solid _.$noisy-white;
+  border-radius: 8px;
+
+  ul {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -326,7 +388,7 @@
   padding: 14px 18px 18px;
 }
 
-.planButtons {
+.planOptions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -334,40 +396,91 @@
   :global(.button) {
     width: 100%;
     min-width: 0;
-    min-height: 64px;
-    padding: 10px 14px;
+    min-height: 116px;
+    padding: 0;
   }
 
   :global(.button__content) {
-    flex-direction: column;
-    gap: 4px;
+    align-items: stretch;
+    width: 100%;
+    min-width: 0;
   }
 }
 
-.planButtonMain {
-  color: _.$white !important;
+.planOptionButton {
+  color: _.$deep-gray !important;
+  background: _.$white !important;
+  border: 1px solid _.$light-gray !important;
+  box-shadow: 0 8px 20px rgba(_.$deep-gray, 0.04);
+
+  &::before {
+    background: transparent !important;
+  }
+
+  @media (hover: hover) {
+    &:hover:not(:disabled):not(.waiting) {
+      border-color: rgba(_.$blue, 0.42) !important;
+      box-shadow: 0 12px 26px rgba(_.$blue, 0.1);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.recommendedPlanOption {
+  background: linear-gradient(180deg, _.$white 0%, rgba(_.$blue, 0.06) 100%) !important;
+  border-color: rgba(_.$blue, 0.42) !important;
+}
+
+.planOptionContent {
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  padding: 14px;
+  text-align: left;
+}
+
+.planOptionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.planOptionName {
+  color: _.$deep-gray !important;
   font-size: 0.95 * _.$base-font-size !important;
   font-weight: 700;
   line-height: 1.35 !important;
 }
 
-.planButtonSub {
-  color: rgba(_.$white, 0.86) !important;
-  font-size: 0.78 * _.$base-font-size !important;
-  font-weight: 600;
-  line-height: 1.4 !important;
-}
-
-.savingsBadge {
+.recommendedBadge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 7px;
+  flex: 0 0 auto;
+  padding: 2px 8px;
   color: _.$blue !important;
-  font-size: 0.75 * _.$base-font-size !important;
+  font-size: 0.74 * _.$base-font-size !important;
   font-weight: 700;
   line-height: 1.4 !important;
-  background: _.$white;
+  background: _.$transparent-blue;
   border-radius: 999px;
+}
+
+.planOptionPrice {
+  color: _.$deep-gray !important;
+  font-size: 1.24 * _.$base-font-size !important;
+  font-weight: 700;
+  line-height: 1.25 !important;
+}
+
+.planOptionMeta {
+  color: _.$gray !important;
+  font-size: 0.82 * _.$base-font-size !important;
+  line-height: 1.5 !important;
 }
 
 .stepList {
@@ -424,6 +537,49 @@
   text-align: center;
 }
 
+.confirmSubscription {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid _.$noisy-white;
+  border-radius: 8px;
+
+  & > div {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 14px;
+    align-items: baseline;
+    padding: 12px 0;
+    margin: 0 14px;
+    border-bottom: 1px solid _.$noisy-white;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  span {
+    color: _.$gray;
+    font-size: 0.84 * _.$base-font-size;
+  }
+
+  strong {
+    min-width: 0;
+    color: _.$deep-gray;
+    font-size: 0.94 * _.$base-font-size;
+    line-height: 1.45;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+.confirmNotice {
+  margin: 2px 0 0;
+  color: _.$gray;
+  font-size: 0.88 * _.$base-font-size;
+  line-height: 1.6;
+}
+
 .paymentMethodSection {
   scroll-margin-top: 24px;
 }
@@ -453,7 +609,8 @@
   }
 
   .quotaInline,
-  .planButtons {
+  .benefitSummary ul,
+  .planOptions {
     grid-template-columns: 1fr;
   }
 

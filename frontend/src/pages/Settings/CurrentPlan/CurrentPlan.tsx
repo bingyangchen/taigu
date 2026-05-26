@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { BeautifulBlock, BeautifulRow, Button } from "../../../components";
+import { BeautifulBlock, BeautifulRow, Button, Modal } from "../../../components";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { fetchAccountInfo } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
@@ -48,6 +48,8 @@ type BindTokenResponse = {
   sdk_url: string;
 };
 
+type BillingInterval = "month" | "year";
+
 const fallbackSubscription: SubscriptionEntitlements = {
   plan: "free",
   status: "canceled",
@@ -68,6 +70,16 @@ const scriptUrls = [
 let isEcpayInitialized = false;
 
 const paymentMethodHighlightDurationMs = 1500;
+const standardBenefitItems = [
+  "交易紀錄與現金股利不限筆數",
+  "買賣計畫不限筆數",
+  "持股與關注清單不限檔數",
+  "行情約每 30 秒更新",
+];
+const confirmationBenefitItems = [
+  "付款成功後立即啟用 Standard",
+  "依所選週期自動續訂，可之後停止自動續訂",
+];
 
 export default function CurrentPlan(): React.ReactElement {
   const dispatch = useAppDispatch();
@@ -78,6 +90,8 @@ export default function CurrentPlan(): React.ReactElement {
   const [isBindingCard, setIsBindingCard] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [isCancelingSubscription, setIsCancelingSubscription] = useState(false);
+  const [pendingBillingInterval, setPendingBillingInterval] =
+    useState<BillingInterval | null>(null);
   const [cancelSubscriptionError, setCancelSubscriptionError] = useState<string | null>(
     null,
   );
@@ -121,6 +135,19 @@ export default function CurrentPlan(): React.ReactElement {
   const priceYear = billing?.prices.year ?? 700;
   const yearlySavings = Math.max(priceMonth * 12 - priceYear, 0);
   const keyDate = getKeyDate(subscription);
+  const cardLabel = card?.card_4_no ? `•••• ${card.card_4_no}` : "已綁定信用卡";
+  const pendingPrice =
+    pendingBillingInterval === "year"
+      ? priceYear
+      : pendingBillingInterval === "month"
+        ? priceMonth
+        : null;
+  const pendingIntervalLabel =
+    pendingBillingInterval === "year"
+      ? "年繳"
+      : pendingBillingInterval === "month"
+        ? "月繳"
+        : "";
 
   const refreshBilling = useCallback(async (): Promise<void> => {
     const response = (await Api.sendRequest("billing/me", "get")) as BillingResponse;
@@ -229,7 +256,7 @@ export default function CurrentPlan(): React.ReactElement {
                   綁定信用卡後可選擇月繳或年繳續用。
                 </div>
               )
-            ) : (
+            ) : hasCard ? null : (
               <div className={styles.upgradeHint}>升級前需先綁定信用卡。</div>
             ))}
         </div>
@@ -240,56 +267,41 @@ export default function CurrentPlan(): React.ReactElement {
           {hasCard ? (
             <>
               <div className={styles.planSummary}>
-                <strong>
-                  {isTrialing ? "試用後繼續使用 Standard" : "升級 Standard"}
-                </strong>
+                <strong>{isTrialing ? "選擇續用方式" : "選擇升級方式"}</strong>
+                <span>選擇月繳或年繳後，下一步會先確認方案內容。</span>
               </div>
+              <BenefitSummary
+                title="Standard 包含"
+                items={standardBenefitItems}
+                className={styles.benefitSummary}
+              />
               <PlanActionGroup
-                cardLast4={card?.card_4_no ?? null}
                 isWaiting={isWaiting}
-                primaryLabels={{
-                  month: isTrialing
-                    ? `續用月繳 NT$${priceMonth}`
-                    : `升級月繳 NT$${priceMonth}`,
-                  year: isTrialing
-                    ? `續用年繳 NT$${priceYear}`
-                    : `升級年繳 NT$${priceYear}`,
-                }}
-                secondaryLabels={{
-                  month: isTrialing ? "彈性按月付款" : "彈性按月付款",
-                  year: yearlySavings > 0 ? `約省 NT$${yearlySavings}` : "一次付款一年",
-                }}
-                onSelect={handleStartSubscription}
+                priceMonth={priceMonth}
+                priceYear={priceYear}
+                yearlySavings={yearlySavings}
+                onSelect={setPendingBillingInterval}
               />
             </>
           ) : (
             <>
               <div className={styles.planSummary}>
-                <strong>{isTrialing ? "試用後繼續使用 Standard" : "Standard"}</strong>
+                <strong>
+                  {isTrialing ? "試用後繼續使用 Standard" : "升級 Standard"}
+                </strong>
                 <span>
-                  解除額度限制，取得更即時的行情更新。月繳 NT${priceMonth}，年繳 NT$
-                  {priceYear}。
+                  Standard 可解除 Free 額度限制，並取得約每 30
+                  秒更新的行情。綁定信用卡後即可選擇月繳或年繳，確認方案後才會扣款。
                 </span>
               </div>
-              <div className={styles.stepList}>
-                <div className={styles.stepRow}>
-                  <span>1</span>
-                  <div>
-                    <strong>綁定信用卡</strong>
-                    <p>綁定後才能選擇月繳或年繳。</p>
-                  </div>
-                </div>
-                <div className={styles.stepRow}>
-                  <span>2</span>
-                  <div>
-                    <strong>選擇月繳或年繳</strong>
-                    <p>確認方案後才會扣款。</p>
-                  </div>
-                </div>
-              </div>
+              <BenefitSummary
+                title="Standard 包含"
+                items={standardBenefitItems}
+                className={styles.benefitSummary}
+              />
               <div className={styles.buttonGroup}>
                 <Button className="primary l" onClick={handleScrollToPaymentMethod}>
-                  前往綁定信用卡
+                  綁定信用卡並繼續
                 </Button>
               </div>
             </>
@@ -349,6 +361,52 @@ export default function CurrentPlan(): React.ReactElement {
         </BeautifulBlock>
       )}
 
+      {pendingBillingInterval && pendingPrice !== null && (
+        <Modal
+          title="確認訂閱 Standard"
+          layout="compact"
+          visualLayer="nested"
+          discardButtonProps={{
+            className: "secondary l",
+            children: "取消",
+            onClick: () => setPendingBillingInterval(null),
+          }}
+          submitButtonProps={{
+            className: "primary_fill l",
+            children: "確認並付款",
+            waiting: isWaiting,
+            onClick: () => handleStartSubscription(pendingBillingInterval),
+          }}
+        >
+          <p className={styles.confirmNotice}>
+            請確認方案與付款資訊。按下確認後會立即扣款。
+          </p>
+          <div className={styles.confirmSubscription}>
+            <div>
+              <span>方案</span>
+              <strong>Standard</strong>
+            </div>
+            <div>
+              <span>付款週期</span>
+              <strong>{pendingIntervalLabel}</strong>
+            </div>
+            <div>
+              <span>金額</span>
+              <strong>NT${pendingPrice.toLocaleString()}</strong>
+            </div>
+            <div>
+              <span>付款方式</span>
+              <strong>{`信用卡 ${cardLabel}`}</strong>
+            </div>
+          </div>
+          <BenefitSummary
+            title="確認事項"
+            items={confirmationBenefitItems}
+            className={styles.confirmBenefits}
+          />
+        </Modal>
+      )}
+
       <CancelSubscriptionDialog
         subscription={subscription}
         isOpen={isCancelDialogOpen}
@@ -405,7 +463,7 @@ export default function CurrentPlan(): React.ReactElement {
     }
   }
 
-  async function handleStartSubscription(interval: "month" | "year"): Promise<void> {
+  async function handleStartSubscription(interval: BillingInterval): Promise<void> {
     setIsWaiting(true);
     setNotice(null);
     try {
@@ -416,6 +474,7 @@ export default function CurrentPlan(): React.ReactElement {
       );
       dispatch(pushToast({ type: "success", text: "Standard 訂閱已啟用" }));
       await refreshBilling();
+      setPendingBillingInterval(null);
     } catch (error) {
       const text = getUserFacingError(
         error,
@@ -603,42 +662,75 @@ function SubscriptionStoppedPanel(): React.ReactElement {
   );
 }
 
+function BenefitSummary({
+  title,
+  items,
+  className,
+}: {
+  title: string;
+  items: string[];
+  className: string;
+}): React.ReactElement {
+  return (
+    <div className={className}>
+      <strong>{title}</strong>
+      <ul>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function PlanActionGroup({
-  cardLast4,
   isWaiting,
-  primaryLabels,
-  secondaryLabels,
+  priceMonth,
+  priceYear,
+  yearlySavings,
   onSelect,
 }: {
-  cardLast4: string | null;
   isWaiting: boolean;
-  primaryLabels: { month: string; year: string };
-  secondaryLabels: { month: string; year: string };
-  onSelect: (interval: "month" | "year") => Promise<void>;
+  priceMonth: number;
+  priceYear: number;
+  yearlySavings: number;
+  onSelect: (interval: BillingInterval) => void;
 }): React.ReactElement {
-  const cardLabel = cardLast4 ? `•••• ${cardLast4}` : "已綁定信用卡";
-
   return (
     <div className={`${styles.planActionGroup} ${styles.planActions}`}>
-      <div className={styles.planButtons}>
+      <div className={styles.planOptions}>
         <Button
-          className="primary_fill l"
+          className={`transparent l ${styles.planOptionButton}`}
           waiting={isWaiting}
           onClick={() => onSelect("month")}
         >
-          <span className={styles.planButtonMain}>{primaryLabels.month}</span>
-          <span className={styles.planButtonSub}>{secondaryLabels.month}</span>
+          <span className={styles.planOptionContent}>
+            <span className={styles.planOptionHeader}>
+              <span className={styles.planOptionName}>月繳</span>
+            </span>
+            <span className={styles.planOptionPrice}>NT${priceMonth}</span>
+            <span className={styles.planOptionMeta}>每月付款，保留彈性</span>
+          </span>
         </Button>
         <Button
-          className="primary_fill l"
+          className={`transparent l ${styles.planOptionButton} ${styles.recommendedPlanOption}`}
           waiting={isWaiting}
           onClick={() => onSelect("year")}
         >
-          <span className={styles.planButtonMain}>{primaryLabels.year}</span>
-          <span className={styles.savingsBadge}>{secondaryLabels.year}</span>
+          <span className={styles.planOptionContent}>
+            <span className={styles.planOptionHeader}>
+              <span className={styles.planOptionName}>年繳</span>
+              <span className={styles.recommendedBadge}>推薦</span>
+            </span>
+            <span className={styles.planOptionPrice}>NT${priceYear}</span>
+            <span className={styles.planOptionMeta}>
+              {yearlySavings > 0
+                ? `一次付款一年，省 NT$${yearlySavings}`
+                : "一次付款一年"}
+            </span>
+          </span>
         </Button>
       </div>
-      <p>{`使用信用卡 ${cardLabel}。確認方案後才會扣款。`}</p>
     </div>
   );
 }
