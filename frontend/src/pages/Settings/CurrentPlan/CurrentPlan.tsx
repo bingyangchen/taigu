@@ -60,7 +60,7 @@ const paymentMethodHighlightDurationMs = 1500;
 export default function CurrentPlan(): React.ReactElement {
   const dispatch = useAppDispatch();
   const accountSubscription = useAppSelector((state) => state.account.subscription);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [billing, setBilling] = useState<BillingResponse | null>(null);
   const [isWaiting, setIsWaiting] = useState(false);
   const [isBindingCard, setIsBindingCard] = useState(false);
@@ -110,17 +110,28 @@ export default function CurrentPlan(): React.ReactElement {
   useEffect(() => {
     dispatch(updateHeaderTitle("付款與方案"));
     void refreshBilling();
+  }, [dispatch, refreshBilling]);
+
+  useEffect(() => {
     const bindResult = searchParams.get("bind");
+    const clearBindResultFromUrl = (): void => {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete("bind");
+      setSearchParams(nextSearchParams, { replace: true });
+    };
+
     if (bindResult === "success") {
       setIsCardBindingPanelOpen(false);
       setNotice({ type: "success", text: "信用卡綁定成功，可以繼續選擇方案。" });
       dispatch(pushToast({ type: "success", text: "信用卡綁定成功" }));
+      clearBindResultFromUrl();
     } else if (bindResult === "failed") {
       const text = "信用卡綁定未完成，請確認卡號或稍後再試。";
       setNotice({ type: "error", text });
       dispatch(pushToast({ type: "error", text }));
+      clearBindResultFromUrl();
     }
-  }, [dispatch, refreshBilling, searchParams]);
+  }, [dispatch, searchParams, setSearchParams]);
 
   useEffect(() => {
     return () => {
