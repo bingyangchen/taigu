@@ -372,6 +372,10 @@ class TestMeView:
         assert data["username"] == "Test User"
         assert data["email"] == "test@example.com"
         assert data["avatar_url"] == "https://example.com/avatar.jpg"
+        assert data["subscription"] == {
+            "plan": "standard",
+            "market_refresh_interval_seconds": 30,
+        }
 
     def test_me_without_avatar(self, request_obj: HttpRequest, user: User) -> None:
         user.avatar_url = None

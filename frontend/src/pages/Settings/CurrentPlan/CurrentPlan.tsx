@@ -48,6 +48,18 @@ type BindTokenResponse = {
   sdk_url: string;
 };
 
+const fallbackSubscription: SubscriptionEntitlements = {
+  plan: "free",
+  status: "canceled",
+  billing_interval: "month",
+  trial_ends_at: null,
+  current_period_ends_at: null,
+  cancel_at_period_end: false,
+  market_refresh_interval_seconds: 600,
+  quota: { monthly_records: 20, monthly_trade_plans: 10, holdings: 10, favorites: 10 },
+  usage: { monthly_records: 0, monthly_trade_plans: 0, holdings: 0, favorites: 0 },
+};
+
 const scriptUrls = [
   "https://code.jquery.com/jquery-3.7.1.min.js",
   "https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js",
@@ -81,7 +93,16 @@ export default function CurrentPlan(): React.ReactElement {
   const paymentMethodHighlightTimeoutRef = useRef<number | null>(null);
   const isSubmittingCardBindingRef = useRef(false);
 
-  const subscription = billing?.subscription ?? accountSubscription;
+  const subscription = useMemo<SubscriptionEntitlements>(
+    () =>
+      billing?.subscription ?? {
+        ...fallbackSubscription,
+        plan: accountSubscription.plan,
+        market_refresh_interval_seconds:
+          accountSubscription.market_refresh_interval_seconds,
+      },
+    [accountSubscription, billing],
+  );
   const card = billing?.card ?? null;
   const isStandard = subscription.plan === "standard";
   const isTrialing = subscription.status === "trialing";

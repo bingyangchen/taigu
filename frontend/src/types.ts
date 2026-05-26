@@ -49,10 +49,15 @@ export type Account = {
   email: string;
   username: string;
   avatar_url: string | null;
-  subscription: SubscriptionEntitlements;
+  subscription: AccountSubscription;
 };
 
 export type SubscriptionPlan = "free" | "standard";
+
+export type AccountSubscription = Pick<
+  SubscriptionEntitlements,
+  "plan" | "market_refresh_interval_seconds"
+>;
 
 export type SubscriptionEntitlements = {
   plan: SubscriptionPlan;
