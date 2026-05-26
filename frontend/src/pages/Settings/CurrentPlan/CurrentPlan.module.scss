@@ -11,8 +11,6 @@
 .quotaList,
 .actionPanel,
 .buttonGroup,
-.compactPaymentSection,
-.compactPaymentRow,
 .paymentMethodSection,
 .planActionGroup,
 .planSummary,
@@ -370,69 +368,6 @@
   line-height: 1.4 !important;
   background: _.$white;
   border-radius: 999px;
-}
-
-.compactPaymentSection {
-  box-sizing: border-box;
-  padding: 0 18px 18px;
-}
-
-.compactPaymentRow {
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content;
-  gap: 12px;
-  align-items: center;
-  padding-top: 14px;
-  color: _.$deep-gray;
-  border-top: 1px solid _.$noisy-white;
-
-  & > div:first-child {
-    display: flex;
-    gap: 8px;
-    align-items: baseline;
-    min-width: 0;
-  }
-
-  span {
-    color: _.$gray;
-    font-size: 0.86 * _.$base-font-size;
-  }
-
-  strong {
-    color: _.$deep-gray;
-    font-size: 0.92 * _.$base-font-size;
-  }
-
-  :global(.button) {
-    min-width: 0;
-    padding-inline: 8px;
-    color: _.$blue;
-  }
-}
-
-.cardBindingPanel {
-  margin-top: 14px;
-  padding: 16px;
-  background: _.$white;
-  border: 1px solid _.$noisy-white;
-  border-radius: 8px;
-}
-
-.cardBindingHeader {
-  margin-bottom: 14px;
-
-  strong {
-    color: _.$deep-gray;
-    font-size: 1.02 * _.$base-font-size;
-  }
-
-  p {
-    margin: 6px 0 0;
-    color: _.$gray;
-    font-size: 0.9 * _.$base-font-size;
-    line-height: 1.6;
-  }
 }
 
 .stepList {

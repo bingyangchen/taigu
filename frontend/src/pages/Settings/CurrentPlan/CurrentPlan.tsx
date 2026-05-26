@@ -261,15 +261,6 @@ export default function CurrentPlan(): React.ReactElement {
                 }}
                 onSelect={handleStartSubscription}
               />
-              {isTrialing && card && (
-                <CompactPaymentMethodSection
-                  card={card}
-                  isBindingCard={isBindingCard}
-                  isExpanded={isCardBindingPanelOpen}
-                  onBindCard={handleBindCard}
-                  onCancel={handleCancelCardBinding}
-                />
-              )}
             </>
           ) : (
             <>
@@ -306,22 +297,20 @@ export default function CurrentPlan(): React.ReactElement {
         </BeautifulBlock>
       )}
 
-      {!(isTrialing && hasCard) && (
-        <div
-          ref={paymentMethodSectionRef}
-          className={`${styles.paymentMethodSection} ${
-            isPaymentMethodHighlighted ? styles.paymentMethodHighlight : ""
-          }`}
-        >
-          <PaymentMethodBlock
-            card={card}
-            isBindingCard={isBindingCard}
-            isExpanded={isCardBindingPanelOpen}
-            onBindCard={handleBindCard}
-            onCancel={handleCancelCardBinding}
-          />
-        </div>
-      )}
+      <div
+        ref={paymentMethodSectionRef}
+        className={`${styles.paymentMethodSection} ${
+          isPaymentMethodHighlighted ? styles.paymentMethodHighlight : ""
+        }`}
+      >
+        <PaymentMethodBlock
+          card={card}
+          isBindingCard={isBindingCard}
+          isExpanded={isCardBindingPanelOpen}
+          onBindCard={handleBindCard}
+          onCancel={handleCancelCardBinding}
+        />
+      </div>
 
       {!isStandard && (
         <BeautifulBlock title="額度使用">
@@ -650,49 +639,6 @@ function PlanActionGroup({
         </Button>
       </div>
       <p>{`使用信用卡 ${cardLabel}。確認方案後才會扣款。`}</p>
-    </div>
-  );
-}
-
-function CompactPaymentMethodSection({
-  card,
-  isBindingCard,
-  isExpanded,
-  onBindCard,
-  onCancel,
-}: {
-  card: BillingCard;
-  isBindingCard: boolean;
-  isExpanded: boolean;
-  onBindCard: () => Promise<void>;
-  onCancel: () => void;
-}): React.ReactElement {
-  const cardLabel = card.card_4_no ? `•••• ${card.card_4_no}` : "已綁定信用卡";
-
-  return (
-    <div className={styles.compactPaymentSection}>
-      <div className={styles.compactPaymentRow}>
-        <div>
-          <span>付款方式</span>
-          <strong>{cardLabel}</strong>
-        </div>
-        <Button
-          className="transparent s"
-          waiting={isBindingCard}
-          onClick={isExpanded ? onCancel : onBindCard}
-        >
-          {isExpanded ? "取消更換" : "更換"}
-        </Button>
-      </div>
-      {isExpanded && (
-        <div className={styles.cardBindingPanel}>
-          <div className={styles.cardBindingHeader}>
-            <strong>更換信用卡</strong>
-            <p>請輸入新的信用卡資訊。綁定成功後會取代目前付款方式。</p>
-          </div>
-          <div id="ECPayPayment" className={styles.ecpayPayment}></div>
-        </div>
-      )}
     </div>
   );
 }
