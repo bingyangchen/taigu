@@ -119,23 +119,15 @@ self.addEventListener("fetch", (event) => {
       event.respondWith(
         caches.open("taigu").then((cache) => {
           return cache.match(request).then(async (cacheResponse) => {
-            const fetchPromise = fetch(request).then((networkResponse) => {
+            const fetchPromise = fetch(request).then(async (networkResponse) => {
               if (networkResponse.status < 400) {
-                event.waitUntil(
-                  Promise.all([
-                    cache.put(request, networkResponse.clone()),
-                    networkResponse
-                      .clone()
-                      .json()
-                      .then((data) => {
-                        channel.postMessage({
-                          authorized: true,
-                          url: requestUrl,
-                          data,
-                        });
-                      }),
-                  ]).then(() => undefined),
-                );
+                await cache.put(request, networkResponse.clone());
+                try {
+                  const data = await networkResponse.clone().json();
+                  channel.postMessage({ authorized: true, url: requestUrl, data });
+                } catch {
+                  // Non-JSON responses are cached but not broadcast.
+                }
               }
               return networkResponse;
             });
@@ -147,7 +139,7 @@ self.addEventListener("fetch", (event) => {
       (/account\/logout[/]?$/gs.test(requestUrl) && method === "post") ||
       (/account\/delete[/]?$/gs.test(requestUrl) && method === "delete")
     ) {
-      event.waitUntil(caches.delete("taigu"));
+      event.respondWith(caches.delete("taigu").then(() => fetch(request)));
     }
   }
   return;
