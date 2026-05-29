@@ -38,10 +38,7 @@ GOOGLE_CLIENT_CONFIG = {
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
         "client_secret": env.GOOGLE_CLIENT_SECRET,
-        "redirect_uris": build_frontend_urls(
-            "/login",
-            "/settings/account-binding",
-        ),
+        "redirect_uris": build_frontend_urls("/login", "/settings/account-binding"),
     }
 }
 SCOPES = [
@@ -153,7 +150,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
             "email": user.email,
             "username": user.username,
             "avatar_url": user.avatar_url,
-        },
+        }
     )
     return _set_new_token_pair(response, user)
 

@@ -30,10 +30,7 @@ class TestFavoriteUrls:
     def test_url_patterns_regex_format(self) -> None:
         from main.favorite.urls import urlpatterns
 
-        expected_patterns = [
-            r"^$",
-            r"^(?P<sid>\w+)[/]?$",
-        ]
+        expected_patterns = [r"^$", r"^(?P<sid>\w+)[/]?$"]
 
         actual_patterns = []
         for pattern in urlpatterns:

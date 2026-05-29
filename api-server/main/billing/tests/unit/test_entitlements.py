@@ -32,10 +32,7 @@ class TestEntitlements:
     @pytest.fixture
     def company(self) -> Company:
         return Company.objects.create(
-            stock_id="2330",
-            name="台積電",
-            trade_type="tse",
-            business="Semiconductor",
+            stock_id="2330", name="台積電", trade_type="tse", business="Semiconductor"
         )
 
     def test_new_user_gets_standard_trial(self, user: User) -> None:
@@ -64,9 +61,7 @@ class TestEntitlements:
         self, user: User, company: Company
     ) -> None:
         BillingProfile.objects.create(
-            user=user,
-            plan=Plan.FREE,
-            subscription_status=SubscriptionStatus.CANCELED,
+            user=user, plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED
         )
         for index in range(10):
             TradeRecord.objects.create(
@@ -91,9 +86,7 @@ class TestEntitlements:
         self, user: User, company: Company
     ) -> None:
         BillingProfile.objects.create(
-            user=user,
-            plan=Plan.FREE,
-            subscription_status=SubscriptionStatus.CANCELED,
+            user=user, plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED
         )
         Favorite.objects.create(owner=user, company=company)
 

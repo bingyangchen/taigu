@@ -523,10 +523,7 @@ class TestTradeRecordUpdateOrDeleteView:
         assert change_log.operation == DataChangeLog.Operation.UPSERT
 
     def test_update_or_delete_delete_method(
-        self,
-        request_factory: RequestFactory,
-        user: User,
-        trade_record: TradeRecord,
+        self, request_factory: RequestFactory, user: User, trade_record: TradeRecord
     ) -> None:
         record_id = trade_record.pk
 
@@ -606,7 +603,7 @@ class TestTradeRecordUpdateOrDeleteView:
         self, request_factory: RequestFactory, user: User, trade_record: TradeRecord
     ) -> None:
         payload = {
-            "deal_time": "2023-12-05",
+            "deal_time": "2023-12-05"
             # Missing other required fields
         }
 

@@ -3,14 +3,8 @@ from urllib.parse import urlparse
 from main.env import Env, env
 
 _ORIGINS: dict[Env, dict[str, str]] = {
-    Env.PROD: {
-        "frontend": "https://taigu.tw",
-        "api": "https://api.taigu.tw",
-    },
-    Env.DEV: {
-        "frontend": "https://local.taigu.tw",
-        "api": "https://local.taigu.tw",
-    },
+    Env.PROD: {"frontend": "https://taigu.tw", "api": "https://api.taigu.tw"},
+    Env.DEV: {"frontend": "https://local.taigu.tw", "api": "https://local.taigu.tw"},
 }
 
 

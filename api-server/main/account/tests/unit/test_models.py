@@ -135,10 +135,7 @@ class TestUserModel:
         user, created = User.objects.get_or_create(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
-            defaults={
-                "email": "test@example.com",
-                "username": "testuser",
-            },
+            defaults={"email": "test@example.com", "username": "testuser"},
         )
 
         assert created
@@ -149,10 +146,7 @@ class TestUserModel:
         user2, created2 = User.objects.get_or_create(
             oauth_org=OAuthOrganization.GOOGLE,
             oauth_id="test_oauth_id",
-            defaults={
-                "email": "different@example.com",
-                "username": "differentuser",
-            },
+            defaults={"email": "different@example.com", "username": "differentuser"},
         )
 
         assert not created2

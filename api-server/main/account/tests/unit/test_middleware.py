@@ -40,7 +40,9 @@ class TestCheckLoginStatusMiddleware:
             "id": str(user.id),
             "exp": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
-        return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+        return jwt.encode(
+            payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+        )
 
     def test_middleware_no_token(
         self,

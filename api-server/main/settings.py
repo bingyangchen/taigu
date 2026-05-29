@@ -102,6 +102,6 @@ if env.SQL_LOG:
                 "handlers": ["console"],
                 "level": "DEBUG",
                 "propagate": False,
-            },
+            }
         },
     }

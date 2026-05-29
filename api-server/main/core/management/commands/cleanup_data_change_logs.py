@@ -21,8 +21,7 @@ class Command(BaseCommand):
         # so monotonic numbering and incremental sync stay anchored.
         latest_log_ids = (
             DataChangeLog.objects.filter(
-                user=OuterRef("user"),
-                subject=OuterRef("subject"),
+                user=OuterRef("user"), subject=OuterRef("subject")
             )
             .order_by("-revision")
             .values("id")[:1]

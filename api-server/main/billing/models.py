@@ -57,9 +57,7 @@ class BillingProfile(CreateUpdateDateModel):
         default=SubscriptionStatus.TRIALING,
     )
     billing_interval = models.CharField(
-        max_length=16,
-        choices=BillingInterval.choices,
-        default=BillingInterval.MONTH,
+        max_length=16, choices=BillingInterval.choices, default=BillingInterval.MONTH
     )
     trial_started_at = models.DateTimeField(blank=True, null=True)
     trial_ends_at = models.DateTimeField(blank=True, null=True)
@@ -133,9 +131,7 @@ class BillingProfile(CreateUpdateDateModel):
 class CardBinding(CreateUpdateDateModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="card_bindings",
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="card_bindings"
     )
     provider = models.CharField(
         max_length=32, choices=PaymentProvider.choices, default=PaymentProvider.ECPAY
@@ -155,8 +151,7 @@ class CardBinding(CreateUpdateDateModel):
         indexes = [
             models.Index(fields=["user", "status"], name="card_bind_user_status_idx"),
             models.Index(
-                fields=["provider", "status"],
-                name="card_bind_provider_status_idx",
+                fields=["provider", "status"], name="card_bind_provider_status_idx"
             ),
         ]
         constraints = [
@@ -169,7 +164,7 @@ class CardBinding(CreateUpdateDateModel):
                         & ~models.Q(provider_binding_id="")
                     )
                 ),
-            ),
+            )
         ]
 
 
@@ -181,9 +176,7 @@ class SubscriptionPayment(CreateUpdateDateModel):
         related_name="subscription_payments",
     )
     card_binding = models.ForeignKey(
-        CardBinding,
-        on_delete=models.PROTECT,
-        related_name="subscription_payments",
+        CardBinding, on_delete=models.PROTECT, related_name="subscription_payments"
     )
     provider_request_id = models.CharField(max_length=64, unique=True)
     provider_transaction_id = models.CharField(max_length=128, blank=True, null=True)
@@ -203,7 +196,7 @@ class SubscriptionPayment(CreateUpdateDateModel):
     class Meta:
         db_table = "subscription_payment"
         indexes = [
-            models.Index(fields=["user", "status"], name="sub_payment_status_idx"),
+            models.Index(fields=["user", "status"], name="sub_payment_status_idx")
         ]
         constraints = [
             models.CheckConstraint(
@@ -216,5 +209,5 @@ class SubscriptionPayment(CreateUpdateDateModel):
                         & models.Q(paid_at__isnull=False)
                     )
                 ),
-            ),
+            )
         ]

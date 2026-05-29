@@ -33,10 +33,7 @@ class TestTradePlanUrls:
     def test_url_patterns_regex_format(self) -> None:
         from main.trade_plan.urls import urlpatterns
 
-        expected_patterns = [
-            r"^$",
-            r"^(?P<id>\w+)[/]?$",
-        ]
+        expected_patterns = [r"^$", r"^(?P<id>\w+)[/]?$"]
 
         actual_patterns = []
         for pattern in urlpatterns:

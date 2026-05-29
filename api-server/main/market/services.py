@@ -108,10 +108,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                     if current_dealt_price:
                         price = current_dealt_price
                     elif lowest_ask_price and highest_bid_price:
-                        price = round(
-                            (lowest_ask_price + highest_bid_price) / 2,
-                            2,
-                        )
+                        price = round((lowest_ask_price + highest_bid_price) / 2, 2)
                     elif highest_bid_price and price_upper_bound:
                         price = price_upper_bound
                     elif lowest_ask_price and price_lower_bound:

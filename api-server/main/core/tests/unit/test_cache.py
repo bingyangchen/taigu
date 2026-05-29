@@ -50,9 +50,7 @@ class TestBaseCacheManager:
 
     @patch("main.core.cache.cache")
     def test_get_returns_none_when_cache_miss(
-        self,
-        mock_cache: Mock,
-        cache_manager: ConcreteCacheManager,
+        self, mock_cache: Mock, cache_manager: ConcreteCacheManager
     ) -> None:
         mock_cache.get.return_value = None
 
