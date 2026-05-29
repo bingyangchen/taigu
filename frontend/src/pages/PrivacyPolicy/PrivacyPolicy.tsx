@@ -108,7 +108,7 @@ class PrivacyPolicy extends React.Component<Props, State> {
             >
               問題回報網頁
             </a>
-            提出 ，或透過客服信箱 trade.smartly.official@gmail.com 聯絡我們。
+            提出 ，或透過客服信箱 taigu.tw@gmail.com 聯絡我們。
           </p>
         </div>
       </div>
