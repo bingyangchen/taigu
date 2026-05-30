@@ -1,7 +1,9 @@
 import threading
-from datetime import timedelta
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from django.db import connection
 from django.utils import timezone
 
@@ -16,7 +18,7 @@ from main.billing.models import (
     Plan,
     SubscriptionStatus,
 )
-from main.billing.services.subscription import renew_due_subscriptions
+from main.billing.services.subscription import next_period_end, renew_due_subscriptions
 
 
 class FakeEcpayClient:
@@ -42,6 +44,28 @@ class BlockingEcpayClient(FakeEcpayClient):
         self.started.set()
         assert self.release.wait(timeout=5)
         return super().create_payment_with_card_id(**kwargs)
+
+
+def test_next_period_end_uses_calendar_month(monkeypatch: MonkeyPatch) -> None:
+    fixed_now = datetime(2024, 1, 31, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
+    monkeypatch.setattr(
+        "main.billing.services.subscription.timezone.now", lambda: fixed_now
+    )
+
+    period_end = next_period_end(BillingInterval.MONTH)
+
+    assert period_end == datetime(2024, 2, 29, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
+
+
+def test_next_period_end_uses_calendar_year(monkeypatch: MonkeyPatch) -> None:
+    fixed_now = datetime(2024, 2, 29, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
+    monkeypatch.setattr(
+        "main.billing.services.subscription.timezone.now", lambda: fixed_now
+    )
+
+    period_end = next_period_end(BillingInterval.YEAR)
+
+    assert period_end == datetime(2025, 2, 28, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
 
 
 @pytest.mark.django_db
