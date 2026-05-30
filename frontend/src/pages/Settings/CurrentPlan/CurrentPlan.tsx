@@ -547,7 +547,7 @@ export default function CurrentPlan(): React.ReactElement {
     submitButtonContent.className = "button__content";
     submitButtonContent.textContent = "送出信用卡綁定";
     submitButton.appendChild(submitButtonContent);
-    submitButton.onclick = () => void submitBindCardPayToken();
+    submitButton.onclick = () => void confirmCardBinding();
     const submitHint = document.createElement("p");
     submitHint.className = styles.submitHint;
     submitHint.textContent = "送出後可能需要完成 3D 驗證。";
@@ -557,7 +557,7 @@ export default function CurrentPlan(): React.ReactElement {
     watchCardBindingTokenExpiry(response.token_expires_at);
   }
 
-  async function submitBindCardPayToken(): Promise<void> {
+  async function confirmCardBinding(): Promise<void> {
     if (isSubmittingCardBindingRef.current) return;
     if (isCardBindingTokenExpired()) {
       markCardBindingTokenExpired();

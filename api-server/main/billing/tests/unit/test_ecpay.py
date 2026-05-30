@@ -9,6 +9,7 @@ from main.billing.services.ecpay import (
     EcpayConfig,
     aes_decrypt,
     aes_encrypt,
+    generate_merchant_trade_no,
     next_period_end,
 )
 
@@ -27,6 +28,14 @@ class CapturingEcpayClient(EcpayClient):
     def post(self, path: str, data: dict) -> dict:
         self.data = data
         return {"Token": "token"}
+
+
+def test_generate_merchant_trade_no() -> None:
+    trade_no = generate_merchant_trade_no("B")
+
+    assert trade_no.startswith("B")
+    assert len(trade_no) == 20
+    assert trade_no.isalnum()
 
 
 def test_ecpay_aes_round_trip() -> None:

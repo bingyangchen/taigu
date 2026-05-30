@@ -4,7 +4,7 @@ from main.account import OAuthOrganization
 from main.account.models import User
 from main.billing.models import CardBinding, CardStatus, PaymentProvider
 from main.billing.services.card import (
-    activate_card_binding_from_response,
+    activate_card_binding,
     create_card_binding_token,
     get_default_active_card,
 )
@@ -68,7 +68,7 @@ class TestCardBinding:
             provider_request_id="B123",
         )
 
-        result = activate_card_binding_from_response(
+        result = activate_card_binding(
             {
                 "RtnCode": 1,
                 "OrderInfo": {"MerchantTradeNo": "B123"},
@@ -97,7 +97,7 @@ class TestCardBinding:
             "OrderInfo": {"MerchantTradeNo": "B123"},
         }
 
-        activate_card_binding_from_response(response)
+        activate_card_binding(response)
 
         binding.refresh_from_db()
         assert binding.status == CardStatus.FAILED
