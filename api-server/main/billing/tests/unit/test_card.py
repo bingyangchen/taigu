@@ -8,7 +8,11 @@ from main.billing.services.card import (
     create_card_binding_token,
     get_default_active_card,
 )
-from main.billing.services.ecpay import merchant_member_id
+from main.billing.services.ecpay import (
+    get_ecpay_bind_result_url,
+    get_ecpay_return_url,
+    merchant_member_id,
+)
 
 
 class FakeEcpayClient:
@@ -36,22 +40,16 @@ class TestCardBinding:
     ) -> None:
         client = FakeEcpayClient()
 
-        result = create_card_binding_token(
-            user=user,
-            return_url="https://local.taigu.tw/api/billing/ecpay/return",
-            order_result_url="https://local.taigu.tw/api/billing/ecpay/bind-result",
-            client=client,
-        )
+        result = create_card_binding_token(user=user, client=client)
 
-        binding = CardBinding.objects.get(
-            provider_request_id=result["provider_request_id"]
-        )
+        binding = CardBinding.objects.get(user=user, status=CardStatus.PENDING)
         assert result == {
             "token": "binding-token",
             "token_expires_at": "2026/01/01 12:00:00",
-            "provider_request_id": binding.provider_request_id,
         }
         assert client.request is not None
+        assert client.request["return_url"] == get_ecpay_return_url()
+        assert client.request["order_result_url"] == get_ecpay_bind_result_url()
         assert client.request["merchant_trade_no"] == binding.provider_request_id
         assert binding.user == user
         assert binding.provider == PaymentProvider.ECPAY

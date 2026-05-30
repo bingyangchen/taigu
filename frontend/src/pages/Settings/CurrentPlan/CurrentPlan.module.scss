@@ -545,6 +545,10 @@
   text-align: center;
 }
 
+.submitHintExpired {
+  color: _.$red;
+}
+
 .confirmSubscription {
   display: flex;
   flex-direction: column;

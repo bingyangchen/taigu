@@ -21,6 +21,7 @@ type BillingResponse = {
 
 type BindTokenResponse = {
   token: string;
+  token_expires_at?: string;
   sdk_environment: "Stage" | "Prod";
   sdk_url: string;
 };
@@ -166,6 +167,7 @@ export default function CurrentPlan(): React.ReactElement {
       if (paymentMethodHighlightTimeoutRef.current !== null) {
         window.clearTimeout(paymentMethodHighlightTimeoutRef.current);
       }
+      clearCardBindingTokenExpiryWatch();
     };
   }, []);
 
@@ -552,10 +554,15 @@ export default function CurrentPlan(): React.ReactElement {
     const paymentElement = document.getElementById("ECPayPayment");
     paymentElement?.appendChild(submitButton);
     paymentElement?.appendChild(submitHint);
+    watchCardBindingTokenExpiry(response.token_expires_at);
   }
 
   async function submitBindCardPayToken(): Promise<void> {
     if (isSubmittingCardBindingRef.current) return;
+    if (isCardBindingTokenExpired()) {
+      markCardBindingTokenExpired();
+      return;
+    }
     isSubmittingCardBindingRef.current = true;
     setIsWaiting(true);
     setSdkSubmitButtonWaiting(true);
@@ -863,7 +870,75 @@ function requireECPay(): NonNullable<Window["ECPay"]> {
   return ecpay;
 }
 
+let cardBindingTokenExpiresAt: Date | null = null;
+let cardBindingTokenExpiryTimeout: number | null = null;
+
+const cardBindingTokenExpiredMessage = "綁卡步驟已失效，請重新載入頁面後再進行綁定。";
+
+function parseEcpayTokenExpireDate(value: string): Date | null {
+  const match = value.match(/^(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const [, year, month, day, hour, minute, second] = match;
+  return new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second),
+  );
+}
+
+function clearCardBindingTokenExpiryWatch(): void {
+  if (cardBindingTokenExpiryTimeout !== null) {
+    window.clearTimeout(cardBindingTokenExpiryTimeout);
+    cardBindingTokenExpiryTimeout = null;
+  }
+  cardBindingTokenExpiresAt = null;
+}
+
+function isCardBindingTokenExpired(): boolean {
+  return (
+    cardBindingTokenExpiresAt !== null &&
+    Date.now() >= cardBindingTokenExpiresAt.getTime()
+  );
+}
+
+function markCardBindingTokenExpired(): void {
+  const submitHint = document.querySelector<HTMLParagraphElement>(
+    `.${styles.submitHint}`,
+  );
+  if (submitHint) {
+    submitHint.classList.add(styles.submitHintExpired);
+    submitHint.textContent = cardBindingTokenExpiredMessage;
+  }
+  const submitButton = document.querySelector<HTMLButtonElement>(
+    `.${styles.hiddenSdkButton}`,
+  );
+  if (submitButton) {
+    submitButton.disabled = true;
+  }
+}
+
+function watchCardBindingTokenExpiry(tokenExpiresAt: string | undefined): void {
+  clearCardBindingTokenExpiryWatch();
+  if (!tokenExpiresAt) return;
+  const expiresAt = parseEcpayTokenExpireDate(tokenExpiresAt);
+  if (!expiresAt) return;
+  cardBindingTokenExpiresAt = expiresAt;
+  const delayMs = expiresAt.getTime() - Date.now();
+  if (delayMs <= 0) {
+    markCardBindingTokenExpired();
+    return;
+  }
+  cardBindingTokenExpiryTimeout = window.setTimeout(() => {
+    markCardBindingTokenExpired();
+    cardBindingTokenExpiryTimeout = null;
+  }, delayMs);
+}
+
 function clearEcpayPayment(): void {
+  clearCardBindingTokenExpiryWatch();
   document.querySelector(`.${styles.hiddenSdkButton}`)?.remove();
   document.querySelector(`.${styles.submitHint}`)?.remove();
   const paymentElement = document.getElementById("ECPayPayment");
