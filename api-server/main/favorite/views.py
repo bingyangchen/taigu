@@ -1,6 +1,7 @@
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods
 
+from main.billing.entitlements import QuotaExceededError, assert_can_add_favorite
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 from main.favorite.models import Favorite
@@ -20,6 +21,11 @@ def create_or_delete_favorite(request: HttpRequest, sid: str) -> JsonResponse:
 
 
 def _create_favorite(request: HttpRequest, sid: str) -> JsonResponse:
+    try:
+        assert_can_add_favorite(request.user, sid)
+    except QuotaExceededError as error:
+        return error.to_response()
+
     company = Company.objects.get(pk=sid)
     Favorite.objects.get_or_create(owner=request.user, company=company)
     return JsonResponse({"sid": sid})

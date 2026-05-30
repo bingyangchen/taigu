@@ -9,7 +9,9 @@ from main.billing.entitlements import (
     QuotaExceededError,
     _get_entitlements,
     assert_can_add_favorite,
-    assert_can_create_record,
+    assert_can_create_cash_dividend_record,
+    assert_can_create_trade_record,
+    serialize_entitlements,
 )
 from main.billing.models import BillingProfile, Plan, SubscriptionStatus
 from main.cash_dividend.models import CashDividendRecord
@@ -42,6 +44,12 @@ class TestEntitlements:
         assert entitlements.status == SubscriptionStatus.TRIALING
         assert entitlements.billing_interval == "month"
         assert entitlements.market_refresh_interval_seconds == 30
+        assert entitlements.quota.monthly_records is None
+        assert entitlements.usage.monthly_records == 0
+
+        serialized = serialize_entitlements(user)
+        assert serialized["quota"]["monthly_records"] is None
+        assert serialized["usage"]["monthly_records"] == 0
 
     def test_expired_trial_falls_back_to_free(self, user: User) -> None:
         BillingProfile.objects.create(
@@ -80,7 +88,9 @@ class TestEntitlements:
             )
 
         with pytest.raises(QuotaExceededError):
-            assert_can_create_record(user)
+            assert_can_create_trade_record(user)
+        with pytest.raises(QuotaExceededError):
+            assert_can_create_cash_dividend_record(user)
 
     def test_free_favorite_quota_allows_existing_favorite(
         self, user: User, company: Company

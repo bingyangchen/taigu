@@ -6,6 +6,11 @@ from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_http_methods
 
+from main.billing.entitlements import (
+    QuotaExceededError,
+    assert_can_add_holding,
+    assert_can_create_trade_record,
+)
 from main.core.data_change import append_data_change_log, get_last_revision
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
@@ -110,6 +115,12 @@ def _create(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"message": "Deal price must be positive"}, status=400)
     if handling_fee < 0:
         return JsonResponse({"message": "Handling fee must be positive"}, status=400)
+
+    try:
+        assert_can_create_trade_record(request.user)
+        assert_can_add_holding(request.user, str(sid), int(deal_quantity))
+    except QuotaExceededError as error:
+        return error.to_response()
 
     try:
         company = Company.objects.get(pk=str(sid))

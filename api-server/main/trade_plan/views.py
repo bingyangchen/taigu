@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from main.billing.entitlements import QuotaExceededError, assert_can_create_trade_plan
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 from main.market.models import Company
@@ -37,6 +38,11 @@ def create_trade_plan(request: HttpRequest) -> JsonResponse:
     target_quantity = int(target_quantity)
     if target_quantity < 0:
         return JsonResponse({"message": "Target quantity must be positive"}, status=400)
+
+    try:
+        assert_can_create_trade_plan(request.user)
+    except QuotaExceededError as error:
+        return error.to_response()
 
     try:
         company = Company.objects.get(pk=str(sid))
