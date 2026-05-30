@@ -381,6 +381,7 @@ export default function Welcome(): React.ReactElement {
             問題回報
           </Link>
         </div>
+        <p className={styles.footerContact}>聯絡信箱：taigu.tw@gmail.com</p>
         <p>Copyright © Taigu 2021-{new Date().getFullYear()} All rights reserved</p>
       </footer>
     </main>
