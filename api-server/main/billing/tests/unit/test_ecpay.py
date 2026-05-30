@@ -3,14 +3,14 @@ from zoneinfo import ZoneInfo
 
 from _pytest.monkeypatch import MonkeyPatch
 
-from main.billing.ecpay import (
+from main.billing.models import BillingInterval
+from main.billing.services.ecpay import (
     EcpayClient,
     EcpayConfig,
     aes_decrypt,
     aes_encrypt,
     next_period_end,
 )
-from main.billing.models import BillingInterval
 
 
 class CapturingEcpayClient(EcpayClient):
@@ -63,7 +63,7 @@ def test_binding_token_uses_ecpay_verification_amount() -> None:
 
 def test_next_period_end_uses_calendar_month(monkeypatch: MonkeyPatch) -> None:
     fixed_now = datetime(2024, 1, 31, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
-    monkeypatch.setattr("main.billing.ecpay.timezone.now", lambda: fixed_now)
+    monkeypatch.setattr("main.billing.services.ecpay.timezone.now", lambda: fixed_now)
 
     period_end = next_period_end(BillingInterval.MONTH)
 
@@ -72,7 +72,7 @@ def test_next_period_end_uses_calendar_month(monkeypatch: MonkeyPatch) -> None:
 
 def test_next_period_end_uses_calendar_year(monkeypatch: MonkeyPatch) -> None:
     fixed_now = datetime(2024, 2, 29, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
-    monkeypatch.setattr("main.billing.ecpay.timezone.now", lambda: fixed_now)
+    monkeypatch.setattr("main.billing.services.ecpay.timezone.now", lambda: fixed_now)
 
     period_end = next_period_end(BillingInterval.YEAR)
 

@@ -5,7 +5,8 @@ from django.utils import timezone
 
 from main.account import OAuthOrganization
 from main.account.models import User
-from main.billing.entitlements import (
+from main.billing.models import BillingProfile, Plan, SubscriptionStatus
+from main.billing.services.entitlements import (
     QuotaExceededError,
     _get_entitlements,
     assert_can_add_favorite,
@@ -13,7 +14,6 @@ from main.billing.entitlements import (
     assert_can_create_trade_record,
     serialize_entitlements,
 )
-from main.billing.models import BillingProfile, Plan, SubscriptionStatus
 from main.cash_dividend.models import CashDividendRecord
 from main.favorite.models import Favorite
 from main.market.models import Company

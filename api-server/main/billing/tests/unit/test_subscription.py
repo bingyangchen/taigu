@@ -16,7 +16,7 @@ from main.billing.models import (
     Plan,
     SubscriptionStatus,
 )
-from main.billing.services import renew_due_subscriptions
+from main.billing.services.subscription import renew_due_subscriptions
 
 
 class FakeEcpayClient:
