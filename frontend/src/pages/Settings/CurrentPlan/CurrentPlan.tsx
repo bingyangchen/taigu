@@ -150,7 +150,10 @@ export default function CurrentPlan(): React.ReactElement {
         : "";
 
   const refreshBilling = useCallback(async (): Promise<void> => {
-    const response = (await Api.sendRequest("billing/me", "get")) as BillingResponse;
+    const response = (await Api.sendRequest(
+      "billing/subscription",
+      "get",
+    )) as BillingResponse;
     setBilling(response);
     await dispatch(fetchAccountInfo()).unwrap();
   }, [dispatch]);
@@ -468,9 +471,9 @@ export default function CurrentPlan(): React.ReactElement {
     setNotice(null);
     try {
       await Api.sendRequest(
-        "billing/standard-subscription",
+        "billing/subscription",
         "post",
-        JSON.stringify({ billing_interval: interval }),
+        JSON.stringify({ plan: "standard", billing_interval: interval }),
       );
       dispatch(pushToast({ type: "success", text: "Standard 訂閱已啟用" }));
       await refreshBilling();
@@ -503,7 +506,7 @@ export default function CurrentPlan(): React.ReactElement {
     setCancelSubscriptionError(null);
     try {
       await Api.sendRequest(
-        "billing/cancel-subscription",
+        "billing/subscription/cancel",
         "post",
         JSON.stringify({
           reason: cancelSubscriptionFeedback.reason || null,
