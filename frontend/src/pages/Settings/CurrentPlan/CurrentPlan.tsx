@@ -166,9 +166,9 @@ export default function CurrentPlan(): React.ReactElement {
   useEffect(() => {
     const bindResult = searchParams.get("bind");
     const clearBindResultFromUrl = (): void => {
-      const nextSearchParams = new URLSearchParams(searchParams);
-      nextSearchParams.delete("bind");
-      setSearchParams(nextSearchParams, { replace: true });
+      const p = new URLSearchParams(searchParams);
+      p.delete("bind");
+      setSearchParams(p, { replace: true });
     };
 
     if (bindResult === "success") {
@@ -440,18 +440,9 @@ export default function CurrentPlan(): React.ReactElement {
   async function handleBindCard(): Promise<void> {
     setIsBindingCard(true);
     setNotice(null);
+    setIsCardBindingPanelOpen(true);
     try {
-      setIsCardBindingPanelOpen(true);
-      if (isTrialing && hasCard) {
-        await waitForNextPaint();
-      }
-      const response = (await Api.sendRequest(
-        "billing/card-binding/init",
-        "post",
-        new URLSearchParams(),
-      )) as BindTokenResponse;
-      await loadEcpayScripts(response.sdk_url);
-      await initializeEcpay(response.sdk_environment, response.token);
+      await startEcpayCardBinding();
     } catch (error) {
       clearEcpayPayment();
       setIsCardBindingPanelOpen(false);
@@ -532,20 +523,25 @@ export default function CurrentPlan(): React.ReactElement {
     setNotice(null);
   }
 
-  async function initializeEcpay(
-    environment: "Stage" | "Prod",
-    token: string,
-  ): Promise<void> {
+  async function startEcpayCardBinding(): Promise<void> {
+    const response = (await Api.sendRequest(
+      "billing/card-binding/init",
+      "post",
+      new URLSearchParams(),
+    )) as BindTokenResponse;
+
+    await loadEcpayScripts(response.sdk_url);
+
     if (!isEcpayInitialized) {
       await new Promise<void>((resolve, reject) => {
-        if (!window.ECPay) {
-          reject(new Error("綠界付款元件尚未載入"));
-          return;
+        try {
+          requireECPay().initialize(response.sdk_environment, 1, (errorMessage) => {
+            if (errorMessage) reject(new Error(errorMessage));
+            else resolve();
+          });
+        } catch (error) {
+          reject(error);
         }
-        window.ECPay.initialize(environment, 1, (errorMessage) => {
-          if (errorMessage) reject(new Error(errorMessage));
-          else resolve();
-        });
       });
       isEcpayInitialized = true;
     }
@@ -554,14 +550,14 @@ export default function CurrentPlan(): React.ReactElement {
     await waitForNextPaint();
 
     await new Promise<void>((resolve, reject) => {
-      if (!window.ECPay) {
-        reject(new Error("綠界付款元件尚未載入"));
-        return;
+      try {
+        requireECPay().addBindingCard(response.token, "zh-TW", (errorMessage) => {
+          if (errorMessage) reject(new Error(errorMessage));
+          else resolve();
+        });
+      } catch (error) {
+        reject(error);
       }
-      window.ECPay.addBindingCard(token, "zh-TW", (errorMessage) => {
-        if (errorMessage) reject(new Error(errorMessage));
-        else resolve();
-      });
     });
     document.querySelector(`.${styles.hiddenSdkButton}`)?.remove();
     document.querySelector(`.${styles.submitHint}`)?.remove();
@@ -590,14 +586,14 @@ export default function CurrentPlan(): React.ReactElement {
     let isRedirectingToThreeD = false;
     try {
       const bindCardPayToken = await new Promise<string>((resolve, reject) => {
-        if (!window.ECPay) {
-          reject(new Error("綠界付款元件尚未載入"));
-          return;
+        try {
+          requireECPay().getBindCardPayToken((result, errorMessage) => {
+            if (errorMessage) reject(new Error(errorMessage));
+            else resolve(result.BindCardPayToken);
+          });
+        } catch (error) {
+          reject(error);
         }
-        window.ECPay.getBindCardPayToken((result, errorMessage) => {
-          if (errorMessage) reject(new Error(errorMessage));
-          else resolve(result.BindCardPayToken);
-        });
       });
       const response = await Api.sendRequest(
         "billing/card-binding/confirm",
@@ -859,10 +855,7 @@ function formatDate(value: string | null): string {
 }
 
 function getUserFacingError(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  return fallback;
+  return error instanceof Error && error.message ? error.message : fallback;
 }
 
 function getCancelSubscriptionError(error: unknown): string {
@@ -883,6 +876,14 @@ function waitForNextPaint(): Promise<void> {
       window.requestAnimationFrame(() => resolve());
     });
   });
+}
+
+function requireECPay(): NonNullable<Window["ECPay"]> {
+  const ecpay = window.ECPay;
+  if (!ecpay) {
+    throw new Error("綠界付款元件尚未載入");
+  }
+  return ecpay;
 }
 
 function clearEcpayPayment(): void {
