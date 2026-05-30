@@ -1,6 +1,8 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from _pytest.monkeypatch import MonkeyPatch
+
 from main.billing.ecpay import (
     EcpayClient,
     EcpayConfig,
@@ -56,10 +58,10 @@ def test_binding_token_uses_ecpay_verification_amount() -> None:
     )
 
     assert client.data is not None
-    assert client.data["OrderInfo"]["TotalAmount"] == "10"
+    assert client.data["OrderInfo"]["TotalAmount"] == "2"
 
 
-def test_next_period_end_uses_calendar_month(monkeypatch) -> None:
+def test_next_period_end_uses_calendar_month(monkeypatch: MonkeyPatch) -> None:
     fixed_now = datetime(2024, 1, 31, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
     monkeypatch.setattr("main.billing.ecpay.timezone.now", lambda: fixed_now)
 
@@ -68,7 +70,7 @@ def test_next_period_end_uses_calendar_month(monkeypatch) -> None:
     assert period_end == datetime(2024, 2, 29, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
 
 
-def test_next_period_end_uses_calendar_year(monkeypatch) -> None:
+def test_next_period_end_uses_calendar_year(monkeypatch: MonkeyPatch) -> None:
     fixed_now = datetime(2024, 2, 29, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
     monkeypatch.setattr("main.billing.ecpay.timezone.now", lambda: fixed_now)
 

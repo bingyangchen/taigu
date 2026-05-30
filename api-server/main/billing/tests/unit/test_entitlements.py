@@ -7,9 +7,9 @@ from main.account import OAuthOrganization
 from main.account.models import User
 from main.billing.entitlements import (
     QuotaExceededError,
+    _get_entitlements,
     assert_can_add_favorite,
     assert_can_create_record,
-    get_entitlements,
 )
 from main.billing.models import BillingProfile, Plan, SubscriptionStatus
 from main.cash_dividend.models import CashDividendRecord
@@ -36,7 +36,7 @@ class TestEntitlements:
         )
 
     def test_new_user_gets_standard_trial(self, user: User) -> None:
-        entitlements = get_entitlements(user)
+        entitlements = _get_entitlements(user)
 
         assert entitlements.plan == Plan.STANDARD
         assert entitlements.status == SubscriptionStatus.TRIALING
@@ -52,7 +52,7 @@ class TestEntitlements:
             trial_ends_at=timezone.now() - timedelta(days=9),
         )
 
-        entitlements = get_entitlements(user)
+        entitlements = _get_entitlements(user)
 
         assert entitlements.plan == Plan.FREE
         assert entitlements.market_refresh_interval_seconds == 600
