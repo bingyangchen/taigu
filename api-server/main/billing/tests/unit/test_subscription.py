@@ -18,7 +18,7 @@ from main.billing.models import (
     Plan,
     SubscriptionStatus,
 )
-from main.billing.services.subscription import next_period_end, renew_due_subscriptions
+from main.billing.services.subscription import _next_period_end, renew_due_subscriptions
 
 
 class FakeEcpayClient:
@@ -52,7 +52,7 @@ def test_next_period_end_uses_calendar_month(monkeypatch: MonkeyPatch) -> None:
         "main.billing.services.subscription.timezone.now", lambda: fixed_now
     )
 
-    period_end = next_period_end(BillingInterval.MONTH)
+    period_end = _next_period_end(BillingInterval.MONTH)
 
     assert period_end == datetime(2024, 2, 29, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
 
@@ -63,7 +63,7 @@ def test_next_period_end_uses_calendar_year(monkeypatch: MonkeyPatch) -> None:
         "main.billing.services.subscription.timezone.now", lambda: fixed_now
     )
 
-    period_end = next_period_end(BillingInterval.YEAR)
+    period_end = _next_period_end(BillingInterval.YEAR)
 
     assert period_end == datetime(2025, 2, 28, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
 

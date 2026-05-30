@@ -156,7 +156,6 @@ def ecpay_return(request: HttpRequest) -> HttpResponse:
                 mark_payment_failed(provider_request_id, data)
     except Exception:
         logger.exception("Failed to process ECPay ReturnURL")
-        return HttpResponse("1|OK", content_type="text/plain")
     return HttpResponse("1|OK", content_type="text/plain")
 
 
