@@ -22,6 +22,10 @@ from main.account.tokens import (
     revoke_refresh_token,
     rotate_refresh_token,
 )
+from main.billing.entitlements import (
+    ensure_billing_profile,
+    serialize_account_subscription,
+)
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 from main.env import env
@@ -110,6 +114,7 @@ def google_login(request: HttpRequest) -> JsonResponse:
             "avatar_url": verified_result.picture,
         },
     )
+    ensure_billing_profile(user)
     request.user = user  # type: ignore
     return _set_new_token_pair(JsonResponse({}), user)
 
@@ -136,12 +141,12 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
             status=400,
         )
 
-    user: User = request.user  # type: ignore
-    user.oauth_org = OAuthOrganization.GOOGLE  # type: ignore
-    user.oauth_id = verified_result.sub  # type: ignore
-    user.email = verified_result.email  # type: ignore
-    user.username = verified_result.name  # type: ignore
-    user.avatar_url = verified_result.picture  # type: ignore
+    user: User = request.user
+    user.oauth_org = OAuthOrganization.GOOGLE
+    user.oauth_id = verified_result.sub
+    user.email = verified_result.email
+    user.username = verified_result.name
+    user.avatar_url = verified_result.picture
     user.save()
 
     response = JsonResponse(
@@ -150,6 +155,7 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
             "email": user.email,
             "username": user.username,
             "avatar_url": user.avatar_url,
+            "subscription": serialize_account_subscription(user),
         }
     )
     return _set_new_token_pair(response, user)
@@ -162,10 +168,11 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
 def me(request: HttpRequest) -> JsonResponse:
     return JsonResponse(
         {
-            "id": request.user.pk,  # type: ignore
-            "username": request.user.username,  # type: ignore
-            "email": request.user.email,  # type: ignore
-            "avatar_url": request.user.avatar_url or None,  # type: ignore
+            "id": request.user.pk,
+            "username": request.user.username,
+            "email": request.user.email,
+            "avatar_url": request.user.avatar_url or None,
+            "subscription": serialize_account_subscription(request.user),
         }
     )
 
@@ -218,6 +225,7 @@ def update(request: HttpRequest) -> JsonResponse:
                 "username": user.username,
                 "email": user.email,
                 "avatar_url": user.avatar_url or None,
+                "subscription": serialize_account_subscription(user),
             }
         )
     except ValidationError as e:

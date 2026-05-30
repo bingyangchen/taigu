@@ -287,6 +287,10 @@ class TestChangeGoogleBindingView:
         assert data["email"] == "new@example.com"
         assert data["username"] == "New User"
         assert data["avatar_url"] == "https://example.com/new_avatar.jpg"
+        assert data["subscription"] == {
+            "plan": "standard",
+            "market_refresh_interval_seconds": 30,
+        }
         assert ACCESS_COOKIE_NAME in response.cookies
 
     def test_change_google_binding_already_bound(
@@ -536,6 +540,10 @@ class TestUpdateView:
         assert data["username"] == "New Username"
         assert data["email"] == "test@example.com"
         assert data["avatar_url"] == "https://example.com/avatar.jpg"
+        assert data["subscription"] == {
+            "plan": "standard",
+            "market_refresh_interval_seconds": 30,
+        }
 
         # Verify user was updated in database
         user.refresh_from_db()
