@@ -59,8 +59,10 @@ jobs:
           python-version: "3.13"
       - name: Install Ruff
         run: pip install ruff==0.12.8
-      - name: Run Ruff
+      - name: Run Ruff lint check
         run: ruff check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
+      - name: Run Ruff format check
+        run: ruff format --check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
 
   lint-frontend:
     name: Lint frontend with ESLint

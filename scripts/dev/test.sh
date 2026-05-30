@@ -22,6 +22,8 @@ printf "Passed!\n\n"
 printf "${BLUE}Running Ruff...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm -v "$(pwd):/app:ro" \
   api-server ruff check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
+docker compose -f compose.dev.yaml --progress quiet run $T --rm -v "$(pwd):/app:ro" \
+  api-server ruff format --check ./api-server/ ./scheduler/ --config=./api-server/ruff.toml --no-cache
 printf "\n"
 
 printf "${BLUE}Running Prettier...${RESET}\n"
