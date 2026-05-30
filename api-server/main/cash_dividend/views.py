@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from main.billing.entitlements import (
+from main.billing.services.entitlements import (
     QuotaExceededError,
     assert_can_create_cash_dividend_record,
 )

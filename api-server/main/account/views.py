@@ -22,7 +22,7 @@ from main.account.tokens import (
     revoke_refresh_token,
     rotate_refresh_token,
 )
-from main.billing.entitlements import (
+from main.billing.services.entitlements import (
     ensure_billing_profile,
     serialize_account_subscription,
 )

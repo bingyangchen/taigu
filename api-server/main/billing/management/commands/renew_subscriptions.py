@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from main.billing.services import renew_due_subscriptions
+from main.billing.services.subscription import renew_due_subscriptions
 
 
 class Command(BaseCommand):

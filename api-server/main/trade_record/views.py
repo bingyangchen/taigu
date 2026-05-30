@@ -6,7 +6,7 @@ from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from main.billing.entitlements import (
+from main.billing.services.entitlements import (
     QuotaExceededError,
     assert_can_add_holding,
     assert_can_create_trade_record,
