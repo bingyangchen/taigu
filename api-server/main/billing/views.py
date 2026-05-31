@@ -165,7 +165,9 @@ def ecpay_return(request: HttpRequest) -> HttpResponse:
                 provider_request_id=provider_request_id
             )
             if data.get("RtnCode") == 1:
-                mark_payment_paid(payment, data)
+                mark_payment_paid(
+                    payment, data, expected_merchant_id=config.merchant_id
+                )
             else:
                 mark_payment_failed(provider_request_id, data)
         else:

@@ -23,6 +23,7 @@ from main.billing.models import (
 from main.billing.services.subscription import (
     STALE_PAYMENT_FAILURE_MESSAGE,
     SubscriptionPaymentNotChargeableError,
+    SubscriptionPaymentValidationError,
     _next_period_end,
     create_subscription_payment,
     expire_all_stale_pending_payments,
@@ -43,6 +44,7 @@ class FakeEcpayClient:
             "OrderInfo": {
                 "MerchantTradeNo": kwargs["merchant_trade_no"],
                 "TradeNo": "ecpay-trade-no",
+                "TotalAmount": kwargs["amount"],
             },
         }
 
@@ -337,6 +339,7 @@ class TestSubscriptionPaymentLifecycle:
                 "OrderInfo": {
                     "MerchantTradeNo": payment.provider_request_id,
                     "TradeNo": "ecpay-trade-no",
+                    "TotalAmount": payment.amount,
                 },
             },
         )
@@ -344,3 +347,110 @@ class TestSubscriptionPaymentLifecycle:
         payment.refresh_from_db()
         assert payment.status == PaymentStatus.PAID
         assert payment.provider_transaction_id == "ecpay-trade-no"
+
+    def test_success_callback_rejects_amount_mismatch(
+        self, user: User, card: CardBinding
+    ) -> None:
+        payment = SubscriptionPayment.objects.create(
+            user=user,
+            card_binding=card,
+            provider_request_id="S123",
+            plan=Plan.STANDARD,
+            billing_interval=BillingInterval.MONTH,
+            amount=65,
+            status=PaymentStatus.PENDING,
+        )
+
+        with pytest.raises(
+            SubscriptionPaymentValidationError, match="Payment amount mismatch"
+        ):
+            mark_payment_paid(
+                payment,
+                {
+                    "RtnCode": 1,
+                    "OrderInfo": {
+                        "MerchantTradeNo": payment.provider_request_id,
+                        "TradeNo": "ecpay-trade-no",
+                        "TotalAmount": 700,
+                    },
+                },
+            )
+
+        payment.refresh_from_db()
+        assert payment.status == PaymentStatus.PENDING
+
+    def test_success_callback_rejects_merchant_mismatch(
+        self, user: User, card: CardBinding
+    ) -> None:
+        payment = SubscriptionPayment.objects.create(
+            user=user,
+            card_binding=card,
+            provider_request_id="S123",
+            plan=Plan.STANDARD,
+            billing_interval=BillingInterval.MONTH,
+            amount=65,
+            status=PaymentStatus.PENDING,
+        )
+
+        with pytest.raises(
+            SubscriptionPaymentValidationError, match="Payment merchant id mismatch"
+        ):
+            mark_payment_paid(
+                payment,
+                {
+                    "MerchantID": "unexpected-merchant",
+                    "RtnCode": 1,
+                    "OrderInfo": {
+                        "MerchantTradeNo": payment.provider_request_id,
+                        "TradeNo": "ecpay-trade-no",
+                        "TotalAmount": payment.amount,
+                    },
+                },
+                expected_merchant_id="expected-merchant",
+            )
+
+        payment.refresh_from_db()
+        assert payment.status == PaymentStatus.PENDING
+
+    def test_success_callback_rejects_duplicate_provider_transaction_id(
+        self, user: User, card: CardBinding
+    ) -> None:
+        SubscriptionPayment.objects.create(
+            user=user,
+            card_binding=card,
+            provider_request_id="S122",
+            provider_transaction_id="ecpay-trade-no",
+            plan=Plan.STANDARD,
+            billing_interval=BillingInterval.MONTH,
+            amount=65,
+            status=PaymentStatus.PAID,
+            paid_at=timezone.now(),
+        )
+        payment = SubscriptionPayment.objects.create(
+            user=user,
+            card_binding=card,
+            provider_request_id="S123",
+            plan=Plan.STANDARD,
+            billing_interval=BillingInterval.MONTH,
+            amount=65,
+            status=PaymentStatus.PENDING,
+        )
+
+        with pytest.raises(
+            SubscriptionPaymentValidationError,
+            match="Payment provider transaction id already used",
+        ):
+            mark_payment_paid(
+                payment,
+                {
+                    "RtnCode": 1,
+                    "OrderInfo": {
+                        "MerchantTradeNo": payment.provider_request_id,
+                        "TradeNo": "ecpay-trade-no",
+                        "TotalAmount": payment.amount,
+                    },
+                },
+            )
+
+        payment.refresh_from_db()
+        assert payment.status == PaymentStatus.PENDING

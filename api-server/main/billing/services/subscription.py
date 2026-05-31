@@ -46,6 +46,10 @@ class SubscriptionPaymentNotChargeableError(Exception):
     pass
 
 
+class SubscriptionPaymentValidationError(Exception):
+    pass
+
+
 def _next_period_end(interval: str) -> datetime:
     now = timezone.now()
     if interval == BillingInterval.YEAR:
@@ -289,11 +293,19 @@ def _due_subscription_profiles(now: datetime) -> QuerySet[BillingProfile]:
 
 
 @transaction.atomic
-def mark_payment_paid(payment: SubscriptionPayment, data: dict) -> None:
+def mark_payment_paid(
+    payment: SubscriptionPayment, data: dict, *, expected_merchant_id: str | None = None
+) -> None:
     payment = SubscriptionPayment.objects.select_for_update().get(pk=payment.pk)
     if payment.status == PaymentStatus.PAID:
         return
     order_info = data.get("OrderInfo", {})
+    _validate_paid_payment_callback(
+        payment=payment,
+        data=data,
+        order_info=order_info,
+        expected_merchant_id=expected_merchant_id,
+    )
     payment.status = PaymentStatus.PAID
     payment.provider_transaction_id = order_info.get("TradeNo")
     payment.paid_at = timezone.now()
@@ -319,3 +331,53 @@ def mark_payment_failed(provider_request_id: str, data: dict) -> None:
     payment.failure_message = data.get("RtnMsg", "")[:256]
     payment.raw_response = data
     payment.save()
+
+
+def _validate_paid_payment_callback(
+    *,
+    payment: SubscriptionPayment,
+    data: dict,
+    order_info: dict,
+    expected_merchant_id: str | None,
+) -> None:
+    if data.get("RtnCode") != 1:
+        raise SubscriptionPaymentValidationError("Payment callback is not successful")
+
+    if (
+        expected_merchant_id is not None
+        and data.get("MerchantID") != expected_merchant_id
+    ):
+        raise SubscriptionPaymentValidationError("Payment merchant id mismatch")
+
+    if order_info.get("MerchantTradeNo") != payment.provider_request_id:
+        raise SubscriptionPaymentValidationError("Payment trade number mismatch")
+
+    if not order_info.get("TradeNo"):
+        raise SubscriptionPaymentValidationError(
+            "Payment provider transaction id missing"
+        )
+
+    if (
+        SubscriptionPayment.objects.filter(
+            provider_transaction_id=order_info["TradeNo"], status=PaymentStatus.PAID
+        )
+        .exclude(pk=payment.pk)
+        .exists()
+    ):
+        raise SubscriptionPaymentValidationError(
+            "Payment provider transaction id already used"
+        )
+
+    callback_amount = order_info.get("TotalAmount")
+    if callback_amount is None and expected_merchant_id is not None:
+        raise SubscriptionPaymentValidationError("Payment amount missing")
+    if callback_amount is None:
+        return
+
+    try:
+        parsed_callback_amount = int(callback_amount)
+    except (TypeError, ValueError) as error:
+        raise SubscriptionPaymentValidationError("Payment amount is invalid") from error
+
+    if parsed_callback_amount != payment.amount:
+        raise SubscriptionPaymentValidationError("Payment amount mismatch")
