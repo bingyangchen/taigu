@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from main.billing.models import (
     BillingInterval,
+    PaymentStatus,
     Plan,
     SubscriptionPayment,
     SubscriptionStatus,
@@ -72,13 +73,15 @@ def _start_subscription(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"message": "Unsupported subscription plan"}, status=400)
     interval = payload.get("billing_interval", BillingInterval.MONTH)
     try:
-        create_subscription_payment(user=request.user, interval=interval)
+        payment = create_subscription_payment(user=request.user, interval=interval)
     except (SubscriptionPaymentNotChargeableError, ValueError) as error:
         return JsonResponse({"message": str(error)}, status=400)
     except EcpayApiError as error:
         logger.warning("Failed to charge ECPay subscription: %s", error)
         return JsonResponse({"message": str(error)}, status=502)
-    return JsonResponse({})
+    return JsonResponse(
+        {"subscription_activated": payment.status == PaymentStatus.PAID}
+    )
 
 
 @rate_limit(rate=0.5)

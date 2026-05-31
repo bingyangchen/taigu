@@ -31,6 +31,7 @@ class PaymentStatus(models.TextChoices):
     PENDING = "pending", "Pending"
     PAID = "paid", "Paid"
     FAILED = "failed", "Failed"
+    EXPIRED = "expired", "Expired"
 
 
 class CardStatus(models.TextChoices):
@@ -222,5 +223,10 @@ class SubscriptionPayment(CreateUpdateDateModel):
                         & models.Q(paid_at__isnull=False)
                     )
                 ),
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["user"],
+                condition=models.Q(status=PaymentStatus.PENDING),
+                name="unique_pending_subscription_payment_per_user",
+            ),
         ]

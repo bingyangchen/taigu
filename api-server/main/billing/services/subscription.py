@@ -3,7 +3,7 @@ from enum import StrEnum
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 
@@ -28,7 +28,8 @@ from main.billing.services.entitlements import ensure_billing_profile
 
 STANDARD_PRICES = {BillingInterval.MONTH: 65, BillingInterval.YEAR: 700}
 STANDARD_CURRENCY = Currency.TWD
-RENEWAL_PAYMENT_IN_FLIGHT_WINDOW = timedelta(minutes=30)
+PENDING_PAYMENT_TTL = timedelta(minutes=30)
+STALE_PAYMENT_FAILURE_MESSAGE = "Payment confirmation timed out"
 
 
 class RenewalResult(StrEnum):
@@ -38,6 +39,7 @@ class RenewalResult(StrEnum):
 
 
 PreparedRenewal = SubscriptionPayment | RenewalResult | None
+PreparedPayment = tuple[SubscriptionPayment, bool]
 
 
 class SubscriptionPaymentNotChargeableError(Exception):
@@ -54,11 +56,63 @@ def _next_period_end(interval: str) -> datetime:
 def create_subscription_payment(
     *, user: User, interval: str, client: EcpayClient | None = None
 ) -> SubscriptionPayment:
-    payment = _create_pending_subscription_payment(user=user, interval=interval)
+    payment, should_charge = _get_or_create_pending_subscription_payment(
+        user=user, interval=interval
+    )
+    if not should_charge:
+        return payment
+
     try:
         return _charge_subscription_payment(payment_id=payment.id, client=client)
     except (EcpayApiError, SubscriptionPaymentNotChargeableError) as error:
         mark_payment_failed(payment.provider_request_id, {"RtnMsg": str(error)})
+        raise
+
+
+def _expire_stale_pending_payments(*, user: User, now: datetime | None = None) -> int:
+    now = now or timezone.now()
+    return (
+        _stale_pending_payments(now)
+        .filter(user=user)
+        .update(
+            status=PaymentStatus.EXPIRED,
+            failure_message=STALE_PAYMENT_FAILURE_MESSAGE,
+            updated_at=now,
+        )
+    )
+
+
+def expire_all_stale_pending_payments(*, now: datetime | None = None) -> int:
+    now = now or timezone.now()
+    return _stale_pending_payments(now).update(
+        status=PaymentStatus.EXPIRED,
+        failure_message=STALE_PAYMENT_FAILURE_MESSAGE,
+        updated_at=now,
+    )
+
+
+def _get_or_create_pending_subscription_payment(
+    *, user: User, interval: str
+) -> PreparedPayment:
+    try:
+        with transaction.atomic():
+            _expire_stale_pending_payments(user=user)
+            existing_payment = (
+                _pending_payments(user=user)
+                .select_for_update()
+                .order_by("-created_at")
+                .first()
+            )
+            if existing_payment is not None:
+                return existing_payment, False
+
+            return _create_pending_subscription_payment(
+                user=user, interval=interval
+            ), True
+    except IntegrityError:
+        existing_payment = _pending_payments(user=user).first()
+        if existing_payment is not None:
+            return existing_payment, False
         raise
 
 
@@ -176,7 +230,8 @@ def _prepare_due_subscription_payment(
         profile.save()
         return RenewalResult.CANCELED
 
-    if _has_fresh_pending_payment(user=profile.user, now=now):
+    _expire_stale_pending_payments(user=profile.user, now=now)
+    if _pending_payments(user=profile.user).exists():
         return None
 
     try:
@@ -195,13 +250,18 @@ def _mark_profile_past_due(*, profile_id: int, now: datetime) -> None:
     )
 
 
-def _has_fresh_pending_payment(*, user: User, now: datetime) -> bool:
+def _pending_payments(*, user: User) -> QuerySet[SubscriptionPayment]:
     return SubscriptionPayment.objects.filter(
-        user=user,
+        user=user, plan=Plan.STANDARD, status=PaymentStatus.PENDING
+    )
+
+
+def _stale_pending_payments(now: datetime) -> QuerySet[SubscriptionPayment]:
+    return SubscriptionPayment.objects.filter(
         plan=Plan.STANDARD,
         status=PaymentStatus.PENDING,
-        created_at__gte=now - RENEWAL_PAYMENT_IN_FLIGHT_WINDOW,
-    ).exists()
+        created_at__lt=now - PENDING_PAYMENT_TTL,
+    )
 
 
 def _due_subscription_profiles(now: datetime) -> QuerySet[BillingProfile]:

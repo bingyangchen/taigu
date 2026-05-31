@@ -26,6 +26,10 @@ type BindTokenResponse = {
   sdk_url: string;
 };
 
+type StartSubscriptionResponse = {
+  subscription_activated: boolean;
+};
+
 type BillingInterval = "month" | "year";
 
 const fallbackSubscription: SubscriptionEntitlements = {
@@ -440,12 +444,18 @@ export default function CurrentPlan(): React.ReactElement {
     setIsWaiting(true);
     setNotice(null);
     try {
-      await Api.sendRequest(
+      const response = (await Api.sendRequest(
         "billing/subscription",
         "post",
         JSON.stringify({ plan: "standard", billing_interval: interval }),
-      );
-      dispatch(pushToast({ type: "success", text: "Standard 訂閱已啟用" }));
+      )) as StartSubscriptionResponse;
+      if (response.subscription_activated) {
+        dispatch(pushToast({ type: "success", text: "Standard 訂閱已啟用" }));
+      } else {
+        const text = "付款正在處理中，請稍後重新整理付款與方案狀態。";
+        setNotice({ type: "info", text });
+        dispatch(pushToast({ type: "success", text: "付款正在處理中" }));
+      }
       await refreshBilling();
       setPendingBillingInterval(null);
     } catch (error) {
