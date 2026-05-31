@@ -258,9 +258,12 @@ class TestSubscriptionPaymentLifecycle:
         assert payment == existing_payment
         assert payment.status == PaymentStatus.PENDING
         assert client.calls == 0
-        assert SubscriptionPayment.objects.filter(
-            user=user, status=PaymentStatus.PENDING
-        ).count() == 1
+        assert (
+            SubscriptionPayment.objects.filter(
+                user=user, status=PaymentStatus.PENDING
+            ).count()
+            == 1
+        )
 
     def test_active_subscription_cannot_be_started_again(
         self, user: User, card: CardBinding

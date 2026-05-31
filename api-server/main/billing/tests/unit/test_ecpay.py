@@ -75,9 +75,7 @@ def test_binding_token_uses_ecpay_verification_amount() -> None:
 
 def test_ecpay_return_acks_invalid_payload() -> None:
     request = RequestFactory().post(
-        "/api/billing/ecpay/return",
-        data=b"{",
-        content_type="application/json",
+        "/api/billing/ecpay/return", data=b"{", content_type="application/json"
     )
 
     response = views.ecpay_return(request)
@@ -86,9 +84,7 @@ def test_ecpay_return_acks_invalid_payload() -> None:
     assert response.content == b"1|OK"
 
 
-def test_ecpay_return_acks_missing_merchant_trade_no(
-    monkeypatch: MonkeyPatch,
-) -> None:
+def test_ecpay_return_acks_missing_merchant_trade_no(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         views,
         "get_ecpay_config",

@@ -163,7 +163,7 @@ class CardBinding(CreateUpdateDateModel):
             models.Index(
                 fields=["user", "status", "provider", "-updated_at"],
                 name="card_bind_default_idx",
-            ),
+            )
         ]
         constraints = [
             models.CheckConstraint(
@@ -210,7 +210,7 @@ class SubscriptionPayment(CreateUpdateDateModel):
             models.Index(
                 fields=["user", "plan", "status", "created_at"],
                 name="sub_payment_inflight_idx",
-            ),
+            )
         ]
         constraints = [
             models.CheckConstraint(
