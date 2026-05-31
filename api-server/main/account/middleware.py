@@ -4,10 +4,7 @@ from django.contrib.auth import authenticate
 from django.http import HttpRequest, HttpResponse
 
 from main.account import ACCESS_COOKIE_NAME
-from main.account.cookies import (
-    delete_access_cookie,
-    has_auth_cookie_been_handled,
-)
+from main.account.cookies import delete_access_cookie, has_auth_cookie_been_handled
 
 
 def check_login_status_middleware(

@@ -37,10 +37,7 @@ class TestHandlingFeeUrls:
         """Test that URL patterns use the expected regex format."""
         from main.handling_fee.urls import urlpatterns
 
-        expected_patterns = [
-            r"^discount[/]?$",
-            r"^discount/(?P<id>\w+)[/]?$",
-        ]
+        expected_patterns = [r"^discount[/]?$", r"^discount/(?P<id>\w+)[/]?$"]
 
         actual_patterns = []
         for pattern in urlpatterns:

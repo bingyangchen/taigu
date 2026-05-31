@@ -36,11 +36,8 @@ class DataChangeLog(models.Model):
             models.UniqueConstraint(
                 fields=["user", "subject", "revision"],
                 name="unique_user_subject_revision",
-            ),
+            )
         ]
         indexes = [
-            models.Index(
-                fields=["created_at"],
-                name="data_change_log_created_at_idx",
-            ),
+            models.Index(fields=["created_at"], name="data_change_log_created_at_idx")
         ]

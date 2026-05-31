@@ -13,10 +13,7 @@ from main.market.models import Company
 
 class CashDividendRecord(CreateUpdateDateModel):
     owner: User = ForeignKey(  # type: ignore
-        User,
-        on_delete=CASCADE,
-        related_name="cash_dividend_records",
-        db_index=True,
+        User, on_delete=CASCADE, related_name="cash_dividend_records", db_index=True
     )
     company: Company = ForeignKey(Company, on_delete=PROTECT, db_index=True)  # type: ignore
     deal_time = DateField()

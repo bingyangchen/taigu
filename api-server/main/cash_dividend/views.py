@@ -5,6 +5,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_http_methods
 
+from main.billing.services.entitlements import (
+    QuotaExceededError,
+    assert_can_create_cash_dividend_record,
+)
 from main.cash_dividend.models import CashDividendRecord
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
@@ -71,6 +75,11 @@ def _create(request: HttpRequest) -> JsonResponse:
     cash_dividend = int(cash_dividend)
     if cash_dividend < 0:
         return JsonResponse({"message": "Cash dividend must be positive"}, status=400)
+
+    try:
+        assert_can_create_cash_dividend_record(request.user)
+    except QuotaExceededError as error:
+        return error.to_response()
 
     try:
         company = Company.objects.get(pk=str(sid))

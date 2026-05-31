@@ -76,6 +76,16 @@ def cleanup_data_change_logs() -> None:
         logger.error(f"Error in cleanup_data_change_logs: {e}")
 
 
+def renew_subscriptions() -> None:
+    try:
+        subprocess.run(  # noqa: S603
+            ["python", "manage.py", "renew_subscriptions"],  # noqa: S607
+            check=True,
+        )
+    except Exception as e:
+        logger.error(f"Error in renew_subscriptions: {e}")
+
+
 ########################################################################################
 
 
@@ -133,6 +143,11 @@ if __name__ == "__main__":
         cleanup_data_change_logs,
         CronTrigger.from_crontab("20 3 * * *"),
         name="cleanup_data_change_logs",
+    )
+    scheduler.add_job(
+        renew_subscriptions,
+        CronTrigger.from_crontab("40 3 * * *"),
+        name="renew_subscriptions",
     )
 
     try:

@@ -33,6 +33,9 @@ class EnvironmentVariableManager(BaseModel):
     GOOGLE_CLIENT_ID: str = os.environ.get("GOOGLE_CLIENT_ID")  # type: ignore
     GOOGLE_PROJECT_ID: str = os.environ.get("GOOGLE_PROJECT_ID")  # type: ignore
     GOOGLE_CLIENT_SECRET: str = os.environ.get("GOOGLE_CLIENT_SECRET")  # type: ignore
+    ECPAY_MERCHANT_ID: str = os.environ.get("ECPAY_MERCHANT_ID")  # type: ignore
+    ECPAY_HASH_KEY: str = os.environ.get("ECPAY_HASH_KEY")  # type: ignore
+    ECPAY_HASH_IV: str = os.environ.get("ECPAY_HASH_IV")  # type: ignore
     LOG_LEVEL: LogLevel = LogLevel(os.environ.get("LOG_LEVEL"))
     SQL_LOG: bool = bool(int(os.environ.get("SQL_LOG")))  # type: ignore
 

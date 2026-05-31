@@ -55,6 +55,7 @@ function mapStateToProps(rootState: RootState) {
   const { marketPageSubpageName: activeSubpageName } = rootState.mainPage;
   const { sidStockInfoMap } = rootState.stockInfo;
   const { tradePlans } = rootState.tradePlan;
+  const { subscription } = rootState.account;
   return {
     activeSubpageName,
     cashDividendRecords,
@@ -64,6 +65,7 @@ function mapStateToProps(rootState: RootState) {
     sidStockInfoMap,
     sidTradeRecordsMap,
     stockWarehouse,
+    subscription,
     tradePlans,
   };
 }
@@ -112,7 +114,7 @@ class Market extends React.Component<Props, State> {
       if (this.state.activeTab === "favorites") {
         this.fetchFavoriteStockInfo();
       }
-    }, 15000);
+    }, this.props.subscription.market_refresh_interval_seconds * 1000);
   }
 
   public componentDidUpdate(prevProps: Readonly<Props>): void {

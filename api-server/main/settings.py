@@ -2,6 +2,11 @@ import logging
 from pathlib import Path
 
 from main.env import Env, env
+from main.origins import (
+    get_csrf_cookie_domain,
+    get_public_api_host,
+    get_public_frontend_origin,
+)
 
 logging.basicConfig(
     level=env.LOG_LEVEL,
@@ -13,17 +18,13 @@ SECRET_KEY = env.SECRET_KEY
 DEBUG = env.ENV == Env.DEV
 JWT_ALGORITHM = "HS256"
 
-ALLOWED_HOSTS = ["*"] if env.ENV == Env.DEV else ["api.taigu.tw"]
+ALLOWED_HOSTS = ["*"] if env.ENV == Env.DEV else [get_public_api_host()]
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = (
-    ["https://local.taigu.tw"] if env.ENV == Env.DEV else ["https://taigu.tw"]
-)
+CORS_ALLOWED_ORIGINS = [get_public_frontend_origin()]
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_DOMAIN = None if env.ENV == Env.DEV else ".taigu.tw"
-CSRF_TRUSTED_ORIGINS = (
-    ["https://local.taigu.tw"] if env.ENV == Env.DEV else ["https://taigu.tw"]
-)
+CSRF_COOKIE_DOMAIN = get_csrf_cookie_domain()
+CSRF_TRUSTED_ORIGINS = [get_public_frontend_origin()]
 
 ROOT_URLCONF = "main.urls"
 WSGI_APPLICATION = "main.wsgi.application"
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     # Local
     "main.core",
     "main.account",
+    "main.billing",
     "main.market",
     "main.stock_memo",
     "main.trade_plan",
@@ -100,6 +102,6 @@ if env.SQL_LOG:
                 "handlers": ["console"],
                 "level": "DEBUG",
                 "propagate": False,
-            },
+            }
         },
     }

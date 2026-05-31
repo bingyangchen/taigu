@@ -14,6 +14,7 @@ const initialState: AccountState = {
   email: "",
   username: "",
   avatar_url: "",
+  subscription: { plan: "free", market_refresh_interval_seconds: 600 },
   isWaiting: false,
 };
 
@@ -102,6 +103,7 @@ export const accountSlice = createSlice({
         state.email = action.payload.email;
         state.username = action.payload.username;
         state.avatar_url = action.payload.avatar_url;
+        state.subscription = action.payload.subscription;
 
         state.isWaiting = false;
       })
@@ -117,6 +119,7 @@ export const accountSlice = createSlice({
         state.email = action.payload.email;
         state.username = action.payload.username;
         state.avatar_url = action.payload.avatar_url;
+        state.subscription = action.payload.subscription;
 
         state.isWaiting = false;
       })
@@ -132,6 +135,7 @@ export const accountSlice = createSlice({
         state.email = action.payload.email;
         state.username = action.payload.username;
         state.avatar_url = action.payload.avatar_url;
+        state.subscription = action.payload.subscription;
 
         state.isWaiting = false;
       })

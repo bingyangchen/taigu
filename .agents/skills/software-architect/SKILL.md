@@ -86,6 +86,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py migrate
 - Avoid abbreviations and single-letter names except common loop indices (`i`, `j`, `k`) and established domain terms.
 - Avoid redundant filename suffixes when the directory already describes the role, such as `repositories/achievement.dart` instead of `repositories/achievement_repository.dart`.
 - For map (dart) and dict (python) data structures, prefer `xxxToYyy`/`xxx_to_yyy` naming convention for clarity.
+- Use `_` prefix for private functions in a Python module, and `__` prefix for private variables and functions in a Python class.
 
 ## Comments and Docstrings
 

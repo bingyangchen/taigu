@@ -39,11 +39,7 @@ class TestCreateOrListDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test POST method creates a discount."""
-        payload = {
-            "date": "2023-12-01",
-            "amount": 100,
-            "memo": "Test memo",
-        }
+        payload = {"date": "2023-12-01", "amount": 100, "memo": "Test memo"}
 
         request = request_factory.post(
             "/api/handling-fee/discount/",
@@ -119,11 +115,7 @@ class TestCreateDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test creating a discount with valid data."""
-        payload = {
-            "date": "2023-12-01",
-            "amount": 100,
-            "memo": "Test memo",
-        }
+        payload = {"date": "2023-12-01", "amount": 100, "memo": "Test memo"}
 
         request = request_factory.post(
             "/api/handling-fee/discount/",
@@ -152,10 +144,7 @@ class TestCreateDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test creating a discount without memo (should default to empty string)."""
-        payload = {
-            "date": "2023-12-01",
-            "amount": 100,
-        }
+        payload = {"date": "2023-12-01", "amount": 100}
 
         request = request_factory.post(
             "/api/handling-fee/discount/",
@@ -176,9 +165,7 @@ class TestCreateDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test creating a discount without date returns 400."""
-        payload = {
-            "amount": 100,
-        }
+        payload = {"amount": 100}
 
         request = request_factory.post(
             "/api/handling-fee/discount/",
@@ -199,9 +186,7 @@ class TestCreateDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test creating a discount without amount returns 400."""
-        payload = {
-            "date": "2023-12-01",
-        }
+        payload = {"date": "2023-12-01"}
 
         request = request_factory.post(
             "/api/handling-fee/discount/",
@@ -222,10 +207,7 @@ class TestCreateDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test creating a discount with negative amount returns 400."""
-        payload = {
-            "date": "2023-12-01",
-            "amount": -100,
-        }
+        payload = {"date": "2023-12-01", "amount": -100}
 
         request = request_factory.post(
             "/api/handling-fee/discount/",
@@ -246,10 +228,7 @@ class TestCreateDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test creating a discount with zero amount (should be valid)."""
-        payload = {
-            "date": "2023-12-01",
-            "amount": 0,
-        }
+        payload = {"date": "2023-12-01", "amount": 0}
 
         request = request_factory.post(
             "/api/handling-fee/discount/",
@@ -270,10 +249,7 @@ class TestCreateDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test creating a discount with invalid date format returns 400."""
-        payload = {
-            "date": "invalid-date",
-            "amount": 100,
-        }
+        payload = {"date": "invalid-date", "amount": 100}
 
         request = request_factory.post(
             "/api/handling-fee/discount/",
@@ -294,10 +270,7 @@ class TestCreateDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test creating a discount with wrong date format returns 400."""
-        payload = {
-            "date": "12/01/2023",
-            "amount": 100,
-        }
+        payload = {"date": "12/01/2023", "amount": 100}
 
         request = request_factory.post(
             "/api/handling-fee/discount/",
@@ -459,11 +432,7 @@ class TestUpdateOrDeleteDiscountView:
         discount: HandlingFeeDiscountRecord,
     ) -> None:
         """Test PUT method updates a discount."""
-        payload = {
-            "date": "2023-12-02",
-            "amount": 200,
-            "memo": "Updated memo",
-        }
+        payload = {"date": "2023-12-02", "amount": 200, "memo": "Updated memo"}
 
         request = request_factory.put(
             f"/api/handling-fee/discount/{discount.pk}/",
@@ -549,11 +518,7 @@ class TestUpdateDiscountView:
         discount: HandlingFeeDiscountRecord,
     ) -> None:
         """Test updating all fields of a discount."""
-        payload = {
-            "date": "2023-12-02",
-            "amount": 200,
-            "memo": "Updated memo",
-        }
+        payload = {"date": "2023-12-02", "amount": 200, "memo": "Updated memo"}
 
         request = request_factory.put(
             f"/api/handling-fee/discount/{discount.pk}/",
@@ -585,9 +550,7 @@ class TestUpdateDiscountView:
         discount: HandlingFeeDiscountRecord,
     ) -> None:
         """Test updating only the date field."""
-        payload = {
-            "date": "2023-12-05",
-        }
+        payload = {"date": "2023-12-05"}
 
         request = request_factory.put(
             f"/api/handling-fee/discount/{discount.pk}/",
@@ -613,9 +576,7 @@ class TestUpdateDiscountView:
         discount: HandlingFeeDiscountRecord,
     ) -> None:
         """Test updating only the amount field."""
-        payload = {
-            "amount": 250,
-        }
+        payload = {"amount": 250}
 
         request = request_factory.put(
             f"/api/handling-fee/discount/{discount.pk}/",
@@ -641,9 +602,7 @@ class TestUpdateDiscountView:
         discount: HandlingFeeDiscountRecord,
     ) -> None:
         """Test updating only the memo field."""
-        payload = {
-            "memo": "New memo text",
-        }
+        payload = {"memo": "New memo text"}
 
         request = request_factory.put(
             f"/api/handling-fee/discount/{discount.pk}/",
@@ -695,9 +654,7 @@ class TestUpdateDiscountView:
         discount: HandlingFeeDiscountRecord,
     ) -> None:
         """Test updating with negative amount returns 400."""
-        payload = {
-            "amount": -50,
-        }
+        payload = {"amount": -50}
 
         request = request_factory.put(
             f"/api/handling-fee/discount/{discount.pk}/",
@@ -721,9 +678,7 @@ class TestUpdateDiscountView:
         discount: HandlingFeeDiscountRecord,
     ) -> None:
         """Test updating with invalid date format returns 400."""
-        payload = {
-            "date": "invalid-date",
-        }
+        payload = {"date": "invalid-date"}
 
         request = request_factory.put(
             f"/api/handling-fee/discount/{discount.pk}/",
@@ -744,9 +699,7 @@ class TestUpdateDiscountView:
         self, request_factory: RequestFactory, user: User
     ) -> None:
         """Test updating a non-existent record raises ObjectDoesNotExist."""
-        payload = {
-            "amount": 200,
-        }
+        payload = {"amount": 200}
 
         request = request_factory.put(
             "/api/handling-fee/discount/99999/",
@@ -769,9 +722,7 @@ class TestUpdateDiscountView:
             username="otheruser",
         )
 
-        payload = {
-            "amount": 200,
-        }
+        payload = {"amount": 200}
 
         request = request_factory.put(
             f"/api/handling-fee/discount/{discount.pk}/",

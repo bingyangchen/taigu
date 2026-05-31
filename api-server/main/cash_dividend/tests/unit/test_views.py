@@ -226,11 +226,7 @@ class TestCashDividendRecordCreateView:
     def test_create_valid_cash_dividend_record(
         self, request_factory: RequestFactory, user: User, company: Company
     ) -> None:
-        payload = {
-            "deal_time": "2023-12-01",
-            "sid": "1234",
-            "cash_dividend": 1500,
-        }
+        payload = {"deal_time": "2023-12-01", "sid": "1234", "cash_dividend": 1500}
 
         request = request_factory.post(
             "/api/cash-dividends/",
@@ -353,11 +349,7 @@ class TestCashDividendRecordCreateView:
     def test_create_invalid_date_format(
         self, request_factory: RequestFactory, user: User, company: Company
     ) -> None:
-        payload = {
-            "deal_time": "invalid-date",
-            "sid": "1234",
-            "cash_dividend": 1500,
-        }
+        payload = {"deal_time": "invalid-date", "sid": "1234", "cash_dividend": 1500}
 
         request = request_factory.post(
             "/api/cash-dividends/",
@@ -404,10 +396,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
     @pytest.fixture
     def cash_dividend_record(self, user: User, company: Company) -> CashDividendRecord:
         return CashDividendRecord.objects.create(
-            owner=user,
-            company=company,
-            deal_time=date(2023, 12, 1),
-            cash_dividend=1000,
+            owner=user, company=company, deal_time=date(2023, 12, 1), cash_dividend=1000
         )
 
     def test_update_valid_data(
@@ -417,11 +406,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         company: Company,
         cash_dividend_record: CashDividendRecord,
     ) -> None:
-        payload = {
-            "deal_time": "2023-12-02",
-            "sid": "1234",
-            "cash_dividend": 2000,
-        }
+        payload = {"deal_time": "2023-12-02", "sid": "1234", "cash_dividend": 2000}
 
         request = request_factory.post(
             f"/api/cash-dividends/{cash_dividend_record.pk}/",
