@@ -1,3 +1,10 @@
+import json
+from types import SimpleNamespace
+
+from _pytest.monkeypatch import MonkeyPatch
+from django.test import RequestFactory
+
+from main.billing import views
 from main.billing.services.ecpay import (
     EcpayClient,
     EcpayConfig,
@@ -64,3 +71,67 @@ def test_binding_token_uses_ecpay_verification_amount() -> None:
 
     assert client.data is not None
     assert client.data["OrderInfo"]["TotalAmount"] == "2"
+
+
+def test_ecpay_return_acks_invalid_payload() -> None:
+    request = RequestFactory().post(
+        "/api/billing/ecpay/return",
+        data=b"{",
+        content_type="application/json",
+    )
+
+    response = views.ecpay_return(request)
+
+    assert response.status_code == 200
+    assert response.content == b"1|OK"
+
+
+def test_ecpay_return_acks_missing_merchant_trade_no(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        views,
+        "get_ecpay_config",
+        lambda: SimpleNamespace(hash_key="hash-key", hash_iv="hash-iv"),
+    )
+    monkeypatch.setattr(views, "aes_decrypt", lambda *args: {"OrderInfo": {}})
+    request = RequestFactory().post(
+        "/api/billing/ecpay/return",
+        data=json.dumps({"Data": "encrypted"}),
+        content_type="application/json",
+    )
+
+    response = views.ecpay_return(request)
+
+    assert response.status_code == 200
+    assert response.content == b"1|OK"
+
+
+def test_ecpay_return_requests_retry_when_processing_fails(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        views,
+        "get_ecpay_config",
+        lambda: SimpleNamespace(hash_key="hash-key", hash_iv="hash-iv"),
+    )
+    monkeypatch.setattr(
+        views,
+        "aes_decrypt",
+        lambda *args: {"OrderInfo": {"MerchantTradeNo": "S123"}, "RtnCode": 1},
+    )
+    monkeypatch.setattr(
+        views.SubscriptionPayment.objects,
+        "get",
+        lambda **kwargs: (_ for _ in ()).throw(RuntimeError("database unavailable")),
+    )
+    request = RequestFactory().post(
+        "/api/billing/ecpay/return",
+        data=json.dumps({"Data": "encrypted"}),
+        content_type="application/json",
+    )
+
+    response = views.ecpay_return(request)
+
+    assert response.status_code == 200
+    assert response.content == b"0|ERROR"

@@ -141,10 +141,19 @@ def cancel_subscription(request: HttpRequest) -> JsonResponse:
 @require_POST
 def ecpay_return(request: HttpRequest) -> HttpResponse:
     # Ref: https://developers.ecpay.com.tw/35601/
-    payload = json.loads(request.body)
-    config = get_ecpay_config()
-    data = aes_decrypt(payload["Data"], config.hash_key, config.hash_iv)
+    try:
+        payload = json.loads(request.body)
+        config = get_ecpay_config()
+        data = aes_decrypt(payload["Data"], config.hash_key, config.hash_iv)
+    except Exception:
+        logger.exception("Invalid ECPay ReturnURL payload")
+        return HttpResponse("1|OK", content_type="text/plain")
+
     provider_request_id = data.get("OrderInfo", {}).get("MerchantTradeNo")
+    if not provider_request_id:
+        logger.error("ECPay ReturnURL missing MerchantTradeNo: %s", data)
+        return HttpResponse("1|OK", content_type="text/plain")
+
     try:
         if provider_request_id.startswith("B"):
             activate_card_binding(data)
@@ -156,8 +165,13 @@ def ecpay_return(request: HttpRequest) -> HttpResponse:
                 mark_payment_paid(payment, data)
             else:
                 mark_payment_failed(provider_request_id, data)
+        else:
+            logger.error(
+                "Unknown ECPay MerchantTradeNo prefix: %s", provider_request_id
+            )
     except Exception:
         logger.exception("Failed to process ECPay ReturnURL")
+        return HttpResponse("0|ERROR", content_type="text/plain")
     return HttpResponse("1|OK", content_type="text/plain")
 
 
