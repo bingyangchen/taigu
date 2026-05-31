@@ -86,8 +86,8 @@ def _create_pending_subscription_payment(
 def _charge_subscription_payment(
     *, payment_id: UUID, client: EcpayClient | None = None
 ) -> SubscriptionPayment:
-    # Because ECPay callback (/ecpay/return) will also update the payment, we need to
-    # select fresh payment to prevent double-charging.
+    # Re-read by id so retries observe a callback-updated PAID state before charging.
+    # This narrows retry risk; the pending-payment guard owns renewal concurrency.
     payment = SubscriptionPayment.objects.select_related("user", "card_binding").get(
         pk=payment_id
     )

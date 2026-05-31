@@ -67,6 +67,16 @@ class BillingProfile(CreateUpdateDateModel):
 
     class Meta:
         db_table = "billing_profile"
+        indexes = [
+            models.Index(
+                fields=["plan", "subscription_status", "current_period_ends_at"],
+                name="billing_profile_due_idx",
+            ),
+            models.Index(
+                fields=["plan", "subscription_status", "trial_ends_at"],
+                name="billing_profile_trial_idx",
+            ),
+        ]
         constraints = [
             models.CheckConstraint(
                 name="billing_profile_plan_subscription_status_valid",
@@ -149,9 +159,9 @@ class CardBinding(CreateUpdateDateModel):
     class Meta:
         db_table = "card_binding"
         indexes = [
-            models.Index(fields=["user", "status"], name="card_bind_user_status_idx"),
             models.Index(
-                fields=["provider", "status"], name="card_bind_provider_status_idx"
+                fields=["user", "status", "provider", "-updated_at"],
+                name="card_bind_default_idx",
             ),
         ]
         constraints = [
@@ -196,7 +206,10 @@ class SubscriptionPayment(CreateUpdateDateModel):
     class Meta:
         db_table = "subscription_payment"
         indexes = [
-            models.Index(fields=["user", "status"], name="sub_payment_status_idx")
+            models.Index(
+                fields=["user", "plan", "status", "created_at"],
+                name="sub_payment_inflight_idx",
+            ),
         ]
         constraints = [
             models.CheckConstraint(
