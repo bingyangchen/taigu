@@ -62,6 +62,14 @@ class TestCardBinding:
         }
 
     def test_activate_card_binding_from_success_response(self, user: User) -> None:
+        existing_active = CardBinding.objects.create(
+            user=user,
+            provider=PaymentProvider.ECPAY,
+            provider_member_id="member",
+            provider_request_id="B122",
+            provider_binding_id="old-bind-card-id",
+            status=CardStatus.ACTIVE,
+        )
         binding = CardBinding.objects.create(
             user=user,
             provider=PaymentProvider.ECPAY,
@@ -78,8 +86,10 @@ class TestCardBinding:
             }
         )
 
+        existing_active.refresh_from_db()
         binding.refresh_from_db()
         assert result == binding
+        assert existing_active.status == CardStatus.DELETED
         assert binding.status == CardStatus.ACTIVE
         assert binding.provider_binding_id == "bind-card-id"
         assert binding.card_6_no == "431195"
@@ -105,7 +115,7 @@ class TestCardBinding:
         assert binding.provider_binding_id is None
         assert binding.raw_response == response
 
-    def test_get_default_active_card_returns_latest_bound_card(
+    def test_get_default_active_card_ignores_deleted_bound_card(
         self, user: User
     ) -> None:
         CardBinding.objects.create(
@@ -115,25 +125,24 @@ class TestCardBinding:
             provider_request_id="B123",
             status=CardStatus.FAILED,
         )
-        first_active = CardBinding.objects.create(
+        CardBinding.objects.create(
             user=user,
             provider=PaymentProvider.ECPAY,
             provider_member_id="member",
             provider_request_id="B124",
             provider_binding_id="first-bind-card-id",
-            status=CardStatus.ACTIVE,
+            status=CardStatus.DELETED,
         )
-        latest_active = CardBinding.objects.create(
+        active = CardBinding.objects.create(
             user=user,
             provider=PaymentProvider.ECPAY,
             provider_member_id="member",
             provider_request_id="B125",
-            provider_binding_id="latest-bind-card-id",
+            provider_binding_id="active-bind-card-id",
             status=CardStatus.ACTIVE,
         )
 
-        assert first_active.provider_binding_id
-        assert get_default_active_card(user) == latest_active
+        assert get_default_active_card(user) == active
 
     def test_serialize_card_returns_public_card_fields(self, user: User) -> None:
         binding = CardBinding.objects.create(

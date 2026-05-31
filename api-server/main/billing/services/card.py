@@ -55,6 +55,11 @@ def activate_card_binding(data: dict) -> CardBinding:
     binding.card_4_no = card_info.get("Card4No")
     binding.status = CardStatus.ACTIVE
     binding.raw_response = data
+    CardBinding.objects.filter(
+        user=binding.user,
+        provider=binding.provider,
+        status=CardStatus.ACTIVE,
+    ).exclude(pk=binding.pk).update(status=CardStatus.DELETED)
     binding.save()
     return binding
 
