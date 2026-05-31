@@ -18,9 +18,12 @@ class CapturingEcpayClient(EcpayClient):
         )
         self.data = None
 
-    def _EcpayClient__post(self, path: str, data: dict) -> dict:
+    def capture_post(self, path: str, data: dict) -> dict:
         self.data = data
         return {"Token": "token"}
+
+
+CapturingEcpayClient._EcpayClient__post = CapturingEcpayClient.capture_post
 
 
 def test_generate_merchant_trade_no() -> None:
