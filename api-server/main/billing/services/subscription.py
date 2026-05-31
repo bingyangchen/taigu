@@ -1,8 +1,10 @@
-from datetime import datetime
-from typing import Literal
+from datetime import datetime, timedelta
+from enum import StrEnum
+from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from django.db.models import QuerySet
 from django.utils import timezone
 
 from main.account.models import User
@@ -26,7 +28,20 @@ from main.billing.services.entitlements import ensure_billing_profile
 
 STANDARD_PRICES = {BillingInterval.MONTH: 65, BillingInterval.YEAR: 700}
 STANDARD_CURRENCY = Currency.TWD
-RenewalResult = Literal["renewed", "past_due", "canceled"]
+RENEWAL_PAYMENT_IN_FLIGHT_WINDOW = timedelta(minutes=30)
+
+
+class RenewalResult(StrEnum):
+    RENEWED = "renewed"
+    PAST_DUE = "past_due"
+    CANCELED = "canceled"
+
+
+PreparedRenewal = SubscriptionPayment | RenewalResult | None
+
+
+class SubscriptionPaymentNotChargeableError(Exception):
+    pass
 
 
 def _next_period_end(interval: str) -> datetime:
@@ -39,15 +54,25 @@ def _next_period_end(interval: str) -> datetime:
 def create_subscription_payment(
     *, user: User, interval: str, client: EcpayClient | None = None
 ) -> SubscriptionPayment:
+    payment = _create_pending_subscription_payment(user=user, interval=interval)
+    try:
+        return _charge_subscription_payment(payment_id=payment.id, client=client)
+    except (EcpayApiError, SubscriptionPaymentNotChargeableError) as error:
+        mark_payment_failed(payment.provider_request_id, {"RtnMsg": str(error)})
+        raise
+
+
+def _create_pending_subscription_payment(
+    *, user: User, interval: str
+) -> SubscriptionPayment:
     if interval not in STANDARD_PRICES:
         raise ValueError("Unsupported billing interval")
 
     card = get_default_active_card(user)
     if card is None or not card.provider_binding_id:
-        raise ValueError("No active bound card")
+        raise SubscriptionPaymentNotChargeableError("No active bound card")
 
-    ecpay_client = client or EcpayClient()
-    payment = SubscriptionPayment.objects.create(
+    return SubscriptionPayment.objects.create(
         user=user,
         card_binding=card,
         provider_request_id=generate_merchant_trade_no("S"),
@@ -56,39 +81,45 @@ def create_subscription_payment(
         currency=STANDARD_CURRENCY,
         amount=STANDARD_PRICES[interval],
     )
+
+
+def _charge_subscription_payment(
+    *, payment_id: UUID, client: EcpayClient | None = None
+) -> SubscriptionPayment:
+    # Because ECPay callback (/ecpay/return) will also update the payment, we need to
+    # select fresh payment to prevent double-charging.
+    payment = SubscriptionPayment.objects.select_related("user", "card_binding").get(
+        pk=payment_id
+    )
+    if payment.status == PaymentStatus.PAID:
+        return payment
+    if payment.card_binding.provider_binding_id is None:
+        raise SubscriptionPaymentNotChargeableError("No active bound card")
+
+    ecpay_client = client or EcpayClient()
     response = ecpay_client.create_payment_with_card_id(
-        bind_card_id=card.provider_binding_id,
-        user_id=user.id,
-        user_email=user.email,
-        user_name=user.username,
+        bind_card_id=payment.card_binding.provider_binding_id,
+        user_id=payment.user.id,
+        user_email=payment.user.email,
+        user_name=payment.user.username,
         merchant_trade_no=payment.provider_request_id,
         amount=payment.amount,
         return_url=get_ecpay_return_url(),
     )
     payment.raw_response = response
     payment.save()
-    if response.get("RtnCode") == 1:
-        mark_payment_paid(payment, response)
-        payment.refresh_from_db()
+    mark_payment_paid(payment, response)
+    payment.refresh_from_db()
     return payment
 
 
 def renew_due_subscriptions(
     *, client: EcpayClient | None = None, now: datetime | None = None
-) -> dict[str, int]:
+) -> dict[RenewalResult, int]:
     now = now or timezone.now()
-    summary = {"renewed": 0, "past_due": 0, "canceled": 0}
+    summary = dict.fromkeys(RenewalResult, 0)
 
-    due_profile_ids = list(
-        BillingProfile.objects.filter(
-            plan=Plan.STANDARD,
-            subscription_status__in=[
-                SubscriptionStatus.ACTIVE,
-                SubscriptionStatus.PAST_DUE,
-            ],
-            current_period_ends_at__lte=now,
-        ).values_list("pk", flat=True)
-    )
+    due_profile_ids = list(_due_subscription_profiles(now).values_list("pk", flat=True))
     for profile_id in due_profile_ids:
         result = _renew_due_subscription(profile_id=profile_id, client=client, now=now)
         if result is not None:
@@ -99,28 +130,40 @@ def renew_due_subscriptions(
         subscription_status=SubscriptionStatus.TRIALING,
         trial_ends_at__lte=now,
     )
-    summary["canceled"] += expired_trials.update(
+    summary[RenewalResult.CANCELED] += expired_trials.update(
         plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED, updated_at=now
     )
     return summary
 
 
-@transaction.atomic
 def _renew_due_subscription(
     *, profile_id: int, client: EcpayClient | None, now: datetime
 ) -> RenewalResult | None:
-    profile = (
-        BillingProfile.objects.select_for_update(skip_locked=True)
-        .select_related("user")
-        .filter(
-            pk=profile_id,
-            plan=Plan.STANDARD,
-            subscription_status__in=[
-                SubscriptionStatus.ACTIVE,
-                SubscriptionStatus.PAST_DUE,
-            ],
-            current_period_ends_at__lte=now,
+    prepared_renewal = _prepare_due_subscription_payment(profile_id=profile_id, now=now)
+    if not isinstance(prepared_renewal, SubscriptionPayment):
+        return prepared_renewal
+
+    try:
+        _charge_subscription_payment(payment_id=prepared_renewal.id, client=client)
+    except (EcpayApiError, SubscriptionPaymentNotChargeableError) as error:
+        mark_payment_failed(
+            prepared_renewal.provider_request_id, {"RtnMsg": str(error)}
         )
+        _mark_profile_past_due(profile_id=profile_id, now=now)
+        return RenewalResult.PAST_DUE
+
+    return RenewalResult.RENEWED
+
+
+@transaction.atomic
+def _prepare_due_subscription_payment(
+    *, profile_id: int, now: datetime
+) -> PreparedRenewal:
+    profile = (
+        _due_subscription_profiles(now)
+        .select_for_update(skip_locked=True)
+        .select_related("user")
+        .filter(pk=profile_id)
         .first()
     )
     if profile is None:
@@ -131,23 +174,45 @@ def _renew_due_subscription(
         profile.subscription_status = SubscriptionStatus.CANCELED
         profile.cancel_at_period_end = False
         profile.save()
-        return "canceled"
+        return RenewalResult.CANCELED
+
+    if _has_fresh_pending_payment(user=profile.user, now=now):
+        return None
 
     try:
-        payment = create_subscription_payment(
-            user=profile.user, interval=profile.billing_interval, client=client
+        return _create_pending_subscription_payment(
+            user=profile.user, interval=profile.billing_interval
         )
-    except (EcpayApiError, ValueError):
+    except SubscriptionPaymentNotChargeableError:
         profile.subscription_status = SubscriptionStatus.PAST_DUE
         profile.save()
-        return "past_due"
+        return RenewalResult.PAST_DUE
 
-    if payment.status == PaymentStatus.PAID:
-        return "renewed"
 
-    profile.subscription_status = SubscriptionStatus.PAST_DUE
-    profile.save()
-    return "past_due"
+def _mark_profile_past_due(*, profile_id: int, now: datetime) -> None:
+    _due_subscription_profiles(now).filter(pk=profile_id).update(
+        subscription_status=SubscriptionStatus.PAST_DUE, updated_at=now
+    )
+
+
+def _has_fresh_pending_payment(*, user: User, now: datetime) -> bool:
+    return SubscriptionPayment.objects.filter(
+        user=user,
+        plan=Plan.STANDARD,
+        status=PaymentStatus.PENDING,
+        created_at__gte=now - RENEWAL_PAYMENT_IN_FLIGHT_WINDOW,
+    ).exists()
+
+
+def _due_subscription_profiles(now: datetime) -> QuerySet[BillingProfile]:
+    return BillingProfile.objects.filter(
+        plan=Plan.STANDARD,
+        subscription_status__in=[
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.PAST_DUE,
+        ],
+        current_period_ends_at__lte=now,
+    )
 
 
 @transaction.atomic
@@ -178,6 +243,6 @@ def mark_payment_failed(provider_request_id: str, data: dict) -> None:
         provider_request_id=provider_request_id
     )
     payment.status = PaymentStatus.FAILED
-    payment.failure_message = data.get("RtnMsg", "")
+    payment.failure_message = data.get("RtnMsg", "")[:256]
     payment.raw_response = data
     payment.save()

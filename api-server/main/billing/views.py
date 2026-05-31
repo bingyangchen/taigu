@@ -29,6 +29,7 @@ from main.billing.services.entitlements import (
 )
 from main.billing.services.subscription import (
     STANDARD_PRICES,
+    SubscriptionPaymentNotChargeableError,
     create_subscription_payment,
     mark_payment_failed,
     mark_payment_paid,
@@ -72,7 +73,7 @@ def _start_subscription(request: HttpRequest) -> JsonResponse:
     interval = payload.get("billing_interval", BillingInterval.MONTH)
     try:
         create_subscription_payment(user=request.user, interval=interval)
-    except ValueError as error:
+    except (SubscriptionPaymentNotChargeableError, ValueError) as error:
         return JsonResponse({"message": str(error)}, status=400)
     except EcpayApiError as error:
         logger.warning("Failed to charge ECPay subscription: %s", error)

@@ -125,7 +125,7 @@ class TestRenewSubscriptions:
         assert profile.subscription_status == SubscriptionStatus.CANCELED
 
     @pytest.mark.django_db(transaction=True)
-    def test_concurrent_renewal_skips_locked_profile(self, user: User) -> None:
+    def test_concurrent_renewal_skips_payment_in_flight(self, user: User) -> None:
         due_at = timezone.now() - timedelta(minutes=1)
         BillingProfile.objects.create(
             user=user,
