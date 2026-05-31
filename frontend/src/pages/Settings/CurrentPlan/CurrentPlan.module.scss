@@ -189,7 +189,7 @@
   strong {
     display: block;
     color: _.$deep-gray;
-    font-size: 15px;
+    font-size: 0.9 * _.$base-font-size;
     font-weight: 600;
     line-height: 1.45;
   }
@@ -197,7 +197,7 @@
   p {
     margin: 4px 0 0;
     color: _.$gray;
-    font-size: 13px;
+    font-size: 0.88 * _.$base-font-size;
     line-height: 1.5;
   }
 }
@@ -321,7 +321,7 @@
   & > strong {
     display: block;
     color: _.$deep-gray;
-    font-size: 0.92 * _.$base-font-size;
+    font-size: 0.9 * _.$base-font-size;
     font-weight: 700;
     line-height: 1.45;
   }
