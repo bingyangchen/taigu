@@ -68,3 +68,14 @@ def get_default_active_card(user: User) -> CardBinding | None:
         .order_by("-updated_at")
         .first()
     )
+
+
+def serialize_card(card: CardBinding | None) -> dict | None:
+    if card is None:
+        return None
+    return {
+        "id": str(card.id),
+        "card_6_no": card.card_6_no,
+        "card_4_no": card.card_4_no,
+        "status": card.status,
+    }

@@ -7,7 +7,6 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from main.billing.models import (
     BillingInterval,
-    CardBinding,
     Plan,
     SubscriptionPayment,
     SubscriptionStatus,
@@ -16,6 +15,7 @@ from main.billing.services.card import (
     activate_card_binding,
     create_card_binding_token,
     get_default_active_card,
+    serialize_card,
 )
 from main.billing.services.ecpay import (
     EcpayApiError,
@@ -28,6 +28,7 @@ from main.billing.services.entitlements import (
     serialize_entitlements,
 )
 from main.billing.services.subscription import (
+    STANDARD_PRICES,
     create_subscription_payment,
     mark_payment_failed,
     mark_payment_paid,
@@ -56,8 +57,8 @@ def _get_subscription(request: HttpRequest) -> JsonResponse:
     return JsonResponse(
         {
             "subscription": serialize_entitlements(user),
-            "card": _serialize_card(card),
-            "prices": {BillingInterval.MONTH: 65, BillingInterval.YEAR: 700},
+            "card": serialize_card(card),
+            "prices": STANDARD_PRICES,
         }
     )
 
@@ -181,14 +182,3 @@ def ecpay_bind_result(request: HttpRequest) -> HttpResponse:
         )
 
     return HttpResponseRedirect(redirect_url)
-
-
-def _serialize_card(card: CardBinding | None) -> dict | None:
-    if card is None:
-        return None
-    return {
-        "id": str(card.id),
-        "card_6_no": card.card_6_no,
-        "card_4_no": card.card_4_no,
-        "status": card.status,
-    }

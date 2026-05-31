@@ -7,6 +7,7 @@ from main.billing.services.card import (
     activate_card_binding,
     create_card_binding_token,
     get_default_active_card,
+    serialize_card,
 )
 from main.billing.services.ecpay import (
     get_ecpay_bind_result_url,
@@ -133,3 +134,25 @@ class TestCardBinding:
 
         assert first_active.provider_binding_id
         assert get_default_active_card(user) == latest_active
+
+    def test_serialize_card_returns_public_card_fields(self, user: User) -> None:
+        binding = CardBinding.objects.create(
+            user=user,
+            provider=PaymentProvider.ECPAY,
+            provider_member_id="member",
+            provider_request_id="B123",
+            provider_binding_id="bind-card-id",
+            card_6_no="431195",
+            card_4_no="2222",
+            status=CardStatus.ACTIVE,
+        )
+
+        assert serialize_card(binding) == {
+            "id": str(binding.id),
+            "card_6_no": "431195",
+            "card_4_no": "2222",
+            "status": CardStatus.ACTIVE,
+        }
+
+    def test_serialize_card_returns_none_without_card(self) -> None:
+        assert serialize_card(None) is None
