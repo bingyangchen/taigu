@@ -22,6 +22,7 @@ from main.billing.models import (
 )
 from main.billing.services.subscription import (
     STALE_PAYMENT_FAILURE_MESSAGE,
+    SubscriptionPaymentNotChargeableError,
     _next_period_end,
     create_subscription_payment,
     expire_all_stale_pending_payments,
@@ -258,6 +259,30 @@ class TestSubscriptionPaymentLifecycle:
         assert SubscriptionPayment.objects.filter(
             user=user, status=PaymentStatus.PENDING
         ).count() == 1
+
+    def test_active_subscription_cannot_be_started_again(
+        self, user: User, card: CardBinding
+    ) -> None:
+        BillingProfile.objects.create(
+            user=user,
+            plan=Plan.STANDARD,
+            subscription_status=SubscriptionStatus.ACTIVE,
+            billing_interval=BillingInterval.MONTH,
+            current_period_started_at=timezone.now() - timedelta(days=1),
+            current_period_ends_at=timezone.now() + timedelta(days=29),
+        )
+        client = FakeEcpayClient()
+
+        with pytest.raises(
+            SubscriptionPaymentNotChargeableError,
+            match="Subscription is already active",
+        ):
+            create_subscription_payment(
+                user=user, interval=BillingInterval.MONTH, client=client
+            )
+
+        assert client.calls == 0
+        assert not SubscriptionPayment.objects.filter(user=user).exists()
 
     def test_expires_stale_pending_payment_before_creating_new_payment(
         self, user: User, card: CardBinding

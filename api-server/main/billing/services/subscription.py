@@ -96,6 +96,7 @@ def _get_or_create_pending_subscription_payment(
 ) -> PreparedPayment:
     try:
         with transaction.atomic():
+            _assert_subscription_can_be_started(user=user)
             _expire_stale_pending_payments(user=user)
             existing_payment = (
                 _pending_payments(user=user)
@@ -114,6 +115,18 @@ def _get_or_create_pending_subscription_payment(
         if existing_payment is not None:
             return existing_payment, False
         raise
+
+
+def _assert_subscription_can_be_started(*, user: User) -> None:
+    ensure_billing_profile(user)
+    profile = BillingProfile.objects.select_for_update().get(user=user)
+    if (
+        profile.plan == Plan.STANDARD
+        and profile.subscription_status == SubscriptionStatus.ACTIVE
+        and profile.current_period_ends_at
+        and profile.current_period_ends_at > timezone.now()
+    ):
+        raise SubscriptionPaymentNotChargeableError("Subscription is already active")
 
 
 def _create_pending_subscription_payment(
