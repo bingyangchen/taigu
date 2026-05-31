@@ -26,9 +26,7 @@ type BindTokenResponse = {
   sdk_url: string;
 };
 
-type StartSubscriptionResponse = {
-  subscription_activated: boolean;
-};
+type StartSubscriptionResponse = { subscription_activated: boolean };
 
 type BillingInterval = "month" | "year";
 
