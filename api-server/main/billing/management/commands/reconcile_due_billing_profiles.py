@@ -1,14 +1,14 @@
 from django.core.management.base import BaseCommand
 
 from main.billing.services.subscription import (
-    expire_all_stale_pending_payments,
+    expire_stale_pending_payments,
     reconcile_due_billing_profiles,
 )
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options) -> None:  # noqa: ANN002, ANN003
-        expired_payments = expire_all_stale_pending_payments()
+        expired_payments = expire_stale_pending_payments()
         canceled_count = reconcile_due_billing_profiles()
         self.stdout.write(
             self.style.SUCCESS(
