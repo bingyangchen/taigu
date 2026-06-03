@@ -102,6 +102,10 @@ def get_ecpay_checkout_result_url() -> str:
     return f"{get_public_frontend_origin()}/settings/current-plan?checkout=ecpay"
 
 
+def get_aio_order_result_url() -> str:
+    return f"{get_public_api_origin()}/api/billing/ecpay/order-result"
+
+
 class EcpayClient:
     def __init__(self) -> None:
         self.config = get_ecpay_config()
@@ -115,7 +119,7 @@ class EcpayClient:
         billing_interval: str,
         return_url: str,
         period_return_url: str,
-        client_back_url: str,
+        order_result_url: str,
     ) -> dict:
         # Ref: https://developers.ecpay.com.tw/2868/
         period_type = "Y" if billing_interval == "year" else "M"
@@ -136,7 +140,7 @@ class EcpayClient:
             "Frequency": 1,
             "ExecTimes": exec_times,
             "PeriodReturnURL": period_return_url,
-            "ClientBackURL": client_back_url,
+            "OrderResultURL": order_result_url,
             "CustomField1": str(user_id),
         }
         params["CheckMacValue"] = generate_check_mac_value(

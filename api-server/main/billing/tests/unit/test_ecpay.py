@@ -9,6 +9,7 @@ from main.billing.services.ecpay import (
     EcpayConfig,
     generate_check_mac_value,
     generate_merchant_trade_no,
+    get_aio_order_result_url,
     get_ecpay_checkout_result_url,
     verify_check_mac_value,
 )
@@ -65,6 +66,18 @@ def test_checkout_result_url_flags_ecpay_checkout(monkeypatch: MonkeyPatch) -> N
     )
 
 
+def test_aio_order_result_url_uses_api_origin(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "main.billing.services.ecpay.get_public_api_origin",
+        lambda: "https://local.taigu.tw",
+    )
+
+    assert (
+        get_aio_order_result_url()
+        == "https://local.taigu.tw/api/billing/ecpay/order-result"
+    )
+
+
 def test_periodic_checkout_uses_aio_periodic_fields() -> None:
     client = ConfiguredEcpayClient()
 
@@ -75,7 +88,7 @@ def test_periodic_checkout_uses_aio_periodic_fields() -> None:
         billing_interval="month",
         return_url="https://local.taigu.tw/api/billing/ecpay/return",
         period_return_url="https://local.taigu.tw/api/billing/ecpay/period-return",
-        client_back_url="https://local.taigu.tw/settings/current-plan",
+        order_result_url="https://local.taigu.tw/settings/current-plan",
     )
 
     params = checkout["params"]
@@ -116,6 +129,30 @@ def test_ecpay_return_acks_missing_merchant_trade_no(monkeypatch: MonkeyPatch) -
     assert response.content == b"1|OK"
 
 
+def test_ecpay_return_acks_unknown_merchant_trade_no(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        views,
+        "get_ecpay_config",
+        lambda: SimpleNamespace(hash_key="hash-key", hash_iv="hash-iv"),
+    )
+    monkeypatch.setattr(views, "verify_check_mac_value", lambda *args: True)
+    monkeypatch.setattr(
+        views.SubscriptionPayment.objects,
+        "get",
+        lambda **kwargs: (_ for _ in ()).throw(
+            views.SubscriptionPayment.DoesNotExist()
+        ),
+    )
+    request = RequestFactory().post(
+        "/api/billing/ecpay/return", data={"MerchantTradeNo": "X123", "RtnCode": "1"}
+    )
+
+    response = views.ecpay_return(request)
+
+    assert response.status_code == 200
+    assert response.content == b"1|OK"
+
+
 def test_ecpay_return_requests_retry_when_processing_fails(
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -138,3 +175,24 @@ def test_ecpay_return_requests_retry_when_processing_fails(
 
     assert response.status_code == 200
     assert response.content == b"0|ERROR"
+
+
+def test_ecpay_order_result_redirects_to_checkout_result(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        views,
+        "get_ecpay_checkout_result_url",
+        lambda: "https://local.taigu.tw/settings/current-plan?checkout=ecpay",
+    )
+    request = RequestFactory().post(
+        "/api/billing/ecpay/order-result", data={"MerchantTradeNo": "S123"}
+    )
+
+    response = views.ecpay_order_result(request)
+
+    assert response.status_code == 303
+    assert (
+        response["Location"]
+        == "https://local.taigu.tw/settings/current-plan?checkout=ecpay"
+    )
