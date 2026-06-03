@@ -96,6 +96,18 @@ def ensure_billing_profile(user: User) -> BillingProfile:
     return profile
 
 
+def is_standard_subscription_active(
+    profile: BillingProfile, *, now: datetime | None = None
+) -> bool:
+    now = now or timezone.now()
+    return (
+        profile.plan == Plan.STANDARD
+        and profile.subscription_status == SubscriptionStatus.ACTIVE
+        and profile.current_period_ends_at is not None
+        and profile.current_period_ends_at > now
+    )
+
+
 def _get_effective_plan(profile: BillingProfile) -> Plan:
     now = timezone.now()
     if (
@@ -106,12 +118,7 @@ def _get_effective_plan(profile: BillingProfile) -> Plan:
     ):
         return Plan.STANDARD
 
-    if (
-        profile.plan == Plan.STANDARD
-        and profile.subscription_status == SubscriptionStatus.ACTIVE
-        and profile.current_period_ends_at
-        and profile.current_period_ends_at > now
-    ):
+    if is_standard_subscription_active(profile, now=now):
         return Plan.STANDARD
 
     return Plan.FREE

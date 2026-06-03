@@ -81,13 +81,6 @@ export type SubscriptionEntitlements = {
   };
 };
 
-export type BillingCard = {
-  id: string;
-  card_6_no: string | null;
-  card_4_no: string | null;
-  status: string;
-};
-
 export type StockWarehouse = { [sid: string]: number[] };
 
 export type CashDividendRecord = {

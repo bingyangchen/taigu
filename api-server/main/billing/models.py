@@ -34,17 +34,6 @@ class PaymentStatus(models.TextChoices):
     EXPIRED = "expired", "Expired"
 
 
-class CardStatus(models.TextChoices):
-    PENDING = "pending", "Pending"
-    ACTIVE = "active", "Active"
-    FAILED = "failed", "Failed"
-    DELETED = "deleted", "Deleted"
-
-
-class PaymentProvider(models.TextChoices):
-    ECPAY = "ecpay", "ECPay"
-
-
 class BillingProfile(CreateUpdateDateModel):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -139,46 +128,6 @@ class BillingProfile(CreateUpdateDateModel):
         ]
 
 
-class CardBinding(CreateUpdateDateModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="card_bindings"
-    )
-    provider = models.CharField(
-        max_length=32, choices=PaymentProvider.choices, default=PaymentProvider.ECPAY
-    )
-    provider_member_id = models.CharField(max_length=60)
-    provider_request_id = models.CharField(max_length=64, unique=True)
-    provider_binding_id = models.CharField(max_length=128, blank=True, null=True)
-    card_6_no = models.CharField(max_length=6, blank=True, null=True)
-    card_4_no = models.CharField(max_length=4, blank=True, null=True)
-    status = models.CharField(
-        max_length=16, choices=CardStatus.choices, default=CardStatus.PENDING
-    )
-    raw_response = models.JSONField(default=dict, blank=True)
-
-    class Meta:
-        db_table = "card_binding"
-        indexes = [
-            models.Index(
-                fields=["user", "status", "provider", "-updated_at"],
-                name="card_bind_default_idx",
-            )
-        ]
-        constraints = [
-            models.CheckConstraint(
-                name="card_bind_active_provider_id",
-                condition=(
-                    ~models.Q(status=CardStatus.ACTIVE)
-                    | (
-                        models.Q(provider_binding_id__isnull=False)
-                        & ~models.Q(provider_binding_id="")
-                    )
-                ),
-            )
-        ]
-
-
 class SubscriptionPayment(CreateUpdateDateModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -186,10 +135,8 @@ class SubscriptionPayment(CreateUpdateDateModel):
         on_delete=models.CASCADE,
         related_name="subscription_payments",
     )
-    card_binding = models.ForeignKey(
-        CardBinding, on_delete=models.PROTECT, related_name="subscription_payments"
-    )
     provider_request_id = models.CharField(max_length=64, unique=True)
+    provider_subscription_id = models.CharField(max_length=64, blank=True, null=True)
     provider_transaction_id = models.CharField(max_length=128, blank=True, null=True)
     plan = models.CharField(max_length=16, choices=Plan.choices, default=Plan.STANDARD)
     billing_interval = models.CharField(max_length=16, choices=BillingInterval.choices)
@@ -210,7 +157,11 @@ class SubscriptionPayment(CreateUpdateDateModel):
             models.Index(
                 fields=["user", "plan", "status", "created_at"],
                 name="sub_payment_inflight_idx",
-            )
+            ),
+            models.Index(
+                fields=["user", "provider_subscription_id", "-created_at"],
+                name="sub_payment_subscription_idx",
+            ),
         ]
         constraints = [
             models.CheckConstraint(
