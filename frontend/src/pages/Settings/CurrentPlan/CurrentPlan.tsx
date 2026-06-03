@@ -51,6 +51,7 @@ export default function CurrentPlan(): React.ReactElement {
   const accountSubscription = useAppSelector((state) => state.account.subscription);
   const [searchParams, setSearchParams] = useSearchParams();
   const [billing, setBilling] = useState<BillingResponse | null>(null);
+  const [isBillingLoading, setIsBillingLoading] = useState(true);
   const [isWaiting, setIsWaiting] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [isCancelingSubscription, setIsCancelingSubscription] = useState(false);
@@ -106,17 +107,25 @@ export default function CurrentPlan(): React.ReactElement {
         : "";
 
   const refreshBilling = useCallback(async (): Promise<void> => {
-    const response = (await Api.sendRequest(
-      "billing/subscription",
-      "get",
-    )) as BillingResponse;
-    setBilling(response);
-    await dispatch(fetchAccountInfo()).unwrap();
+    try {
+      const response = (await Api.sendRequest(
+        "billing/subscription",
+        "get",
+      )) as BillingResponse;
+      setBilling(response);
+      await dispatch(fetchAccountInfo()).unwrap();
+    } finally {
+      setIsBillingLoading(false);
+    }
   }, [dispatch]);
 
   useEffect(() => {
     dispatch(updateHeaderTitle("付款與方案"));
-    void refreshBilling();
+    void refreshBilling().catch((error) => {
+      const text = getUserFacingError(error, "暫時無法取得方案資料，請稍後再試。");
+      setNotice({ type: "error", text });
+      dispatch(pushToast({ type: "error", text }));
+    });
   }, [dispatch, refreshBilling]);
 
   useEffect(() => {
@@ -148,6 +157,14 @@ export default function CurrentPlan(): React.ReactElement {
     ],
     [subscription],
   );
+
+  if (isBillingLoading) {
+    return (
+      <div className={styles.main}>
+        <CurrentPlanSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.main}>
@@ -372,6 +389,45 @@ export default function CurrentPlan(): React.ReactElement {
       setIsCancelingSubscription(false);
     }
   }
+}
+
+function CurrentPlanSkeleton(): React.ReactElement {
+  return (
+    <>
+      <BeautifulBlock title="目前方案">
+        <div className={styles.summarySkeleton} aria-busy="true" aria-live="polite">
+          <div className={styles.skeletonHeader}>
+            <span className={styles.skeletonLineLarge} />
+            <span className={styles.skeletonBadge} />
+            <span className={styles.skeletonLineSmall} />
+          </div>
+          <span className={styles.skeletonLineFull} />
+          <span className={styles.skeletonLineMedium} />
+          <div className={styles.skeletonRows}>
+            <span />
+            <span />
+          </div>
+        </div>
+      </BeautifulBlock>
+      <BeautifulBlock title="方案選擇">
+        <div className={styles.planSelectionSkeleton} aria-hidden="true">
+          <span className={styles.skeletonLineLarge} />
+          <span className={styles.skeletonLineFull} />
+          <span className={styles.skeletonLineMedium} />
+          <div className={styles.skeletonBenefitGrid}>
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className={styles.skeletonPlanOptions}>
+            <span />
+            <span />
+          </div>
+        </div>
+      </BeautifulBlock>
+    </>
+  );
 }
 
 function SubscriptionManagementPanel({
