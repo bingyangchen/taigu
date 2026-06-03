@@ -9,12 +9,10 @@ from main.billing.services.subscription import (
 class Command(BaseCommand):
     def handle(self, *args, **options) -> None:  # noqa: ANN002, ANN003
         expired_payments = expire_all_stale_pending_payments()
-        summary = reconcile_due_billing_profiles()
+        canceled_count = reconcile_due_billing_profiles()
         self.stdout.write(
             self.style.SUCCESS(
-                "Reconciled due billing profiles: canceled {canceled}, "
-                "expired pending payments {expired_payments}".format(
-                    **summary, expired_payments=expired_payments
-                )
+                f"Reconciled due billing profiles: canceled {canceled_count}, "
+                f"expired pending payments {expired_payments}"
             )
         )
