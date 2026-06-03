@@ -1,6 +1,5 @@
-import base64
-import json
-import logging
+import hashlib
+import hmac
 import urllib.parse
 import uuid
 from dataclasses import dataclass
@@ -8,19 +7,13 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import requests
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from main.env import Env, env
-from main.origins import get_public_api_origin
-
-logger = logging.getLogger(__name__)
+from main.origins import get_public_api_origin, get_public_frontend_origin
 
 TAIPEI = ZoneInfo("Asia/Taipei")
-ECPAY_STAGE_ECPG_URL = "https://ecpg-stage.ecpay.com.tw"
-ECPAY_PROD_ECPG_URL = "https://ecpg.ecpay.com.tw"
-ECPAY_SDK_URL = "https://ecpg.ecpay.com.tw/Scripts/sdk-1.0.0.js?t=20210121100116"
-CARD_BINDING_VERIFICATION_AMOUNT = "2"
-ECPAY_COUNTRY_CODE_TAIWAN = "158"  # ISO 3166-1 numeric
+ECPAY_STAGE_AIO_URL = "https://payment-stage.ecpay.com.tw"
+ECPAY_PROD_AIO_URL = "https://payment.ecpay.com.tw"
 
 
 class EcpayApiError(Exception):
@@ -41,9 +34,7 @@ class EcpayConfig:
     merchant_id: str
     hash_key: str
     hash_iv: str
-    ecpg_base_url: str
-    sdk_environment: str
-    sdk_url: str = ECPAY_SDK_URL
+    aio_base_url: str
 
 
 def get_ecpay_config() -> EcpayConfig:
@@ -52,166 +43,128 @@ def get_ecpay_config() -> EcpayConfig:
         merchant_id=env.ECPAY_MERCHANT_ID,
         hash_key=env.ECPAY_HASH_KEY,
         hash_iv=env.ECPAY_HASH_IV,
-        ecpg_base_url=ECPAY_PROD_ECPG_URL if is_prod else ECPAY_STAGE_ECPG_URL,
-        sdk_environment="Prod" if is_prod else "Stage",
+        aio_base_url=ECPAY_PROD_AIO_URL if is_prod else ECPAY_STAGE_AIO_URL,
     )
-
-
-def merchant_member_id(user_id: object) -> str:
-    return f"taigu{str(user_id).replace('-', '')}"[:60]
 
 
 def generate_merchant_trade_no(prefix: str) -> str:
     return f"{prefix}{uuid.uuid4().hex}"[:20]
 
 
-def aes_encrypt(data: dict, hash_key: str, hash_iv: str) -> str:
-    # Ref: https://developers.ecpay.com.tw/9103/
-    raw_json = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
-    encoded = urllib.parse.quote_plus(raw_json, safe="").replace("~", "%7E")
-    plain = encoded.encode("utf-8")
-    pad_length = 16 - len(plain) % 16
-    padded = plain + bytes([pad_length]) * pad_length
-    cipher = Cipher(
-        algorithms.AES(hash_key[:16].encode("utf-8")),
-        modes.CBC(hash_iv[:16].encode("utf-8")),
-    )
-    encryptor = cipher.encryptor()
-    encrypted = encryptor.update(padded) + encryptor.finalize()
-    return base64.b64encode(encrypted).decode("utf-8")
+def ecpay_url_encode(value: str) -> str:
+    encoded = urllib.parse.quote_plus(value, safe="").lower()
+    replacements = {
+        "%2d": "-",
+        "%5f": "_",
+        "%2e": ".",
+        "%21": "!",
+        "%2a": "*",
+        "%28": "(",
+        "%29": ")",
+    }
+    for source, target in replacements.items():
+        encoded = encoded.replace(source, target)
+    return encoded
 
 
-def aes_decrypt(encrypted_data: str, hash_key: str, hash_iv: str) -> dict:
-    encrypted = base64.b64decode(encrypted_data)
-    cipher = Cipher(
-        algorithms.AES(hash_key[:16].encode("utf-8")),
-        modes.CBC(hash_iv[:16].encode("utf-8")),
+def generate_check_mac_value(params: dict, hash_key: str, hash_iv: str) -> str:
+    filtered = {
+        key: "" if value is None else str(value)
+        for key, value in params.items()
+        if key != "CheckMacValue"
+    }
+    sorted_items = sorted(filtered.items(), key=lambda item: item[0].lower())
+    raw = (
+        f"HashKey={hash_key}&"
+        + "&".join(f"{key}={value}" for key, value in sorted_items)
+        + f"&HashIV={hash_iv}"
     )
-    decryptor = cipher.decryptor()
-    padded = decryptor.update(encrypted) + decryptor.finalize()
-    pad_length = padded[-1]
-    encoded = padded[:-pad_length].decode("utf-8")
-    raw_json = urllib.parse.unquote_plus(encoded)
-    return json.loads(raw_json)
+    return hashlib.sha256(ecpay_url_encode(raw).encode("utf-8")).hexdigest().upper()
+
+
+def verify_check_mac_value(params: dict, hash_key: str, hash_iv: str) -> bool:
+    received = str(params.get("CheckMacValue", "")).upper()
+    if not received:
+        return False
+    expected = generate_check_mac_value(params, hash_key, hash_iv)
+    return hmac.compare_digest(expected, received)
+
+
+def get_aio_return_url() -> str:
+    return f"{get_public_api_origin()}/api/billing/ecpay/return"
+
+
+def get_aio_period_return_url() -> str:
+    return f"{get_public_api_origin()}/api/billing/ecpay/period-return"
+
+
+def get_ecpay_checkout_result_url() -> str:
+    return f"{get_public_frontend_origin()}/settings/current-plan?checkout=ecpay"
 
 
 class EcpayClient:
     def __init__(self) -> None:
         self.config = get_ecpay_config()
 
-    def __post(self, path: str, data: dict) -> dict:
-        request_body = {
-            "MerchantID": self.config.merchant_id,
-            "RqHeader": {"Timestamp": int(datetime.now(TAIPEI).timestamp())},
-            "Data": aes_encrypt(data, self.config.hash_key, self.config.hash_iv),
-        }
-        response = requests.post(
-            f"{self.config.ecpg_base_url}{path}", json=request_body, timeout=30
-        )
-        response.raise_for_status()
-        payload = response.json()
-        if payload.get("TransCode") != 1:
-            raise EcpayApiError(
-                payload.get("TransMsg", "ECPay transport error"),
-                trans_code=payload.get("TransCode"),
-            )
-        decrypted = aes_decrypt(
-            payload["Data"], self.config.hash_key, self.config.hash_iv
-        )
-        if decrypted.get("RtnCode") != 1:
-            raise EcpayApiError(
-                decrypted.get("RtnMsg", "ECPay business error"),
-                trans_code=1,
-                rtn_code=decrypted.get("RtnCode"),
-            )
-        return decrypted
-
-    def create_binding_token(
+    def build_aio_periodic_checkout_form(
         self,
         *,
-        user_email: str,
-        user_name: str,
         user_id: object,
-        merchant_trade_no: str,
-        return_url: str,
-        order_result_url: str,
-    ) -> dict:
-        # Ref: https://developers.ecpay.com.tw/35591/
-        return self.__post(
-            "/Merchant/GetTokenbyBindingCard",
-            {
-                "MerchantID": self.config.merchant_id,
-                "ConsumerInfo": {
-                    "MerchantMemberID": merchant_member_id(user_id),
-                    "Email": user_email,
-                    "Name": user_name[:50],
-                    "CountryCode": ECPAY_COUNTRY_CODE_TAIWAN,
-                },
-                "OrderInfo": {
-                    "MerchantTradeDate": datetime.now(TAIPEI).strftime(
-                        "%Y/%m/%d %H:%M:%S"
-                    ),
-                    "MerchantTradeNo": merchant_trade_no,
-                    "TotalAmount": CARD_BINDING_VERIFICATION_AMOUNT,
-                    "TradeDesc": "Taigu subscription card binding",
-                    "ItemName": "Taigu Card Verification",
-                    "ReturnURL": return_url,
-                },
-                "OrderResultURL": order_result_url,
-                "CustomField": str(user_id),
-            },
-        )
-
-    def create_bind_card(self, *, bind_card_pay_token: str, user_id: object) -> dict:
-        return self.__post(
-            "/Merchant/CreateBindCard",
-            {
-                "MerchantID": self.config.merchant_id,
-                "BindCardPayToken": bind_card_pay_token,
-                "MerchantMemberID": merchant_member_id(user_id),
-            },
-        )
-
-    def create_payment_with_card_id(
-        self,
-        *,
-        bind_card_id: str,
-        user_id: object,
-        user_email: str,
-        user_name: str,
         merchant_trade_no: str,
         amount: int,
+        billing_interval: str,
         return_url: str,
+        period_return_url: str,
+        client_back_url: str,
     ) -> dict:
-        return self.__post(
-            "/Merchant/CreatePaymentWithCardID",
-            {
-                "MerchantID": self.config.merchant_id,
-                "BindCardID": bind_card_id,
-                "OrderInfo": {
-                    "MerchantTradeDate": datetime.now(TAIPEI).strftime(
-                        "%Y/%m/%d %H:%M:%S"
-                    ),
-                    "MerchantTradeNo": merchant_trade_no,
-                    "TotalAmount": amount,
-                    "ReturnURL": return_url,
-                    "TradeDesc": "Taigu Standard subscription",
-                    "ItemName": "Taigu Standard",
-                },
-                "ConsumerInfo": {
-                    "MerchantMemberID": merchant_member_id(user_id),
-                    "Email": user_email,
-                    "Name": user_name[:50],
-                    "CountryCode": ECPAY_COUNTRY_CODE_TAIWAN,
-                },
-                "CustomField": str(user_id),
-            },
+        # Ref: https://developers.ecpay.com.tw/2868/
+        period_type = "Y" if billing_interval == "year" else "M"
+        exec_times = 99 if period_type == "Y" else 999
+        params = {
+            "MerchantID": self.config.merchant_id,
+            "MerchantTradeNo": merchant_trade_no,
+            "MerchantTradeDate": datetime.now(TAIPEI).strftime("%Y/%m/%d %H:%M:%S"),
+            "PaymentType": "aio",
+            "TotalAmount": amount,
+            "TradeDesc": "Taigu Standard subscription",
+            "ItemName": "Taigu Standard",
+            "ReturnURL": return_url,
+            "ChoosePayment": "Credit",
+            "EncryptType": 1,
+            "PeriodAmount": amount,
+            "PeriodType": period_type,
+            "Frequency": 1,
+            "ExecTimes": exec_times,
+            "PeriodReturnURL": period_return_url,
+            "ClientBackURL": client_back_url,
+            "CustomField1": str(user_id),
+        }
+        params["CheckMacValue"] = generate_check_mac_value(
+            params, self.config.hash_key, self.config.hash_iv
         )
+        return {
+            "action_url": f"{self.config.aio_base_url}/Cashier/AioCheckOut/V5",
+            "params": params,
+        }
 
-
-def get_ecpay_return_url() -> str:
-    return f"{get_public_api_origin()}/api/billing/ecpay/return"
-
-
-def get_ecpay_bind_result_url() -> str:
-    return f"{get_public_api_origin()}/api/billing/ecpay/bind-result"
+    def cancel_aio_periodic_order(self, *, merchant_trade_no: str) -> dict:
+        # Ref: https://developers.ecpay.com.tw/2900/
+        params = {
+            "MerchantID": self.config.merchant_id,
+            "MerchantTradeNo": merchant_trade_no,
+            "Action": "Cancel",
+            "TimeStamp": int(datetime.now(TAIPEI).timestamp()),
+        }
+        params["CheckMacValue"] = generate_check_mac_value(
+            params, self.config.hash_key, self.config.hash_iv
+        )
+        response = requests.post(
+            f"{self.config.aio_base_url}/Cashier/CreditCardPeriodAction",
+            data=params,
+            timeout=30,
+        )
+        response.raise_for_status()
+        payload = dict(urllib.parse.parse_qsl(response.text, keep_blank_values=True))
+        if payload and str(payload.get("RtnCode")) != "1":
+            raise EcpayApiError(payload.get("RtnMsg", "ECPay period action error"))
+        return payload
