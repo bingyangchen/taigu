@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { closePlanUpsell } from "../../redux/slices/PlanUpsellSlice";
 import type { PlanQuotaResource } from "../../types";
 import Env from "../../utils/env";
+import { requestCloseActiveModal } from "../../utils/modalEvents";
 import Modal from "../Modal/Modal";
 import styles from "./PlanUpsellModal.module.scss";
 
@@ -35,9 +36,9 @@ export default function PlanUpsellModal(): React.ReactElement | null {
     dispatch(closePlanUpsell());
   }
 
-  function handleViewPlan(): void {
-    dispatch(closePlanUpsell());
-    navigate(`${Env.frontendRootPath}settings/current-plan`);
+  async function handleViewPlan(): Promise<void> {
+    await requestCloseActiveModal({ popHistory: false });
+    navigate(`${Env.frontendRootPath}settings/current-plan`, { replace: true });
   }
 
   return (
@@ -48,7 +49,6 @@ export default function PlanUpsellModal(): React.ReactElement | null {
         </div>
       }
       layout="auto"
-      manageHistory={false}
       discardButtonProps={{
         className: "transparent l",
         children: "稍後再說",

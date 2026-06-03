@@ -8,6 +8,7 @@ import {
   HeaderForMain,
   LoadingScreen,
   MainSideBar,
+  PlanUpsellModal,
   ToastList,
 } from "../../components";
 import {
@@ -209,6 +210,7 @@ class Main extends React.Component<Props, State> {
         ref={this.mainRef}
       >
         <ToastList />
+        <PlanUpsellModal />
         {this.state.isLoading && <LoadingScreen />}
         {Util.isMobile && !this.isMobileEditorRoute && !Nav.isAtDetailsPage && (
           <HeaderForMain />

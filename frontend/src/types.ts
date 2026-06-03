@@ -54,6 +54,8 @@ export type Account = {
 
 export type SubscriptionPlan = "free" | "standard";
 
+export type PlanQuotaResource = "records" | "trade_plans" | "holdings" | "favorites";
+
 export type AccountSubscription = Pick<
   SubscriptionEntitlements,
   "plan" | "market_refresh_interval_seconds"
