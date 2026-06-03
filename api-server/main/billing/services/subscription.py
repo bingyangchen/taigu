@@ -29,6 +29,7 @@ from main.billing.services.entitlements import (
 STANDARD_PRICES = {BillingInterval.MONTH: 65, BillingInterval.YEAR: 700}
 STANDARD_CURRENCY = Currency.TWD
 PENDING_PAYMENT_TTL = timedelta(minutes=30)
+PERIOD_RENEWAL_CALLBACK_GRACE_PERIOD = timedelta(days=1)
 STALE_PAYMENT_FAILURE_MESSAGE = "Payment confirmation timed out"
 SUPERSEDED_PAYMENT_FAILURE_MESSAGE = "Payment checkout was replaced"
 
@@ -75,6 +76,12 @@ def expire_stale_pending_payments(*, now: datetime | None = None) -> int:
 
 def reconcile_due_billing_profiles(*, now: datetime | None = None) -> int:
     now = now or timezone.now()
+    past_due_subscription_count = BillingProfile.objects.filter(
+        plan=Plan.STANDARD,
+        subscription_status=SubscriptionStatus.ACTIVE,
+        current_period_ends_at__lte=now - PERIOD_RENEWAL_CALLBACK_GRACE_PERIOD,
+        cancel_at_period_end=False,
+    ).update(subscription_status=SubscriptionStatus.PAST_DUE, updated_at=now)
     canceled_subscription_count = BillingProfile.objects.filter(
         plan=Plan.STANDARD,
         subscription_status__in=[
@@ -96,7 +103,9 @@ def reconcile_due_billing_profiles(*, now: datetime | None = None) -> int:
     ).update(
         plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED, updated_at=now
     )
-    return canceled_subscription_count + expired_trial_count
+    return (
+        past_due_subscription_count + canceled_subscription_count + expired_trial_count
+    )
 
 
 @transaction.atomic
