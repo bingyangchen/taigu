@@ -19,10 +19,10 @@ if [ "$target_env" == "prod" ]; then
         if [ "$service" == "scheduler" ]; then
             docker build -t "$DOCKER_USERNAME/$service:$tag" --target "$target_env"_final \
                 --build-arg API_SERVER_IMAGE_TAG="$tag" \
-                -f ./Dockerfile --platform linux/x86_64 .
+                -f ./Dockerfile --platform linux/amd64 .
         else
             docker build -t "$DOCKER_USERNAME/$service:$tag" --target "$target_env"_final \
-                -f ./Dockerfile --platform linux/x86_64 .
+                -f ./Dockerfile --platform linux/amd64 .
         fi
         cd ..
     done
