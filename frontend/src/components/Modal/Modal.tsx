@@ -5,6 +5,10 @@ import React from "react";
 import { Button, RoundButton } from "../../components";
 import { IconXLarge } from "../../icons";
 import { IRouter, withRouter } from "../../router";
+import {
+  type CloseActiveModalEvent,
+  closeActiveModalEventName,
+} from "../../utils/modalEvents";
 import { Props as ButtonProps } from "../Button/Button";
 import styles from "./Modal.module.scss";
 
@@ -28,11 +32,17 @@ interface State {}
 
 class Modal extends React.Component<Props, State> {
   public state: State;
+  private isClosingFromGlobalEvent: boolean;
   public constructor(props: Props) {
     super(props);
     this.state = {};
+    this.isClosingFromGlobalEvent = false;
   }
   public componentDidMount(): void {
+    window.addEventListener(
+      closeActiveModalEventName,
+      this.handleGlobalCloseActiveModalEvent,
+    );
     setTimeout(() => {
       if (this.shouldManageHistory) this.props.router.navigate("##");
       if (this.shouldManageBodyScroll) {
@@ -42,6 +52,7 @@ class Modal extends React.Component<Props, State> {
   }
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (!this.shouldManageHistory) return;
+    if (this.isClosingFromGlobalEvent) return;
     if (
       prevProps.router.location.hash === "##" &&
       this.props.router.location.hash === ""
@@ -50,10 +61,18 @@ class Modal extends React.Component<Props, State> {
     }
   }
   public componentWillUnmount(): void {
+    window.removeEventListener(
+      closeActiveModalEventName,
+      this.handleGlobalCloseActiveModalEvent,
+    );
     if (this.shouldManageBodyScroll) {
       document.body.style.overscrollBehaviorY = "initial";
     }
-    if (this.shouldManageHistory && this.props.router.location.hash === "##") {
+    if (
+      this.shouldManageHistory &&
+      !this.isClosingFromGlobalEvent &&
+      this.props.router.location.hash === "##"
+    ) {
       this.props.router.navigate(-1);
     }
   }
@@ -168,6 +187,22 @@ class Modal extends React.Component<Props, State> {
     if (this.props.silentBackground) {
       e.preventDefault();
     }
+  };
+  private handleGlobalCloseActiveModalEvent = (event: Event): void => {
+    const closeEvent = event as CloseActiveModalEvent;
+    if (closeEvent.detail.handled) return;
+    closeEvent.detail.handled = true;
+    this.isClosingFromGlobalEvent = true;
+    if (
+      closeEvent.detail.popHistory &&
+      this.shouldManageHistory &&
+      window.location.hash === "##"
+    ) {
+      this.props.router.navigate(-1);
+    }
+    this.handleClickDiscard({} as React.MouseEvent<Element>)
+      .catch(() => {})
+      .finally(() => closeEvent.detail.done());
   };
 }
 

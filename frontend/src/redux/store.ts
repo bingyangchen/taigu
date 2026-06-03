@@ -5,6 +5,7 @@ import fetchAllCashDividendReducer from "./slices/CashDividendRecordSlice";
 import handlingFeeDiscountReducer from "./slices/HandlingFeeDiscountSlice";
 import mainPageReducer from "./slices/MainPageSlice";
 import memoReducer from "./slices/MemoSlice";
+import planUpsellReducer from "./slices/PlanUpsellSlice";
 import settingsPageReducer from "./slices/SettingsPageSlice";
 import stockInfoReducer from "./slices/StockInfoSlice";
 import toastReducer from "./slices/ToastSlice";
@@ -21,6 +22,7 @@ export const store = configureStore({
     tradePlan: tradePlanReducer,
     memo: memoReducer,
     toast: toastReducer,
+    planUpsell: planUpsellReducer,
     mainPage: mainPageReducer,
     handlingFeeDiscount: handlingFeeDiscountReducer,
   },

@@ -211,14 +211,18 @@ def _assert_can_create_monthly_record(user: User) -> None:
     entitlements = _get_entitlements(user)
     quota = entitlements.quota.monthly_records
     if quota is not None and entitlements.usage.monthly_records >= quota:
-        raise QuotaExceededError("records", "Free 每月可新增 20 筆交易紀錄與現金股利。")
+        raise QuotaExceededError(
+            "records", "Free 方案每月最多只能新增 20 筆交易紀錄與現金股利。"
+        )
 
 
 def assert_can_create_trade_plan(user: User) -> None:
     entitlements = _get_entitlements(user)
     quota = entitlements.quota.monthly_trade_plans
     if quota is not None and entitlements.usage.monthly_trade_plans >= quota:
-        raise QuotaExceededError("trade_plans", "Free 每月可新增 10 筆買賣計畫。")
+        raise QuotaExceededError(
+            "trade_plans", "Free 方案每月最多只能新增 10 筆買賣計畫。"
+        )
 
 
 def assert_can_add_favorite(user: User, sid: str) -> None:
@@ -228,7 +232,7 @@ def assert_can_add_favorite(user: User, sid: str) -> None:
     entitlements = _get_entitlements(user)
     quota = entitlements.quota.favorites
     if quota is not None and entitlements.usage.favorites >= quota:
-        raise QuotaExceededError("favorites", "Free 最多可關注 10 檔股票。")
+        raise QuotaExceededError("favorites", "Free 方案最多只能關注 10 檔股票。")
 
 
 def assert_can_add_holding(user: User, sid: str, quantity_delta: int) -> None:
@@ -240,7 +244,7 @@ def assert_can_add_holding(user: User, sid: str, quantity_delta: int) -> None:
     entitlements = _get_entitlements(user)
     quota = entitlements.quota.holdings
     if quota is not None and len(holding_sids) >= quota:
-        raise QuotaExceededError("holdings", "Free 最多可持有 10 檔股票。")
+        raise QuotaExceededError("holdings", "Free 方案最多只能同時持有 10 檔股票。")
 
 
 def _get_holding_sids(user: User) -> set[str]:

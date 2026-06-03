@@ -16,7 +16,9 @@
 .paymentMethodSection,
 .planActionGroup,
 .planSummary,
+.planSelectionSkeleton,
 .summary,
+.summarySkeleton,
 .stepList,
 .notice {
   width: 100%;
@@ -59,6 +61,120 @@
     color: _.$gray;
     font-size: 0.88 * _.$base-font-size;
     line-height: 1.6;
+  }
+}
+
+.summarySkeleton,
+.planSelectionSkeleton {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  overflow: hidden;
+}
+
+.skeletonHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.skeletonLineLarge,
+.skeletonLineSmall,
+.skeletonLineFull,
+.skeletonLineMedium,
+.skeletonBadge,
+.skeletonRows span,
+.skeletonBenefitGrid span,
+.skeletonPlanOptions span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: _.$noisy-white;
+  border-radius: 999px;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: linear-gradient(
+      90deg,
+      rgba(_.$white, 0),
+      rgba(_.$white, 0.78),
+      rgba(_.$white, 0)
+    );
+    animation: skeletonShimmer 1.15s ease-in-out infinite;
+    transform: translateX(-100%);
+  }
+}
+
+.skeletonLineLarge {
+  width: 116px;
+  height: 22px;
+}
+
+.skeletonLineSmall {
+  width: 68px;
+  height: 16px;
+}
+
+.skeletonLineFull {
+  width: min(100%, 560px);
+  height: 15px;
+}
+
+.skeletonLineMedium {
+  width: min(74%, 380px);
+  height: 15px;
+}
+
+.skeletonBadge {
+  width: 62px;
+  height: 24px;
+}
+
+.skeletonRows {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-top: 2px;
+  border-top: 1px solid _.$noisy-white;
+
+  span {
+    height: 17px;
+    margin: 12px 0;
+  }
+
+  span:first-child {
+    width: min(100%, 340px);
+  }
+
+  span:last-child {
+    width: min(86%, 300px);
+  }
+}
+
+.skeletonBenefitGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  padding-top: 2px;
+
+  span {
+    height: 16px;
+  }
+}
+
+.skeletonPlanOptions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-top: 2px;
+
+  span {
+    height: 116px;
+    border-radius: 8px;
   }
 }
 
@@ -622,6 +738,8 @@
 
   .quotaInline,
   .benefitSummary ul,
+  .skeletonBenefitGrid,
+  .skeletonPlanOptions,
   .planOptions {
     grid-template-columns: 1fr;
   }
@@ -651,6 +769,20 @@
     animation-duration: 100ms;
     animation-name: noticeFadeIn;
   }
+
+  .skeletonLineLarge,
+  .skeletonLineSmall,
+  .skeletonLineFull,
+  .skeletonLineMedium,
+  .skeletonBadge,
+  .skeletonRows span,
+  .skeletonBenefitGrid span,
+  .skeletonPlanOptions span {
+    &::after {
+      animation: none;
+      transform: none;
+    }
+  }
 }
 
 @keyframes noticeEnter {
@@ -670,5 +802,11 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes skeletonShimmer {
+  to {
+    transform: translateX(100%);
   }
 }

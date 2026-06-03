@@ -1,7 +1,28 @@
+import { openPlanUpsell } from "../redux/slices/PlanUpsellSlice";
 import { pushToast } from "../redux/slices/ToastSlice";
 import { store } from "../redux/store";
+import type { PlanQuotaResource } from "../types";
 import Env from "./env";
+import { requestCloseActiveModal } from "./modalEvents";
 import Nav from "./nav";
+
+type ApiErrorPayload = {
+  code?: string;
+  resource?: PlanQuotaResource;
+  message?: string;
+};
+
+export class ApiError extends Error {
+  public readonly code?: string;
+  public readonly resource?: PlanQuotaResource;
+
+  public constructor(payload: ApiErrorPayload) {
+    super(payload.message ?? "Unknown error occurred");
+    this.name = "ApiError";
+    this.code = payload.code;
+    this.resource = payload.resource;
+  }
+}
 
 export default class Api {
   private static safeMethods = ["get", "head", "options"];
@@ -65,15 +86,31 @@ export default class Api {
       return await Api.handleResponse(response);
     } catch (error) {
       if (method !== "get") {
-        store.dispatch(
-          pushToast({
-            type: "error",
-            text: error instanceof Error ? error.message : "Error when sending request",
-          }),
-        );
+        if (Api.isQuotaExceededError(error)) {
+          await requestCloseActiveModal();
+          store.dispatch(
+            openPlanUpsell({ resource: error.resource, message: error.message }),
+          );
+        } else {
+          store.dispatch(
+            pushToast({
+              type: "error",
+              text:
+                error instanceof Error ? error.message : "Error when sending request",
+            }),
+          );
+        }
       }
       throw error;
     }
+  }
+
+  private static isQuotaExceededError(
+    error: unknown,
+  ): error is ApiError & { resource: PlanQuotaResource } {
+    return (
+      error instanceof ApiError && error.code === "QUOTA_EXCEEDED" && !!error.resource
+    );
   }
 
   private static isSessionEndpoint(endpoint: string): boolean {
@@ -120,7 +157,7 @@ export default class Api {
       }
     } else if (!response.ok) {
       const error = await response.json().catch(() => null);
-      throw Error(error?.message || "Unknown error occurred");
+      throw new ApiError(error ?? {});
     } else return await response.json();
   }
 }
