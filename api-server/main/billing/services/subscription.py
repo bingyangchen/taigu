@@ -75,22 +75,19 @@ def expire_stale_pending_payments(*, now: datetime | None = None) -> int:
 
 def reconcile_due_billing_profiles(*, now: datetime | None = None) -> int:
     now = now or timezone.now()
-    canceled_subscription_count = (
-        BillingProfile.objects.filter(
-            plan=Plan.STANDARD,
-            subscription_status__in=[
-                SubscriptionStatus.ACTIVE,
-                SubscriptionStatus.PAST_DUE,
-            ],
-            current_period_ends_at__lte=now,
-        )
-        .filter(cancel_at_period_end=True)
-        .update(
-            plan=Plan.FREE,
-            subscription_status=SubscriptionStatus.CANCELED,
-            cancel_at_period_end=False,
-            updated_at=now,
-        )
+    canceled_subscription_count = BillingProfile.objects.filter(
+        plan=Plan.STANDARD,
+        subscription_status__in=[
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.PAST_DUE,
+        ],
+        current_period_ends_at__lte=now,
+        cancel_at_period_end=True,
+    ).update(
+        plan=Plan.FREE,
+        subscription_status=SubscriptionStatus.CANCELED,
+        cancel_at_period_end=False,
+        updated_at=now,
     )
     expired_trial_count = BillingProfile.objects.filter(
         plan=Plan.STANDARD,
