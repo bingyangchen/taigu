@@ -16,6 +16,17 @@ declare const self: ServiceWorkerGlobalScope;
 
 const VERSION = "2026.05.14.01";
 console.log(`Service worker version: ${VERSION}`);
+const API_CACHE_NAME = "taigu";
+const BROADCAST_CHANNEL_NAME = "taigu";
+const apiCachePaths = new Set([
+  "cash-dividends",
+  "market/market-index",
+  "trade-plans",
+  "stock-memo/company-info",
+  "favorites",
+  "handling-fee/discount",
+]);
+const channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
 
 clientsClaim();
 
@@ -68,6 +79,42 @@ registerRoute(
   }),
 );
 
+const getApiPath = (url: URL): string => url.pathname.replace(/^\/api\/?/, "");
+
+registerRoute(
+  ({ request, url }) => request.method === "GET" && apiCachePaths.has(getApiPath(url)),
+  new StaleWhileRevalidate({
+    cacheName: API_CACHE_NAME,
+    plugins: [
+      {
+        cacheWillUpdate: async ({ response }) =>
+          response.status < 400 ? response : null,
+        fetchDidSucceed: async ({ request, response }) => {
+          if (response.status < 400) {
+            try {
+              const data = await response.clone().json();
+              channel.postMessage({ authorized: true, url: request.url, data });
+            } catch {
+              // Non-JSON responses are cached but not broadcast.
+            }
+          }
+          return response;
+        },
+      },
+    ],
+  }),
+);
+
+registerRoute(
+  ({ request, url }) =>
+    (request.method === "POST" && getApiPath(url) === "account/logout") ||
+    (request.method === "DELETE" && getApiPath(url) === "account/delete"),
+  async ({ request }) => {
+    await caches.delete(API_CACHE_NAME);
+    return fetch(request);
+  },
+);
+
 self.addEventListener("message", (event) => {
   // This allows the web app to trigger skipWaiting via
   // registration.waiting.postMessage({type: 'SKIP_WAITING'})
@@ -85,48 +132,4 @@ self.addEventListener("activate", (event) => {
   // Claims all clients immediately, which makes the new service worker active
   event.waitUntil(self.clients.claim());
   // NOTE: `window` is not defined in service worker
-});
-
-const channel = new BroadcastChannel("taigu");
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  const requestUrl = request.url;
-  const method = request.method.toLowerCase();
-  if (/^http/gs.test(requestUrl)) {
-    if (
-      (/cash-dividends[/]?$/gs.test(requestUrl) ||
-        /market\/market-index[/]?$/gs.test(requestUrl) ||
-        /trade-plans[/]?$/gs.test(requestUrl) ||
-        /stock-memo\/company-info[/]?$/gs.test(requestUrl) ||
-        /favorites[/]?$/gs.test(requestUrl) ||
-        /handling-fee\/discount[/]?$/gs.test(requestUrl)) &&
-      method === "get"
-    ) {
-      event.respondWith(
-        caches.open("taigu").then((cache) => {
-          return cache.match(request).then(async (cacheResponse) => {
-            const fetchPromise = fetch(request).then(async (networkResponse) => {
-              if (networkResponse.status < 400) {
-                await cache.put(request, networkResponse.clone());
-                try {
-                  const data = await networkResponse.clone().json();
-                  channel.postMessage({ authorized: true, url: requestUrl, data });
-                } catch {
-                  // Non-JSON responses are cached but not broadcast.
-                }
-              }
-              return networkResponse;
-            });
-            return cacheResponse ?? (await fetchPromise);
-          });
-        }),
-      );
-    } else if (
-      (/account\/logout[/]?$/gs.test(requestUrl) && method === "post") ||
-      (/account\/delete[/]?$/gs.test(requestUrl) && method === "delete")
-    ) {
-      event.respondWith(caches.delete("taigu").then(() => fetch(request)));
-    }
-  }
-  return;
 });
