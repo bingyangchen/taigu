@@ -16,6 +16,7 @@ from main.billing.models import (
     SubscriptionStatus,
 )
 from main.billing.services.subscription import (
+    PERIOD_RENEWAL_CALLBACK_GRACE_PERIOD,
     STALE_PAYMENT_FAILURE_MESSAGE,
     SUPERSEDED_PAYMENT_FAILURE_MESSAGE,
     SubscriptionPaymentNotChargeableError,
@@ -76,7 +77,7 @@ class TestDueBillingProfileReconciliation:
             username="Test User",
         )
 
-    def test_due_active_subscription_waits_for_ecpay_period_callback(
+    def test_due_active_subscription_waits_within_period_callback_grace_period(
         self, user: User
     ) -> None:
         due_at = timezone.now() - timedelta(minutes=1)
@@ -93,6 +94,28 @@ class TestDueBillingProfileReconciliation:
         profile = BillingProfile.objects.get(user=user)
         assert canceled_count == 0
         assert profile.subscription_status == SubscriptionStatus.ACTIVE
+        assert profile.current_period_ends_at == due_at
+
+    def test_due_active_subscription_becomes_past_due_after_period_callback_grace_period(
+        self, user: User
+    ) -> None:
+        now = timezone.now()
+        due_at = now - PERIOD_RENEWAL_CALLBACK_GRACE_PERIOD - timedelta(minutes=1)
+        BillingProfile.objects.create(
+            user=user,
+            plan=Plan.STANDARD,
+            subscription_status=SubscriptionStatus.ACTIVE,
+            billing_interval=BillingInterval.MONTH,
+            current_period_started_at=due_at - timedelta(days=31),
+            current_period_ends_at=due_at,
+        )
+
+        updated_count = reconcile_due_billing_profiles(now=now)
+
+        profile = BillingProfile.objects.get(user=user)
+        assert updated_count == 1
+        assert profile.plan == Plan.STANDARD
+        assert profile.subscription_status == SubscriptionStatus.PAST_DUE
         assert profile.current_period_ends_at == due_at
 
     def test_cancel_at_period_end_downgrades_without_charging(self, user: User) -> None:

@@ -1,10 +1,8 @@
 /// <reference lib="webworker" />
 /* eslint-disable no-restricted-globals */
 
-// This service worker can be customized!
 // See https://developers.google.com/web/tools/workbox/modules
-// for the list of available Workbox modules, or add any other
-// code you'd like.
+// for the list of available Workbox modules, or add any other code you'd like.
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
 
@@ -18,6 +16,17 @@ declare const self: ServiceWorkerGlobalScope;
 
 const VERSION = "2026.05.14.01";
 console.log(`Service worker version: ${VERSION}`);
+const API_CACHE_NAME = "taigu";
+const BROADCAST_CHANNEL_NAME = "taigu";
+const apiCachePaths = new Set([
+  "cash-dividends",
+  "market/market-index",
+  "trade-plans",
+  "stock-memo/company-info",
+  "favorites",
+  "handling-fee/discount",
+]);
+const channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
 
 clientsClaim();
 
@@ -34,31 +43,24 @@ const fileExtensionRegexp = new RegExp("/[^/?]+\\.[^/]+$");
 registerRoute(
   // Return false to exempt requests from being fulfilled by index.html.
   ({ request, url }: { request: Request; url: URL }) => {
-    // If this isn't a navigation, skip.
     if (request.mode !== "navigate") {
       return false;
     }
 
-    // If this is a URL that starts with /_, skip.
     if (url.pathname.startsWith("/_")) {
       return false;
     }
 
-    // If this looks like a URL for a resource, because it contains
-    // a file extension, skip.
     if (url.pathname.match(fileExtensionRegexp)) {
       return false;
     }
 
-    // Return true to signal that we want to use the handler.
     return true;
   },
   createHandlerBoundToURL(process.env.PUBLIC_URL + "/index.html"),
 );
 
-// An example runtime caching route for requests that aren't handled by the precache.
 registerRoute(
-  // Add in any other file extensions or routing criteria as needed.
   ({ url }) =>
     url.origin === self.location.origin &&
     (url.pathname.endsWith(".png") ||
@@ -67,7 +69,6 @@ registerRoute(
       url.pathname.endsWith(".webp") ||
       url.pathname.endsWith(".mp4")),
 
-  // Customize this strategy as needed, e.g., by changing to CacheFirst.
   new StaleWhileRevalidate({
     cacheName: "images",
     plugins: [
@@ -78,15 +79,50 @@ registerRoute(
   }),
 );
 
-// This allows the web app to trigger skipWaiting via
-// registration.waiting.postMessage({type: 'SKIP_WAITING'})
+const getApiPath = (url: URL): string => url.pathname.replace(/^\/api\/?/, "");
+
+registerRoute(
+  ({ request, url }) => request.method === "GET" && apiCachePaths.has(getApiPath(url)),
+  new StaleWhileRevalidate({
+    cacheName: API_CACHE_NAME,
+    plugins: [
+      {
+        cacheWillUpdate: async ({ response }) => {
+          return response.status < 400 ? response : null;
+        },
+        fetchDidSucceed: async ({ request, response }) => {
+          if (response.status < 400) {
+            try {
+              const data = await response.clone().json();
+              channel.postMessage({ url: request.url, data });
+            } catch {
+              // Non-JSON responses are cached but not broadcast.
+            }
+          }
+          return response;
+        },
+      },
+    ],
+  }),
+);
+
+registerRoute(
+  ({ request, url }) =>
+    (request.method === "POST" && getApiPath(url) === "account/logout") ||
+    (request.method === "DELETE" && getApiPath(url) === "account/delete"),
+  async ({ request }) => {
+    await caches.delete(API_CACHE_NAME);
+    return fetch(request);
+  },
+);
+
 self.addEventListener("message", (event) => {
+  // This allows the web app to trigger skipWaiting via
+  // registration.waiting.postMessage({type: 'SKIP_WAITING'})
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
-
-// Any other custom service worker logic can go here.
 
 self.addEventListener("install", () => {
   // Forces the waiting service worker to become the active service worker
@@ -97,50 +133,4 @@ self.addEventListener("activate", (event) => {
   // Claims all clients immediately, which makes the new service worker active
   event.waitUntil(self.clients.claim());
   // NOTE: `window` is not defined in service worker
-});
-
-const channel = new BroadcastChannel("taigu");
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  const requestUrl = request.url;
-  const method = request.method.toLowerCase();
-
-  // Filter request
-  if (/^http/gs.test(requestUrl)) {
-    if (
-      (/cash-dividends[/]?$/gs.test(requestUrl) ||
-        /market\/market-index[/]?$/gs.test(requestUrl) ||
-        /trade-plans[/]?$/gs.test(requestUrl) ||
-        /stock-memo\/company-info[/]?$/gs.test(requestUrl) ||
-        /favorites[/]?$/gs.test(requestUrl) ||
-        /handling-fee\/discount[/]?$/gs.test(requestUrl)) &&
-      method === "get"
-    ) {
-      event.respondWith(
-        caches.open("taigu").then((cache) => {
-          return cache.match(request).then(async (cacheResponse) => {
-            const fetchPromise = fetch(request).then(async (networkResponse) => {
-              if (networkResponse.status < 400) {
-                await cache.put(request, networkResponse.clone());
-                try {
-                  const data = await networkResponse.clone().json();
-                  channel.postMessage({ authorized: true, url: requestUrl, data });
-                } catch {
-                  // Non-JSON responses are cached but not broadcast.
-                }
-              }
-              return networkResponse;
-            });
-            return cacheResponse ?? (await fetchPromise);
-          });
-        }),
-      );
-    } else if (
-      (/account\/logout[/]?$/gs.test(requestUrl) && method === "post") ||
-      (/account\/delete[/]?$/gs.test(requestUrl) && method === "delete")
-    ) {
-      event.respondWith(caches.delete("taigu").then(() => fetch(request)));
-    }
-  }
-  return;
 });
