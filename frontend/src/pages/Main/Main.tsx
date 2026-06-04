@@ -269,28 +269,22 @@ class Main extends React.Component<Props, State> {
   }
   private handleNonCacheResponse = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
+    e: MessageEvent<{ url: string; data: any }>,
   ): Promise<void> => {
-    if (e.data.authorized) {
-      if (/cash-dividends[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(
-          refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
-        );
-      } else if (/market\/market-index[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
-      } else if (/trade-plans[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshTradePlansWithNonCacheResponse(e.data.data.data));
-      } else if (/stock-memo\/company-info[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
-      } else if (/favorites[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
-      } else if (/handling-fee\/discount[/]?$/gs.test(e.data.url)) {
-        this.props.dispatch(refreshDiscountsWithNonCacheResponse(e.data.data.data));
-      }
-    } else {
-      Nav.goToWelcomePage(
-        this.props.router.location.pathname + this.props.router.location.search,
+    if (/cash-dividends[/]?$/gs.test(e.data.url)) {
+      this.props.dispatch(
+        refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
       );
+    } else if (/market\/market-index[/]?$/gs.test(e.data.url)) {
+      this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
+    } else if (/trade-plans[/]?$/gs.test(e.data.url)) {
+      this.props.dispatch(refreshTradePlansWithNonCacheResponse(e.data.data.data));
+    } else if (/stock-memo\/company-info[/]?$/gs.test(e.data.url)) {
+      this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
+    } else if (/favorites[/]?$/gs.test(e.data.url)) {
+      this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
+    } else if (/handling-fee\/discount[/]?$/gs.test(e.data.url)) {
+      this.props.dispatch(refreshDiscountsWithNonCacheResponse(e.data.data.data));
     }
   };
   private fetchHoldingStockInfo = async (

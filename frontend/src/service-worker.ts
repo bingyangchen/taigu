@@ -87,13 +87,14 @@ registerRoute(
     cacheName: API_CACHE_NAME,
     plugins: [
       {
-        cacheWillUpdate: async ({ response }) =>
-          response.status < 400 ? response : null,
+        cacheWillUpdate: async ({ response }) => {
+          return response.status < 400 ? response : null;
+        },
         fetchDidSucceed: async ({ request, response }) => {
           if (response.status < 400) {
             try {
               const data = await response.clone().json();
-              channel.postMessage({ authorized: true, url: request.url, data });
+              channel.postMessage({ url: request.url, data });
             } catch {
               // Non-JSON responses are cached but not broadcast.
             }

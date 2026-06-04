@@ -6,8 +6,6 @@ import { HeaderForSettings, ToastList } from "../../components";
 import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
 import type { AppDispatch } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
-import Env from "../../utils/env";
-import Nav from "../../utils/nav";
 import Util from "../../utils/util";
 import styles from "./Settings.module.scss";
 
@@ -20,12 +18,9 @@ interface State {
 
 class Settings extends React.Component<Props, State> {
   public state: State;
-  private channel: BroadcastChannel;
   public constructor(props: Props) {
     super(props);
     this.state = { prevLocationPathname: null };
-    this.channel = new BroadcastChannel(Env.broadcastChannelName);
-    this.channel.addEventListener("message", this.handleNonCacheResponse);
   }
 
   public async componentDidMount(): Promise<void> {
@@ -52,7 +47,6 @@ class Settings extends React.Component<Props, State> {
 
   public componentWillUnmount(): void {
     document.body.classList.remove("settings-page-document-scroll");
-    this.channel.close();
   }
 
   public render(): React.ReactNode {
@@ -66,17 +60,6 @@ class Settings extends React.Component<Props, State> {
       </main>
     );
   }
-
-  private handleNonCacheResponse = async (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: MessageEvent<{ authorized: boolean; url: string; data: any }>,
-  ): Promise<void> => {
-    if (!e.data.authorized) {
-      Nav.goToWelcomePage(
-        this.props.router.location.pathname + this.props.router.location.search,
-      );
-    }
-  };
 }
 
 export default connect()(withRouter(Settings));
