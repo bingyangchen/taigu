@@ -19,6 +19,7 @@ import { IRouter, settingsPagePath, withRouter } from "../../../router";
 import Env from "../../../utils/env";
 import Nav from "../../../utils/nav";
 import Util from "../../../utils/util";
+import { IssueReportEditor } from "../IssueReport/IssueReport";
 import styles from "./Overview.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -30,7 +31,7 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
   dispatch: AppDispatch;
 }
 interface State {
-  activeModalName: "checkLogout" | null;
+  activeModalName: "checkLogout" | "issueReport" | null;
   showDefaultAvatar: boolean;
 }
 
@@ -141,14 +142,7 @@ class Overview extends React.Component<Props, State> {
                 服務條款
               </div>
             </BeautifulRow>
-            <BeautifulRow
-              onClick={() =>
-                window.open(
-                  "https://github.com/bingyangchen/taigu/issues",
-                  Util.isMobile ? "_self" : "_blank",
-                )
-              }
-            >
+            <BeautifulRow onClick={this.handleClickIssueReport}>
               <div className={`${styles.row_inner} ${styles.issue_report}`}>
                 <IconExclamation sideLength="16px" />
                 問題回報
@@ -175,7 +169,20 @@ class Overview extends React.Component<Props, State> {
       </>
     );
   }
-  private get activeModal(): React.ReactElement<typeof Modal> | null {
+  private handleClickIssueReport = (): void => {
+    if (Util.isMobile) {
+      this.props.router.navigate(
+        `${Env.frontendRootPath}${settingsPagePath}/issue-report`,
+      );
+      return;
+    }
+    this.setState({ activeModalName: "issueReport" });
+  };
+
+  private get activeModal(): React.ReactNode {
+    if (this.state.activeModalName === "issueReport") {
+      return <IssueReportEditor hideModal={Util.getHideModalCallback(this)} />;
+    }
     if (this.state.activeModalName === "checkLogout") {
       return (
         <Modal
@@ -199,6 +206,7 @@ class Overview extends React.Component<Props, State> {
     }
     return null;
   }
+
   private handleClickCheckLogout = async (): Promise<void> => {
     await this.props.dispatch(logout()).unwrap();
     if (Nav.isAtLoginPage) return;

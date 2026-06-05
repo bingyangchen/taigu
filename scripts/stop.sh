@@ -12,4 +12,4 @@ if [ "$deployment_environment" = "prod" ]; then
 fi
 
 file_name="compose.$deployment_environment.yaml"
-docker compose -f "$file_name" down
+docker compose -f "$file_name" down -t 0

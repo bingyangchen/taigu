@@ -23,6 +23,7 @@ services:
       - ./frontend/public:/app/public:cached
       - ./frontend/.eslintrc.js:/app/.eslintrc.js:cached
     command: ["npm", "run", "dev"]
+    # command: ["sh", "-lc", "npm run build && npm run preview"]
     depends_on:
       - api-server
     restart: unless-stopped
