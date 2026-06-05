@@ -5,7 +5,8 @@ import { Outlet } from "react-router-dom";
 import { HeaderForSettings, ToastList } from "../../components";
 import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
 import type { AppDispatch } from "../../redux/store";
-import { IRouter, withRouter } from "../../router";
+import { IRouter, settingsPagePath, withRouter } from "../../router";
+import Env from "../../utils/env";
 import Util from "../../utils/util";
 import styles from "./Settings.module.scss";
 
@@ -51,14 +52,24 @@ class Settings extends React.Component<Props, State> {
 
   public render(): React.ReactNode {
     return (
-      <main className={styles.main}>
+      <main
+        className={`${styles.main} ${
+          Util.isMobile && this.isSettingsEditorRoute ? styles.mobile_editor_shell : ""
+        }`}
+      >
         <ToastList />
         <div className={styles.body}>
-          <HeaderForSettings />
+          {!this.isSettingsEditorRoute && <HeaderForSettings />}
           <Outlet />
         </div>
       </main>
     );
+  }
+
+  private get isSettingsEditorRoute(): boolean {
+    const issueReportPath =
+      `${Env.frontendRootPath}${settingsPagePath}/issue-report`.replace(/\/+/g, "/");
+    return this.props.router.location.pathname === issueReportPath;
   }
 }
 

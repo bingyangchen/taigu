@@ -35,6 +35,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy";
 import AccountBinding from "./pages/Settings/AccountBinding/AccountBinding";
 import CurrentPlan from "./pages/Settings/CurrentPlan/CurrentPlan";
 import DataControls from "./pages/Settings/DataControls/DataControls";
+import IssueReport from "./pages/Settings/IssueReport/IssueReport";
 import Overview from "./pages/Settings/Overview/Overview";
 import Settings from "./pages/Settings/Settings";
 import UserInfo from "./pages/Settings/UserInfo/UserInfo";
@@ -55,6 +56,7 @@ const myRouter = createBrowserRouter(
         <Route path="account-binding" element={<AccountBinding />}></Route>
         <Route path="current-plan" element={<CurrentPlan />}></Route>
         <Route path="data-controls" element={<DataControls />}></Route>
+        <Route path="issue-report" element={<IssueReport />}></Route>
       </Route>
       <Route path="" element={<Main />}>
         <Route path="" element={<Dashboard />}></Route>
