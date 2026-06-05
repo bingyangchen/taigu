@@ -10,4 +10,5 @@ urlpatterns = [
     re_path(r"^api/trade-records/?", include("main.trade_record.urls")),
     re_path(r"^api/cash-dividends/?", include("main.cash_dividend.urls")),
     re_path(r"^api/handling-fee/", include("main.handling_fee.urls")),
+    re_path(r"^api/issue-reports/?", include("main.issue_report.urls")),
 ]
