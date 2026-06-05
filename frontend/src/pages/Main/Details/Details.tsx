@@ -410,7 +410,7 @@ class Details extends React.Component<Props, State> {
             <div className={styles.stock_info}>
               <div className={styles.stock_heading}>
                 <h1 className={styles.company_name}>{stockInfo?.name || this.sid}</h1>
-                <div className={styles.sid}>證券代號 {this.sid}</div>
+                <div className={styles.sid}>{this.sid}</div>
               </div>
               <div className={`${styles.price} ${!stockInfo ? styles.skeleton : ""}`}>
                 {stockInfo ? (
