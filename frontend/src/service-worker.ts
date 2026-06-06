@@ -10,7 +10,7 @@ import { clientsClaim } from "workbox-core";
 import { ExpirationPlugin } from "workbox-expiration";
 import { createHandlerBoundToURL, precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
-import { StaleWhileRevalidate } from "workbox-strategies";
+import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -58,52 +58,41 @@ registerRoute(
   }),
 );
 
-// const API_CACHE_NAME = "api-cache";
+const API_CACHE_NAME = "api-cache";
 
-// const getApiPath = (url: URL): string => url.pathname.replace(/^\/api\/?/, "");
-// const apiCachePaths = new Set([
-//   "cash-dividends",
-//   "market/market-index",
-//   "trade-plans",
-//   "stock-memo/company-info",
-//   "favorites",
-//   "handling-fee/discount",
-// ]);
-// const channel = new BroadcastChannel("taigu");
-// registerRoute(
-//   ({ request, url }) => request.method === "GET" && apiCachePaths.has(getApiPath(url)),
-//   new StaleWhileRevalidate({
-//     cacheName: API_CACHE_NAME,
-//     plugins: [
-//       {
-//         cacheWillUpdate: async ({ response }) => {
-//           return response.status < 400 ? response : null;
-//         },
-//         fetchDidSucceed: async ({ request, response }) => {
-//           if (response.status < 400) {
-//             try {
-//               const data = await response.clone().json();
-//               channel.postMessage({ url: request.url, data });
-//             } catch {
-//               // Non-JSON responses are cached but not broadcast.
-//             }
-//           }
-//           return response;
-//         },
-//       },
-//     ],
-//   }),
-// );
+const getApiPath = (url: URL): string => url.pathname.replace(/^\/api\/?/, "");
+const apiCachePaths = new Set([
+  "cash-dividends",
+  "market/market-index",
+  "trade-plans",
+  "stock-memo/company-info",
+  "favorites",
+  "handling-fee/discount",
+]);
+registerRoute(
+  ({ request, url }) => request.method === "GET" && apiCachePaths.has(getApiPath(url)),
+  new NetworkFirst({
+    cacheName: API_CACHE_NAME,
+    networkTimeoutSeconds: 3,
+    plugins: [
+      {
+        cacheWillUpdate: async ({ response }) => {
+          return response.status < 400 ? response : null;
+        },
+      },
+    ],
+  }),
+);
 
-// registerRoute(
-//   ({ request, url }) =>
-//     (request.method === "POST" && getApiPath(url) === "account/logout") ||
-//     (request.method === "DELETE" && getApiPath(url) === "account/delete"),
-//   async ({ request }) => {
-//     await caches.delete(API_CACHE_NAME);
-//     return fetch(request);
-//   },
-// );
+registerRoute(
+  ({ request, url }) =>
+    (request.method === "POST" && getApiPath(url) === "account/logout") ||
+    (request.method === "DELETE" && getApiPath(url) === "account/delete"),
+  async ({ request }) => {
+    await caches.delete(API_CACHE_NAME);
+    return fetch(request);
+  },
+);
 
 self.addEventListener("message", (event) => {
   // This allows the web app to trigger skipWaiting via
