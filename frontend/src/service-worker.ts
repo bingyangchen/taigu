@@ -16,17 +16,8 @@ declare const self: ServiceWorkerGlobalScope;
 
 const VERSION = "2026.05.14.01";
 console.log(`Service worker version: ${VERSION}`);
-const API_CACHE_NAME = "taigu";
-const BROADCAST_CHANNEL_NAME = "taigu";
-const apiCachePaths = new Set([
-  "cash-dividends",
-  "market/market-index",
-  "trade-plans",
-  "stock-memo/company-info",
-  "favorites",
-  "handling-fee/discount",
-]);
-const channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+
+const API_CACHE_NAME = "api-cache";
 
 clientsClaim();
 
@@ -42,20 +33,11 @@ precacheAndRoute(self.__WB_MANIFEST);
 const fileExtensionRegexp = new RegExp("/[^/?]+\\.[^/]+$");
 registerRoute(
   // Return false to exempt requests from being fulfilled by index.html.
-  ({ request, url }: { request: Request; url: URL }) => {
-    if (request.mode !== "navigate") {
-      return false;
-    }
-
-    if (url.pathname.startsWith("/_")) {
-      return false;
-    }
-
-    if (url.pathname.match(fileExtensionRegexp)) {
-      return false;
-    }
-
-    return true;
+  ({ request, url }) => {
+    const isNavigate = request.mode === "navigate";
+    const isApiRoute = url.pathname.startsWith("/_");
+    const isAsset = fileExtensionRegexp.test(url.pathname);
+    return isNavigate && !isApiRoute && !isAsset;
   },
   createHandlerBoundToURL(process.env.PUBLIC_URL + "/index.html"),
 );
@@ -68,7 +50,6 @@ registerRoute(
       url.pathname.endsWith(".svg") ||
       url.pathname.endsWith(".webp") ||
       url.pathname.endsWith(".mp4")),
-
   new StaleWhileRevalidate({
     cacheName: "images",
     plugins: [
@@ -80,7 +61,15 @@ registerRoute(
 );
 
 const getApiPath = (url: URL): string => url.pathname.replace(/^\/api\/?/, "");
-
+const apiCachePaths = new Set([
+  "cash-dividends",
+  "market/market-index",
+  "trade-plans",
+  "stock-memo/company-info",
+  "favorites",
+  "handling-fee/discount",
+]);
+const channel = new BroadcastChannel("taigu");
 registerRoute(
   ({ request, url }) => request.method === "GET" && apiCachePaths.has(getApiPath(url)),
   new StaleWhileRevalidate({
@@ -132,5 +121,4 @@ self.addEventListener("install", () => {
 self.addEventListener("activate", (event) => {
   // Claims all clients immediately, which makes the new service worker active
   event.waitUntil(self.clients.claim());
-  // NOTE: `window` is not defined in service worker
 });
