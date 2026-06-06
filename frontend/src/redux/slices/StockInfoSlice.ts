@@ -73,7 +73,7 @@ export const fetchSingleStockHistoricalPrices = createAsyncThunk(
   }> => {
     const { sid, frequency } = payload;
     const response = await Api.sendRequest(
-      `market/historical-prices/${sid}?frequency=${frequency}`,
+      `market/historical-prices?sid=${sid}&frequency=${frequency}`,
       "get",
     );
     const data: { date: string; price: number }[] = response.data.map(
