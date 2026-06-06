@@ -64,6 +64,8 @@ const getApiPath = (url: URL): string => url.pathname.replace(/^\/api\/?/, "");
 const apiCachePaths = new Set([
   "cash-dividends",
   "market/market-index",
+  "market/market-index-historical-prices",
+  "market/historical-prices",
   "trade-plans",
   "stock-memo/company-info",
   "favorites",

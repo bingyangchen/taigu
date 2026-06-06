@@ -27,6 +27,7 @@ import {
 import HandlingFee from "./pages/Main/HandlingFee/HandlingFee";
 import Main from "./pages/Main/Main";
 import Market from "./pages/Main/Market/Market";
+import MarketIndexDetails from "./pages/Main/MarketIndexDetails/MarketIndexDetails";
 import Plans from "./pages/Main/Plans/Plans";
 import Records from "./pages/Main/Records/Records";
 import Search from "./pages/Main/Search/Search";
@@ -60,6 +61,7 @@ const myRouter = createBrowserRouter(
       </Route>
       <Route path="" element={<Main />}>
         <Route path="" element={<Dashboard />}></Route>
+        <Route path="market-index/:market" element={<MarketIndexDetails />}></Route>
         <Route path="records" element={<Records />}></Route>
         <Route path="records/trade/new" element={<TradeRecordCreateRoute />}></Route>
         <Route
