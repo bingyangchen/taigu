@@ -72,17 +72,6 @@ export const memoSlice = createSlice({
   name: "memo",
   initialState,
   reducers: {
-    refreshAllCompanyInfoWithNonCacheResponse(
-      state,
-      action: PayloadAction<{ [sid: string]: CompanyInfo }>,
-    ) {
-      for (const [sid, companyInfo] of Object.entries(action.payload)) {
-        state.sidCompanyInfoMap[sid] = companyInfo;
-      }
-    },
-    refreshFavoritesWithNonCacheResponse(state, action: PayloadAction<string[]>) {
-      state.favorites = [...action.payload];
-    },
     fakeAddToFavorites(state, action: PayloadAction<string>) {
       const sid = action.payload;
       if (!state.favorites.includes(sid)) state.favorites.push(sid);
@@ -158,10 +147,5 @@ export const memoSlice = createSlice({
   },
 });
 
-export const {
-  refreshAllCompanyInfoWithNonCacheResponse,
-  refreshFavoritesWithNonCacheResponse,
-  fakeAddToFavorites,
-  fakeRemoveFromFavorites,
-} = memoSlice.actions;
+export const { fakeAddToFavorites, fakeRemoveFromFavorites } = memoSlice.actions;
 export default memoSlice.reducer;

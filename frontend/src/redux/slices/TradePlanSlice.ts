@@ -1,4 +1,3 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import type {
@@ -61,11 +60,7 @@ export const deletePlan = createAsyncThunk(
 export const tradePlanSlice = createSlice({
   name: "tradePlan",
   initialState,
-  reducers: {
-    refreshTradePlansWithNonCacheResponse(state, action: PayloadAction<TradePlan[]>) {
-      state.tradePlans = action.payload;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchAllTradePlans.pending, (state) => {
@@ -118,5 +113,4 @@ export const tradePlanSlice = createSlice({
   },
 });
 
-export const { refreshTradePlansWithNonCacheResponse } = tradePlanSlice.actions;
 export default tradePlanSlice.reducer;

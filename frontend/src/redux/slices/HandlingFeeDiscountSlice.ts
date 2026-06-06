@@ -1,4 +1,3 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import type {
@@ -81,14 +80,7 @@ export const deleteDiscount = createAsyncThunk(
 export const handlingFeeDiscountSlice = createSlice({
   name: "handlingFeeDiscount",
   initialState,
-  reducers: {
-    refreshDiscountsWithNonCacheResponse(
-      state,
-      action: PayloadAction<HandlingFeeDiscount[]>,
-    ) {
-      state.handlingFeeDiscountRecords = action.payload;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchAllDiscounts.pending, (state) => {
@@ -144,6 +136,4 @@ export const handlingFeeDiscountSlice = createSlice({
   },
 });
 
-export const { refreshDiscountsWithNonCacheResponse } =
-  handlingFeeDiscountSlice.actions;
 export default handlingFeeDiscountSlice.reducer;

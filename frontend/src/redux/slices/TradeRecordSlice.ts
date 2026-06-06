@@ -10,7 +10,6 @@ import type {
 } from "../../types";
 import Api from "../../utils/api";
 import { RootState } from "../store";
-import { refreshDiscountsWithNonCacheResponse } from "./HandlingFeeDiscountSlice";
 
 export interface TradeRecordState {
   tradeRecords: TradeRecord[];
@@ -250,18 +249,6 @@ export const tradeRecordSlice = createSlice({
 
       .addCase(calculateTotalHandlingFee.fulfilled, (state, action) => {
         state.totalHandlingFee = action.payload;
-      })
-
-      .addCase(refreshDiscountsWithNonCacheResponse, (state, action) => {
-        const baseTotalHandlingFee = Object.values(state.sidHandlingFeeMap).reduce(
-          (sum, fee) => sum + fee,
-          0,
-        );
-        const newTotalDiscount = action.payload.reduce(
-          (sum, discount) => sum + discount.amount,
-          0,
-        );
-        state.totalHandlingFee = baseTotalHandlingFee - newTotalDiscount;
       });
   },
 });
