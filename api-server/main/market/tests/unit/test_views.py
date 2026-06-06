@@ -329,6 +329,43 @@ class TestMarketIndexHistoricalPricesView:
 
         assert response.status_code == 400
 
+    def test_market_index_historical_prices_with_since(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
+        MarketIndexHistory.objects.create(
+            market=TradeType.TSE, date=date(2023, 12, 1), close_price=15000.0
+        )
+        MarketIndexHistory.objects.create(
+            market=TradeType.TSE, date=date(2023, 12, 2), close_price=15100.0
+        )
+        MarketIndexHistory.objects.create(
+            market=TradeType.TSE, date=date(2023, 12, 3), close_price=15200.0
+        )
+        request = request_factory.get(
+            "/api/market/market-index-historical-prices/?market=tse&since=2023-12-02"
+        )
+        request.user = user
+
+        response = market_index_historical_prices(request)
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert len(data["data"]) == 2
+        assert data["data"][0]["price"] == 15100.0
+        assert data["data"][1]["price"] == 15200.0
+
+    def test_market_index_historical_prices_invalid_since(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
+        request = request_factory.get(
+            "/api/market/market-index-historical-prices/?market=tse&since=bad-date"
+        )
+        request.user = user
+
+        response = market_index_historical_prices(request)
+
+        assert response.status_code == 400
+
 
 @pytest.mark.django_db
 class TestHistoricalPricesView:

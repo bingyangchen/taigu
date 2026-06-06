@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
@@ -80,8 +81,17 @@ def market_index_historical_prices(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "Missing market"}, status=400)
     if market not in TradeType.ALL:
         return JsonResponse({"error": "Invalid market"}, status=400)
+
+    queryset = MarketIndexHistory.objects.filter(market=market)
+    if since := request.GET.get("since"):
+        try:
+            since_date = datetime.strptime(since, "%Y-%m-%d").date()
+        except ValueError:
+            return JsonResponse({"error": "Invalid since"}, status=400)
+        queryset = queryset.filter(date__gte=since_date)
+
     result = {"data": []}
-    for row in MarketIndexHistory.objects.filter(market=market).order_by("date"):
+    for row in queryset.order_by("date"):
         result["data"].append({"date": row.date, "price": row.close_price})
     return JsonResponse(result)
 
