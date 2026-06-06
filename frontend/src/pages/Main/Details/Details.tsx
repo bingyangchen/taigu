@@ -23,6 +23,7 @@ import {
   IconMemo,
   IconThumbtack,
 } from "../../../icons";
+import type { MarketTab } from "../../../redux/slices/MainPageSlice";
 import {
   addToFavorites,
   fakeAddToFavorites,
@@ -40,6 +41,7 @@ import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import { MaterialFact } from "../../../types";
 import Env from "../../../utils/env";
+import { getVisibleMarketSids } from "../../../utils/marketSids";
 import Util from "../../../utils/util";
 import styles from "./Details.module.scss";
 
@@ -57,7 +59,7 @@ function mapStateToProps(rootState: RootState) {
   const { sidHistoricalPricesMap, isWaitingHistoricalPrices } = rootState.stockInfo;
   const { sidCompanyInfoMap, favorites } = rootState.memo;
   const { tradePlans } = rootState.tradePlan;
-  const { scrollTop } = rootState.mainPage;
+  const { scrollTop, marketSortKey, marketSearchText } = rootState.mainPage;
   const { subscription } = rootState.account;
   return {
     cashDividendRecords,
@@ -75,6 +77,8 @@ function mapStateToProps(rootState: RootState) {
     isWaitingHistoricalPrices,
     isWaitingTradeRecord,
     mainScrollTop: scrollTop,
+    marketSortKey,
+    marketSearchText,
     subscription,
   };
 }
@@ -907,11 +911,27 @@ class Details extends React.Component<Props, State> {
       .catch(() => this.setState({ didStockInfoFail: true }));
   };
 
+  private getSwipeSids(): string[] {
+    const tab = this.listName;
+    if (tab !== "holding" && tab !== "favorites") return [];
+
+    const context = {
+      tab: tab as MarketTab,
+      searchText: this.props.marketSearchText,
+      sortKey: this.props.marketSortKey,
+      stockWarehouse: this.props.stockWarehouse,
+      favorites: this.props.favorites,
+      sidStockInfoMap: this.props.sidStockInfoMap,
+      sidTradeRecordsMap: this.props.sidTradeRecordsMap,
+      cashDividendRecords: this.props.cashDividendRecords,
+    };
+    const visibleSids = getVisibleMarketSids(context);
+    if (visibleSids.includes(this.sid)) return visibleSids;
+    return getVisibleMarketSids({ ...context, searchText: "" });
+  }
+
   private goToPrevOne(): void {
-    const sids =
-      this.listName === "holding"
-        ? Object.keys(this.props.stockWarehouse)
-        : this.props.favorites;
+    const sids = this.getSwipeSids();
     const prevIndex = sids.findIndex((e) => e === this.sid) - 1;
     if (prevIndex < 0) return;
     // if (navigator.vibrate) navigator.vibrate(10);
@@ -923,10 +943,7 @@ class Details extends React.Component<Props, State> {
   }
 
   private goToNextOne(): void {
-    const sids =
-      this.listName === "holding"
-        ? Object.keys(this.props.stockWarehouse)
-        : this.props.favorites;
+    const sids = this.getSwipeSids();
     const nextIndex = sids.findIndex((e) => e === this.sid) + 1;
     if (nextIndex >= sids.length) return;
     // if (navigator.vibrate) navigator.vibrate(10);

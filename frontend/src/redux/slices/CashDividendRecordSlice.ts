@@ -1,4 +1,3 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import type {
@@ -70,19 +69,7 @@ export const deleteRecord = createAsyncThunk(
 export const cashDividendRecordSlice = createSlice({
   name: "cashDividendRecord",
   initialState,
-  reducers: {
-    refreshCashDividendRecordsWithNonCacheResponse(
-      state,
-      action: PayloadAction<CashDividendRecord[]>,
-    ) {
-      state.cashDividendRecords = [...action.payload].sort(
-        (a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time),
-      );
-      state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
-        state.cashDividendRecords,
-      );
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchAllCashDividendRecords.pending, (state) => {
@@ -165,6 +152,4 @@ const getSidTotalCashDividendMap = (
   return result;
 };
 
-export const { refreshCashDividendRecordsWithNonCacheResponse } =
-  cashDividendRecordSlice.actions;
 export default cashDividendRecordSlice.reducer;

@@ -1,4 +1,3 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import type { MarketIndex, StockInfo } from "../../types";
@@ -92,13 +91,7 @@ export const fetchSingleStockHistoricalPrices = createAsyncThunk(
 export const stockInfoSlice = createSlice({
   name: "stockInfo",
   initialState,
-  reducers: {
-    refreshMarketIndexWithNonCacheResponse(state, action: PayloadAction<MarketIndex>) {
-      state.realtimePriceDate = action.payload.date || "0000-00-00";
-      state.tseIndexRealtimePrices = action.payload.tse;
-      state.otcIndexRealtimePrices = action.payload.otc;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchRealtimeMarketIndex.pending, () => {})
@@ -203,5 +196,4 @@ export const getTotalMarketValue = (
   return result;
 };
 
-export const { refreshMarketIndexWithNonCacheResponse } = stockInfoSlice.actions;
 export default stockInfoSlice.reducer;

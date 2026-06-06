@@ -11,32 +11,36 @@ import {
 } from "../../../icons";
 import {
   changeMarketPageSubpage,
+  changeMarketSearchText,
+  changeMarketSortKey,
+  type MarketSortKey,
+  type MarketTab,
   updateHeaderTitle,
 } from "../../../redux/slices/MainPageSlice";
-import {
-  calculateMarketValue,
-  fetchStockInfo,
-} from "../../../redux/slices/StockInfoSlice";
+import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { StockInfo } from "../../../types";
 import Env from "../../../utils/env";
+import {
+  getAllMarketSids,
+  getStockName,
+  getStockXirr,
+  getVisibleMarketSids,
+} from "../../../utils/marketSids";
 import Util from "../../../utils/util";
 import styles from "./Market.module.scss";
 
-type MarketTab = "holding" | "favorites";
-type SortKey = "marketValue" | "returnRate" | "fluct" | "name";
-
-const sortLabels: Record<SortKey, string> = {
-  marketValue: "市值高到低",
-  returnRate: "報酬率高到低",
+const sortLabels: Record<MarketSortKey, string> = {
+  marketValue: "持倉高到低",
+  xirr: "報酬率高到低",
   fluct: "今日漲跌幅",
   name: "名稱",
 };
 
-const shortSortLabels: Record<SortKey, string> = {
-  marketValue: "市值",
-  returnRate: "報酬率",
+const shortSortLabels: Record<MarketSortKey, string> = {
+  marketValue: "持倉",
+  xirr: "報酬率",
   fluct: "漲跌幅",
   name: "名稱",
 };
@@ -52,15 +56,17 @@ function mapStateToProps(rootState: RootState) {
   } = rootState.tradeRecord;
   const { cashDividendRecords } = rootState.cashDividend;
   const { favorites } = rootState.memo;
-  const { marketPageSubpageName: activeSubpageName } = rootState.mainPage;
+  const { marketPageSubpageName, marketSearchText, marketSortKey } = rootState.mainPage;
   const { sidStockInfoMap } = rootState.stockInfo;
   const { tradePlans } = rootState.tradePlan;
   const { subscription } = rootState.account;
   return {
-    activeSubpageName,
     cashDividendRecords,
     favorites,
     isWaitingTradeRecords,
+    marketPageSubpageName,
+    marketSearchText,
+    marketSortKey,
     sidCashInvestedMap,
     sidStockInfoMap,
     sidTradeRecordsMap,
@@ -75,11 +81,8 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 }
 
 interface State {
-  activeTab: MarketTab;
   favoriteUpdateFailed: boolean;
   isRefreshingFavorites: boolean;
-  searchText: string;
-  sortKey: SortKey;
 }
 
 class Market extends React.Component<Props, State> {
@@ -89,51 +92,20 @@ class Market extends React.Component<Props, State> {
 
   public constructor(props: Props) {
     super(props);
-    const activeTab = this.getInitialActiveTab(props);
-    this.state = {
-      activeTab,
-      favoriteUpdateFailed: false,
-      isRefreshingFavorites: false,
-      searchText: props.router.search_params.get("q") ?? "",
-      sortKey: this.getInitialSortKey(props, activeTab),
-    };
+    this.state = { favoriteUpdateFailed: false, isRefreshingFavorites: false };
     this.fetchFavoriteStockInfoTimer = null;
   }
 
   public componentDidMount(): void {
     this.props.dispatch(updateHeaderTitle(null));
-    const initialTab = this.getInitialActiveTab(this.props);
-    if (initialTab !== this.props.activeSubpageName) {
-      this.props.dispatch(changeMarketPageSubpage(initialTab));
-    }
-    this.syncUrlState(initialTab, this.state.searchText, this.state.sortKey, true);
-    if (initialTab === "favorites") {
+    if (this.props.marketPageSubpageName === "favorites") {
       this.fetchFavoriteStockInfo();
     }
     this.fetchFavoriteStockInfoTimer = setInterval(() => {
-      if (this.state.activeTab === "favorites") {
+      if (this.props.marketPageSubpageName === "favorites") {
         this.fetchFavoriteStockInfo();
       }
     }, this.props.subscription.market_refresh_interval_seconds * 1000);
-  }
-
-  public componentDidUpdate(prevProps: Readonly<Props>): void {
-    if (
-      prevProps.activeSubpageName !== this.props.activeSubpageName &&
-      this.props.activeSubpageName !== this.state.activeTab
-    ) {
-      this.setState({
-        activeTab: this.props.activeSubpageName,
-        sortKey: this.getDefaultSortKey(this.props.activeSubpageName),
-      });
-      return;
-    }
-    if (
-      prevProps.activeSubpageName !== this.props.activeSubpageName &&
-      !this.props.router.search_params.get("sort")
-    ) {
-      this.setState({ sortKey: this.getDefaultSortKey(this.props.activeSubpageName) });
-    }
   }
 
   public componentWillUnmount(): void {
@@ -144,8 +116,12 @@ class Market extends React.Component<Props, State> {
   }
 
   public render(): React.ReactNode {
-    const { activeTab } = this.state;
-    const allSids = this.getAllSids(activeTab);
+    const activeTab = this.props.marketPageSubpageName;
+    const allSids = getAllMarketSids(
+      activeTab,
+      this.props.stockWarehouse,
+      this.props.favorites,
+    );
     const visibleSids = this.getVisibleSids(activeTab);
     const isLoading =
       (activeTab === "holding" && this.props.isWaitingTradeRecords) ||
@@ -185,10 +161,10 @@ class Market extends React.Component<Props, State> {
                 placeholder={
                   activeTab === "holding" ? "搜尋持股代號或名稱" : "搜尋最愛代號或名稱"
                 }
-                value={this.state.searchText}
+                value={this.props.marketSearchText}
                 onChange={this.handleSearchChange}
               />
-              {this.state.searchText && (
+              {this.props.marketSearchText && (
                 <button
                   aria-label="清除搜尋"
                   className={styles.clear_search_button}
@@ -204,17 +180,17 @@ class Market extends React.Component<Props, State> {
             <div className={styles.sort_menu}>
               <select
                 aria-label="排序股票"
-                value={this.state.sortKey}
+                value={this.props.marketSortKey}
                 onChange={this.handleSortChange}
               >
-                {(Object.keys(sortLabels) as SortKey[]).map((sortKey) => (
+                {(Object.keys(sortLabels) as MarketSortKey[]).map((sortKey) => (
                   <option key={sortKey} value={sortKey}>
                     {sortLabels[sortKey]}
                   </option>
                 ))}
               </select>
               <span className={styles.sort_label}>
-                {shortSortLabels[this.state.sortKey]}
+                {shortSortLabels[this.props.marketSortKey]}
               </span>
             </div>
           </div>
@@ -231,7 +207,11 @@ class Market extends React.Component<Props, State> {
   }
 
   private renderMetrics(activeTab: MarketTab): React.ReactNode {
-    const allSids = this.getAllSids(activeTab);
+    const allSids = getAllMarketSids(
+      activeTab,
+      this.props.stockWarehouse,
+      this.props.favorites,
+    );
     const upCount = allSids.filter(
       (sid) => (this.props.sidStockInfoMap[sid]?.fluct_price ?? 0) > 0,
     ).length;
@@ -331,8 +311,8 @@ class Market extends React.Component<Props, State> {
     const inventory = inventoryCosts.length;
     const averageCost =
       inventory > 0 ? (this.props.sidCashInvestedMap[sid] ?? 0) / inventory : 0;
-    const returnRate = this.getReturnRate(sid, stockInfo);
-    const returnTone = returnRate > 0 ? "up" : returnRate < 0 ? "down" : "neutral";
+    const xirr = this.getStockXirr(sid, stockInfo);
+    const returnTone = xirr > 0 ? "up" : xirr < 0 ? "down" : "neutral";
 
     return (
       <div className={styles.holding_chips}>
@@ -346,9 +326,7 @@ class Market extends React.Component<Props, State> {
         </div>
         <div>
           <span>報酬率</span>
-          <strong className={styles[returnTone]}>
-            {this.formatPercent(returnRate)}
-          </strong>
+          <strong className={styles[returnTone]}>{this.formatPercent(xirr)}</strong>
         </div>
       </div>
     );
@@ -440,14 +418,17 @@ class Market extends React.Component<Props, State> {
   }
 
   private renderResultCount(totalCount: number, visibleCount: number): React.ReactNode {
-    if (!this.state.searchText || visibleCount === totalCount) {
+    if (!this.props.marketSearchText || visibleCount === totalCount) {
       return null;
     }
     return <span className={styles.result_count}>{visibleCount} 筆結果</span>;
   }
 
   private renderUpdateFailure(): React.ReactNode {
-    if (!this.state.favoriteUpdateFailed || this.state.activeTab !== "favorites") {
+    if (
+      !this.state.favoriteUpdateFailed ||
+      this.props.marketPageSubpageName !== "favorites"
+    ) {
       return null;
     }
     return (
@@ -467,37 +448,21 @@ class Market extends React.Component<Props, State> {
     );
   }
 
-  private getVisibleSids(activeTab: MarketTab): string[] {
-    const keyword = this.state.searchText.trim().toLowerCase();
-    return this.getAllSids(activeTab)
-      .filter((sid) => {
-        if (!keyword) return true;
-        const name = this.getFallbackStockName(sid).toLowerCase();
-        return sid.toLowerCase().includes(keyword) || name.includes(keyword);
-      })
-      .sort((leftSid, rightSid) => this.compareSids(leftSid, rightSid));
+  private getMarketSidsContext(activeTab: MarketTab) {
+    return {
+      tab: activeTab,
+      searchText: this.props.marketSearchText,
+      sortKey: this.props.marketSortKey,
+      stockWarehouse: this.props.stockWarehouse,
+      favorites: this.props.favorites,
+      sidStockInfoMap: this.props.sidStockInfoMap,
+      sidTradeRecordsMap: this.props.sidTradeRecordsMap,
+      cashDividendRecords: this.props.cashDividendRecords,
+    };
   }
 
-  private compareSids(leftSid: string, rightSid: string): number {
-    if (this.state.sortKey === "name") {
-      return this.getFallbackStockName(leftSid).localeCompare(
-        this.getFallbackStockName(rightSid),
-        "zh-Hant",
-      );
-    }
-    if (this.state.sortKey === "returnRate") {
-      return (
-        this.getReturnRate(rightSid, this.props.sidStockInfoMap[rightSid]) -
-        this.getReturnRate(leftSid, this.props.sidStockInfoMap[leftSid])
-      );
-    }
-    if (this.state.sortKey === "fluct") {
-      return (
-        this.getAbsoluteChangePercent(this.props.sidStockInfoMap[rightSid]) -
-        this.getAbsoluteChangePercent(this.props.sidStockInfoMap[leftSid])
-      );
-    }
-    return this.getMarketValue(rightSid) - this.getMarketValue(leftSid);
+  private getVisibleSids(activeTab: MarketTab): string[] {
+    return getVisibleMarketSids(this.getMarketSidsContext(activeTab));
   }
 
   private fetchFavoriteStockInfo = async (): Promise<void> => {
@@ -513,104 +478,35 @@ class Market extends React.Component<Props, State> {
 
   private handleSubpageChange = (value: string): void => {
     const nextTab = value === "favorites" ? "favorites" : "holding";
-    const sortKey = this.getDefaultSortKey(nextTab);
     this.props.dispatch(changeMarketPageSubpage(nextTab));
-    this.setState({ activeTab: nextTab, sortKey }, () => {
-      this.syncUrlState(nextTab, this.state.searchText, sortKey);
-    });
     if (nextTab === "favorites") {
       this.fetchFavoriteStockInfo();
     }
   };
 
   private handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    const searchText = event.target.value;
-    this.setState({ searchText }, () => {
-      this.syncUrlState(this.state.activeTab, searchText, this.state.sortKey);
-    });
+    this.props.dispatch(changeMarketSearchText(event.target.value));
   };
 
   private clearSearch = (): void => {
-    this.setState({ searchText: "" }, () => {
-      this.syncUrlState(this.state.activeTab, "", this.state.sortKey);
-    });
+    this.props.dispatch(changeMarketSearchText(""));
   };
 
   private handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
-    const sortKey = event.target.value as SortKey;
-    this.setState({ sortKey }, () => {
-      this.syncUrlState(this.state.activeTab, this.state.searchText, sortKey);
-    });
+    this.props.dispatch(changeMarketSortKey(event.target.value as MarketSortKey));
   };
 
-  private syncUrlState(
-    tab: MarketTab,
-    searchText: string,
-    sortKey: SortKey,
-    replace = true,
-  ): void {
-    const nextParams = new URLSearchParams();
-    nextParams.set("tab", tab);
-    if (searchText.trim()) nextParams.set("q", searchText.trim());
-    if (sortKey !== this.getDefaultSortKey(tab)) nextParams.set("sort", sortKey);
-    this.props.router.set_search_params(nextParams, { replace });
-  }
-
-  private getInitialActiveTab(props: Props): MarketTab {
-    const tab = props.router.search_params.get("tab");
-    if (tab === "holding" || tab === "favorites") return tab;
-    return props.activeSubpageName === "favorites" ? "favorites" : "holding";
-  }
-
-  private getInitialSortKey(props: Props, activeTab: MarketTab): SortKey {
-    const sortKey = props.router.search_params.get("sort");
-    if (sortKey && sortKey in sortLabels) return sortKey as SortKey;
-    return this.getDefaultSortKey(activeTab);
-  }
-
-  private getDefaultSortKey(activeTab: MarketTab): SortKey {
-    return activeTab === "holding" ? "marketValue" : "fluct";
-  }
-
-  private getAllSids(activeTab: MarketTab): string[] {
-    return activeTab === "holding"
-      ? Object.keys(this.props.stockWarehouse)
-      : this.props.favorites;
-  }
-
-  private getSubtitle(activeTab: MarketTab): string {
-    return activeTab === "holding"
-      ? "追蹤你的持股現況、報酬率與最新價格。"
-      : "觀察你關注的股票，等待適合的進場時機。";
-  }
-
-  private getTitle(activeTab: MarketTab): string {
-    return activeTab === "holding" ? "持股追蹤" : "關注";
-  }
-
   private getFallbackStockName(sid: string): string {
-    return (
-      this.props.sidStockInfoMap[sid]?.name ??
-      this.props.sidTradeRecordsMap[sid]?.[0]?.company_name ??
-      sid
-    );
+    return getStockName(sid, this.props.sidStockInfoMap, this.props.sidTradeRecordsMap);
   }
 
-  private getMarketValue(sid: string): number {
-    return calculateMarketValue(
-      this.props.sidStockInfoMap[sid],
-      this.props.stockWarehouse[sid] ?? [],
-    );
-  }
-
-  private getReturnRate(sid: string, stockInfo: StockInfo | undefined): number {
-    const inventoryCosts = this.props.stockWarehouse[sid] ?? [];
-    const marketValue = calculateMarketValue(stockInfo, inventoryCosts);
-    return Util.calculateXIRR(
-      this.props.sidTradeRecordsMap[sid] || [],
-      [],
-      this.props.cashDividendRecords.filter((record) => record.sid === sid),
-      marketValue,
+  private getStockXirr(sid: string, stockInfo: StockInfo | undefined): number {
+    return getStockXirr(
+      sid,
+      stockInfo,
+      this.props.stockWarehouse,
+      this.props.sidTradeRecordsMap,
+      this.props.cashDividendRecords,
     );
   }
 
@@ -639,8 +535,14 @@ class Market extends React.Component<Props, State> {
     return Math.abs(stockInfo.fluct_price / previousClose);
   }
 
-  private getAbsoluteChangePercent(stockInfo: StockInfo | undefined): number {
-    return this.getChangePercent(stockInfo);
+  private getSubtitle(activeTab: MarketTab): string {
+    return activeTab === "holding"
+      ? "追蹤你的持股現況、報酬率與最新價格。"
+      : "觀察你關注的股票，等待適合的進場時機。";
+  }
+
+  private getTitle(activeTab: MarketTab): string {
+    return activeTab === "holding" ? "持股追蹤" : "關注";
   }
 
   private formatChange(fluctPrice: number, percent: number): string {
@@ -666,7 +568,7 @@ class Market extends React.Component<Props, State> {
     const inventory = inventoryCosts.length;
     const averageCost =
       inventory > 0 ? (this.props.sidCashInvestedMap[sid] ?? 0) / inventory : 0;
-    const returnRate = this.getReturnRate(sid, stockInfo);
+    const xirr = this.getStockXirr(sid, stockInfo);
     const priceText = stockInfo?.close
       ? `目前價格 ${stockInfo.close.toLocaleString()}`
       : "尚未取得價格";
@@ -675,7 +577,7 @@ class Market extends React.Component<Props, State> {
       stockInfo,
     )}，庫存 ${inventory.toLocaleString()} 股，平均成本 ${averageCost.toFixed(
       2,
-    )}，報酬率 ${this.formatPercent(returnRate)}，${this.getVolumeText(
+    )}，報酬率 ${this.formatPercent(xirr)}，${this.getVolumeText(
       stockInfo,
     )}${planText ? `，${planText}` : ""}，${stockInfo ? "可查看詳情" : "尚未取得價格"}`;
   }

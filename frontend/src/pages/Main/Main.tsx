@@ -60,19 +60,17 @@ interface State {
 
 class Main extends React.Component<Props, State> {
   public state: State;
-  private channel: BroadcastChannel;
   private mainRef: React.RefObject<HTMLDivElement>;
   private subpages: Subpage[];
   private fetchStockInfoTimer: ReturnType<typeof setTimeout> | null;
   public constructor(props: Props) {
     super(props);
     this.state = { isLoading: true, prevLocationPathname: null };
-    this.channel = new BroadcastChannel(Env.broadcastChannelName);
-    // this.channel.addEventListener("message", this.handleNonCacheResponse);
     this.mainRef = React.createRef();
     this.subpages = [];
     this.fetchStockInfoTimer = null;
   }
+
   public async componentDidMount(): Promise<void> {
     oncontextmenu = (e) => e.preventDefault();
     this.syncMobileScrollMode();
@@ -151,6 +149,7 @@ class Main extends React.Component<Props, State> {
       this.props.dispatch(fetchRealtimeMarketIndex());
     }, this.marketRefreshIntervalMs);
   }
+
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (prevProps.router.location.pathname !== this.props.router.location.pathname) {
       this.syncMobileScrollMode();
@@ -174,6 +173,7 @@ class Main extends React.Component<Props, State> {
       } else this.setState({ prevLocationPathname: null });
     }
   }
+
   public componentWillUnmount(): void {
     this.mainRef.current?.removeEventListener("scroll", this.handleScroll);
     window.removeEventListener("scroll", this.handleScroll);
@@ -183,8 +183,8 @@ class Main extends React.Component<Props, State> {
       clearInterval(this.fetchStockInfoTimer);
       this.fetchStockInfoTimer = null;
     }
-    this.channel.close();
   }
+
   public render(): React.ReactNode {
     return (
       <main
@@ -217,6 +217,7 @@ class Main extends React.Component<Props, State> {
       </main>
     );
   }
+
   private handleScroll = (): void => {
     const scrollTop = this.shouldUseDocumentScroll
       ? window.scrollY
@@ -225,6 +226,7 @@ class Main extends React.Component<Props, State> {
 
     this.props.dispatch(updateScrollTop(scrollTop));
   };
+
   private syncMobileScrollMode(): void {
     document.body.classList.toggle(
       "main-page-document-scroll",
@@ -235,9 +237,11 @@ class Main extends React.Component<Props, State> {
       this.shouldUseDocumentScroll && !this.shouldUseWhiteMobileShell,
     );
   }
+
   private get shouldUseDocumentScroll(): boolean {
     return Util.isMobile && !this.isMobileEditorRoute;
   }
+
   private get shouldUseWhiteMobileShell(): boolean {
     return (
       this.isMobileEditorRoute ||
@@ -245,6 +249,7 @@ class Main extends React.Component<Props, State> {
       this.props.router.location.pathname === `${Env.frontendRootPath}plans`
     );
   }
+
   private get isMobileEditorRoute(): boolean {
     return [
       /^\/records\/(trade|cash-dividend)\/(new|\d+\/edit)$/u,
@@ -253,26 +258,7 @@ class Main extends React.Component<Props, State> {
       /^\/search$/u,
     ].some((pattern) => pattern.test(this.props.router.location.pathname));
   }
-  // private handleNonCacheResponse = async (
-  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   e: MessageEvent<{ url: string; data: any }>,
-  // ): Promise<void> => {
-  //   if (/cash-dividends[/]?$/gs.test(e.data.url)) {
-  //     this.props.dispatch(
-  //       refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
-  //     );
-  //   } else if (/market\/market-index[/]?$/gs.test(e.data.url)) {
-  //     this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
-  //   } else if (/trade-plans[/]?$/gs.test(e.data.url)) {
-  //     this.props.dispatch(refreshTradePlansWithNonCacheResponse(e.data.data.data));
-  //   } else if (/stock-memo\/company-info[/]?$/gs.test(e.data.url)) {
-  //     this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
-  //   } else if (/favorites[/]?$/gs.test(e.data.url)) {
-  //     this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
-  //   } else if (/handling-fee\/discount[/]?$/gs.test(e.data.url)) {
-  //     this.props.dispatch(refreshDiscountsWithNonCacheResponse(e.data.data.data));
-  //   }
-  // };
+
   private fetchHoldingStockInfo = async (
     warehouseFromStore?: StockWarehouse,
   ): Promise<void> => {
