@@ -27,6 +27,8 @@ class NavTab extends React.Component<Props, State> {
   private readonly dashboardSubpages = [
     `${Env.frontendRootPath}handling-fee`,
     `${Env.frontendRootPath}earning-analysis`,
+    `${Env.frontendRootPath}market-index/tse`,
+    `${Env.frontendRootPath}market-index/otc`,
   ];
 
   public render(): React.ReactNode {
@@ -57,9 +59,9 @@ class NavTab extends React.Component<Props, State> {
     const pagePath = this.props.page.path;
     if (pagePath === Env.frontendRootPath) {
       if (currentPath === pagePath) return true;
-      else if (this.dashboardSubpages.includes(currentPath)) return true;
-      else return false;
-    } else return currentPath.startsWith(pagePath);
+      return this.dashboardSubpages.includes(currentPath);
+    }
+    return currentPath === pagePath || currentPath.startsWith(`${pagePath}/`);
   }
 }
 

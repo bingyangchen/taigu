@@ -22,6 +22,8 @@ class Footer extends React.Component<Props, State> {
   private readonly dashboardSubpages = [
     `${Env.frontendRootPath}handling-fee`,
     `${Env.frontendRootPath}earning-analysis`,
+    `${Env.frontendRootPath}market-index/tse`,
+    `${Env.frontendRootPath}market-index/otc`,
   ];
 
   public render(): React.ReactNode {
@@ -64,9 +66,9 @@ class Footer extends React.Component<Props, State> {
     const pagePath = subpage.path;
     if (pagePath === Env.frontendRootPath) {
       if (this.currentPath === pagePath) return true;
-      else if (this.dashboardSubpages.includes(this.currentPath)) return true;
-      else return false;
-    } else return this.currentPath.startsWith(pagePath);
+      return this.dashboardSubpages.includes(this.currentPath);
+    }
+    return this.currentPath === pagePath || this.currentPath.startsWith(`${pagePath}/`);
   }
 
   private shouldReplacePath(subpage: Subpage): boolean {

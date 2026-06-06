@@ -191,16 +191,19 @@ class Main extends React.Component<Props, State> {
         className={`${styles.main} ${
           this.shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
         } ${this.isMobileEditorRoute ? styles.mobile_editor_shell : ""} ${
-          Nav.isAtDetailsPage ? styles.mobile_detail_shell : ""
+          Nav.isAtDetailsPage || Nav.isAtMarketIndexDetailsPage
+            ? styles.mobile_detail_shell
+            : ""
         }`}
         ref={this.mainRef}
       >
         <ToastList />
         <PlanUpsellModal />
         {this.state.isLoading && <LoadingScreen />}
-        {Util.isMobile && !this.isMobileEditorRoute && !Nav.isAtDetailsPage && (
-          <HeaderForMain />
-        )}
+        {Util.isMobile &&
+          !this.isMobileEditorRoute &&
+          !Nav.isAtDetailsPage &&
+          !Nav.isAtMarketIndexDetailsPage && <HeaderForMain />}
         <div className={styles.body}>
           {!Util.isMobile && (
             <MainSideBar

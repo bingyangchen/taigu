@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
@@ -8,7 +9,13 @@ from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 from main.market import Frequency, TradeType
 from main.market.cache import TimeSeriesStockInfo, TimeSeriesStockInfoCacheManager
-from main.market.models import Company, History, MarketIndexPerMinute, StockInfo
+from main.market.models import (
+    Company,
+    History,
+    MarketIndexHistory,
+    MarketIndexPerMinute,
+    StockInfo,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +72,36 @@ def current_stock_info(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
+@rate_limit(rate=2)
+@require_GET
+@require_login
+def market_index_historical_prices(request: HttpRequest) -> JsonResponse:
+    market = request.GET.get("market")
+    if not market:
+        return JsonResponse({"error": "Missing market"}, status=400)
+    if market not in TradeType.ALL:
+        return JsonResponse({"error": "Invalid market"}, status=400)
+
+    queryset = MarketIndexHistory.objects.filter(market=market)
+    if since := request.GET.get("since"):
+        try:
+            since_date = datetime.strptime(since, "%Y-%m-%d").date()
+        except ValueError:
+            return JsonResponse({"error": "Invalid since"}, status=400)
+        queryset = queryset.filter(date__gte=since_date)
+
+    result = {"data": []}
+    for row in queryset.order_by("date"):
+        result["data"].append({"date": row.date, "price": row.close_price})
+    return JsonResponse(result)
+
+
 @rate_limit(rate=3)
 @require_GET
 @require_login
-def historical_prices(request: HttpRequest, sid: str) -> JsonResponse:
+def historical_prices(request: HttpRequest) -> JsonResponse:
+    if not (sid := request.GET.get("sid")):
+        return JsonResponse({"error": "Missing sid"}, status=400)
     result = {"data": []}
     for h in History.objects.filter(
         company=Company.objects.get(pk=sid),

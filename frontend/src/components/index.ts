@@ -26,6 +26,7 @@ export { default as ListRow } from "./ListRow/ListRow";
 export { default as ListRowActionBar } from "./ListRowActionBar/ListRowActionBar";
 export { default as LoadingScreen } from "./LoadingScreen/LoadingScreen";
 export { default as MainSideBar } from "./MainSideBar/MainSideBar";
+export { default as MarketIndexIntradayLineChart } from "./MarketIndexIntradayLineChart/MarketIndexIntradayLineChart";
 export { default as MarketIndexLineChart } from "./MarketIndexLineChart/MarketIndexLineChart";
 export { default as MarketValuePieChart } from "./MarketValuePieChart/MarketValuePieChart";
 export { default as Modal } from "./Modal/Modal";

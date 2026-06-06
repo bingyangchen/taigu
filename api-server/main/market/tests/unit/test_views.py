@@ -13,11 +13,12 @@ from main.account import OAuthOrganization
 from main.account.models import User
 from main.market import Frequency, TradeType
 from main.market.cache import TimeSeriesStockInfo
-from main.market.models import Company, History, StockInfo
+from main.market.models import Company, History, MarketIndexHistory, StockInfo
 from main.market.views import (
     current_stock_info,
     historical_prices,
     market_index,
+    market_index_historical_prices,
     search,
 )
 
@@ -272,6 +273,101 @@ class TestCurrentStockInfoView:
 
 
 @pytest.mark.django_db
+class TestMarketIndexHistoricalPricesView:
+    @pytest.fixture(autouse=True)
+    def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
+        mock_lua_script = Mock(return_value=1)
+        monkeypatch.setattr(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", mock_lua_script
+        )
+
+    @pytest.fixture
+    def request_factory(self) -> RequestFactory:
+        return RequestFactory()
+
+    @pytest.fixture
+    def user(self) -> User:
+        return User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="test_oauth_id",
+            email="test@example.com",
+            username="testuser",
+        )
+
+    def test_market_index_historical_prices_success(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
+        MarketIndexHistory.objects.create(
+            market=TradeType.TSE, date=date(2023, 12, 1), close_price=15000.0
+        )
+        MarketIndexHistory.objects.create(
+            market=TradeType.TSE, date=date(2023, 12, 2), close_price=15100.0
+        )
+        request = request_factory.get(
+            "/api/market/market-index-historical-prices/?market=tse"
+        )
+        request.user = user
+
+        response = market_index_historical_prices(request)
+
+        assert isinstance(response, JsonResponse)
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert len(data["data"]) == 2
+        assert data["data"][0]["price"] == 15000.0
+        assert data["data"][1]["price"] == 15100.0
+
+    def test_market_index_historical_prices_invalid_market(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
+        request = request_factory.get(
+            "/api/market/market-index-historical-prices/?market=foo"
+        )
+        request.user = user
+
+        response = market_index_historical_prices(request)
+
+        assert response.status_code == 400
+
+    def test_market_index_historical_prices_with_since(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
+        MarketIndexHistory.objects.create(
+            market=TradeType.TSE, date=date(2023, 12, 1), close_price=15000.0
+        )
+        MarketIndexHistory.objects.create(
+            market=TradeType.TSE, date=date(2023, 12, 2), close_price=15100.0
+        )
+        MarketIndexHistory.objects.create(
+            market=TradeType.TSE, date=date(2023, 12, 3), close_price=15200.0
+        )
+        request = request_factory.get(
+            "/api/market/market-index-historical-prices/?market=tse&since=2023-12-02"
+        )
+        request.user = user
+
+        response = market_index_historical_prices(request)
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert len(data["data"]) == 2
+        assert data["data"][0]["price"] == 15100.0
+        assert data["data"][1]["price"] == 15200.0
+
+    def test_market_index_historical_prices_invalid_since(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
+        request = request_factory.get(
+            "/api/market/market-index-historical-prices/?market=tse&since=bad-date"
+        )
+        request.user = user
+
+        response = market_index_historical_prices(request)
+
+        assert response.status_code == 400
+
+
+@pytest.mark.django_db
 class TestHistoricalPricesView:
     @pytest.fixture(autouse=True)
     def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
@@ -334,10 +430,10 @@ class TestHistoricalPricesView:
         history_records: list[History],
         user: User,
     ) -> None:
-        request = request_factory.get("/api/market/historical-prices/1234/")
+        request = request_factory.get("/api/market/historical-prices/?sid=1234")
         request.user = user
 
-        response = historical_prices(request, "1234")
+        response = historical_prices(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -357,11 +453,11 @@ class TestHistoricalPricesView:
         user: User,
     ) -> None:
         request = request_factory.get(
-            f"/api/market/historical-prices/1234/?frequency={Frequency.WEEKLY}"
+            f"/api/market/historical-prices/?sid=1234&frequency={Frequency.WEEKLY}"
         )
         request.user = user
 
-        response = historical_prices(request, "1234")
+        response = historical_prices(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -377,11 +473,11 @@ class TestHistoricalPricesView:
         user: User,
     ) -> None:
         request = request_factory.get(
-            f"/api/market/historical-prices/1234/?frequency={Frequency.MONTHLY}"
+            f"/api/market/historical-prices/?sid=1234&frequency={Frequency.MONTHLY}"
         )
         request.user = user
 
-        response = historical_prices(request, "1234")
+        response = historical_prices(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -393,19 +489,19 @@ class TestHistoricalPricesView:
     def test_historical_prices_nonexistent_company(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.get("/api/market/historical-prices/9999/")
+        request = request_factory.get("/api/market/historical-prices/?sid=9999")
         request.user = user
 
         with pytest.raises(ObjectDoesNotExist):
-            historical_prices(request, "9999")
+            historical_prices(request)
 
     def test_historical_prices_no_history_data(
         self, request_factory: RequestFactory, company: Company, user: User
     ) -> None:
-        request = request_factory.get("/api/market/historical-prices/1234/")
+        request = request_factory.get("/api/market/historical-prices/?sid=1234")
         request.user = user
 
-        response = historical_prices(request, "1234")
+        response = historical_prices(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200

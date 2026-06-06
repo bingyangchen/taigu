@@ -1,5 +1,6 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
+import LocalDatabase from "../../storage/localDatabase";
 import type { MarketIndex, StockInfo } from "../../types";
 import Api from "../../utils/api";
 
@@ -12,7 +13,12 @@ interface StockInfoState {
       monthly?: { [date: string]: number };
     };
   };
+  marketIndexHistoricalPricesMap: {
+    tse?: { [date: string]: number };
+    otc?: { [date: string]: number };
+  };
   isWaitingHistoricalPrices: boolean;
+  isWaitingMarketIndexHistoricalPrices: boolean;
   realtimePriceDate: string;
   tseIndexRealtimePrices: { [number: string]: number } & {
     yesterday_price?: number;
@@ -27,7 +33,9 @@ interface StockInfoState {
 const initialState: StockInfoState = {
   sidStockInfoMap: {},
   sidHistoricalPricesMap: {},
+  marketIndexHistoricalPricesMap: {},
   isWaitingHistoricalPrices: false,
+  isWaitingMarketIndexHistoricalPrices: false,
   realtimePriceDate: "0000-00-00",
   tseIndexRealtimePrices: {},
   otcIndexRealtimePrices: {},
@@ -61,6 +69,37 @@ export const fetchSingleStockInfo = createAsyncThunk(
   },
 );
 
+export const fetchMarketIndexHistoricalPrices = createAsyncThunk(
+  "stockInfo/fetchMarketIndexHistoricalPrices",
+  async (
+    payload: { market: "tse" | "otc" },
+    { dispatch },
+  ): Promise<{ market: "tse" | "otc"; data: { date: string; price: number }[] }> => {
+    const { market } = payload;
+    const cachedPrices = await LocalDatabase.getMarketIndexHistoricalPrices(market);
+    if (Object.keys(cachedPrices).length > 0) {
+      dispatch(setMarketIndexHistoricalPrices({ market, prices: cachedPrices }));
+    }
+
+    const since = LocalDatabase.getNextMarketIndexHistoricalSinceDate(cachedPrices);
+    const query = new URLSearchParams({ market });
+    if (since) query.set("since", since);
+
+    const response = await Api.sendRequest(
+      `market/market-index-historical-prices?${query.toString()}`,
+      "get",
+    );
+    const data: { date: string; price: number }[] = response.data.map(
+      (row: { date: string; price: number }) => ({
+        date: new Date(Date.parse(row.date)).toLocaleDateString("af"),
+        price: row.price,
+      }),
+    );
+    await LocalDatabase.putMarketIndexHistoricalPrices(market, data);
+    return { market, data };
+  },
+);
+
 export const fetchSingleStockHistoricalPrices = createAsyncThunk(
   "stockInfo/fetchSingleStockHistoricalPrices",
   async (payload: {
@@ -73,7 +112,7 @@ export const fetchSingleStockHistoricalPrices = createAsyncThunk(
   }> => {
     const { sid, frequency } = payload;
     const response = await Api.sendRequest(
-      `market/historical-prices/${sid}?frequency=${frequency}`,
+      `market/historical-prices?sid=${sid}&frequency=${frequency}`,
       "get",
     );
     const data: { date: string; price: number }[] = response.data.map(
@@ -91,7 +130,18 @@ export const fetchSingleStockHistoricalPrices = createAsyncThunk(
 export const stockInfoSlice = createSlice({
   name: "stockInfo",
   initialState,
-  reducers: {},
+  reducers: {
+    setMarketIndexHistoricalPrices: (
+      state,
+      action: PayloadAction<{
+        market: "tse" | "otc";
+        prices: { [date: string]: number };
+      }>,
+    ) => {
+      state.marketIndexHistoricalPricesMap[action.payload.market] =
+        action.payload.prices;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchRealtimeMarketIndex.pending, () => {})
@@ -163,6 +213,21 @@ export const stockInfoSlice = createSlice({
       })
       .addCase(fetchSingleStockHistoricalPrices.rejected, (state) => {
         state.isWaitingHistoricalPrices = false;
+      })
+
+      .addCase(fetchMarketIndexHistoricalPrices.pending, (state) => {
+        state.isWaitingMarketIndexHistoricalPrices = true;
+      })
+      .addCase(fetchMarketIndexHistoricalPrices.fulfilled, (state, action) => {
+        const { market, data } = action.payload;
+        const daily = (state.marketIndexHistoricalPricesMap[market] ??= {});
+        data.forEach((row) => {
+          daily[row.date] = row.price;
+        });
+        state.isWaitingMarketIndexHistoricalPrices = false;
+      })
+      .addCase(fetchMarketIndexHistoricalPrices.rejected, (state) => {
+        state.isWaitingMarketIndexHistoricalPrices = false;
       });
   },
 });
@@ -196,4 +261,5 @@ export const getTotalMarketValue = (
   return result;
 };
 
+export const { setMarketIndexHistoricalPrices } = stockInfoSlice.actions;
 export default stockInfoSlice.reducer;

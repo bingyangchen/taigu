@@ -157,7 +157,12 @@ class Dashboard extends React.Component<Props, State> {
         {Util.isMobile && <SpeedDial />}
         <div className={styles.left}>
           <div className={styles.upper}>
-            <div className={styles.market_index}>
+            <button
+              type="button"
+              className={styles.market_index}
+              onClick={() => this.handleMarketIndexChartClick("tse")}
+              aria-label="查看加權指數走勢"
+            >
               <div className={styles.left}>
                 <div className={styles.title}>加權指數</div>
                 <div className={styles.date}>{this.props.realtimePriceDate}</div>
@@ -174,8 +179,13 @@ class Dashboard extends React.Component<Props, State> {
                   {this.getIndexFluctPercentText(this.latestTseFluctPercent)}
                 </div>
               </div>
-            </div>
-            <div className={styles.market_index}>
+            </button>
+            <button
+              type="button"
+              className={styles.market_index}
+              onClick={() => this.handleMarketIndexChartClick("otc")}
+              aria-label="查看櫃買指數走勢"
+            >
               <div className={styles.left}>
                 <div className={styles.title}>櫃買指數</div>
                 <div className={styles.date}>{this.props.realtimePriceDate}</div>
@@ -192,7 +202,7 @@ class Dashboard extends React.Component<Props, State> {
                   {this.getIndexFluctPercentText(this.latestOtcFluctPercent)}
                 </div>
               </div>
-            </div>
+            </button>
           </div>
           <div className={styles.lower}>
             <div className={styles.cash_invested_text}>
@@ -368,6 +378,10 @@ class Dashboard extends React.Component<Props, State> {
 
   private handleClickHandlingFee = (): void => {
     this.props.router.navigate(`${Env.frontendRootPath}handling-fee`);
+  };
+
+  private handleMarketIndexChartClick = (market: "tse" | "otc"): void => {
+    this.props.router.navigate(`${Env.frontendRootPath}market-index/${market}`);
   };
 
   private handleCreateTradeRecordClick = (): void => {

@@ -4,6 +4,12 @@ import React from "react";
 import { connect } from "react-redux";
 
 import Util from "../../utils/util";
+import {
+  MARKET_INDEX_GREEN,
+  MARKET_INDEX_RED,
+} from "../MarketIndexLineChart/marketIndexChartData";
+
+const HISTORICAL_PRICE_FLAT_COLOR = "#888888";
 
 function mapStateToProps() {
   return {};
@@ -37,9 +43,32 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
     );
   }
 
+  private get periodTrendColor(): string {
+    const values = this.props.values;
+    if (values.length < 2) return HISTORICAL_PRICE_FLAT_COLOR;
+    const firstPrice = values[0];
+    const lastPrice = values[values.length - 1];
+    if (firstPrice > lastPrice) return MARKET_INDEX_GREEN;
+    if (firstPrice < lastPrice) return MARKET_INDEX_RED;
+    return HISTORICAL_PRICE_FLAT_COLOR;
+  }
+
+  private get periodTrendAreaGradient(): { start: string; end: string } {
+    const color = this.periodTrendColor;
+    if (color === MARKET_INDEX_GREEN) {
+      return { start: "rgba(26, 162, 96, 1)", end: "rgba(26, 162, 96, 0)" };
+    }
+    if (color === MARKET_INDEX_RED) {
+      return { start: "rgba(222, 82, 70, 1)", end: "rgba(222, 82, 70, 0)" };
+    }
+    return { start: "rgba(136, 136, 136, 1)", end: "rgba(136, 136, 136, 0)" };
+  }
+
   private get chartOption(): EChartsOption {
     const dates = this.props.isWaiting ? this.state.fakeDates : this.props.dates;
     const values = this.props.isWaiting ? this.state.fakeValues : this.props.values;
+    const lineColor = this.props.isWaiting ? "#ccc" : this.periodTrendColor;
+    const areaGradient = this.periodTrendAreaGradient;
 
     if (dates.length === 0 || values.length === 0) {
       return {};
@@ -97,8 +126,7 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
             },
             axisLine: { show: false },
             axisTick: { show: false },
-            splitLine: { lineStyle: { color: "#e9eef5", width: 1 } },
-            splitNumber: 3,
+            splitLine: { show: false },
           },
       series: this.props.isWaiting
         ? {
@@ -111,10 +139,12 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
         : {
             type: "line",
             data: values,
-            lineStyle: { width: 2, color: "#4c8bf5", join: "round" },
+            lineStyle: { width: 2, color: lineColor, join: "round" },
+            itemStyle: { color: lineColor },
             symbol: "circle",
             symbolSize: Util.isMobile ? 5 : 8,
             showSymbol: false,
+            emphasis: { itemStyle: { color: lineColor, borderColor: lineColor } },
             areaStyle: {
               color: {
                 type: "linear",
@@ -123,8 +153,8 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
                 x2: 0,
                 y2: 1,
                 colorStops: [
-                  { offset: 0, color: "rgba(76, 139, 245, 1)" },
-                  { offset: 1, color: "rgba(76, 139, 245, 0)" },
+                  { offset: 0, color: areaGradient.start },
+                  { offset: 1, color: areaGradient.end },
                 ],
               },
             },
@@ -132,7 +162,7 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
       tooltip: {
         show: !this.props.isWaiting,
         trigger: "axis",
-        axisPointer: { type: "line", lineStyle: { color: "#9fb8dc", width: 1 } },
+        axisPointer: { type: "line", lineStyle: { color: "#ddd", width: 1 } },
         backgroundColor: "rgba(255, 255, 255, 0.96)",
         borderColor: "#dbe4ef",
         borderWidth: 1,

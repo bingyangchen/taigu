@@ -6,7 +6,12 @@ import pytest
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
 from main.market import Frequency, TradeType
-from main.market.models import Company, StockInfo
+from main.market.models import (
+    Company,
+    MarketIndexHistory,
+    MarketIndexPerMinute,
+    StockInfo,
+)
 from main.market.services import (
     _fetch_and_store_historical_info_from_yahoo,
     _store_market_per_minute_info,
@@ -14,6 +19,7 @@ from main.market.services import (
     roc_date_string_to_date,
     update_all_stocks_history,
     update_company_list,
+    update_market_indices_history,
     update_material_facts,
 )
 
@@ -366,6 +372,28 @@ class TestUpdateAllStocksHistory:
             fluct_price=2.3,
         )
 
+    @pytest.mark.django_db
+    def test_update_market_indices_history(self) -> None:
+        today = date.today()
+        MarketIndexPerMinute.objects.create(
+            market=TradeType.TSE,
+            date=today,
+            number=270,
+            price=15000.0,
+            fluct_price=50.0,
+        )
+        MarketIndexPerMinute.objects.create(
+            market=TradeType.OTC, date=today, number=270, price=220.0, fluct_price=1.5
+        )
+
+        update_market_indices_history()
+
+        assert MarketIndexHistory.objects.filter(market=TradeType.TSE).count() == 1
+        assert MarketIndexHistory.objects.filter(market=TradeType.OTC).count() == 1
+        tse_history = MarketIndexHistory.objects.get(market=TradeType.TSE)
+        assert tse_history.close_price == 15000.0
+
+    @patch("main.market.services.update_market_indices_history")
     @patch("main.market.services.History.objects.bulk_create")
     @patch("main.market.services.History.objects.filter")
     @patch("main.market.services.StockInfo.objects.filter")
@@ -374,6 +402,7 @@ class TestUpdateAllStocksHistory:
         mock_stock_filter: Mock,
         mock_history_filter: Mock,
         mock_bulk_create: Mock,
+        mock_update_market_indices_history: Mock,
         stock_info: StockInfo,
     ) -> None:
         mock_stock_filter.return_value.select_related.return_value = [stock_info]
@@ -383,6 +412,7 @@ class TestUpdateAllStocksHistory:
 
         mock_bulk_create.assert_called_once()
         mock_history_filter.assert_called_once()
+        mock_update_market_indices_history.assert_called_once()
 
 
 @pytest.mark.django_db

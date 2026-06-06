@@ -8,8 +8,12 @@ class TestMarketUrls:
     def test_all_url_patterns_resolve_correctly(self) -> None:
         url_patterns = [
             ("/api/market/market-index/", views.market_index),
+            (
+                "/api/market/market-index-historical-prices/",
+                views.market_index_historical_prices,
+            ),
             ("/api/market/current-stock-info/", views.current_stock_info),
-            ("/api/market/historical-prices/2330/", views.historical_prices),
+            ("/api/market/historical-prices/", views.historical_prices),
             ("/api/market/search/", views.search),
             ("/api/market/company-names/", views.company_names),
         ]
