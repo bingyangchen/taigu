@@ -389,10 +389,10 @@ class TestHistoricalPricesView:
         history_records: list[History],
         user: User,
     ) -> None:
-        request = request_factory.get("/api/market/historical-prices/1234/")
+        request = request_factory.get("/api/market/historical-prices/?sid=1234")
         request.user = user
 
-        response = historical_prices(request, "1234")
+        response = historical_prices(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -412,11 +412,11 @@ class TestHistoricalPricesView:
         user: User,
     ) -> None:
         request = request_factory.get(
-            f"/api/market/historical-prices/1234/?frequency={Frequency.WEEKLY}"
+            f"/api/market/historical-prices/?sid=1234&frequency={Frequency.WEEKLY}"
         )
         request.user = user
 
-        response = historical_prices(request, "1234")
+        response = historical_prices(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -432,11 +432,11 @@ class TestHistoricalPricesView:
         user: User,
     ) -> None:
         request = request_factory.get(
-            f"/api/market/historical-prices/1234/?frequency={Frequency.MONTHLY}"
+            f"/api/market/historical-prices/?sid=1234&frequency={Frequency.MONTHLY}"
         )
         request.user = user
 
-        response = historical_prices(request, "1234")
+        response = historical_prices(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -448,19 +448,19 @@ class TestHistoricalPricesView:
     def test_historical_prices_nonexistent_company(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.get("/api/market/historical-prices/9999/")
+        request = request_factory.get("/api/market/historical-prices/?sid=9999")
         request.user = user
 
         with pytest.raises(ObjectDoesNotExist):
-            historical_prices(request, "9999")
+            historical_prices(request)
 
     def test_historical_prices_no_history_data(
         self, request_factory: RequestFactory, company: Company, user: User
     ) -> None:
-        request = request_factory.get("/api/market/historical-prices/1234/")
+        request = request_factory.get("/api/market/historical-prices/?sid=1234")
         request.user = user
 
-        response = historical_prices(request, "1234")
+        response = historical_prices(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200

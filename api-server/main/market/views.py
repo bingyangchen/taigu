@@ -86,7 +86,9 @@ def market_index_historical_prices(request: HttpRequest, market: str) -> JsonRes
 @rate_limit(rate=3)
 @require_GET
 @require_login
-def historical_prices(request: HttpRequest, sid: str) -> JsonResponse:
+def historical_prices(request: HttpRequest) -> JsonResponse:
+    if not (sid := request.GET.get("sid")):
+        return JsonResponse({"error": "Missing sid"}, status=400)
     result = {"data": []}
     for h in History.objects.filter(
         company=Company.objects.get(pk=sid),
