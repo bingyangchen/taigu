@@ -271,19 +271,26 @@ class Main extends React.Component<Props, State> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: MessageEvent<{ url: string; data: any }>,
   ): Promise<void> => {
+    console.log(e.data);
     if (/cash-dividends[/]?$/gs.test(e.data.url)) {
+      console.log(1);
       this.props.dispatch(
         refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
       );
     } else if (/market\/market-index[/]?$/gs.test(e.data.url)) {
+      console.log(2);
       this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
     } else if (/trade-plans[/]?$/gs.test(e.data.url)) {
+      console.log(3);
       this.props.dispatch(refreshTradePlansWithNonCacheResponse(e.data.data.data));
     } else if (/stock-memo\/company-info[/]?$/gs.test(e.data.url)) {
+      console.log(4);
       this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
     } else if (/favorites[/]?$/gs.test(e.data.url)) {
+      console.log(5);
       this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
     } else if (/handling-fee\/discount[/]?$/gs.test(e.data.url)) {
+      console.log(6);
       this.props.dispatch(refreshDiscountsWithNonCacheResponse(e.data.data.data));
     }
   };
