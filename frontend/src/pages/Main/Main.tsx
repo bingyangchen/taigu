@@ -22,29 +22,15 @@ import {
   IconThumbtackBold,
 } from "../../icons";
 import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
-import {
-  fetchAllCashDividendRecords,
-  refreshCashDividendRecordsWithNonCacheResponse,
-} from "../../redux/slices/CashDividendRecordSlice";
-import {
-  fetchAllDiscounts,
-  refreshDiscountsWithNonCacheResponse,
-} from "../../redux/slices/HandlingFeeDiscountSlice";
+import { fetchAllCashDividendRecords } from "../../redux/slices/CashDividendRecordSlice";
+import { fetchAllDiscounts } from "../../redux/slices/HandlingFeeDiscountSlice";
 import { updateScrollTop } from "../../redux/slices/MainPageSlice";
-import {
-  fetchAllFavorites,
-  refreshAllCompanyInfoWithNonCacheResponse,
-  refreshFavoritesWithNonCacheResponse,
-} from "../../redux/slices/MemoSlice";
+import { fetchAllFavorites } from "../../redux/slices/MemoSlice";
 import {
   fetchRealtimeMarketIndex,
   fetchStockInfo,
-  refreshMarketIndexWithNonCacheResponse,
 } from "../../redux/slices/StockInfoSlice";
-import {
-  fetchAllTradePlans,
-  refreshTradePlansWithNonCacheResponse,
-} from "../../redux/slices/TradePlanSlice";
+import { fetchAllTradePlans } from "../../redux/slices/TradePlanSlice";
 import {
   calculateTotalHandlingFee,
   fetchAllTradeRecords,
@@ -82,7 +68,7 @@ class Main extends React.Component<Props, State> {
     super(props);
     this.state = { isLoading: true, prevLocationPathname: null };
     this.channel = new BroadcastChannel(Env.broadcastChannelName);
-    this.channel.addEventListener("message", this.handleNonCacheResponse);
+    // this.channel.addEventListener("message", this.handleNonCacheResponse);
     this.mainRef = React.createRef();
     this.subpages = [];
     this.fetchStockInfoTimer = null;
@@ -267,33 +253,26 @@ class Main extends React.Component<Props, State> {
       /^\/search$/u,
     ].some((pattern) => pattern.test(this.props.router.location.pathname));
   }
-  private handleNonCacheResponse = async (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: MessageEvent<{ url: string; data: any }>,
-  ): Promise<void> => {
-    console.log(e.data);
-    if (/cash-dividends[/]?$/gs.test(e.data.url)) {
-      console.log(1);
-      this.props.dispatch(
-        refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
-      );
-    } else if (/market\/market-index[/]?$/gs.test(e.data.url)) {
-      console.log(2);
-      this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
-    } else if (/trade-plans[/]?$/gs.test(e.data.url)) {
-      console.log(3);
-      this.props.dispatch(refreshTradePlansWithNonCacheResponse(e.data.data.data));
-    } else if (/stock-memo\/company-info[/]?$/gs.test(e.data.url)) {
-      console.log(4);
-      this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
-    } else if (/favorites[/]?$/gs.test(e.data.url)) {
-      console.log(5);
-      this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
-    } else if (/handling-fee\/discount[/]?$/gs.test(e.data.url)) {
-      console.log(6);
-      this.props.dispatch(refreshDiscountsWithNonCacheResponse(e.data.data.data));
-    }
-  };
+  // private handleNonCacheResponse = async (
+  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //   e: MessageEvent<{ url: string; data: any }>,
+  // ): Promise<void> => {
+  //   if (/cash-dividends[/]?$/gs.test(e.data.url)) {
+  //     this.props.dispatch(
+  //       refreshCashDividendRecordsWithNonCacheResponse(e.data.data.data),
+  //     );
+  //   } else if (/market\/market-index[/]?$/gs.test(e.data.url)) {
+  //     this.props.dispatch(refreshMarketIndexWithNonCacheResponse(e.data.data));
+  //   } else if (/trade-plans[/]?$/gs.test(e.data.url)) {
+  //     this.props.dispatch(refreshTradePlansWithNonCacheResponse(e.data.data.data));
+  //   } else if (/stock-memo\/company-info[/]?$/gs.test(e.data.url)) {
+  //     this.props.dispatch(refreshAllCompanyInfoWithNonCacheResponse(e.data.data));
+  //   } else if (/favorites[/]?$/gs.test(e.data.url)) {
+  //     this.props.dispatch(refreshFavoritesWithNonCacheResponse(e.data.data.data));
+  //   } else if (/handling-fee\/discount[/]?$/gs.test(e.data.url)) {
+  //     this.props.dispatch(refreshDiscountsWithNonCacheResponse(e.data.data.data));
+  //   }
+  // };
   private fetchHoldingStockInfo = async (
     warehouseFromStore?: StockWarehouse,
   ): Promise<void> => {
