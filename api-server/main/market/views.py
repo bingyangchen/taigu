@@ -74,7 +74,10 @@ def current_stock_info(request: HttpRequest) -> JsonResponse:
 @rate_limit(rate=2)
 @require_GET
 @require_login
-def market_index_historical_prices(request: HttpRequest, market: str) -> JsonResponse:
+def market_index_historical_prices(request: HttpRequest) -> JsonResponse:
+    market = request.GET.get("market")
+    if not market:
+        return JsonResponse({"error": "Missing market"}, status=400)
     if market not in TradeType.ALL:
         return JsonResponse({"error": "Invalid market"}, status=400)
     result = {"data": []}

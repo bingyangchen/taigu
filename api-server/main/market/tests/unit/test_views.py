@@ -303,10 +303,12 @@ class TestMarketIndexHistoricalPricesView:
         MarketIndexHistory.objects.create(
             market=TradeType.TSE, date=date(2023, 12, 2), close_price=15100.0
         )
-        request = request_factory.get("/api/market/market-index-historical-prices/tse/")
+        request = request_factory.get(
+            "/api/market/market-index-historical-prices/?market=tse"
+        )
         request.user = user
 
-        response = market_index_historical_prices(request, "tse")
+        response = market_index_historical_prices(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
@@ -318,10 +320,12 @@ class TestMarketIndexHistoricalPricesView:
     def test_market_index_historical_prices_invalid_market(
         self, request_factory: RequestFactory, user: User
     ) -> None:
-        request = request_factory.get("/api/market/market-index-historical-prices/foo/")
+        request = request_factory.get(
+            "/api/market/market-index-historical-prices/?market=foo"
+        )
         request.user = user
 
-        response = market_index_historical_prices(request, "foo")
+        response = market_index_historical_prices(request)
 
         assert response.status_code == 400
 

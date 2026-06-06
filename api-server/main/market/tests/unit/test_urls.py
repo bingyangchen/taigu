@@ -9,7 +9,7 @@ class TestMarketUrls:
         url_patterns = [
             ("/api/market/market-index/", views.market_index),
             (
-                "/api/market/market-index-historical-prices/tse/",
+                "/api/market/market-index-historical-prices/",
                 views.market_index_historical_prices,
             ),
             ("/api/market/current-stock-info/", views.current_stock_info),
