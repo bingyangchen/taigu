@@ -51,6 +51,23 @@
         align-items: center;
         gap: 5px;
         width: 100%;
+        padding: 0;
+        border: none;
+        background: transparent;
+        text-align: inherit;
+        border-radius: 12px;
+        transition: background-color 150ms ease;
+
+        @media (hover: hover) {
+          &:hover {
+            background-color: #4c8bf510;
+          }
+        }
+
+        &:active {
+          background-color: #4c8bf520;
+        }
+
         @media (max-width: _.$width-512) {
           height: 40px;
         }
@@ -72,6 +89,7 @@
         & > .chart_container {
           height: 40px;
           width: 48%;
+
           @media (max-width: _.$width-512) {
             height: 100%;
           }

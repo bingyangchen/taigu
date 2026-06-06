@@ -1,18 +1,34 @@
 import { Dexie, type Table } from "dexie";
 
 import type { TradeRecord, TradeRecordSyncResponse } from "../types";
+import Util from "../utils/util";
 
 type Metadata = { key: string; value: number | string };
+export type MarketId = "tse" | "otc";
+export type MarketIndexHistoricalPriceRow = {
+  market: MarketId;
+  date: string;
+  price: number;
+};
 
 class TaiguDatabase extends Dexie {
   tradeRecords!: Table<TradeRecord, number>;
   metadata!: Table<Metadata, string>;
+  marketIndexHistoricalPrices!: Table<
+    MarketIndexHistoricalPriceRow,
+    [MarketId, string]
+  >;
 
   public constructor() {
     super("taigu");
     this.version(1).stores({
       tradeRecords: "id, [deal_time+id], sid",
       metadata: "key",
+    });
+    this.version(2).stores({
+      tradeRecords: "id, [deal_time+id], sid",
+      metadata: "key",
+      marketIndexHistoricalPrices: "[market+date]",
     });
   }
 }
@@ -105,5 +121,41 @@ export default class LocalDatabase {
 
   public static async deleteTradeRecord(id: number | string): Promise<void> {
     await database.tradeRecords.delete(Number(id));
+  }
+
+  public static async getMarketIndexHistoricalPrices(
+    market: MarketId,
+  ): Promise<{ [date: string]: number }> {
+    const rows = await database.marketIndexHistoricalPrices
+      .where("[market+date]")
+      .between([market, Dexie.minKey], [market, Dexie.maxKey])
+      .toArray();
+    return Object.fromEntries(rows.map((row) => [row.date, row.price]));
+  }
+
+  public static getNextMarketIndexHistoricalSinceDate(prices: {
+    [date: string]: number;
+  }): string | null {
+    const dates = Object.keys(prices);
+    if (dates.length === 0) return null;
+
+    let latestDate = dates[0];
+    for (let i = 1; i < dates.length; i++) {
+      if (dates[i] > latestDate) latestDate = dates[i];
+    }
+
+    const nextDate = Util.dateStringToDate(latestDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+    return nextDate.toLocaleDateString("af");
+  }
+
+  public static async putMarketIndexHistoricalPrices(
+    market: MarketId,
+    prices: { date: string; price: number }[],
+  ): Promise<void> {
+    if (prices.length === 0) return;
+    await database.marketIndexHistoricalPrices.bulkPut(
+      prices.map((row) => ({ market, date: row.date, price: row.price })),
+    );
   }
 }

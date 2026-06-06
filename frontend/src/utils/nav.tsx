@@ -40,6 +40,14 @@ export default class Nav {
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);
   }
+  public static get isAtMarketIndexDetailsPage(): boolean {
+    const pathRegexString = `^${Env.frontendRootPath.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&",
+    )}market-index/(tse|otc)[/]?$`;
+    const escapedRegex = new RegExp(pathRegexString, "gs");
+    return escapedRegex.test(window.location.pathname);
+  }
   public static get isAtDetailsPage(): boolean {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,

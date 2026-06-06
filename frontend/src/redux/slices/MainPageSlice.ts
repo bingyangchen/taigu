@@ -8,6 +8,7 @@ interface MainPageState {
   headerTitle: string | null;
   scrollTop: number;
   dashboardDaysToShow: number;
+  marketIndexHistoricalDaysToShow: number;
   marketPageSubpageName: MarketTab;
   marketSortKey: MarketSortKey;
   marketSearchText: string;
@@ -17,6 +18,7 @@ const initialState: MainPageState = {
   headerTitle: null,
   scrollTop: 0,
   dashboardDaysToShow: 30,
+  marketIndexHistoricalDaysToShow: 30,
   marketPageSubpageName: "holding",
   marketSortKey: "marketValue",
   marketSearchText: "",
@@ -35,6 +37,9 @@ export const mainPageSlice = createSlice({
     changeDashboardDaysToShow(state, action: PayloadAction<number>) {
       state.dashboardDaysToShow = action.payload;
     },
+    changeMarketIndexHistoricalDaysToShow(state, action: PayloadAction<number>) {
+      state.marketIndexHistoricalDaysToShow = action.payload;
+    },
     changeMarketPageSubpage(state, action: PayloadAction<MarketTab>) {
       state.marketPageSubpageName = action.payload;
     },
@@ -50,6 +55,7 @@ export const mainPageSlice = createSlice({
 export const { updateHeaderTitle } = mainPageSlice.actions;
 export const { updateScrollTop } = mainPageSlice.actions;
 export const { changeDashboardDaysToShow } = mainPageSlice.actions;
+export const { changeMarketIndexHistoricalDaysToShow } = mainPageSlice.actions;
 export const { changeMarketPageSubpage } = mainPageSlice.actions;
 export const { changeMarketSortKey } = mainPageSlice.actions;
 export const { changeMarketSearchText } = mainPageSlice.actions;
