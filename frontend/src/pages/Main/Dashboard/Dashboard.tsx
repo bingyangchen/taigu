@@ -12,11 +12,12 @@ import {
   SummaryCard,
   TradeRecordEditor,
 } from "../../../components";
+import { changeDashboardDaysToShow } from "../../../redux/slices/MainPageSlice";
 import {
   getSidMarketValueMap,
   getTotalMarketValue,
 } from "../../../redux/slices/StockInfoSlice";
-import type { RootState } from "../../../redux/store";
+import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Env from "../../../utils/env";
 import Util from "../../../utils/util";
@@ -40,6 +41,7 @@ function mapStateToProps(rootState: RootState) {
     otcIndexRealtimePrices,
   } = rootState.stockInfo;
   const { handlingFeeDiscountRecords } = rootState.handlingFeeDiscount;
+  const { dashboardDaysToShow } = rootState.mainPage;
   return {
     tradeRecords,
     cashDividendRecords,
@@ -54,17 +56,19 @@ function mapStateToProps(rootState: RootState) {
     realtimePriceDate,
     tseIndexRealtimePrices,
     otcIndexRealtimePrices,
+    dashboardDaysToShow,
   };
 }
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {}
+interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
+  dispatch: AppDispatch;
+}
 
 interface State {
   tseIndexLineChart: React.ReactElement | null;
   otcIndexLineChart: React.ReactElement | null;
   cashInvestedLineChart: React.ReactElement | null;
   marketValuePieChart: React.ReactElement | null;
-  daysToShow: number;
   sidMarketValueMap: { [sid: string]: number };
   totalMarketValue: number;
   totalEarning: number;
@@ -83,7 +87,6 @@ class Dashboard extends React.Component<Props, State> {
       otcIndexLineChart: null,
       cashInvestedLineChart: null,
       marketValuePieChart: null,
-      daysToShow: 30,
       sidMarketValueMap: {},
       totalMarketValue: 0,
       totalEarning: 0,
@@ -121,7 +124,7 @@ class Dashboard extends React.Component<Props, State> {
     }
     if (
       prevProps.totalCashInvested !== this.props.totalCashInvested ||
-      prevState.daysToShow !== this.state.daysToShow
+      prevProps.dashboardDaysToShow !== this.props.dashboardDaysToShow
     ) {
       this.updateCashInvestedLineChart();
       this.animateTotalCashInvested();
@@ -224,7 +227,7 @@ class Dashboard extends React.Component<Props, State> {
                         { label: "1Y", value: "365" },
                         { label: "ALL", value: "Infinity" },
                       ]}
-                      value={String(this.state.daysToShow)}
+                      value={String(this.props.dashboardDaysToShow)}
                       onChange={this.handleTimeSpanSegmentChange}
                     />
                     {/* <RoundButton className="p-12" hint_text="查看詳情">
@@ -354,7 +357,9 @@ class Dashboard extends React.Component<Props, State> {
   }
 
   private handleTimeSpanSegmentChange = (value: string): void => {
-    this.setState({ daysToShow: value === "Infinity" ? Infinity : Number(value) });
+    this.props.dispatch(
+      changeDashboardDaysToShow(value === "Infinity" ? Infinity : Number(value)),
+    );
   };
 
   private handleClickTotalEarning = (): void => {
@@ -422,7 +427,7 @@ class Dashboard extends React.Component<Props, State> {
         const dateStr = row[0] as string;
         return { date: Util.dateStringToDate(dateStr), value: row[1] as number };
       });
-      const daysToShow = Math.min(state.daysToShow, allData.length);
+      const daysToShow = Math.min(props.dashboardDaysToShow, allData.length);
       const filteredData = allData.slice(-daysToShow);
       return {
         cashInvestedLineChart: (
