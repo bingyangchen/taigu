@@ -13,6 +13,7 @@ from main.market.models import (
     Company,
     CompanyManager,
     History,
+    MarketIndexHistory,
     MarketIndexPerMinute,
     MaterialFact,
     StockInfo,
@@ -309,6 +310,32 @@ class TestMarketIndexPerMinuteModel:
         market_index2 = MarketIndexPerMinute.objects.create(**market_index_data)
 
         assert market_index2.number == 31
+
+
+@pytest.mark.django_db
+class TestMarketIndexHistoryModel:
+    @pytest.fixture
+    def market_index_history_data(self) -> dict[str, Any]:
+        return {"market": TradeType.TSE, "date": date.today(), "close_price": 15000.5}
+
+    def test_market_index_history_creation(
+        self, market_index_history_data: dict[str, Any]
+    ) -> None:
+        market_index_history = MarketIndexHistory.objects.create(
+            **market_index_history_data
+        )
+
+        assert market_index_history.market == TradeType.TSE
+        assert market_index_history.date == date.today()
+        assert market_index_history.close_price == 15000.5
+
+    def test_market_index_history_unique_constraint(
+        self, market_index_history_data: dict[str, Any]
+    ) -> None:
+        MarketIndexHistory.objects.create(**market_index_history_data)
+
+        with pytest.raises(IntegrityError):
+            MarketIndexHistory.objects.create(**market_index_history_data)
 
 
 @pytest.mark.django_db

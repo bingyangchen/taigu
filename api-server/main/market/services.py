@@ -20,6 +20,7 @@ from main.market.cache import (
 from main.market.models import (
     Company,
     History,
+    MarketIndexHistory,
     MarketIndexPerMinute,
     MaterialFact,
     StockInfo,
@@ -318,6 +319,30 @@ def _fetch_and_store_historical_info_from_yahoo(
     )
 
 
+def update_market_indices_history() -> None:
+    today = date.today()
+    to_create_batch = []
+    for market_id in (TradeType.TSE, TradeType.OTC):
+        row = (
+            MarketIndexPerMinute.objects.filter(market=market_id, date=today)
+            .order_by("-number")
+            .values("price", "date")
+            .first()
+        )
+        if row is not None:
+            to_create_batch.append(
+                MarketIndexHistory(
+                    market=market_id, date=row["date"], close_price=row["price"]
+                )
+            )
+    MarketIndexHistory.objects.bulk_create(
+        to_create_batch,
+        update_conflicts=True,
+        update_fields=["close_price"],
+        unique_fields=["market", "date"],
+    )
+
+
 def update_all_stocks_history() -> None:
     to_create_batch = [
         History(
@@ -338,6 +363,7 @@ def update_all_stocks_history() -> None:
         unique_fields=["company_id", "frequency", "date"],
     )
     History.objects.filter(date__lt=date.today() - timedelta(days=80)).delete()
+    update_market_indices_history()
 
 
 def update_material_facts() -> None:

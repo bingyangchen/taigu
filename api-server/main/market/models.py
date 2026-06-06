@@ -140,6 +140,19 @@ class MarketIndexPerMinute(CreateUpdateDateModel):
         unique_together = [["market", "date", "number"]]
 
 
+class MarketIndexHistory(CreateUpdateDateModel):
+    market = CharField(max_length=4, choices=TradeType.CHOICES)
+    date = DateField(db_index=True)
+    close_price = FloatField()
+
+    class Meta:
+        db_table = "market_index_history"
+        unique_together = [["market", "date"]]
+
+    def __str__(self) -> str:
+        return f"{self.market}({self.date})"
+
+
 class History(CreateUpdateDateModel):
     company: Company = ForeignKey(  # type: ignore
         Company, on_delete=CASCADE, related_name="history", db_index=False

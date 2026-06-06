@@ -8,7 +8,13 @@ from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 from main.market import Frequency, TradeType
 from main.market.cache import TimeSeriesStockInfo, TimeSeriesStockInfoCacheManager
-from main.market.models import Company, History, MarketIndexPerMinute, StockInfo
+from main.market.models import (
+    Company,
+    History,
+    MarketIndexHistory,
+    MarketIndexPerMinute,
+    StockInfo,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +68,18 @@ def current_stock_info(request: HttpRequest) -> JsonResponse:
             "close": info.close_price,
             "fluct_price": info.fluct_price,
         }
+    return JsonResponse(result)
+
+
+@rate_limit(rate=2)
+@require_GET
+@require_login
+def market_index_historical_prices(request: HttpRequest, market: str) -> JsonResponse:
+    if market not in TradeType.ALL:
+        return JsonResponse({"error": "Invalid market"}, status=400)
+    result = {"data": []}
+    for row in MarketIndexHistory.objects.filter(market=market).order_by("date"):
+        result["data"].append({"date": row.date, "price": row.close_price})
     return JsonResponse(result)
 
 
