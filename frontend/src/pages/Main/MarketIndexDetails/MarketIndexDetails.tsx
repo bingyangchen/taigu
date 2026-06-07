@@ -98,7 +98,9 @@ class MarketIndexDetails extends React.Component<Props, State> {
       prevProps.marketIndexHistoricalDaysToShow !==
         this.props.marketIndexHistoricalDaysToShow ||
       prevProps.isWaitingMarketIndexHistoricalPrices !==
-        this.props.isWaitingMarketIndexHistoricalPrices;
+        this.props.isWaitingMarketIndexHistoricalPrices ||
+      prevProps.realtimePriceDate !== this.props.realtimePriceDate ||
+      realtimePricesChanged;
 
     if (
       (this.state.chartMode === "historical" &&
@@ -222,12 +224,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
   }
 
   private get latestPrice(): number {
-    const numbers = Object.keys(this.realtimePrices)
-      .map((key) => parseInt(key))
-      .filter((number) => !Number.isNaN(number));
-    if (numbers.length === 0) return 0;
-    const maxNum = Math.max(...numbers);
-    return this.realtimePrices[maxNum.toString()] ?? 0;
+    return MarketIndexDetails.getLatestRealtimePrice(this.realtimePrices);
   }
 
   private get priceClass(): string {
@@ -253,11 +250,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
   }
 
   private get showIntradayEmptyState(): boolean {
-    const realtimePrices = this.realtimePrices;
-    return !Object.keys(realtimePrices).some((key) => {
-      const number = parseInt(key);
-      return !Number.isNaN(number);
-    });
+    return !MarketIndexDetails.hasRealtimeIntradayData(this.realtimePrices);
   }
 
   private get showHistoricalLoadingState(): boolean {
@@ -302,14 +295,49 @@ class MarketIndexDetails extends React.Component<Props, State> {
     marketIndexHistoricalPricesMap: Props["marketIndexHistoricalPricesMap"],
     marketIndexHistoricalDaysToShow: number,
     market: MarketId,
+    realtimePriceDate: string,
+    realtimePrices: Props["tseIndexRealtimePrices"],
   ): { dates: string[]; values: number[] } {
-    const daily = marketIndexHistoricalPricesMap[market] ?? {};
+    // Merge today's realtime price for display only. Do not persist this to Redux
+    // or LocalDatabase, otherwise incremental fetch `since` would be wrong.
+    const daily = { ...(marketIndexHistoricalPricesMap[market] ?? {}) };
+    const latestRealtimePrice =
+      MarketIndexDetails.getLatestRealtimePrice(realtimePrices);
+    if (
+      MarketIndexDetails.hasRealtimeIntradayData(realtimePrices) &&
+      latestRealtimePrice > 0 &&
+      realtimePriceDate &&
+      realtimePriceDate !== "0000-00-00"
+    ) {
+      const todayDate = new Date(Date.parse(realtimePriceDate)).toLocaleDateString(
+        "af",
+      );
+      daily[todayDate] = latestRealtimePrice;
+    }
+
     const sortedDates = Object.keys(daily).sort(
       (a, b) => Util.dateStringToDate(a).getTime() - Util.dateStringToDate(b).getTime(),
     );
     const daysToShow = Math.min(marketIndexHistoricalDaysToShow, sortedDates.length);
     const filteredDates = sortedDates.slice(-daysToShow);
     return { dates: filteredDates, values: filteredDates.map((date) => daily[date]) };
+  }
+
+  private static getLatestRealtimePrice(
+    realtimePrices: Props["tseIndexRealtimePrices"],
+  ): number {
+    const numbers = Object.keys(realtimePrices)
+      .map((key) => parseInt(key))
+      .filter((number) => !Number.isNaN(number));
+    if (numbers.length === 0) return 0;
+    const maxNum = Math.max(...numbers);
+    return realtimePrices[maxNum.toString()] ?? 0;
+  }
+
+  private static hasRealtimeIntradayData(
+    realtimePrices: Props["tseIndexRealtimePrices"],
+  ): boolean {
+    return Object.keys(realtimePrices).some((key) => !Number.isNaN(parseInt(key)));
   }
 
   private updateIntradayLineChart(): void {
@@ -353,10 +381,14 @@ class MarketIndexDetails extends React.Component<Props, State> {
         return { historicalLineChart: null };
       }
 
+      const realtimePrices =
+        market === "tse" ? props.tseIndexRealtimePrices : props.otcIndexRealtimePrices;
       const { dates, values } = this.buildHistoricalChartData(
         props.marketIndexHistoricalPricesMap,
         props.marketIndexHistoricalDaysToShow,
         market,
+        props.realtimePriceDate,
+        realtimePrices,
       );
       const isWaiting =
         props.isWaitingMarketIndexHistoricalPrices &&
