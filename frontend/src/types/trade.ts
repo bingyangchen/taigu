@@ -1,3 +1,20 @@
+import type { StockWarehouse } from "./stock";
+
+export type TradeRecordState = {
+  tradeRecords: TradeRecord[];
+  sidTradeRecordsMap: { [sid: string]: TradeRecord[] };
+  sidHandlingFeeMap: { [sid: string]: number };
+  sidGainMap: { [sid: string]: number };
+  sidCashInvestedMap: { [sid: string]: number };
+  stockWarehouse: StockWarehouse;
+  totalCashInvested: number;
+  totalHandlingFee: number;
+  cashInvestedChartData: (string | number)[][];
+  tradeVolumeChartData: (string | number)[][];
+  averageCashInvested: number;
+  isWaiting: boolean;
+};
+
 export type CashDividendRecord = {
   id: number;
   deal_time: string;

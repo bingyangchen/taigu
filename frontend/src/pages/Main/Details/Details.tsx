@@ -10,6 +10,9 @@ import {
   Modal,
   PercentSign,
   RoundButton,
+  ScrollThresholdContainer,
+  Skeleton,
+  SkeletonOverlay,
   SpeedDial,
   StockMemoEditor,
 } from "../../../components";
@@ -23,7 +26,6 @@ import {
   IconMemo,
   IconThumbtack,
 } from "../../../icons";
-import type { MarketTab } from "../../../redux/slices/MainPageSlice";
 import {
   addToFavorites,
   fakeAddToFavorites,
@@ -32,53 +34,48 @@ import {
   removeFromFavorites,
 } from "../../../redux/slices/MemoSlice";
 import {
-  calculateMarketValue,
   fetchSingleStockHistoricalPrices,
   fetchSingleStockInfo,
 } from "../../../redux/slices/StockInfoSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
+import { store } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
-import { MaterialFact } from "../../../types";
+import type { MarketTab, MaterialFact } from "../../../types";
 import Env from "../../../utils/env";
-import { getVisibleMarketSids } from "../../../utils/marketSids";
+import { calculateMarketValue, getVisibleMarketSids } from "../../../utils/market";
 import Util from "../../../utils/util";
 import styles from "./Details.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { sidStockInfoMap } = rootState.stockInfo;
+function mapStateToProps(rootState: RootState, ownProps: IRouter) {
+  const sid = ownProps.router.params.sid ?? "";
+  const { sidStockInfoMap, sidHistoricalPricesMap, isWaitingHistoricalPrices } =
+    rootState.stockInfo;
   const {
     sidTradeRecordsMap,
     sidGainMap,
     sidCashInvestedMap,
-    sidHandlingFeeMap,
     stockWarehouse,
     isWaiting: isWaitingTradeRecord,
   } = rootState.tradeRecord;
   const { cashDividendRecords, sidTotalCashDividendMap } = rootState.cashDividend;
-  const { sidHistoricalPricesMap, isWaitingHistoricalPrices } = rootState.stockInfo;
   const { sidCompanyInfoMap, favorites } = rootState.memo;
   const { tradePlans } = rootState.tradePlan;
-  const { scrollTop, marketSortKey, marketSearchText } = rootState.mainPage;
   const { subscription } = rootState.account;
   return {
+    stockInfo: sidStockInfoMap[sid],
+    inventory: stockWarehouse[sid],
+    historicalPrices: sidHistoricalPricesMap[sid],
+    tradeRecords: sidTradeRecordsMap[sid],
+    cashInvested: sidCashInvestedMap[sid],
+    realizedGain: sidGainMap[sid],
     cashDividendRecords,
-    sidStockInfoMap,
-    sidTradeRecordsMap,
-    sidCashInvestedMap,
-    sidHandlingFeeMap,
-    stockWarehouse,
-    sidGainMap,
     sidTotalCashDividendMap,
-    sidHistoricalPricesMap,
-    sidCompanyInfoMap,
-    favorites,
+    companyInfo: sidCompanyInfoMap[sid],
     tradePlans,
+    favorites,
     isWaitingHistoricalPrices,
     isWaitingTradeRecord,
-    mainScrollTop: scrollTop,
-    marketSortKey,
-    marketSearchText,
     subscription,
   };
 }
@@ -89,8 +86,7 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {
   activeModalName: "companyInfo" | "updateOrCreateNote" | null;
-  historicalPriceChartDates: string[];
-  historicalPriceChartValues: number[];
+  historicalPriceLineChart: React.ReactElement | null;
   marketValue: number;
   xirr: number;
   inventoryHistogram: React.ReactElement | null;
@@ -113,13 +109,11 @@ class Details extends React.Component<Props, State> {
   private pageSwitchTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly SCROLLING_THRESHOLD: number = 10;
   private readonly SWITCHING_THRESHOLD: number = 85;
-  private readonly SHOW_FLOATING_INFO_THRESHOLD: number = 120;
   public constructor(props: Props) {
     super(props);
     this.state = {
       activeModalName: null,
-      historicalPriceChartDates: [],
-      historicalPriceChartValues: [],
+      historicalPriceLineChart: null,
       marketValue: 0,
       xirr: 0,
       inventoryHistogram: null,
@@ -160,19 +154,7 @@ class Details extends React.Component<Props, State> {
       .then(() => {
         if (sid !== this.sid) return;
         this.setState({ didStockInfoFail: false });
-        this.setState(
-          (state, props) => {
-            return {
-              marketValue: calculateMarketValue(
-                props.sidStockInfoMap[sid],
-                props.stockWarehouse[sid] || [],
-              ),
-            };
-          },
-          () => {
-            this.setState({ xirr: this.calcXIRR() });
-          },
-        );
+        this.updateMarketValueFromProps();
       })
       .catch(() => {
         if (sid === this.sid) this.setState({ didStockInfoFail: true });
@@ -182,11 +164,7 @@ class Details extends React.Component<Props, State> {
       .unwrap()
       .then(() => {
         if (sid !== this.sid) return;
-        const chartData = this.getHistoricalPriceChartData(sid);
-        this.setState({
-          historicalPriceChartDates: chartData.dates,
-          historicalPriceChartValues: chartData.values,
-        });
+        this.updateHistoricalPriceLineChart();
       });
     this.props.dispatch(fetchCompanyInfo(sid));
 
@@ -212,12 +190,15 @@ class Details extends React.Component<Props, State> {
   }
 
   public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
-    if (prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord) {
+    if (
+      prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord ||
+      prevProps.tradeRecords !== this.props.tradeRecords
+    ) {
       this.setState({
         inventoryHistogram: (
           <InventoryHistogram prices={await this.calcInventoryHistogramChartData()} />
         ),
-        xirr: this.calcXIRR(),
+        xirr: this.xirr,
       });
     }
     if (prevProps.router.params.sid !== this.props.router.params.sid) {
@@ -229,8 +210,7 @@ class Details extends React.Component<Props, State> {
         {
           activeMaterialFact: null,
           didStockInfoFail: false,
-          historicalPriceChartDates: [],
-          historicalPriceChartValues: [],
+          historicalPriceLineChart: null,
           inventoryHistogram: null,
           marketValue: 0,
           xirr: 0,
@@ -242,30 +222,16 @@ class Details extends React.Component<Props, State> {
       return;
     }
     if (
-      prevProps.stockWarehouse !== this.props.stockWarehouse ||
-      prevProps.sidStockInfoMap !== this.props.sidStockInfoMap
+      prevProps.inventory !== this.props.inventory ||
+      prevProps.stockInfo !== this.props.stockInfo
     ) {
-      this.setState(
-        (state, props) => {
-          return {
-            marketValue: calculateMarketValue(
-              props.sidStockInfoMap[this.sid],
-              props.stockWarehouse[this.sid] || [],
-            ),
-          };
-        },
-        () => this.setState({ xirr: this.calcXIRR() }),
-      );
+      this.updateMarketValueFromProps();
     }
     if (
-      prevProps.sidHistoricalPricesMap[this.sid] !==
-      this.props.sidHistoricalPricesMap[this.sid]
+      prevProps.historicalPrices !== this.props.historicalPrices ||
+      prevProps.isWaitingHistoricalPrices !== this.props.isWaitingHistoricalPrices
     ) {
-      const chartData = this.getHistoricalPriceChartData();
-      this.setState({
-        historicalPriceChartDates: chartData.dates,
-        historicalPriceChartValues: chartData.values,
-      });
+      this.updateHistoricalPriceLineChart();
     }
   }
 
@@ -286,7 +252,7 @@ class Details extends React.Component<Props, State> {
   }
 
   public render(): React.ReactNode {
-    const stockInfo = this.props.sidStockInfoMap[this.sid];
+    const stockInfo = this.props.stockInfo;
     return (
       <>
         {this.activeModal}
@@ -297,12 +263,9 @@ class Details extends React.Component<Props, State> {
           ref={this.mainRef}
         >
           {Util.isMobile && (
-            <div
-              className={`${styles.mobile_back_button_container} ${
-                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-                  ? styles.scrolled
-                  : ""
-              }`}
+            <ScrollThresholdContainer
+              className={styles.mobile_back_button_container}
+              scrolledClassName={styles.scrolled}
             >
               <RoundButton
                 onClick={() => this.props.router.navigate(-1)}
@@ -312,42 +275,39 @@ class Details extends React.Component<Props, State> {
               >
                 <IconChevronLeft sideLength="16" />
               </RoundButton>
-            </div>
+            </ScrollThresholdContainer>
           )}
           {Util.isMobile && (
-            <button
-              type="button"
-              className={`${styles.mobile_favorite_button} ${
-                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-                  ? styles.scrolled
-                  : ""
-              } ${this.isFavorite ? styles.active : ""}`}
-              onClick={this.changeFavStatus}
-              aria-label={this.isFavorite ? "取消關注" : "加入關注"}
-            >
-              {this.isFavorite ? (
-                <IconHeartFill sideLength="20" />
-              ) : (
-                <IconHeart sideLength="20" />
+            <ScrollThresholdContainer>
+              {(isScrolled) => (
+                <button
+                  type="button"
+                  className={`${styles.mobile_favorite_button} ${
+                    isScrolled ? styles.scrolled : ""
+                  } ${this.isFavorite ? styles.active : ""}`}
+                  onClick={this.changeFavStatus}
+                  aria-label={this.isFavorite ? "取消關注" : "加入關注"}
+                >
+                  {this.isFavorite ? (
+                    <IconHeartFill sideLength="20" />
+                  ) : (
+                    <IconHeart sideLength="20" />
+                  )}
+                </button>
               )}
-            </button>
+            </ScrollThresholdContainer>
           )}
-          {Util.isMobile && this.sid in this.props.sidStockInfoMap && (
-            <div
-              className={`${styles.stock_brief_info_container} ${
-                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-                  ? styles.show
-                  : ""
-              }`}
+          {Util.isMobile && stockInfo && (
+            <ScrollThresholdContainer
+              className={styles.stock_brief_info_container}
+              scrolledClassName={styles.show}
               onClick={this.handleScrollToTop}
               role="button"
               tabIndex={0}
             >
-              <div className={styles.company_name}>
-                {this.props.sidStockInfoMap[this.sid].name}
-              </div>
+              <div className={styles.company_name}>{stockInfo.name}</div>
               <div className={styles.sid}>{this.sid}</div>
-            </div>
+            </ScrollThresholdContainer>
           )}
           {this.state.didStockInfoFail && (
             <div className={styles.inline_notice}>
@@ -416,16 +376,14 @@ class Details extends React.Component<Props, State> {
                 <h1 className={styles.company_name}>{stockInfo?.name || this.sid}</h1>
                 <div className={styles.sid}>{this.sid}</div>
               </div>
-              <div className={`${styles.price} ${!stockInfo ? styles.skeleton : ""}`}>
-                {stockInfo ? (
-                  <>
-                    <DollarSign />
-                    {stockInfo.close}
-                  </>
-                ) : (
-                  " "
-                )}
-              </div>
+              {stockInfo ? (
+                <div className={styles.price}>
+                  <DollarSign />
+                  {stockInfo.close}
+                </div>
+              ) : (
+                <Skeleton className={styles.price_skeleton} />
+              )}
               <div className={styles.price_meta}>
                 <span className={this.fluctPriceClass}>{this.fluctPriceString}</span>
                 <span className={styles.trade_quantity}>
@@ -456,22 +414,19 @@ class Details extends React.Component<Props, State> {
               )}
             </div>
             <div
-              className={`${styles.historical_price_chart_container} ${
-                this.props.isWaitingHistoricalPrices ? styles.is_waiting : ""
-              }`}
+              className={styles.historical_price_chart_container}
               aria-label="近 60 日收盤價走勢"
             >
+              {this.props.isWaitingHistoricalPrices && (
+                <SkeletonOverlay className={styles.historical_price_chart_overlay} />
+              )}
               {this.showHistoricalPriceEmptyState ? (
                 <div className={styles.empty_chart}>
                   <div>目前沒有歷史價格資料</div>
                   <span>稍後更新後會顯示走勢圖。</span>
                 </div>
               ) : (
-                <HistoricalPriceLineChart
-                  dates={this.state.historicalPriceChartDates}
-                  values={this.state.historicalPriceChartValues}
-                  isWaiting={this.props.isWaitingHistoricalPrices}
-                />
+                this.state.historicalPriceLineChart
               )}
             </div>
           </section>
@@ -611,7 +566,7 @@ class Details extends React.Component<Props, State> {
       return (
         <StockMemoEditor
           sid={this.sid}
-          defaultValue={this.props.sidCompanyInfoMap[this.sid]?.note || ""}
+          defaultValue={this.props.companyInfo?.note || ""}
           hideModal={Util.getHideModalCallback(this)}
         />
       );
@@ -654,42 +609,36 @@ class Details extends React.Component<Props, State> {
   }
 
   private get fluctPriceClass(): string {
-    const fluct_price = this.props.sidStockInfoMap[this.sid]?.fluct_price || 0;
+    const fluct_price = this.props.stockInfo?.fluct_price || 0;
     return `${styles.price_fluctuation} ${
       fluct_price > 0 ? styles.red : fluct_price < 0 ? styles.green : styles.gray
     }`;
   }
 
   private get fluctPriceString(): string {
-    const fluct_price = this.props.sidStockInfoMap[this.sid]?.fluct_price || 0;
+    const fluct_price = this.props.stockInfo?.fluct_price || 0;
+    const close = this.props.stockInfo?.close ?? 0;
     return `${fluct_price > 0 ? "▲" : fluct_price < 0 ? "▼" : "-"}${
       fluct_price !== 0 ? Math.abs(fluct_price) : ""
     }${
       fluct_price !== 0
-        ? ` (${(
-            Math.abs(
-              fluct_price / (this.props.sidStockInfoMap[this.sid].close - fluct_price),
-            ) * 100
-          ).toFixed(2)}%)`
+        ? ` (${(Math.abs(fluct_price / (close - fluct_price)) * 100).toFixed(2)}%)`
         : ""
     }`;
   }
 
   private get tradeVolumeText(): string {
-    return Math.round(
-      (this.props.sidStockInfoMap[this.sid]?.quantity || 0) / 1000,
-    ).toLocaleString();
+    return Math.round((this.props.stockInfo?.quantity || 0) / 1000).toLocaleString();
   }
 
   private get averageCostText(): React.ReactNode {
     if (!this.hasInventory) return "-";
+    const inventoryLength = this.props.inventory?.length ?? 0;
+    if (inventoryLength === 0) return "-";
     return (
       <>
         <DollarSign />
-        {(
-          (this.props.sidCashInvestedMap[this.sid] || 0) /
-          this.props.stockWarehouse[this.sid].length
-        ).toFixed(2)}
+        {((this.props.cashInvested ?? 0) / inventoryLength).toFixed(2)}
       </>
     );
   }
@@ -705,7 +654,7 @@ class Details extends React.Component<Props, State> {
         value: (
           <>
             <DollarSign />
-            {Math.round(this.props.sidCashInvestedMap[this.sid] || 0).toLocaleString()}
+            {Math.round(this.props.cashInvested ?? 0).toLocaleString()}
           </>
         ),
       },
@@ -720,7 +669,7 @@ class Details extends React.Component<Props, State> {
       },
       {
         label: "庫存",
-        value: `${(this.props.stockWarehouse[this.sid] || []).length.toLocaleString()} 股`,
+        value: `${(this.props.inventory || []).length.toLocaleString()} 股`,
       },
       { label: "平均成本", value: this.averageCostText },
       {
@@ -747,7 +696,7 @@ class Details extends React.Component<Props, State> {
   }
 
   private get tradeRecordCount(): number {
-    return (this.props.sidTradeRecordsMap[this.sid] || []).length;
+    return (this.props.tradeRecords ?? []).length;
   }
 
   private get tradePlanCount(): number {
@@ -755,7 +704,7 @@ class Details extends React.Component<Props, State> {
   }
 
   private get companyInfo() {
-    return this.props.sidCompanyInfoMap[this.sid];
+    return this.props.companyInfo;
   }
 
   private get recentMaterialFacts(): MaterialFact[] {
@@ -767,41 +716,72 @@ class Details extends React.Component<Props, State> {
   private get showHistoricalPriceEmptyState(): boolean {
     return (
       !this.props.isWaitingHistoricalPrices &&
-      this.sid in this.props.sidHistoricalPricesMap &&
-      this.state.historicalPriceChartDates.length === 0
+      this.props.historicalPrices !== undefined &&
+      this.getHistoricalPriceChartData().dates.length === 0
     );
   }
 
-  private getHistoricalPriceChartData(sid = this.sid): {
+  private getHistoricalPriceChartData(historicalPrices = this.props.historicalPrices): {
     dates: string[];
     values: number[];
   } {
     const dates: string[] = [];
     const values: number[] = [];
-    if (sid in this.props.sidHistoricalPricesMap) {
-      const data = this.props.sidHistoricalPricesMap[sid].daily;
-      if (data) {
-        const entries = Object.entries(data);
-        entries.sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]));
-        for (const [date, price] of entries) {
-          const formattedDate = date.split("-").slice(1).join("/");
-          dates.push(formattedDate);
-          values.push(price);
-        }
+    const data = historicalPrices?.daily;
+    if (data) {
+      const entries = Object.entries(data);
+      entries.sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]));
+      for (const [date, price] of entries) {
+        const formattedDate = date.split("-").slice(1).join("/");
+        dates.push(formattedDate);
+        values.push(price);
       }
     }
     return { dates, values };
   }
 
   private get hasInventory(): boolean {
-    return Boolean(this.props.stockWarehouse[this.sid]?.length);
+    return Boolean(this.props.inventory?.length);
+  }
+
+  private updateMarketValueFromProps(): void {
+    const marketValue = calculateMarketValue(
+      this.props.stockInfo,
+      this.props.inventory || [],
+    );
+    if (marketValue === this.state.marketValue) return;
+    this.setState({ marketValue }, () => this.setState({ xirr: this.xirr }));
+  }
+
+  private updateHistoricalPriceLineChart(): void {
+    this.setState((state, props) => {
+      const { dates, values } = this.getHistoricalPriceChartData(
+        props.historicalPrices,
+      );
+
+      if (!props.isWaitingHistoricalPrices && dates.length === 0) {
+        return { historicalPriceLineChart: null };
+      }
+
+      return {
+        historicalPriceLineChart: (
+          <HistoricalPriceLineChart
+            dates={dates}
+            values={values}
+            isWaiting={props.isWaitingHistoricalPrices}
+          />
+        ),
+      };
+    });
   }
 
   private async calcInventoryHistogramChartData(sid = this.sid): Promise<number[]> {
     const worker = new Worker(
       new URL("../../../workers/histogramChartWorker.ts", import.meta.url),
     );
-    worker.postMessage(this.props.sidTradeRecordsMap[sid] || []);
+    // Read from store, not props.tradeRecords: loadStockDetail awaits this
+    // worker, and the user may navigate to another stock before it finishes.
+    worker.postMessage(store.getState().tradeRecord.sidTradeRecordsMap[sid] ?? []);
     return await new Promise<number[]>((resolve) => {
       worker.onmessage = (event) => {
         worker.terminate();
@@ -810,9 +790,9 @@ class Details extends React.Component<Props, State> {
     });
   }
 
-  private calcXIRR(): number {
+  private get xirr(): number {
     return Util.calculateXIRR(
-      this.props.sidTradeRecordsMap[this.sid] || [],
+      this.props.tradeRecords ?? [],
       [],
       this.props.cashDividendRecords.filter((record) => record.sid === this.sid),
       this.state.marketValue,
@@ -821,7 +801,7 @@ class Details extends React.Component<Props, State> {
 
   private get finalGain(): number {
     return (
-      (this.props.sidGainMap[this.sid] || 0) +
+      (this.props.realizedGain ?? 0) +
       (this.props.sidTotalCashDividendMap[this.sid] || 0)
     );
   }
@@ -910,18 +890,19 @@ class Details extends React.Component<Props, State> {
       .catch(() => this.setState({ didStockInfoFail: true }));
   };
 
-  private getSwipeSids(): string[] {
+  private get navigableSids(): string[] {
     const tab = this.listName;
     if (tab !== "holding" && tab !== "favorites") return [];
 
+    const { stockInfo, tradeRecord, mainPage } = store.getState();
     const context = {
       tab: tab as MarketTab,
-      searchText: this.props.marketSearchText,
-      sortKey: this.props.marketSortKey,
-      stockWarehouse: this.props.stockWarehouse,
+      searchText: mainPage.marketSearchText,
+      sortKey: mainPage.marketSortKey,
+      stockWarehouse: tradeRecord.stockWarehouse,
       favorites: this.props.favorites,
-      sidStockInfoMap: this.props.sidStockInfoMap,
-      sidTradeRecordsMap: this.props.sidTradeRecordsMap,
+      sidStockInfoMap: stockInfo.sidStockInfoMap,
+      sidTradeRecordsMap: tradeRecord.sidTradeRecordsMap,
       cashDividendRecords: this.props.cashDividendRecords,
     };
     const visibleSids = getVisibleMarketSids(context);
@@ -930,7 +911,7 @@ class Details extends React.Component<Props, State> {
   }
 
   private goToPrevOne(): void {
-    const sids = this.getSwipeSids();
+    const sids = this.navigableSids;
     const prevIndex = sids.findIndex((e) => e === this.sid) - 1;
     if (prevIndex < 0) return;
     // if (navigator.vibrate) navigator.vibrate(10);
@@ -942,7 +923,7 @@ class Details extends React.Component<Props, State> {
   }
 
   private goToNextOne(): void {
-    const sids = this.getSwipeSids();
+    const sids = this.navigableSids;
     const nextIndex = sids.findIndex((e) => e === this.sid) + 1;
     if (nextIndex >= sids.length) return;
     // if (navigator.vibrate) navigator.vibrate(10);
@@ -1030,17 +1011,13 @@ class Details extends React.Component<Props, State> {
         <div className={styles.title}>證券代號</div>
         <div className={styles.content}>{this.sid}</div>
         <div className={styles.title}>公司簡稱</div>
-        <div className={styles.content}>
-          {this.props.sidStockInfoMap[this.sid]?.name || "-"}
-        </div>
+        <div className={styles.content}>{this.props.stockInfo?.name || "-"}</div>
         <div className={styles.title}>主要經營業務</div>
-        <div className={styles.content}>
-          {this.props.sidCompanyInfoMap[this.sid]?.business || "-"}
-        </div>
+        <div className={styles.content}>{this.props.companyInfo?.business || "-"}</div>
         <div className={styles.title}>重大消息</div>
-        {this.props.sidCompanyInfoMap[this.sid]?.material_facts.length > 0 ? (
+        {(this.props.companyInfo?.material_facts.length ?? 0) > 0 ? (
           <div className={styles.material_fact_list}>
-            {this.props.sidCompanyInfoMap[this.sid]?.material_facts.map((m, idx) => {
+            {this.props.companyInfo?.material_facts.map((m, idx) => {
               return (
                 <div className={styles.brief_material_fact} key={idx}>
                   <div className={styles.left}>
@@ -1069,4 +1046,4 @@ class Details extends React.Component<Props, State> {
   }
 }
 
-export default connect(mapStateToProps)(withRouter(Details));
+export default withRouter(connect(mapStateToProps)(Details));

@@ -1,7 +1,6 @@
 @use "../../../design_system" as _;
 
 $detail-layout-width: 1180px;
-$page-bg: #f6f9fc;
 $text-muted: #6f7c8d;
 $switch-single-column-width: 760px;
 
@@ -33,7 +32,7 @@ $switch-single-column-width: 760px;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: $page-bg;
+    background: _.$page-bg;
   }
 
   &.is_switching {
@@ -59,7 +58,7 @@ $switch-single-column-width: 760px;
     gap: 5dvh;
     max-width: none;
     padding: 0 0 calc(_.$footer-height + env(safe-area-inset-bottom) + 92px);
-    background: $page-bg;
+    background: _.$page-bg;
   }
 }
 
@@ -80,7 +79,7 @@ $switch-single-column-width: 760px;
   border: 1px solid _.$black-transparent-3;
   border-radius: 16px;
   background: _.$white-transparent;
-  box-shadow: 0 10px 24px #26394d0a;
+  box-shadow: 0 10px 24px _.$blue-transparent-4;
   animation: section-enter 180ms ease-out both;
 
   @media (max-width: _.$width-780) {
@@ -285,17 +284,15 @@ $switch-single-column-width: 760px;
   }
 }
 
-.skeleton {
+.price_skeleton {
   width: 180px;
+  height: 62px;
+  margin-top: 12px;
   border-radius: 14px;
-  background: linear-gradient(90deg, #e8eef6 0%, #f7faff 45%, #e8eef6 100%);
-  background-size: 220% 100%;
-  animation: shimmer 1200ms ease-in-out infinite;
-}
 
-@keyframes shimmer {
-  to {
-    background-position: -220% 0;
+  @media (max-width: _.$width-780) {
+    height: 48px;
+    margin-top: 10px;
   }
 }
 
@@ -339,33 +336,16 @@ $switch-single-column-width: 760px;
   margin-top: 24px;
   overflow: hidden;
 
-  &.is_waiting::before {
-    content: "";
-    position: absolute;
-    inset: 10px 8px 24px 0;
-    z-index: 1;
-    border-radius: 18px;
-    background:
-      linear-gradient(90deg, #dfe8f2 0%, #f8fbff 50%, #dfe8f2 100%),
-      repeating-linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent 54px,
-        #dce5ef 55px
-      );
-    background-size:
-      220% 100%,
-      100% 100%;
-    animation:
-      shimmer 1300ms ease-in-out infinite,
-      skeleton-fade 160ms ease-out both;
-  }
-
   @media (max-width: _.$width-780) {
     width: 100%;
     height: clamp(238px, 31dvh, 280px);
     margin-top: 18px;
   }
+}
+
+.historical_price_chart_overlay {
+  inset: 10px 8px 24px 0;
+  animation: skeleton-fade 160ms ease-out both;
 }
 
 @keyframes skeleton-fade {

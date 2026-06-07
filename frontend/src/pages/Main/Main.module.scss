@@ -12,7 +12,11 @@
 
   &.white_mobile_shell {
     @media (max-width: _.$width-780) {
-      background: _.$white;
+      background: _.$page-bg;
+
+      & > .body {
+        background: _.$page-bg;
+      }
     }
   }
 
@@ -35,7 +39,7 @@
   }
 
   &.mobile_detail_shell > .body {
-    background: #f6f9fc;
+    background: _.$page-bg;
 
     @media (max-width: _.$width-780) {
       min-height: calc(100dvh - _.$footer-height - env(safe-area-inset-bottom));
@@ -43,7 +47,7 @@
   }
 
   &.mobile_detail_shell {
-    background: #f6f9fc;
+    background: _.$page-bg;
   }
 
   &:not(.mobile_editor_shell) {

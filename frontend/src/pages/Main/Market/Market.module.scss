@@ -683,49 +683,14 @@
 }
 
 .skeleton_card {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 14px;
   width: 100%;
   padding: 16px;
-  overflow: hidden;
   border: 1px solid _.$black-transparent-3;
   border-radius: 16px;
-  background: _.$white-transparent;
-
-  &::before {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      _.$black-transparent-3,
-      transparent
-    );
-    content: "";
-    animation: shimmer 1.2s linear infinite;
-    transform: translateX(-100%);
-  }
-
-  div {
-    position: relative;
-    height: 14px;
-    border-radius: 999px;
-    background: _.$black-transparent-4;
-  }
-
-  div:first-child {
-    width: 54%;
-  }
-
-  div:nth-child(2) {
-    width: 82%;
-  }
-
-  div:last-child {
-    width: 36%;
-  }
+  background: _.$white;
 }
 
 .holding_skeleton {
@@ -734,12 +699,6 @@
 
 .favorite_skeleton {
   height: 108px;
-}
-
-@keyframes shimmer {
-  to {
-    transform: translateX(100%);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -753,11 +712,6 @@
   .stock_card:active,
   .primary_action:active,
   .secondary_action:active {
-    transform: none;
-  }
-
-  .skeleton_card::before {
-    animation: none;
     transform: none;
   }
 }

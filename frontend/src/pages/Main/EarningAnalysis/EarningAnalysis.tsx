@@ -3,7 +3,12 @@ import ReactECharts from "echarts-for-react";
 import React from "react";
 import { connect } from "react-redux";
 
-import { RoundButton, SegmentedControl, SpeedDial } from "../../../components";
+import {
+  RoundButton,
+  ScrollThresholdContainer,
+  SegmentedControl,
+  SpeedDial,
+} from "../../../components";
 import { IconChevronLeft } from "../../../icons";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
@@ -14,8 +19,7 @@ import styles from "./EarningAnalysis.module.scss";
 function mapStateToProps(rootState: RootState) {
   const { sidGainMap } = rootState.tradeRecord;
   const { sidTotalCashDividendMap } = rootState.cashDividend;
-  const { scrollTop } = rootState.mainPage;
-  return { sidGainMap, sidTotalCashDividendMap, mainScrollTop: scrollTop };
+  return { sidGainMap, sidTotalCashDividendMap };
 }
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
@@ -28,8 +32,6 @@ interface State {
 }
 
 class EarningAnalysis extends React.Component<Props, State> {
-  private readonly SHOW_FLOATING_INFO_THRESHOLD: number = 120;
-
   public state: State;
 
   public constructor(props: Props) {
@@ -65,12 +67,9 @@ class EarningAnalysis extends React.Component<Props, State> {
     return (
       <div className={styles.main}>
         {Util.isMobile && <SpeedDial />}
-        <div
-          className={`${styles.back_button_container} ${
-            this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-              ? styles.scrolled
-              : ""
-          }`}
+        <ScrollThresholdContainer
+          className={styles.back_button_container}
+          scrolledClassName={styles.scrolled}
         >
           <RoundButton
             onClick={() => this.props.router.navigate(-1)}
@@ -79,7 +78,7 @@ class EarningAnalysis extends React.Component<Props, State> {
           >
             <IconChevronLeft sideLength="16" />
           </RoundButton>
-        </div>
+        </ScrollThresholdContainer>
         <div className={styles.floating_pill_wrapper}>
           <SegmentedControl
             label="收益分析分類"

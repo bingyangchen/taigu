@@ -1,7 +1,6 @@
 import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
-import { connect } from "react-redux";
 
 import Util from "../../utils/util";
 import {
@@ -11,11 +10,7 @@ import {
 
 const HISTORICAL_PRICE_FLAT_COLOR = "#888888";
 
-function mapStateToProps() {
-  return {};
-}
-
-interface Props extends ReturnType<typeof mapStateToProps> {
+interface Props {
   dates: string[];
   values: number[];
   isWaiting: boolean;
@@ -26,7 +21,7 @@ interface State {
   fakeValues: number[];
 }
 
-class HistoricalPriceLineChart extends React.Component<Props, State> {
+class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
@@ -203,4 +198,4 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
   }
 }
 
-export default connect(mapStateToProps)(HistoricalPriceLineChart);
+export default HistoricalPriceLineChart;

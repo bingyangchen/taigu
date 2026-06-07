@@ -9,6 +9,10 @@
   overflow: hidden;
   background-color: _.$white;
   user-select: none;
+
+  @media (max-width: _.$width-780) {
+    background-color: transparent;
+  }
 }
 
 .header {

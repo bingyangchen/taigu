@@ -60,6 +60,10 @@ a {
     background-color: _.$main-shell-gradient-top;
   }
 
+  body.main-page-white-shell-scroll {
+    background-color: _.$page-bg;
+  }
+
   body.main-page-document-scroll #root {
     min-height: 100dvh;
     height: auto;

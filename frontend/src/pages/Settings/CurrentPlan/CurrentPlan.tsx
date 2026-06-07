@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { BeautifulBlock, Button, Modal } from "../../../components";
+import { BeautifulBlock, Button, Modal, Skeleton } from "../../../components";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { fetchAccountInfo } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
@@ -397,32 +397,32 @@ function CurrentPlanSkeleton(): React.ReactElement {
       <BeautifulBlock title="目前方案">
         <div className={styles.summarySkeleton} aria-busy="true" aria-live="polite">
           <div className={styles.skeletonHeader}>
-            <span className={styles.skeletonLineLarge} />
-            <span className={styles.skeletonBadge} />
-            <span className={styles.skeletonLineSmall} />
+            <Skeleton size="large" />
+            <Skeleton size="badge" />
+            <Skeleton size="small" />
           </div>
-          <span className={styles.skeletonLineFull} />
-          <span className={styles.skeletonLineMedium} />
+          <Skeleton size="full" />
+          <Skeleton size="medium" />
           <div className={styles.skeletonRows}>
-            <span />
-            <span />
+            <Skeleton width="min(100%, 340px)" height={17} />
+            <Skeleton width="min(86%, 300px)" height={17} />
           </div>
         </div>
       </BeautifulBlock>
       <BeautifulBlock title="方案選擇">
         <div className={styles.planSelectionSkeleton} aria-hidden="true">
-          <span className={styles.skeletonLineLarge} />
-          <span className={styles.skeletonLineFull} />
-          <span className={styles.skeletonLineMedium} />
+          <Skeleton size="large" />
+          <Skeleton size="full" />
+          <Skeleton size="medium" />
           <div className={styles.skeletonBenefitGrid}>
-            <span />
-            <span />
-            <span />
-            <span />
+            <Skeleton height={16} />
+            <Skeleton height={16} />
+            <Skeleton height={16} />
+            <Skeleton height={16} />
           </div>
           <div className={styles.skeletonPlanOptions}>
-            <span />
-            <span />
+            <Skeleton height={116} borderRadius={8} />
+            <Skeleton height={116} borderRadius={8} />
           </div>
         </div>
       </BeautifulBlock>

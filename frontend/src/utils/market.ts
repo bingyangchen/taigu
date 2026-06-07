@@ -1,12 +1,41 @@
-import type { MarketSortKey, MarketTab } from "../redux/slices/MainPageSlice";
-import { calculateMarketValue } from "../redux/slices/StockInfoSlice";
 import type {
   CashDividendRecord,
+  MarketSortKey,
+  MarketTab,
   StockInfo,
   StockWarehouse,
   TradeRecord,
 } from "../types";
 import Util from "./util";
+
+export const calculateMarketValue = (
+  stockInfo: StockInfo | undefined,
+  inventoryCosts: number[],
+): number => {
+  return (stockInfo?.close ?? 0) * inventoryCosts.length;
+};
+
+export const getSidMarketValueMap = (
+  sidStockInfoMap: { [sid: string]: StockInfo },
+  stockWarehouse: { [sid: string]: number[] },
+): { [sid: string]: number } => {
+  const result: { [sid: string]: number } = {};
+  for (const [sid, inventoryCosts] of Object.entries(stockWarehouse)) {
+    result[sid] = calculateMarketValue(sidStockInfoMap[sid], inventoryCosts);
+  }
+  return result;
+};
+
+export const getTotalMarketValue = (
+  sidStockInfoMap: { [sid: string]: StockInfo },
+  stockWarehouse: { [sid: string]: number[] },
+): number => {
+  let result = 0;
+  for (const [sid, inventoryCosts] of Object.entries(stockWarehouse)) {
+    result += calculateMarketValue(sidStockInfoMap[sid], inventoryCosts);
+  }
+  return result;
+};
 
 export interface MarketSidsContext {
   tab: MarketTab;
@@ -35,14 +64,6 @@ export function getStockName(
   return (
     sidStockInfoMap[sid]?.name ?? sidTradeRecordsMap[sid]?.[0]?.company_name ?? sid
   );
-}
-
-export function getStockMarketValue(
-  sid: string,
-  sidStockInfoMap: MarketSidsContext["sidStockInfoMap"],
-  stockWarehouse: StockWarehouse,
-): number {
-  return calculateMarketValue(sidStockInfoMap[sid], stockWarehouse[sid] ?? []);
 }
 
 export function getStockXirr(
@@ -109,8 +130,14 @@ function compareMarketSids(
     );
   }
   return (
-    getStockMarketValue(rightSid, context.sidStockInfoMap, context.stockWarehouse) -
-    getStockMarketValue(leftSid, context.sidStockInfoMap, context.stockWarehouse)
+    calculateMarketValue(
+      context.sidStockInfoMap[rightSid],
+      context.stockWarehouse[rightSid] ?? [],
+    ) -
+    calculateMarketValue(
+      context.sidStockInfoMap[leftSid],
+      context.stockWarehouse[leftSid] ?? [],
+    )
   );
 }
 

@@ -28,6 +28,10 @@
   user-select: none;
   overflow: hidden;
 
+  @media (max-width: _.$width-780) {
+    background-color: _.$page-bg;
+  }
+
   & > .page_header {
     display: flex;
     align-items: center;
@@ -36,6 +40,10 @@
     padding: env(safe-area-inset-top) 8px 0;
     border-bottom: 1px solid _.$black-transparent-3;
     background-color: _.$noisy-white;
+
+    @media (max-width: _.$width-780) {
+      background-color: _.$page-bg;
+    }
     flex-shrink: 0;
 
     & > .page_search_input_outer {

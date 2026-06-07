@@ -12,6 +12,7 @@ import {
   InfiniteScrollSentinel,
   ListRow,
   RoundButton,
+  ScrollThresholdContainer,
   SegmentedControl,
   SpeedDial,
 } from "../../../components";
@@ -25,12 +26,10 @@ import Util from "../../../utils/util";
 import styles from "./HandlingFee.module.scss";
 
 function mapStateToProps(rootState: RootState) {
-  const { scrollTop } = rootState.mainPage;
   const { totalHandlingFee, tradeRecords } = rootState.tradeRecord;
   const { handlingFeeDiscountRecords, isWaiting: isWaitingDiscount } =
     rootState.handlingFeeDiscount;
   return {
-    mainScrollTop: scrollTop,
     totalHandlingFee,
     tradeRecords,
     handlingFeeDiscountRecords,
@@ -52,7 +51,6 @@ interface State {
 
 class HandlingFee extends React.Component<Props, State> {
   public state: State;
-  private readonly SHOW_FLOATING_INFO_THRESHOLD: number = 120;
   private readonly TIME_SPAN_OPTIONS_IN_DAYS: number[] = [182, 365, 1825, Infinity];
 
   public constructor(props: Props) {
@@ -94,12 +92,9 @@ class HandlingFee extends React.Component<Props, State> {
         <div className={styles.main}>
           {Util.isMobile && <SpeedDial />}
           {Util.isMobile && (
-            <div
-              className={`${styles.mobile_back_button_container} ${
-                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-                  ? styles.scrolled
-                  : ""
-              }`}
+            <ScrollThresholdContainer
+              className={styles.mobile_back_button_container}
+              scrolledClassName={styles.scrolled}
             >
               <RoundButton
                 onClick={() => this.props.router.navigate(-1)}
@@ -108,7 +103,7 @@ class HandlingFee extends React.Component<Props, State> {
               >
                 <IconChevronLeft sideLength="16" />
               </RoundButton>
-            </div>
+            </ScrollThresholdContainer>
           )}
           <div className={styles.container}>
             {!Util.isMobile && (

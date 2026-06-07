@@ -5,7 +5,9 @@ import {
   HistoricalPriceLineChart,
   MarketIndexIntradayLineChart,
   RoundButton,
+  ScrollThresholdContainer,
   SegmentedControl,
+  SkeletonOverlay,
   SpeedDial,
 } from "../../../components";
 import { IconChevronLeft } from "../../../icons";
@@ -33,7 +35,7 @@ function mapStateToProps(rootState: RootState) {
     marketIndexHistoricalPricesMap,
     isWaitingMarketIndexHistoricalPrices,
   } = rootState.stockInfo;
-  const { scrollTop, marketIndexHistoricalDaysToShow } = rootState.mainPage;
+  const { marketIndexHistoricalDaysToShow } = rootState.mainPage;
   return {
     realtimePriceDate,
     tseIndexRealtimePrices,
@@ -41,7 +43,6 @@ function mapStateToProps(rootState: RootState) {
     marketIndexHistoricalPricesMap,
     isWaitingMarketIndexHistoricalPrices,
     marketIndexHistoricalDaysToShow,
-    mainScrollTop: scrollTop,
   };
 }
 
@@ -51,12 +52,16 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {
   chartMode: ChartMode;
+  intradayLineChart: React.ReactElement | null;
+  historicalLineChart: React.ReactElement | null;
 }
 
 class MarketIndexDetails extends React.Component<Props, State> {
-  private readonly SHOW_FLOATING_INFO_THRESHOLD = 120;
-
-  public state: State = { chartMode: "intraday" };
+  public state: State = {
+    chartMode: "intraday",
+    intradayLineChart: null,
+    historicalLineChart: null,
+  };
 
   public componentDidMount(): void {
     if (!this.isValidMarket) {
@@ -64,6 +69,48 @@ class MarketIndexDetails extends React.Component<Props, State> {
       return;
     }
     this.props.dispatch(fetchMarketIndexHistoricalPrices({ market: this.market }));
+    this.updateIntradayLineChart();
+    this.updateHistoricalLineChart();
+  }
+
+  public componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevState: Readonly<State>,
+  ): void {
+    const marketChanged =
+      prevProps.router.params.market !== this.props.router.params.market;
+    const realtimePricesChanged =
+      this.market === "tse"
+        ? prevProps.tseIndexRealtimePrices !== this.props.tseIndexRealtimePrices
+        : prevProps.otcIndexRealtimePrices !== this.props.otcIndexRealtimePrices;
+
+    if (
+      (this.state.chartMode === "intraday" &&
+        (realtimePricesChanged || marketChanged)) ||
+      (prevState.chartMode !== this.state.chartMode &&
+        this.state.chartMode === "intraday")
+    ) {
+      this.updateIntradayLineChart();
+    }
+
+    const historicalDataChanged =
+      prevProps.marketIndexHistoricalPricesMap !==
+        this.props.marketIndexHistoricalPricesMap ||
+      prevProps.marketIndexHistoricalDaysToShow !==
+        this.props.marketIndexHistoricalDaysToShow ||
+      prevProps.isWaitingMarketIndexHistoricalPrices !==
+        this.props.isWaitingMarketIndexHistoricalPrices ||
+      prevProps.realtimePriceDate !== this.props.realtimePriceDate ||
+      realtimePricesChanged;
+
+    if (
+      (this.state.chartMode === "historical" &&
+        (historicalDataChanged || marketChanged)) ||
+      (prevState.chartMode !== this.state.chartMode &&
+        this.state.chartMode === "historical")
+    ) {
+      this.updateHistoricalLineChart();
+    }
   }
 
   public render(): React.ReactNode {
@@ -72,12 +119,9 @@ class MarketIndexDetails extends React.Component<Props, State> {
     return (
       <div className={styles.main}>
         {Util.isMobile && <SpeedDial />}
-        <div
-          className={`${styles.back_button_container} ${
-            this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-              ? styles.scrolled
-              : ""
-          }`}
+        <ScrollThresholdContainer
+          className={styles.back_button_container}
+          scrolledClassName={styles.scrolled}
         >
           <RoundButton
             onClick={() => this.props.router.navigate(-1)}
@@ -86,9 +130,9 @@ class MarketIndexDetails extends React.Component<Props, State> {
           >
             <IconChevronLeft sideLength="16" />
           </RoundButton>
-        </div>
+        </ScrollThresholdContainer>
         <div className={styles.content}>
-          <div className={styles.header_card}>
+          <div className={`${styles.block} ${styles.header_card}`}>
             <div className={styles.title}>{this.marketLabel}</div>
             <div className={styles.date}>{this.props.realtimePriceDate}</div>
             <div className={`${styles.price_row} ${this.priceClass}`}>
@@ -98,7 +142,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
               </div>
             </div>
           </div>
-          <div className={styles.chart_card}>
+          <div className={`${styles.block} ${styles.chart_card}`}>
             <div className={styles.controls}>
               <SegmentedControl
                 label="指數圖表類型"
@@ -111,17 +155,17 @@ class MarketIndexDetails extends React.Component<Props, State> {
               />
             </div>
             <div
-              className={`${styles.chart_container} ${
-                this.state.chartMode === "historical" && this.showHistoricalLoadingState
-                  ? styles.is_waiting
-                  : ""
-              }`}
+              className={styles.chart_container}
               aria-label={
                 this.state.chartMode === "intraday"
                   ? "今日走勢"
                   : `${this.historicalChartAriaLabel}收盤價走勢`
               }
             >
+              {this.state.chartMode === "historical" &&
+                this.showHistoricalLoadingState && (
+                  <SkeletonOverlay className={styles.chart_overlay} />
+                )}
               {this.state.chartMode === "intraday" ? (
                 this.showIntradayEmptyState ? (
                   <div className={styles.empty_chart}>
@@ -129,10 +173,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
                     <span>開盤後會顯示今日走勢。</span>
                   </div>
                 ) : (
-                  <MarketIndexIntradayLineChart
-                    data={this.intradayChartData}
-                    prevClosePrice={this.realtimePrices.yesterday_price ?? 0}
-                  />
+                  this.state.intradayLineChart
                 )
               ) : this.showHistoricalEmptyState ? (
                 <div className={styles.empty_chart}>
@@ -140,11 +181,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
                   <span>收盤後會開始累積歷史資料。</span>
                 </div>
               ) : (
-                <HistoricalPriceLineChart
-                  dates={this.historicalChartData.dates}
-                  values={this.historicalChartData.values}
-                  isWaiting={this.showHistoricalLoadingState}
-                />
+                this.state.historicalLineChart
               )}
             </div>
             {this.state.chartMode === "historical" &&
@@ -188,12 +225,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
   }
 
   private get latestPrice(): number {
-    const numbers = Object.keys(this.realtimePrices)
-      .map((key) => parseInt(key))
-      .filter((number) => !Number.isNaN(number));
-    if (numbers.length === 0) return 0;
-    const maxNum = Math.max(...numbers);
-    return this.realtimePrices[maxNum.toString()] ?? 0;
+    return MarketIndexDetails.getLatestRealtimePrice(this.realtimePrices);
   }
 
   private get priceClass(): string {
@@ -218,21 +250,8 @@ class MarketIndexDetails extends React.Component<Props, State> {
     return `(${fluctPercent !== 0 ? Math.abs(fluctPercent) + "%" : "-"})`;
   }
 
-  private get intradayChartData(): [number, number | null][] {
-    const realtimePrices = this.realtimePrices;
-    const chartData: [number, number | null][] = [];
-    for (let i = 0; i <= 270; i++) {
-      if (Object.prototype.hasOwnProperty.call(realtimePrices, i.toString())) {
-        chartData.push([i, realtimePrices[i.toString()]]);
-      } else {
-        chartData.push([i, null]);
-      }
-    }
-    return chartData;
-  }
-
   private get showIntradayEmptyState(): boolean {
-    return !this.intradayChartData.some(([, price]) => price !== null);
+    return !MarketIndexDetails.hasRealtimeIntradayData(this.realtimePrices);
   }
 
   private get showHistoricalLoadingState(): boolean {
@@ -259,17 +278,133 @@ class MarketIndexDetails extends React.Component<Props, State> {
     return "近 1 年";
   }
 
-  private get historicalChartData(): { dates: string[]; values: number[] } {
-    const daily = this.props.marketIndexHistoricalPricesMap[this.market] ?? {};
+  private buildIntradayChartData(
+    realtimePrices: Props["tseIndexRealtimePrices"],
+  ): [number, number | null][] {
+    const chartData: [number, number | null][] = [];
+    for (let i = 0; i <= 270; i++) {
+      if (Object.prototype.hasOwnProperty.call(realtimePrices, i.toString())) {
+        chartData.push([i, realtimePrices[i.toString()]]);
+      } else {
+        chartData.push([i, null]);
+      }
+    }
+    return chartData;
+  }
+
+  private buildHistoricalChartData(
+    marketIndexHistoricalPricesMap: Props["marketIndexHistoricalPricesMap"],
+    marketIndexHistoricalDaysToShow: number,
+    market: MarketId,
+    realtimePriceDate: string,
+    realtimePrices: Props["tseIndexRealtimePrices"],
+  ): { dates: string[]; values: number[] } {
+    // Merge today's realtime price for display only. Do not persist this to Redux
+    // or LocalDatabase, otherwise incremental fetch `since` would be wrong.
+    const daily = { ...(marketIndexHistoricalPricesMap[market] ?? {}) };
+    const latestRealtimePrice =
+      MarketIndexDetails.getLatestRealtimePrice(realtimePrices);
+    if (
+      MarketIndexDetails.hasRealtimeIntradayData(realtimePrices) &&
+      latestRealtimePrice > 0 &&
+      realtimePriceDate &&
+      realtimePriceDate !== "0000-00-00"
+    ) {
+      const todayDate = new Date(Date.parse(realtimePriceDate)).toLocaleDateString(
+        "af",
+      );
+      daily[todayDate] = latestRealtimePrice;
+    }
+
     const sortedDates = Object.keys(daily).sort(
       (a, b) => Util.dateStringToDate(a).getTime() - Util.dateStringToDate(b).getTime(),
     );
-    const daysToShow = Math.min(
-      this.props.marketIndexHistoricalDaysToShow,
-      sortedDates.length,
-    );
+    const daysToShow = Math.min(marketIndexHistoricalDaysToShow, sortedDates.length);
     const filteredDates = sortedDates.slice(-daysToShow);
     return { dates: filteredDates, values: filteredDates.map((date) => daily[date]) };
+  }
+
+  private static getLatestRealtimePrice(
+    realtimePrices: Props["tseIndexRealtimePrices"],
+  ): number {
+    const numbers = Object.keys(realtimePrices)
+      .map((key) => parseInt(key))
+      .filter((number) => !Number.isNaN(number));
+    if (numbers.length === 0) return 0;
+    const maxNum = Math.max(...numbers);
+    return realtimePrices[maxNum.toString()] ?? 0;
+  }
+
+  private static hasRealtimeIntradayData(
+    realtimePrices: Props["tseIndexRealtimePrices"],
+  ): boolean {
+    return Object.keys(realtimePrices).some((key) => !Number.isNaN(parseInt(key)));
+  }
+
+  private updateIntradayLineChart(): void {
+    this.setState((state, props) => {
+      const market = props.router.params.market as MarketId;
+      if (market !== "tse" && market !== "otc") {
+        return { intradayLineChart: null };
+      }
+
+      const realtimePrices =
+        market === "tse" ? props.tseIndexRealtimePrices : props.otcIndexRealtimePrices;
+      const chartData = this.buildIntradayChartData(realtimePrices);
+      const hasPlottedData = chartData.some(([, price]) => price !== null);
+      if (!hasPlottedData) {
+        return { intradayLineChart: null };
+      }
+
+      return {
+        intradayLineChart: (
+          <MarketIndexIntradayLineChart
+            data={chartData}
+            prevClosePrice={realtimePrices.yesterday_price ?? 0}
+          />
+        ),
+      };
+    });
+  }
+
+  private updateHistoricalLineChart(): void {
+    this.setState((state, props) => {
+      const market = props.router.params.market as MarketId;
+      if (market !== "tse" && market !== "otc") {
+        return { historicalLineChart: null };
+      }
+
+      const daily = props.marketIndexHistoricalPricesMap[market];
+      const isEmpty =
+        !props.isWaitingMarketIndexHistoricalPrices &&
+        (daily === undefined || Object.keys(daily).length === 0);
+      if (isEmpty) {
+        return { historicalLineChart: null };
+      }
+
+      const realtimePrices =
+        market === "tse" ? props.tseIndexRealtimePrices : props.otcIndexRealtimePrices;
+      const { dates, values } = this.buildHistoricalChartData(
+        props.marketIndexHistoricalPricesMap,
+        props.marketIndexHistoricalDaysToShow,
+        market,
+        props.realtimePriceDate,
+        realtimePrices,
+      );
+      const isWaiting =
+        props.isWaitingMarketIndexHistoricalPrices &&
+        (daily === undefined || Object.keys(daily).length === 0);
+
+      return {
+        historicalLineChart: (
+          <HistoricalPriceLineChart
+            dates={dates}
+            values={values}
+            isWaiting={isWaiting}
+          />
+        ),
+      };
+    });
   }
 
   private handleHistoricalTimeSpanChange = (value: string): void => {

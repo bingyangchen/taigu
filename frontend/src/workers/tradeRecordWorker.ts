@@ -1,7 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-import { TradeRecordState } from "../redux/slices/TradeRecordSlice";
-import { StockWarehouse, TradeRecord } from "../types";
+import { StockWarehouse, TradeRecord, TradeRecordState } from "../types";
 import Util from "../utils/util";
 
 self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
