@@ -1,7 +1,5 @@
 @use "../../../design_system" as _;
 
-$page-bg: #f6f9fc;
-
 .main {
   position: relative;
   display: flex;
@@ -17,11 +15,11 @@ $page-bg: #f6f9fc;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: $page-bg;
+    background: _.$page-bg;
   }
 
   @media (max-width: _.$width-780) {
-    background: $page-bg;
+    background: _.$page-bg;
   }
 
   @media (max-width: _.$width-512) {

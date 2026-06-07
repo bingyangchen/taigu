@@ -183,6 +183,7 @@ class Main extends React.Component<Props, State> {
     window.removeEventListener("scroll", this.handleScroll);
     document.body.classList.remove("main-page-document-scroll");
     document.body.classList.remove("main-page-gradient-scroll");
+    document.body.classList.remove("main-page-white-shell-scroll");
     if (this.scrollAnimationFrameId !== null) {
       cancelAnimationFrame(this.scrollAnimationFrameId);
       this.scrollAnimationFrameId = null;
@@ -253,6 +254,10 @@ class Main extends React.Component<Props, State> {
     document.body.classList.toggle(
       "main-page-gradient-scroll",
       this.shouldUseDocumentScroll && !this.shouldUseWhiteMobileShell,
+    );
+    document.body.classList.toggle(
+      "main-page-white-shell-scroll",
+      this.shouldUseDocumentScroll && this.shouldUseWhiteMobileShell,
     );
   }
 

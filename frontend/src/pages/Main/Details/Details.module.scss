@@ -1,7 +1,6 @@
 @use "../../../design_system" as _;
 
 $detail-layout-width: 1180px;
-$page-bg: #f6f9fc;
 $text-muted: #6f7c8d;
 $switch-single-column-width: 760px;
 
@@ -33,7 +32,7 @@ $switch-single-column-width: 760px;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: $page-bg;
+    background: _.$page-bg;
   }
 
   &.is_switching {
@@ -59,7 +58,7 @@ $switch-single-column-width: 760px;
     gap: 5dvh;
     max-width: none;
     padding: 0 0 calc(_.$footer-height + env(safe-area-inset-bottom) + 92px);
-    background: $page-bg;
+    background: _.$page-bg;
   }
 }
 
