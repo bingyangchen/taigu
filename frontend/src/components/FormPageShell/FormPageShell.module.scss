@@ -60,10 +60,4 @@
   padding: 8px 6px;
   color: _.$blue !important;
   font-weight: 600;
-
-  &:disabled,
-  &[data-disabled] {
-    color: _.$light-gray !important;
-    background-color: transparent !important;
-  }
 }

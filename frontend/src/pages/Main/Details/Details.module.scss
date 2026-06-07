@@ -718,18 +718,18 @@ $switch-single-column-width: 760px;
   transition: all 180ms ease;
 
   & > * {
-    min-width: 44px !important;
-    width: 44px !important;
-    height: 44px !important;
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
   }
 
   &.scrolled > * {
-    border-radius: 50% !important;
-    background-color: #ffffffc9 !important;
-    border: 1px solid $border !important;
-    box-shadow: 0 8px 20px #26394d18 !important;
-    backdrop-filter: blur(10px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+    border-radius: 50%;
+    background-color: #ffffffc9;
+    border: 1px solid $border;
+    box-shadow: 0 8px 20px #26394d18;
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
   }
 }
 
