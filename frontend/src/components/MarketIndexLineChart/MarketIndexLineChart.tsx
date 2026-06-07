@@ -27,6 +27,7 @@ class MarketIndexLineChart extends React.Component<Props, State> {
         <ReactECharts
           option={this.chartOption}
           style={{ height: "100%", width: "100%" }}
+          notMerge={true}
         />
       )
     );

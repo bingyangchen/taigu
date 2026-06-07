@@ -10,6 +10,7 @@ import {
   Modal,
   PercentSign,
   RoundButton,
+  ScrollThresholdContainer,
   SpeedDial,
   StockMemoEditor,
 } from "../../../components";
@@ -59,7 +60,7 @@ function mapStateToProps(rootState: RootState) {
   const { sidHistoricalPricesMap, isWaitingHistoricalPrices } = rootState.stockInfo;
   const { sidCompanyInfoMap, favorites } = rootState.memo;
   const { tradePlans } = rootState.tradePlan;
-  const { scrollTop, marketSortKey, marketSearchText } = rootState.mainPage;
+  const { marketSortKey, marketSearchText } = rootState.mainPage;
   const { subscription } = rootState.account;
   return {
     cashDividendRecords,
@@ -76,7 +77,6 @@ function mapStateToProps(rootState: RootState) {
     tradePlans,
     isWaitingHistoricalPrices,
     isWaitingTradeRecord,
-    mainScrollTop: scrollTop,
     marketSortKey,
     marketSearchText,
     subscription,
@@ -113,7 +113,6 @@ class Details extends React.Component<Props, State> {
   private pageSwitchTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly SCROLLING_THRESHOLD: number = 10;
   private readonly SWITCHING_THRESHOLD: number = 85;
-  private readonly SHOW_FLOATING_INFO_THRESHOLD: number = 120;
   public constructor(props: Props) {
     super(props);
     this.state = {
@@ -297,12 +296,9 @@ class Details extends React.Component<Props, State> {
           ref={this.mainRef}
         >
           {Util.isMobile && (
-            <div
-              className={`${styles.mobile_back_button_container} ${
-                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-                  ? styles.scrolled
-                  : ""
-              }`}
+            <ScrollThresholdContainer
+              className={styles.mobile_back_button_container}
+              scrolledClassName={styles.scrolled}
             >
               <RoundButton
                 onClick={() => this.props.router.navigate(-1)}
@@ -312,33 +308,32 @@ class Details extends React.Component<Props, State> {
               >
                 <IconChevronLeft sideLength="16" />
               </RoundButton>
-            </div>
+            </ScrollThresholdContainer>
           )}
           {Util.isMobile && (
-            <button
-              type="button"
-              className={`${styles.mobile_favorite_button} ${
-                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-                  ? styles.scrolled
-                  : ""
-              } ${this.isFavorite ? styles.active : ""}`}
-              onClick={this.changeFavStatus}
-              aria-label={this.isFavorite ? "取消關注" : "加入關注"}
-            >
-              {this.isFavorite ? (
-                <IconHeartFill sideLength="20" />
-              ) : (
-                <IconHeart sideLength="20" />
+            <ScrollThresholdContainer>
+              {(isScrolled) => (
+                <button
+                  type="button"
+                  className={`${styles.mobile_favorite_button} ${
+                    isScrolled ? styles.scrolled : ""
+                  } ${this.isFavorite ? styles.active : ""}`}
+                  onClick={this.changeFavStatus}
+                  aria-label={this.isFavorite ? "取消關注" : "加入關注"}
+                >
+                  {this.isFavorite ? (
+                    <IconHeartFill sideLength="20" />
+                  ) : (
+                    <IconHeart sideLength="20" />
+                  )}
+                </button>
               )}
-            </button>
+            </ScrollThresholdContainer>
           )}
           {Util.isMobile && this.sid in this.props.sidStockInfoMap && (
-            <div
-              className={`${styles.stock_brief_info_container} ${
-                this.props.mainScrollTop > this.SHOW_FLOATING_INFO_THRESHOLD
-                  ? styles.show
-                  : ""
-              }`}
+            <ScrollThresholdContainer
+              className={styles.stock_brief_info_container}
+              scrolledClassName={styles.show}
               onClick={this.handleScrollToTop}
               role="button"
               tabIndex={0}
@@ -347,7 +342,7 @@ class Details extends React.Component<Props, State> {
                 {this.props.sidStockInfoMap[this.sid].name}
               </div>
               <div className={styles.sid}>{this.sid}</div>
-            </div>
+            </ScrollThresholdContainer>
           )}
           {this.state.didStockInfoFail && (
             <div className={styles.inline_notice}>

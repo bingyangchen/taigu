@@ -63,6 +63,8 @@ class Main extends React.Component<Props, State> {
   private mainRef: React.RefObject<HTMLDivElement>;
   private subpages: Subpage[];
   private fetchStockInfoTimer: ReturnType<typeof setTimeout> | null;
+  private scrollAnimationFrameId: number | null = null;
+  private lastDispatchedScrollTop: number | null = null;
   public constructor(props: Props) {
     super(props);
     this.state = { isLoading: true, prevLocationPathname: null };
@@ -155,6 +157,8 @@ class Main extends React.Component<Props, State> {
       this.syncMobileScrollMode();
       if (this.shouldUseDocumentScroll) window.scrollTo(0, 0);
       else this.mainRef.current?.scrollTo(0, 0);
+      this.lastDispatchedScrollTop = 0;
+      this.props.dispatch(updateScrollTop(0));
       this.props.dispatch(fetchAccountInfo());
     }
 
@@ -179,6 +183,10 @@ class Main extends React.Component<Props, State> {
     window.removeEventListener("scroll", this.handleScroll);
     document.body.classList.remove("main-page-document-scroll");
     document.body.classList.remove("main-page-gradient-scroll");
+    if (this.scrollAnimationFrameId !== null) {
+      cancelAnimationFrame(this.scrollAnimationFrameId);
+      this.scrollAnimationFrameId = null;
+    }
     if (this.fetchStockInfoTimer) {
       clearInterval(this.fetchStockInfoTimer);
       this.fetchStockInfoTimer = null;
@@ -222,12 +230,19 @@ class Main extends React.Component<Props, State> {
   }
 
   private handleScroll = (): void => {
-    const scrollTop = this.shouldUseDocumentScroll
-      ? window.scrollY
-      : this.mainRef.current?.scrollTop;
-    if (scrollTop === undefined) return;
+    if (this.scrollAnimationFrameId !== null) return;
 
-    this.props.dispatch(updateScrollTop(scrollTop));
+    this.scrollAnimationFrameId = requestAnimationFrame(() => {
+      this.scrollAnimationFrameId = null;
+
+      const scrollTop = this.shouldUseDocumentScroll
+        ? window.scrollY
+        : this.mainRef.current?.scrollTop;
+      if (scrollTop === undefined || scrollTop === this.lastDispatchedScrollTop) return;
+
+      this.lastDispatchedScrollTop = scrollTop;
+      this.props.dispatch(updateScrollTop(scrollTop));
+    });
   };
 
   private syncMobileScrollMode(): void {

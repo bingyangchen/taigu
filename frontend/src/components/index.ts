@@ -34,6 +34,7 @@ export { default as PercentSign } from "./PercentSign/PercentSign";
 export { default as PlanUpsellModal } from "./PlanUpsellModal/PlanUpsellModal";
 export { default as RoundButton } from "./RoundButton/RoundButton";
 export { default as ScrollAwareFloatingControls } from "./ScrollAwareFloatingControls/ScrollAwareFloatingControls";
+export { default as ScrollThresholdContainer } from "./ScrollThresholdContainer/ScrollThresholdContainer";
 export { default as SearchKeywordInput } from "./SearchKeywordInput/SearchKeywordInput";
 export { default as SegmentedControl } from "./SegmentedControl/SegmentedControl";
 export { default as SettingsSideBar } from "./SettingsSideBar/SettingsSideBar";
