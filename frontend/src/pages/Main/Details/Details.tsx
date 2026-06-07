@@ -53,32 +53,27 @@ function mapStateToProps(rootState: RootState, ownProps: IRouter) {
     sidTradeRecordsMap,
     sidGainMap,
     sidCashInvestedMap,
-    sidHandlingFeeMap,
     stockWarehouse,
     isWaiting: isWaitingTradeRecord,
   } = rootState.tradeRecord;
   const { cashDividendRecords, sidTotalCashDividendMap } = rootState.cashDividend;
   const { sidCompanyInfoMap, favorites } = rootState.memo;
   const { tradePlans } = rootState.tradePlan;
-  const { marketSortKey, marketSearchText } = rootState.mainPage;
   const { subscription } = rootState.account;
   return {
-    cashDividendRecords,
     stockInfo: sidStockInfoMap[sid],
     inventory: stockWarehouse[sid],
-    sidTradeRecordsMap,
-    sidCashInvestedMap,
-    sidHandlingFeeMap,
-    sidGainMap,
-    sidTotalCashDividendMap,
     historicalPrices: sidHistoricalPricesMap[sid],
-    sidCompanyInfoMap,
-    favorites,
+    tradeRecords: sidTradeRecordsMap[sid],
+    cashInvested: sidCashInvestedMap[sid],
+    realizedGain: sidGainMap[sid],
+    cashDividendRecords,
+    sidTotalCashDividendMap,
+    companyInfo: sidCompanyInfoMap[sid],
     tradePlans,
+    favorites,
     isWaitingHistoricalPrices,
     isWaitingTradeRecord,
-    marketSortKey,
-    marketSearchText,
     subscription,
   };
 }
@@ -193,7 +188,10 @@ class Details extends React.Component<Props, State> {
   }
 
   public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
-    if (prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord) {
+    if (
+      prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord ||
+      prevProps.tradeRecords !== this.props.tradeRecords
+    ) {
       this.setState({
         inventoryHistogram: (
           <InventoryHistogram prices={await this.calcInventoryHistogramChartData()} />
@@ -567,7 +565,7 @@ class Details extends React.Component<Props, State> {
       return (
         <StockMemoEditor
           sid={this.sid}
-          defaultValue={this.props.sidCompanyInfoMap[this.sid]?.note || ""}
+          defaultValue={this.props.companyInfo?.note || ""}
           hideModal={Util.getHideModalCallback(this)}
         />
       );
@@ -639,7 +637,7 @@ class Details extends React.Component<Props, State> {
     return (
       <>
         <DollarSign />
-        {((this.props.sidCashInvestedMap[this.sid] || 0) / inventoryLength).toFixed(2)}
+        {((this.props.cashInvested ?? 0) / inventoryLength).toFixed(2)}
       </>
     );
   }
@@ -655,7 +653,7 @@ class Details extends React.Component<Props, State> {
         value: (
           <>
             <DollarSign />
-            {Math.round(this.props.sidCashInvestedMap[this.sid] || 0).toLocaleString()}
+            {Math.round(this.props.cashInvested ?? 0).toLocaleString()}
           </>
         ),
       },
@@ -697,7 +695,7 @@ class Details extends React.Component<Props, State> {
   }
 
   private get tradeRecordCount(): number {
-    return (this.props.sidTradeRecordsMap[this.sid] || []).length;
+    return (this.props.tradeRecords ?? []).length;
   }
 
   private get tradePlanCount(): number {
@@ -705,7 +703,7 @@ class Details extends React.Component<Props, State> {
   }
 
   private get companyInfo() {
-    return this.props.sidCompanyInfoMap[this.sid];
+    return this.props.companyInfo;
   }
 
   private get recentMaterialFacts(): MaterialFact[] {
@@ -780,7 +778,9 @@ class Details extends React.Component<Props, State> {
     const worker = new Worker(
       new URL("../../../workers/histogramChartWorker.ts", import.meta.url),
     );
-    worker.postMessage(this.props.sidTradeRecordsMap[sid] || []);
+    // Read from store, not props.tradeRecords: loadStockDetail awaits this
+    // worker, and the user may navigate to another stock before it finishes.
+    worker.postMessage(store.getState().tradeRecord.sidTradeRecordsMap[sid] ?? []);
     return await new Promise<number[]>((resolve) => {
       worker.onmessage = (event) => {
         worker.terminate();
@@ -791,7 +791,7 @@ class Details extends React.Component<Props, State> {
 
   private get xirr(): number {
     return Util.calculateXIRR(
-      this.props.sidTradeRecordsMap[this.sid] || [],
+      this.props.tradeRecords ?? [],
       [],
       this.props.cashDividendRecords.filter((record) => record.sid === this.sid),
       this.state.marketValue,
@@ -800,7 +800,7 @@ class Details extends React.Component<Props, State> {
 
   private get finalGain(): number {
     return (
-      (this.props.sidGainMap[this.sid] || 0) +
+      (this.props.realizedGain ?? 0) +
       (this.props.sidTotalCashDividendMap[this.sid] || 0)
     );
   }
@@ -893,15 +893,15 @@ class Details extends React.Component<Props, State> {
     const tab = this.listName;
     if (tab !== "holding" && tab !== "favorites") return [];
 
-    const { stockInfo, tradeRecord } = store.getState();
+    const { stockInfo, tradeRecord, mainPage } = store.getState();
     const context = {
       tab: tab as MarketTab,
-      searchText: this.props.marketSearchText,
-      sortKey: this.props.marketSortKey,
+      searchText: mainPage.marketSearchText,
+      sortKey: mainPage.marketSortKey,
       stockWarehouse: tradeRecord.stockWarehouse,
       favorites: this.props.favorites,
       sidStockInfoMap: stockInfo.sidStockInfoMap,
-      sidTradeRecordsMap: this.props.sidTradeRecordsMap,
+      sidTradeRecordsMap: tradeRecord.sidTradeRecordsMap,
       cashDividendRecords: this.props.cashDividendRecords,
     };
     const visibleSids = getVisibleMarketSids(context);
@@ -1012,13 +1012,11 @@ class Details extends React.Component<Props, State> {
         <div className={styles.title}>公司簡稱</div>
         <div className={styles.content}>{this.props.stockInfo?.name || "-"}</div>
         <div className={styles.title}>主要經營業務</div>
-        <div className={styles.content}>
-          {this.props.sidCompanyInfoMap[this.sid]?.business || "-"}
-        </div>
+        <div className={styles.content}>{this.props.companyInfo?.business || "-"}</div>
         <div className={styles.title}>重大消息</div>
-        {this.props.sidCompanyInfoMap[this.sid]?.material_facts.length > 0 ? (
+        {(this.props.companyInfo?.material_facts.length ?? 0) > 0 ? (
           <div className={styles.material_fact_list}>
-            {this.props.sidCompanyInfoMap[this.sid]?.material_facts.map((m, idx) => {
+            {this.props.companyInfo?.material_facts.map((m, idx) => {
               return (
                 <div className={styles.brief_material_fact} key={idx}>
                   <div className={styles.left}>
