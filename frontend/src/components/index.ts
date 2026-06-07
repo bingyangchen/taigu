@@ -8,7 +8,6 @@ export { default as CheckDeleteModal } from "./CheckDeleteModal/CheckDeleteModal
 export { default as ComplexCashInvestedLineChart } from "./ComplexCashInvestedLineChart/ComplexCashInvestedLineChart";
 export { default as DeletePreview } from "./DeletePreview/DeletePreview";
 export { default as DestructiveActionSection } from "./DestructiveActionSection/DestructiveActionSection";
-export { default as DetailCard } from "./DetailCard/DetailCard";
 export { default as DollarSign } from "./DollarSign/DollarSign";
 export { default as Footer } from "./Footer/Footer";
 export { default as Form } from "./Form/Form";
