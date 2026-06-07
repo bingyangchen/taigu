@@ -35,7 +35,7 @@
       padding-left: 0;
       & > * {
         border-radius: 50%;
-        background-color: _.$transparent-white;
+        background-color: _.$white-transparent;
         backdrop-filter: blur(10px) saturate(150%);
         -webkit-backdrop-filter: blur(10px) saturate(150%);
         box-shadow:
@@ -43,12 +43,7 @@
           0 2px 8px #00000014;
         border: 0.5px solid _.$noisy-white;
         &:active {
-          background-color: #ffffffdd;
-        }
-        @media (hover: hover) {
-          &:hover {
-            background-color: #ffffffee;
-          }
+          background-color: _.$white;
         }
       }
     }
@@ -89,7 +84,7 @@
       padding: $padding-y $padding-x;
       border-radius: 20px;
       background-color: #ffffff90;
-      box-shadow: 0 0 15px -10px _.$semi-transparent-black;
+      box-shadow: 0 0 15px -10px _.$black-transparent-1;
       height: 100%;
       @media (max-width: _.$width-780) {
         padding: 0;
@@ -187,9 +182,9 @@
         align-items: center;
         justify-content: center;
         font-size: 0.85 * _.$base-font-size;
-        background-color: _.$transparent-white;
+        background-color: _.$white-transparent;
         border-radius: 20px;
-        box-shadow: 0 0 5px 1px _.$transparent-black;
+        box-shadow: 0 0 5px 1px _.$black-transparent-2;
         padding: 60px 20px;
         color: _.$gray;
         text-align: center;
@@ -203,9 +198,9 @@
         display: flex;
         flex-direction: column;
         font-size: 0.85 * _.$base-font-size;
-        background-color: _.$transparent-white;
+        background-color: _.$white-transparent;
         border-radius: 20px;
-        box-shadow: 0 0 5px 1px _.$transparent-black;
+        box-shadow: 0 0 5px 1px _.$black-transparent-2;
         padding-bottom: 50px;
         overflow: auto;
         @media (max-width: _.$width-780) {

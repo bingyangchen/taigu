@@ -70,7 +70,7 @@
       position: relative;
       @media (hover: hover) {
         &:hover {
-          background-color: _.$transparent-black;
+          background-color: _.$black-transparent-2;
         }
       }
       & > .icon_outer {
@@ -127,7 +127,7 @@
           transition-duration: 150ms;
           @media (hover: hover) {
             &:hover {
-              background-color: _.$transparent-black;
+              background-color: _.$black-transparent-2;
             }
           }
           & > .text {

@@ -1,10 +1,6 @@
 @use "../../../design_system" as _;
 
 .main {
-  --panel-background: rgba(255, 255, 255, 0.72);
-  --card-background: rgba(255, 255, 255, 0.82);
-  --soft-border: rgba(68, 68, 68, 0.08);
-  --soft-fill: rgba(68, 68, 68, 0.045);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -29,10 +25,9 @@
   min-height: 128px;
   gap: 24px;
   padding: 24px 28px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 24px;
-  background: var(--panel-background);
-  box-shadow: 0 12px 36px rgba(68, 68, 68, 0.08);
+  background: _.$white-transparent;
+  box-shadow: 0 12px 36px _.$black-transparent-2;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 
@@ -166,17 +161,17 @@
   height: 40px;
   min-width: 0;
   padding: 0 6px 0 12px;
-  border: 1px solid rgba(68, 68, 68, 0.08);
+  border: 1px solid _.$noisy-white;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
+  background: _.$white-transparent;
   color: _.$gray;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease;
 
   &:focus-within {
-    border-color: rgba(76, 139, 245, 0.45);
-    box-shadow: 0 0 0 3px rgba(76, 139, 245, 0.18);
+    border-color: _.$blue-transparent;
+    box-shadow: 0 0 0 3px _.$blue-transparent;
   }
 
   input {
@@ -222,7 +217,7 @@
   @media (hover: hover) {
     &:hover {
       color: _.$deep-gray;
-      background: var(--soft-fill);
+      background: _.$black-transparent-2;
     }
   }
 }
@@ -247,10 +242,10 @@
     width: 100%;
     height: 100%;
     padding: 0 28px 0 14px;
-    border: 1px solid rgba(68, 68, 68, 0.08);
+    border: 1px solid _.$noisy-white;
     border-radius: 999px;
     appearance: none;
-    background: rgba(255, 255, 255, 0.78);
+    background: _.$white-transparent;
     color: _.$deep-gray;
     cursor: pointer;
     font: inherit;
@@ -260,7 +255,7 @@
   }
 
   select:focus-visible {
-    box-shadow: 0 0 0 3px rgba(76, 139, 245, 0.18);
+    box-shadow: 0 0 0 3px _.$blue-transparent;
   }
 
   &::after {
@@ -314,7 +309,7 @@
     min-height: 32px;
     padding: 0 10px;
     border-radius: 999px;
-    background: rgba(251, 188, 5, 0.18);
+    background: _.$yellow-transparent;
     color: _.$deep-gray;
     font-size: 12px;
     line-height: 16px;
@@ -356,12 +351,11 @@
   width: 100%;
   min-height: 142px;
   padding: 16px;
-  border: 1px solid rgba(68, 68, 68, 0.07);
+  border: 1px solid _.$noisy-white;
   border-radius: 16px;
-  background: var(--card-background);
-  box-shadow: 0 6px 18px rgba(68, 68, 68, 0.06);
+  background: _.$white-transparent;
+  box-shadow: 0 6px 18px _.$black-transparent-2;
   color: _.$deep-gray;
-  cursor: pointer;
   font: inherit;
   letter-spacing: 0;
   text-align: left;
@@ -380,7 +374,7 @@
 
   @media (hover: hover) {
     &:hover {
-      box-shadow: 0 14px 28px rgba(68, 68, 68, 0.1);
+      box-shadow: 0 14px 28px _.$black-transparent-2;
       transform: translateY(-2px);
     }
   }
@@ -486,7 +480,7 @@
     min-width: 0;
     padding: 8px 10px;
     border-radius: 10px;
-    background: rgba(68, 68, 68, 0.06);
+    background: _.$black-transparent-2;
   }
 
   span {
@@ -507,7 +501,7 @@
 
   @media (max-width: _.$width-780) {
     div {
-      background: rgba(68, 68, 68, 0.07);
+      background: _.$black-transparent-2;
     }
 
     span {
@@ -580,7 +574,7 @@
   max-width: 100%;
   padding: 4px 8px;
   border-radius: 999px;
-  background: rgba(76, 139, 245, 0.12);
+  background: _.$blue-transparent;
   color: _.$deep-gray;
 }
 
@@ -617,10 +611,10 @@
   max-width: 420px;
   margin-top: 32px;
   padding: 32px 24px;
-  border: 1px solid rgba(68, 68, 68, 0.06);
+  border: 1px solid _.$black-transparent-2;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 10px 24px rgba(68, 68, 68, 0.06);
+  background: _.$white-transparent;
+  box-shadow: 0 10px 24px _.$black-transparent-2;
   text-align: center;
 
   h2 {
@@ -697,7 +691,7 @@
   @media (hover: hover) {
     &:hover {
       color: _.$deep-gray;
-      background: var(--soft-fill);
+      background: _.$black-transparent-2;
     }
   }
 }
@@ -710,18 +704,18 @@
   width: 100%;
   padding: 16px;
   overflow: hidden;
-  border: 1px solid rgba(68, 68, 68, 0.06);
+  border: 1px solid _.$black-transparent-2;
   border-radius: 16px;
-  background: var(--card-background);
+  background: _.$white-transparent;
 
   &::before {
     position: absolute;
     inset: 0;
     background: linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0.04),
-      rgba(0, 0, 0, 0.08),
-      rgba(0, 0, 0, 0.04)
+      transparent,
+      _.$black-transparent-2,
+      transparent
     );
     content: "";
     animation: shimmer 1.2s linear infinite;
@@ -732,7 +726,7 @@
     position: relative;
     height: 14px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.52);
+    background: _.$black-transparent-3;
   }
 
   div:first-child {

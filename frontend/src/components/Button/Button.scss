@@ -22,7 +22,7 @@
   &:focus-visible {
     box-shadow:
       0 0 0 2px _.$white,
-      0 0 0 5px _.$transparent-blue;
+      0 0 0 5px _.$blue-transparent;
   }
 
   & > .button__content {
@@ -46,7 +46,7 @@
   @media (hover: hover) {
     &:hover:not(:disabled):not(.waiting) {
       &::before {
-        background-color: _.$transparent-black;
+        background-color: _.$black-transparent-2;
         transition-duration: $transition-duration;
       }
     }
@@ -81,7 +81,7 @@
     color: _.$white;
   }
   &.light {
-    background-color: _.$transparent-black;
+    background-color: _.$black-transparent-2;
     color: _.$deep-gray;
   }
   &.primary_fill {

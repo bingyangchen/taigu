@@ -543,7 +543,7 @@ $switch-single-column-width: 760px;
 
   @media (hover: hover) {
     &:hover {
-      background: _.$transparent-blue;
+      background: _.$blue-transparent;
     }
   }
 
@@ -586,7 +586,7 @@ $switch-single-column-width: 760px;
 
   @media (hover: hover) {
     &:hover {
-      background: _.$transparent-blue;
+      background: _.$blue-transparent;
     }
   }
 
@@ -621,14 +621,14 @@ $switch-single-column-width: 760px;
 
   @media (hover: hover) {
     &:hover {
-      background: _.$transparent-blue;
+      background: _.$blue-transparent;
     }
   }
 
   &:focus-visible {
     outline: 2px solid _.$blue;
     outline-offset: 2px;
-    background: _.$transparent-blue;
+    background: _.$blue-transparent;
   }
 
   span {
@@ -869,7 +869,7 @@ $switch-single-column-width: 760px;
     position: absolute;
     inset: 0;
     border-radius: 999px;
-    background: _.$transparent-blue;
+    background: _.$blue-transparent;
     filter: blur(1px);
   }
 

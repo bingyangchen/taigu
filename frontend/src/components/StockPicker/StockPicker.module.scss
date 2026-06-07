@@ -201,12 +201,12 @@
 
   @media (hover: hover) {
     &:hover {
-      background-color: _.$transparent-black;
+      background-color: _.$black-transparent-2;
     }
   }
 
   &.highlighted {
-    background-color: _.$transparent-black;
+    background-color: _.$black-transparent-2;
   }
 }
 

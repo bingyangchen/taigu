@@ -79,11 +79,11 @@
 
   &.buy {
     color: _.$red;
-    background-color: rgba(_.$red, 0.1);
+    background-color: _.$red-transparent;
   }
 
   &.sell {
     color: _.$blue;
-    background-color: rgba(_.$blue, 0.1);
+    background-color: _.$blue-transparent;
   }
 }

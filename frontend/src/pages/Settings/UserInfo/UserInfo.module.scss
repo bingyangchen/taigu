@@ -20,11 +20,11 @@
     letter-spacing: 0.5 * _.$base-letter-spacing;
     border-radius: 100px;
     padding: 5px 10px;
-    background-color: _.$transparent-blue;
+    background-color: _.$blue-transparent;
     cursor: pointer;
     transition-duration: 150ms;
     &:hover {
-      background-color: _.$transparent-black;
+      background-color: _.$black-transparent-2;
     }
   }
 }

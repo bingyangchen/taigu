@@ -6,7 +6,7 @@
   left: 0;
   height: 100dvh;
   width: 100vw;
-  background-color: _.$semi-transparent-black;
+  background-color: _.$black-transparent-1;
   z-index: 6;
   animation: 300ms fadein ease;
 
@@ -35,7 +35,7 @@
   &:focus-visible {
     box-shadow:
       0 0 0 2px _.$white,
-      0 0 0 5px _.$transparent-blue;
+      0 0 0 5px _.$blue-transparent;
   }
 
   &.nested {
