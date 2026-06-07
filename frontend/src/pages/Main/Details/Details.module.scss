@@ -59,7 +59,7 @@ $switch-single-column-width: 760px;
   @media (max-width: _.$width-780) {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 5dvh;
     max-width: none;
     padding: 0 0 calc(_.$footer-height + env(safe-area-inset-bottom) + 92px);
     background: $page-bg;
@@ -115,10 +115,10 @@ $switch-single-column-width: 760px;
 
   @media (max-width: _.$width-780) {
     min-height: min(
-      78dvh,
+      77dvh,
       calc(100dvh - _.$footer-height - env(safe-area-inset-bottom) - 40px)
     );
-    padding: calc(env(safe-area-inset-top) + 68px) 14px 6px;
+    padding: calc(env(safe-area-inset-top) + 68px) 0 6px;
   }
 }
 
@@ -416,11 +416,6 @@ $switch-single-column-width: 760px;
   }
 }
 
-.section_hint {
-  color: $text-muted;
-  font-size: 13px;
-}
-
 .investment_info {
   display: flex;
   flex-direction: column;
@@ -669,6 +664,7 @@ $switch-single-column-width: 760px;
       display: -webkit-box;
       line-height: 1.35;
       white-space: normal;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 2;
     }

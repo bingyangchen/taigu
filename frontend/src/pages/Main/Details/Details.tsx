@@ -494,7 +494,6 @@ class Details extends React.Component<Props, State> {
             <section className={`${styles.block} ${styles.inventory_block}`}>
               <div className={styles.section_header}>
                 <div className={styles.section_title}>庫存分佈</div>
-                <div className={styles.section_hint}>依買進成本分布</div>
               </div>
               <div className={styles.inventory_histogram_container}>
                 {this.state.inventoryHistogram}

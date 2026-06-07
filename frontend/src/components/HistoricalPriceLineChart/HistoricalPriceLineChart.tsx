@@ -77,7 +77,7 @@ class HistoricalPriceLineChart extends React.Component<Props, State> {
     return {
       backgroundColor: "transparent",
       grid: {
-        left: 6,
+        left: 0,
         top: 12,
         right: 38,
         bottom: 24,
