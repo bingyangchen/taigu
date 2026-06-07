@@ -249,7 +249,8 @@ class Main extends React.Component<Props, State> {
     return (
       this.isMobileEditorRoute ||
       this.props.router.location.pathname === `${Env.frontendRootPath}records` ||
-      this.props.router.location.pathname === `${Env.frontendRootPath}plans`
+      this.props.router.location.pathname === `${Env.frontendRootPath}plans` ||
+      Nav.isAtDetailsPage
     );
   }
 
