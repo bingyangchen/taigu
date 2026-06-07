@@ -13,11 +13,11 @@
   transition-duration: 150ms;
   &.active {
     color: _.$blue;
-    background-color: _.$blue-transparent;
+    background-color: _.$blue-transparent-3;
   }
   @media (hover: hover) {
     &:not(.active):hover {
-      background-color: _.$black-transparent-2;
+      background-color: _.$black-transparent-3;
     }
   }
   & > .icon_outer {

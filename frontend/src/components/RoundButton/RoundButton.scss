@@ -16,7 +16,7 @@
     &.primary {
       &:not(.disabled) {
         color: _.$blue;
-        background-color: _.$blue-transparent;
+        background-color: _.$blue-transparent-3;
       }
     }
   }

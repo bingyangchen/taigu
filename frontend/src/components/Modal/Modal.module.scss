@@ -11,7 +11,6 @@
   animation: 300ms fadein ease;
 
   &.nested_background {
-    background-color: #0005;
     z-index: 8;
     animation: 180ms fadein ease;
   }
@@ -35,7 +34,7 @@
   &:focus-visible {
     box-shadow:
       0 0 0 2px _.$white,
-      0 0 0 5px _.$blue-transparent;
+      0 0 0 5px _.$blue-transparent-3;
   }
 
   &.nested {

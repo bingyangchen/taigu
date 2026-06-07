@@ -20,11 +20,11 @@
     letter-spacing: 0.5 * _.$base-letter-spacing;
     border-radius: 100px;
     padding: 5px 10px;
-    background-color: _.$blue-transparent;
+    background-color: _.$blue-transparent-3;
     cursor: pointer;
     transition-duration: 150ms;
     &:hover {
-      background-color: _.$black-transparent-2;
+      background-color: _.$black-transparent-3;
     }
   }
 }
@@ -68,12 +68,12 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 50%;
+      width: 60%;
       height: 100%;
       background: linear-gradient(
         90deg,
         transparent,
-        rgba(0, 123, 255, 0.2),
+        _.$blue-transparent-3,
         transparent
       );
       animation: shimmer 550ms ease-out;

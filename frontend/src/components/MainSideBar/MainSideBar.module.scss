@@ -70,7 +70,7 @@
       position: relative;
       @media (hover: hover) {
         &:hover {
-          background-color: _.$black-transparent-2;
+          background-color: _.$black-transparent-3;
         }
       }
       & > .icon_outer {
@@ -110,7 +110,7 @@
         min-width: fit-content;
         background-color: _.$white;
         border-radius: 10px;
-        box-shadow: 0 4px 12px #00000026;
+        box-shadow: 0 4px 12px _.$black-transparent-2;
         padding: 5px;
         z-index: 10;
         display: flex;
@@ -127,7 +127,7 @@
           transition-duration: 150ms;
           @media (hover: hover) {
             &:hover {
-              background-color: _.$black-transparent-2;
+              background-color: _.$black-transparent-3;
             }
           }
           & > .text {

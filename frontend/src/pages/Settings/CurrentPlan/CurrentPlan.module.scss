@@ -37,19 +37,19 @@
 }
 
 .success {
-  border-color: rgba(_.$green, 0.28);
-  background: rgba(_.$green, 0.08);
+  border-color: _.$green-transparent-2;
+  background: _.$green-transparent-3;
   animation: noticeEnter 180ms ease;
 }
 
 .error {
-  border-color: rgba(_.$red, 0.28);
-  background: rgba(_.$red, 0.08);
+  border-color: _.$red-transparent-2;
+  background: _.$red-transparent-3;
 }
 
 .info {
-  border-color: rgba(_.$blue, 0.24);
-  background: _.$blue-transparent;
+  border-color: _.$blue-transparent-2;
+  background: _.$blue-transparent-3;
 }
 
 .summary {
@@ -99,12 +99,7 @@
     position: absolute;
     inset: 0;
     content: "";
-    background: linear-gradient(
-      90deg,
-      rgba(_.$white, 0),
-      rgba(_.$white, 0.78),
-      rgba(_.$white, 0)
-    );
+    background: linear-gradient(90deg, transparent, _.$white-transparent, transparent);
     animation: skeletonShimmer 1.15s ease-in-out infinite;
     transform: translateX(-100%);
   }
@@ -212,19 +207,19 @@
   color: _.$blue;
   font-size: 0.82 * _.$base-font-size;
   font-weight: 700;
-  background: _.$blue-transparent;
+  background: _.$blue-transparent-3;
   border-radius: 999px;
 }
 
 .planBadgeBilling,
 .planBadgeTrial {
   color: _.$blue;
-  background: _.$blue-transparent;
+  background: _.$blue-transparent-3;
 }
 
 .planBadgeCurrent {
   color: _.$green;
-  background: rgba(_.$green, 0.1);
+  background: _.$green-transparent-3;
 }
 
 .summaryGrid {
@@ -323,18 +318,18 @@
   min-height: 40px;
   color: _.$red !important;
   background: transparent !important;
-  border-color: rgba(_.$red, 0.28) !important;
+  border-color: _.$red-transparent-2 !important;
 
   @media (hover: hover) {
     &:hover:not(:disabled):not(.waiting) {
-      background: rgba(_.$red, 0.06) !important;
+      background: _.$red-transparent-4 !important;
     }
   }
 
   &:focus-visible {
     box-shadow:
       0 0 0 2px _.$white,
-      0 0 0 5px rgba(_.$blue, 0.42);
+      0 0 0 5px _.$blue-transparent-1;
   }
 }
 
@@ -535,7 +530,7 @@
   color: _.$deep-gray !important;
   background: _.$white !important;
   border: 1px solid _.$light-gray !important;
-  box-shadow: 0 8px 20px rgba(_.$deep-gray, 0.04);
+  box-shadow: 0 8px 20px _.$black-transparent-3;
 
   &::before {
     background: transparent !important;
@@ -543,16 +538,20 @@
 
   @media (hover: hover) {
     &:hover:not(:disabled):not(.waiting) {
-      border-color: rgba(_.$blue, 0.42) !important;
-      box-shadow: 0 12px 26px rgba(_.$blue, 0.1);
+      border-color: _.$blue !important;
+      box-shadow: 0 12px 26px _.$blue-transparent-3;
       transform: translateY(-1px);
     }
   }
 }
 
 .recommendedPlanOption {
-  background: linear-gradient(180deg, _.$white 0%, rgba(_.$blue, 0.06) 100%) !important;
-  border-color: rgba(_.$blue, 0.42) !important;
+  background: linear-gradient(
+    180deg,
+    _.$white 0%,
+    _.$blue-transparent-4 100%
+  ) !important;
+  border-color: _.$blue-transparent-1 !important;
 }
 
 .planOptionContent {
@@ -590,7 +589,7 @@
   font-size: 0.74 * _.$base-font-size !important;
   font-weight: 700;
   line-height: 1.4 !important;
-  background: _.$blue-transparent;
+  background: _.$blue-transparent-3;
   border-radius: 999px;
 }
 
@@ -628,7 +627,7 @@
     color: _.$blue;
     font-weight: 700;
     place-items: center;
-    background: _.$blue-transparent;
+    background: _.$blue-transparent-3;
     border-radius: 50%;
   }
 
@@ -714,7 +713,7 @@
 
 .paymentMethodHighlight {
   border-radius: 20px;
-  box-shadow: 0 0 0 2px rgba(_.$blue, 0.35);
+  box-shadow: 0 0 0 2px _.$blue-transparent-1;
   transition: box-shadow 0.3s ease;
 }
 

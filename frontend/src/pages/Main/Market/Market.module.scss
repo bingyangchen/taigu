@@ -27,7 +27,7 @@
   padding: 24px 28px;
   border-radius: 24px;
   background: _.$white-transparent;
-  box-shadow: 0 12px 36px _.$black-transparent-2;
+  box-shadow: 0 12px 36px _.$black-transparent-3;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 
@@ -170,8 +170,8 @@
     box-shadow 160ms ease;
 
   &:focus-within {
-    border-color: _.$blue-transparent;
-    box-shadow: 0 0 0 3px _.$blue-transparent;
+    border-color: _.$blue-transparent-3;
+    box-shadow: 0 0 0 3px _.$blue-transparent-3;
   }
 
   input {
@@ -217,7 +217,7 @@
   @media (hover: hover) {
     &:hover {
       color: _.$deep-gray;
-      background: _.$black-transparent-2;
+      background: _.$black-transparent-3;
     }
   }
 }
@@ -255,7 +255,7 @@
   }
 
   select:focus-visible {
-    box-shadow: 0 0 0 3px _.$blue-transparent;
+    box-shadow: 0 0 0 3px _.$blue-transparent-3;
   }
 
   &::after {
@@ -354,7 +354,7 @@
   border: 1px solid _.$noisy-white;
   border-radius: 16px;
   background: _.$white-transparent;
-  box-shadow: 0 6px 18px _.$black-transparent-2;
+  box-shadow: 0 6px 18px _.$black-transparent-3;
   color: _.$deep-gray;
   font: inherit;
   letter-spacing: 0;
@@ -374,7 +374,7 @@
 
   @media (hover: hover) {
     &:hover {
-      box-shadow: 0 14px 28px _.$black-transparent-2;
+      box-shadow: 0 14px 28px _.$black-transparent-3;
       transform: translateY(-2px);
     }
   }
@@ -418,13 +418,6 @@
     color: _.$gray;
     font-size: 12px;
     line-height: 16px;
-  }
-
-  @media (max-width: _.$width-780) {
-    span {
-      color: #6f6f6f;
-      font-size: 12px;
-    }
   }
 }
 
@@ -480,11 +473,11 @@
     min-width: 0;
     padding: 8px 10px;
     border-radius: 10px;
-    background: _.$black-transparent-2;
+    background: _.$black-transparent-3;
   }
 
   span {
-    color: #727272;
+    color: _.$gray;
     font-size: 11px;
     line-height: 16px;
   }
@@ -501,11 +494,10 @@
 
   @media (max-width: _.$width-780) {
     div {
-      background: _.$black-transparent-2;
+      background: _.$black-transparent-3;
     }
 
     span {
-      color: #666;
       font-size: 12px;
       line-height: 17px;
     }
@@ -544,7 +536,7 @@
   }
 
   span {
-    color: #666;
+    color: _.$gray;
   }
 
   strong {
@@ -574,7 +566,7 @@
   max-width: 100%;
   padding: 4px 8px;
   border-radius: 999px;
-  background: _.$blue-transparent;
+  background: _.$blue-transparent-3;
   color: _.$deep-gray;
 }
 
@@ -611,10 +603,10 @@
   max-width: 420px;
   margin-top: 32px;
   padding: 32px 24px;
-  border: 1px solid _.$black-transparent-2;
+  border: 1px solid _.$black-transparent-3;
   border-radius: 20px;
   background: _.$white-transparent;
-  box-shadow: 0 10px 24px _.$black-transparent-2;
+  box-shadow: 0 10px 24px _.$black-transparent-3;
   text-align: center;
 
   h2 {
@@ -691,7 +683,7 @@
   @media (hover: hover) {
     &:hover {
       color: _.$deep-gray;
-      background: _.$black-transparent-2;
+      background: _.$black-transparent-3;
     }
   }
 }
@@ -704,7 +696,7 @@
   width: 100%;
   padding: 16px;
   overflow: hidden;
-  border: 1px solid _.$black-transparent-2;
+  border: 1px solid _.$black-transparent-3;
   border-radius: 16px;
   background: _.$white-transparent;
 
@@ -714,7 +706,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      _.$black-transparent-2,
+      _.$black-transparent-3,
       transparent
     );
     content: "";
@@ -726,7 +718,7 @@
     position: relative;
     height: 14px;
     border-radius: 999px;
-    background: _.$black-transparent-3;
+    background: _.$black-transparent-4;
   }
 
   div:first-child {

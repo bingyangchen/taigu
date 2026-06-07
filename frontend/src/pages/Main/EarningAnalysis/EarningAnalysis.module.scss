@@ -30,17 +30,9 @@
         backdrop-filter: blur(10px) saturate(150%);
         -webkit-backdrop-filter: blur(10px) saturate(150%);
         box-shadow:
-          0 4px 16px #0000001a,
-          0 2px 8px #00000014;
+          0 4px 16px _.$black-transparent-2,
+          0 2px 8px _.$black-transparent-3;
         border: 0.5px solid _.$noisy-white;
-        &:active {
-          background-color: #ffffffdd;
-        }
-        @media (hover: hover) {
-          &:hover {
-            background-color: #ffffffee;
-          }
-        }
       }
     }
   }
@@ -61,12 +53,12 @@
       gap: 3px;
       padding: 4px;
       border-radius: 20px;
-      background-color: #ffffffcc;
+      background-color: _.$white-transparent;
       backdrop-filter: blur(10px) saturate(150%);
       -webkit-backdrop-filter: blur(10px) saturate(150%);
       box-shadow:
-        0 4px 16px #0000001a,
-        0 2px 8px #00000014;
+        0 4px 16px _.$black-transparent-2,
+        0 2px 8px _.$black-transparent-3;
       border: 0.5px solid _.$noisy-white;
       --option-width: 80px;
       & > .active_indicator {
@@ -79,7 +71,7 @@
         border-radius: 16px;
         transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 0;
-        box-shadow: 0 2px 8px #0000001a;
+        box-shadow: 0 2px 8px _.$black-transparent-2;
       }
       & > .tab_button {
         position: relative;

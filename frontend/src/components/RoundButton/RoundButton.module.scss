@@ -24,18 +24,18 @@
   &:focus-visible {
     box-shadow:
       0 0 0 2px _.$white,
-      0 0 0 5px _.$blue-transparent;
+      0 0 0 5px _.$blue-transparent-3;
   }
   &:active {
     &:not(.disabled) {
-      background-color: _.$black-transparent-2;
+      background-color: _.$black-transparent-3;
     }
   }
   @media (hover: hover) {
     &:hover {
       &:not(.disabled) {
         color: _.$deep-gray;
-        background-color: _.$black-transparent-2;
+        background-color: _.$black-transparent-3;
       }
     }
   }

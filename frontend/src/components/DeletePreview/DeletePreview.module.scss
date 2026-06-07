@@ -7,7 +7,7 @@
   padding: 14px 16px;
   border: 1px solid _.$noisy-white;
   border-radius: 8px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%), _.$white;
+  background: linear-gradient(180deg, _.$white 0%, _.$noisy-white 100%), _.$white;
 }
 
 .header {
@@ -79,11 +79,11 @@
 
   &.buy {
     color: _.$red;
-    background-color: _.$red-transparent;
+    background-color: _.$red-transparent-3;
   }
 
   &.sell {
     color: _.$blue;
-    background-color: _.$blue-transparent;
+    background-color: _.$blue-transparent-3;
   }
 }

@@ -6,8 +6,8 @@
   justify-content: space-between;
   height: 55px;
   padding: 15px 25px;
-  background-color: #ffffff90;
-  box-shadow: 0 0 15px -10px _.$black-transparent-2;
+  background-color: _.$white-transparent;
+  box-shadow: 0 0 15px -10px _.$black-transparent-3;
   border-radius: 20px;
   transition: all 150ms ease;
   @media (max-width: _.$width-512) {
@@ -40,7 +40,7 @@
     }
     @media (hover: hover) {
       &:hover {
-        box-shadow: 0 4px 20px -8px _.$black-transparent-2;
+        box-shadow: 0 4px 20px -8px _.$black-transparent-3;
         background-color: _.$white;
         & > .chevron {
           opacity: 1;
