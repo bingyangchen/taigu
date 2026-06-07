@@ -1,10 +1,10 @@
-@use "../../../global_variables" as _;
+@use "../../../design_system" as _;
 
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 8;
-  background: rgba(_.$black, 0.36);
+  background: _.$black-transparent-1;
   animation: cancelDialogFadeIn 160ms ease;
 }
 
@@ -30,7 +30,7 @@
   &:focus-visible {
     box-shadow:
       0 0 0 2px _.$white,
-      0 0 0 5px rgba(_.$blue, 0.45);
+      0 0 0 5px _.$blue-transparent-1;
   }
 }
 
@@ -60,7 +60,7 @@
   margin-top: 20px;
   padding: 12px;
   color: _.$blue;
-  background: rgba(_.$blue, 0.08);
+  background: _.$blue-transparent-3;
   border-radius: 8px;
 
   p {
@@ -115,7 +115,7 @@
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
-  background: rgba(_.$blue, 0.1);
+  background: _.$blue-transparent-3;
   border-radius: 50%;
   place-items: center;
 }
@@ -185,7 +185,7 @@
 
   &:focus-visible {
     border-color: _.$blue;
-    box-shadow: 0 0 0 3px rgba(_.$blue, 0.16);
+    box-shadow: 0 0 0 3px _.$blue-transparent-3;
   }
 }
 
@@ -206,8 +206,8 @@
   color: _.$red;
   font-size: 14px;
   line-height: 20px;
-  background: rgba(_.$red, 0.08);
-  border: 1px solid rgba(_.$red, 0.22);
+  background: _.$red-transparent-3;
+  border: 1px solid _.$red-transparent-2;
   border-radius: 8px;
 }
 
@@ -229,11 +229,11 @@
   min-width: 128px;
   color: _.$red !important;
   background: _.$white !important;
-  border-color: rgba(_.$red, 0.28) !important;
+  border-color: _.$red-transparent-2 !important;
 
   @media (hover: hover) {
     &:hover:not(:disabled):not(.waiting) {
-      background: rgba(_.$red, 0.06) !important;
+      background: _.$red-transparent-4 !important;
     }
   }
 }

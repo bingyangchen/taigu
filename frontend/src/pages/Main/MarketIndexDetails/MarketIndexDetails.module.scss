@@ -1,4 +1,4 @@
-@use "../../../global_variables" as _;
+@use "../../../design_system" as _;
 
 .main {
   position: relative;
@@ -34,14 +34,14 @@
       height: auto;
 
       & > * {
-        border-radius: 50% !important;
-        background-color: _.$transparent-white !important;
-        backdrop-filter: blur(10px) saturate(150%) !important;
-        -webkit-backdrop-filter: blur(10px) saturate(150%) !important;
+        border-radius: 50%;
+        background-color: _.$white-transparent;
+        backdrop-filter: blur(10px) saturate(150%);
+        -webkit-backdrop-filter: blur(10px) saturate(150%);
         box-shadow:
-          0 4px 16px #0000001a,
-          0 2px 8px #00000014 !important;
-        border: 0.5px solid _.$noisy-white !important;
+          0 4px 16px _.$black-transparent-2,
+          0 2px 8px _.$black-transparent-3;
+        border: 0.5px solid _.$noisy-white;
       }
     }
   }
@@ -63,8 +63,8 @@
   gap: 8px;
   padding: 24px;
   border-radius: 25px;
-  background-color: #ffffff90;
-  box-shadow: 0 0 15px -10px _.$transparent-black;
+  background-color: _.$white-transparent;
+  box-shadow: 0 0 15px -10px _.$black-transparent-3;
 
   @media (max-width: _.$width-512) {
     padding: 20px 18px;
@@ -118,8 +118,8 @@
   gap: 16px;
   padding: 24px;
   border-radius: 25px;
-  background-color: #ffffff90;
-  box-shadow: 0 0 15px -10px _.$transparent-black;
+  background-color: _.$white-transparent;
+  box-shadow: 0 0 15px -10px _.$black-transparent-3;
 
   @media (max-width: _.$width-512) {
     padding: 18px 14px 20px;
@@ -137,9 +137,14 @@
     inset: 10px 8px 24px 0;
     z-index: 1;
     border-radius: 18px;
-    background: linear-gradient(90deg, #dfe8f2 0%, #f8fbff 50%, #dfe8f2 100%);
+    background: linear-gradient(
+      90deg,
+      _.$black-transparent-3 0%,
+      _.$white 50%,
+      _.$black-transparent-3 100%
+    );
     background-size: 220% 100%;
-    animation: shimmer 1300ms ease-in-out infinite;
+    animation: shimmer 1200ms ease-in-out infinite;
   }
 
   @media (max-width: _.$width-512) {
@@ -148,11 +153,8 @@
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: 100% 0;
-  }
-  100% {
-    background-position: -100% 0;
+  to {
+    background-position: -220% 0;
   }
 }
 
@@ -163,12 +165,12 @@
   justify-content: center;
   height: 100%;
   color: _.$deep-gray;
-  font-size: 15px;
+  font-size: 16px;
 
   span {
     margin-top: 6px;
-    color: #8a96a3;
-    font-size: 13px;
+    color: _.$gray;
+    font-size: 12px;
   }
 }
 

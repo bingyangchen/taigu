@@ -1,4 +1,4 @@
-@use "../../global_variables" as _;
+@use "../../design_system" as _;
 
 .main {
   position: relative;
@@ -24,18 +24,18 @@
   &:focus-visible {
     box-shadow:
       0 0 0 2px _.$white,
-      0 0 0 5px _.$transparent-blue;
+      0 0 0 5px _.$blue-transparent-3;
   }
   &:active {
     &:not(.disabled) {
-      background-color: _.$transparent-black;
+      background-color: _.$black-transparent-3;
     }
   }
   @media (hover: hover) {
     &:hover {
       &:not(.disabled) {
         color: _.$deep-gray;
-        background-color: _.$transparent-black;
+        background-color: _.$black-transparent-3;
       }
     }
   }

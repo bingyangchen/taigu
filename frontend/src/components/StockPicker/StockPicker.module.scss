@@ -1,4 +1,4 @@
-@use "../../global_variables" as _;
+@use "../../design_system" as _;
 
 .main {
   position: relative;
@@ -118,10 +118,10 @@
   width: 100%;
   margin-top: 5px;
   overflow: hidden;
-  border: 1px solid #00000014;
+  border: 1px solid _.$black-transparent-3;
   border-radius: 10px;
   background-color: _.$white;
-  box-shadow: 0 12px 30px #0000001a;
+  box-shadow: 0 12px 30px _.$black-transparent-2;
 }
 
 .desktop_search_panel {
@@ -201,12 +201,12 @@
 
   @media (hover: hover) {
     &:hover {
-      background-color: _.$transparent-black;
+      background-color: _.$black-transparent-3;
     }
   }
 
   &.highlighted {
-    background-color: _.$transparent-black;
+    background-color: _.$black-transparent-3;
   }
 }
 

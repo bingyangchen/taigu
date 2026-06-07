@@ -1,4 +1,4 @@
-@use "../../global_variables" as _;
+@use "../../design_system" as _;
 
 .main {
   display: flex;
@@ -7,7 +7,7 @@
   padding: 14px 16px;
   border: 1px solid _.$noisy-white;
   border-radius: 8px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%), _.$white;
+  background: linear-gradient(180deg, _.$white 0%, _.$noisy-white 100%), _.$white;
 }
 
 .header {
@@ -79,11 +79,11 @@
 
   &.buy {
     color: _.$red;
-    background-color: rgba(_.$red, 0.1);
+    background-color: _.$red-transparent-3;
   }
 
   &.sell {
     color: _.$blue;
-    background-color: rgba(_.$blue, 0.1);
+    background-color: _.$blue-transparent-3;
   }
 }

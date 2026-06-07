@@ -2,13 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { SegmentedControl, SpeedDial } from "../../../components";
-import {
-  IconBriefcase,
-  IconExclamation,
-  IconHeart,
-  IconMagnifier,
-  IconXLarge,
-} from "../../../icons";
+import { IconBriefcase, IconHeart, IconMagnifier, IconXLarge } from "../../../icons";
 import {
   changeMarketPageSubpage,
   changeMarketSearchText,
@@ -433,10 +427,7 @@ class Market extends React.Component<Props, State> {
     }
     return (
       <div className={styles.update_failure}>
-        <span title="暫時無法取得最新價格，已保留上次資料。">
-          <IconExclamation sideLength="14" />
-          更新失敗
-        </span>
+        <span title="暫時無法取得最新價格，已保留上次資料。">更新失敗</span>
         <button
           aria-label="重新整理最愛股價"
           type="button"

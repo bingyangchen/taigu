@@ -1,4 +1,4 @@
-@use "../../global_variables" as _;
+@use "../../design_system" as _;
 
 .main {
   display: flex;
@@ -21,7 +21,7 @@
 }
 
 .subtle .list {
-  background-color: rgba(0, 0, 0, 0.045);
+  background-color: _.$black-transparent-3;
 }
 
 .floating .list {
@@ -32,10 +32,10 @@
   padding: 4px;
   border: 0.5px solid _.$noisy-white;
   border-radius: 20px;
-  background-color: #ffffffcc;
+  background-color: _.$white-transparent;
   box-shadow:
-    0 4px 16px #0000001a,
-    0 2px 8px #00000014;
+    0 4px 16px _.$black-transparent-2,
+    0 2px 8px _.$black-transparent-3;
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
 }
@@ -59,7 +59,7 @@
   height: calc(100% - 8px);
   background-color: _.$white;
   border-radius: 16px;
-  box-shadow: 0 2px 8px #0000001a;
+  box-shadow: 0 2px 8px _.$black-transparent-2;
 }
 
 .trigger {
@@ -79,7 +79,6 @@
   letter-spacing: inherit;
   z-index: 1;
   transition: color 0.3s ease;
-  cursor: pointer;
   outline: none;
   white-space: nowrap;
 
@@ -94,7 +93,6 @@
   @media (hover: hover) {
     &:hover {
       color: _.$deep-gray;
-      background-color: rgba(255, 255, 255, 0.2);
     }
   }
 }

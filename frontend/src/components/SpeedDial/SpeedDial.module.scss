@@ -1,4 +1,4 @@
-@use "../../global_variables" as _;
+@use "../../design_system" as _;
 
 .main {
   $side-length: 60px;
@@ -11,8 +11,8 @@
   width: $side-length;
   background-color: _.$white;
   box-shadow:
-    0 4px 12px #0000001a,
-    0 2px 6px #00000014;
+    0 4px 12px _.$black-transparent-2,
+    0 2px 6px _.$black-transparent-3;
   z-index: 7;
   transition-duration: 200ms;
   display: flex;
@@ -44,15 +44,15 @@
       width: 100vw;
       height: 100dvh;
       display: block;
-      background-color: _.$semi-transparent-black;
+      background-color: _.$black-transparent-1;
       z-index: 6;
     }
   }
   @media (hover: hover) {
     &:hover {
       box-shadow:
-        0 6px 16px #0000001f,
-        0 3px 8px #0000001a;
+        0 6px 16px _.$black-transparent-3,
+        0 3px 8px _.$black-transparent-2;
       &:not(.active) {
         cursor: pointer;
       }

@@ -1,15 +1,10 @@
-@use "../../global_variables" as _;
+@use "../../design_system" as _;
 
 .main {
   --surface: #fbfdff;
-  --paper: #ffffff;
   --ink: #213044;
   --muted: #647287;
   --line: #dce6f2;
-  --blue: #{_.$blue};
-  --green: #{_.$green};
-  --red: #{_.$red};
-  --yellow: #{_.$yellow};
   --soft-blue: #e8f4ff;
   --soft-green: #eaf7ef;
   --shadow: 0 24px 70px #22466b1c;
@@ -63,7 +58,7 @@
   padding: 6px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: #ffffffb8;
+  background: _.$white-transparent;
 
   a {
     padding: 9px 14px;
@@ -102,7 +97,7 @@
   }
 
   &:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--blue) 35%, transparent);
+    outline: 3px solid color-mix(in srgb, _.$blue 35%, transparent);
     outline-offset: 3px;
   }
 }
@@ -112,22 +107,22 @@
   min-width: 86px;
   padding: 0 18px;
   background: var(--ink);
-  color: #fff;
+  color: _.$white;
   font-size: 0.92rem;
 }
 
 .primaryAction {
   padding: 0 24px;
-  background: var(--blue);
-  color: #fff;
+  background: _.$blue;
+  color: _.$white;
   font-weight: 700;
-  box-shadow: 0 14px 34px color-mix(in srgb, var(--blue) 32%, transparent);
+  box-shadow: 0 14px 34px color-mix(in srgb, _.$blue 32%, transparent);
 }
 
 .secondaryAction {
   padding: 0 20px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: _.$white;
   color: var(--ink);
 }
 
@@ -178,7 +173,7 @@
 
 .eyebrow {
   margin: 0;
-  color: var(--blue);
+  color: _.$blue;
   font-size: 0.92rem;
   font-weight: 800;
 }
@@ -212,7 +207,7 @@
 
   div {
     padding: 20px;
-    background: #ffffffc9;
+    background: _.$white;
   }
 
   dt {
@@ -272,7 +267,7 @@
 }
 
 .workflowSection {
-  background: var(--paper);
+  background: _.$white;
 }
 
 .sectionIntro,
@@ -328,7 +323,7 @@
   aspect-ratio: 1;
   border-radius: 8px;
   background: var(--soft-blue);
-  color: var(--blue);
+  color: _.$blue;
 }
 
 .showcaseSection {
@@ -387,7 +382,7 @@
   padding: 14px;
   border: 1px solid #d6e6ec;
   border-radius: 8px;
-  background: #fff;
+  background: _.$white;
 
   video {
     width: 116px;
@@ -454,7 +449,7 @@
   min-height: 580px;
   padding: 34px;
   border-radius: 8px;
-  background: #fff;
+  background: _.$white;
   color: var(--ink);
   animation: pricing-rise 420ms ease-out both 100ms;
   transition:
@@ -479,14 +474,14 @@
 
 .standardCard {
   order: 2;
-  border: 2px solid var(--blue);
-  box-shadow: 0 24px 70px color-mix(in srgb, var(--blue) 18%, transparent);
+  border: 2px solid _.$blue;
+  box-shadow: 0 24px 70px color-mix(in srgb, _.$blue 18%, transparent);
   transform: translateY(-10px);
   animation-name: pricing-standard-rise;
 
   &:hover {
     transform: translateY(-12px);
-    box-shadow: 0 27px 78px color-mix(in srgb, var(--blue) 20%, transparent);
+    box-shadow: 0 27px 78px color-mix(in srgb, _.$blue 20%, transparent);
   }
 }
 
@@ -526,7 +521,7 @@
   min-height: 30px;
   padding: 0 12px;
   background: var(--soft-blue);
-  color: var(--blue);
+  color: _.$blue;
   font-size: 13px;
 }
 
@@ -649,7 +644,7 @@
     width: 18px;
     aspect-ratio: 1;
     border-radius: 999px;
-    background: var(--blue);
+    background: _.$blue;
   }
 
   li::after {
@@ -659,8 +654,8 @@
     left: 5px;
     width: 7px;
     height: 4px;
-    border-bottom: 2px solid #fff;
-    border-left: 2px solid #fff;
+    border-bottom: 2px solid _.$white;
+    border-left: 2px solid _.$white;
     transform: rotate(-45deg);
   }
 }
@@ -728,7 +723,7 @@
 
 .trustCopy {
   svg {
-    color: var(--green);
+    color: _.$green;
   }
 }
 
@@ -748,7 +743,7 @@
   align-items: center;
   text-align: center;
   background: #203248;
-  color: #fff;
+  color: _.$white;
 
   svg {
     color: #9fd0ff;
@@ -769,7 +764,7 @@
   }
 
   .primaryAction {
-    background: #fff;
+    background: _.$white;
     color: var(--ink);
     box-shadow: none;
   }
@@ -802,7 +797,7 @@
     font-size: 0.92rem;
 
     &:hover {
-      color: var(--blue);
+      color: _.$blue;
     }
   }
 }

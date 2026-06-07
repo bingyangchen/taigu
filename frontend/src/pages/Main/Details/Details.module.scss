@@ -1,9 +1,6 @@
-@use "../../../global_variables" as _;
+@use "../../../design_system" as _;
 
 $detail-layout-width: 1180px;
-$surface: #fffffff2;
-$surface-strong: #fff;
-$border: #dbe4ef;
 $page-bg: #f6f9fc;
 $text-muted: #6f7c8d;
 $switch-single-column-width: 760px;
@@ -59,7 +56,7 @@ $switch-single-column-width: 760px;
   @media (max-width: _.$width-780) {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 5dvh;
     max-width: none;
     padding: 0 0 calc(_.$footer-height + env(safe-area-inset-bottom) + 92px);
     background: $page-bg;
@@ -80,9 +77,9 @@ $switch-single-column-width: 760px;
 .block {
   position: relative;
   box-sizing: border-box;
-  border: 1px solid $border;
+  border: 1px solid _.$black-transparent-3;
   border-radius: 16px;
-  background: $surface;
+  background: _.$white-transparent;
   box-shadow: 0 10px 24px #26394d0a;
   animation: section-enter 180ms ease-out both;
 
@@ -115,10 +112,10 @@ $switch-single-column-width: 760px;
 
   @media (max-width: _.$width-780) {
     min-height: min(
-      78dvh,
+      77dvh,
       calc(100dvh - _.$footer-height - env(safe-area-inset-bottom) - 40px)
     );
-    padding: calc(env(safe-area-inset-top) + 68px) 14px 6px;
+    padding: calc(env(safe-area-inset-top) + 68px) 0 6px;
   }
 }
 
@@ -416,11 +413,6 @@ $switch-single-column-width: 760px;
   }
 }
 
-.section_hint {
-  color: $text-muted;
-  font-size: 13px;
-}
-
 .investment_info {
   display: flex;
   flex-direction: column;
@@ -448,7 +440,7 @@ $switch-single-column-width: 760px;
     padding: 0 14px;
     border: 1px solid #e4ebf4;
     border-radius: 12px;
-    background: #ffffff9e;
+    background: _.$white-transparent;
   }
 }
 
@@ -548,7 +540,7 @@ $switch-single-column-width: 760px;
 
   @media (hover: hover) {
     &:hover {
-      background: _.$transparent-blue;
+      background: _.$blue-transparent-3;
     }
   }
 
@@ -591,7 +583,7 @@ $switch-single-column-width: 760px;
 
   @media (hover: hover) {
     &:hover {
-      background: _.$transparent-blue;
+      background: _.$blue-transparent-3;
     }
   }
 
@@ -626,14 +618,14 @@ $switch-single-column-width: 760px;
 
   @media (hover: hover) {
     &:hover {
-      background: _.$transparent-blue;
+      background: _.$blue-transparent-3;
     }
   }
 
   &:focus-visible {
     outline: 2px solid _.$blue;
     outline-offset: 2px;
-    background: _.$transparent-blue;
+    background: _.$blue-transparent-3;
   }
 
   span {
@@ -669,6 +661,7 @@ $switch-single-column-width: 760px;
       display: -webkit-box;
       line-height: 1.35;
       white-space: normal;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 2;
     }
@@ -722,18 +715,18 @@ $switch-single-column-width: 760px;
   transition: all 180ms ease;
 
   & > * {
-    min-width: 44px !important;
-    width: 44px !important;
-    height: 44px !important;
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
   }
 
   &.scrolled > * {
-    border-radius: 50% !important;
-    background-color: #ffffffc9 !important;
-    border: 1px solid $border !important;
-    box-shadow: 0 8px 20px #26394d18 !important;
-    backdrop-filter: blur(10px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+    border-radius: 50%;
+    background-color: _.$white-transparent;
+    border: 1px solid _.$black-transparent-3;
+    box-shadow: 0 8px 20px #26394d18;
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
   }
 }
 
@@ -749,8 +742,8 @@ $switch-single-column-width: 760px;
   color: _.$gray;
 
   &.scrolled {
-    background-color: #ffffffc9;
-    border-color: $border;
+    background-color: _.$white-transparent;
+    border-color: _.$black-transparent-3;
     box-shadow: 0 8px 20px #26394d18;
     backdrop-filter: blur(10px) saturate(140%);
     -webkit-backdrop-filter: blur(10px) saturate(140%);
@@ -767,9 +760,9 @@ $switch-single-column-width: 760px;
   gap: 8px;
   height: 44px;
   padding: 0 14px;
-  border: 1px solid $border;
+  border: 1px solid _.$black-transparent-3;
   border-radius: 999px;
-  background: #ffffffcf;
+  background: _.$white-transparent;
   box-shadow: 0 8px 20px #26394d14;
   color: _.$deep-gray;
   opacity: 0;
@@ -873,7 +866,7 @@ $switch-single-column-width: 760px;
     position: absolute;
     inset: 0;
     border-radius: 999px;
-    background: _.$transparent-blue;
+    background: _.$blue-transparent-3;
     filter: blur(1px);
   }
 

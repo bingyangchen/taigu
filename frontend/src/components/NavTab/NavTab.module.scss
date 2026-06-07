@@ -1,4 +1,4 @@
-@use "../../global_variables" as _;
+@use "../../design_system" as _;
 
 .tab {
   height: 65px;
@@ -13,11 +13,11 @@
   transition-duration: 150ms;
   &.active {
     color: _.$blue;
-    background-color: _.$transparent-blue;
+    background-color: _.$blue-transparent-3;
   }
   @media (hover: hover) {
     &:not(.active):hover {
-      background-color: _.$transparent-black;
+      background-color: _.$black-transparent-3;
     }
   }
   & > .icon_outer {

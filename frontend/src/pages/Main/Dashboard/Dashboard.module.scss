@@ -1,4 +1,4 @@
-@use "../../../global_variables" as _;
+@use "../../../design_system" as _;
 
 .main {
   $border-radius: 25px;
@@ -36,8 +36,8 @@
       align-items: stretch;
       padding: 15px 20px;
       gap: 20px;
-      background-color: #ffffff90;
-      box-shadow: 0 0 15px -10px _.$transparent-black;
+      background-color: _.$white-transparent;
+      box-shadow: 0 0 15px -10px _.$black-transparent-3;
       border-radius: $border-radius;
       overflow: hidden;
       overflow-x: auto;
@@ -60,12 +60,12 @@
 
         @media (hover: hover) {
           &:hover {
-            background-color: #4c8bf510;
+            background-color: _.$blue-transparent-4;
           }
         }
 
         &:active {
-          background-color: #4c8bf520;
+          background-color: _.$blue-transparent-3;
         }
 
         @media (max-width: _.$width-512) {
@@ -127,8 +127,8 @@
       justify-content: flex-end;
       border-radius: $border-radius;
       padding: 25px 10px 25px 25px;
-      background-color: #ffffff90;
-      box-shadow: 0 0 15px -10px _.$transparent-black;
+      background-color: _.$white-transparent;
+      box-shadow: 0 0 15px -10px _.$black-transparent-3;
       @media (max-width: _.$width-1280) {
         height: fit-content;
       }

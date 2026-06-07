@@ -1,4 +1,4 @@
-@use "../../global_variables" as _;
+@use "../../design_system" as _;
 
 .main {
   position: relative;
@@ -14,8 +14,7 @@
   }
   @media (hover: hover) {
     &.reactive:hover {
-      cursor: pointer;
-      background-color: rgba(0, 0, 0, 0.015);
+      background-color: _.$black-transparent-4;
       & > .tail_mark {
         color: _.$gray;
       }
@@ -33,7 +32,7 @@
       border-radius: 50%;
       transform: scale(0);
       animation: ripple 250ms linear;
-      background-color: _.$transparent-black;
+      background-color: _.$black-transparent-4;
     }
   }
   & > .label {

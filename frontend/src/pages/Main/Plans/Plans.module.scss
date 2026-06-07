@@ -1,4 +1,4 @@
-@use "../../../global_variables" as _;
+@use "../../../design_system" as _;
 
 .main {
   position: relative;
@@ -23,12 +23,12 @@
     padding: 7.5px 4px;
     z-index: 2;
     border-radius: 25px;
-    background-color: #ffffffcc;
+    background-color: _.$white-transparent;
     backdrop-filter: blur(10px) saturate(150%);
     -webkit-backdrop-filter: blur(10px) saturate(150%);
     box-shadow:
-      0 4px 16px #0000001a,
-      0 2px 8px #00000014;
+      0 4px 16px _.$black-transparent-2,
+      0 2px 8px _.$black-transparent-3;
     border: 0.5px solid _.$noisy-white;
     width: fit-content;
     transition:
@@ -68,9 +68,9 @@
     align-items: center;
     justify-content: center;
     font-size: 0.85 * _.$base-font-size;
-    background-color: _.$transparent-white;
+    background-color: _.$white-transparent;
     border-radius: 20px;
-    box-shadow: 0 0 5px 1px _.$transparent-black;
+    box-shadow: 0 0 5px 1px _.$black-transparent-3;
     padding: 60px 20px;
     color: _.$gray;
     text-align: center;
@@ -85,9 +85,9 @@
     display: flex;
     flex-direction: column;
     font-size: 0.85 * _.$base-font-size;
-    background-color: _.$transparent-white;
+    background-color: _.$white-transparent;
     border-radius: 20px;
-    box-shadow: 0 0 5px 1px _.$transparent-black;
+    box-shadow: 0 0 5px 1px _.$black-transparent-3;
     padding-bottom: 50px;
     overflow: auto;
     @media (max-width: _.$width-780) {
@@ -175,11 +175,11 @@
       white-space: nowrap;
       &.buy {
         color: _.$red;
-        background-color: rgba(_.$red, 0.1);
+        background-color: _.$red-transparent-3;
       }
       &.sell {
         color: _.$blue;
-        background-color: rgba(_.$blue, 0.1);
+        background-color: _.$blue-transparent-3;
       }
     }
     .quantity {
