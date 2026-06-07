@@ -51,7 +51,7 @@
   @media (hover: hover) {
     &:hover {
       box-shadow:
-        0 6px 16px #0000001f,
+        0 6px 16px _.$black-transparent-3,
         0 3px 8px _.$black-transparent-2;
       &:not(.active) {
         cursor: pointer;

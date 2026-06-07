@@ -45,7 +45,7 @@
           border-radius: 50%;
           background-color: _.$white;
           transition: transform 0.2s ease;
-          box-shadow: 0 2px 4px #00000033;
+          box-shadow: 0 2px 4px _.$black-transparent-2;
         }
         &.buy > .switch_thumb {
           transform: translateX(0);

@@ -14,7 +14,7 @@
 
   & > .search_input_outer {
     &:not(:last-child) {
-      border-bottom: 1px solid #0000000d;
+      border-bottom: 1px solid _.$black-transparent-3;
     }
   }
 }
@@ -34,7 +34,7 @@
     gap: 2px;
     min-height: calc(56px + env(safe-area-inset-top));
     padding: env(safe-area-inset-top) 8px 0;
-    border-bottom: 1px solid #0000000d;
+    border-bottom: 1px solid _.$black-transparent-3;
     background-color: _.$noisy-white;
     flex-shrink: 0;
 
@@ -138,11 +138,11 @@
     justify-content: center;
     width: 56px;
     height: 56px;
-    border: 1px solid #0000000d;
+    border: 1px solid _.$black-transparent-3;
     border-radius: 18px;
     background-color: _.$white;
     color: _.$light-gray;
-    box-shadow: 0 8px 24px #0000000a;
+    box-shadow: 0 8px 24px _.$black-transparent-3;
   }
 
   & > .empty_state_text {

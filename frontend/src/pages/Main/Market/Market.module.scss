@@ -667,12 +667,6 @@
   border: 0;
   background: _.$blue;
   color: _.$white;
-
-  @media (hover: hover) {
-    &:hover {
-      background: #3679e8;
-    }
-  }
 }
 
 .secondary_action {

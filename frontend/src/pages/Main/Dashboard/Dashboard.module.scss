@@ -60,12 +60,12 @@
 
         @media (hover: hover) {
           &:hover {
-            background-color: #4c8bf510;
+            background-color: _.$blue-transparent-4;
           }
         }
 
         &:active {
-          background-color: #4c8bf520;
+          background-color: _.$blue-transparent-3;
         }
 
         @media (max-width: _.$width-512) {
