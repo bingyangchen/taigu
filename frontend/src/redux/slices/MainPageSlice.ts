@@ -1,8 +1,7 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
 
-export type MarketTab = "holding" | "favorites";
-export type MarketSortKey = "marketValue" | "xirr" | "fluct" | "name";
+import type { MarketSortKey, MarketTab } from "../../types";
 
 interface MainPageState {
   headerTitle: string | null;

@@ -3,28 +3,13 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import LocalDatabase from "../../storage/localDatabase";
 import type {
   CreateTradeRecordRequestBody,
-  StockWarehouse,
   TradeRecord,
+  TradeRecordState,
   TradeRecordSyncResponse,
   UpdateTradeRecordRequestBody,
 } from "../../types";
 import Api from "../../utils/api";
 import { RootState } from "../store";
-
-export interface TradeRecordState {
-  tradeRecords: TradeRecord[];
-  sidTradeRecordsMap: { [sid: string]: TradeRecord[] };
-  sidHandlingFeeMap: { [sid: string]: number };
-  sidGainMap: { [sid: string]: number };
-  sidCashInvestedMap: { [sid: string]: number };
-  stockWarehouse: StockWarehouse;
-  totalCashInvested: number;
-  totalHandlingFee: number;
-  cashInvestedChartData: (string | number)[][];
-  tradeVolumeChartData: (string | number)[][];
-  averageCashInvested: number;
-  isWaiting: boolean;
-}
 
 const initialState: TradeRecordState = {
   tradeRecords: [],

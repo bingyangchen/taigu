@@ -232,34 +232,5 @@ export const stockInfoSlice = createSlice({
   },
 });
 
-export const getSidMarketValueMap = (
-  sidStockInfoMap: { [sid: string]: StockInfo },
-  stockWarehouse: { [sid: string]: number[] },
-): { [sid: string]: number } => {
-  const result: { [sid: string]: number } = {};
-  for (const [sid, inventoryCosts] of Object.entries(stockWarehouse)) {
-    result[sid] = calculateMarketValue(sidStockInfoMap[sid], inventoryCosts);
-  }
-  return result;
-};
-
-export const calculateMarketValue = (
-  stockInfo: StockInfo | undefined,
-  inventoryCosts: number[],
-): number => {
-  return (stockInfo?.close ?? 0) * inventoryCosts.length;
-};
-
-export const getTotalMarketValue = (
-  sidStockInfoMap: { [sid: string]: StockInfo },
-  stockWarehouse: { [sid: string]: number[] },
-): number => {
-  let result = 0;
-  for (const [sid, inventoryCosts] of Object.entries(stockWarehouse)) {
-    result += calculateMarketValue(sidStockInfoMap[sid], inventoryCosts);
-  }
-  return result;
-};
-
 export const { setMarketIndexHistoricalPrices } = stockInfoSlice.actions;
 export default stockInfoSlice.reducer;

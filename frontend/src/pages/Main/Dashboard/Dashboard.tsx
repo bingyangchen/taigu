@@ -13,13 +13,10 @@ import {
   TradeRecordEditor,
 } from "../../../components";
 import { changeDashboardDaysToShow } from "../../../redux/slices/MainPageSlice";
-import {
-  getSidMarketValueMap,
-  getTotalMarketValue,
-} from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Env from "../../../utils/env";
+import { getSidMarketValueMap, getTotalMarketValue } from "../../../utils/market";
 import Util from "../../../utils/util";
 import styles from "./Dashboard.module.scss";
 

@@ -7,21 +7,19 @@ import {
   changeMarketPageSubpage,
   changeMarketSearchText,
   changeMarketSortKey,
-  type MarketSortKey,
-  type MarketTab,
   updateHeaderTitle,
 } from "../../../redux/slices/MainPageSlice";
 import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
-import type { StockInfo } from "../../../types";
+import type { MarketSortKey, MarketTab, StockInfo } from "../../../types";
 import Env from "../../../utils/env";
 import {
   getAllMarketSids,
   getStockName,
   getStockXirr,
   getVisibleMarketSids,
-} from "../../../utils/marketSids";
+} from "../../../utils/market";
 import Util from "../../../utils/util";
 import styles from "./Market.module.scss";
 

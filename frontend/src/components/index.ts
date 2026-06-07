@@ -5,7 +5,6 @@ export { default as BottomSheet } from "./BottomSheet/BottomSheet";
 export { default as Button } from "./Button/Button";
 export { default as CashDividendRecordEditor } from "./CashDividendRecordEditor/CashDividendRecordEditor";
 export { default as CheckDeleteModal } from "./CheckDeleteModal/CheckDeleteModal";
-export { default as ComplexCashInvestedLineChart } from "./ComplexCashInvestedLineChart/ComplexCashInvestedLineChart";
 export { default as DeletePreview } from "./DeletePreview/DeletePreview";
 export { default as DestructiveActionSection } from "./DestructiveActionSection/DestructiveActionSection";
 export { default as DollarSign } from "./DollarSign/DollarSign";
