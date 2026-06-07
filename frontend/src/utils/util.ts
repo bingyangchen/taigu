@@ -46,7 +46,7 @@ export default class Util {
     return window.matchMedia("(display-mode: standalone)").matches;
   }
 
-  public static debounce = <T,>(
+  public static debounce = <T>(
     func: (..._args: T[]) => void,
     delay: number,
   ): ((..._args: T[]) => void) => {
