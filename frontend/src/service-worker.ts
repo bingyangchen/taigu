@@ -1,14 +1,15 @@
 /// <reference lib="webworker" />
 /* eslint-disable no-restricted-globals */
 
-// See https://developers.google.com/web/tools/workbox/modules
-// for the list of available Workbox modules, or add any other code you'd like.
-// You can also remove this file if you'd prefer not to use a
-// service worker, and the Workbox build step will be skipped.
+// Workbox Docs: https://developers.google.com/web/tools/workbox/modules
 
 import { clientsClaim } from "workbox-core";
 import { ExpirationPlugin } from "workbox-expiration";
-import { createHandlerBoundToURL, precacheAndRoute } from "workbox-precaching";
+import {
+  cleanupOutdatedCaches,
+  createHandlerBoundToURL,
+  precacheAndRoute,
+} from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
@@ -23,6 +24,7 @@ clientsClaim();
 // Their URLs are injected into the manifest variable below.
 // This variable must be present somewhere in your service worker file,
 // even if you decide not to use precaching. See https://cra.link/PWA
+cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Set up App Shell-style routing, so that all navigation requests
@@ -51,15 +53,13 @@ registerRoute(
   new StaleWhileRevalidate({
     cacheName: "images",
     plugins: [
-      // Ensure that once this runtime cache reaches a maximum size the
-      // least-recently used images are removed.
+      // Ensure that once this runtime cache reaches a maximum size the LRU images are removed.
       new ExpirationPlugin({ maxEntries: 50 }),
     ],
   }),
 );
 
 const API_CACHE_NAME = "api-cache";
-
 const getApiPath = (url: URL): string => url.pathname.replace(/^\/api\/?/, "");
 const apiCachePaths = new Set([
   "cash-dividends",
@@ -96,20 +96,6 @@ registerRoute(
   },
 );
 
-self.addEventListener("message", (event) => {
-  // This allows the web app to trigger skipWaiting via
-  // registration.waiting.postMessage({type: 'SKIP_WAITING'})
-  if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-});
-
 self.addEventListener("install", () => {
-  // Forces the waiting service worker to become the active service worker
   self.skipWaiting();
-});
-
-self.addEventListener("activate", (event) => {
-  // Claims all clients immediately, which makes the new service worker active
-  event.waitUntil(self.clients.claim());
 });
