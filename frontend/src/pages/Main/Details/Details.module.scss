@@ -80,7 +80,7 @@ $switch-single-column-width: 760px;
   border: 1px solid _.$black-transparent-3;
   border-radius: 16px;
   background: _.$white-transparent;
-  box-shadow: 0 10px 24px #26394d0a;
+  box-shadow: 0 10px 24px _.$blue-transparent-4;
   animation: section-enter 180ms ease-out both;
 
   @media (max-width: _.$width-780) {

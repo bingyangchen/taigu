@@ -129,7 +129,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
           </RoundButton>
         </ScrollThresholdContainer>
         <div className={styles.content}>
-          <div className={styles.header_card}>
+          <div className={`${styles.block} ${styles.header_card}`}>
             <div className={styles.title}>{this.marketLabel}</div>
             <div className={styles.date}>{this.props.realtimePriceDate}</div>
             <div className={`${styles.price_row} ${this.priceClass}`}>
@@ -139,7 +139,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
               </div>
             </div>
           </div>
-          <div className={styles.chart_card}>
+          <div className={`${styles.block} ${styles.chart_card}`}>
             <div className={styles.controls}>
               <SegmentedControl
                 label="指數圖表類型"
