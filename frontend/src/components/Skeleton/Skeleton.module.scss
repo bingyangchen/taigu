@@ -1,0 +1,74 @@
+@use "../../design_system" as _;
+
+.skeleton {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: _.$noisy-white;
+  border-radius: 999px;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: linear-gradient(90deg, transparent, _.$white-transparent, transparent);
+    animation: skeletonShimmer 1.15s ease-in-out infinite;
+    transform: translateX(-100%);
+  }
+}
+
+.lineLarge {
+  width: 116px;
+  height: 22px;
+}
+
+.lineSmall {
+  width: 68px;
+  height: 16px;
+}
+
+.lineFull {
+  width: min(100%, 560px);
+  height: 15px;
+}
+
+.lineMedium {
+  width: min(74%, 380px);
+  height: 15px;
+}
+
+.badge {
+  width: 62px;
+  height: 24px;
+}
+
+.overlay {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  background: _.$noisy-white;
+  border-radius: 18px;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: linear-gradient(90deg, transparent, _.$white-transparent, transparent);
+    animation: skeletonShimmer 1.15s ease-in-out infinite;
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after,
+  .overlay::after {
+    animation: none;
+    transform: none;
+  }
+}
+
+@keyframes skeletonShimmer {
+  to {
+    transform: translateX(100%);
+  }
+}

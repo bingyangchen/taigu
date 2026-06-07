@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 
-import { SegmentedControl, SpeedDial } from "../../../components";
+import { SegmentedControl, Skeleton, SpeedDial } from "../../../components";
 import { IconBriefcase, IconHeart, IconMagnifier, IconXLarge } from "../../../icons";
 import {
   changeMarketPageSubpage,
@@ -402,9 +402,9 @@ class Market extends React.Component<Props, State> {
           activeTab === "holding" ? styles.holding_skeleton : styles.favorite_skeleton
         }`}
       >
-        <div />
-        <div />
-        <div />
+        <Skeleton width="54%" height={14} />
+        <Skeleton width="82%" height={14} />
+        <Skeleton width="36%" height={14} />
       </div>
     ));
   }

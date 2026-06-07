@@ -7,6 +7,7 @@ import {
   RoundButton,
   ScrollThresholdContainer,
   SegmentedControl,
+  SkeletonOverlay,
   SpeedDial,
 } from "../../../components";
 import { IconChevronLeft } from "../../../icons";
@@ -154,17 +155,17 @@ class MarketIndexDetails extends React.Component<Props, State> {
               />
             </div>
             <div
-              className={`${styles.chart_container} ${
-                this.state.chartMode === "historical" && this.showHistoricalLoadingState
-                  ? styles.is_waiting
-                  : ""
-              }`}
+              className={styles.chart_container}
               aria-label={
                 this.state.chartMode === "intraday"
                   ? "今日走勢"
                   : `${this.historicalChartAriaLabel}收盤價走勢`
               }
             >
+              {this.state.chartMode === "historical" &&
+                this.showHistoricalLoadingState && (
+                  <SkeletonOverlay className={styles.chart_overlay} />
+                )}
               {this.state.chartMode === "intraday" ? (
                 this.showIntradayEmptyState ? (
                   <div className={styles.empty_chart}>

@@ -284,17 +284,15 @@ $switch-single-column-width: 760px;
   }
 }
 
-.skeleton {
+.price_skeleton {
   width: 180px;
+  height: 62px;
+  margin-top: 12px;
   border-radius: 14px;
-  background: linear-gradient(90deg, #e8eef6 0%, #f7faff 45%, #e8eef6 100%);
-  background-size: 220% 100%;
-  animation: shimmer 1200ms ease-in-out infinite;
-}
 
-@keyframes shimmer {
-  to {
-    background-position: -220% 0;
+  @media (max-width: _.$width-780) {
+    height: 48px;
+    margin-top: 10px;
   }
 }
 
@@ -338,33 +336,16 @@ $switch-single-column-width: 760px;
   margin-top: 24px;
   overflow: hidden;
 
-  &.is_waiting::before {
-    content: "";
-    position: absolute;
-    inset: 10px 8px 24px 0;
-    z-index: 1;
-    border-radius: 18px;
-    background:
-      linear-gradient(90deg, #dfe8f2 0%, #f8fbff 50%, #dfe8f2 100%),
-      repeating-linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent 54px,
-        #dce5ef 55px
-      );
-    background-size:
-      220% 100%,
-      100% 100%;
-    animation:
-      shimmer 1300ms ease-in-out infinite,
-      skeleton-fade 160ms ease-out both;
-  }
-
   @media (max-width: _.$width-780) {
     width: 100%;
     height: clamp(238px, 31dvh, 280px);
     margin-top: 18px;
   }
+}
+
+.historical_price_chart_overlay {
+  inset: 10px 8px 24px 0;
+  animation: skeleton-fade 160ms ease-out both;
 }
 
 @keyframes skeleton-fade {

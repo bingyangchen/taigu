@@ -11,6 +11,8 @@ import {
   PercentSign,
   RoundButton,
   ScrollThresholdContainer,
+  Skeleton,
+  SkeletonOverlay,
   SpeedDial,
   StockMemoEditor,
 } from "../../../components";
@@ -374,16 +376,14 @@ class Details extends React.Component<Props, State> {
                 <h1 className={styles.company_name}>{stockInfo?.name || this.sid}</h1>
                 <div className={styles.sid}>{this.sid}</div>
               </div>
-              <div className={`${styles.price} ${!stockInfo ? styles.skeleton : ""}`}>
-                {stockInfo ? (
-                  <>
-                    <DollarSign />
-                    {stockInfo.close}
-                  </>
-                ) : (
-                  " "
-                )}
-              </div>
+              {stockInfo ? (
+                <div className={styles.price}>
+                  <DollarSign />
+                  {stockInfo.close}
+                </div>
+              ) : (
+                <Skeleton className={styles.price_skeleton} />
+              )}
               <div className={styles.price_meta}>
                 <span className={this.fluctPriceClass}>{this.fluctPriceString}</span>
                 <span className={styles.trade_quantity}>
@@ -414,11 +414,12 @@ class Details extends React.Component<Props, State> {
               )}
             </div>
             <div
-              className={`${styles.historical_price_chart_container} ${
-                this.props.isWaitingHistoricalPrices ? styles.is_waiting : ""
-              }`}
+              className={styles.historical_price_chart_container}
               aria-label="近 60 日收盤價走勢"
             >
+              {this.props.isWaitingHistoricalPrices && (
+                <SkeletonOverlay className={styles.historical_price_chart_overlay} />
+              )}
               {this.showHistoricalPriceEmptyState ? (
                 <div className={styles.empty_chart}>
                   <div>目前沒有歷史價格資料</div>

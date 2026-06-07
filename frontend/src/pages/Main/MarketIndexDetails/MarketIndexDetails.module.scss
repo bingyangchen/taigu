@@ -156,31 +156,13 @@
   position: relative;
   height: 320px;
 
-  &.is_waiting::before {
-    content: "";
-    position: absolute;
-    inset: 10px 8px 24px 0;
-    z-index: 1;
-    border-radius: 18px;
-    background: linear-gradient(
-      90deg,
-      _.$black-transparent-3 0%,
-      _.$white 50%,
-      _.$black-transparent-3 100%
-    );
-    background-size: 220% 100%;
-    animation: shimmer 1200ms ease-in-out infinite;
-  }
-
   @media (max-width: _.$width-512) {
     height: clamp(240px, 36dvh, 300px);
   }
 }
 
-@keyframes shimmer {
-  to {
-    background-position: -220% 0;
-  }
+.chart_overlay {
+  inset: 10px 8px 24px 0;
 }
 
 .empty_chart {
