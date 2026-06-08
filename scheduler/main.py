@@ -76,6 +76,16 @@ def cleanup_data_change_logs() -> None:
         logger.error(f"Error in cleanup_data_change_logs: {e}")
 
 
+def cleanup_expired_refresh_tokens() -> None:
+    try:
+        subprocess.run(  # noqa: S603
+            ["python", "manage.py", "cleanup_expired_refresh_tokens"],  # noqa: S607
+            check=True,
+        )
+    except Exception as e:
+        logger.error(f"Error in cleanup_expired_refresh_tokens: {e}")
+
+
 def reconcile_due_billing_profiles() -> None:
     try:
         subprocess.run(  # noqa: S603
@@ -143,6 +153,11 @@ if __name__ == "__main__":
         cleanup_data_change_logs,
         CronTrigger.from_crontab("20 3 * * *"),
         name="cleanup_data_change_logs",
+    )
+    scheduler.add_job(
+        cleanup_expired_refresh_tokens,
+        CronTrigger.from_crontab("30 3 * * *"),
+        name="cleanup_expired_refresh_tokens",
     )
     scheduler.add_job(
         reconcile_due_billing_profiles,

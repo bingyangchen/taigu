@@ -107,3 +107,10 @@ def rotate_refresh_token(raw_token: str) -> TokenPair:
                 )
 
     raise InvalidRefreshTokenError
+
+
+def delete_expired_refresh_tokens() -> int:
+    deleted_count, _ = RefreshToken.objects.filter(
+        expires_at__lt=timezone.now()
+    ).delete()
+    return deleted_count
