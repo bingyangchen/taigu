@@ -79,24 +79,24 @@ class Main extends React.Component<Props, State> {
     this.mainRef.current?.addEventListener("scroll", this.handleScroll);
     window.addEventListener("scroll", this.handleScroll);
 
-    const independentPromises = Promise.allSettled([
-      this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
-      this.props.dispatch(fetchAllFavorites()).unwrap(),
-      this.props.dispatch(fetchAllTradePlans()).unwrap(),
-      this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
-      this.props.dispatch(fetchAllDiscounts()).unwrap(),
-    ]);
-
-    this.props.dispatch(openSession());
-
     try {
       const account = await this.props.dispatch(fetchAccountInfo()).unwrap();
-      const tradeRecordsResult = await this.props
-        .dispatch(fetchAllTradeRecords(account.id))
-        .unwrap();
+
+      const independentPromises = Promise.allSettled([
+        this.props.dispatch(openSession()).unwrap(),
+        this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
+        this.props.dispatch(fetchAllFavorites()).unwrap(),
+        this.props.dispatch(fetchAllTradePlans()).unwrap(),
+        this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
+        this.props.dispatch(fetchAllDiscounts()).unwrap(),
+      ]);
+
+      const res = await this.props.dispatch(fetchAllTradeRecords(account.id)).unwrap();
+
       await Promise.allSettled([
         this.props.dispatch(calculateTotalHandlingFee()).unwrap(),
-        this.fetchHoldingStockInfo(tradeRecordsResult.stockWarehouse),
+        this.fetchHoldingStockInfo(res.stockWarehouse),
+        independentPromises,
       ]);
     } catch (error) {
       console.error(
@@ -104,7 +104,6 @@ class Main extends React.Component<Props, State> {
         error,
       );
     } finally {
-      await independentPromises;
       this.setState({ isLoading: false });
     }
 
