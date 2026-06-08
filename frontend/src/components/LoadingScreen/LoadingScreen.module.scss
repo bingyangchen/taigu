@@ -13,9 +13,58 @@
   align-items: center;
   gap: 2dvh;
   z-index: 8;
+
+  & > .logo_wrapper {
+    animation: logo-breathe-in 2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
   & > .loading_spinner {
     width: 20px;
     aspect-ratio: 1;
+    opacity: 0;
+    animation: spinner-fade-in 400ms ease forwards;
+    animation-delay: 2s;
+  }
+}
+
+@keyframes logo-breathe-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.78);
+  }
+
+  55% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spinner-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
     opacity: 60%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main {
+    & > .logo_wrapper {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    & > .loading_spinner {
+      animation: none;
+      opacity: 60%;
+    }
   }
 }
