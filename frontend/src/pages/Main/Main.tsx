@@ -199,10 +199,7 @@ class Main extends React.Component<Props, State> {
         <ToastList />
         <PlanUpsellModal />
         {this.state.isLoading && <LoadingScreen />}
-        {Util.isMobile &&
-          !this.isMobileEditorRoute &&
-          !Nav.isAtDetailsPage &&
-          !Nav.isAtMarketIndexDetailsPage && <HeaderForMain />}
+        {this.shouldShowHeader && <HeaderForMain />}
         <div className={styles.body}>
           {!Util.isMobile && (
             <MainSideBar
@@ -248,6 +245,15 @@ class Main extends React.Component<Props, State> {
     document.body.classList.toggle(
       "main-page-white-shell-scroll",
       this.shouldUseDocumentScroll && this.shouldUseWhiteMobileShell,
+    );
+  }
+
+  private get shouldShowHeader(): boolean {
+    return (
+      Util.isMobile &&
+      !this.isMobileEditorRoute &&
+      !Nav.isAtDetailsPage &&
+      !Nav.isAtMarketIndexDetailsPage
     );
   }
 
