@@ -3,7 +3,7 @@ import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import React from "react";
 
 import { Button, RoundButton } from "../../components";
-import { IconXLarge } from "../../icons";
+import * as Icons from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import {
   type CloseActiveModalEvent,
@@ -115,7 +115,7 @@ class Modal extends React.Component<Props, State> {
                   className="p-12"
                   onClick={this.handleClickDiscard}
                 >
-                  <IconXLarge sideLength="16" />
+                  <Icons.IconXLarge sideLength="16" />
                 </RoundButton>
               )}
             </div>

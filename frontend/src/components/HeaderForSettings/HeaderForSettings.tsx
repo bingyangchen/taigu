@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { RoundButton } from "../../components";
-import { IconChevronLeft } from "../../icons";
+import * as Icons from "../../icons";
 import type { RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
@@ -32,7 +32,7 @@ class HeaderForSettings extends React.Component<Props, State> {
           hint_text="上一頁"
           onClick={this.goToParentDirectory}
         >
-          <IconChevronLeft sideLength="16" />
+          <Icons.IconChevronLeft sideLength="16" />
         </RoundButton>
         {this.props.headerTitle}
       </header>

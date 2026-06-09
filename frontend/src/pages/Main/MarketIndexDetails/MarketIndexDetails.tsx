@@ -10,7 +10,7 @@ import {
   SkeletonOverlay,
   SpeedDial,
 } from "../../../components";
-import { IconChevronLeft } from "../../../icons";
+import * as Icons from "../../../icons";
 import { changeMarketIndexHistoricalDaysToShow } from "../../../redux/slices/MainPageSlice";
 import {
   fetchMarketIndexHistoricalPrices,
@@ -128,7 +128,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
             className="p-12"
             hint_text="回儀表板"
           >
-            <IconChevronLeft sideLength="16" />
+            <Icons.IconChevronLeft sideLength="16" />
           </RoundButton>
         </ScrollThresholdContainer>
         <div className={styles.content}>

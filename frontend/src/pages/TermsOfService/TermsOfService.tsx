@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 import { FullLogo, RoundButton } from "../../components";
-import { IconChevronLeft } from "../../icons";
+import * as Icons from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
 import Util from "../../utils/util";
@@ -29,7 +29,7 @@ class TermsOfService extends React.Component<Props, State> {
               hint_text="上一頁"
               onClick={() => this.props.router.navigate(-1)}
             >
-              <IconChevronLeft sideLength="16" />
+              <Icons.IconChevronLeft sideLength="16" />
             </RoundButton>
           )}
           <Link to={Env.frontendRootPath}>

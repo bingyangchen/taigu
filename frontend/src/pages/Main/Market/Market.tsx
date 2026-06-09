@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { SegmentedControl, Skeleton, SpeedDial } from "../../../components";
-import { IconBriefcase, IconHeart, IconMagnifier, IconXLarge } from "../../../icons";
+import * as Icons from "../../../icons";
 import {
   changeMarketPageSubpage,
   changeMarketSearchText,
@@ -147,7 +147,7 @@ class Market extends React.Component<Props, State> {
           </div>
           <div className={styles.search_sort_row}>
             <label className={styles.search_box}>
-              <IconMagnifier sideLength="16" />
+              <Icons.IconMagnifier sideLength="16" />
               <input
                 aria-label="搜尋股票"
                 placeholder={
@@ -163,7 +163,7 @@ class Market extends React.Component<Props, State> {
                   type="button"
                   onClick={this.clearSearch}
                 >
-                  <IconXLarge sideLength="12" />
+                  <Icons.IconXLarge sideLength="12" />
                 </button>
               )}
             </label>
@@ -339,7 +339,7 @@ class Market extends React.Component<Props, State> {
 
   private renderEmptyState(activeTab: MarketTab): React.ReactNode {
     const isHolding = activeTab === "holding";
-    const EmptyIcon = isHolding ? IconBriefcase : IconHeart;
+    const EmptyIcon = isHolding ? Icons.IconBriefcase : Icons.IconHeart;
     return (
       <div className={styles.empty_state}>
         <EmptyIcon sideLength="40" color="#4c8bf5" />
@@ -380,7 +380,7 @@ class Market extends React.Component<Props, State> {
   private renderNoSearchResults(): React.ReactNode {
     return (
       <div className={styles.empty_state}>
-        <IconMagnifier sideLength="40" color="#4c8bf5" />
+        <Icons.IconMagnifier sideLength="40" color="#4c8bf5" />
         <h2>找不到符合的股票</h2>
         <p>請確認代號或名稱是否正確，或清除搜尋條件。</p>
         <button

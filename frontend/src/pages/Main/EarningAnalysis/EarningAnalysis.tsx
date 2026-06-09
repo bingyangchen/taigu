@@ -9,7 +9,7 @@ import {
   SegmentedControl,
   SpeedDial,
 } from "../../../components";
-import { IconChevronLeft } from "../../../icons";
+import * as Icons from "../../../icons";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Api from "../../../utils/api";
@@ -76,7 +76,7 @@ class EarningAnalysis extends React.Component<Props, State> {
             className="p-12"
             hint_text="回儀表板"
           >
-            <IconChevronLeft sideLength="16" />
+            <Icons.IconChevronLeft sideLength="16" />
           </RoundButton>
         </ScrollThresholdContainer>
         <div className={styles.floating_pill_wrapper}>
