@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Button, Modal, RoundButton } from "../../components";
-import { IconChevronLeft } from "../../icons";
+import * as Icons from "../../icons";
 import type { Props as ButtonProps } from "../Button/Button";
 import styles from "./FormPageShell.module.scss";
 
@@ -32,7 +32,7 @@ export default class FormPageShell extends React.Component<Props, State> {
                   className="p-12"
                   onClick={this.handleClickDiscard}
                 >
-                  <IconChevronLeft sideLength="16" />
+                  <Icons.IconChevronLeft sideLength="16" />
                 </RoundButton>
               )}
             </div>

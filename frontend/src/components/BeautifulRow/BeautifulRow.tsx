@@ -1,6 +1,6 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 
-import { IconChevronRight } from "../../icons";
+import * as Icons from "../../icons";
 import styles from "./BeautifulRow.module.scss";
 
 interface Props {
@@ -37,7 +37,7 @@ export default class BeautifulRow extends React.Component<Props, State> {
         </div>
         {this.props.onClick && (
           <div className={styles.tail_mark}>
-            <IconChevronRight sideLength="13" />
+            <Icons.IconChevronRight sideLength="13" />
           </div>
         )}
       </div>

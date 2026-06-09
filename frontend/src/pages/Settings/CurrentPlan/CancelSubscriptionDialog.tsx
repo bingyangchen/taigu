@@ -2,7 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import React, { useRef, useState } from "react";
 
 import { Button } from "../../../components";
-import { IconInfoCircle } from "../../../icons";
+import * as Icons from "../../../icons";
 import type { SubscriptionEntitlements } from "../../../types";
 import styles from "./CancelSubscriptionDialog.module.scss";
 
@@ -96,7 +96,7 @@ export default function CancelSubscriptionDialog({
           </header>
 
           <div className={styles.retentionNotice}>
-            <IconInfoCircle sideLength="16" />
+            <Icons.IconInfoCircle sideLength="16" />
             <p>
               Standard 權益會保留至 <strong>{periodEnd}</strong>。到期後會切換為 Free。
             </p>

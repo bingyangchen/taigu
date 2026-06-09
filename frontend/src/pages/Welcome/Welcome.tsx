@@ -11,13 +11,7 @@ import demo05 from "../../assets/demo05.webp";
 import demo06 from "../../assets/demo06.webp";
 import realtimeInfo from "../../assets/realtime_info.webp";
 import { FullLogo } from "../../components";
-import {
-  IconAppAdd,
-  IconChartHistogram,
-  IconClockHistory,
-  IconDatabaseManagement,
-  IconShieldCheck,
-} from "../../icons";
+import * as Icons from "../../icons";
 import Env from "../../utils/env";
 import Util from "../../utils/util";
 import styles from "./Welcome.module.scss";
@@ -29,17 +23,17 @@ const featureHighlights = [
     title: "交易與股利一次記好",
     description:
       "買進、賣出、現金股利與手續費都回到同一份紀錄，不必再維護分散的試算表。",
-    icon: <IconDatabaseManagement sideLength="22" />,
+    icon: <Icons.IconDatabaseManagement sideLength="22" />,
   },
   {
     title: "績效圖表直接回答問題",
     description: "快速看懂投入成本、市值、已實現損益、年化報酬與股利貢獻。",
-    icon: <IconChartHistogram sideLength="22" />,
+    icon: <Icons.IconChartHistogram sideLength="22" />,
   },
   {
     title: "市場資訊貼近台股習慣",
     description: "支援上市、上櫃、興櫃與 ETF，追蹤持股、關注清單與即時行情。",
-    icon: <IconClockHistory sideLength="22" />,
+    icon: <Icons.IconClockHistory sideLength="22" />,
   },
 ];
 
@@ -338,7 +332,7 @@ export default function Welcome(): React.ReactElement {
 
       <section id="trust" className={styles.trustSection}>
         <div className={styles.trustCopy}>
-          <IconShieldCheck sideLength="34" />
+          <Icons.IconShieldCheck sideLength="34" />
           <h2>你的投資紀錄應該清楚，也應該被妥善保護。</h2>
           <p>
             Taigu 採用 Google
@@ -351,7 +345,7 @@ export default function Welcome(): React.ReactElement {
       </section>
 
       <section className={styles.finalCta}>
-        <IconAppAdd sideLength="34" />
+        <Icons.IconAppAdd sideLength="34" />
         <h2>今天開始，用一個安靜但完整的地方管理台股紀錄。</h2>
         <p>先記下一筆交易，讓 Taigu 幫你把績效、股利和持股脈絡整理起來。</p>
         {canInstallPWA ? (

@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from "react";
 
-import { IconMagnifier } from "../../icons";
+import * as Icons from "../../icons";
 import styles from "./SearchKeywordInput.module.scss";
 
 interface Props {
@@ -29,7 +29,7 @@ export default class SearchKeywordInput extends React.Component<Props, State> {
       <div
         className={`${styles.main} ${this.props.size === "l" ? styles.l : styles.m}`}
       >
-        <IconMagnifier sideLength={this.props.size === "l" ? "18" : "14"} />
+        <Icons.IconMagnifier sideLength={this.props.size === "l" ? "18" : "14"} />
         <input
           ref={this.inputRef}
           type="text"

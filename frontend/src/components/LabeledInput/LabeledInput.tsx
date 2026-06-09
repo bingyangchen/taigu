@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from "react";
 
 import { RoundButton } from "../../components";
-import { IconEye, IconEyeSlash } from "../../icons";
+import * as Icons from "../../icons";
 import styles from "./LabeledInput.module.scss";
 
 interface Props {
@@ -75,9 +75,9 @@ export default class LabeledInput extends React.Component<Props, State> {
             hint_text={this.state.type === "password" ? "顯示密碼" : "隱藏密碼"}
           >
             {this.state.type === "password" ? (
-              <IconEyeSlash sideLength="20" />
+              <Icons.IconEyeSlash sideLength="20" />
             ) : (
-              <IconEye sideLength="20" />
+              <Icons.IconEye sideLength="20" />
             )}
           </RoundButton>
         )}

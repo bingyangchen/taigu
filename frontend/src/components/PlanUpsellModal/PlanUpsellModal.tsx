@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-import { IconShieldCheck } from "../../icons";
+import * as Icons from "../../icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { closePlanUpsell } from "../../redux/slices/PlanUpsellSlice";
 import type { PlanQuotaResource } from "../../types";
@@ -71,7 +71,7 @@ export default function PlanUpsellModal(): React.ReactElement | null {
         <div className={styles.benefits} aria-label="Standard 方案包含">
           {standardBenefits.map((benefit) => (
             <div className={styles.benefit} key={benefit}>
-              <IconShieldCheck sideLength="17" />
+              <Icons.IconShieldCheck sideLength="17" />
               <span>{benefit}</span>
             </div>
           ))}

@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { FullLogo, NavTab, RoundButton } from "../../components";
-import { IconChevronLeft } from "../../icons";
+import * as Icons from "../../icons";
 import { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import { Subpage } from "../../types";
@@ -38,7 +38,7 @@ class SettingsSideBar extends React.Component<Props, State> {
               this.props.router.navigate(`${Env.frontendRootPath}`, { replace: true })
             }
           >
-            <IconChevronLeft sideLength="16" />
+            <Icons.IconChevronLeft sideLength="16" />
           </RoundButton>
           帳號與設定
         </div>

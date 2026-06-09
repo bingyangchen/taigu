@@ -7,13 +7,7 @@ import {
   TradePlanEditor,
   TradeRecordEditor,
 } from "../../components";
-import {
-  IconCoin,
-  IconMagnifier,
-  IconPencilSquare,
-  IconPlus,
-  IconThumbtack,
-} from "../../icons";
+import * as Icons from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
 import Util from "../../utils/util";
@@ -57,25 +51,25 @@ class SpeedDial extends React.Component<Props, State> {
           className={`${styles.main} ${this.state.isActive ? styles.active : ""}`}
           onClick={this.toggle}
         >
-          <IconPlus sideLength="26" />
+          <Icons.IconPlus sideLength="26" />
           <div className={styles.button_container}>
             <div className={styles.button} onClick={this.handleCreateTradeRecord}>
-              <IconPencilSquare sideLength="20" />
+              <Icons.IconPencilSquare sideLength="20" />
               <div className={styles.hint_text}>新增交易紀錄</div>
             </div>
             <div
               className={styles.button}
               onClick={this.handleCreateCashDividendRecord}
             >
-              <IconCoin sideLength="20" />
+              <Icons.IconCoin sideLength="20" />
               <div className={styles.hint_text}>新增現金股利</div>
             </div>
             <div className={styles.button} onClick={this.handleCreateTradePlan}>
-              <IconThumbtack sideLength="20" />
+              <Icons.IconThumbtack sideLength="20" />
               <div className={styles.hint_text}>新增買賣計畫</div>
             </div>
             <div className={styles.button} onClick={this.handleSearch}>
-              <IconMagnifier sideLength="20" />
+              <Icons.IconMagnifier sideLength="20" />
               <div className={styles.hint_text}>搜尋</div>
             </div>
           </div>

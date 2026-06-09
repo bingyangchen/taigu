@@ -10,7 +10,7 @@ import {
   TradePlanEditor,
   TradeRecordEditor,
 } from "../../components";
-import { IconMagnifier, IconPlus } from "../../icons";
+import * as Icons from "../../icons";
 import { AppDispatch, RootState } from "../../redux/store";
 import { settingsPagePath } from "../../router";
 import { Subpage } from "../../types";
@@ -83,7 +83,7 @@ class MainSideBar extends React.Component<Props, State> {
             tabIndex={0}
           >
             <div className={styles.icon_outer}>
-              <IconPlus sideLength="100%" />
+              <Icons.IconPlus sideLength="100%" />
             </div>
             新增
             <div
@@ -178,7 +178,7 @@ class MainSideBar extends React.Component<Props, State> {
             tabIndex={0}
           >
             <div className={styles.icon_outer}>
-              <IconMagnifier sideLength="100%" />
+              <Icons.IconMagnifier sideLength="100%" />
             </div>
             搜尋
           </div>

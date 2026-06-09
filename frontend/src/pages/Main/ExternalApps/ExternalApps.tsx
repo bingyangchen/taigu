@@ -2,7 +2,7 @@ import React from "react";
 
 import simulator_icon from "../../../assets/simulator_icon.png";
 import simulator_pro_icon from "../../../assets/simulator_pro_icon.png";
-import { IconStar } from "../../../icons";
+import * as Icons from "../../../icons";
 import { IRouter, withRouter } from "../../../router";
 import styles from "./ExternalApps.module.scss";
 
@@ -36,7 +36,7 @@ class ExternalApps extends React.Component<Props, State> {
                 <div className={styles.app_name}>投資策略模擬器</div>
                 <div className={styles.star}>
                   4.8
-                  <IconStar sideLength="10" />
+                  <Icons.IconStar sideLength="10" />
                 </div>
               </div>
             </div>
@@ -54,7 +54,7 @@ class ExternalApps extends React.Component<Props, State> {
                 <div className={styles.app_name}>市場模擬器</div>
                 <div className={styles.star}>
                   4.5
-                  <IconStar sideLength="10" />
+                  <Icons.IconStar sideLength="10" />
                 </div>
               </div>
             </div>

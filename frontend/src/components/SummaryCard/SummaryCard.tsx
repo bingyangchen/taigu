@@ -1,6 +1,6 @@
 import React, { KeyboardEvent } from "react";
 
-import { IconChevronRight } from "../../icons";
+import * as Icons from "../../icons";
 import styles from "./SummaryCard.module.scss";
 
 interface Props {
@@ -30,7 +30,7 @@ export default class SummaryCard extends React.Component<Props> {
         <div className={styles.price}>{this.props.children}</div>
         {this.isClickable && (
           <div className={styles.chevron}>
-            <IconChevronRight sideLength="12" />
+            <Icons.IconChevronRight sideLength="12" />
           </div>
         )}
       </div>

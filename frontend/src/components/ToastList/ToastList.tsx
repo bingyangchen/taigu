@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { connect } from "react-redux";
 
 import { RoundButton } from "../../components";
-import { IconXLarge } from "../../icons";
+import * as Icons from "../../icons";
 import { removeToast } from "../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import styles from "./ToastList.module.scss";
@@ -44,7 +44,7 @@ class ToastList extends React.Component<Props, State> {
                   onClick={() => this.handleClickRemoveMessage(idx)}
                   className={styles.close_button}
                 >
-                  <IconXLarge sideLength="8" color="#FFF" />
+                  <Icons.IconXLarge sideLength="8" color="#FFF" />
                 </RoundButton>
               </div>
             </div>

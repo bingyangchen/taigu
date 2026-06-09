@@ -16,16 +16,7 @@ import {
   SpeedDial,
   StockMemoEditor,
 } from "../../../components";
-import {
-  IconBriefcase,
-  IconChevronLeft,
-  IconChevronRight,
-  IconClockHistory,
-  IconHeart,
-  IconHeartFill,
-  IconMemo,
-  IconThumbtack,
-} from "../../../icons";
+import * as Icons from "../../../icons";
 import {
   addToFavorites,
   fakeAddToFavorites,
@@ -273,7 +264,7 @@ class Details extends React.Component<Props, State> {
                 hint_text="回列表"
                 aria-label="回列表"
               >
-                <IconChevronLeft sideLength="16" />
+                <Icons.IconChevronLeft sideLength="16" />
               </RoundButton>
             </ScrollThresholdContainer>
           )}
@@ -289,9 +280,9 @@ class Details extends React.Component<Props, State> {
                   aria-label={this.isFavorite ? "取消關注" : "加入關注"}
                 >
                   {this.isFavorite ? (
-                    <IconHeartFill sideLength="20" />
+                    <Icons.IconHeartFill sideLength="20" />
                   ) : (
-                    <IconHeart sideLength="20" />
+                    <Icons.IconHeart sideLength="20" />
                   )}
                 </button>
               )}
@@ -326,7 +317,7 @@ class Details extends React.Component<Props, State> {
                   hint_text="回列表"
                   aria-label="回列表"
                 >
-                  <IconChevronLeft sideLength="17" />
+                  <Icons.IconChevronLeft sideLength="17" />
                 </RoundButton>
               )}
               <div className={styles.toolbar_spacer} />
@@ -340,9 +331,9 @@ class Details extends React.Component<Props, State> {
                   aria-label={this.isFavorite ? "取消關注" : "加入關注"}
                 >
                   {this.isFavorite ? (
-                    <IconHeartFill sideLength="18" />
+                    <Icons.IconHeartFill sideLength="18" />
                   ) : (
-                    <IconHeart sideLength="18" />
+                    <Icons.IconHeart sideLength="18" />
                   )}
                 </button>
               )}
@@ -356,7 +347,7 @@ class Details extends React.Component<Props, State> {
                       this.setState({ activeModalName: "companyInfo" });
                     }}
                   >
-                    <IconBriefcase sideLength="18" />
+                    <Icons.IconBriefcase sideLength="18" />
                   </button>
                   <button
                     type="button"
@@ -366,7 +357,7 @@ class Details extends React.Component<Props, State> {
                       this.setState({ activeModalName: "updateOrCreateNote" });
                     }}
                   >
-                    <IconMemo sideLength="18" />
+                    <Icons.IconMemo sideLength="18" />
                   </button>
                 </>
               )}
@@ -397,7 +388,7 @@ class Details extends React.Component<Props, State> {
                     onClick={() => this.setState({ activeModalName: "companyInfo" })}
                     aria-label="公司資訊"
                   >
-                    <IconBriefcase sideLength="16" />
+                    <Icons.IconBriefcase sideLength="16" />
                     公司資訊
                   </button>
                   <button
@@ -407,7 +398,7 @@ class Details extends React.Component<Props, State> {
                     }
                     aria-label="編輯備註"
                   >
-                    <IconMemo sideLength="16" />
+                    <Icons.IconMemo sideLength="16" />
                     備註
                   </button>
                 </div>
@@ -462,7 +453,7 @@ class Details extends React.Component<Props, State> {
                 to={`${Env.frontendRootPath}records?sid=${this.sid}`}
                 className={styles.action_button}
               >
-                <IconClockHistory sideLength="20" color="#444" />
+                <Icons.IconClockHistory sideLength="20" color="#444" />
                 <span>查看交易紀錄</span>
                 {this.tradeRecordCount === 0 && <em>尚無紀錄</em>}
               </Link>
@@ -470,7 +461,7 @@ class Details extends React.Component<Props, State> {
                 to={`${Env.frontendRootPath}plans?sid=${this.sid}`}
                 className={styles.action_button}
               >
-                <IconThumbtack sideLength="20" color="#444" />
+                <Icons.IconThumbtack sideLength="20" color="#444" />
                 <span>查看買賣計畫</span>
                 {this.tradePlanCount > 0 && <em>{this.tradePlanCount} 個計畫</em>}
               </Link>
@@ -510,7 +501,7 @@ class Details extends React.Component<Props, State> {
                       )}
                     </span>
                     <strong>{materialFact.title}</strong>
-                    <IconChevronRight sideLength="14" />
+                    <Icons.IconChevronRight sideLength="14" />
                   </button>
                 ))
               ) : (
@@ -984,7 +975,7 @@ class Details extends React.Component<Props, State> {
           className="p-12"
           onClick={() => this.setState({ activeMaterialFact: null })}
         >
-          <IconChevronLeft />
+          <Icons.IconChevronLeft />
         </RoundButton>
         <div
           className={`${styles.material_fact_outer} ${
@@ -1031,7 +1022,7 @@ class Details extends React.Component<Props, State> {
                       className="p-12"
                       onClick={() => this.setState({ activeMaterialFact: m })}
                     >
-                      <IconChevronRight />
+                      <Icons.IconChevronRight />
                     </RoundButton>
                   </div>
                 </div>

@@ -4,14 +4,7 @@ import { connect } from "react-redux";
 import googleLogo from "../../../assets/google.png";
 import imgPersonFill from "../../../assets/person-fill.svg";
 import { BeautifulBlock, BeautifulRow, FullLogo, Modal } from "../../../components";
-import {
-  IconDatabaseManagement,
-  IconEnvelope,
-  IconExclamation,
-  IconExit,
-  IconIncognito,
-  IconTermsInfo,
-} from "../../../icons";
+import * as Icons from "../../../icons";
 import { logout } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
@@ -82,7 +75,7 @@ class Overview extends React.Component<Props, State> {
               }
             >
               <div className={`${styles.row_inner} ${styles.email}`}>
-                <IconEnvelope sideLength="16px" />
+                <Icons.IconEnvelope sideLength="16px" />
                 <div className={styles.email_container}>
                   <div>Email</div>
                   <div>{this.props.email}</div>
@@ -98,7 +91,7 @@ class Overview extends React.Component<Props, State> {
               }
             >
               <div className={`${styles.row_inner} ${styles.terms_of_service}`}>
-                <IconDatabaseManagement sideLength="16px" />
+                <Icons.IconDatabaseManagement sideLength="16px" />
                 資料控制
               </div>
             </BeautifulRow>
@@ -125,7 +118,7 @@ class Overview extends React.Component<Props, State> {
               }
             >
               <div className={`${styles.row_inner} ${styles.privacy_policy}`}>
-                <IconIncognito sideLength="16px" />
+                <Icons.IconIncognito sideLength="16px" />
                 隱私權政策
               </div>
             </BeautifulRow>
@@ -138,13 +131,13 @@ class Overview extends React.Component<Props, State> {
               }
             >
               <div className={`${styles.row_inner} ${styles.terms_of_service}`}>
-                <IconTermsInfo sideLength="16px" />
+                <Icons.IconTermsInfo sideLength="16px" />
                 服務條款
               </div>
             </BeautifulRow>
             <BeautifulRow onClick={this.handleClickIssueReport}>
               <div className={`${styles.row_inner} ${styles.issue_report}`}>
-                <IconExclamation sideLength="16px" />
+                <Icons.IconExclamation sideLength="16px" />
                 問題回報
               </div>
             </BeautifulRow>
@@ -156,7 +149,7 @@ class Overview extends React.Component<Props, State> {
               }}
             >
               <div className={`${styles.row_inner} ${styles.logout}`}>
-                <IconExit sideLength="16px" />
+                <Icons.IconExit sideLength="16px" />
                 登出
               </div>
             </BeautifulRow>

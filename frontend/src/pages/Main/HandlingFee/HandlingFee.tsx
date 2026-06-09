@@ -16,7 +16,7 @@ import {
   SegmentedControl,
   SpeedDial,
 } from "../../../components";
-import { IconChevronLeft } from "../../../icons";
+import * as Icons from "../../../icons";
 import { deleteDiscount } from "../../../redux/slices/HandlingFeeDiscountSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
@@ -101,7 +101,7 @@ class HandlingFee extends React.Component<Props, State> {
                 className="p-12"
                 hint_text="回儀表板"
               >
-                <IconChevronLeft sideLength="16" />
+                <Icons.IconChevronLeft sideLength="16" />
               </RoundButton>
             </ScrollThresholdContainer>
           )}
@@ -113,7 +113,7 @@ class HandlingFee extends React.Component<Props, State> {
                   className="p-12"
                   hint_text="回儀表板"
                 >
-                  <IconChevronLeft sideLength="16" />
+                  <Icons.IconChevronLeft sideLength="16" />
                 </RoundButton>
               </div>
             )}

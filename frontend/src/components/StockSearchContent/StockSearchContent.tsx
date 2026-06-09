@@ -1,6 +1,6 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 
-import { IconChevronLeft, IconMagnifier } from "../../icons";
+import * as Icons from "../../icons";
 import type { StockInfo } from "../../types";
 import Api from "../../utils/api";
 import Util from "../../utils/util";
@@ -71,7 +71,7 @@ export default class StockSearchContent extends React.Component<Props, State> {
               className="p-12"
               onClick={this.props.onClose}
             >
-              <IconChevronLeft sideLength="18" />
+              <Icons.IconChevronLeft sideLength="18" />
             </RoundButton>
             <div className={styles.page_search_input_outer}>
               {this.renderSearchInput()}
@@ -166,7 +166,7 @@ export default class StockSearchContent extends React.Component<Props, State> {
     return (
       <div className={styles.empty_state}>
         <div className={styles.empty_state_icon}>
-          <IconMagnifier sideLength="24" />
+          <Icons.IconMagnifier sideLength="24" />
         </div>
         <div className={styles.empty_state_text}>
           <div className={styles.empty_state_title}>

@@ -11,7 +11,7 @@ import {
   LabeledInputV2,
   Modal,
 } from "../../../components";
-import { IconLink } from "../../../icons";
+import * as Icons from "../../../icons";
 import { changeAccountBinding } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
@@ -102,7 +102,7 @@ class AccountBinding extends React.Component<Props, State> {
         <div className={styles.main}>
           <div className={styles.logo_container}>
             <FullLogo size="l" />
-            <IconLink sideLength="16px" color="gray" />
+            <Icons.IconLink sideLength="16px" color="gray" />
             <img className={styles.google_logo} src={googleLogo} alt="" />
           </div>
           <BeautifulBlock>
