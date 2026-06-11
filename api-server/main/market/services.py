@@ -1,7 +1,8 @@
 import csv
 import logging
 import math
-from datetime import UTC, date, datetime, time, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta
+from datetime import timezone as stdlib_timezone
 from io import StringIO
 from time import sleep
 from typing import Literal
@@ -9,6 +10,7 @@ from typing import Literal
 import requests
 import urllib3
 from dateutil.relativedelta import relativedelta
+from django.utils import timezone
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
 from main.market import Frequency, ThirdPartyApi, TradeType
@@ -120,7 +122,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                     fluct_price = round(price - yesterday_price, 2)
                     if date.today() == date_:  # do nothing if market is not opened
                         if company_id in market_indices:
-                            _store_market_per_minute_info(
+                            _store_market_index_per_minute(
                                 id=company_id,
                                 date_=date_,
                                 price=price,
@@ -164,10 +166,10 @@ def fetch_and_store_realtime_stock_info() -> None:
     logger.info("All realtime stock info updated!")
 
 
-def _store_market_per_minute_info(
+def _store_market_index_per_minute(
     id: Literal["t00", "o00"], date_: date, price: float, fluct_price: float
 ) -> None:
-    now = (datetime.now(UTC) + timedelta(hours=8)).time()
+    now = timezone.localtime()
     minutes_after_opening = (now.hour - 9) * 60 + now.minute
 
     # Do nothing when at 9:00 or during 13:30 ~ 13:58
@@ -401,7 +403,7 @@ def update_material_facts() -> None:
                                 int(row["發言時間"][-4:-2] or 0),
                                 int(row["發言時間"][-2:] or 0),
                             ),
-                            tzinfo=timezone(timedelta(hours=8)),
+                            tzinfo=stdlib_timezone(timedelta(hours=8)),
                         ),
                         title=row["主旨 " if trade_type == TradeType.TSE else "主旨"],
                         description=row["說明"],

@@ -1,6 +1,7 @@
-from datetime import date, time
+from datetime import date, datetime
 from typing import Any
 from unittest.mock import Mock, patch
+from zoneinfo import ZoneInfo
 
 import pytest
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
@@ -14,7 +15,7 @@ from main.market.models import (
 )
 from main.market.services import (
     _fetch_and_store_historical_info_from_yahoo,
-    _store_market_per_minute_info,
+    _store_market_index_per_minute,
     fetch_and_store_realtime_stock_info,
     roc_date_string_to_date,
     update_all_stocks_history,
@@ -69,7 +70,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         }
 
     @patch("main.market.services.requests.get")
-    @patch("main.market.services._store_market_per_minute_info")
+    @patch("main.market.services._store_market_index_per_minute")
     @patch("main.market.services.StockInfo.objects.bulk_create")
     @patch("main.market.services.Company.objects.filter")
     @patch("main.market.services.logger")
@@ -179,13 +180,13 @@ class TestStoreMarketPerMinuteInfo:
 
         test_date = date(2023, 12, 1)
 
-        # Mock the datetime computation to return 10:30 (90 minutes after 9:00)
-        with patch("main.market.services.datetime") as mock_datetime:
-            mock_time_result = Mock()
-            mock_time_result.time.return_value = time(10, 30)
-            mock_datetime.now.return_value.__add__.return_value = mock_time_result
+        # Mock local time to return 10:30 (90 minutes after 9:00)
+        with patch("main.market.services.timezone.localtime") as mock_localtime:
+            mock_localtime.return_value = datetime(
+                2023, 12, 1, 10, 30, tzinfo=ZoneInfo("Asia/Taipei")
+            )
 
-            _store_market_per_minute_info("t00", test_date, 15000.0, 50.0)
+            _store_market_index_per_minute("t00", test_date, 15000.0, 50.0)
 
         mock_get_or_create.assert_called_once_with(
             market=TradeType.TSE,
@@ -213,13 +214,13 @@ class TestStoreMarketPerMinuteInfo:
 
         test_date = date(2023, 12, 1)
 
-        # Mock the datetime computation to return 10:30 (90 minutes after 9:00)
-        with patch("main.market.services.datetime") as mock_datetime:
-            mock_time_result = Mock()
-            mock_time_result.time.return_value = time(10, 30)
-            mock_datetime.now.return_value.__add__.return_value = mock_time_result
+        # Mock local time to return 10:30 (90 minutes after 9:00)
+        with patch("main.market.services.timezone.localtime") as mock_localtime:
+            mock_localtime.return_value = datetime(
+                2023, 12, 1, 10, 30, tzinfo=ZoneInfo("Asia/Taipei")
+            )
 
-            _store_market_per_minute_info("o00", test_date, 150.0, 2.0)
+            _store_market_index_per_minute("o00", test_date, 150.0, 2.0)
 
         mock_get_or_create.assert_called_once_with(
             market=TradeType.OTC,
