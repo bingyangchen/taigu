@@ -111,6 +111,24 @@ class TestBaseCacheManager:
         mock_cache.delete.assert_called_once_with("ConcreteCacheManager:test_id")
 
     @patch("main.core.cache.cache")
+    def test_delete_many_calls_django_cache_delete_many(
+        self, mock_cache: Mock, cache_manager: ConcreteCacheManager
+    ) -> None:
+        cache_manager.delete_many(["id_a", "id_b"])
+
+        mock_cache.delete_many.assert_called_once_with(
+            ["ConcreteCacheManager:id_a", "ConcreteCacheManager:id_b"]
+        )
+
+    @patch("main.core.cache.cache")
+    def test_delete_many_skips_empty_list(
+        self, mock_cache: Mock, cache_manager: ConcreteCacheManager
+    ) -> None:
+        cache_manager.delete_many([])
+
+        mock_cache.delete_many.assert_not_called()
+
+    @patch("main.core.cache.cache")
     def test_validation_called_before_cache_set(
         self, mock_cache: Mock, cache_manager: ConcreteCacheManager
     ) -> None:

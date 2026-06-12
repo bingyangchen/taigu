@@ -10,6 +10,7 @@ from typing import Literal
 import requests
 import urllib3
 from dateutil.relativedelta import relativedelta
+from django.db import transaction
 from django.utils import timezone
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
@@ -26,6 +27,7 @@ from main.market.models import (
     MarketIndexPerMinute,
     MaterialFact,
     StockInfo,
+    StockPricePerMinute,
 )
 
 logger = logging.getLogger(__name__)
@@ -33,15 +35,16 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def fetch_and_store_realtime_stock_info() -> None:
-    logger.info("Start fetching realtime sotck info.")
+    batch_size = 145
     market_indices = ("t00", "o00")
+
+    logger.info("Start fetching realtime sotck info.")
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )
     all = [f"tse_{market_indices[0]}.tw", f"otc_{market_indices[1]}.tw"] + [
         f"{x['trade_type']}_{x['pk']}.tw" for x in query_set
     ]
-    batch_size = 145
     logger.info(f"Expected request count: {math.ceil(len(all) / batch_size)}")
     while len(all) > 0:
         start = datetime.now()
@@ -49,60 +52,44 @@ def fetch_and_store_realtime_stock_info() -> None:
         try:
             json_data = requests.get(url, timeout=4, verify=False).json()  # noqa: S501
             to_update_batch = []
+            to_store_stock_price_batch = []
             for row in json_data["msgArray"]:
                 try:
-                    # parse row data
                     company_id = row["c"]
                     if not company_id:
                         continue
                     date_ = datetime.strptime(row["d"], "%Y%m%d").date()
                     quantity = (
-                        int(row["v"]) * 1000
-                        if row.get("v") is not None and row["v"] != "-"
-                        else 0
+                        int(v) * 1000 if (v := row.get("v")) not in (None, "-") else 0
                     )
                     yesterday_price = (
-                        round(float(row["y"]), 2)
-                        if row.get("y") is not None and row["y"] != "-"
+                        round(float(y), 2)
+                        if (y := row.get("y")) not in (None, "-")
                         else 0.0
                     )
                     current_dealt_price = (
-                        round(float(row["z"]), 2)
-                        if row.get("z") is not None and row["z"] != "-"
+                        round(float(z), 2)
+                        if (z := row.get("z")) not in (None, "-")
                         else None
                     )
                     lowest_ask_price = (
-                        round(
-                            min(
-                                float(price_str)
-                                for price_str in row["a"].split("_")
-                                if price_str
-                            ),
-                            2,
-                        )
-                        if row.get("a") is not None and row["a"] != "-"
+                        round(min(map(float, filter(None, a.split("_")))), 2)
+                        if (a := row.get("a")) not in (None, "-")
                         else None
                     )
                     highest_bid_price = (
-                        round(
-                            max(
-                                float(price_str)
-                                for price_str in row["b"].split("_")
-                                if price_str
-                            ),
-                            2,
-                        )
-                        if row.get("b") is not None and row["b"] != "-"
+                        round(max(map(float, filter(None, b.split("_")))), 2)
+                        if (b := row.get("b")) not in (None, "-")
                         else None
                     )
                     price_upper_bound = (
-                        round(float(row["u"]), 2)
-                        if row.get("u") is not None and row["u"] != "-"
+                        round(float(u), 2)
+                        if (u := row.get("u")) not in (None, "-")
                         else None
                     )
                     price_lower_bound = (
-                        round(float(row["w"]), 2)
-                        if row.get("w") is not None and row["w"] != "-"
+                        round(float(w), 2)
+                        if (w := row.get("w")) not in (None, "-")
                         else None
                     )
 
@@ -119,8 +106,9 @@ def fetch_and_store_realtime_stock_info() -> None:
                     elif yesterday_price:
                         price = yesterday_price
 
-                    fluct_price = round(price - yesterday_price, 2)
-                    if date.today() == date_:  # do nothing if market is not opened
+                    # Do nothing if market is not opened or price is not available
+                    if date.today() == date_ and price:
+                        fluct_price = round(price - yesterday_price, 2)
                         if company_id in market_indices:
                             _store_market_index_per_minute(
                                 id=company_id,
@@ -138,6 +126,19 @@ def fetch_and_store_realtime_stock_info() -> None:
                                     fluct_price=fluct_price,
                                 )
                             )
+                            slot_number = _get_intraday_five_minute_slot(
+                                timezone.localtime()
+                            )
+                            if slot_number is not None:
+                                to_store_stock_price_batch.append(
+                                    StockPricePerMinute(
+                                        company_id=company_id,
+                                        date=date_,
+                                        number=slot_number,
+                                        price=price,
+                                        fluct_price=fluct_price,
+                                    )
+                                )
                 except Exception as e:
                     logger.error(f"<{type(e).__name__}>: {e}")
                     logger.error(f"Row: {row}")
@@ -148,6 +149,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                 update_fields=["date", "quantity", "close_price", "fluct_price"],
                 unique_fields=["company_id"],
             )
+            _bulk_store_stock_price_per_minute(to_store_stock_price_batch)
         except ReadTimeout:
             logger.warning("ReadTimeout")
         except ConnectTimeout:
@@ -166,6 +168,39 @@ def fetch_and_store_realtime_stock_info() -> None:
     logger.info("All realtime stock info updated!")
 
 
+def _get_intraday_five_minute_slot(now: datetime) -> int | None:
+    minutes_after_opening = (now.hour - 9) * 60 + now.minute
+
+    if minutes_after_opening <= 0 or (269 < minutes_after_opening < 298):
+        return None
+
+    if minutes_after_opening >= 298:
+        minutes_after_opening = 270
+
+    return math.ceil(minutes_after_opening / 5) * 5
+
+
+def _bulk_store_stock_price_per_minute(
+    to_store_batch: list[StockPricePerMinute],
+) -> None:
+    if not to_store_batch:
+        return
+
+    company_ids = list({record.company_id for record in to_store_batch})
+    trading_date = to_store_batch[0].date
+    with transaction.atomic():
+        StockPricePerMinute.objects.filter(company_id__in=company_ids).exclude(
+            date=trading_date
+        ).delete()
+        StockPricePerMinute.objects.bulk_create(
+            to_store_batch,
+            update_conflicts=True,
+            update_fields=["price", "fluct_price"],
+            unique_fields=["company_id", "date", "number"],
+        )
+    TimeSeriesStockInfoCacheManager.delete_many(company_ids)
+
+
 def _store_market_index_per_minute(
     id: Literal["t00", "o00"], date_: date, price: float, fluct_price: float
 ) -> None:
@@ -173,7 +208,7 @@ def _store_market_index_per_minute(
     minutes_after_opening = (now.hour - 9) * 60 + now.minute
 
     # Do nothing when at 9:00 or during 13:30 ~ 13:58
-    if minutes_after_opening == 0 or (269 < minutes_after_opening < 298):
+    if minutes_after_opening <= 0 or (269 < minutes_after_opening < 298):
         return
 
     # Convert the last few minutes to 270
@@ -266,7 +301,6 @@ def update_company_list() -> None:
 def _fetch_and_store_historical_info_from_yahoo(
     company: Company, frequency: str
 ) -> None:
-    """This function is currently not used."""
     end = datetime.now()
     start = end - relativedelta(days=80)
     interval = "1d"

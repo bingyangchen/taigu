@@ -130,14 +130,31 @@ class StockInfo(CreateUpdateDateModel):
 
 class MarketIndexPerMinute(CreateUpdateDateModel):
     market = CharField(max_length=4, choices=TradeType.CHOICES)
-    date = DateField(db_index=True)
-    number = PositiveSmallIntegerField(db_index=True)
+    date = DateField()
+    number = PositiveSmallIntegerField()
     price = FloatField()
     fluct_price = FloatField()
 
     class Meta:
         db_table = "market_index_per_minute"
         unique_together = [["market", "date", "number"]]
+
+
+class StockPricePerMinute(CreateUpdateDateModel):
+    company: Company = ForeignKey(  # type: ignore
+        Company,
+        on_delete=CASCADE,
+        related_name="stock_prices_per_minute",
+        db_index=False,
+    )
+    date = DateField()
+    number = PositiveSmallIntegerField()
+    price = FloatField()
+    fluct_price = FloatField()
+
+    class Meta:
+        db_table = "stock_price_per_minute"
+        unique_together = [["company", "date", "number"]]
 
 
 class MarketIndexHistory(CreateUpdateDateModel):
@@ -157,7 +174,7 @@ class History(CreateUpdateDateModel):
     company: Company = ForeignKey(  # type: ignore
         Company, on_delete=CASCADE, related_name="history", db_index=False
     )
-    frequency = CharField(max_length=8, choices=Frequency.CHOICES, db_index=True)
+    frequency = CharField(max_length=8, choices=Frequency.CHOICES)
     date = DateField(db_index=True)
     quantity = PositiveBigIntegerField()
     close_price = FloatField()
