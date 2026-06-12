@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.test import RequestFactory
 
@@ -13,10 +12,17 @@ from main.account import OAuthOrganization
 from main.account.models import User
 from main.market import Frequency, TradeType
 from main.market.cache import TimeSeriesStockInfo
-from main.market.models import Company, History, MarketIndexHistory, StockInfo
+from main.market.models import (
+    Company,
+    History,
+    MarketIndexHistory,
+    StockInfo,
+    StockPricePerMinute,
+)
 from main.market.views import (
     current_stock_info,
     historical_prices,
+    intraday_prices,
     market_index,
     market_index_historical_prices,
     search,
@@ -273,6 +279,168 @@ class TestCurrentStockInfoView:
 
 
 @pytest.mark.django_db
+class TestIntradayPricesView:
+    @pytest.fixture(autouse=True)
+    def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
+        mock_lua_script = Mock(return_value=1)
+        monkeypatch.setattr(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", mock_lua_script
+        )
+
+    @pytest.fixture
+    def request_factory(self) -> RequestFactory:
+        return RequestFactory()
+
+    @pytest.fixture
+    def user(self) -> User:
+        return User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="test_oauth_id",
+            email="test@example.com",
+            username="testuser",
+        )
+
+    @pytest.fixture
+    def company(self) -> Company:
+        return Company.objects.create(
+            stock_id="2330", name="台積電", trade_type=TradeType.TSE, business="半導體"
+        )
+
+    @pytest.fixture
+    def intraday_records(self, company: Company) -> list[StockPricePerMinute]:
+        return [
+            StockPricePerMinute.objects.create(
+                company=company,
+                date=date(2023, 12, 1),
+                number=5,
+                quantity=1_000_000,
+                price=600.0,
+                fluct_price=5.0,
+            ),
+            StockPricePerMinute.objects.create(
+                company=company,
+                date=date(2023, 12, 1),
+                number=10,
+                quantity=1_100_000,
+                price=605.0,
+                fluct_price=10.0,
+            ),
+        ]
+
+    @patch("main.market.views.date")
+    @patch("main.market.views.TimeSeriesStockInfoCacheManager.get")
+    def test_intraday_prices_with_cache_hit(
+        self,
+        mock_get: Mock,
+        mock_date: Mock,
+        request_factory: RequestFactory,
+        company: Company,
+        user: User,
+    ) -> None:
+        mock_date.today.return_value = date(2023, 12, 1)
+        mock_get.return_value = TimeSeriesStockInfo.model_validate(
+            {
+                "data": {
+                    5: {"date": date(2023, 12, 1), "price": 600.0, "fluct_price": 5.0},
+                    10: {
+                        "date": date(2023, 12, 1),
+                        "price": 605.0,
+                        "fluct_price": 10.0,
+                    },
+                }
+            }
+        )
+
+        request = request_factory.get("/api/market/intraday-prices/?sid=2330")
+        request.user = user
+
+        response = intraday_prices(request)
+
+        assert isinstance(response, JsonResponse)
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["date"] == "2023-12-01"
+        assert data["5"] == 600.0
+        assert data["10"] == 605.0
+        assert data["yesterday_price"] == 595.0
+        assert data["last_fluct_price"] == 10.0
+
+    @patch("main.market.views.date")
+    @patch("main.market.views.TimeSeriesStockInfoCacheManager.get")
+    @patch("main.market.views.TimeSeriesStockInfoCacheManager.set")
+    def test_intraday_prices_with_cache_miss(
+        self,
+        mock_set: Mock,
+        mock_get: Mock,
+        mock_date: Mock,
+        request_factory: RequestFactory,
+        intraday_records: list[StockPricePerMinute],
+        user: User,
+    ) -> None:
+        mock_date.today.return_value = date(2023, 12, 1)
+        mock_get.return_value = None
+
+        request = request_factory.get("/api/market/intraday-prices/?sid=2330")
+        request.user = user
+
+        response = intraday_prices(request)
+
+        assert isinstance(response, JsonResponse)
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["date"] == "2023-12-01"
+        assert data["5"] == 600.0
+        assert data["10"] == 605.0
+        assert data["yesterday_price"] == 595.0
+        assert data["last_fluct_price"] == 10.0
+        mock_set.assert_called_once()
+
+    def test_intraday_prices_missing_sid(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
+        request = request_factory.get("/api/market/intraday-prices/")
+        request.user = user
+
+        response = intraday_prices(request)
+
+        assert response.status_code == 400
+
+    def test_intraday_prices_nonexistent_company(
+        self, request_factory: RequestFactory, user: User
+    ) -> None:
+        request = request_factory.get("/api/market/intraday-prices/?sid=9999")
+        request.user = user
+
+        response = intraday_prices(request)
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["error"] == "Unknown Stock ID"
+
+    @patch("main.market.views.date")
+    def test_intraday_prices_no_data(
+        self,
+        mock_date: Mock,
+        request_factory: RequestFactory,
+        company: Company,
+        user: User,
+    ) -> None:
+        mock_date.today.return_value = date(2023, 12, 1)
+
+        request = request_factory.get("/api/market/intraday-prices/?sid=2330")
+        request.user = user
+
+        response = intraday_prices(request)
+
+        assert isinstance(response, JsonResponse)
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["date"] is None
+        assert data["yesterday_price"] == 0
+        assert data["last_fluct_price"] == 0
+
+
+@pytest.mark.django_db
 class TestMarketIndexHistoricalPricesView:
     @pytest.fixture(autouse=True)
     def mock_rate_limit(self, monkeypatch: MonkeyPatch) -> None:
@@ -492,8 +660,11 @@ class TestHistoricalPricesView:
         request = request_factory.get("/api/market/historical-prices/?sid=9999")
         request.user = user
 
-        with pytest.raises(ObjectDoesNotExist):
-            historical_prices(request)
+        response = historical_prices(request)
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["error"] == "Unknown Stock ID"
 
     def test_historical_prices_no_history_data(
         self, request_factory: RequestFactory, company: Company, user: User
