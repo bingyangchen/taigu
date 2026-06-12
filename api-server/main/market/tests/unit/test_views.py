@@ -313,7 +313,6 @@ class TestIntradayPricesView:
                 company=company,
                 date=date(2023, 12, 1),
                 number=5,
-                quantity=1_000_000,
                 price=600.0,
                 fluct_price=5.0,
             ),
@@ -321,23 +320,19 @@ class TestIntradayPricesView:
                 company=company,
                 date=date(2023, 12, 1),
                 number=10,
-                quantity=1_100_000,
                 price=605.0,
                 fluct_price=10.0,
             ),
         ]
 
-    @patch("main.market.views.date")
     @patch("main.market.views.TimeSeriesStockInfoCacheManager.get")
     def test_intraday_prices_with_cache_hit(
         self,
         mock_get: Mock,
-        mock_date: Mock,
         request_factory: RequestFactory,
         company: Company,
         user: User,
     ) -> None:
-        mock_date.today.return_value = date(2023, 12, 1)
         mock_get.return_value = TimeSeriesStockInfo.model_validate(
             {
                 "data": {
@@ -365,19 +360,16 @@ class TestIntradayPricesView:
         assert data["yesterday_price"] == 595.0
         assert data["last_fluct_price"] == 10.0
 
-    @patch("main.market.views.date")
     @patch("main.market.views.TimeSeriesStockInfoCacheManager.get")
     @patch("main.market.views.TimeSeriesStockInfoCacheManager.set")
     def test_intraday_prices_with_cache_miss(
         self,
         mock_set: Mock,
         mock_get: Mock,
-        mock_date: Mock,
         request_factory: RequestFactory,
         intraday_records: list[StockPricePerMinute],
         user: User,
     ) -> None:
-        mock_date.today.return_value = date(2023, 12, 1)
         mock_get.return_value = None
 
         request = request_factory.get("/api/market/intraday-prices/?sid=2330")
@@ -417,16 +409,9 @@ class TestIntradayPricesView:
         data = json.loads(response.content)
         assert data["error"] == "Unknown Stock ID"
 
-    @patch("main.market.views.date")
     def test_intraday_prices_no_data(
-        self,
-        mock_date: Mock,
-        request_factory: RequestFactory,
-        company: Company,
-        user: User,
+        self, request_factory: RequestFactory, company: Company, user: User
     ) -> None:
-        mock_date.today.return_value = date(2023, 12, 1)
-
         request = request_factory.get("/api/market/intraday-prices/?sid=2330")
         request.user = user
 
