@@ -327,6 +327,7 @@ class TestStockPricePerMinuteModel:
             "company": company,
             "date": date.today(),
             "number": 30,
+            "quantity": 1_000_000,
             "price": 600.0,
             "fluct_price": 5.0,
         }
@@ -339,6 +340,7 @@ class TestStockPricePerMinuteModel:
         assert stock_price.company.pk == "2330"
         assert stock_price.date == date.today()
         assert stock_price.number == 30
+        assert stock_price.quantity == 1_000_000
         assert stock_price.price == 600.0
         assert stock_price.fluct_price == 5.0
 

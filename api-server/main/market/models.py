@@ -149,6 +149,7 @@ class StockPricePerMinute(CreateUpdateDateModel):
     )
     date = DateField()
     number = PositiveSmallIntegerField()
+    quantity = PositiveBigIntegerField()
     price = FloatField()
     fluct_price = FloatField()
 

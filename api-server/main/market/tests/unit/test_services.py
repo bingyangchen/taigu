@@ -120,6 +120,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         assert len(stock_price_batch) == 1
         assert stock_price_batch[0].company_id == "1234"
         assert stock_price_batch[0].number == 90
+        assert stock_price_batch[0].quantity == 1_000_000
         assert stock_price_batch[0].price == 102.5
 
     @patch("main.market.services._bulk_store_stock_price_per_minute")
@@ -202,6 +203,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         assert len(stock_price_batch) == 1
         assert stock_price_batch[0].company_id == "1234"
         assert stock_price_batch[0].number == 90
+        assert stock_price_batch[0].quantity == 1_000_000
         assert stock_price_batch[0].price == 102.5
         assert stock_price_batch[0].fluct_price == 2.5
 
@@ -357,6 +359,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         record = StockPricePerMinute.objects.get(
             company=company, date=date(2023, 12, 1), number=90
         )
+        assert record.quantity == 1_000_000
         assert record.price == 102.5
         assert record.fluct_price == 2.5
         mock_delete_cache.assert_called_once_with([company.pk])
@@ -534,6 +537,7 @@ class TestBulkStoreStockPricePerMinute:
                     company_id=company.pk,
                     date=test_date,
                     number=90,
+                    quantity=1_000_000,
                     price=600.0,
                     fluct_price=5.0,
                 )
@@ -543,6 +547,7 @@ class TestBulkStoreStockPricePerMinute:
         record = StockPricePerMinute.objects.get(
             company=company, date=test_date, number=90
         )
+        assert record.quantity == 1_000_000
         assert record.price == 600.0
         assert record.fluct_price == 5.0
 
@@ -552,6 +557,7 @@ class TestBulkStoreStockPricePerMinute:
                     company_id=company.pk,
                     date=test_date,
                     number=90,
+                    quantity=2_000_000,
                     price=605.0,
                     fluct_price=10.0,
                 )
@@ -559,6 +565,7 @@ class TestBulkStoreStockPricePerMinute:
         )
 
         record.refresh_from_db()
+        assert record.quantity == 2_000_000
         assert record.price == 605.0
         assert record.fluct_price == 10.0
         assert StockPricePerMinute.objects.count() == 1
@@ -572,7 +579,12 @@ class TestBulkStoreStockPricePerMinute:
         previous_date = date(2023, 11, 30)
         trading_date = date(2023, 12, 1)
         StockPricePerMinute.objects.create(
-            company=company, date=previous_date, number=90, price=590.0, fluct_price=3.0
+            company=company,
+            date=previous_date,
+            number=90,
+            quantity=500_000,
+            price=590.0,
+            fluct_price=3.0,
         )
 
         _bulk_store_stock_price_per_minute(
@@ -581,6 +593,7 @@ class TestBulkStoreStockPricePerMinute:
                     company_id=company.pk,
                     date=trading_date,
                     number=90,
+                    quantity=1_000_000,
                     price=600.0,
                     fluct_price=5.0,
                 )
@@ -616,6 +629,7 @@ class TestBulkStoreStockPricePerMinute:
                 company=company,
                 date=previous_date,
                 number=90,
+                quantity=100_000,
                 price=100.0,
                 fluct_price=1.0,
             )
@@ -626,6 +640,7 @@ class TestBulkStoreStockPricePerMinute:
                     company_id=company.pk,
                     date=trading_date,
                     number=90,
+                    quantity=200_000,
                     price=200.0,
                     fluct_price=2.0,
                 )

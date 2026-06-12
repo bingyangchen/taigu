@@ -133,6 +133,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                                         company_id=company_id,
                                         date=date_,
                                         number=intraday_slot_number,
+                                        quantity=quantity,
                                         price=price,
                                         fluct_price=fluct_price,
                                     )
@@ -195,7 +196,7 @@ def _bulk_store_stock_price_per_minute(
         StockPricePerMinute.objects.bulk_create(
             to_store_batch,
             update_conflicts=True,
-            update_fields=["price", "fluct_price"],
+            update_fields=["quantity", "price", "fluct_price"],
             unique_fields=["company_id", "date", "number"],
         )
     TimeSeriesStockInfoCacheManager.delete_many(company_ids)
