@@ -168,7 +168,7 @@ def fetch_and_store_realtime_stock_info() -> None:
 
 def _get_minutes_after_opening(now: datetime) -> int | None:
     minutes_after_opening = (now.hour - 9) * 60 + now.minute
-    if minutes_after_opening <= 0 or (269 < minutes_after_opening < 298):
+    if minutes_after_opening < 0 or (270 < minutes_after_opening < 298):
         return None
     return min(minutes_after_opening, 270)
 
