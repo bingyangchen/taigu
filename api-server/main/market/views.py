@@ -104,7 +104,7 @@ def intraday_prices(request: HttpRequest) -> JsonResponse:
     if not (sid := request.GET.get("sid")):
         return JsonResponse({"error": "Missing sid"}, status=400)
 
-    if Company.objects.filter(pk=sid).first() is None:
+    if not Company.objects.filter(pk=sid).exists():
         return JsonResponse({"error": "Unknown Stock ID"}, status=400)
 
     if (cache_result := TimeSeriesStockInfoCacheManager.get(sid)) is not None:
