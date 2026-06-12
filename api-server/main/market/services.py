@@ -244,8 +244,7 @@ def update_company_list() -> None:
     today = date.today()
     new_sids = []
     to_create_stock_info = []
-
-    for trade_type in [TradeType.TSE, TradeType.OTC]:
+    for trade_type in (TradeType.TSE, TradeType.OTC):
         try:
             response: list[dict[str, str]] = requests.get(
                 ThirdPartyApi.single_day[trade_type],
