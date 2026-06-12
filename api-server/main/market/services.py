@@ -53,6 +53,7 @@ def fetch_and_store_realtime_stock_info() -> None:
             json_data = requests.get(url, timeout=4, verify=False).json()  # noqa: S501
             to_update_batch = []
             to_store_stock_price_batch = []
+            intraday_slot_number = _get_intraday_five_minute_slot(timezone.localtime())
             for row in json_data["msgArray"]:
                 try:
                     company_id = row["c"]
@@ -126,15 +127,12 @@ def fetch_and_store_realtime_stock_info() -> None:
                                     fluct_price=fluct_price,
                                 )
                             )
-                            slot_number = _get_intraday_five_minute_slot(
-                                timezone.localtime()
-                            )
-                            if slot_number is not None:
+                            if intraday_slot_number is not None:
                                 to_store_stock_price_batch.append(
                                     StockPricePerMinute(
                                         company_id=company_id,
                                         date=date_,
-                                        number=slot_number,
+                                        number=intraday_slot_number,
                                         price=price,
                                         fluct_price=fluct_price,
                                     )
@@ -168,15 +166,17 @@ def fetch_and_store_realtime_stock_info() -> None:
     logger.info("All realtime stock info updated!")
 
 
-def _get_intraday_five_minute_slot(now: datetime) -> int | None:
+def _get_minutes_after_opening(now: datetime) -> int | None:
     minutes_after_opening = (now.hour - 9) * 60 + now.minute
-
     if minutes_after_opening <= 0 or (269 < minutes_after_opening < 298):
         return None
+    return min(minutes_after_opening, 270)
 
-    if minutes_after_opening >= 298:
-        minutes_after_opening = 270
 
+def _get_intraday_five_minute_slot(now: datetime) -> int | None:
+    minutes_after_opening = _get_minutes_after_opening(now)
+    if minutes_after_opening is None:
+        return None
     return math.ceil(minutes_after_opening / 5) * 5
 
 
@@ -204,16 +204,9 @@ def _bulk_store_stock_price_per_minute(
 def _store_market_index_per_minute(
     id: Literal["t00", "o00"], date_: date, price: float, fluct_price: float
 ) -> None:
-    now = timezone.localtime()
-    minutes_after_opening = (now.hour - 9) * 60 + now.minute
-
-    # Do nothing when at 9:00 or during 13:30 ~ 13:58
-    if minutes_after_opening <= 0 or (269 < minutes_after_opening < 298):
+    minutes_after_opening = _get_minutes_after_opening(timezone.localtime())
+    if minutes_after_opening is None:
         return
-
-    # Convert the last few minutes to 270
-    if minutes_after_opening >= 298:
-        minutes_after_opening = 270
 
     market_id = TradeType.TSE if id == "t00" else TradeType.OTC
 

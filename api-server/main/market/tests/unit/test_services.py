@@ -18,6 +18,7 @@ from main.market.services import (
     _bulk_store_stock_price_per_minute,
     _fetch_and_store_historical_info_from_yahoo,
     _get_intraday_five_minute_slot,
+    _get_minutes_after_opening,
     _store_market_index_per_minute,
     fetch_and_store_realtime_stock_info,
     roc_date_string_to_date,
@@ -479,6 +480,18 @@ class TestStoreMarketPerMinuteInfo:
         )
 
 
+class TestGetMinutesAfterOpening:
+    @pytest.mark.parametrize(
+        ("hour", "minute", "expected"),
+        [(9, 0, None), (10, 30, 90), (13, 30, None), (14, 0, 270)],
+    )
+    def test_get_minutes_after_opening(
+        self, hour: int, minute: int, expected: int | None
+    ) -> None:
+        now = datetime(2023, 12, 1, hour, minute, tzinfo=ZoneInfo("Asia/Taipei"))
+        assert _get_minutes_after_opening(now) == expected
+
+
 class TestGetIntradayFiveMinuteSlot:
     @pytest.mark.parametrize(
         ("hour", "minute", "expected"),
@@ -510,8 +523,9 @@ class TestBulkStoreStockPricePerMinute:
             stock_id="2330", name="台積電", trade_type=TradeType.TSE, business="半導體"
         )
 
-    def test_bulk_store_stock_price_per_minute_upserts_same_day(
-        self, company: Company
+    @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
+    def test_bulk_store_stock_price_per_minute_upserts_same_day_and_invalidates_cache(
+        self, mock_delete_cache: Mock, company: Company
     ) -> None:
         test_date = date(2023, 12, 1)
         _bulk_store_stock_price_per_minute(
@@ -548,6 +562,8 @@ class TestBulkStoreStockPricePerMinute:
         assert record.price == 605.0
         assert record.fluct_price == 10.0
         assert StockPricePerMinute.objects.count() == 1
+        assert mock_delete_cache.call_count == 2
+        mock_delete_cache.assert_called_with([company.pk])
 
     @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
     def test_bulk_store_stock_price_per_minute_deletes_stale_date_and_cache(
@@ -619,7 +635,10 @@ class TestBulkStoreStockPricePerMinute:
 
         assert StockPricePerMinute.objects.filter(date=previous_date).count() == 0
         assert StockPricePerMinute.objects.filter(date=trading_date).count() == 2
-        mock_delete_cache.assert_called_once_with([company.pk for company in companies])
+        mock_delete_cache.assert_called_once()
+        assert set(mock_delete_cache.call_args[0][0]) == {
+            company.pk for company in companies
+        }
 
     @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
     def test_bulk_store_stock_price_per_minute_skips_empty_batch(
