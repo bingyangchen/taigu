@@ -13,6 +13,7 @@ class TestMarketUrls:
                 views.market_index_historical_prices,
             ),
             ("/api/market/current-stock-info/", views.current_stock_info),
+            ("/api/market/intraday-prices/", views.intraday_prices),
             ("/api/market/historical-prices/", views.historical_prices),
             ("/api/market/search/", views.search),
             ("/api/market/company-names/", views.company_names),

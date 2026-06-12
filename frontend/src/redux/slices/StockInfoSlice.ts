@@ -1,11 +1,12 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 import LocalDatabase from "../../storage/localDatabase";
-import type { MarketIndex, StockInfo } from "../../types";
+import type { MarketIndex, StockInfo, StockIntradayPrices } from "../../types";
 import Api from "../../utils/api";
 
 interface StockInfoState {
   sidStockInfoMap: { [sid: string]: StockInfo };
+  sidIntradayPricesMap: { [sid: string]: StockIntradayPrices };
   sidHistoricalPricesMap: {
     [sid: string]: {
       daily?: { [date: string]: number };
@@ -18,6 +19,7 @@ interface StockInfoState {
     otc?: { [date: string]: number };
   };
   isWaitingHistoricalPrices: boolean;
+  isWaitingIntradayPrices: boolean;
   isWaitingMarketIndexHistoricalPrices: boolean;
   realtimePriceDate: string;
   tseIndexRealtimePrices: { [number: string]: number } & {
@@ -32,9 +34,11 @@ interface StockInfoState {
 
 const initialState: StockInfoState = {
   sidStockInfoMap: {},
+  sidIntradayPricesMap: {},
   sidHistoricalPricesMap: {},
   marketIndexHistoricalPricesMap: {},
   isWaitingHistoricalPrices: false,
+  isWaitingIntradayPrices: false,
   isWaitingMarketIndexHistoricalPrices: false,
   realtimePriceDate: "0000-00-00",
   tseIndexRealtimePrices: {},
@@ -97,6 +101,17 @@ export const fetchMarketIndexHistoricalPrices = createAsyncThunk(
     );
     await LocalDatabase.putMarketIndexHistoricalPrices(market, data);
     return { market, data };
+  },
+);
+
+export const fetchSingleStockIntradayPrices = createAsyncThunk(
+  "stockInfo/fetchSingleStockIntradayPrices",
+  async (sid: string): Promise<{ sid: string; data: StockIntradayPrices }> => {
+    const response: StockIntradayPrices = await Api.sendRequest(
+      `market/intraday-prices?sid=${sid}`,
+      "get",
+    );
+    return { sid, data: response };
   },
 );
 
@@ -174,6 +189,18 @@ export const stockInfoSlice = createSlice({
         historicalPrices.daily[new Date().toLocaleDateString("af")] = close;
       })
       .addCase(fetchSingleStockInfo.rejected, () => {})
+
+      .addCase(fetchSingleStockIntradayPrices.pending, (state) => {
+        state.isWaitingIntradayPrices = true;
+      })
+      .addCase(fetchSingleStockIntradayPrices.fulfilled, (state, action) => {
+        const { sid, data } = action.payload;
+        state.sidIntradayPricesMap[sid] = data;
+        state.isWaitingIntradayPrices = false;
+      })
+      .addCase(fetchSingleStockIntradayPrices.rejected, (state) => {
+        state.isWaitingIntradayPrices = false;
+      })
 
       .addCase(fetchSingleStockHistoricalPrices.pending, (state) => {
         state.isWaitingHistoricalPrices = true;

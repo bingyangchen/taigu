@@ -18,6 +18,13 @@ export type StockInfo = {
   fluct_price: number;
 };
 
+export type StockIntradayPrices = {
+  date: string | null;
+  yesterday_price?: number;
+  last_fluct_price?: number;
+  [minute: string]: number | string | null | undefined;
+};
+
 export type MarketIndex = {
   date: string;
   tse: { [number: string]: number } & {

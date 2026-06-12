@@ -11,12 +11,22 @@ import {
   PercentSign,
   RoundButton,
   ScrollThresholdContainer,
+  SegmentedControl,
   Skeleton,
   SkeletonOverlay,
   SpeedDial,
+  StockIntradayLineChart,
   StockMemoEditor,
 } from "../../../components";
+import {
+  buildStockIntradayChartData,
+  hasStockIntradayPlottedData,
+} from "../../../components/StockIntradayLineChart/stockIntradayChartData";
 import * as Icons from "../../../icons";
+import {
+  changeStockDetailChartMode,
+  type StockDetailChartMode,
+} from "../../../redux/slices/MainPageSlice";
 import {
   addToFavorites,
   fakeAddToFavorites,
@@ -27,6 +37,7 @@ import {
 import {
   fetchSingleStockHistoricalPrices,
   fetchSingleStockInfo,
+  fetchSingleStockIntradayPrices,
 } from "../../../redux/slices/StockInfoSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
@@ -40,8 +51,13 @@ import styles from "./Details.module.scss";
 
 function mapStateToProps(rootState: RootState, ownProps: IRouter) {
   const sid = ownProps.router.params.sid ?? "";
-  const { sidStockInfoMap, sidHistoricalPricesMap, isWaitingHistoricalPrices } =
-    rootState.stockInfo;
+  const {
+    sidStockInfoMap,
+    sidHistoricalPricesMap,
+    sidIntradayPricesMap,
+    isWaitingHistoricalPrices,
+    isWaitingIntradayPrices,
+  } = rootState.stockInfo;
   const {
     sidTradeRecordsMap,
     sidGainMap,
@@ -53,8 +69,10 @@ function mapStateToProps(rootState: RootState, ownProps: IRouter) {
   const { sidCompanyInfoMap, favorites } = rootState.memo;
   const { tradePlans } = rootState.tradePlan;
   const { subscription } = rootState.account;
+  const { stockDetailChartMode } = rootState.mainPage;
   return {
     stockInfo: sidStockInfoMap[sid],
+    intradayPrices: sidIntradayPricesMap[sid],
     inventory: stockWarehouse[sid],
     historicalPrices: sidHistoricalPricesMap[sid],
     tradeRecords: sidTradeRecordsMap[sid],
@@ -66,8 +84,10 @@ function mapStateToProps(rootState: RootState, ownProps: IRouter) {
     tradePlans,
     favorites,
     isWaitingHistoricalPrices,
+    isWaitingIntradayPrices,
     isWaitingTradeRecord,
     subscription,
+    stockDetailChartMode,
   };
 }
 
@@ -78,6 +98,7 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 interface State {
   activeModalName: "companyInfo" | "updateOrCreateNote" | null;
   historicalPriceLineChart: React.ReactElement | null;
+  intradayLineChart: React.ReactElement | null;
   marketValue: number;
   xirr: number;
   inventoryHistogram: React.ReactElement | null;
@@ -105,6 +126,7 @@ class Details extends React.Component<Props, State> {
     this.state = {
       activeModalName: null,
       historicalPriceLineChart: null,
+      intradayLineChart: null,
       marketValue: 0,
       xirr: 0,
       inventoryHistogram: null,
@@ -157,8 +179,14 @@ class Details extends React.Component<Props, State> {
         if (sid !== this.sid) return;
         this.updateHistoricalPriceLineChart();
       });
+    this.props
+      .dispatch(fetchSingleStockIntradayPrices(sid))
+      .unwrap()
+      .then(() => {
+        if (sid !== this.sid) return;
+        this.updateIntradayLineChart();
+      });
     this.props.dispatch(fetchCompanyInfo(sid));
-
     this.startFetchStockInfoTimer(sid);
   }
 
@@ -177,6 +205,7 @@ class Details extends React.Component<Props, State> {
         .catch(() => {
           if (sid === this.sid) this.setState({ didStockInfoFail: true });
         });
+      this.props.dispatch(fetchSingleStockIntradayPrices(sid));
     }, this.props.subscription.market_refresh_interval_seconds * 1000);
   }
 
@@ -202,6 +231,7 @@ class Details extends React.Component<Props, State> {
           activeMaterialFact: null,
           didStockInfoFail: false,
           historicalPriceLineChart: null,
+          intradayLineChart: null,
           inventoryHistogram: null,
           marketValue: 0,
           xirr: 0,
@@ -223,6 +253,12 @@ class Details extends React.Component<Props, State> {
       prevProps.isWaitingHistoricalPrices !== this.props.isWaitingHistoricalPrices
     ) {
       this.updateHistoricalPriceLineChart();
+    }
+    if (
+      prevProps.intradayPrices !== this.props.intradayPrices ||
+      prevProps.isWaitingIntradayPrices !== this.props.isWaitingIntradayPrices
+    ) {
+      this.updateIntradayLineChart();
     }
   }
 
@@ -404,21 +440,50 @@ class Details extends React.Component<Props, State> {
                 </div>
               )}
             </div>
+            <div className={styles.chart_controls}>
+              <div className={styles.chart_status_label}>{this.chartStatusLabel}</div>
+              <SegmentedControl
+                label="個股圖表類型"
+                variant="subtle"
+                optionWidth={Util.isMobile ? "58px" : "63px"}
+                options={[
+                  { label: "今日", value: "intraday" },
+                  { label: "歷史", value: "historical" },
+                ]}
+                value={this.props.stockDetailChartMode}
+                onChange={this.handleChartModeChange}
+              />
+            </div>
             <div
               className={styles.historical_price_chart_container}
-              aria-label="近 60 日收盤價走勢"
+              aria-label={
+                this.props.stockDetailChartMode === "intraday"
+                  ? "今日走勢"
+                  : "近 60 日收盤價走勢"
+              }
             >
-              {this.props.isWaitingHistoricalPrices && (
-                <SkeletonOverlay className={styles.historical_price_chart_overlay} />
+              {this.showChartLoadingState && (
+                <SkeletonOverlay className={styles.chart_overlay} />
               )}
-              {this.showHistoricalPriceEmptyState ? (
-                <div className={styles.empty_chart}>
-                  <div>目前沒有歷史價格資料</div>
-                  <span>稍後更新後會顯示走勢圖。</span>
-                </div>
-              ) : (
-                this.state.historicalPriceLineChart
-              )}
+              <div key={this.props.stockDetailChartMode} className={styles.chart_panel}>
+                {this.props.stockDetailChartMode === "intraday" ? (
+                  this.showIntradayEmptyState ? (
+                    <div className={styles.empty_chart}>
+                      <div>盤中尚未有成交資料</div>
+                      <span>開盤後會顯示今日走勢。</span>
+                    </div>
+                  ) : (
+                    this.state.intradayLineChart
+                  )
+                ) : this.showHistoricalPriceEmptyState ? (
+                  <div className={styles.empty_chart}>
+                    <div>目前沒有歷史價格資料</div>
+                    <span>稍後更新後會顯示走勢圖。</span>
+                  </div>
+                ) : (
+                  this.state.historicalPriceLineChart
+                )}
+              </div>
             </div>
           </section>
           <section className={`${styles.block} ${styles.summary_block}`}>
@@ -712,6 +777,34 @@ class Details extends React.Component<Props, State> {
     );
   }
 
+  private get showIntradayEmptyState(): boolean {
+    const intradayPrices = this.props.intradayPrices;
+    return (
+      !this.props.isWaitingIntradayPrices &&
+      (intradayPrices === undefined || !hasStockIntradayPlottedData(intradayPrices))
+    );
+  }
+
+  private get showChartLoadingState(): boolean {
+    if (this.props.stockDetailChartMode === "intraday") {
+      return (
+        this.props.isWaitingIntradayPrices &&
+        (this.props.intradayPrices === undefined ||
+          !hasStockIntradayPlottedData(this.props.intradayPrices))
+      );
+    }
+    return (
+      this.props.isWaitingHistoricalPrices &&
+      this.getHistoricalPriceChartData().dates.length === 0
+    );
+  }
+
+  private get chartStatusLabel(): string {
+    if (this.props.stockDetailChartMode === "historical") return "近 60 日收盤價走勢";
+    const intradayDate = this.props.intradayPrices?.date ?? null;
+    return Util.formatDateWithWeekday(intradayDate);
+  }
+
   private getHistoricalPriceChartData(historicalPrices = this.props.historicalPrices): {
     dates: string[];
     values: number[];
@@ -744,6 +837,34 @@ class Details extends React.Component<Props, State> {
     this.setState({ marketValue }, () => this.setState({ xirr: this.xirr }));
   }
 
+  private updateIntradayLineChart(): void {
+    this.setState((_state, props) => {
+      if (props.stockDetailChartMode !== "intraday") {
+        return null;
+      }
+
+      const intradayPrices = props.intradayPrices;
+      if (
+        !props.isWaitingIntradayPrices &&
+        (intradayPrices === undefined || !hasStockIntradayPlottedData(intradayPrices))
+      ) {
+        return { intradayLineChart: null };
+      }
+
+      const chartData = buildStockIntradayChartData(intradayPrices ?? { date: null });
+      const prevClosePrice = intradayPrices?.yesterday_price ?? 0;
+      if (!chartData.some(([, price]) => price !== null)) {
+        return { intradayLineChart: null };
+      }
+
+      return {
+        intradayLineChart: (
+          <StockIntradayLineChart data={chartData} prevClosePrice={prevClosePrice} />
+        ),
+      };
+    });
+  }
+
   private updateHistoricalPriceLineChart(): void {
     this.setState((state, props) => {
       const { dates, values } = this.getHistoricalPriceChartData(
@@ -765,6 +886,10 @@ class Details extends React.Component<Props, State> {
       };
     });
   }
+
+  private handleChartModeChange = (value: string): void => {
+    this.props.dispatch(changeStockDetailChartMode(value as StockDetailChartMode));
+  };
 
   private async calcInventoryHistogramChartData(sid = this.sid): Promise<number[]> {
     const worker = new Worker(

@@ -194,6 +194,27 @@ class TestTimeSeriesStockInfoCacheManager:
         )
 
     @patch("main.core.cache.cache")
+    def test_cache_manager_delete_many_operation(
+        self, mock_cache: Mock, cache_manager: TimeSeriesStockInfoCacheManager
+    ) -> None:
+        cache_manager.delete_many(["2330", "2317"])
+
+        mock_cache.delete_many.assert_called_once_with(
+            [
+                "TimeSeriesStockInfoCacheManager:2330",
+                "TimeSeriesStockInfoCacheManager:2317",
+            ]
+        )
+
+    @patch("main.core.cache.cache")
+    def test_cache_manager_delete_many_skips_empty_list(
+        self, mock_cache: Mock, cache_manager: TimeSeriesStockInfoCacheManager
+    ) -> None:
+        cache_manager.delete_many([])
+
+        mock_cache.delete_many.assert_not_called()
+
+    @patch("main.core.cache.cache")
     def test_cache_manager_validation_error(
         self, mock_cache: Mock, cache_manager: TimeSeriesStockInfoCacheManager
     ) -> None:

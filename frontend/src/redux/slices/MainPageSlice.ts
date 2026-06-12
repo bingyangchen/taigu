@@ -3,11 +3,14 @@ import { createSlice } from "@reduxjs/toolkit";
 
 import type { MarketSortKey, MarketTab } from "../../types";
 
+export type StockDetailChartMode = "intraday" | "historical";
+
 interface MainPageState {
   headerTitle: string | null;
   scrollTop: number;
   dashboardDaysToShow: number;
   marketIndexHistoricalDaysToShow: number;
+  stockDetailChartMode: StockDetailChartMode;
   marketPageSubpageName: MarketTab;
   marketSortKey: MarketSortKey;
   marketSearchText: string;
@@ -18,6 +21,7 @@ const initialState: MainPageState = {
   scrollTop: 0,
   dashboardDaysToShow: 30,
   marketIndexHistoricalDaysToShow: 30,
+  stockDetailChartMode: "intraday",
   marketPageSubpageName: "holding",
   marketSortKey: "marketValue",
   marketSearchText: "",
@@ -39,6 +43,9 @@ export const mainPageSlice = createSlice({
     changeMarketIndexHistoricalDaysToShow(state, action: PayloadAction<number>) {
       state.marketIndexHistoricalDaysToShow = action.payload;
     },
+    changeStockDetailChartMode(state, action: PayloadAction<StockDetailChartMode>) {
+      state.stockDetailChartMode = action.payload;
+    },
     changeMarketPageSubpage(state, action: PayloadAction<MarketTab>) {
       state.marketPageSubpageName = action.payload;
     },
@@ -51,11 +58,14 @@ export const mainPageSlice = createSlice({
   },
 });
 
-export const { updateHeaderTitle } = mainPageSlice.actions;
-export const { updateScrollTop } = mainPageSlice.actions;
-export const { changeDashboardDaysToShow } = mainPageSlice.actions;
-export const { changeMarketIndexHistoricalDaysToShow } = mainPageSlice.actions;
-export const { changeMarketPageSubpage } = mainPageSlice.actions;
-export const { changeMarketSortKey } = mainPageSlice.actions;
-export const { changeMarketSearchText } = mainPageSlice.actions;
+export const {
+  updateHeaderTitle,
+  updateScrollTop,
+  changeDashboardDaysToShow,
+  changeMarketIndexHistoricalDaysToShow,
+  changeStockDetailChartMode,
+  changeMarketPageSubpage,
+  changeMarketSortKey,
+  changeMarketSearchText,
+} = mainPageSlice.actions;
 export default mainPageSlice.reducer;

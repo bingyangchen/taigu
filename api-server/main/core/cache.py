@@ -56,3 +56,11 @@ class BaseCacheManager[T: BaseModel]:
     @classmethod
     def delete(cls, identifier: str) -> None:
         cache.delete(cls.__gen_cache_key(identifier))
+
+    @classmethod
+    def delete_many(cls, identifiers: list[str]) -> None:
+        if not identifiers:
+            return
+        cache.delete_many(
+            [cls.__gen_cache_key(identifier) for identifier in identifiers]
+        )

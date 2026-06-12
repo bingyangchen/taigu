@@ -15,6 +15,7 @@ from main.market.models import (
     MarketIndexHistory,
     MarketIndexPerMinute,
     StockInfo,
+    StockPricePerMinute,
 )
 
 logger = logging.getLogger(__name__)
@@ -99,13 +100,58 @@ def market_index_historical_prices(request: HttpRequest) -> JsonResponse:
 @rate_limit(rate=3)
 @require_GET
 @require_login
+def intraday_prices(request: HttpRequest) -> JsonResponse:
+    if not (sid := request.GET.get("sid")):
+        return JsonResponse({"error": "Missing sid"}, status=400)
+
+    if not Company.objects.filter(pk=sid).exists():
+        return JsonResponse({"error": "Unknown Stock ID"}, status=400)
+
+    if (cache_result := TimeSeriesStockInfoCacheManager.get(sid)) is not None:
+        data: dict = cache_result.model_dump()["data"]
+    else:
+        data = {
+            row["number"]: {
+                "date": row["date"],
+                "price": row["price"],
+                "fluct_price": row["fluct_price"],
+            }
+            for row in StockPricePerMinute.objects.filter(company_id=sid).values(
+                "number", "date", "price", "fluct_price"
+            )
+        }
+        TimeSeriesStockInfoCacheManager.set(
+            sid, TimeSeriesStockInfo.model_validate({"data": data}), 300
+        )
+
+    sorted_data = dict(sorted(data.items(), key=lambda item: item[0], reverse=True))
+    result: dict = {
+        "date": None,
+        "yesterday_price": 0,
+        "last_fluct_price": 0,
+        **{str(number): point["price"] for number, point in sorted_data.items()},
+    }
+    if last := (next(iter(sorted_data.values())) if sorted_data else None):
+        result["date"] = last["date"]
+        result["yesterday_price"] = last["price"] - last["fluct_price"]
+        result["last_fluct_price"] = last["fluct_price"]
+    return JsonResponse(result)
+
+
+@rate_limit(rate=3)
+@require_GET
+@require_login
 def historical_prices(request: HttpRequest) -> JsonResponse:
     if not (sid := request.GET.get("sid")):
         return JsonResponse({"error": "Missing sid"}, status=400)
+
+    company = Company.objects.filter(pk=sid).first()
+    if company is None:
+        return JsonResponse({"error": "Unknown Stock ID"}, status=400)
+
     result = {"data": []}
     for h in History.objects.filter(
-        company=Company.objects.get(pk=sid),
-        frequency=request.GET.get("frequency", Frequency.DAILY),
+        company=company, frequency=request.GET.get("frequency", Frequency.DAILY)
     ):
         result["data"].append({"date": h.date, "price": h.close_price})
     return JsonResponse(result)

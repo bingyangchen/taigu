@@ -17,6 +17,7 @@ from main.market.models import (
     MarketIndexPerMinute,
     MaterialFact,
     StockInfo,
+    StockPricePerMinute,
 )
 from main.trade_record.models import TradeRecord
 
@@ -310,6 +311,54 @@ class TestMarketIndexPerMinuteModel:
         market_index2 = MarketIndexPerMinute.objects.create(**market_index_data)
 
         assert market_index2.number == 31
+
+
+@pytest.mark.django_db
+class TestStockPricePerMinuteModel:
+    @pytest.fixture
+    def company(self) -> Company:
+        return Company.objects.create(
+            stock_id="2330", name="台積電", trade_type=TradeType.TSE, business="半導體"
+        )
+
+    @pytest.fixture
+    def stock_price_data(self, company: Company) -> dict[str, Any]:
+        return {
+            "company": company,
+            "date": date.today(),
+            "number": 30,
+            "price": 600.0,
+            "fluct_price": 5.0,
+        }
+
+    def test_stock_price_per_minute_creation(
+        self, stock_price_data: dict[str, Any]
+    ) -> None:
+        stock_price = StockPricePerMinute.objects.create(**stock_price_data)
+
+        assert stock_price.company.pk == "2330"
+        assert stock_price.date == date.today()
+        assert stock_price.number == 30
+        assert stock_price.price == 600.0
+        assert stock_price.fluct_price == 5.0
+
+    def test_stock_price_per_minute_unique_constraint(
+        self, stock_price_data: dict[str, Any]
+    ) -> None:
+        StockPricePerMinute.objects.create(**stock_price_data)
+
+        with pytest.raises(IntegrityError):
+            StockPricePerMinute.objects.create(**stock_price_data)
+
+    def test_stock_price_per_minute_different_numbers_allowed(
+        self, stock_price_data: dict[str, Any]
+    ) -> None:
+        StockPricePerMinute.objects.create(**stock_price_data)
+
+        stock_price_data["number"] = 35
+        stock_price2 = StockPricePerMinute.objects.create(**stock_price_data)
+
+        assert stock_price2.number == 35
 
 
 @pytest.mark.django_db

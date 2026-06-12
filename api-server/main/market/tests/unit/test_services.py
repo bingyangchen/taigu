@@ -1,6 +1,7 @@
-from datetime import date, time
+from datetime import date, datetime
 from typing import Any
 from unittest.mock import Mock, patch
+from zoneinfo import ZoneInfo
 
 import pytest
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
@@ -11,10 +12,14 @@ from main.market.models import (
     MarketIndexHistory,
     MarketIndexPerMinute,
     StockInfo,
+    StockPricePerMinute,
 )
 from main.market.services import (
+    _bulk_store_stock_price_per_minute,
     _fetch_and_store_historical_info_from_yahoo,
-    _store_market_per_minute_info,
+    _get_intraday_five_minute_slot,
+    _get_minutes_after_opening,
+    _store_market_index_per_minute,
     fetch_and_store_realtime_stock_info,
     roc_date_string_to_date,
     update_all_stocks_history,
@@ -68,8 +73,9 @@ class TestFetchAndStoreRealtimeStockInfo:
             ]
         }
 
+    @patch("main.market.services._bulk_store_stock_price_per_minute")
     @patch("main.market.services.requests.get")
-    @patch("main.market.services._store_market_per_minute_info")
+    @patch("main.market.services._store_market_index_per_minute")
     @patch("main.market.services.StockInfo.objects.bulk_create")
     @patch("main.market.services.Company.objects.filter")
     @patch("main.market.services.logger")
@@ -80,10 +86,10 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_bulk_create: Mock,
         mock_store_market: Mock,
         mock_get: Mock,
+        mock_store_stock_price: Mock,
         mock_companies: list[Company],
         mock_json_response: dict[str, Any],
     ) -> None:
-        # Setup mocks
         mock_filter.return_value.values.return_value = [
             {"pk": "1234", "trade_type": TradeType.TSE}
         ]
@@ -92,23 +98,268 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_response.json.return_value = mock_json_response
         mock_get.return_value = mock_response
 
-        # Mock date.today() to match test data
-        with patch("main.market.services.date") as mock_date:
+        with (
+            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services._get_intraday_five_minute_slot", return_value=90
+            ),
+        ):
             mock_date.today.return_value = date(2023, 12, 1)
 
             fetch_and_store_realtime_stock_info()
 
-        # Verify logger calls
         mock_logger.info.assert_any_call("Start fetching realtime sotck info.")
         mock_logger.info.assert_any_call("All realtime stock info updated!")
 
-        # Verify market info storage for t00
         mock_store_market.assert_called_once_with(
             id="t00", date_=date(2023, 12, 1), price=15050.0, fluct_price=50.0
         )
-
-        # Verify bulk create was called
         mock_bulk_create.assert_called_once()
+        mock_store_stock_price.assert_called_once()
+        stock_price_batch = mock_store_stock_price.call_args[0][0]
+        assert len(stock_price_batch) == 1
+        assert stock_price_batch[0].company_id == "1234"
+        assert stock_price_batch[0].number == 90
+        assert stock_price_batch[0].price == 102.5
+
+    @patch("main.market.services._bulk_store_stock_price_per_minute")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services._store_market_index_per_minute")
+    @patch("main.market.services.StockInfo.objects.bulk_create")
+    @patch("main.market.services.Company.objects.filter")
+    def test_fetch_passes_empty_stock_price_batch_when_intraday_slot_is_none(
+        self,
+        mock_filter: Mock,
+        mock_bulk_create: Mock,
+        mock_store_market: Mock,
+        mock_get: Mock,
+        mock_store_stock_price: Mock,
+        mock_json_response: dict[str, Any],
+    ) -> None:
+        mock_filter.return_value.values.return_value = [
+            {"pk": "1234", "trade_type": TradeType.TSE}
+        ]
+        mock_response = Mock()
+        mock_response.json.return_value = mock_json_response
+        mock_get.return_value = mock_response
+
+        with (
+            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services._get_intraday_five_minute_slot", return_value=None
+            ),
+        ):
+            mock_date.today.return_value = date(2023, 12, 1)
+            fetch_and_store_realtime_stock_info()
+
+        mock_bulk_create.assert_called_once()
+        mock_store_stock_price.assert_called_once()
+        assert mock_store_stock_price.call_args[0][0] == []
+
+    @patch("main.market.services._bulk_store_stock_price_per_minute")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services._store_market_index_per_minute")
+    @patch("main.market.services.StockInfo.objects.bulk_create")
+    @patch("main.market.services.Company.objects.filter")
+    def test_fetch_stores_stock_price_from_bid_ask_without_deal_price(
+        self,
+        mock_filter: Mock,
+        mock_bulk_create: Mock,
+        mock_store_market: Mock,
+        mock_get: Mock,
+        mock_store_stock_price: Mock,
+    ) -> None:
+        mock_filter.return_value.values.return_value = [
+            {"pk": "1234", "trade_type": TradeType.TSE}
+        ]
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "msgArray": [
+                {
+                    "c": "1234",
+                    "d": "20231201",
+                    "v": "1000",
+                    "y": "100.0",
+                    "a": "103.0_103.5",
+                    "b": "101.5_102.0",
+                    "u": "110.0",
+                    "w": "90.0",
+                }
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        with (
+            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services._get_intraday_five_minute_slot", return_value=90
+            ),
+        ):
+            mock_date.today.return_value = date(2023, 12, 1)
+            fetch_and_store_realtime_stock_info()
+
+        stock_price_batch = mock_store_stock_price.call_args[0][0]
+        assert len(stock_price_batch) == 1
+        assert stock_price_batch[0].company_id == "1234"
+        assert stock_price_batch[0].number == 90
+        assert stock_price_batch[0].price == 102.5
+        assert stock_price_batch[0].fluct_price == 2.5
+
+    @patch("main.market.services._bulk_store_stock_price_per_minute")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services._store_market_index_per_minute")
+    @patch("main.market.services.StockInfo.objects.bulk_create")
+    @patch("main.market.services.Company.objects.filter")
+    def test_fetch_skips_stock_price_when_price_unavailable(
+        self,
+        mock_filter: Mock,
+        mock_bulk_create: Mock,
+        mock_store_market: Mock,
+        mock_get: Mock,
+        mock_store_stock_price: Mock,
+    ) -> None:
+        mock_filter.return_value.values.return_value = [
+            {"pk": "1234", "trade_type": TradeType.TSE}
+        ]
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "msgArray": [
+                {
+                    "c": "1234",
+                    "d": "20231201",
+                    "v": "-",
+                    "y": "-",
+                    "z": "-",
+                    "a": "-",
+                    "b": "-",
+                    "u": "-",
+                    "w": "-",
+                }
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        with (
+            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services._get_intraday_five_minute_slot", return_value=90
+            ),
+        ):
+            mock_date.today.return_value = date(2023, 12, 1)
+            fetch_and_store_realtime_stock_info()
+
+        mock_bulk_create.assert_called_once_with(
+            [],
+            update_conflicts=True,
+            update_fields=["date", "quantity", "close_price", "fluct_price"],
+            unique_fields=["company_id"],
+        )
+        assert mock_store_stock_price.call_args[0][0] == []
+
+    @patch("main.market.services._bulk_store_stock_price_per_minute")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services._store_market_index_per_minute")
+    @patch("main.market.services.StockInfo.objects.bulk_create")
+    @patch("main.market.services.Company.objects.filter")
+    def test_fetch_skips_stock_price_when_date_not_today(
+        self,
+        mock_filter: Mock,
+        mock_bulk_create: Mock,
+        mock_store_market: Mock,
+        mock_get: Mock,
+        mock_store_stock_price: Mock,
+    ) -> None:
+        mock_filter.return_value.values.return_value = [
+            {"pk": "1234", "trade_type": TradeType.TSE}
+        ]
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "msgArray": [
+                {
+                    "c": "1234",
+                    "d": "20231130",
+                    "v": "1000",
+                    "y": "100.0",
+                    "z": "102.5",
+                    "a": "103.0_103.5",
+                    "b": "101.5_102.0",
+                    "u": "110.0",
+                    "w": "90.0",
+                }
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        with (
+            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services._get_intraday_five_minute_slot", return_value=90
+            ),
+        ):
+            mock_date.today.return_value = date(2023, 12, 1)
+            fetch_and_store_realtime_stock_info()
+
+        mock_bulk_create.assert_called_once_with(
+            [],
+            update_conflicts=True,
+            update_fields=["date", "quantity", "close_price", "fluct_price"],
+            unique_fields=["company_id"],
+        )
+        assert mock_store_stock_price.call_args[0][0] == []
+
+    @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services._store_market_index_per_minute")
+    @patch("main.market.services.Company.objects.filter")
+    def test_fetch_persists_stock_price_per_minute(
+        self,
+        mock_filter: Mock,
+        mock_store_market: Mock,
+        mock_get: Mock,
+        mock_delete_cache: Mock,
+    ) -> None:
+        company = Company.objects.create(
+            stock_id="1234",
+            name="Test Company",
+            trade_type=TradeType.TSE,
+            business="Test business",
+        )
+        mock_filter.return_value.values.return_value = [
+            {"pk": company.pk, "trade_type": TradeType.TSE}
+        ]
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "msgArray": [
+                {
+                    "c": company.pk,
+                    "d": "20231201",
+                    "v": "1000",
+                    "y": "100.0",
+                    "z": "102.5",
+                    "a": "103.0_103.5",
+                    "b": "101.5_102.0",
+                    "u": "110.0",
+                    "w": "90.0",
+                }
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        with (
+            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services._get_intraday_five_minute_slot", return_value=90
+            ),
+        ):
+            mock_date.today.return_value = date(2023, 12, 1)
+            fetch_and_store_realtime_stock_info()
+
+        record = StockPricePerMinute.objects.get(
+            company=company, date=date(2023, 12, 1), number=90
+        )
+        assert record.price == 102.5
+        assert record.fluct_price == 2.5
+        mock_delete_cache.assert_called_once_with([company.pk])
 
     @patch("main.market.services.requests.get")
     @patch("main.market.services.Company.objects.filter")
@@ -179,13 +430,13 @@ class TestStoreMarketPerMinuteInfo:
 
         test_date = date(2023, 12, 1)
 
-        # Mock the datetime computation to return 10:30 (90 minutes after 9:00)
-        with patch("main.market.services.datetime") as mock_datetime:
-            mock_time_result = Mock()
-            mock_time_result.time.return_value = time(10, 30)
-            mock_datetime.now.return_value.__add__.return_value = mock_time_result
+        # Mock local time to return 10:30 (90 minutes after 9:00)
+        with patch("main.market.services.timezone.localtime") as mock_localtime:
+            mock_localtime.return_value = datetime(
+                2023, 12, 1, 10, 30, tzinfo=ZoneInfo("Asia/Taipei")
+            )
 
-            _store_market_per_minute_info("t00", test_date, 15000.0, 50.0)
+            _store_market_index_per_minute("t00", test_date, 15000.0, 50.0)
 
         mock_get_or_create.assert_called_once_with(
             market=TradeType.TSE,
@@ -213,13 +464,13 @@ class TestStoreMarketPerMinuteInfo:
 
         test_date = date(2023, 12, 1)
 
-        # Mock the datetime computation to return 10:30 (90 minutes after 9:00)
-        with patch("main.market.services.datetime") as mock_datetime:
-            mock_time_result = Mock()
-            mock_time_result.time.return_value = time(10, 30)
-            mock_datetime.now.return_value.__add__.return_value = mock_time_result
+        # Mock local time to return 10:30 (90 minutes after 9:00)
+        with patch("main.market.services.timezone.localtime") as mock_localtime:
+            mock_localtime.return_value = datetime(
+                2023, 12, 1, 10, 30, tzinfo=ZoneInfo("Asia/Taipei")
+            )
 
-            _store_market_per_minute_info("o00", test_date, 150.0, 2.0)
+            _store_market_index_per_minute("o00", test_date, 150.0, 2.0)
 
         mock_get_or_create.assert_called_once_with(
             market=TradeType.OTC,
@@ -227,6 +478,174 @@ class TestStoreMarketPerMinuteInfo:
             number=90,
             defaults={"price": 150.0, "fluct_price": 2.0},
         )
+
+
+class TestGetMinutesAfterOpening:
+    @pytest.mark.parametrize(
+        ("hour", "minute", "expected"),
+        [(9, 0, 0), (10, 30, 90), (13, 30, 270), (14, 0, 270)],
+    )
+    def test_get_minutes_after_opening(
+        self, hour: int, minute: int, expected: int | None
+    ) -> None:
+        now = datetime(2023, 12, 1, hour, minute, tzinfo=ZoneInfo("Asia/Taipei"))
+        assert _get_minutes_after_opening(now) == expected
+
+
+class TestGetIntradayFiveMinuteSlot:
+    @pytest.mark.parametrize(
+        ("hour", "minute", "expected"),
+        [
+            (8, 30, None),
+            (8, 59, None),
+            (9, 0, 0),
+            (9, 3, 5),
+            (10, 30, 90),
+            (13, 25, 265),
+            (13, 29, 270),
+            (13, 30, 270),
+            (13, 45, None),
+            (14, 0, 270),
+        ],
+    )
+    def test_get_intraday_five_minute_slot(
+        self, hour: int, minute: int, expected: int | None
+    ) -> None:
+        now = datetime(2023, 12, 1, hour, minute, tzinfo=ZoneInfo("Asia/Taipei"))
+        assert _get_intraday_five_minute_slot(now) == expected
+
+
+@pytest.mark.django_db
+class TestBulkStoreStockPricePerMinute:
+    @pytest.fixture
+    def company(self) -> Company:
+        return Company.objects.create(
+            stock_id="2330", name="台積電", trade_type=TradeType.TSE, business="半導體"
+        )
+
+    @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
+    def test_bulk_store_stock_price_per_minute_upserts_same_day_and_invalidates_cache(
+        self, mock_delete_cache: Mock, company: Company
+    ) -> None:
+        test_date = date(2023, 12, 1)
+        _bulk_store_stock_price_per_minute(
+            [
+                StockPricePerMinute(
+                    company_id=company.pk,
+                    date=test_date,
+                    number=90,
+                    price=600.0,
+                    fluct_price=5.0,
+                )
+            ]
+        )
+
+        record = StockPricePerMinute.objects.get(
+            company=company, date=test_date, number=90
+        )
+        assert record.price == 600.0
+        assert record.fluct_price == 5.0
+
+        _bulk_store_stock_price_per_minute(
+            [
+                StockPricePerMinute(
+                    company_id=company.pk,
+                    date=test_date,
+                    number=90,
+                    price=605.0,
+                    fluct_price=10.0,
+                )
+            ]
+        )
+
+        record.refresh_from_db()
+        assert record.price == 605.0
+        assert record.fluct_price == 10.0
+        assert StockPricePerMinute.objects.count() == 1
+        assert mock_delete_cache.call_count == 2
+        mock_delete_cache.assert_called_with([company.pk])
+
+    @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
+    def test_bulk_store_stock_price_per_minute_deletes_stale_date_and_cache(
+        self, mock_delete_cache: Mock, company: Company
+    ) -> None:
+        previous_date = date(2023, 11, 30)
+        trading_date = date(2023, 12, 1)
+        StockPricePerMinute.objects.create(
+            company=company, date=previous_date, number=90, price=590.0, fluct_price=3.0
+        )
+
+        _bulk_store_stock_price_per_minute(
+            [
+                StockPricePerMinute(
+                    company_id=company.pk,
+                    date=trading_date,
+                    number=90,
+                    price=600.0,
+                    fluct_price=5.0,
+                )
+            ]
+        )
+
+        assert not StockPricePerMinute.objects.filter(date=previous_date).exists()
+        record = StockPricePerMinute.objects.get(
+            company=company, date=trading_date, number=90
+        )
+        assert record.price == 600.0
+        mock_delete_cache.assert_called_once_with([company.pk])
+
+    @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
+    def test_bulk_store_stock_price_per_minute_deletes_stale_dates_in_bulk(
+        self, mock_delete_cache: Mock
+    ) -> None:
+        previous_date = date(2023, 11, 30)
+        trading_date = date(2023, 12, 1)
+        companies = [
+            Company.objects.create(
+                stock_id="2330",
+                name="台積電",
+                trade_type=TradeType.TSE,
+                business="半導體",
+            ),
+            Company.objects.create(
+                stock_id="2317", name="鴻海", trade_type=TradeType.TSE, business="電子"
+            ),
+        ]
+        for company in companies:
+            StockPricePerMinute.objects.create(
+                company=company,
+                date=previous_date,
+                number=90,
+                price=100.0,
+                fluct_price=1.0,
+            )
+
+        _bulk_store_stock_price_per_minute(
+            [
+                StockPricePerMinute(
+                    company_id=company.pk,
+                    date=trading_date,
+                    number=90,
+                    price=200.0,
+                    fluct_price=2.0,
+                )
+                for company in companies
+            ]
+        )
+
+        assert StockPricePerMinute.objects.filter(date=previous_date).count() == 0
+        assert StockPricePerMinute.objects.filter(date=trading_date).count() == 2
+        mock_delete_cache.assert_called_once()
+        assert set(mock_delete_cache.call_args[0][0]) == {
+            company.pk for company in companies
+        }
+
+    @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
+    def test_bulk_store_stock_price_per_minute_skips_empty_batch(
+        self, mock_delete_cache: Mock
+    ) -> None:
+        _bulk_store_stock_price_per_minute([])
+        mock_delete_cache.assert_not_called()
 
 
 @pytest.mark.django_db

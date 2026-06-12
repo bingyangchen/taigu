@@ -130,12 +130,9 @@ def change_google_binding(request: HttpRequest) -> JsonResponse:
     verified_result = _verify_with_code_flow(str(code), str(redirect_uri))
 
     # Check if the given google account is not bound to any other account
-    if (
-        User.objects.filter(
-            oauth_org=OAuthOrganization.GOOGLE, oauth_id=verified_result.sub
-        ).first()
-        is not None
-    ):
+    if User.objects.filter(
+        oauth_org=OAuthOrganization.GOOGLE, oauth_id=verified_result.sub
+    ).exists():
         return JsonResponse(
             {"message": "This Google account is already bound to another account."},
             status=400,

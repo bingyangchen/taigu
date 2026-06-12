@@ -41,6 +41,7 @@ export { default as SimpleCashInvestedLineChart } from "./SimpleCashInvestedLine
 export { default as Skeleton } from "./Skeleton/Skeleton";
 export { default as SkeletonOverlay } from "./Skeleton/SkeletonOverlay";
 export { default as SpeedDial } from "./SpeedDial/SpeedDial";
+export { default as StockIntradayLineChart } from "./StockIntradayLineChart/StockIntradayLineChart";
 export { default as StockMemoEditor } from "./StockMemoEditor/StockMemoEditor";
 export { default as StockPicker } from "./StockPicker/StockPicker";
 export { default as StockSearchContent } from "./StockSearchContent/StockSearchContent";
