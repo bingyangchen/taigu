@@ -66,6 +66,7 @@ const apiCachePaths = new Set([
   "market/market-index",
   "market/market-index-historical-prices",
   "market/historical-prices",
+  "market/intraday-prices",
   "trade-plans",
   "stock-memo/company-info",
   "favorites",

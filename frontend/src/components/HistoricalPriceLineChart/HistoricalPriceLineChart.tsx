@@ -3,10 +3,7 @@ import ReactECharts from "echarts-for-react";
 import React from "react";
 
 import Util from "../../utils/util";
-import {
-  MARKET_INDEX_GREEN,
-  MARKET_INDEX_RED,
-} from "../MarketIndexLineChart/marketIndexChartData";
+import { GREEN, RED } from "../MarketIndexLineChart/marketIndexChartData";
 
 const HISTORICAL_PRICE_FLAT_COLOR = "#888888";
 
@@ -43,20 +40,16 @@ class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
     if (values.length < 2) return HISTORICAL_PRICE_FLAT_COLOR;
     const firstPrice = values[0];
     const lastPrice = values[values.length - 1];
-    if (firstPrice > lastPrice) return MARKET_INDEX_GREEN;
-    if (firstPrice < lastPrice) return MARKET_INDEX_RED;
+    if (firstPrice > lastPrice) return GREEN;
+    if (firstPrice < lastPrice) return RED;
     return HISTORICAL_PRICE_FLAT_COLOR;
   }
 
   private get periodTrendAreaGradient(): { start: string; end: string } {
     const color = this.periodTrendColor;
-    if (color === MARKET_INDEX_GREEN) {
-      return { start: "rgba(26, 162, 96, 1)", end: "rgba(26, 162, 96, 0)" };
-    }
-    if (color === MARKET_INDEX_RED) {
-      return { start: "rgba(222, 82, 70, 1)", end: "rgba(222, 82, 70, 0)" };
-    }
-    return { start: "rgba(136, 136, 136, 1)", end: "rgba(136, 136, 136, 0)" };
+    if (color === GREEN) return { start: GREEN, end: "#1aa26000" };
+    if (color === RED) return { start: RED, end: "#d4493f00" };
+    return { start: "#888888", end: "#88888800" };
   }
 
   private get chartOption(): EChartsOption {
@@ -158,9 +151,7 @@ class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
         show: !this.props.isWaiting,
         trigger: "axis",
         axisPointer: { type: "line", lineStyle: { color: "#ddd", width: 1 } },
-        backgroundColor: "rgba(255, 255, 255, 0.96)",
-        borderColor: "#dbe4ef",
-        borderWidth: 1,
+        backgroundColor: "#ffffff",
         textStyle: { color: "#334155", fontSize: 12 },
         formatter: (params: unknown) => {
           if (!Array.isArray(params) || params.length === 0) {

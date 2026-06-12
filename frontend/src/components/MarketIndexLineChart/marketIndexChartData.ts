@@ -1,5 +1,5 @@
-export const MARKET_INDEX_GREEN = "#1aa260";
-export const MARKET_INDEX_RED = "#de5246";
+export const GREEN = "#1aa260";
+export const RED = "#d4493f";
 
 export function getMarketIndexMinPrice(
   data: [number, number | null][],
@@ -28,11 +28,8 @@ export function splitMarketIndexDataIntoColoredSegments(
   for (let i = 0; i < data.length; i++) {
     const point = data[i];
     const value = point[1];
-
-    let pointColor: string;
-    if (value === null) pointColor = currentColor ?? MARKET_INDEX_GREEN;
-    else if (value > prevClosePrice) pointColor = MARKET_INDEX_RED;
-    else pointColor = MARKET_INDEX_GREEN;
+    const pointColor: string =
+      value === null ? (currentColor ?? GREEN) : value > prevClosePrice ? RED : GREEN;
 
     if (
       currentColor !== null &&

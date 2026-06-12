@@ -22,6 +22,17 @@ export default class Util {
     return new Date(year, month - 1, day);
   }
 
+  public static formatDateWithWeekday(dateString: string | null): string {
+    if (!dateString || dateString === "0000-00-00") return "-";
+    const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"] as const;
+    const date = new Date(`${dateString}T00:00:00+08:00`);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const weekday = WEEKDAY_LABELS[date.getDay()];
+    return `${year}/${month}/${day} (${weekday})`;
+  }
+
   public static getHideModalCallback =
     (component: React.Component): MouseEventHandler =>
     (): void => {
