@@ -18,6 +18,7 @@ import { IRouter, withRouter } from "../../../router";
 import { dateStringToDate } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { getSidMarketValueMap, getTotalMarketValue } from "../../../utils/market";
+import { getHideModalCallback } from "../../../utils/modal";
 import Util from "../../../utils/util";
 import styles from "./Dashboard.module.scss";
 
@@ -283,7 +284,7 @@ class Dashboard extends React.Component<Props, State> {
 
   private get activeModal(): React.ReactElement | null {
     if (this.state.activeModalName === "createTradeRecord") {
-      return <TradeRecordEditor hideModal={Util.getHideModalCallback(this)} />;
+      return <TradeRecordEditor hideModal={getHideModalCallback(this)} />;
     }
     return null;
   }

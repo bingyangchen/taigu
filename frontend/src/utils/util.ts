@@ -1,5 +1,3 @@
-import React, { MouseEventHandler } from "react";
-
 import {
   CashDividendRecord,
   HandlingFeeDiscount,
@@ -8,14 +6,6 @@ import {
 } from "../types";
 
 export default class Util {
-  public static getHideModalCallback =
-    (component: React.Component): MouseEventHandler =>
-    (): void => {
-      if ("activeModalName" in component.state) {
-        component.setState({ activeModalName: null });
-      } else throw Error("Lack of state: activeModalName");
-    };
-
   public static get isMobile(): boolean {
     // prettier-ignore
     return (

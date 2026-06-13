@@ -8,6 +8,7 @@ import {
   TradePlan,
   TradeRecord,
 } from "../../types";
+import { getHideModalCallback } from "../../utils/modal";
 import Util from "../../utils/util";
 import styles from "./ListRow.module.scss";
 
@@ -88,7 +89,7 @@ class ListRow extends React.Component<Props, State> {
   }
 
   private get activeModal(): ReactNode {
-    const hideModal = Util.getHideModalCallback(this);
+    const hideModal = getHideModalCallback(this);
     if (this.state.activeModalName === "edit") {
       return this.props.editModal ? this.props.editModal(hideModal) : null;
     } else if (this.state.activeModalName === "checkDelete") {

@@ -17,6 +17,7 @@ import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Api from "../../../utils/api";
+import { getHideModalCallback } from "../../../utils/modal";
 import Util from "../../../utils/util";
 import styles from "./AccountBinding.module.scss";
 
@@ -83,7 +84,7 @@ class AccountBinding extends React.Component<Props, State> {
               discardButtonProps={{
                 children: null,
                 className: "",
-                onClick: Util.getHideModalCallback(this),
+                onClick: getHideModalCallback(this),
               }}
             >
               <div className={styles.model_body}>

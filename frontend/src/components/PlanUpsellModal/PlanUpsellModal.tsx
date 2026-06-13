@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { closePlanUpsell } from "../../redux/slices/PlanUpsellSlice";
 import type { PlanQuotaResource } from "../../types";
 import Env from "../../utils/env";
-import { requestCloseActiveModal } from "../../utils/modalEvents";
+import { requestCloseActiveModal } from "../../utils/modal";
 import Modal from "../Modal/Modal";
 import styles from "./PlanUpsellModal.module.scss";
 

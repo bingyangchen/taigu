@@ -10,6 +10,7 @@ import {
 import * as Icons from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
+import { getHideModalCallback } from "../../utils/modal";
 import Util from "../../utils/util";
 import styles from "./SpeedDial.module.scss";
 
@@ -83,25 +84,25 @@ class SpeedDial extends React.Component<Props, State> {
       return (
         <TradeRecordEditor
           defaultSid={this.props.defaultSid}
-          hideModal={Util.getHideModalCallback(this)}
+          hideModal={getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "createCashDividendRecord") {
       return (
         <CashDividendRecordEditor
           defaultSid={this.props.defaultSid}
-          hideModal={Util.getHideModalCallback(this)}
+          hideModal={getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "createTradePlan") {
       return (
         <TradePlanEditor
           defaultSid={this.props.defaultSid}
-          hideModal={Util.getHideModalCallback(this)}
+          hideModal={getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "search") {
-      return <StockSearchModal hideModal={Util.getHideModalCallback(this)} />;
+      return <StockSearchModal hideModal={getHideModalCallback(this)} />;
     }
     return null;
   }

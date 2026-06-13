@@ -22,6 +22,7 @@ import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { HandlingFeeDiscount } from "../../../types";
 import Env from "../../../utils/env";
+import { getHideModalCallback } from "../../../utils/modal";
 import Util from "../../../utils/util";
 import styles from "./HandlingFee.module.scss";
 
@@ -198,7 +199,7 @@ class HandlingFee extends React.Component<Props, State> {
     typeof HandlingFeeDiscountEditor
   > | null {
     if (this.state.activeModalName === "discountModal") {
-      return <HandlingFeeDiscountEditor hideModal={Util.getHideModalCallback(this)} />;
+      return <HandlingFeeDiscountEditor hideModal={getHideModalCallback(this)} />;
     }
     return null;
   }

@@ -47,6 +47,7 @@ import type { MarketTab, MaterialFact } from "../../../types";
 import { formatDateWithWeekday } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { calculateMarketValue, getVisibleMarketSids } from "../../../utils/market";
+import { getHideModalCallback } from "../../../utils/modal";
 import Util from "../../../utils/util";
 import styles from "./Details.module.scss";
 
@@ -624,7 +625,7 @@ class Details extends React.Component<Props, State> {
         <StockMemoEditor
           sid={this.sid}
           defaultValue={this.props.companyInfo?.note || ""}
-          hideModal={Util.getHideModalCallback(this)}
+          hideModal={getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "companyInfo") {

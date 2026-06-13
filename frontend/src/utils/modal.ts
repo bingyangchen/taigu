@@ -1,3 +1,5 @@
+import React, { MouseEventHandler } from "react";
+
 export const closeActiveModalEventName = "taigu:close-active-modal";
 
 type CloseActiveModalDetail = {
@@ -30,4 +32,12 @@ function waitForNextFrame(): Promise<void> {
   return new Promise((resolve) => {
     window.requestAnimationFrame(() => resolve());
   });
+}
+
+export function getHideModalCallback(component: React.Component): MouseEventHandler {
+  return (): void => {
+    if (component.state && "activeModalName" in component.state) {
+      component.setState({ activeModalName: null });
+    } else throw Error("Lack of state: activeModalName");
+  };
 }
