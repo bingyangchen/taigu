@@ -15,6 +15,7 @@ import {
 import { changeDashboardDaysToShow } from "../../../redux/slices/MainPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
+import { dateStringToDate } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { getSidMarketValueMap, getTotalMarketValue } from "../../../utils/market";
 import Util from "../../../utils/util";
@@ -436,7 +437,7 @@ class Dashboard extends React.Component<Props, State> {
     this.setState((state, props) => {
       const allData = props.cashInvestedChartData.map((row) => {
         const dateStr = row[0] as string;
-        return { date: Util.dateStringToDate(dateStr), value: row[1] as number };
+        return { date: dateStringToDate(dateStr), value: row[1] as number };
       });
       const daysToShow = Math.min(props.dashboardDaysToShow, allData.length);
       const filteredData = allData.slice(-daysToShow);

@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 
 import { StockWarehouse, TradeRecord, TradeRecordState } from "../types";
-import Util from "../utils/util";
+import { getDateStringList } from "../utils/date";
 
 self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
   const tradeRecords = [...e.data].sort(
@@ -133,7 +133,7 @@ const getChartData = (orderedTradeRecords: TradeRecord[]): (string | number)[][]
 
   let remainingRecords = [...orderedTradeRecords];
   let currentStockWarehouse: StockWarehouse = {};
-  const datesToProcess = Util.getDateStringList(
+  const datesToProcess = getDateStringList(
     new Date(orderedTradeRecords[0].deal_time),
     new Date(),
   );

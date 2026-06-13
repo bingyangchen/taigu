@@ -44,6 +44,7 @@ import type { AppDispatch, RootState } from "../../../redux/store";
 import { store } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { MarketTab, MaterialFact } from "../../../types";
+import { formatDateWithWeekday } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { calculateMarketValue, getVisibleMarketSids } from "../../../utils/market";
 import Util from "../../../utils/util";
@@ -802,7 +803,7 @@ class Details extends React.Component<Props, State> {
   private get chartStatusLabel(): string {
     if (this.props.stockDetailChartMode === "historical") return "近 60 日收盤價走勢";
     const intradayDate = this.props.intradayPrices?.date ?? null;
-    return Util.formatDateWithWeekday(intradayDate);
+    return formatDateWithWeekday(intradayDate);
   }
 
   private getHistoricalPriceChartData(historicalPrices = this.props.historicalPrices): {
