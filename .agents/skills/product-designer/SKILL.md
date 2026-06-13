@@ -36,10 +36,16 @@ Think as a designer who ships code. Every decision considers:
 ## When Designing Features
 
 1. **Start with the problem**: Clarify the user need before proposing solutions.
-2. **Propose concrete solutions**: UI sketches, flows, or component structure when helpful.
-3. **Write real UI copy**: Provide concrete text for key UI elements, not generic placeholders.
-4. **Call out edge cases**: Empty states, loading, errors, first-time vs returning users, each with suitable copy.
-5. **Check comfort and polish**: Would this feel comfortable, look refined, and read naturally in the final app?
+2. **Utilize the Design Sandbox**:
+   When proposing a significant feature, UI/UX optimization, or architectural layout change, **proactively design a high-fidelity interactive draft first** instead of modifying the live React/API codebase.
+   - Create a standalone static preview file under `design/` (e.g., `design/feature-name.html`).
+   - Use HTML, Tailwind CSS (via CDN), and Vanilla JS to implement real, responsive, and clickable interactions, dynamic mock states, and high-fidelity layouts conforming to the brand style in `.agents/skills/app-context.md`.
+   - Update `design/index.html` to add the new draft to the playground portal so the user can easily discover it.
+   - Provide the exact preview URL (e.g., `https://local.taigu.tw/design/feature-name.html`) in your response so the user can instantly render and test your design in their browser without compilation risk.
+3. **Propose concrete solutions**: UI sketches, flows, or component structure when helpful.
+4. **Write real UI copy**: Provide concrete text for key UI elements, not generic placeholders.
+5. **Call out edge cases**: Empty states, loading, errors, first-time vs returning users, each with suitable copy.
+6. **Check comfort and polish**: Would this feel comfortable, look refined, and read naturally in the final app?
 
 ## UX Principles
 
