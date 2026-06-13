@@ -15,7 +15,7 @@ import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
 declare const self: ServiceWorkerGlobalScope;
 
-const VERSION = "2026.05.14.01";
+const VERSION = "2026.06.13.01";
 console.log(`Service worker version: ${VERSION}`);
 
 clientsClaim();
