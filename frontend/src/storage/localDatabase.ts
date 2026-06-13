@@ -1,7 +1,7 @@
 import { Dexie, type Table } from "dexie";
 
 import type { TradeRecord, TradeRecordSyncResponse } from "../types";
-import Util from "../utils/util";
+import { dateStringToDate } from "../utils/date";
 
 type Metadata = { key: string; value: number | string };
 export type MarketId = "tse" | "otc";
@@ -144,7 +144,7 @@ export default class LocalDatabase {
       if (dates[i] > latestDate) latestDate = dates[i];
     }
 
-    const nextDate = Util.dateStringToDate(latestDate);
+    const nextDate = dateStringToDate(latestDate);
     nextDate.setDate(nextDate.getDate() + 1);
     return nextDate.toLocaleDateString("af");
   }

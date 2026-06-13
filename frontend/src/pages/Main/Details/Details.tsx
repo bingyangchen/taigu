@@ -44,8 +44,10 @@ import type { AppDispatch, RootState } from "../../../redux/store";
 import { store } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { MarketTab, MaterialFact } from "../../../types";
+import { formatDateWithWeekday } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { calculateMarketValue, getVisibleMarketSids } from "../../../utils/market";
+import { getHideModalCallback } from "../../../utils/modal";
 import Util from "../../../utils/util";
 import styles from "./Details.module.scss";
 
@@ -623,7 +625,7 @@ class Details extends React.Component<Props, State> {
         <StockMemoEditor
           sid={this.sid}
           defaultValue={this.props.companyInfo?.note || ""}
-          hideModal={Util.getHideModalCallback(this)}
+          hideModal={getHideModalCallback(this)}
         />
       );
     } else if (this.state.activeModalName === "companyInfo") {
@@ -802,7 +804,7 @@ class Details extends React.Component<Props, State> {
   private get chartStatusLabel(): string {
     if (this.props.stockDetailChartMode === "historical") return "近 60 日收盤價走勢";
     const intradayDate = this.props.intradayPrices?.date ?? null;
-    return Util.formatDateWithWeekday(intradayDate);
+    return formatDateWithWeekday(intradayDate);
   }
 
   private getHistoricalPriceChartData(historicalPrices = this.props.historicalPrices): {

@@ -10,6 +10,7 @@ import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, settingsPagePath, withRouter } from "../../../router";
 import Env from "../../../utils/env";
+import { getHideModalCallback } from "../../../utils/modal";
 import Nav from "../../../utils/nav";
 import Util from "../../../utils/util";
 import { IssueReportEditor } from "../IssueReport/IssueReport";
@@ -174,7 +175,7 @@ class Overview extends React.Component<Props, State> {
 
   private get activeModal(): React.ReactNode {
     if (this.state.activeModalName === "issueReport") {
-      return <IssueReportEditor hideModal={Util.getHideModalCallback(this)} />;
+      return <IssueReportEditor hideModal={getHideModalCallback(this)} />;
     }
     if (this.state.activeModalName === "checkLogout") {
       return (
@@ -183,7 +184,7 @@ class Overview extends React.Component<Props, State> {
           discardButtonProps={{
             children: "取消",
             className: "transparent l",
-            onClick: Util.getHideModalCallback(this),
+            onClick: getHideModalCallback(this),
           }}
           submitButtonProps={{
             children: "登出",

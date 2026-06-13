@@ -8,7 +8,7 @@ import { IRouter, withRouter } from "../../router";
 import {
   type CloseActiveModalEvent,
   closeActiveModalEventName,
-} from "../../utils/modalEvents";
+} from "../../utils/modal";
 import { Props as ButtonProps } from "../Button/Button";
 import styles from "./Modal.module.scss";
 

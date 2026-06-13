@@ -1,5 +1,3 @@
-import React, { MouseEventHandler } from "react";
-
 import {
   CashDividendRecord,
   HandlingFeeDiscount,
@@ -8,39 +6,6 @@ import {
 } from "../types";
 
 export default class Util {
-  public static getDateStringList(start: Date, end: Date): string[] {
-    const result = [];
-    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-      // Do not drop weekend because sometimes the market would open on weekend
-      result.push(date.toLocaleDateString("af"));
-    }
-    return result;
-  }
-
-  public static dateStringToDate(dateString: string): Date {
-    const [year, month, day] = dateString.split("-").map((e) => parseInt(e, 10));
-    return new Date(year, month - 1, day);
-  }
-
-  public static formatDateWithWeekday(dateString: string | null): string {
-    if (!dateString || dateString === "0000-00-00") return "-";
-    const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"] as const;
-    const date = new Date(`${dateString}T00:00:00+08:00`);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const weekday = WEEKDAY_LABELS[date.getDay()];
-    return `${year}/${month}/${day} (${weekday})`;
-  }
-
-  public static getHideModalCallback =
-    (component: React.Component): MouseEventHandler =>
-    (): void => {
-      if ("activeModalName" in component.state) {
-        component.setState({ activeModalName: null });
-      } else throw Error("Lack of state: activeModalName");
-    };
-
   public static get isMobile(): boolean {
     // prettier-ignore
     return (

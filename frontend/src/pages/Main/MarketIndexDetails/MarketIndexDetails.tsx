@@ -18,6 +18,7 @@ import {
 } from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
+import { dateStringToDate } from "../../../utils/date";
 import Env from "../../../utils/env";
 import Util from "../../../utils/util";
 import styles from "./MarketIndexDetails.module.scss";
@@ -317,7 +318,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
     }
 
     const sortedDates = Object.keys(daily).sort(
-      (a, b) => Util.dateStringToDate(a).getTime() - Util.dateStringToDate(b).getTime(),
+      (a, b) => dateStringToDate(a).getTime() - dateStringToDate(b).getTime(),
     );
     const daysToShow = Math.min(marketIndexHistoricalDaysToShow, sortedDates.length);
     const filteredDates = sortedDates.slice(-daysToShow);

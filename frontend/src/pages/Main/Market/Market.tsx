@@ -136,7 +136,7 @@ class Market extends React.Component<Props, State> {
           <div className={styles.segmented_wrapper}>
             <SegmentedControl
               label="市場資料分類"
-              optionWidth="86px"
+              optionWidth="80px"
               options={[
                 { label: "持股", value: "holding" },
                 { label: "關注", value: "favorites" },
@@ -188,7 +188,12 @@ class Market extends React.Component<Props, State> {
           </div>
         </section>
 
-        <section className={styles.stock_list} aria-live="polite">
+        <section
+          className={`${styles.stock_list} ${
+            !isLoading && visibleSids.length > 0 ? styles.grouped_list : ""
+          }`}
+          aria-live="polite"
+        >
           {isLoading
             ? this.renderSkeletonCards(activeTab)
             : this.renderStockList(activeTab, allSids, visibleSids)}
@@ -271,6 +276,20 @@ class Market extends React.Component<Props, State> {
         ? this.getHoldingAccessibleLabel(sid, stockInfo)
         : this.getFavoriteAccessibleLabel(sid, stockInfo);
 
+    if (Util.isMobile) {
+      return this.renderMobileStockRow(
+        activeTab,
+        sid,
+        stockInfo,
+        stockName,
+        close,
+        fluctPrice,
+        changePercent,
+        tone,
+        accessibleLabel,
+      );
+    }
+
     return (
       <button
         key={sid}
@@ -291,6 +310,86 @@ class Market extends React.Component<Props, State> {
         </div>
         {activeTab === "holding" && this.renderHoldingChips(sid, stockInfo)}
         {this.renderMarketSignals(sid, stockInfo)}
+      </button>
+    );
+  }
+
+  private renderMobileStockRow(
+    activeTab: MarketTab,
+    sid: string,
+    stockInfo: StockInfo | undefined,
+    stockName: string,
+    close: number,
+    fluctPrice: number,
+    changePercent: number,
+    tone: "up" | "down" | "neutral",
+    accessibleLabel: string,
+  ): React.ReactNode {
+    const planText = this.getNearestPlanText(sid, stockInfo);
+    const symbol = fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "";
+    const changeText =
+      fluctPrice === 0 ? "-" : `${symbol} ${(changePercent * 100).toFixed(2)}%`;
+
+    let inventory = 0;
+    let xirr = 0;
+    let returnTone: "up" | "down" | "neutral" = "neutral";
+    if (activeTab === "holding") {
+      const inventoryCosts = this.props.stockWarehouse[sid] ?? [];
+      inventory = inventoryCosts.length;
+      xirr = this.getStockXirr(sid, stockInfo);
+      returnTone = xirr > 0 ? "up" : xirr < 0 ? "down" : "neutral";
+    }
+
+    const volumeText = stockInfo?.quantity
+      ? this.formatVolume(stockInfo.quantity)
+      : "--";
+
+    return (
+      <button
+        key={sid}
+        aria-label={accessibleLabel}
+        className={styles.mobile_stock_row}
+        type="button"
+        onClick={() => this.navigateToDetail(activeTab, sid)}
+      >
+        {/* Line 1: Market Identifiers & Price */}
+        <div className={styles.mobile_row_line1}>
+          <div className={styles.mobile_company_info}>
+            <strong className={styles.mobile_stock_name}>{stockName}</strong>
+            <span className={styles.mobile_stock_sid}>{sid}</span>
+          </div>
+          <strong className={`${styles.mobile_close_price} ${styles["text_" + tone]}`}>
+            {close > 0 ? close.toLocaleString() : "--"}
+          </strong>
+        </div>
+
+        {/* Line 2: Portfolio Summary OR Market Signals ─── Change Percent */}
+        <div className={styles.mobile_row_line2}>
+          {activeTab === "holding" ? (
+            <div className={styles.mobile_holding_summary}>
+              <span>庫存 {inventory.toLocaleString()} 股</span>
+              <span className={styles.mobile_dot}>·</span>
+              <span>報酬率 </span>
+              <strong
+                className={`${styles.mobile_return_value} ${styles["text_" + returnTone]}`}
+              >
+                {this.formatPercent(xirr)}
+              </strong>
+            </div>
+          ) : (
+            <div className={styles.mobile_holding_summary}>
+              {planText ? (
+                <span className={styles.mobile_plan_text}>計畫：{planText}</span>
+              ) : (
+                <span>成交量 {volumeText}</span>
+              )}
+            </div>
+          )}
+
+          <span className={`${styles.mobile_change_percent} ${styles["text_" + tone]}`}>
+            {changeText}
+          </span>
+        </div>
       </button>
     );
   }

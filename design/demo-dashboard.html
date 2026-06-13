@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Taigu 儀表板設計提案 | Demo Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              taigu: {
+                blue: "#4c8bf5",
+                red: "#d4493f", // UP in Taiwan
+                green: "#1aa260", // DOWN in Taiwan
+                yellow: "#fbbc05",
+                dark: "#444444",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap");
+      body {
+        font-family: "Noto Sans TC", sans-serif;
+        background-color: #f1f5f9;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-slate-800 flex flex-col">
+    <!-- Top Design Banner Warning -->
+    <div
+      class="bg-amber-500 text-white py-2 px-4 text-center text-xs font-bold flex justify-between items-center shadow-inner z-50"
+    >
+      <div class="flex-grow text-center">
+        ⚠️ 這是高擬真 UI/UX 設計草稿（沙盒預覽），此頁面並未更動正式專案的 React / API
+        代碼。
+      </div>
+      <a
+        href="index.html"
+        class="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded font-bold transition-colors"
+      >
+        返回設計大廳 ↩
+      </a>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
+      >
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-10 h-10 bg-taigu-blue rounded-xl flex items-center justify-center text-white font-black text-xl shadow-md"
+          >
+            T
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-lg font-bold text-slate-900">Taigu 記帳</h1>
+              <span
+                class="bg-blue-100 text-taigu-blue text-[10px] px-1.5 py-0.5 rounded font-extrabold"
+                >標準版</span
+              >
+            </div>
+            <p class="text-xs text-slate-500">專為台股設計，你的專業記帳幫手</p>
+          </div>
+        </div>
+
+        <!-- Fake Profile & Quick Stats -->
+        <div class="flex items-center space-x-4">
+          <div class="hidden md:flex flex-col items-end">
+            <span class="text-sm font-bold text-slate-800">王小明 (Vincent)</span>
+            <span class="text-xs text-slate-400">訂閱到期日: 2027-07-14</span>
+          </div>
+          <div
+            class="w-10 h-10 bg-slate-100 rounded-full border-2 border-slate-200 flex items-center justify-center font-bold text-slate-600 shadow-sm"
+          >
+            明
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div
+      class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow flex flex-col lg:flex-row gap-8"
+    >
+      <!-- Left Column: Navigation Sidebar (Mock) -->
+      <aside class="w-full lg:w-64 flex-shrink-0">
+        <div
+          class="bg-white rounded-xl border border-slate-200 p-4 space-y-1.5 shadow-sm"
+        >
+          <a
+            href="#"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-bold bg-blue-50 text-taigu-blue transition-colors"
+          >
+            <span class="text-lg">📊</span>
+            <span>我的儀表板</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+          >
+            <span class="text-lg">📈</span>
+            <span>即時市場</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+          >
+            <span class="text-lg">📜</span>
+            <span>交易紀錄</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+          >
+            <span class="text-lg">📝</span>
+            <span>買賣計畫</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+          >
+            <span class="text-lg">💰</span>
+            <span>收益分析</span>
+          </a>
+          <div class="border-t border-slate-100 my-3"></div>
+          <a
+            href="#"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+          >
+            <span class="text-lg">⚙️</span>
+            <span>系統設定</span>
+          </a>
+        </div>
+
+        <!-- Quick Hint -->
+        <div
+          class="mt-6 bg-blue-50/50 rounded-xl border border-blue-100 p-4 text-xs text-slate-500 leading-relaxed"
+        >
+          <p class="font-bold text-slate-800 mb-1">💡 互動小提示：</p>
+          本設計草稿支援「即時切換資產佔比/歷年股利檢視」以及「模擬新增一筆股票交易紀錄」，您可以嘗試點擊下方的按鈕，體驗即時資料變更與動畫反饋！
+        </div>
+      </aside>
+
+      <!-- Right Column: Dashboard Content -->
+      <main class="flex-grow space-y-6">
+        <!-- Quick Alert Profile Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div
+            class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col"
+          >
+            <span class="text-xs text-slate-400 font-bold mb-1">資產總市值 (TWD)</span>
+            <span class="text-2xl font-black text-slate-900" id="totalAssetVal"
+              >NT$ 1,485,320</span
+            >
+            <span
+              class="text-xs text-taigu-red font-bold mt-1 flex items-center"
+              id="totalAssetReturn"
+            >
+              ▲ +NT$ 214,350 (+16.86%)
+            </span>
+          </div>
+
+          <div
+            class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col"
+          >
+            <span class="text-xs text-slate-400 font-bold mb-1"
+              >預估年領股利 (TWD)</span
+            >
+            <span class="text-2xl font-black text-slate-900" id="dividendVal"
+              >NT$ 72,500</span
+            >
+            <span class="text-xs text-slate-500 mt-1">
+              平均殖利率: <span class="font-bold text-slate-700">4.88%</span>
+            </span>
+          </div>
+
+          <div
+            class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between"
+          >
+            <div class="flex justify-between items-start">
+              <div class="flex flex-col">
+                <span class="text-xs text-slate-400 font-bold">本月新增紀錄數</span>
+                <span class="text-2xl font-black text-slate-900" id="recordCountVal"
+                  >18 筆</span
+                >
+              </div>
+              <span
+                class="bg-green-100 text-taigu-green text-[10px] px-1.5 py-0.5 rounded font-bold"
+                >額度安全</span
+              >
+            </div>
+            <span class="text-xs text-slate-400 mt-1">
+              額度限制:
+              <span class="font-semibold text-slate-600">無上限 (標準版)</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Chart & Detail Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <!-- Main Chart (3/5 width) -->
+          <div
+            class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm lg:col-span-3 flex flex-col"
+          >
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="font-bold text-slate-900 text-base">資產配置與分析</h3>
+              <!-- Tabs -->
+              <div
+                class="flex bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs"
+              >
+                <button
+                  id="tabPieBtn"
+                  class="px-3 py-1.5 rounded-md font-bold bg-white text-slate-800 shadow-sm transition-all"
+                  onclick="switchChartTab('pie')"
+                >
+                  資產佔比 (Pie)
+                </button>
+                <button
+                  id="tabBarBtn"
+                  class="px-3 py-1.5 rounded-md font-medium text-slate-500 hover:text-slate-800 transition-all"
+                  onclick="switchChartTab('bar')"
+                >
+                  歷年股利 (Bar)
+                </button>
+              </div>
+            </div>
+
+            <!-- Chart Simulation Area -->
+            <div
+              class="h-64 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 relative overflow-hidden flex-grow"
+            >
+              <!-- Simulated Pie Chart -->
+              <div
+                id="pieChartSim"
+                class="flex flex-col items-center justify-center space-y-4 w-full h-full p-4 transition-all duration-300"
+              >
+                <div class="relative w-36 h-36 flex items-center justify-center">
+                  <!-- Draw a pseudo CSS pie chart -->
+                  <div
+                    class="w-full h-full rounded-full border-[16px] border-slate-200 border-t-taigu-blue border-r-taigu-red border-b-taigu-green absolute animate-spin-slow"
+                  ></div>
+                  <div class="text-center z-10">
+                    <span class="text-xs text-slate-400 font-bold block">最大持股</span>
+                    <span class="text-base font-extrabold text-slate-800"
+                      >2330 台積電</span
+                    >
+                  </div>
+                </div>
+                <!-- Legend -->
+                <div class="flex flex-wrap justify-center gap-3 text-xs">
+                  <span class="flex items-center"
+                    ><span class="w-2.5 h-2.5 rounded-full bg-taigu-blue mr-1"></span>
+                    2330 台積電 (45%)</span
+                  >
+                  <span class="flex items-center"
+                    ><span class="w-2.5 h-2.5 rounded-full bg-taigu-red mr-1"></span>
+                    0050 元大台灣50 (30%)</span
+                  >
+                  <span class="flex items-center"
+                    ><span class="w-2.5 h-2.5 rounded-full bg-taigu-green mr-1"></span>
+                    2884 玉山金 (25%)</span
+                  >
+                </div>
+              </div>
+
+              <!-- Simulated Bar Chart (Hidden initially) -->
+              <div
+                id="barChartSim"
+                class="hidden flex items-end justify-center space-x-4 w-full h-full p-6 pt-10 transition-all duration-300"
+              >
+                <!-- 2023 -->
+                <div class="flex flex-col items-center flex-grow group">
+                  <span
+                    class="text-xs font-bold text-slate-400 mb-2 group-hover:text-taigu-blue transition-colors"
+                    >$42K</span
+                  >
+                  <div
+                    class="w-10 bg-slate-300 hover:bg-taigu-blue h-24 rounded-t-md transition-all duration-300 cursor-pointer"
+                  ></div>
+                  <span class="text-xs font-bold text-slate-500 mt-2">2023</span>
+                </div>
+                <!-- 2024 -->
+                <div class="flex flex-col items-center flex-grow group">
+                  <span
+                    class="text-xs font-bold text-slate-400 mb-2 group-hover:text-taigu-blue transition-colors"
+                    >$55K</span
+                  >
+                  <div
+                    class="w-10 bg-slate-300 hover:bg-taigu-blue h-32 rounded-t-md transition-all duration-300 cursor-pointer"
+                  ></div>
+                  <span class="text-xs font-bold text-slate-500 mt-2">2024</span>
+                </div>
+                <!-- 2025 -->
+                <div class="flex flex-col items-center flex-grow group">
+                  <span
+                    class="text-xs font-bold text-slate-400 mb-2 group-hover:text-taigu-blue transition-colors"
+                    >$68K</span
+                  >
+                  <div
+                    class="w-10 bg-slate-300 hover:bg-taigu-blue h-40 rounded-t-md transition-all duration-300 cursor-pointer"
+                  ></div>
+                  <span class="text-xs font-bold text-slate-500 mt-2">2025</span>
+                </div>
+                <!-- 2026 (Estimate) -->
+                <div class="flex flex-col items-center flex-grow group">
+                  <span class="text-xs font-bold text-taigu-blue mb-2">$72.5K</span>
+                  <div
+                    class="w-10 bg-taigu-blue/80 hover:bg-taigu-blue h-44 rounded-t-md transition-all duration-300 cursor-pointer shadow-md shadow-blue-100"
+                  ></div>
+                  <span class="text-xs font-bold text-slate-900 mt-2">2026 (預估)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Interaction Area (2/5 width) -->
+          <div
+            class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm lg:col-span-2 flex flex-col"
+          >
+            <h3 class="font-bold text-slate-900 text-base mb-4 flex items-center">
+              ⚡ 模擬新增交易紀錄
+            </h3>
+            <p class="text-xs text-slate-500 mb-5 leading-relaxed">
+              在不影響後端資料庫的前提下，直接在此新增交易紀錄，來觀察上面圖表和資產卡片的即時聯動效果！
+            </p>
+
+            <form
+              id="mockTradeForm"
+              onsubmit="
+                event.preventDefault();
+                handleMockAddTrade();
+              "
+              class="space-y-4 flex-grow"
+            >
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1"
+                  >股票代號 / 名稱</label
+                >
+                <select
+                  id="mockStock"
+                  class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-taigu-blue/50 bg-white"
+                >
+                  <option value="2330">2330 - 台積電</option>
+                  <option value="0050">0050 - 元大台灣50</option>
+                  <option value="2884">2884 - 玉山金</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 mb-1"
+                    >交易類型</label
+                  >
+                  <div
+                    class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs"
+                  >
+                    <button
+                      type="button"
+                      id="typeBuyBtn"
+                      class="flex-grow py-1.5 rounded-md font-bold bg-white text-taigu-red shadow-sm"
+                      onclick="setMockType('BUY')"
+                    >
+                      現股買進
+                    </button>
+                    <button
+                      type="button"
+                      id="typeSellBtn"
+                      class="flex-grow py-1.5 rounded-md font-medium text-slate-500"
+                      onclick="setMockType('SELL')"
+                    >
+                      現股賣出
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 mb-1"
+                    >成交股數</label
+                  >
+                  <input
+                    type="number"
+                    id="mockQty"
+                    value="1000"
+                    min="1"
+                    step="1"
+                    class="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-taigu-blue/50 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 mb-1"
+                    >成交價格 (TWD)</label
+                  >
+                  <input
+                    type="number"
+                    id="mockPrice"
+                    value="920"
+                    min="0.1"
+                    step="0.1"
+                    class="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-taigu-blue/50 bg-white"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 mb-1"
+                    >券商折讓 (折)</label
+                  >
+                  <input
+                    type="number"
+                    id="mockDiscount"
+                    value="2.8"
+                    min="0"
+                    max="10"
+                    step="0.1"
+                    class="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-taigu-blue/50 bg-white"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                class="w-full bg-slate-900 hover:bg-taigu-blue text-white py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-colors shadow-sm mt-2"
+              >
+                新增此筆模擬交易
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Trade Records Table (Mock) -->
+        <div
+          class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm overflow-hidden"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-slate-900 text-base">最近交易紀錄 (模擬聯動)</h3>
+            <span class="text-xs text-slate-400">顯示最新 3 筆</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-slate-400 text-xs font-bold">
+                  <th class="py-3 px-4">時間</th>
+                  <th class="py-3 px-4">股票</th>
+                  <th class="py-3 px-4">交易</th>
+                  <th class="py-3 px-4 text-right">成交價</th>
+                  <th class="py-3 px-4 text-right">股數</th>
+                  <th class="py-3 px-4 text-right">手續費</th>
+                  <th class="py-3 px-4 text-right">成交金額</th>
+                </tr>
+              </thead>
+              <tbody id="mockTradeTableBody" class="text-sm">
+                <tr
+                  class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
+                >
+                  <td class="py-3.5 px-4 font-mono text-xs text-slate-400">
+                    2026-06-13 10:15
+                  </td>
+                  <td class="py-3.5 px-4 font-bold text-slate-800">2330 台積電</td>
+                  <td class="py-3.5 px-4">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-taigu-red"
+                      >買進</span
+                    >
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono font-bold">920.0</td>
+                  <td class="py-3.5 px-4 text-right font-mono">1,000</td>
+                  <td class="py-3.5 px-4 text-right font-mono text-slate-400">$368</td>
+                  <td class="py-3.5 px-4 text-right font-mono font-bold text-slate-900">
+                    $920,368
+                  </td>
+                </tr>
+                <tr
+                  class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
+                >
+                  <td class="py-3.5 px-4 font-mono text-xs text-slate-400">
+                    2026-06-12 14:20
+                  </td>
+                  <td class="py-3.5 px-4 font-bold text-slate-800">0050 元大台灣50</td>
+                  <td class="py-3.5 px-4">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-taigu-green"
+                      >賣出</span
+                    >
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono font-bold">185.0</td>
+                  <td class="py-3.5 px-4 text-right font-mono">2,000</td>
+                  <td class="py-3.5 px-4 text-right font-mono text-slate-400">$147</td>
+                  <td class="py-3.5 px-4 text-right font-mono font-bold text-slate-900">
+                    $369,853
+                  </td>
+                </tr>
+                <tr
+                  class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
+                >
+                  <td class="py-3.5 px-4 font-mono text-xs text-slate-400">
+                    2026-06-11 09:30
+                  </td>
+                  <td class="py-3.5 px-4 font-bold text-slate-800">2884 玉山金</td>
+                  <td class="py-3.5 px-4">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-taigu-red"
+                      >買進</span
+                    >
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono font-bold">29.1</td>
+                  <td class="py-3.5 px-4 text-right font-mono">5,000</td>
+                  <td class="py-3.5 px-4 text-right font-mono text-slate-400">$58</td>
+                  <td class="py-3.5 px-4 text-right font-mono font-bold text-slate-900">
+                    $145,558
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4"
+      >
+        <p>© 2026 Taigu.tw - 專為台股設計的專業記帳幫手. 本地沙盒預覽模式.</p>
+        <div class="flex space-x-4">
+          <a href="index.html" class="text-taigu-blue hover:underline font-bold"
+            >← 返回設計大廳</a
+          >
+        </div>
+      </div>
+    </footer>
+
+    <!-- Interactive Logic Script -->
+    <script>
+      // Form states
+      let currentType = "BUY";
+      let currentTotalAssets = 1485320;
+      let currentDividend = 72500;
+      let currentRecordCount = 18;
+
+      function setMockType(type) {
+        currentType = type;
+        const buyBtn = document.getElementById("typeBuyBtn");
+        const sellBtn = document.getElementById("typeSellBtn");
+
+        if (type === "BUY") {
+          buyBtn.className =
+            "flex-grow py-1.5 rounded-md font-bold bg-white text-taigu-red shadow-sm";
+          sellBtn.className = "flex-grow py-1.5 rounded-md font-medium text-slate-500";
+        } else {
+          buyBtn.className = "flex-grow py-1.5 rounded-md font-medium text-slate-500";
+          sellBtn.className =
+            "flex-grow py-1.5 rounded-md font-bold bg-white text-taigu-green shadow-sm";
+        }
+      }
+
+      function switchChartTab(tab) {
+        const pieBtn = document.getElementById("tabPieBtn");
+        const barBtn = document.getElementById("tabBarBtn");
+        const pieSim = document.getElementById("pieChartSim");
+        const barSim = document.getElementById("barChartSim");
+
+        if (tab === "pie") {
+          pieBtn.className =
+            "px-3 py-1.5 rounded-md font-bold bg-white text-slate-800 shadow-sm transition-all";
+          barBtn.className =
+            "px-3 py-1.5 rounded-md font-medium text-slate-500 hover:text-slate-800 transition-all";
+          pieSim.classList.remove("hidden");
+          barSim.classList.add("hidden");
+        } else {
+          pieBtn.className =
+            "px-3 py-1.5 rounded-md font-medium text-slate-500 hover:text-slate-800 transition-all";
+          barBtn.className =
+            "px-3 py-1.5 rounded-md font-bold bg-white text-slate-800 shadow-sm transition-all";
+          pieSim.classList.add("hidden");
+          barSim.classList.remove("hidden");
+        }
+      }
+
+      function handleMockAddTrade() {
+        const stockSelect = document.getElementById("mockStock");
+        const stockVal = stockSelect.value;
+        const stockName =
+          stockSelect.options[stockSelect.selectedIndex].text.split(" - ")[1];
+
+        const qty = parseInt(document.getElementById("mockQty").value) || 0;
+        const price = parseFloat(document.getElementById("mockPrice").value) || 0;
+        const discount =
+          parseFloat(document.getElementById("mockDiscount").value) || 10;
+
+        if (qty <= 0 || price <= 0) {
+          alert("請輸入有效的股數與價格！");
+          return;
+        }
+
+        // Calculation of fee & total
+        // Taiwan stock fee rule: Price * Qty * 0.001425 * Discount/10 (Min 20 TWD)
+        let baseFee = Math.floor(price * qty * 0.001425);
+        let fee = Math.floor(baseFee * (discount / 10));
+        if (fee < 20) fee = 20;
+
+        const tradeVal = Math.floor(price * qty);
+        let finalAmount = 0;
+        if (currentType === "BUY") {
+          finalAmount = tradeVal + fee;
+          currentTotalAssets += tradeVal;
+          // mock dividend impact
+          if (stockVal === "2330")
+            currentDividend += Math.floor(qty * 16); // 16 TWD dividend
+          else if (stockVal === "0050") currentDividend += Math.floor(qty * 5);
+          else if (stockVal === "2884") currentDividend += Math.floor(qty * 1.2);
+        } else {
+          // Sell tax: 0.003
+          const tax = Math.floor(tradeVal * 0.003);
+          finalAmount = tradeVal - fee - tax;
+          currentTotalAssets -= tradeVal;
+          if (stockVal === "2330") currentDividend -= Math.floor(qty * 16);
+          else if (stockVal === "0050") currentDividend -= Math.floor(qty * 5);
+          else if (stockVal === "2884") currentDividend -= Math.floor(qty * 1.2);
+        }
+
+        currentRecordCount += 1;
+
+        // Update DOM stats
+        document.getElementById("totalAssetVal").textContent =
+          `NT$ ${currentTotalAssets.toLocaleString()}`;
+        document.getElementById("dividendVal").textContent =
+          `NT$ ${currentDividend.toLocaleString()}`;
+        document.getElementById("recordCountVal").textContent =
+          `${currentRecordCount} 筆`;
+
+        // Insert row in table
+        const tbody = document.getElementById("mockTradeTableBody");
+        const newRow = document.createElement("tr");
+        newRow.className =
+          "border-b border-slate-50 bg-amber-50/40 hover:bg-slate-50/50 transition-colors";
+
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+        const typeLabel =
+          currentType === "BUY"
+            ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-taigu-red">買進</span>'
+            : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-taigu-green">賣出</span>';
+
+        newRow.innerHTML = `
+                <td class="py-3.5 px-4 font-mono text-xs text-slate-400">${dateStr}</td>
+                <td class="py-3.5 px-4 font-bold text-slate-800">${stockVal} ${stockName}</td>
+                <td class="py-3.5 px-4">${typeLabel}</td>
+                <td class="py-3.5 px-4 text-right font-mono font-bold">${price.toFixed(1)}</td>
+                <td class="py-3.5 px-4 text-right font-mono">${qty.toLocaleString()}</td>
+                <td class="py-3.5 px-4 text-right font-mono text-slate-400">$${fee}</td>
+                <td class="py-3.5 px-4 text-right font-mono font-bold text-slate-900">$${finalAmount.toLocaleString()}</td>
+            `;
+
+        // Keep top 3 only in simulation display if preferred, or just insert at the top
+        tbody.insertBefore(newRow, tbody.firstChild);
+
+        // Add custom animation highlighting the updated totals
+        const totals = [
+          document.getElementById("totalAssetVal"),
+          document.getElementById("dividendVal"),
+          document.getElementById("recordCountVal"),
+        ];
+        totals.forEach((el) => {
+          el.classList.add("scale-105", "text-taigu-blue");
+          setTimeout(() => {
+            el.classList.remove("scale-105", "text-taigu-blue");
+          }, 300);
+        });
+      }
+    </script>
+  </body>
+</html>

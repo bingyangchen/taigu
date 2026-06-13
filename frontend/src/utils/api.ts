@@ -3,7 +3,7 @@ import { pushToast } from "../redux/slices/ToastSlice";
 import { store } from "../redux/store";
 import type { PlanQuotaResource } from "../types";
 import Env from "./env";
-import { requestCloseActiveModal } from "./modalEvents";
+import { requestCloseActiveModal } from "./modal";
 import Nav from "./nav";
 
 type ApiErrorPayload = {

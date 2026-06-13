@@ -32,8 +32,18 @@ services:
       options:
         max-size: "2m"
         max-file: "1"
+  design-server:
+    image: nginx:1.27.4-alpine
+    volumes:
+      - ./design:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "2m"
+        max-file: "1"
   reverse-proxy:
-    image: nginx:1.27.4
+    image: nginx:1.27.4-alpine
     ports:
       - "80:80"
       - "443:443"
@@ -44,6 +54,7 @@ services:
     depends_on:
       - api-server
       - frontend
+      - design-server
     command: ["nginx", "-g", "daemon off;"]
     restart: unless-stopped
     logging:

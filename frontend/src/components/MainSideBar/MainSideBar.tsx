@@ -15,7 +15,7 @@ import { AppDispatch, RootState } from "../../redux/store";
 import { settingsPagePath } from "../../router";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
-import Util from "../../utils/util";
+import { getHideModalCallback } from "../../utils/modal";
 import styles from "./MainSideBar.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -197,13 +197,13 @@ class MainSideBar extends React.Component<Props, State> {
   }
   private get activeModal(): React.ReactElement | null {
     if (this.state.activeModalName === "createTradeRecord") {
-      return <TradeRecordEditor hideModal={Util.getHideModalCallback(this)} />;
+      return <TradeRecordEditor hideModal={getHideModalCallback(this)} />;
     } else if (this.state.activeModalName === "createCashDividendRecord") {
-      return <CashDividendRecordEditor hideModal={Util.getHideModalCallback(this)} />;
+      return <CashDividendRecordEditor hideModal={getHideModalCallback(this)} />;
     } else if (this.state.activeModalName === "createTradePlan") {
-      return <TradePlanEditor hideModal={Util.getHideModalCallback(this)} />;
+      return <TradePlanEditor hideModal={getHideModalCallback(this)} />;
     } else if (this.state.activeModalName === "search") {
-      return <StockSearchModal hideModal={Util.getHideModalCallback(this)} />;
+      return <StockSearchModal hideModal={getHideModalCallback(this)} />;
     }
     return null;
   }
