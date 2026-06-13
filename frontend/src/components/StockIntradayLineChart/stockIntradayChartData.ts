@@ -20,7 +20,6 @@ export function getStockIntradayMinutePrices(
 }
 
 export function hasStockIntradayPlottedData(prices: StockIntradayPrices): boolean {
-  console.log(Object.keys(getStockIntradayMinutePrices(prices)).length);
   return Object.keys(getStockIntradayMinutePrices(prices)).length > 0;
 }
 
