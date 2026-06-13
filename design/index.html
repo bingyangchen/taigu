@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Taigu 設計草稿平台 | Taigu Design Playground</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              taigu: {
+                blue: "#4c8bf5",
+                red: "#d4493f",
+                green: "#1aa260",
+                yellow: "#fbbc05",
+                dark: "#444444",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap");
+      body {
+        font-family: "Noto Sans TC", sans-serif;
+        background-color: #f8fafc;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-slate-800 flex flex-col">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
+      >
+        <div class="flex items-center space-x-3">
+          <!-- App Logo -->
+          <div
+            class="w-10 h-10 bg-taigu-blue rounded-xl flex items-center justify-center text-white font-black text-xl shadow-md shadow-blue-200"
+          >
+            T
+          </div>
+          <div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-900">
+              Taigu <span class="text-taigu-blue font-medium">Design Playground</span>
+            </h1>
+            <p class="text-xs text-slate-500">台股投資記帳專屬設計提案平台</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 text-sm text-slate-500">
+          <span
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800"
+          >
+            Local Preview
+          </span>
+          <span class="text-slate-300">|</span>
+          <span>今日日期: 2026-06-13</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <!-- Hero Section -->
+      <div
+        class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-8 sm:p-12 text-white shadow-xl mb-10 relative overflow-hidden"
+      >
+        <div
+          class="absolute -right-10 -bottom-10 w-40 h-40 bg-taigu-blue/10 rounded-full blur-3xl"
+        ></div>
+        <div
+          class="absolute -left-10 -top-10 w-40 h-40 bg-taigu-green/10 rounded-full blur-3xl"
+        ></div>
+
+        <div class="relative z-10 max-w-3xl">
+          <h2 class="text-2xl sm:text-3xl font-black mb-4">
+            無需更動程式碼，即時體驗高擬真（High-Fidelity）介面設計
+          </h2>
+          <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
+            本目錄
+            <code
+              class="bg-slate-800/80 text-taigu-blue px-2 py-1 rounded text-xs sm:text-sm font-mono border border-slate-700"
+              >/design</code
+            >
+            是專為 AI Agent 設計的提案沙盒。當我們想探討新功能、UI/UX
+            優化或版面重構時，我們會在此產出獨立的靜態網頁（HTML+CSS+JS），並透過 Nginx
+            即時渲染。這能讓您在提案階段，不污染正式 React
+            代碼的前提下，看到並點擊最真實的畫面。
+          </p>
+          <div class="flex flex-wrap gap-4 text-xs sm:text-sm">
+            <div
+              class="flex items-center bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700"
+            >
+              <span class="w-2.5 h-2.5 bg-taigu-blue rounded-full mr-2"></span>
+              100% 互動高擬真
+            </div>
+            <div
+              class="flex items-center bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700"
+            >
+              <span class="w-2.5 h-2.5 bg-taigu-green rounded-full mr-2"></span>
+              不影響正式代碼
+            </div>
+            <div
+              class="flex items-center bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700"
+            >
+              <span class="w-2.5 h-2.5 bg-taigu-yellow rounded-full mr-2"></span>
+              支援 Tailwind & JS 互動
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Panel -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+        <div>
+          <h3 class="text-xl font-extrabold text-slate-900 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 text-taigu-blue mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+              />
+            </svg>
+            設計草稿清單
+          </h3>
+          <p class="text-sm text-slate-500 mt-1">目前可供預覽的設計模型與新功能提案</p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="搜尋設計草稿..."
+            class="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-taigu-blue/50 w-full sm:w-64 bg-white transition-all"
+          />
+        </div>
+      </div>
+
+      <!-- Design Drafts Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="draftsGrid">
+        <!-- Draft Item 1: Dashboard Refactor -->
+        <div
+          class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all group flex flex-col"
+        >
+          <div class="h-3 bg-taigu-blue"></div>
+          <div class="p-6 flex-grow flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-taigu-blue"
+              >
+                提案審查中
+              </span>
+              <span class="text-xs text-slate-400 font-mono">v1.0.0</span>
+            </div>
+            <h4
+              class="text-lg font-bold text-slate-900 group-hover:text-taigu-blue transition-colors mb-2"
+            >
+              新版儀表板 (Dashboard) 數據整合設計
+            </h4>
+            <p class="text-slate-600 text-sm leading-relaxed mb-6 flex-grow">
+              重構主儀表板，優化台股資產配置圓餅圖、歷年股利條形圖與持股明細卡片。大幅提升行動端閱讀體驗，並加入動態載入骨架。
+            </p>
+
+            <div class="border-t border-slate-100 pt-4 mt-auto">
+              <div
+                class="flex items-center justify-between text-xs text-slate-500 mb-4"
+              >
+                <span>設計師: AI Agent</span>
+                <span>更新: 2026-06-13</span>
+              </div>
+              <a
+                href="demo-dashboard.html"
+                class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-slate-900 hover:bg-taigu-blue text-white text-sm font-bold rounded-lg transition-colors shadow-sm group-hover:shadow"
+              >
+                點擊開啟高擬真預覽
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 ml-1.5 transition-transform group-hover:translate-x-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Draft Item 2: Empty State (Placeholder) -->
+        <div
+          class="bg-slate-50 rounded-xl border border-slate-200 border-dashed p-6 flex flex-col justify-center items-center text-center h-[320px] group"
+        >
+          <div
+            class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4 group-hover:bg-slate-200 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </div>
+          <h4 class="text-sm font-bold text-slate-700 mb-1">新增設計提案</h4>
+          <p class="text-xs text-slate-400 max-w-[200px] leading-relaxed">
+            請 AI Agent 在
+            <code
+              class="font-mono text-[11px] bg-white px-1 py-0.5 rounded border border-slate-200"
+              >/design</code
+            >
+            目錄建立 HTML 檔即可
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4"
+      >
+        <p>© 2026 Taigu.tw - 專為台股設計的專業記帳幫手.</p>
+        <div class="flex space-x-4">
+          <span
+            >位置:
+            <code class="font-mono bg-slate-100 text-slate-700 px-1 py-0.5 rounded"
+              >/design/</code
+            ></span
+          >
+          <span>運行模式: Nginx 靜態沙盒</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Search Interaction Script -->
+    <script>
+      document.getElementById("searchInput").addEventListener("input", function (e) {
+        const query = e.target.value.toLowerCase();
+        const cards = document.querySelectorAll("#draftsGrid > div");
+
+        cards.forEach((card) => {
+          const title = card.querySelector("h4")?.textContent || "";
+          const desc = card.querySelector("p")?.textContent || "";
+
+          // Keep the "add new" card always visible or hide if query is not empty
+          if (card.classList.contains("border-dashed")) {
+            if (query.trim() === "") {
+              card.style.display = "flex";
+            } else {
+              card.style.display = "none";
+            }
+            return;
+          }
+
+          if (
+            title.toLowerCase().includes(query) ||
+            desc.toLowerCase().includes(query)
+          ) {
+            card.style.display = "flex";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
