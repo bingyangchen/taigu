@@ -7,7 +7,6 @@ check_triggered_by_make
 load_env_vars
 
 target_env="${1:-}"
-
 validate_environment "$target_env"
 
 if [ "$target_env" == "prod" ]; then
