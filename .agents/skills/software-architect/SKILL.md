@@ -84,8 +84,8 @@ docker compose -f compose.dev.yaml exec api-server python manage.py migrate
 
 - Use full, readable names for variables, functions, parameters, and types.
 - Avoid abbreviations and single-letter names except common loop indices (`i`, `j`, `k`) and established domain terms.
-- Avoid redundant filename suffixes when the directory already describes the role, such as `repositories/achievement.dart` instead of `repositories/achievement_repository.dart`.
-- For map (dart) and dict (python) data structures, prefer `xxxToYyy`/`xxx_to_yyy` naming convention for clarity.
+- Avoid redundant filename suffixes when the directory already describes the role, such as `frontend/src/components/Button/Button.tsx` instead of `ButtonComponent.tsx`, or `api-server/main/billing/models.py` instead of `billing_models.py`.
+- For objects representing mappings (dicts in Python, objects in JavaScript/TypeScript), use the naming conventions `xxx_to_yyy` in Python and `xxxToYyy` in JavaScript/TypeScript for clarity.
 - Use `_` prefix for private functions in a Python module, and `__` prefix for private variables and functions in a Python class.
 
 ## Comments and Docstrings
