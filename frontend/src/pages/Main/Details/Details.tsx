@@ -244,6 +244,13 @@ class Details extends React.Component<Props, State> {
       );
       return;
     }
+    if (prevProps.stockDetailChartMode !== this.props.stockDetailChartMode) {
+      if (this.props.stockDetailChartMode === "intraday") {
+        this.updateIntradayLineChart();
+      } else {
+        this.updateHistoricalPriceLineChart();
+      }
+    }
     if (
       prevProps.inventory !== this.props.inventory ||
       prevProps.stockInfo !== this.props.stockInfo

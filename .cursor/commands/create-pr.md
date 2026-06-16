@@ -1,4 +1,4 @@
-如果你發現目前分支還會 push 到遠端，請先使用 `git push -u origin <branch_name>` 將現在這個分支推送到遠端。
+如果你發現目前分支還未 push 到遠端，請先使用 `git push -u origin <branch_name>` 將現在這個分支推送到遠端。
 
 然後使用 `gh pr create --base <base> --title <title> --body <body> --assignee @me --reviewer taigutw` 來建立一個 PR。
 
