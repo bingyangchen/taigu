@@ -25,7 +25,6 @@
         "files.trimFinalNewlines": true,
         "files.trimTrailingWhitespace": true,
         "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.languageServer": "Pylance",
         "ruff.organizeImports": true,
         "ruff.settings": {
           "config": "/app/api-server/ruff.toml"
@@ -33,8 +32,6 @@
       },
       "extensions": [
         "ms-python.python",
-        "ms-python.vscode-pylance",
-        "anysphere.cursorpyright",
         "charliermarsh.ruff"
       ]
     }
