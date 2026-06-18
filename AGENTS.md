@@ -29,3 +29,4 @@ This file defines project-level guidance for coding agents working in this repos
 
 - Refer to the @Makefile to view the commands for local development.
 - Access the web app at `https://local.taigu.tw` instead of `http://localhost:3000` when running the local development server.
+- When running `ruff format` or `ruff check`, always use the `--no-cache` option to prevent cache to be generated.
