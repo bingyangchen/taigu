@@ -25,7 +25,8 @@ RUN poetry export --without dev --without-hashes --no-interaction --no-ansi \
 FROM python_base AS dev_final
 ENV TZ=Asia/Taipei
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt-get update && apt-get install -y --no-install-recommends git && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends git && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=dev_dependencies requirements.txt .
 RUN pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt --force-reinstall --no-warn-script-location
