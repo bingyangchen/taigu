@@ -3,9 +3,14 @@
   "runArgs": [
     "--name=taigu-devcontainer-api-server",
     "--env-file",
-    ".env"
+    "${localWorkspaceFolder}/.env"
   ],
   "image": "taigutw/api-server:dev",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided"
+    }
+  },
   "workspaceFolder": "/app",
   "mounts": [
     "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"

@@ -101,7 +101,7 @@ jobs:
       - name: Build Docker image for testing
         run: |
           cd api-server
-          docker build --target dev_final -t taigutw/api-server:dev .
+          docker build --target final --build-arg ENVIRONMENT=dev -t taigutw/api-server:dev .
       - name: Run pytest
         run: |
           docker compose -f compose.dev.yaml --progress quiet run --rm \

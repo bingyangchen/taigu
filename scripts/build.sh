@@ -12,28 +12,26 @@ validate_environment "$target_env"
 if [ "$target_env" == "prod" ]; then
     tag="$(resolve_prod_build_image_tag)"
     printf "${BLUE}Production image tag: ${tag}${RESET}\n"
-    for service in api-server scheduler; do
-        echo "Building $service..."
-        cd ./$service
-        if [ "$service" == "scheduler" ]; then
-            docker build -t "$DOCKER_USERNAME/$service:$tag" --target "$target_env"_final \
-                --build-arg API_SERVER_IMAGE_TAG="$tag" \
-                -f ./Dockerfile --platform linux/amd64 .
-        else
-            docker build -t "$DOCKER_USERNAME/$service:$tag" --target "$target_env"_final \
-                -f ./Dockerfile --platform linux/amd64 .
-        fi
-        cd ..
-    done
+    echo "Building api-server..."
+    docker build -t "$DOCKER_USERNAME/api-server:$tag" --target final \
+        --build-arg ENVIRONMENT="$target_env" --platform linux/amd64 ./api-server
+
+    echo "Building scheduler..."
+    docker build -t "$DOCKER_USERNAME/scheduler:$tag" --target final \
+        --build-arg API_SERVER_IMAGE_TAG="$tag" --platform linux/amd64 ./scheduler
 else
     arch=$(uname -m)
-    for service in api-server frontend scheduler; do
-        echo "Building $service..."
-        cd ./$service
-        docker build -t "$DOCKER_USERNAME/$service:$target_env" --target "$target_env"_final \
-            -f ./Dockerfile --platform linux/$arch .
-        cd ..
-    done
+    echo "Building api-server..."
+    docker build -t "$DOCKER_USERNAME/api-server:$target_env" --target final \
+        --build-arg ENVIRONMENT="$target_env" --platform linux/$arch ./api-server
+
+    echo "Building frontend..."
+    docker build -t "$DOCKER_USERNAME/frontend:$target_env" --target final \
+        --platform linux/$arch ./frontend
+
+    echo "Building scheduler..."
+    docker build -t "$DOCKER_USERNAME/scheduler:$target_env" --target final \
+        --build-arg API_SERVER_IMAGE_TAG="$target_env" --platform linux/$arch ./scheduler
 fi
 
 printf "${GREEN} ✔ All images built${RESET}\n"

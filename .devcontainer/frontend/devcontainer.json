@@ -4,6 +4,11 @@
     "--name=taigu-devcontainer-frontend"
   ],
   "image": "taigutw/frontend:dev",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided"
+    }
+  },
   "workspaceFolder": "/app",
   "mounts": [
     "source=${localWorkspaceFolderBasename}_frontend_node_modules,target=/app/frontend/node_modules,type=volume",
