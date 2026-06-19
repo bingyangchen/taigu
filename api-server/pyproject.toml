@@ -15,7 +15,6 @@ dependencies = [
     "django-cors-headers (==4.0.0)",
     "django-csp (==3.8)",
     "python-dateutil (==2.8.2)",
-    "pytest-django (==4.8.0)",
     "google-api-python-client (==2.137.0)",
     "google-auth (==2.32.0)",
     "google-auth-oauthlib (==1.2.1)",
@@ -35,6 +34,7 @@ build-backend = "poetry.core.masonry.api"
 poetry = "2.3.2"
 codespell = "2.4.1"
 ruff = "0.12.8"
+pytest-django = "4.8.0"
 
 [tool.pytest.ini_options]
 python_files = "test_*.py"
