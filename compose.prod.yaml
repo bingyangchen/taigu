@@ -10,6 +10,16 @@ services:
         condition: service_healthy
       db:
         condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=3).status == 200 else 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -28,7 +38,8 @@ services:
       - /etc/ssl/certs/cloudflare-private-key.pem:/etc/ssl/certs/cloudflare-private-key.pem:ro
     command: ["nginx", "-g", "daemon off;"]
     depends_on:
-      - api-server
+      api-server:
+        condition: service_healthy
     restart: unless-stopped
     logging:
       driver: "json-file"
