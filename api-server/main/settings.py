@@ -18,7 +18,8 @@ SECRET_KEY = env.SECRET_KEY
 DEBUG = env.ENV == Env.DEV
 JWT_ALGORITHM = "HS256"
 
-ALLOWED_HOSTS = ["*"] if env.ENV == Env.DEV else [get_public_api_host()]
+# "127.0.0.1" lets the in-container Docker healthcheck reach the app.
+ALLOWED_HOSTS = [get_public_api_host(), "127.0.0.1"]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [get_public_frontend_origin()]
 CSRF_COOKIE_SAMESITE = "None"

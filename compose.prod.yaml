@@ -6,8 +6,20 @@ services:
     expose:
       - "8000"
     depends_on:
-      - redis
-      - db
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=3).status == 200 else 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -16,7 +28,6 @@ services:
         max-file: "1"
   reverse-proxy:
     image: nginx:1.27.4
-    user: root
     ports:
       - "80:80"
       - "443:443"
@@ -26,7 +37,8 @@ services:
       - /etc/ssl/certs/cloudflare-private-key.pem:/etc/ssl/certs/cloudflare-private-key.pem:ro
     command: ["nginx", "-g", "daemon off;"]
     depends_on:
-      - api-server
+      api-server:
+        condition: service_healthy
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -39,6 +51,12 @@ services:
       - "6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -55,9 +73,15 @@ services:
       - path: .env
         required: false
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=taigu
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -69,8 +93,10 @@ services:
     command: ["python", "-u", "main.py"]
     env_file: .env
     depends_on:
-      - redis
-      - db
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     restart: unless-stopped
     logging:
       driver: "json-file"

@@ -1,6 +1,7 @@
 from django.urls import include, re_path
 
 urlpatterns = [
+    re_path(r"^api/health/?", include("main.core.urls")),
     re_path(r"^api/account/", include("main.account.urls")),
     re_path(r"^api/billing/", include("main.billing.urls")),
     re_path(r"^api/market/", include("main.market.urls")),

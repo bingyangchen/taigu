@@ -1,10 +1,12 @@
-*.pyc
-*.pyo
-*.pyd
-*.pyw
-*.pyz
-*.pywz
-__pycache__/
-.DS_Store
-Dockerfile
-README.md
+*
+!main/
+!manage.py
+!gunicorn.conf.py
+!pyproject.toml
+!poetry.lock
+
+# Re-including a directory re-includes its junk — strip it back out
+**/__pycache__/
+**/*.pyc
+**/.DS_Store
+**/.ruff_cache/

@@ -10,7 +10,7 @@ RESET='\033[0m'
 SERVICES=(api-server frontend reverse-proxy db redis scheduler)
 DEPLOYMENT_ENVIRONMENTS=(dev prod)
 
-check_triggered_by_make() {
+require_triggered_by_make() {
     if [ -z "${MAKELEVEL:-}" ]; then
         printf "${YELLOW}This script can only be run from a Makefile.${RESET}\n"
         exit 1
@@ -80,14 +80,30 @@ validate_environment() {
     exit 1
 }
 
-resolve_prod_build_image_tag() {
-    echo "${IMAGE_TAG:-$(git rev-parse main 2>/dev/null || git rev-parse HEAD)}"
+require_clean_working_tree() {
+    if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+        printf "${RED} ✗ Working directory has uncommitted changes. Commit or stash them first so the image tag matches its contents.${RESET}\n" >&2
+        exit 1
+    fi
 }
 
-resolve_prod_pull_image_tag() {
+require_head_is_main() {
+    local main_sha
+    main_sha="$(git rev-parse main 2>/dev/null || true)"
+    if [ -z "$main_sha" ]; then
+        printf "${RED} ✗ Cannot resolve the 'main' branch.${RESET}\n" >&2
+        exit 1
+    fi
+    if [ "$(git rev-parse HEAD)" != "$main_sha" ]; then
+        printf "${RED} ✗ Production images must be built from 'main'. Run 'git switch main' first.${RESET}\n" >&2
+        exit 1
+    fi
+}
+
+resolve_prod_image_tag() {
     local tag="${IMAGE_TAG:-}"
     if [ -z "$tag" ]; then
-        tag=$(git rev-parse HEAD 2>/dev/null || true)
+        tag=$(git rev-parse main 2>/dev/null || true)
     fi
     if [ -z "$tag" ]; then
         printf "${RED} ✗ Set IMAGE_TAG=<full git SHA> (not via .env)${RESET}\n" >&2

@@ -3,9 +3,14 @@
   "runArgs": [
     "--name=taigu-devcontainer-api-server",
     "--env-file",
-    ".env"
+    "${localWorkspaceFolder}/.env"
   ],
   "image": "taigutw/api-server:dev",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided"
+    }
+  },
   "workspaceFolder": "/app",
   "mounts": [
     "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
@@ -25,7 +30,6 @@
         "files.trimFinalNewlines": true,
         "files.trimTrailingWhitespace": true,
         "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.languageServer": "Pylance",
         "ruff.organizeImports": true,
         "ruff.settings": {
           "config": "/app/api-server/ruff.toml"
@@ -33,8 +37,6 @@
       },
       "extensions": [
         "ms-python.python",
-        "ms-python.vscode-pylance",
-        "anysphere.cursorpyright",
         "charliermarsh.ruff"
       ]
     }

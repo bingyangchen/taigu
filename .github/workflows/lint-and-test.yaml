@@ -101,8 +101,12 @@ jobs:
       - name: Build Docker image for testing
         run: |
           cd api-server
-          docker build --target dev_final -t taigutw/api-server:dev .
+          docker build --target final --build-arg ENVIRONMENT=dev -t taigutw/api-server:dev .
       - name: Run pytest
+        env:
+          DB_USER: ${{ vars.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ vars.DB_NAME }}
         run: |
           docker compose -f compose.dev.yaml --progress quiet run --rm \
             -e ENV="${{ vars.ENV }}" \
@@ -117,6 +121,9 @@ jobs:
             -e GOOGLE_CLIENT_ID="${{ vars.GOOGLE_CLIENT_ID }}" \
             -e GOOGLE_PROJECT_ID="${{ vars.GOOGLE_PROJECT_ID }}" \
             -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            -e ECPAY_MERCHANT_ID="${{ vars.ECPAY_MERCHANT_ID }}" \
+            -e ECPAY_HASH_KEY="${{ secrets.ECPAY_HASH_KEY }}" \
+            -e ECPAY_HASH_IV="${{ secrets.ECPAY_HASH_IV }}" \
             -e LOG_LEVEL="${{ vars.LOG_LEVEL }}" \
             -e SQL_LOG="${{ vars.SQL_LOG }}" \
             api-server pytest --ignore-glob="**/tests/integration/*"
