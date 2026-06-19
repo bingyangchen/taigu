@@ -34,7 +34,7 @@ ENV TZ=Asia/Taipei
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 COPY --from=dependencies requirements.txt .
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install -r requirements.txt --force-reinstall --no-warn-script-location
+    pip install -r requirements.txt --no-warn-script-location
 WORKDIR /app
 COPY . .
 ENV PYTHONPATH=/app
