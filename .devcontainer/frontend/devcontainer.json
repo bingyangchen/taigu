@@ -15,6 +15,7 @@
     "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
   ],
   "shutdownAction": "stopContainer",
+  "postCreateCommand": "cd frontend && npm ci",
   "customizations": {
     "vscode": {
       "settings": {
