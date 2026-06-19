@@ -3,14 +3,11 @@
 set -euo pipefail
 source "$(dirname "$(realpath "$0")")/../common.sh"
 
-check_triggered_by_make
+require_triggered_by_make
 load_env_vars
 check_env prod
 
-if [[ -n $(git status -s) ]]; then
-    printf "${RED} ✗ Working directory has uncommitted changes.${RESET}\n" >&2
-    exit 1
-fi
+require_clean_working_tree
 
 git switch main
 git pull origin main

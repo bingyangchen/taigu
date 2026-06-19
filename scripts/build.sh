@@ -3,13 +3,14 @@
 set -euo pipefail
 source "$(dirname "$(realpath "$0")")/common.sh"
 
-check_triggered_by_make
+require_triggered_by_make
 load_env_vars
 
 target_env="${1:-}"
 validate_environment "$target_env"
 
 if [ "$target_env" == "prod" ]; then
+    require_clean_working_tree
     tag="$(resolve_prod_build_image_tag)"
     printf "${BLUE}Production image tag: ${tag}${RESET}\n"
     echo "Building api-server..."

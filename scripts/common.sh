@@ -10,7 +10,7 @@ RESET='\033[0m'
 SERVICES=(api-server frontend reverse-proxy db redis scheduler)
 DEPLOYMENT_ENVIRONMENTS=(dev prod)
 
-check_triggered_by_make() {
+require_triggered_by_make() {
     if [ -z "${MAKELEVEL:-}" ]; then
         printf "${YELLOW}This script can only be run from a Makefile.${RESET}\n"
         exit 1
@@ -78,6 +78,13 @@ validate_environment() {
 
     printf "${RED} ✗ Usage: $0 <${usage// /|}>${RESET}\n" >&2
     exit 1
+}
+
+require_clean_working_tree() {
+    if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+        printf "${RED} ✗ Working directory has uncommitted changes. Commit or stash them first so the image tag matches its contents.${RESET}\n" >&2
+        exit 1
+    fi
 }
 
 resolve_prod_build_image_tag() {

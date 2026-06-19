@@ -3,7 +3,7 @@
 set -euo pipefail
 source "$(dirname "$(realpath "$0")")/common.sh"
 
-check_triggered_by_make
+require_triggered_by_make
 service="${1:-}"
 validate_service "$service"
 load_env_vars

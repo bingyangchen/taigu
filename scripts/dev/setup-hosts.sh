@@ -3,7 +3,7 @@
 set -euo pipefail
 source "$(dirname "$(realpath "$0")")/../common.sh"
 
-check_triggered_by_make
+require_triggered_by_make
 load_env_vars
 check_env dev
 
@@ -17,7 +17,7 @@ else
     sudo sh -c "echo '' >> $HOSTS_FILE"
     sudo sh -c "echo '# Taigu Development' >> $HOSTS_FILE"
     sudo sh -c "echo '$HOSTS_LINE' >> $HOSTS_FILE"
-    
+
     # Flush DNS cache on macOS
     if [[ "$OSTYPE" == "darwin"* ]]; then
         printf "${BLUE}Flushing DNS cache...${RESET}\n"
