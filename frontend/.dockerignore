@@ -1,4 +1,12 @@
-.DS_Store
-Dockerfile
-README.md
-node_modules/
+*
+!package.json
+!package-lock.json
+!src/
+!public/
+!tsconfig.json
+!.eslintrc.js
+!.prettierrc
+!.prettierignore
+
+# Re-including a directory re-includes its junk — strip it back out
+**/.DS_Store
