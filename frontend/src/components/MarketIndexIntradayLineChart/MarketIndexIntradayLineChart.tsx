@@ -110,7 +110,11 @@ class MarketIndexIntradayLineChart extends React.Component<Props> {
       ],
       tooltip: {
         trigger: "axis",
-        axisPointer: { type: "line", lineStyle: { color: "#ddd", width: 1 } },
+        axisPointer: {
+          type: "line",
+          snap: true,
+          lineStyle: { color: "#ddd", width: 1 },
+        },
         backgroundColor: "rgba(255, 255, 255, 0.96)",
         borderColor: "#dbe4ef",
         borderWidth: 1,
