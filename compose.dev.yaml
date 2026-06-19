@@ -1,6 +1,6 @@
 services:
   api-server:
-    image: taigutw/api-server:dev
+    image: ${DOCKER_USERNAME}/api-server:dev
     volumes:
       - ./api-server:/app:cached
     command: ["gunicorn"]
@@ -29,7 +29,7 @@ services:
         max-size: "2m"
         max-file: "1"
   frontend:
-    image: taigutw/frontend:dev
+    image: ${DOCKER_USERNAME}/frontend:dev
     volumes:
       - ./frontend/src:/app/src:cached
       - ./frontend/public:/app/public:cached
@@ -131,7 +131,7 @@ services:
         max-size: "2m"
         max-file: "1"
   scheduler:
-    image: taigutw/scheduler:dev
+    image: ${DOCKER_USERNAME}/scheduler:dev
     volumes:
       - ./scheduler/main.py:/app/main.py:ro
     command: ["python", "-u", "main.py"]

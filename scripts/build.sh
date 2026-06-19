@@ -22,6 +22,7 @@ if [ "$target_env" == "prod" ]; then
 
     echo "Building scheduler..."
     docker build -t "$DOCKER_USERNAME/scheduler:$tag" --target final \
+        --build-arg DOCKER_USERNAME="$DOCKER_USERNAME" \
         --build-arg API_SERVER_IMAGE_TAG="$tag" --platform linux/amd64 ./scheduler
 else
     arch=$(uname -m)
@@ -35,6 +36,7 @@ else
 
     echo "Building scheduler..."
     docker build -t "$DOCKER_USERNAME/scheduler:$target_env" --target final \
+        --build-arg DOCKER_USERNAME="$DOCKER_USERNAME" \
         --build-arg API_SERVER_IMAGE_TAG="$target_env" --platform linux/$arch ./scheduler
 fi
 
