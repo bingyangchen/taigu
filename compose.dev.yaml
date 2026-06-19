@@ -84,9 +84,9 @@ services:
       - path: .env
         required: false
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=taigu
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     restart: unless-stopped
     logging:
       driver: "json-file"
