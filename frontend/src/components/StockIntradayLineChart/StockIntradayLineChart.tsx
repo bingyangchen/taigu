@@ -117,7 +117,11 @@ class StockIntradayLineChart extends React.Component<Props> {
       ],
       tooltip: {
         trigger: "axis",
-        axisPointer: { type: "line", lineStyle: { color: "#ddd", width: 1 } },
+        axisPointer: {
+          type: "line",
+          snap: true,
+          lineStyle: { color: "#ddd", width: 1 },
+        },
         backgroundColor: "#ffffff",
         textStyle: { color: "#334155", fontSize: 12 },
         formatter: (params: unknown) => {
