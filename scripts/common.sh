@@ -87,14 +87,23 @@ require_clean_working_tree() {
     fi
 }
 
-resolve_prod_build_image_tag() {
-    echo "${IMAGE_TAG:-$(git rev-parse main 2>/dev/null || git rev-parse HEAD)}"
+require_head_is_main() {
+    local main_sha
+    main_sha="$(git rev-parse main 2>/dev/null || true)"
+    if [ -z "$main_sha" ]; then
+        printf "${RED} ✗ Cannot resolve the 'main' branch.${RESET}\n" >&2
+        exit 1
+    fi
+    if [ "$(git rev-parse HEAD)" != "$main_sha" ]; then
+        printf "${RED} ✗ Production images must be built from 'main'. Run 'git switch main' first.${RESET}\n" >&2
+        exit 1
+    fi
 }
 
-resolve_prod_pull_image_tag() {
+resolve_prod_image_tag() {
     local tag="${IMAGE_TAG:-}"
     if [ -z "$tag" ]; then
-        tag=$(git rev-parse HEAD 2>/dev/null || true)
+        tag=$(git rev-parse main 2>/dev/null || true)
     fi
     if [ -z "$tag" ]; then
         printf "${RED} ✗ Set IMAGE_TAG=<full git SHA> (not via .env)${RESET}\n" >&2

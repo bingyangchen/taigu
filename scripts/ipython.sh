@@ -9,7 +9,7 @@ clear_screen
 
 deployment_environment="${ENV:?Set ENV=dev or prod in .env or environment}"
 if [ "$deployment_environment" = "prod" ]; then
-    export IMAGE_TAG="$(resolve_prod_pull_image_tag)"
+    export IMAGE_TAG="$(resolve_prod_image_tag)"
 fi
 
 docker compose -f "compose.$deployment_environment.yaml" --progress quiet run --rm api-server python manage.py shell

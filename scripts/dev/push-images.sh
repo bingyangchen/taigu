@@ -12,7 +12,7 @@ validate_environment "$target_env"
 echo "$DOCKER_ACCESS_TOKEN" | docker login --username "$DOCKER_USERNAME" --password-stdin
 
 if [ "$target_env" == "prod" ]; then
-    tag="$(resolve_prod_build_image_tag)"
+    tag="$(resolve_prod_image_tag)"
     local_images=("$DOCKER_USERNAME/api-server:$tag" "$DOCKER_USERNAME/scheduler:$tag")
 else
     local_images=("$DOCKER_USERNAME/api-server:$target_env" "$DOCKER_USERNAME/frontend:$target_env" "$DOCKER_USERNAME/scheduler:$target_env")

@@ -11,7 +11,10 @@ validate_environment "$target_env"
 
 if [ "$target_env" == "prod" ]; then
     require_clean_working_tree
-    tag="$(resolve_prod_build_image_tag)"
+    if [ -z "${IMAGE_TAG:-}" ]; then
+        require_head_is_main
+    fi
+    tag="$(resolve_prod_image_tag)"
     printf "${BLUE}Production image tag: ${tag}${RESET}\n"
     echo "Building api-server..."
     docker build -t "$DOCKER_USERNAME/api-server:$tag" --target final \

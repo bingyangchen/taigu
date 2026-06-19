@@ -12,7 +12,7 @@ require_clean_working_tree
 git switch main
 git pull origin main
 
-export IMAGE_TAG="$(resolve_prod_pull_image_tag)"
+export IMAGE_TAG="$(resolve_prod_image_tag)"
 
 make pull-images-prod
 make migrate-prod
