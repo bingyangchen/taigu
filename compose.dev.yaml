@@ -38,6 +38,16 @@ services:
     # command: ["sh", "-lc", "npm run build && npm run preview"]
     depends_on:
       - api-server
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "const http=require('http'); const req=http.get('http://127.0.0.1:3000/', res => process.exit(res.statusCode === 200 ? 0 : 1)); req.on('error', () => process.exit(1)); req.setTimeout(3000, () => process.exit(1));"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -67,7 +77,7 @@ services:
       api-server:
         condition: service_healthy
       frontend:
-        condition: service_started
+        condition: service_healthy
       design-server:
         condition: service_started
     command: ["nginx", "-g", "daemon off;"]
