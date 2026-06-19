@@ -101,12 +101,13 @@ jobs:
       - name: Build Docker image for testing
         run: |
           cd api-server
-          docker build --target final --build-arg ENVIRONMENT=dev -t taigutw/api-server:dev .
+          docker build --target final --build-arg ENVIRONMENT=dev -t ${{ secrets.DOCKER_USERNAME }}/api-server:dev .
       - name: Run pytest
         env:
           DB_USER: ${{ vars.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ vars.DB_NAME }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
           docker compose -f compose.dev.yaml --progress quiet run --rm \
             -e ENV="${{ vars.ENV }}" \
