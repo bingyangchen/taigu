@@ -13,8 +13,12 @@ from google.oauth2 import id_token
 from google_auth_oauthlib import flow as google_oauth_flow
 from pydantic import BaseModel
 
-from main.account import REFRESH_COOKIE_NAME, OAuthOrganization
-from main.account.cookies import delete_auth_cookies, set_auth_cookies
+from main.account import OAuthOrganization
+from main.account.cookies import (
+    delete_auth_cookies,
+    get_refresh_token,
+    set_auth_cookies,
+)
 from main.account.models import User
 from main.account.tokens import (
     InvalidRefreshTokenError,
@@ -188,7 +192,7 @@ def open_session(request: HttpRequest) -> JsonResponse:
 @require_POST
 def refresh_token(request: HttpRequest) -> JsonResponse:
     try:
-        token_pair = rotate_refresh_token(request.COOKIES.get(REFRESH_COOKIE_NAME, ""))
+        token_pair = rotate_refresh_token(get_refresh_token(request))
     except InvalidRefreshTokenError:
         return delete_auth_cookies(JsonResponse({}, status=401))
     return set_auth_cookies(
@@ -198,7 +202,7 @@ def refresh_token(request: HttpRequest) -> JsonResponse:
 
 @require_POST
 def logout(request: HttpRequest) -> JsonResponse:
-    revoke_refresh_token(request.COOKIES.get(REFRESH_COOKIE_NAME, ""))
+    revoke_refresh_token(get_refresh_token(request))
     return delete_auth_cookies(JsonResponse({}))
 
 

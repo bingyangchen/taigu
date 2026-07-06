@@ -8,7 +8,11 @@ from django.http import HttpRequest, HttpResponse
 from jose import jwt
 
 from main.account import ACCESS_COOKIE_NAME, OAuthOrganization
-from main.account.cookies import delete_auth_cookies, set_access_cookie
+from main.account.cookies import (
+    LEGACY_ACCESS_COOKIE_NAME,
+    delete_auth_cookies,
+    set_access_cookie,
+)
 from main.account.middleware import check_login_status_middleware
 from main.account.models import User
 
@@ -70,6 +74,21 @@ class TestCheckLoginStatusMiddleware:
         assert response.status_code == 200
         assert request_obj.user == user
         # A short-lived access token must not be extended by normal API traffic.
+        assert ACCESS_COOKIE_NAME not in response.cookies
+
+    def test_middleware_valid_legacy_token(
+        self,
+        middleware: Callable[[HttpRequest], HttpResponse],
+        request_obj: HttpRequest,
+        user: User,
+    ) -> None:
+        token = self.create_valid_token(user)
+        request_obj.COOKIES = {LEGACY_ACCESS_COOKIE_NAME: token}
+
+        response = middleware(request_obj)
+
+        assert response.status_code == 200
+        assert request_obj.user == user
         assert ACCESS_COOKIE_NAME not in response.cookies
 
     def test_middleware_invalid_token(

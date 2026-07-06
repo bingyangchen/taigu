@@ -11,6 +11,7 @@ from django.http import HttpRequest, QueryDict
 from django.utils import timezone
 
 from main.account import ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, OAuthOrganization
+from main.account.cookies import LEGACY_REFRESH_COOKIE_NAME
 from main.account.models import User
 from main.account.tokens import issue_token_pair
 from main.account.views import (
@@ -495,6 +496,22 @@ class TestRefreshView:
         assert response.status_code == 200
         assert ACCESS_COOKIE_NAME in response.cookies
         assert REFRESH_COOKIE_NAME in response.cookies
+
+    def test_refresh_accepts_legacy_refresh_cookie(self, user: User) -> None:
+        request = HttpRequest()
+        request.method = "POST"
+        request.COOKIES = {
+            LEGACY_REFRESH_COOKIE_NAME: issue_token_pair(user).refresh_token
+        }
+
+        response = refresh_token(request)
+
+        assert response.status_code == 200
+        assert ACCESS_COOKIE_NAME in response.cookies
+        assert REFRESH_COOKIE_NAME in response.cookies
+        # The legacy cookie must be expired in the same response.
+        assert response.cookies[LEGACY_REFRESH_COOKIE_NAME].value == ""
+        assert response.cookies[LEGACY_REFRESH_COOKIE_NAME]["max-age"] == 0
 
     def test_refresh_rejects_missing_refresh_token(self) -> None:
         request = HttpRequest()
