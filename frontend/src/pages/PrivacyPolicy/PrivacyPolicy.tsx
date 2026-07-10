@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-import { FullLogo, RoundButton } from "../../components";
+import { FullLogo, PageMeta, RoundButton } from "../../components";
 import * as Icons from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
@@ -22,6 +22,11 @@ class PrivacyPolicy extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
+        <PageMeta
+          title="隱私權政策 | Taigu"
+          description="了解 Taigu 台股記帳如何蒐集、使用與保護你的帳戶資料與投資紀錄。"
+          canonicalPath="/privacy-policy"
+        />
         <div className={styles.header}>
           {Util.isMobile && (
             <RoundButton

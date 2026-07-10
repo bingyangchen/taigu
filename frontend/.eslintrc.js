@@ -147,5 +147,6 @@ module.exports = {
     "*.config.js",
     "*.config.ts",
     ".eslintrc.js",
+    "scripts/",
   ],
 };

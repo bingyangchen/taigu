@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 import Button from "../../components/Button/Button";
+import PageMeta from "../../components/PageMeta/PageMeta";
 import Env from "../../utils/env";
 import styles from "./NotFound.module.scss";
 
@@ -19,6 +20,7 @@ export default class NotFound extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <main className={styles.main}>
+        <PageMeta title="找不到頁面 | Taigu" noindex />
         <section className={styles.content} aria-labelledby="not-found-title">
           <p className={styles.status}>404</p>
           <h1 id="not-found-title" className={styles.title}>

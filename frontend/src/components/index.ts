@@ -29,6 +29,7 @@ export { default as MarketIndexLineChart } from "./MarketIndexLineChart/MarketIn
 export { default as MarketValuePieChart } from "./MarketValuePieChart/MarketValuePieChart";
 export { default as Modal } from "./Modal/Modal";
 export { default as NavTab } from "./NavTab/NavTab";
+export { default as PageMeta } from "./PageMeta/PageMeta";
 export { default as PercentSign } from "./PercentSign/PercentSign";
 export { default as PlanUpsellModal } from "./PlanUpsellModal/PlanUpsellModal";
 export { default as RoundButton } from "./RoundButton/RoundButton";

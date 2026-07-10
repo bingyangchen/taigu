@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import google from "../../assets/google.png";
-import { Button, FullLogo, ToastList } from "../../components";
+import { Button, FullLogo, PageMeta, ToastList } from "../../components";
 import { loginWithGoogle } from "../../redux/slices/AccountSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
@@ -68,6 +68,7 @@ class Login extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
+        <PageMeta title="登入 | Taigu" noindex />
         <ToastList />
         <div className={styles.left}>
           <img src={this.state.coverImage} alt="cover" />

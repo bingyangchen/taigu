@@ -8,6 +8,7 @@ import {
   HeaderForMain,
   LoadingScreen,
   MainSideBar,
+  PageMeta,
   PlanUpsellModal,
   ToastList,
 } from "../../components";
@@ -196,6 +197,7 @@ class Main extends React.Component<Props, State> {
         }`}
         ref={this.mainRef}
       >
+        <PageMeta title="Taigu | 台股記帳" noindex />
         <ToastList />
         <PlanUpsellModal />
         {this.state.isLoading && <LoadingScreen />}

@@ -10,7 +10,7 @@ import demo04 from "../../assets/demo04.webp";
 import demo05 from "../../assets/demo05.webp";
 import demo06 from "../../assets/demo06.webp";
 import realtimeInfo from "../../assets/realtime_info.webp";
-import { FullLogo } from "../../components";
+import { FullLogo, PageMeta } from "../../components";
 import * as Icons from "../../icons";
 import Env from "../../utils/env";
 import Util from "../../utils/util";
@@ -86,6 +86,11 @@ export default function Welcome(): React.ReactElement {
 
   return (
     <main className={styles.main}>
+      <PageMeta
+        title="Taigu | 台股記帳 | 專業投資組合管理，精準損益計算與績效追蹤"
+        description="Taigu 是專業的台股投資記帳工具，提供直覺操作、清晰圖表與完整績效分析。支援網頁版與 App，跨平台同步，讓你在手機、平板、電腦隨時掌握投資狀況，輕鬆管理台股投資組合！"
+        canonicalPath="/welcome"
+      />
       <header className={styles.header}>
         <Link to={`${Env.frontendRootPath}welcome`} className={styles.logoLink}>
           <FullLogo size="m" />

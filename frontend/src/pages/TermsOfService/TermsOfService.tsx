@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-import { FullLogo, RoundButton } from "../../components";
+import { FullLogo, PageMeta, RoundButton } from "../../components";
 import * as Icons from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
@@ -22,6 +22,11 @@ class TermsOfService extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <div className={styles.main}>
+        <PageMeta
+          title="服務條款 | Taigu"
+          description="使用 Taigu 台股記帳服務前，請詳閱本服務條款，了解你的權利與義務。"
+          canonicalPath="/terms-of-service"
+        />
         <div className={styles.header}>
           {Util.isMobile && (
             <RoundButton
