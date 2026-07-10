@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { Outlet } from "react-router-dom";
 
-import { HeaderForSettings, ToastList } from "../../components";
+import { HeaderForSettings, PageMeta, ToastList } from "../../components";
 import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
 import type { AppDispatch } from "../../redux/store";
 import { IRouter, settingsPagePath, withRouter } from "../../router";
@@ -57,6 +57,7 @@ class Settings extends React.Component<Props, State> {
           Util.isMobile && this.isSettingsEditorRoute ? styles.mobile_editor_shell : ""
         }`}
       >
+        <PageMeta title="帳戶設定 | Taigu" noindex />
         <ToastList />
         <div className={styles.body}>
           {!this.isSettingsEditorRoute && <HeaderForSettings />}

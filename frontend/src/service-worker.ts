@@ -15,7 +15,7 @@ import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
 declare const self: ServiceWorkerGlobalScope;
 
-const VERSION = "2026.06.13.01";
+const VERSION = "2026.07.10.01";
 console.log(`Service worker version: ${VERSION}`);
 
 clientsClaim();
@@ -31,13 +31,17 @@ precacheAndRoute(self.__WB_MANIFEST);
 // are fulfilled with your index.html shell. Learn more at
 // https://developers.google.com/web/fundamentals/architecture/app-shell
 const fileExtensionRegexp = new RegExp("/[^/?]+\\.[^/]+$");
+// These routes have prerendered HTML files with their own metadata, so they
+// must reach the network instead of being fulfilled by the app shell.
+const prerenderedPaths = new Set(["/welcome", "/privacy-policy", "/terms-of-service"]);
 registerRoute(
   // Return false to exempt requests from being fulfilled by index.html.
   ({ request, url }) => {
     const isNavigate = request.mode === "navigate";
     const isApiRoute = url.pathname.startsWith("/_");
     const isAsset = fileExtensionRegexp.test(url.pathname);
-    return isNavigate && !isApiRoute && !isAsset;
+    const isPrerendered = prerenderedPaths.has(url.pathname);
+    return isNavigate && !isApiRoute && !isAsset && !isPrerendered;
   },
   createHandlerBoundToURL(process.env.PUBLIC_URL + "/index.html"),
 );

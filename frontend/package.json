@@ -46,6 +46,7 @@
   "scripts": {
     "dev": "HOST=0.0.0.0 PORT=3000 WDS_SOCKET_HOST=0.0.0.0 WDS_SOCKET_PORT=443 react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "postbuild": "node scripts/prerender.mjs",
     "preview": "serve -s build -l 3000",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -79,6 +80,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "prettier": "^3.6.2",
+    "puppeteer": "^24.0.0",
     "serve": "^14.2.6"
   }
 }
