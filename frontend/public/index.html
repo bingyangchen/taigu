@@ -8,58 +8,73 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover"
     />
     <meta name="theme-color" content="#fff" />
-    <meta property="og:site_name" content="Taigu" />
-    <meta property="og:url" content="https://taigu.tw/" />
-    <meta property="og:type" content="website" />
-    <meta
-      property="og:title"
-      content="Taigu | 台股記帳 | 專業投資組合管理，精準損益計算與績效追蹤"
-    />
-    <meta property="og:image" content="%PUBLIC_URL%/cover.jpg" />
-    <meta
-      property="og:description"
-      content="Taigu 是專業的台股投資記帳工具，提供直覺操作、清晰圖表與完整績效分析。支援網頁版與 App，跨平台同步，讓你在手機、平板、電腦隨時掌握投資狀況，輕鬆管理台股投資組合！"
-    />
     <meta
       name="description"
       content="Taigu 是專業的台股投資記帳工具，提供直覺操作、清晰圖表與完整績效分析。支援網頁版與 App，跨平台同步，讓你在手機、平板、電腦隨時掌握投資狀況，輕鬆管理台股投資組合！"
     />
+    <meta property="og:site_name" content="Taigu" />
+    <meta property="og:url" content="https://taigu.tw/welcome" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_TW" />
     <meta
-      name="keywords"
-      content="投資記帳,投資記帳工具,投資記帳軟體,台股投資記帳,記帳app,taigu"
+      property="og:title"
+      content="Taigu | 台股記帳 | 專業投資組合管理，精準損益計算與績效追蹤"
     />
+    <meta
+      property="og:description"
+      content="Taigu 是專業的台股投資記帳工具，提供直覺操作、清晰圖表與完整績效分析。支援網頁版與 App，跨平台同步，讓你在手機、平板、電腦隨時掌握投資狀況，輕鬆管理台股投資組合！"
+    />
+    <meta property="og:image" content="https://taigu.tw/cover.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="900" />
+    <meta property="og:image:alt" content="Taigu 台股記帳 app 畫面" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Taigu | 台股記帳 | 專業投資組合管理，精準損益計算與績效追蹤"
+    />
+    <meta
+      name="twitter:description"
+      content="Taigu 是專業的台股投資記帳工具，提供直覺操作、清晰圖表與完整績效分析。支援網頁版與 App，跨平台同步，讓你在手機、平板、電腦隨時掌握投資狀況，輕鬆管理台股投資組合！"
+    />
+    <meta name="twitter:image" content="https://taigu.tw/cover.jpg" />
     <link rel="canonical" href="https://taigu.tw/welcome" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo-l.png" />
-    <!--
-        manifest.json provides metadata used when your web app is installed on a
-        user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-        -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-        Notice the use of %PUBLIC_URL% in the tags above.
-        It will be replaced with the URL of the `public` folder during the build.
-        Only files inside the `public` folder can be referenced from the HTML.
-
-        "%PUBLIC_URL%/xxx" will work correctly both with client-side routing and a non-root public URL.
-        Learn how to configure a non-root public URL by running `npm run build`.
-        -->
     <title>Taigu | 台股記帳 | 專業投資組合管理，精準損益計算與績效追蹤</title>
-    <meta name="robots" content="index, follow" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
         "name": "Taigu",
+        "url": "https://taigu.tw/welcome",
         "description": "Taigu 是專業的台股投資記帳工具，提供直覺操作、清晰圖表與完整績效分析。支援網頁版與 App，跨平台同步，讓你在手機、平板、電腦隨時掌握投資狀況，輕鬆管理台股投資組合！",
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "All",
-        "offers": { "@type": "Offer", "price": "0" }
+        "offers": [
+          { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "TWD" },
+          {
+            "@type": "Offer",
+            "name": "Standard",
+            "price": "65",
+            "priceCurrency": "TWD"
+          }
+        ]
       }
     </script>
-    <link rel="alternate" href="https://taigu.tw" hreflang="zh-Hant" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Taigu",
+        "url": "https://taigu.tw/welcome",
+        "logo": "https://taigu.tw/logo-l.png",
+        "email": "taigu.tw@gmail.com"
+      }
+    </script>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>Taigu 需要啟用 JavaScript 才能運作，請在瀏覽器設定中開啟。</noscript>
     <div id="root"></div>
     <div id="modal-root"></div>
     <div id="toast-root"></div>
