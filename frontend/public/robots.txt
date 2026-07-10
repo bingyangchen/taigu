@@ -1,4 +1,13 @@
 User-agent: *
 Allow: /
+Disallow: /login
+Disallow: /settings
+Disallow: /records
+Disallow: /plans
+Disallow: /market
+Disallow: /market-index
+Disallow: /search
+Disallow: /earning-analysis
+Disallow: /handling-fee
 
 Sitemap: https://taigu.tw/sitemap.xml
