@@ -373,12 +373,6 @@ export default function Welcome(): React.ReactElement {
           <Link to="/terms-of-service" target={Util.isMobile ? "_self" : "_blank"}>
             服務條款
           </Link>
-          <Link to="https://github.com/bingyangchen/taigu" target="_blank">
-            開源程式碼
-          </Link>
-          <Link to="https://github.com/bingyangchen/taigu/issues" target="_blank">
-            問題回報
-          </Link>
         </div>
         <p className={styles.footerContact}>聯絡信箱：taigu.tw@gmail.com</p>
         <p>Copyright © Taigu 2021-{new Date().getFullYear()} All rights reserved</p>
