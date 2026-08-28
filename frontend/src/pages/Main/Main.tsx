@@ -23,10 +23,7 @@ import {
   fetchStockInfo,
 } from "../../redux/slices/StockInfoSlice";
 import { fetchAllTradePlans } from "../../redux/slices/TradePlanSlice";
-import {
-  calculateTotalHandlingFee,
-  fetchAllTradeRecords,
-} from "../../redux/slices/TradeRecordSlice";
+import { fetchAllTradeRecords } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import type { StockWarehouse, Subpage } from "../../types";
@@ -86,7 +83,6 @@ class Main extends React.Component<Props, State> {
       const res = await this.props.dispatch(fetchAllTradeRecords(account.id)).unwrap();
 
       await Promise.allSettled([
-        this.props.dispatch(calculateTotalHandlingFee()).unwrap(),
         this.fetchHoldingStockInfo(res.stockWarehouse),
         independentPromises,
       ]);

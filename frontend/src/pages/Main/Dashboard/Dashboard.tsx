@@ -13,6 +13,7 @@ import {
   TradeRecordEditor,
 } from "../../../components";
 import { changeDashboardDaysToShow } from "../../../redux/slices/MainPageSlice";
+import { selectNetHandlingFee } from "../../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import { dateStringToDate } from "../../../utils/date";
@@ -27,7 +28,6 @@ function mapStateToProps(rootState: RootState) {
     tradeRecords,
     stockWarehouse,
     totalCashInvested,
-    totalHandlingFee,
     sidGainMap,
     cashInvestedChartData,
     averageCashInvested,
@@ -46,7 +46,7 @@ function mapStateToProps(rootState: RootState) {
     cashDividendRecords,
     handlingFeeDiscountRecords,
     totalCashInvested,
-    totalHandlingFee,
+    netHandlingFee: selectNetHandlingFee(rootState),
     sidGainMap,
     cashInvestedChartData,
     averageCashInvested,
@@ -274,7 +274,7 @@ class Dashboard extends React.Component<Props, State> {
           </SummaryCard>
           <SummaryCard title="手續費用(-)" onClick={this.handleClickHandlingFee}>
             <DollarSign />
-            {this.props.totalHandlingFee.toLocaleString()}
+            {this.props.netHandlingFee.toLocaleString()}
           </SummaryCard>
         </div>
         {this.activeModal}
