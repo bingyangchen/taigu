@@ -8,7 +8,7 @@ export type TradeRecordState = {
   sidCashInvestedMap: { [sid: string]: number };
   stockWarehouse: StockWarehouse;
   totalCashInvested: number;
-  totalHandlingFee: number;
+  grossHandlingFee: number;
   cashInvestedChartData: (string | number)[][];
   tradeVolumeChartData: (string | number)[][];
   averageCashInvested: number;

@@ -24,7 +24,7 @@ self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
     sidHandlingFeeMap,
     sidGainMap,
     totalCashInvested: getTotalCashInvested(stockWarehouse),
-    totalHandlingFee: Object.values(sidHandlingFeeMap).reduce(
+    grossHandlingFee: Object.values(sidHandlingFeeMap).reduce(
       (sum, fee) => sum + fee,
       0,
     ),

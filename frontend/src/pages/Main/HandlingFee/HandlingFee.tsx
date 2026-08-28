@@ -18,6 +18,7 @@ import {
 } from "../../../components";
 import * as Icons from "../../../icons";
 import { deleteDiscount } from "../../../redux/slices/HandlingFeeDiscountSlice";
+import { selectNetHandlingFee } from "../../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { HandlingFeeDiscount } from "../../../types";
@@ -27,11 +28,11 @@ import Util from "../../../utils/util";
 import styles from "./HandlingFee.module.scss";
 
 function mapStateToProps(rootState: RootState) {
-  const { totalHandlingFee, tradeRecords } = rootState.tradeRecord;
+  const { tradeRecords } = rootState.tradeRecord;
   const { handlingFeeDiscountRecords, isWaiting: isWaitingDiscount } =
     rootState.handlingFeeDiscount;
   return {
-    totalHandlingFee,
+    netHandlingFee: selectNetHandlingFee(rootState),
     tradeRecords,
     handlingFeeDiscountRecords,
     isWaitingDiscount,
@@ -43,7 +44,7 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 }
 
 interface State {
-  animatedTotalHandlingFee: number;
+  animatedHandlingFee: number;
   daysToShow: number;
   activeModalName: "discountModal" | null;
   numberToShow: number;
@@ -57,7 +58,7 @@ class HandlingFee extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {
-      animatedTotalHandlingFee: 0,
+      animatedHandlingFee: 0,
       daysToShow: this.TIME_SPAN_OPTIONS_IN_DAYS[0],
       activeModalName: null,
       numberToShow: 15,
@@ -67,15 +68,15 @@ class HandlingFee extends React.Component<Props, State> {
 
   public async componentDidMount(): Promise<void> {
     this.updateHandlingFeeChart();
-    this.animateTotalHandlingFee();
+    this.animateHandlingFee();
   }
 
   public async componentDidUpdate(
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
   ): Promise<void> {
-    if (prevProps.totalHandlingFee !== this.props.totalHandlingFee) {
-      this.animateTotalHandlingFee();
+    if (prevProps.netHandlingFee !== this.props.netHandlingFee) {
+      this.animateHandlingFee();
     }
     if (
       prevProps.tradeRecords !== this.props.tradeRecords ||
@@ -123,10 +124,10 @@ class HandlingFee extends React.Component<Props, State> {
                 <div className={styles.title}>累積手續費</div>
                 <div className={styles.total_handling_fee}>
                   <DollarSign />
-                  {Math.round(this.state.animatedTotalHandlingFee).toLocaleString()}
+                  {Math.round(this.state.animatedHandlingFee).toLocaleString()}
                 </div>
               </div>
-              {this.props.totalHandlingFee > 0 ? (
+              {this.props.netHandlingFee > 0 ? (
                 <div className={styles.chart_section}>
                   <div className={styles.chart_container}>
                     {this.state.handlingFeeChart}
@@ -204,22 +205,19 @@ class HandlingFee extends React.Component<Props, State> {
     return null;
   }
 
-  private animateTotalHandlingFee(): void {
-    if (this.state.animatedTotalHandlingFee === this.props.totalHandlingFee) return;
+  private animateHandlingFee(): void {
+    if (this.state.animatedHandlingFee === this.props.netHandlingFee) return;
     this.setState(
       (state, props) => {
         return {
-          animatedTotalHandlingFee: Math.min(
-            state.animatedTotalHandlingFee +
-              Math.max(
-                1,
-                (props.totalHandlingFee - state.animatedTotalHandlingFee) / 2.5,
-              ),
-            props.totalHandlingFee,
+          animatedHandlingFee: Math.min(
+            state.animatedHandlingFee +
+              Math.max(1, (props.netHandlingFee - state.animatedHandlingFee) / 2.5),
+            props.netHandlingFee,
           ),
         };
       },
-      () => setTimeout(() => this.animateTotalHandlingFee(), 30),
+      () => setTimeout(() => this.animateHandlingFee(), 30),
     );
   }
 

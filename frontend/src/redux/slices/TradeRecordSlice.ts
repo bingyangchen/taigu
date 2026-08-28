@@ -19,7 +19,7 @@ const initialState: TradeRecordState = {
   sidCashInvestedMap: {},
   stockWarehouse: {},
   totalCashInvested: 0,
-  totalHandlingFee: 0,
+  grossHandlingFee: 0,
   cashInvestedChartData: [],
   tradeVolumeChartData: [],
   averageCashInvested: 0,
@@ -59,16 +59,7 @@ export const createRecord = createAsyncThunk(
     // if (navigator.vibrate) navigator.vibrate(20);
     await LocalDatabase.upsertTradeRecord(response);
     const rootState = thunkAPI.getState() as RootState;
-    const newState = await computeNewState([
-      response,
-      ...rootState.tradeRecord.tradeRecords,
-    ]);
-    const totalDiscount =
-      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
-        (sum, discount) => sum + discount.amount,
-        0,
-      );
-    return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
+    return await computeNewState([response, ...rootState.tradeRecord.tradeRecords]);
   },
 );
 
@@ -86,17 +77,11 @@ export const updateRecord = createAsyncThunk(
     // if (navigator.vibrate) navigator.vibrate(20);
     await LocalDatabase.upsertTradeRecord(response);
     const rootState = thunkAPI.getState() as RootState;
-    const newState = await computeNewState(
+    return await computeNewState(
       rootState.tradeRecord.tradeRecords.map((r) =>
         r.id === response.id ? response : r,
       ),
     );
-    const totalDiscount =
-      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
-        (sum, discount) => sum + discount.amount,
-        0,
-      );
-    return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
 
@@ -110,42 +95,24 @@ export const deleteRecord = createAsyncThunk(
     // if (navigator.vibrate) navigator.vibrate(20);
     await LocalDatabase.deleteTradeRecord(id);
     const rootState = thunkAPI.getState() as RootState;
-    const newState = await computeNewState(
+    return await computeNewState(
       [...rootState.tradeRecord.tradeRecords].filter((r) => r.id !== id),
     );
-    const totalDiscount =
-      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
-        (sum, discount) => sum + discount.amount,
-        0,
-      );
-    return { ...newState, totalHandlingFee: newState.totalHandlingFee - totalDiscount };
   },
 );
 
-export const calculateTotalHandlingFee = createAsyncThunk(
-  "tradeRecord/calculateTotalHandlingFee",
-  async (_, thunkAPI) => {
-    const rootState = thunkAPI.getState() as RootState;
-    const baseTotalHandlingFee = Object.values(
-      rootState.tradeRecord.sidHandlingFeeMap,
-    ).reduce((sum, fee) => sum + fee, 0);
-    const totalDiscount =
-      rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
-        (sum, discount) => sum + discount.amount,
-        0,
-      );
-    return baseTotalHandlingFee - totalDiscount;
-  },
-);
+export const selectNetHandlingFee = (rootState: RootState): number => {
+  const totalDiscount = rootState.handlingFeeDiscount.handlingFeeDiscountRecords.reduce(
+    (sum, discount) => sum + discount.amount,
+    0,
+  );
+  return rootState.tradeRecord.grossHandlingFee - totalDiscount;
+};
 
 export const tradeRecordSlice = createSlice({
   name: "tradeRecord",
   initialState,
-  reducers: {
-    adjustTotalHandlingFee(state, action: { payload: number }) {
-      state.totalHandlingFee += action.payload;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchAllTradeRecords.pending, (state) => {
@@ -159,7 +126,7 @@ export const tradeRecordSlice = createSlice({
         state.stockWarehouse = action.payload.stockWarehouse;
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
-        state.totalHandlingFee = action.payload.totalHandlingFee;
+        state.grossHandlingFee = action.payload.grossHandlingFee;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -180,7 +147,7 @@ export const tradeRecordSlice = createSlice({
         state.stockWarehouse = action.payload.stockWarehouse;
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
-        state.totalHandlingFee = action.payload.totalHandlingFee;
+        state.grossHandlingFee = action.payload.grossHandlingFee;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -201,7 +168,7 @@ export const tradeRecordSlice = createSlice({
         state.stockWarehouse = action.payload.stockWarehouse;
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
-        state.totalHandlingFee = action.payload.totalHandlingFee;
+        state.grossHandlingFee = action.payload.grossHandlingFee;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -222,7 +189,7 @@ export const tradeRecordSlice = createSlice({
         state.stockWarehouse = action.payload.stockWarehouse;
         state.sidCashInvestedMap = action.payload.sidCashInvestedMap;
         state.totalCashInvested = action.payload.totalCashInvested;
-        state.totalHandlingFee = action.payload.totalHandlingFee;
+        state.grossHandlingFee = action.payload.grossHandlingFee;
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
@@ -230,10 +197,6 @@ export const tradeRecordSlice = createSlice({
       })
       .addCase(deleteRecord.rejected, (state) => {
         state.isWaiting = false;
-      })
-
-      .addCase(calculateTotalHandlingFee.fulfilled, (state, action) => {
-        state.totalHandlingFee = action.payload;
       });
   },
 });
@@ -253,5 +216,4 @@ const computeNewState = async (
   });
 };
 
-export const { adjustTotalHandlingFee } = tradeRecordSlice.actions;
 export default tradeRecordSlice.reducer;
