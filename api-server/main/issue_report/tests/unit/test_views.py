@@ -26,6 +26,7 @@ class TestIssueReportViews:
         request.user = user  # type: ignore
         return request
 
+    @pytest.mark.scenario("ISSUE-R3.1")
     def test_create_issue_report(self, request_obj: HttpRequest, user: User) -> None:
         request_obj._body = json.dumps(
             {"body": "點擊 Google 登入後畫面一直轉圈。"}
@@ -40,6 +41,7 @@ class TestIssueReportViews:
         assert report.user_id == user.pk
         assert report.created_at is not None
 
+    @pytest.mark.scenario("ISSUE-R2.1")
     def test_create_issue_report_rejects_blank_body(
         self, request_obj: HttpRequest
     ) -> None:

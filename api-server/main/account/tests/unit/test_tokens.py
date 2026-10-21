@@ -31,6 +31,7 @@ class TestRefreshTokenRotation:
         assert current_token.revoked_at is not None
         assert current_token.family_id == replacement_token.family_id
 
+    @pytest.mark.scenario("ACCT-R6.1")
     def test_reusing_rotated_token_revokes_family(self, user: User) -> None:
         token_pair = issue_token_pair(user)
         replacement = rotate_refresh_token(token_pair.refresh_token)

@@ -253,6 +253,7 @@ class TestChangeGoogleBindingView:
             "picture": "https://example.com/new_avatar.jpg",
         }
 
+    @pytest.mark.scenario("ACCT-R11.1")
     def test_change_google_binding_success(
         self,
         monkeypatch: Any,
@@ -294,6 +295,7 @@ class TestChangeGoogleBindingView:
         }
         assert ACCESS_COOKIE_NAME in response.cookies
 
+    @pytest.mark.scenario("ACCT-R11.2")
     def test_change_google_binding_already_bound(
         self,
         monkeypatch: Any,
@@ -367,6 +369,7 @@ class TestMeView:
         request.user = user
         return request
 
+    @pytest.mark.scenario("MKT-R11.1")
     def test_me_success(self, request_obj: HttpRequest) -> None:
         request_obj.method = "GET"
         response = me(request_obj)
@@ -382,6 +385,7 @@ class TestMeView:
             "market_refresh_interval_seconds": 30,
         }
 
+    @pytest.mark.scenario("ACCT-R9.3")
     def test_me_without_avatar(self, request_obj: HttpRequest, user: User) -> None:
         user.avatar_url = None
         user.save()
@@ -486,6 +490,7 @@ class TestRefreshView:
             username="Test User",
         )
 
+    @pytest.mark.scenario("ACCT-R5.1")
     def test_refresh_rotates_browser_tokens(self, user: User) -> None:
         request = HttpRequest()
         request.method = "POST"
@@ -543,6 +548,7 @@ class TestUpdateView:
         request.user = user
         return request
 
+    @pytest.mark.scenario("ACCT-R9.1")
     def test_update_username_success(
         self, request_obj: HttpRequest, user: User
     ) -> None:
@@ -566,6 +572,7 @@ class TestUpdateView:
         user.refresh_from_db()
         assert user.username == "New Username"
 
+    @pytest.mark.scenario("ACCT-R9.2")
     def test_update_avatar_url_success(
         self, request_obj: HttpRequest, user: User
     ) -> None:
@@ -585,6 +592,7 @@ class TestUpdateView:
         user.refresh_from_db()
         assert user.avatar_url == "https://example.com/new_avatar.jpg"
 
+    @pytest.mark.scenario("ACCT-R9.3")
     def test_update_avatar_url_to_empty(
         self, request_obj: HttpRequest, user: User
     ) -> None:

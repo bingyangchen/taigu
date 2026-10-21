@@ -54,7 +54,7 @@ class TestFetchAndStoreRealtimeStockInfo:
                     "v": "1000",
                     "y": "100.0",
                     "z": "102.5",
-                    "a": "103.0_103.5",
+                    "a": "104.0_104.5",
                     "b": "101.5_102.0",
                     "u": "110.0",
                     "w": "90.0",
@@ -73,6 +73,7 @@ class TestFetchAndStoreRealtimeStockInfo:
             ]
         }
 
+    @pytest.mark.scenario("MKT-R2.1")
     @patch("main.market.services._bulk_store_stock_price_per_minute")
     @patch("main.market.services.requests.get")
     @patch("main.market.services._store_market_index_per_minute")
@@ -122,6 +123,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         assert stock_price_batch[0].number == 90
         assert stock_price_batch[0].price == 102.5
 
+    @pytest.mark.scenario("MKT-R6.2")
     @patch("main.market.services._bulk_store_stock_price_per_minute")
     @patch("main.market.services.requests.get")
     @patch("main.market.services._store_market_index_per_minute")
@@ -156,6 +158,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_store_stock_price.assert_called_once()
         assert mock_store_stock_price.call_args[0][0] == []
 
+    @pytest.mark.scenario("MKT-R2.2")
     @patch("main.market.services._bulk_store_stock_price_per_minute")
     @patch("main.market.services.requests.get")
     @patch("main.market.services._store_market_index_per_minute")
@@ -205,6 +208,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         assert stock_price_batch[0].price == 102.5
         assert stock_price_batch[0].fluct_price == 2.5
 
+    @pytest.mark.scenario("MKT-R2.5")
     @patch("main.market.services._bulk_store_stock_price_per_minute")
     @patch("main.market.services.requests.get")
     @patch("main.market.services._store_market_index_per_minute")
@@ -256,6 +260,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         )
         assert mock_store_stock_price.call_args[0][0] == []
 
+    @pytest.mark.scenario("MKT-R4.1")
     @patch("main.market.services._bulk_store_stock_price_per_minute")
     @patch("main.market.services.requests.get")
     @patch("main.market.services._store_market_index_per_minute")
@@ -307,6 +312,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         )
         assert mock_store_stock_price.call_args[0][0] == []
 
+    @pytest.mark.scenario("MKT-R2.1")
     @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
     @patch("main.market.services.requests.get")
     @patch("main.market.services._store_market_index_per_minute")
@@ -336,7 +342,7 @@ class TestFetchAndStoreRealtimeStockInfo:
                     "v": "1000",
                     "y": "100.0",
                     "z": "102.5",
-                    "a": "103.0_103.5",
+                    "a": "104.0_104.5",
                     "b": "101.5_102.0",
                     "u": "110.0",
                     "w": "90.0",
@@ -411,6 +417,7 @@ class TestFetchAndStoreRealtimeStockInfo:
 
 @pytest.mark.django_db
 class TestStoreMarketPerMinuteInfo:
+    @pytest.mark.scenario("MKT-R5.1")
     @patch("main.market.services.TimeSeriesStockInfoCacheManager")
     @patch("main.market.services.MarketIndexPerMinute.objects.get_or_create")
     @patch("main.market.services.MarketIndexPerMinute.objects.filter")
@@ -493,6 +500,7 @@ class TestGetMinutesAfterOpening:
 
 
 class TestGetIntradayFiveMinuteSlot:
+    @pytest.mark.scenario("MKT-R6.1", "MKT-R6.2")
     @pytest.mark.parametrize(
         ("hour", "minute", "expected"),
         [
@@ -523,6 +531,7 @@ class TestBulkStoreStockPricePerMinute:
             stock_id="2330", name="台積電", trade_type=TradeType.TSE, business="半導體"
         )
 
+    @pytest.mark.scenario("MKT-R6.1")
     @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
     def test_bulk_store_stock_price_per_minute_upserts_same_day_and_invalidates_cache(
         self, mock_delete_cache: Mock, company: Company
@@ -565,6 +574,7 @@ class TestBulkStoreStockPricePerMinute:
         assert mock_delete_cache.call_count == 2
         mock_delete_cache.assert_called_with([company.pk])
 
+    @pytest.mark.scenario("MKT-R7.1")
     @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
     def test_bulk_store_stock_price_per_minute_deletes_stale_date_and_cache(
         self, mock_delete_cache: Mock, company: Company
@@ -594,6 +604,7 @@ class TestBulkStoreStockPricePerMinute:
         assert record.price == 600.0
         mock_delete_cache.assert_called_once_with([company.pk])
 
+    @pytest.mark.scenario("MKT-R7.1")
     @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
     def test_bulk_store_stock_price_per_minute_deletes_stale_dates_in_bulk(
         self, mock_delete_cache: Mock
@@ -791,6 +802,7 @@ class TestUpdateAllStocksHistory:
             fluct_price=2.3,
         )
 
+    @pytest.mark.scenario("MKT-R8.1")
     @pytest.mark.django_db
     def test_update_market_indices_history(self) -> None:
         today = date.today()

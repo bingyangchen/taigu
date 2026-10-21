@@ -50,6 +50,7 @@ class TestTradePlanViews:
             "target_quantity": 1000,
         }
 
+    @pytest.mark.scenario("PLAN-R5.1")
     def test_create_trade_plan_success(
         self, request_obj: HttpRequest, valid_trade_plan_data: dict[str, Any]
     ) -> None:
@@ -63,6 +64,7 @@ class TestTradePlanViews:
         assert data["plan_type"] == valid_trade_plan_data["plan_type"]
         assert TradePlan.objects.get(id=data["id"]).owner == request_obj.user
 
+    @pytest.mark.scenario("PLAN-R8.1")
     def test_create_trade_plan_rejects_missing_data(
         self, request_obj: HttpRequest
     ) -> None:
@@ -73,6 +75,7 @@ class TestTradePlanViews:
         assert response.status_code == 400
         assert json.loads(response.content)["message"] == "Data Not Sufficient"
 
+    @pytest.mark.scenario("PLAN-R8.2")
     def test_create_trade_plan_rejects_negative_quantity(
         self, request_obj: HttpRequest, valid_trade_plan_data: dict[str, Any]
     ) -> None:
@@ -109,6 +112,7 @@ class TestTradePlanViews:
         assert response.status_code == 200
         assert data["data"][0]["id"] == plan.id
 
+    @pytest.mark.scenario("PLAN-R9.1", "PLAN-R9.2")
     def test_update_trade_plan_success(
         self, user: User, company: Company, request_obj: HttpRequest
     ) -> None:
@@ -135,6 +139,7 @@ class TestTradePlanViews:
         assert data["plan_type"] == "sell"
         assert data["target_price"] == 600.0
 
+    @pytest.mark.scenario("PLAN-R12.2")
     def test_delete_trade_plan_success(
         self, user: User, company: Company, request_obj: HttpRequest
     ) -> None:
@@ -151,6 +156,7 @@ class TestTradePlanViews:
         assert response.status_code == 200
         assert not TradePlan.objects.filter(id=plan.id).exists()
 
+    @pytest.mark.scenario("PLAN-R12.2")
     def test_update_or_delete_trade_plan_delete_method(
         self, user: User, company: Company
     ) -> None:

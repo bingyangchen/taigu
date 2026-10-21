@@ -70,6 +70,7 @@ class TestCashDividendRecordListView:
             ),
         ]
 
+    @pytest.mark.scenario("REC-R20.2")
     def test_list_all_records(
         self,
         request_factory: RequestFactory,
@@ -223,6 +224,7 @@ class TestCashDividendRecordCreateView:
             business="Test business",
         )
 
+    @pytest.mark.scenario("REC-R2.1")
     def test_create_valid_cash_dividend_record(
         self, request_factory: RequestFactory, user: User, company: Company
     ) -> None:
@@ -249,6 +251,7 @@ class TestCashDividendRecordCreateView:
         # Verify record was created in database
         assert CashDividendRecord.objects.filter(owner=user, company=company).exists()
 
+    @pytest.mark.scenario("REC-R5.1")
     def test_create_missing_required_fields(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -291,6 +294,7 @@ class TestCashDividendRecordCreateView:
         assert response.status_code == 400
         assert json.loads(response.content)["message"] == "Data Not Sufficient"
 
+    @pytest.mark.scenario("REC-R5.2", "REC-R5.3")
     def test_create_edge_cases(
         self, request_factory: RequestFactory, user: User, company: Company
     ) -> None:
@@ -322,6 +326,7 @@ class TestCashDividendRecordCreateView:
             json.loads(response.content)["message"] == "Cash dividend must be positive"
         )
 
+    @pytest.mark.scenario("REC-R5.4")
     def test_create_unknown_stock_id(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -399,6 +404,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
             owner=user, company=company, deal_time=date(2023, 12, 1), cash_dividend=1000
         )
 
+    @pytest.mark.scenario("REC-R8.2")
     def test_update_valid_data(
         self,
         request_factory: RequestFactory,
@@ -424,6 +430,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         assert data["cash_dividend"] == 2000
         assert data["deal_time"] == "2023-12-02"
 
+    @pytest.mark.scenario("REC-R5.1")
     def test_update_missing_data(
         self,
         request_factory: RequestFactory,
@@ -447,6 +454,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
+    @pytest.mark.scenario("REC-R5.4")
     def test_update_unknown_stock_id(
         self,
         request_factory: RequestFactory,
@@ -474,6 +482,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         data = json.loads(response.content)
         assert data["message"] == "Unknown Stock ID"
 
+    @pytest.mark.scenario("REC-R9.2")
     def test_delete_valid_record(
         self,
         request_factory: RequestFactory,
@@ -533,6 +542,7 @@ class TestCashDividendRecordUpdateOrDeleteView:
         data = json.loads(response.content)
         assert "message" in data
 
+    @pytest.mark.scenario("REC-R6.1")
     def test_delete_other_users_record(
         self,
         request_factory: RequestFactory,
@@ -554,3 +564,5 @@ class TestCashDividendRecordUpdateOrDeleteView:
 
         with pytest.raises(ObjectDoesNotExist):
             update_or_delete(request, str(cash_dividend_record.pk))
+
+        assert CashDividendRecord.objects.filter(pk=cash_dividend_record.pk).exists()

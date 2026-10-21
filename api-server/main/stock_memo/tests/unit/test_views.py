@@ -34,6 +34,7 @@ class TestStockMemoViews:
         request.user = user  # type: ignore
         return request
 
+    @pytest.mark.scenario("STOCK-R14.1")
     def test_update_or_create_stock_memo_create_new(
         self, request_obj: HttpRequest, company: Company
     ) -> None:
