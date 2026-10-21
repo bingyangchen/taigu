@@ -121,6 +121,18 @@
 
 預期：步驟 11 之後畫面換到歡迎頁 `/welcome`；重新登入後，畫面換回 `/records`。
 
+## ACCT-R5.3 瀏覽器的登入 cookie 被清除
+
+前端沒有自動化 test。
+
+1. 用 Google 帳號登入。
+2. 在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token` 與 `__Secure-refresh_token`。
+3. 開啟 `https://local.taigu.tw/records`。
+4. 確認畫面換到歡迎頁 `/welcome`。
+5. 用 Google 帳號登入。
+
+預期：步驟 3 之後畫面換到歡迎頁 `/welcome`；重新登入後，畫面換回 `/records`。
+
 ## ACCT-R7.1 登出
 
 沒有自動化 test 驗證登出時讓登入憑證失效，畫面與瀏覽器保存的資料在前端，前端也沒有自動化 test。

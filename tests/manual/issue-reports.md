@@ -61,6 +61,20 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：步驟 8 的確認成立；步驟 9 的 Console 印出 `400`，代表 Taigu 拒絕了這則問題回報；步驟 10 的 `count:` 與步驟 1 的數字相同。
 
+## ISSUE-R2.3 內容剛好 5,000 個字
+
+前端沒有自動化 test，後端也沒有驗證剛好 5,000 個字的 test。
+
+1. 在桌面瀏覽器上開啟 `https://local.taigu.tw/settings`。
+2. 開啟 Chrome DevTools 的 Console。
+3. 在 Console 執行 `copy("   " + "測".repeat(5000) + "   ")`，把前後各有 3 個空白的 5,000 個「測」複製到剪貼簿。
+4. 點選「問題回報」。
+5. 在文字框貼上剪貼簿的內容。
+6. 點選送出按鈕。
+7. 執行查看問題回報的指令。
+
+預期：步驟 6 之後畫面出現送出成功的提示；步驟 7 的 `latest:` 那一行顯示字數 `5000`，內容以「測」開頭，前面沒有空白。
+
 ## ISSUE-R3.1 送出一則問題回報
 
 Taigu 儲存的內容、使用者與時間由 unit test 驗證，這裡只檢查畫面，因為前端沒有自動化 test。

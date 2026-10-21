@@ -346,6 +346,16 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 預期：升級提示視窗關閉，網址變成 `https://local.taigu.tw/settings/current-plan`，畫面顯示方案頁。
 
+## BILL-R9.3 兩種額度都用完時新增交易紀錄
+
+前端沒有自動化 test，後端也沒有 test 驗證兩種額度都用完時先擋下哪一種。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+2. 執行「準備資料」指令，`HOLDINGS` 設成 10，`TRADE_RECORDS` 設成 20。
+3. 新增交易紀錄，股票代號用 2603。
+
+預期：Taigu 沒有新增這筆交易紀錄，升級提示視窗的標題是「這個月的新增額度已用完」，不是「持股檔數已達 Free 上限」。
+
 ## BILL-R10.1 自動續訂中
 
 前端沒有自動化 test。

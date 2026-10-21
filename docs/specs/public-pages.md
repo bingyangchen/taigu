@@ -69,7 +69,7 @@ prefix: PUB
 
 | 頁面 | 頁面標題 | 搜尋引擎收錄 | Canonical 網址 |
 | --- | --- | --- | --- |
-| 歡迎頁 | Taigu \| 台股記帳 \| 專業投資組合管理，精準損益計算與績效追蹤 | 開放收錄 | `https://taigu.tw/welcome` |
+| 歡迎頁 | 以「Taigu \| 台股記帳」開頭的歡迎頁標題 | 開放收錄 | `https://taigu.tw/welcome` |
 | 隱私權政策 | 隱私權政策 \| Taigu | 開放收錄 | `https://taigu.tw/privacy-policy` |
 | 服務條款 | 服務條款 \| Taigu | 開放收錄 | `https://taigu.tw/terms-of-service` |
 | 登入頁 | 登入 \| Taigu | 不開放收錄 | 無 |
@@ -82,7 +82,7 @@ prefix: PUB
   - 動作：開啟 `/privacy-policy`。
   - 結果：頁面標題是「隱私權政策 | Taigu」，頁面沒有 `robots` meta tag，canonical 網址是 `https://taigu.tw/privacy-policy`，頁面有頁面說明。
 - PUB-R6.2 從歡迎頁換到登入頁
-  - 前提：訪客沒有登入，使用的瀏覽器沒有提供安裝 Taigu 的選項，畫面在歡迎頁，頁面標題是「Taigu | 台股記帳 | 專業投資組合管理，精準損益計算與績效追蹤」，canonical 網址是 `https://taigu.tw/welcome`。
+  - 前提：訪客沒有登入，使用的瀏覽器沒有提供安裝 Taigu 的選項，畫面在歡迎頁，頁面標題是歡迎頁的標題，canonical 網址是 `https://taigu.tw/welcome`。
   - 動作：點頁首的「登入」。
   - 結果：頁面標題換成「登入 | Taigu」，`robots` meta tag 是 `noindex`，頁面沒有 canonical 網址，也沒有頁面說明。
 
@@ -99,7 +99,7 @@ prefix: PUB
 - PUB-R7.2 不執行 JavaScript 抓取首頁
   - 前提：無。
   - 動作：用不執行 JavaScript 的 client 抓取首頁 `/`。
-  - 結果：回傳的 HTML 的頁面標題與分享預覽的標題都是「Taigu | 台股記帳 | 專業投資組合管理，精準損益計算與績效追蹤」，canonical 網址與分享預覽的網址都是 `https://taigu.tw/welcome`，頁面上的文字只有「Taigu 需要啟用 JavaScript 才能運作，請在瀏覽器設定中開啟。」。
+  - 結果：回傳的 HTML 的頁面標題與分享預覽的標題都是歡迎頁的標題（以「Taigu | 台股記帳」開頭），canonical 網址與分享預覽的網址都是 `https://taigu.tw/welcome`，頁面上的文字只有「Taigu 需要啟用 JavaScript 才能運作，請在瀏覽器設定中開啟。」。
 
 > 設計理由：公開頁面的網址直接回傳整頁內容，因為 LINE、Facebook 抓取分享預覽的爬蟲與部分搜尋引擎不執行 JavaScript，所以網址如果只回傳空白的 HTML、再由 JavaScript 產生內容，這些爬蟲讀到的每個網址都是空白的頁面。
 
