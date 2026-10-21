@@ -65,19 +65,19 @@ architecture-beta
 gitGraph
    commit
    commit
-   branch feature/xxx
-   switch feature/xxx
+   branch plan/0001-xxx
+   switch plan/0001-xxx
    commit
    commit
    switch main
-   merge feature/xxx
+   merge plan/0001-xxx
    commit
-   branch bugfix/xxx
-   switch bugfix/xxx
+   branch impl/0001-xxx
+   switch impl/0001-xxx
    commit
    commit
    switch main
-   merge bugfix/xxx
+   merge impl/0001-xxx
    commit
 ```
 
@@ -150,7 +150,7 @@ gitGraph
 
 ### The Development Workflow
 
-- **Step 1:** Create a branch from `main`, naming it `feature/xxx` or `bugfix/xxx`.
+- **Step 1:** Create a branch from `main`, named as [Spec-Driven Development](#spec-driven-development) describes.
 - **Step 2:** Complete your work, then commit and push your changes.
 - **Step 3:** Open a pull request on GitHub and obtain approval for your PR.
 - **Step 4:** Merge your branch into `main`.
@@ -158,6 +158,16 @@ gitGraph
 - **Step 6:** Push the new images to Docker Hub.
 - **Step 7:** SSH into the EC2 instance, pull the latest code and images.
 - **Step 8:** Restart all Docker containers. You're done!
+
+### Spec-Driven Development
+
+Every change to spec'd behavior or architecture starts from a plan, and code follows. The full workflow is in `.agents/skills/sdd/SKILL.md`.
+
+- `docs/specs/` describes what the code on `main` implements: the product, the architecture, the UI guidelines, and one spec per capability.
+- `docs/plans/` holds approved changes, and `docs/plans/roadmap.md` shows what comes next.
+- `tests/manual/` holds the steps for the scenarios that need a manual check.
+- A change that alters behavior goes through a `plan/NNNN-xxx` branch, then an `impl/NNNN-xxx` branch. A behavior-preserving change, such as a bug fix that restores spec'd behavior or a refactor, uses a `change/xxx` branch, writing the spec of an existing capability uses a `backfill/xxx` branch, and abandoning an approved plan uses an `abandon/NNNN-xxx` branch. A trivial change on the skill's whitelist, such as a typo fix, takes any branch name.
+- `make check-scenarios` checks that every scenario in `docs/specs/` has a test or a manual check; `make test` and CI run it too.
 
 ### Dependency Management
 

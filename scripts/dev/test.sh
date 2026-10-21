@@ -34,6 +34,12 @@ printf "${BLUE}Running Pytest...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm api-server pytest
 printf "\n"
 
+printf "${BLUE}Checking spec scenarios...${RESET}\n"
+docker compose -f compose.dev.yaml --progress quiet run $T --rm --no-deps -v "$(pwd):/app:ro" \
+  -e PYTHONDONTWRITEBYTECODE=1 api-server \
+  sh -c "pytest -p no:django -p no:cacheprovider -q scripts/sdd && python scripts/sdd/check_scenarios.py"
+printf "\n"
+
 printf "${BLUE}Running ESLint...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm frontend npm run lint
 

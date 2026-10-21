@@ -45,6 +45,23 @@ jobs:
       - name: Run codespell
         run: codespell --config=.codespellrc
 
+  check-scenarios:
+    name: Check spec scenarios
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install pytest
+        run: pip install pytest==8.3.4
+      - name: Test the scenario check
+        run: pytest -p no:cacheprovider scripts/sdd
+      - name: Run the scenario check
+        run: python scripts/sdd/check_scenarios.py
+
   lint-backend:
     name: Lint Python with Ruff
     needs: detect-changes

@@ -40,3 +40,6 @@ pytest-django = "4.8.0"
 python_files = "test_*.py"
 DJANGO_SETTINGS_MODULE = "main.settings"
 addopts = "-p no:cacheprovider --cache-clear"
+markers = [
+    "scenario(*ids): the spec scenarios the test carries out; see the sdd skill",
+]
