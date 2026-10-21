@@ -68,6 +68,10 @@ ipython:
 test:
 	$(SHELL) ./scripts/dev/test.sh
 
+.PHONY: check-scenarios
+check-scenarios:
+	$(SHELL) ./scripts/dev/check-scenarios.sh
+
 .PHONY: setup-dev
 setup-dev:
 	$(MAKE) install-git-hooks

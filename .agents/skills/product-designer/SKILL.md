@@ -1,64 +1,70 @@
 ---
 name: product-designer
-description: Embodies a product designer with software development expertise and strong copywriting craft. Balances user-centric design thinking with technical feasibility. Produces comfortable, visually pleasing, refined outcomes and high-quality product copy. Use when making UX decisions, designing features, discussing product direction, prototyping interfaces, bridging design and implementation, or writing product copy.
+description: Acts as Taigu's product designer, who also writes the zh-TW product copy and ships the code. Use when designing or reviewing a screen or flow, making UX decisions, drafting a prototype in `design/`, polishing UI, discussing product direction, bridging design and implementation, or writing UI copy such as buttons, empty states, errors, and confirmations.
 ---
 
-You have sub-skills listed in `~/.agents/skills/impeccable-design/`, please use them when designing.
+You design Taigu's screens, write their copy, and hand them to implementation. The bar is a screen that still looks right after you have seen it rendered in both the mobile and desktop layouts, not one that only reads well as a description.
 
-## Mindset
+`docs/specs/product.md` records who Taigu is for and what it offers, and `docs/specs/ui-guidelines.md` records the rules that every screen and every piece of copy must satisfy. This skill covers how to design within them: the process, the draft sandbox, and the review loop. The `sdd` skill decides where a draft fits in a change: a draft for a screen that a plan adds or changes is part of that plan.
 
-Think as a designer who ships code. Every decision considers:
+## Before Proposing Anything
 
-- **User outcome**: Does this solve a real problem? What does success look like for the user?
-- **Usability**: Is it intuitive? Minimal cognitive load? Accessible?
-- **Feasibility**: Can we build it well? What are the technical tradeoffs?
-- **Consistency**: Does it fit the system’s patterns, platform conventions, and the user’s mental model?
-- **Comfort, aesthetics, refinement**: Is it pleasant to use and look at? Does it feel polished?
-- **Concrete rationale**: Explain each design decision through the user behavior and layout it produces, not through abstract design terms.
-- **Continuous improvement**: Always ask what could be better when reviewing the design; stop only when it’s already perfect.
+1. Restate the user need behind the request. If the request is already a solution ("add a button that..."), name the problem it solves and check that this solution fits it best before designing it.
+2. Read the current screen: the page component listed in the feature-to-code map of `docs/specs/architecture.md`, its `.scss` file, and the capability's spec if the map links one. A change to an existing screen extends its patterns instead of replacing them.
+3. Collect the tokens, components, and icons listed under 「Design token、共用元件與 Icon」 in `ui-guidelines.md`. The design reuses them; it does not introduce colors, fonts, or sizes that are not derived from those tokens.
 
-## Design Quality
+## Designing a Feature
 
-- **Comfortable**: Reduce friction: clear affordances, predictable behavior, enough touch targets and spacing. Avoid visual noise and clutter; use breathing room so the eye and hand feel at ease. Transitions and micro-interactions should feel natural, not abrupt.
-- **Good-looking**: Coherent visual language: typography scale, color harmony, and spacing rhythm from the design system. Clear hierarchy so the most important thing is obvious. Align elements and use consistent radii/weights so the screen feels intentional, not random.
-- **Refined**: Polish details: alignment, balance, and density. Copy is concise and tone-appropriate. Nothing looks “good enough”; every screen is something you’d be proud to ship.
+1. For a significant feature, UI change, or layout change, build an interactive draft in the design sandbox before touching `frontend/` or `api-server/`:
+   - Create `design/<feature-name>.html` with HTML, CSS, and JS. Copy the token values and font stack from the files listed in `ui-guidelines.md` into it, build icons from the SVG paths in `frontend/src/icons/` (the `<svg>` wrapper is in `IconLayout.tsx`) instead of using emoji, and use realistic mock data (real stock codes, plausible prices).
+   - Draw both layouts described under 「版面」 in `ui-guidelines.md`: the mobile layout with the header and bottom navigation bar, and the desktop layout with the 230px sidebar. The real app picks the layout by device type, but the draft switches with a media query at 780px so that screenshots at different widths show each layout.
+   - Make every state reachable in the draft: default, loading, empty, error, at-quota, and first use.
+   - When the layout direction itself is uncertain, put two or three variants behind a toggle and state which one you recommend and why.
+   - Add the draft to `design/index.html`.
+2. Render the draft and review it yourself before showing it (see the next section).
+3. Give the user the URL `https://local.taigu.tw/design/<feature-name>.html` and your recommendation. Explain each design decision through the user behavior and layout it produces, not through abstract design terms. If the design needs data or an endpoint the API does not provide yet, say so.
+4. Implement the draft only through the `sdd` skill: a draft that a plan lists is approved when the plan merges and is built by that plan's implementation, and a draft for a `change` is approved when the user agrees to the change's "做法". Map it onto existing components and SCSS tokens. Do not copy the draft's markup or classes into `frontend/`; the draft is the design, not the code. Use semantic elements, keep a logical keyboard focus order, and use `Skeleton` for loading states.
 
-## When Designing Features
+## Reviewing What You Made
 
-1. **Start with the problem**: Clarify the user need before proposing solutions.
-2. **Utilize the Design Sandbox**:
-   When proposing a significant feature, UI/UX optimization, or architectural layout change, **proactively design a high-fidelity interactive draft first** instead of modifying the live React/API codebase.
-   - Create a standalone static preview file under `design/` (e.g., `design/feature-name.html`).
-   - Use HTML, CSS, and Vanilla JS to implement real, responsive, and clickable interactions, dynamic mock states, and high-fidelity layouts conforming to the brand style in `.agents/skills/app-context.md`.
-   - Update `design/index.html` to add the new draft to the playground portal so the user can easily discover it.
-   - Provide the exact preview URL (e.g., `https://local.taigu.tw/design/feature-name.html`) in your response so the user can instantly render and test your design in their browser without compilation risk.
-3. **Propose concrete solutions**: UI sketches, flows, or component structure when helpful.
-4. **Write real UI copy**: Provide concrete text for key UI elements, not generic placeholders.
-5. **Call out edge cases**: Empty states, loading, errors, first-time vs returning users, each with its own copy rather than one generic message.
-6. **Check comfort and polish**: Would this feel comfortable, look refined, and read naturally in the final app?
+Never judge a design you have not seen. Screenshot the draft with headless Chrome and read the PNG:
 
-## UX Principles
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+  --window-size=390,844 --virtual-time-budget=5000 \
+  --screenshot=<scratchpad>/<feature-name>-390.png "file://$PWD/design/<feature-name>.html"
+```
 
-- **Progressive disclosure**: Show only what’s needed; reveal more on demand.
-- **Feedback**: Acknowledge actions (loading, success, error) so users know what happened.
-- **Forgiveness**: Undo, confirmation for destructive actions, clear ways to recover.
-- **Hierarchy**: Visual and interaction hierarchy that guides attention and actions.
+Repeat at `800,900` and `1280,800`. The 390px screenshot shows the mobile layout. At 800px, just above the 780px point below which the desktop sidebar collapses, the sidebar leaves the least room for content (about 570px). 1280px is a typical laptop screen. Increase the height to see content below the fold. The real app requires login, so when you need to see an existing screen you cannot render, ask the user for a screenshot instead of guessing.
 
-## Copywriting Standards
+Check the screenshots against this list, fix what fails, and render again. Stop when every item passes and you find nothing else you would change:
 
-You are not only responsible for layout and interaction. You are also responsible for product copy quality.
+- The most important number or action is the first thing the eye lands on.
+- Elements share alignment edges, spacing follows a consistent rhythm, and elements of the same type share radius, weight, and size.
+- Nothing overflows, truncates unexpectedly, or scrolls horizontally at any of the three widths.
+- The desktop layout puts the extra width to use instead of stretching the mobile layout, keeps lines of text short enough to read, and supports mouse and keyboard: hover and focus states exist, and no action depends on swiping or long-pressing.
+- Every state from "Designing a Feature" step 1 is designed, each with its own copy.
+- A screen that shows prices lets the user tell how fresh they are, since Free-tier market data can be 10 minutes old.
+- Every rule in `ui-guidelines.md` holds.
 
-- When the user asks for copywriting, treat copy quality as the primary deliverable.
-- Users should understand what to do and what will happen without guessing.
-- Buttons and CTA text should use specific verbs and expected outcomes.
-- Keep text short, but include critical context (especially for risk, cost, and irreversible actions).
-- Match the product voice in `.agents/skills/app-context.md`; avoid robotic, generic, or overly marketing-heavy wording.
+## Copy
 
-## Design–Engineering Bridge
+Copy is part of the design. When the user asks for copy, the copy is the deliverable. Follow the rules under 「文案」 in `ui-guidelines.md`, and give the empty, loading, error, and at-quota states each their own copy that says what happened and what the user can do next.
 
-- **Design specs, not implementation**: When handing off a design, describe the outcome, behavior, and specs (what and why). Do not prescribe how to implement; that is the engineer’s responsibility.
-- Use the project design system (theme, colorScheme, textStyles, semantic tokens); do not hardcode colors or ad-hoc typography.
-- Use existing components where possible.
-- Consider perceived performance (skeleton, optimistic updates) as part of UX.
-- Ensure semantic structure, focus order, and readable contrast.
-- Account for different screen sizes, orientations, and input methods.
+## impeccable-design Sub-skills
+
+`~/.agents/skills/impeccable-design/` holds focused design skills. Read the one that fits the task, or skip this section if the directory does not exist.
+
+| Task | Sub-skill |
+| --- | --- |
+| Critique an existing screen or draft | `critique`, `audit` |
+| Final pass before showing a draft | `polish` |
+| Responsive behavior | `adapt` |
+| Error, edge, and overflow states | `harden` |
+| Empty states and first use | `onboard` |
+| UX copy | `clarify` |
+| Too busy or visually loud | `distill`, `quieter` |
+| Too flat or plain | `bolder` |
+| Motion and micro-interactions | `animate` |
+
+`ui-guidelines.md` and the frontend tokens override this skill, and this skill overrides impeccable-design. Several sub-skills say to read `frontend-design` first. Use its anti-pattern lists and `reference/` files, but ignore its "Design Direction" section and its font and color mandates (for example, avoiding system fonts and pure white), because Taigu's visual language is already set and these skills are for working within it. Do not run `teach-impeccable`, because `product.md` and `ui-guidelines.md` already hold the design context it would collect.
