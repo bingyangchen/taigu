@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from django.test import RequestFactory
 
@@ -54,6 +55,7 @@ def test_ecpay_check_mac_value_round_trip() -> None:
     assert verify_check_mac_value(data, "pwFHCqoQZGmho4w6", "EkRm7iFT261dpevs")
 
 
+@pytest.mark.scenario("BILL-R19.1")
 def test_checkout_result_url_flags_ecpay_checkout(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         "main.billing.services.ecpay.get_public_frontend_origin",
@@ -177,6 +179,7 @@ def test_ecpay_return_requests_retry_when_processing_fails(
     assert response.content == b"0|ERROR"
 
 
+@pytest.mark.scenario("BILL-R19.1")
 def test_ecpay_order_result_redirects_to_checkout_result(
     monkeypatch: MonkeyPatch,
 ) -> None:

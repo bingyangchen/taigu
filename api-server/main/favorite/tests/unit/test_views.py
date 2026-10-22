@@ -39,6 +39,7 @@ class TestFavoriteViews:
         request.user = user  # type: ignore
         return request
 
+    @pytest.mark.scenario("FAV-R1.1")
     def test_create_or_delete_favorite_post_method(
         self, request_obj: HttpRequest, company: Company
     ) -> None:
@@ -47,6 +48,7 @@ class TestFavoriteViews:
         assert response.status_code == 200
         assert Favorite.objects.filter(owner=request_obj.user, company=company).exists()
 
+    @pytest.mark.scenario("FAV-R1.2")
     def test_create_or_delete_favorite_delete_method(
         self, user: User, company: Company
     ) -> None:
@@ -59,6 +61,7 @@ class TestFavoriteViews:
         assert response.status_code == 200
         assert not Favorite.objects.filter(owner=user, company=company).exists()
 
+    @pytest.mark.scenario("FAV-R3.1")
     def test_create_favorite_is_idempotent(
         self, request_obj: HttpRequest, company: Company
     ) -> None:
@@ -76,6 +79,7 @@ class TestFavoriteViews:
         with pytest.raises(ObjectDoesNotExist):
             _create_favorite(request_obj, "unknown_sid")
 
+    @pytest.mark.scenario("FAV-R1.2")
     def test_delete_favorite_success(
         self, request_obj: HttpRequest, company: Company
     ) -> None:

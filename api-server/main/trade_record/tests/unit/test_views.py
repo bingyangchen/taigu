@@ -72,6 +72,7 @@ class TestTradeRecordListView:
             ),
         ]
 
+    @pytest.mark.scenario("REC-R20.1")
     def test_list_all_records(
         self,
         request_factory: RequestFactory,
@@ -105,6 +106,7 @@ class TestTradeRecordListView:
         }
         assert set(record.keys()) == expected_keys
 
+    @pytest.mark.scenario("REC-R19.1")
     def test_list_incremental_records(
         self,
         request_factory: RequestFactory,
@@ -268,6 +270,7 @@ class TestTradeRecordCreateView:
             business="Test business",
         )
 
+    @pytest.mark.scenario("REC-R1.1")
     def test_create_valid_trade_record(
         self, request_factory: RequestFactory, user: User, company: Company
     ) -> None:
@@ -308,6 +311,7 @@ class TestTradeRecordCreateView:
         assert change_log.revision == 1
         assert change_log.operation == DataChangeLog.Operation.UPSERT
 
+    @pytest.mark.scenario("REC-R5.1")
     def test_create_missing_deal_time(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -333,6 +337,7 @@ class TestTradeRecordCreateView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
+    @pytest.mark.scenario("REC-R5.1")
     def test_create_missing_sid(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -358,6 +363,7 @@ class TestTradeRecordCreateView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
+    @pytest.mark.scenario("REC-R5.1")
     def test_create_deal_price_none(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -384,6 +390,7 @@ class TestTradeRecordCreateView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
+    @pytest.mark.scenario("REC-R5.4")
     def test_create_unknown_stock_id(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -484,6 +491,7 @@ class TestTradeRecordUpdateOrDeleteView:
             handling_fee=50,
         )
 
+    @pytest.mark.scenario("REC-R8.1")
     def test_update_or_delete_post_method(
         self,
         request_factory: RequestFactory,
@@ -522,6 +530,7 @@ class TestTradeRecordUpdateOrDeleteView:
         assert change_log.revision == 1
         assert change_log.operation == DataChangeLog.Operation.UPSERT
 
+    @pytest.mark.scenario("REC-R9.1", "REC-R9.3")
     def test_update_or_delete_delete_method(
         self, request_factory: RequestFactory, user: User, trade_record: TradeRecord
     ) -> None:
@@ -599,6 +608,7 @@ class TestTradeRecordUpdateOrDeleteView:
         assert trade_record.deal_price == 250.75
         assert trade_record.company.stock_id == "5678"
 
+    @pytest.mark.scenario("REC-R5.1")
     def test_update_missing_data(
         self, request_factory: RequestFactory, user: User, trade_record: TradeRecord
     ) -> None:
@@ -622,6 +632,7 @@ class TestTradeRecordUpdateOrDeleteView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
+    @pytest.mark.scenario("REC-R5.4")
     def test_update_unknown_stock_id(
         self, request_factory: RequestFactory, user: User, trade_record: TradeRecord
     ) -> None:
@@ -678,6 +689,7 @@ class TestTradeRecordUpdateOrDeleteView:
         with pytest.raises(ObjectDoesNotExist):
             update_or_delete(request, "99999")
 
+    @pytest.mark.scenario("REC-R6.1")
     def test_delete_other_users_record(
         self,
         request_factory: RequestFactory,
@@ -697,3 +709,5 @@ class TestTradeRecordUpdateOrDeleteView:
 
         with pytest.raises(ObjectDoesNotExist):
             update_or_delete(request, str(trade_record.pk))
+
+        assert TradeRecord.objects.filter(pk=trade_record.pk).exists()

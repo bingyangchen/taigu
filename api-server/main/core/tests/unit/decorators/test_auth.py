@@ -49,6 +49,7 @@ class TestRequireLoginDecorator:
         response_data = json.loads(response.content.decode("utf-8"))
         assert response_data["message"] == "success"
 
+    @pytest.mark.scenario("ACCT-R4.1")
     def test_require_login_with_unauthenticated_user(
         self, unauthenticated_request: HttpRequest
     ) -> None:

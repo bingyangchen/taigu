@@ -35,6 +35,7 @@ class TestCreateOrListDiscountView:
             username="testuser",
         )
 
+    @pytest.mark.scenario("FEE-R7.1")
     def test_create_or_list_discount_post_method(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -111,6 +112,7 @@ class TestCreateDiscountView:
             username="testuser",
         )
 
+    @pytest.mark.scenario("FEE-R7.1")
     def test_create_discount_valid(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -140,6 +142,7 @@ class TestCreateDiscountView:
             owner=user, date=date(2023, 12, 1), amount=100
         ).exists()
 
+    @pytest.mark.scenario("FEE-R7.2")
     def test_create_discount_without_memo(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -161,6 +164,7 @@ class TestCreateDiscountView:
         data = json.loads(response.content)
         assert data["memo"] == ""
 
+    @pytest.mark.scenario("FEE-R15.1")
     def test_create_discount_missing_date(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -182,6 +186,7 @@ class TestCreateDiscountView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
+    @pytest.mark.scenario("FEE-R15.1")
     def test_create_discount_missing_amount(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -203,6 +208,7 @@ class TestCreateDiscountView:
         data = json.loads(response.content)
         assert data["message"] == "Data Not Sufficient"
 
+    @pytest.mark.scenario("FEE-R14.3")
     def test_create_discount_negative_amount(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -224,6 +230,7 @@ class TestCreateDiscountView:
         data = json.loads(response.content)
         assert data["message"] == "Amount must be positive"
 
+    @pytest.mark.scenario("FEE-R14.2")
     def test_create_discount_zero_amount(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -245,6 +252,7 @@ class TestCreateDiscountView:
         data = json.loads(response.content)
         assert data["amount"] == 0
 
+    @pytest.mark.scenario("FEE-R15.2")
     def test_create_discount_invalid_date_format(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -266,6 +274,7 @@ class TestCreateDiscountView:
         data = json.loads(response.content)
         assert data["message"] == "Invalid Date Format"
 
+    @pytest.mark.scenario("FEE-R15.2")
     def test_create_discount_wrong_date_format(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -326,6 +335,7 @@ class TestListDiscountsView:
             username="otheruser",
         )
 
+    @pytest.mark.scenario("FEE-R6.1")
     def test_list_discounts_with_records(
         self, request_factory: RequestFactory, user: User
     ) -> None:
@@ -375,6 +385,7 @@ class TestListDiscountsView:
         assert "data" in data
         assert len(data["data"]) == 0
 
+    @pytest.mark.scenario("FEE-R16.1")
     def test_list_discounts_only_owner_records(
         self, request_factory: RequestFactory, user: User, other_user: User
     ) -> None:
@@ -451,6 +462,7 @@ class TestUpdateOrDeleteDiscountView:
         assert data["amount"] == 200
         assert data["memo"] == "Updated memo"
 
+    @pytest.mark.scenario("FEE-R10.1")
     def test_update_or_delete_discount_delete_method(
         self,
         request_factory: RequestFactory,
@@ -511,6 +523,7 @@ class TestUpdateDiscountView:
             owner=user, date=date(2023, 12, 1), amount=100, memo="Original memo"
         )
 
+    @pytest.mark.scenario("FEE-R9.1")
     def test_update_discount_all_fields(
         self,
         request_factory: RequestFactory,
@@ -647,6 +660,7 @@ class TestUpdateDiscountView:
         assert data["amount"] == 100  # Unchanged
         assert data["memo"] == "Original memo"  # Unchanged
 
+    @pytest.mark.scenario("FEE-R14.3")
     def test_update_discount_negative_amount(
         self,
         request_factory: RequestFactory,
@@ -671,6 +685,7 @@ class TestUpdateDiscountView:
         data = json.loads(response.content)
         assert data["message"] == "Amount must be positive"
 
+    @pytest.mark.scenario("FEE-R15.2")
     def test_update_discount_invalid_date_format(
         self,
         request_factory: RequestFactory,
@@ -711,6 +726,7 @@ class TestUpdateDiscountView:
         with pytest.raises(ObjectDoesNotExist):
             _update_discount(request, "99999")
 
+    @pytest.mark.scenario("FEE-R16.1")
     def test_update_discount_other_users_record(
         self, request_factory: RequestFactory, discount: HandlingFeeDiscountRecord
     ) -> None:
@@ -773,6 +789,7 @@ class TestDeleteDiscountView:
             owner=user, date=date(2023, 12, 1), amount=100, memo="Test memo"
         )
 
+    @pytest.mark.scenario("FEE-R10.1")
     def test_delete_discount_success(
         self,
         request_factory: RequestFactory,
@@ -806,6 +823,7 @@ class TestDeleteDiscountView:
         with pytest.raises(ObjectDoesNotExist):
             _delete_discount(request, "99999")
 
+    @pytest.mark.scenario("FEE-R16.1")
     def test_delete_discount_other_users_record(
         self, request_factory: RequestFactory, discount: HandlingFeeDiscountRecord
     ) -> None:

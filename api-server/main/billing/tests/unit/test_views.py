@@ -22,6 +22,7 @@ class TestCancelSubscriptionView:
             username="Test User",
         )
 
+    @pytest.mark.scenario("BILL-R23.4")
     def test_trialing_user_cannot_cancel_subscription(self, user: User) -> None:
         trial_started_at = timezone.now() - timedelta(days=1)
         trial_ends_at = timezone.now() + timedelta(days=30)
@@ -46,6 +47,7 @@ class TestCancelSubscriptionView:
         assert profile.trial_started_at == trial_started_at
         assert profile.trial_ends_at == trial_ends_at
 
+    @pytest.mark.scenario("BILL-R23.5")
     def test_free_user_cannot_cancel_subscription(self, user: User) -> None:
         BillingProfile.objects.create(
             user=user, plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED

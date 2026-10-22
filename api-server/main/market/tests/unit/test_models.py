@@ -147,6 +147,7 @@ class TestCompanyManager:
         with pytest.raises(UnknownStockIdError, match="Unknown Stock ID: 1234"):
             CompanyManager.fetch_company_info("1234")
 
+    @pytest.mark.scenario("STOCK-R11.1")
     @patch("requests.post")
     @patch("main.market.models.PyQuery")
     @patch("main.market.models.logger")

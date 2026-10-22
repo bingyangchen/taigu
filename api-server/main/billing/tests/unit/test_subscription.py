@@ -44,6 +44,7 @@ class FakeEcpayClient:
         }
 
 
+@pytest.mark.scenario("BILL-R14.2")
 def test_next_period_end_uses_calendar_month(monkeypatch: MonkeyPatch) -> None:
     fixed_now = datetime(2024, 1, 31, 10, 0, tzinfo=ZoneInfo("Asia/Taipei"))
     monkeypatch.setattr(
@@ -77,6 +78,7 @@ class TestDueBillingProfileReconciliation:
             username="Test User",
         )
 
+    @pytest.mark.scenario("BILL-R22.1")
     def test_due_active_subscription_waits_within_period_callback_grace_period(
         self, user: User
     ) -> None:
@@ -96,6 +98,7 @@ class TestDueBillingProfileReconciliation:
         assert profile.subscription_status == SubscriptionStatus.ACTIVE
         assert profile.current_period_ends_at == due_at
 
+    @pytest.mark.scenario("BILL-R22.2")
     def test_due_active_subscription_becomes_past_due_after_period_callback_grace_period(
         self, user: User
     ) -> None:
@@ -118,6 +121,7 @@ class TestDueBillingProfileReconciliation:
         assert profile.subscription_status == SubscriptionStatus.PAST_DUE
         assert profile.current_period_ends_at == due_at
 
+    @pytest.mark.scenario("BILL-R24.2")
     def test_cancel_at_period_end_downgrades_without_charging(self, user: User) -> None:
         due_at = timezone.now() - timedelta(minutes=1)
         BillingProfile.objects.create(
@@ -169,6 +173,7 @@ class TestSubscriptionPaymentLifecycle:
             username="Test User",
         )
 
+    @pytest.mark.scenario("BILL-R17.1")
     def test_replaces_existing_pending_payment_with_new_checkout(
         self, user: User
     ) -> None:
@@ -209,6 +214,7 @@ class TestSubscriptionPaymentLifecycle:
             == 1
         )
 
+    @pytest.mark.scenario("BILL-R18.1")
     def test_active_subscription_cannot_be_started_again(self, user: User) -> None:
         BillingProfile.objects.create(
             user=user,
@@ -231,6 +237,7 @@ class TestSubscriptionPaymentLifecycle:
         assert client.calls == 0
         assert not SubscriptionPayment.objects.filter(user=user).exists()
 
+    @pytest.mark.scenario("BILL-R17.1")
     def test_expires_stale_pending_payment_before_creating_new_payment(
         self, user: User
     ) -> None:
@@ -260,6 +267,7 @@ class TestSubscriptionPaymentLifecycle:
         assert payment.status == PaymentStatus.PENDING
         assert client.calls == 1
 
+    @pytest.mark.scenario("BILL-R14.3")
     def test_late_success_callback_can_mark_expired_payment_paid(
         self, user: User
     ) -> None:
@@ -294,6 +302,7 @@ class TestSubscriptionPaymentLifecycle:
         assert payment.status == PaymentStatus.PAID
         assert payment.provider_transaction_id == "ecpay-trade-no"
 
+    @pytest.mark.scenario("BILL-R16.3")
     def test_success_callback_rejects_amount_mismatch(self, user: User) -> None:
         payment = SubscriptionPayment.objects.create(
             user=user,
@@ -322,6 +331,7 @@ class TestSubscriptionPaymentLifecycle:
         payment.refresh_from_db()
         assert payment.status == PaymentStatus.PENDING
 
+    @pytest.mark.scenario("BILL-R16.2")
     def test_success_callback_rejects_merchant_mismatch(self, user: User) -> None:
         payment = SubscriptionPayment.objects.create(
             user=user,
@@ -352,6 +362,7 @@ class TestSubscriptionPaymentLifecycle:
         payment.refresh_from_db()
         assert payment.status == PaymentStatus.PENDING
 
+    @pytest.mark.scenario("BILL-R16.4")
     def test_success_callback_rejects_duplicate_provider_transaction_id(
         self, user: User
     ) -> None:

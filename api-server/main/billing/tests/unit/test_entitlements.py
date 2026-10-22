@@ -37,6 +37,7 @@ class TestEntitlements:
             stock_id="2330", name="台積電", trade_type="tse", business="Semiconductor"
         )
 
+    @pytest.mark.scenario("BILL-R2.1", "MKT-R11.1")
     def test_new_user_gets_standard_trial(self, user: User) -> None:
         entitlements = _get_entitlements(user)
 
@@ -51,13 +52,14 @@ class TestEntitlements:
         assert serialized["quota"]["monthly_records"] is None
         assert serialized["usage"]["monthly_records"] == 0
 
+    @pytest.mark.scenario("BILL-R2.2", "MKT-R11.2")
     def test_expired_trial_falls_back_to_free(self, user: User) -> None:
         BillingProfile.objects.create(
             user=user,
             plan=Plan.STANDARD,
             subscription_status=SubscriptionStatus.TRIALING,
             trial_started_at=timezone.now() - timedelta(days=40),
-            trial_ends_at=timezone.now() - timedelta(days=9),
+            trial_ends_at=timezone.now() - timedelta(minutes=1),
         )
 
         entitlements = _get_entitlements(user)
@@ -65,6 +67,7 @@ class TestEntitlements:
         assert entitlements.plan == Plan.FREE
         assert entitlements.market_refresh_interval_seconds == 600
 
+    @pytest.mark.scenario("BILL-R3.1")
     def test_free_record_monthly_quota_counts_trade_and_dividend(
         self, user: User, company: Company
     ) -> None:
@@ -92,6 +95,7 @@ class TestEntitlements:
         with pytest.raises(QuotaExceededError):
             assert_can_create_cash_dividend_record(user)
 
+    @pytest.mark.scenario("FAV-R3.1")
     def test_free_favorite_quota_allows_existing_favorite(
         self, user: User, company: Company
     ) -> None:
@@ -99,5 +103,10 @@ class TestEntitlements:
             user=user, plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED
         )
         Favorite.objects.create(owner=user, company=company)
+        for index in range(9):
+            other_company = Company.objects.create(
+                stock_id=f"9{index:03d}", name=f"Other {index}"
+            )
+            Favorite.objects.create(owner=user, company=other_company)
 
         assert_can_add_favorite(user, company.pk)

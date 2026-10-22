@@ -734,6 +734,7 @@ class TestSearchView:
         assert data["data"][0]["sid"] == "1234"
         assert data["data"][0]["name"] == "Taiwan Semiconductor"
 
+    @pytest.mark.scenario("MKT-R16.2")
     def test_search_by_company_name(
         self,
         request_factory: RequestFactory,
@@ -754,6 +755,7 @@ class TestSearchView:
         assert data["data"][0]["sid"] == "2330"
         assert data["data"][0]["name"] == "TSMC Limited"
 
+    @pytest.mark.scenario("MKT-R16.1")
     def test_search_partial_match(
         self,
         request_factory: RequestFactory,
@@ -825,6 +827,7 @@ class TestSearchView:
         assert "data" in data
         assert len(data["data"]) == 0
 
+    @pytest.mark.scenario("MKT-R16.3")
     def test_search_limit_results(
         self, request_factory: RequestFactory, user: User
     ) -> None:
