@@ -13,9 +13,11 @@ import {
 import { registerRoute } from "workbox-routing";
 import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
+import { API_CACHE_NAME } from "./utils/cache";
+
 declare const self: ServiceWorkerGlobalScope;
 
-const VERSION = "2026.07.10.01";
+const VERSION = "2026.10.22.01";
 console.log(`Service worker version: ${VERSION}`);
 
 clientsClaim();
@@ -63,7 +65,6 @@ registerRoute(
   }),
 );
 
-const API_CACHE_NAME = "api-cache";
 const getApiPath = (url: URL): string => url.pathname.replace(/^\/api\/?/, "");
 const apiCachePaths = new Set([
   "cash-dividends",
@@ -103,4 +104,11 @@ registerRoute(
 
 self.addEventListener("install", () => {
   self.skipWaiting();
+});
+
+// Service workers before PR #185 stored API responses in a cache named "taigu".
+// Nothing reads it anymore, so delete it to drop the user data it still holds.
+const LEGACY_API_CACHE_NAME = "taigu";
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.delete(LEGACY_API_CACHE_NAME));
 });

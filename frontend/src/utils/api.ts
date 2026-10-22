@@ -2,6 +2,7 @@ import { openPlanUpsell } from "../redux/slices/PlanUpsellSlice";
 import { pushToast } from "../redux/slices/ToastSlice";
 import { store } from "../redux/store";
 import type { PlanQuotaResource } from "../types";
+import { API_CACHE_NAME } from "./cache";
 import Env from "./env";
 import { requestCloseActiveModal } from "./modal";
 import Nav from "./nav";
@@ -30,7 +31,7 @@ export default class Api {
 
   public static async clearCache(): Promise<void> {
     if ("caches" in window) {
-      await caches.delete(Env.cacheKey);
+      await caches.delete(API_CACHE_NAME);
     }
   }
 

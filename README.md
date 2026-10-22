@@ -8,94 +8,22 @@
 
 ## 🔍 Overview
 
-### Architecture
-
-#### Development
-
-```mermaid
-architecture-beta
-    group localhost(server)[Localhost]
-    service db(database)[Relational Database] in localhost
-    service in_mem_cache(database)[In Memory Cache] in localhost
-    service api_server(server)[API Server] in localhost
-    service frontend(server)[Static File Server] in localhost
-    service reverse_proxy(server)[Reverse Proxy] in localhost
-    service scheduler(server)[Scheduler] in localhost
-    service internet(internet)[Internet]
-
-    internet:B --> T:reverse_proxy
-    reverse_proxy:R --> L:api_server
-    reverse_proxy:L --> R:frontend
-    api_server:R --> L:db
-    api_server:B --> L:in_mem_cache
-    scheduler:L --> R:db
-    scheduler:B --> R:in_mem_cache
-```
-
-#### Production
-
-```mermaid
-architecture-beta
-    group ec2(cloud)[AWS EC2]
-    service db(database)[Relational Database] in ec2
-    service in_mem_cache(database)[In Memory Cache] in ec2
-    service api_server(server)[API Server] in ec2
-    service reverse_proxy(server)[Reverse Proxy] in ec2
-    service scheduler(server)[Scheduler] in ec2
-    service internet(internet)[Internet]
-    service cloudflare(cloud)[Cloudflare]
-    service cloudflare_pages(server)[Cloudflare Pages]
-    service github(server)[GitHub]
-
-    internet:B --> T:cloudflare
-    cloudflare:L --> R:cloudflare_pages
-    cloudflare_pages:B --> T:github
-    cloudflare:B --> T:reverse_proxy
-    reverse_proxy:R --> L:api_server
-    api_server:R --> L:db
-    api_server:B --> L:in_mem_cache
-    scheduler:L --> R:db
-    scheduler:B --> R:in_mem_cache
-```
-
-### Branches
-
-```mermaid
-%%{init: { 'theme': 'base', 'gitGraph': {'showCommitLabel': false}} }%%
-gitGraph
-   commit
-   commit
-   branch plan/0001-xxx
-   switch plan/0001-xxx
-   commit
-   commit
-   switch main
-   merge plan/0001-xxx
-   commit
-   branch impl/0001-xxx
-   switch impl/0001-xxx
-   commit
-   commit
-   switch main
-   merge impl/0001-xxx
-   commit
-```
-
-### Tech Stack
-
-- API Server
-  - Programming Language: Python
-  - Framework: Django
-- Frontend
-  - Programming Language: TypeScript
-  - Framework: React
-- Database: PostgreSQL
-- Cache: Redis
-- Reverse Proxy: Nginx
-- Scheduler
-  - Programming Language: Python
+Taigu is a stock portfolio tracker built for the Taiwan stock market. This README covers how to develop and deploy it. What the product does and how the system is built are in `docs/specs/`: start from [`product.md`](docs/specs/product.md) and [`architecture.md`](docs/specs/architecture.md).
 
 ## 🧑🏻‍💻 Development
+
+### Repository Layout
+
+| Directory | What it holds |
+| --- | --- |
+| `api-server/` | The Django API server, including the management commands that the scheduler runs |
+| `frontend/` | The React web app, which Cloudflare Pages builds and serves |
+| `scheduler/` | The APScheduler process that runs api-server management commands on a schedule |
+| `reverse-proxy/` | The Nginx configs for dev and prod |
+| `design/` | Interactive drafts of screens, served at `/design/` in dev |
+| `docs/` | The specs (`docs/specs/`), plans, and roadmap (`docs/plans/`) |
+| `tests/manual/` | The steps of the spec scenarios that need a manual check |
+| `scripts/` | The scripts behind the Makefile targets |
 
 ### Prerequisites
 
@@ -154,10 +82,8 @@ gitGraph
 - **Step 2:** Complete your work, then commit and push your changes.
 - **Step 3:** Open a pull request on GitHub and obtain approval for your PR.
 - **Step 4:** Merge your branch into `main`.
-- **Step 5:** Build new images for **production** from the latest `main` on your local machine.
-- **Step 6:** Push the new images to Docker Hub.
-- **Step 7:** SSH into the EC2 instance, pull the latest code and images.
-- **Step 8:** Restart all Docker containers. You're done!
+- **Step 5:** Wait for the "Build and push production images" workflow on GitHub Actions to push the new images to Docker Hub.
+- **Step 6:** SSH into the EC2 instance and deploy as [Deploying a New Version](#deploying-a-new-version) describes. You're done!
 
 ### Spec-Driven Development
 
@@ -168,6 +94,29 @@ Every change to spec'd behavior or architecture starts from a plan, and code fol
 - `tests/manual/` holds the steps for the scenarios that need a manual check.
 - A change that alters behavior goes through a `plan/NNNN-xxx` branch, then an `impl/NNNN-xxx` branch. A behavior-preserving change, such as a bug fix that restores spec'd behavior or a refactor, uses a `change/xxx` branch, writing the spec of an existing capability uses a `backfill/xxx` branch, and abandoning an approved plan uses an `abandon/NNNN-xxx` branch. A trivial change on the skill's whitelist, such as a typo fix, takes any branch name.
 - `make check-scenarios` checks that every scenario in `docs/specs/` has a test or a manual check; `make test` and CI run it too.
+
+A behavior change reaches `main` in two merges, the plan first and then its implementation:
+
+```mermaid
+%%{init: { 'theme': 'base', 'gitGraph': {'showCommitLabel': false}} }%%
+gitGraph
+   commit
+   commit
+   branch plan/0001-xxx
+   switch plan/0001-xxx
+   commit
+   commit
+   switch main
+   merge plan/0001-xxx
+   commit
+   branch impl/0001-xxx
+   switch impl/0001-xxx
+   commit
+   commit
+   switch main
+   merge impl/0001-xxx
+   commit
+```
 
 ### Dependency Management
 
