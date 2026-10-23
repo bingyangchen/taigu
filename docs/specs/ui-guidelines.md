@@ -6,7 +6,7 @@
 
 介面使用台灣的繁體中文。語氣務實、簡潔、友善、精確，不用行銷話術，也不用聽起來像投資建議的說法。
 
-## Design token、共用元件與 Icon
+## Design Token、共用元件與 Icon
 
 顏色、斷點與版面尺寸都是 `frontend/src/_design_system.scss` 裡的 SCSS token，基本的字型寫在 `frontend/src/index.scss`，這兩個檔案以外不寫死這些數值。共用元件放在 `frontend/src/components/`，icon 放在 `frontend/src/icons/`。
 

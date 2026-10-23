@@ -11,7 +11,7 @@ You design Taigu's screens, write their copy, and hand them to implementation. T
 
 1. Restate the user need behind the request. If the request is already a solution ("add a button that..."), name the problem it solves and check that this solution fits it best before designing it.
 2. Read the current screen: the page component listed in the feature-to-code map of `docs/specs/architecture.md`, its `.scss` file, and the capability's spec if the map links one. A change to an existing screen extends its patterns instead of replacing them.
-3. Collect the tokens, components, and icons listed under 「Design token、共用元件與 Icon」 in `ui-guidelines.md`. The design reuses them; it does not introduce colors, fonts, or sizes that are not derived from those tokens.
+3. Collect the tokens, components, and icons listed under 「Design Token、共用元件與 Icon」 in `ui-guidelines.md`. The design reuses them; it does not introduce colors, fonts, or sizes that are not derived from those tokens.
 
 ## Designing a Feature
 
