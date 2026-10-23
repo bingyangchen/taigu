@@ -1,12 +1,17 @@
 # ruff: noqa: ANN401
+import importlib.util
+import inspect
 import json
+from collections.abc import Callable, Iterator
 from unittest.mock import Mock, patch
 
 import pytest
+from django.apps import apps
 from django.http import HttpRequest, JsonResponse
 
 from main.account import OAuthOrganization
 from main.account.models import User
+from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 
 
@@ -245,3 +250,36 @@ class TestRateLimitDecorator:
         assert call1_key != call2_key
         assert f":{authenticated_user.id}" in call1_key
         assert f":{user2.id}" in call2_key
+
+
+def _get_view_functions() -> Iterator[Callable]:
+    for app_config in apps.get_app_configs():
+        if not app_config.name.startswith("main.") or not importlib.util.find_spec(
+            f"{app_config.name}.views"
+        ):
+            continue
+        module = importlib.import_module(f"{app_config.name}.views")
+        for _, function in inspect.getmembers(module, inspect.isfunction):
+            if function.__module__ == module.__name__:
+                yield function
+
+
+def test_rate_limit_never_runs_before_login_check() -> None:
+    """
+    A request whose access token has expired must get 401, so the frontend
+    refreshes the token and retries, instead of a 429 from the quota that all
+    anonymous requests share.
+    """
+    require_login_code = require_login(lambda request: None).__code__
+    rate_limit_code = rate_limit(rate=1)(lambda request: None).__code__
+
+    for function in _get_view_functions():
+        layer_codes = []
+        layer: Callable | None = function
+        while layer is not None:
+            layer_codes.append(layer.__code__)
+            layer = getattr(layer, "__wrapped__", None)
+        if require_login_code in layer_codes and rate_limit_code in layer_codes:
+            assert layer_codes.index(require_login_code) < layer_codes.index(
+                rate_limit_code
+            ), f"{function.__module__}.{function.__qualname__}"

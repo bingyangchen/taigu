@@ -68,6 +68,8 @@ def rate_limit(rate: float, capacity: int | None = None) -> Callable:
 
     - rate: request per second
     - capacity: "burst size" (the maximum number of requests allowed in a moment)
+
+    On an endpoint that requires login, put it below @require_login.
     """
 
     if capacity is None:

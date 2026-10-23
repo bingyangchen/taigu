@@ -12,9 +12,9 @@ from main.handling_fee.models import HandlingFeeDiscountRecord
 logger = logging.getLogger(__name__)
 
 
-@rate_limit(rate=2)
 @require_http_methods(["POST", "GET"])
 @require_login
+@rate_limit(rate=2)
 def create_or_list_discount(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         return _create_discount(request)
@@ -24,9 +24,9 @@ def create_or_list_discount(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
-@rate_limit(rate=1)
 @require_http_methods(["PUT", "DELETE"])
 @require_login
+@rate_limit(rate=1)
 def update_or_delete_discount(request: HttpRequest, id: str | int) -> JsonResponse:
     if request.method == "PUT":
         return _update_discount(request, id)

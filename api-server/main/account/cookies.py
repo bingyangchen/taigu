@@ -1,12 +1,17 @@
+from django.core import signing
 from django.http import HttpRequest, HttpResponse
+from django.utils.crypto import constant_time_compare
 
-from main.account import ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME
+from main.account import ACCESS_COOKIE_NAME, OAUTH_COOKIE_NAME, REFRESH_COOKIE_NAME
 from main.account.tokens import ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE
 from main.env import Env, env
 from main.origins import get_public_frontend_host
 
 AUTH_COOKIE_HANDLED_ATTRIBUTE = "_auth_cookie_handled"
 REFRESH_COOKIE_PATH = "/api/account"
+OAUTH_COOKIE_PATH = "/api/account"
+OAUTH_COOKIE_MAX_AGE = 10 * 60
+OAUTH_COOKIE_SALT = "main.account.cookies.oauth"
 
 # TODO: Cookies issued before 2026-07 used these names, scoped to the registrable domain
 # in prod. Every authenticated response now expires them so stale copies leave the
@@ -106,3 +111,43 @@ def delete_refresh_cookie(response: HttpResponse) -> HttpResponse:
 def delete_auth_cookies(response: HttpResponse) -> HttpResponse:
     response = delete_access_cookie(response)
     return delete_refresh_cookie(response)
+
+
+def set_oauth_cookie(
+    response: HttpResponse, state: str, code_verifier: str
+) -> HttpResponse:
+    response.set_cookie(
+        key=OAUTH_COOKIE_NAME,
+        value=signing.dumps(
+            {"state": state, "code_verifier": code_verifier}, salt=OAUTH_COOKIE_SALT
+        ),
+        max_age=OAUTH_COOKIE_MAX_AGE,
+        secure=True,
+        httponly=True,
+        path=OAUTH_COOKIE_PATH,
+        samesite="Strict",
+    )
+    return response
+
+
+def get_oauth_code_verifier(request: HttpRequest, state: str) -> str | None:
+    """
+    None means the authorization must be rejected: the cookie is missing, not signed
+    by api-server, older than OAUTH_COOKIE_MAX_AGE, or `state` does not match.
+    """
+    try:
+        authorization = signing.loads(
+            request.COOKIES.get(OAUTH_COOKIE_NAME, ""),
+            salt=OAUTH_COOKIE_SALT,
+            max_age=OAUTH_COOKIE_MAX_AGE,
+        )
+    except signing.BadSignature:
+        return None
+    if not state or not constant_time_compare(state, authorization["state"]):
+        return None
+    return authorization["code_verifier"]
+
+
+def delete_oauth_cookie(response: HttpResponse) -> HttpResponse:
+    response.delete_cookie(OAUTH_COOKIE_NAME, path=OAUTH_COOKIE_PATH)
+    return response

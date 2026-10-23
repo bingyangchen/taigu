@@ -20,9 +20,9 @@ def _parse_plain_text_body(payload: dict) -> str | None:
     return normalized
 
 
-@rate_limit(rate=1)
 @require_POST
 @require_login
+@rate_limit(rate=1)
 def create_issue_report(request: HttpRequest) -> JsonResponse:
     payload = json.loads(request.body)
     body = _parse_plain_text_body(payload)

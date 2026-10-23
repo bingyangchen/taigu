@@ -10,9 +10,9 @@ from main.market.models import Company
 from main.stock_memo.models import StockMemo
 
 
-@rate_limit(rate=1)
 @require_POST
 @require_login
+@rate_limit(rate=1)
 def update_or_create_stock_memo(request: HttpRequest, sid: str) -> JsonResponse:
     note = json.loads(request.body)["note"] or ""
 
@@ -34,9 +34,9 @@ def update_or_create_stock_memo(request: HttpRequest, sid: str) -> JsonResponse:
     )
 
 
-@rate_limit(rate=3)
 @require_GET
 @require_login
+@rate_limit(rate=3)
 def list_company_info(request: HttpRequest) -> JsonResponse:
     sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
     if not sids:

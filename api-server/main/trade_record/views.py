@@ -21,8 +21,8 @@ from main.trade_record.models import TradeRecord
 TRADE_RECORD_SUBJECT = DataChangeLog.Subject.TRADE_RECORD
 
 
-@rate_limit(rate=2)
 @require_login
+@rate_limit(rate=2)
 @require_http_methods(["GET", "POST"])
 def create_or_list(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
@@ -145,8 +145,8 @@ def _create(request: HttpRequest) -> JsonResponse:
     return JsonResponse(_serialize_trade_record(record))
 
 
-@rate_limit(rate=1)
 @require_login
+@rate_limit(rate=1)
 @require_http_methods(["POST", "DELETE"])
 def update_or_delete(request: HttpRequest, id: str | int) -> JsonResponse:
     if request.method == "POST":

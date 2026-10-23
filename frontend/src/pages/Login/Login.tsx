@@ -4,11 +4,15 @@ import { connect } from "react-redux";
 import google from "../../assets/google.png";
 import { Button, FullLogo, PageMeta, ToastList } from "../../components";
 import { loginWithGoogle } from "../../redux/slices/AccountSlice";
+import { pushToast } from "../../redux/slices/ToastSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import { IRouter, withRouter } from "../../router";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
+import Nav from "../../utils/nav";
 import styles from "./Login.module.scss";
+
+const LOGIN_FAILED_MESSAGE = "登入失敗，請重新登入。";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.account;
@@ -47,21 +51,25 @@ class Login extends React.Component<Props, State> {
           "code",
           this.props.router.search_params.get("code") as string,
         );
+        requestBody.append("state", this.props.router.search_params.get("state") ?? "");
         requestBody.append("redirect_uri", `${window.location.origin}/login`);
         await this.props.dispatch(loginWithGoogle(requestBody)).unwrap();
 
-        const currentUrl = new URL(window.location.href);
-        currentUrl.search = "";
-        window.history.replaceState({}, "", currentUrl.href);
+        Nav.clearSearchParams();
 
         const pathAndQueryString =
           window.localStorage.getItem("pathAndQueryString") ?? Env.frontendRootPath;
         window.localStorage.removeItem("pathAndQueryString");
         this.props.router.navigate(pathAndQueryString, { replace: true });
       } catch (error) {
-        const currentUrl = new URL(window.location.href);
-        currentUrl.search = "";
-        window.history.replaceState({}, "", currentUrl.href);
+        Nav.clearSearchParams();
+      }
+    } else if (this.props.router.search_params.get("error")) {
+      const isCanceled =
+        this.props.router.search_params.get("error") === "access_denied";
+      Nav.clearSearchParams();
+      if (!isCanceled) {
+        this.props.dispatch(pushToast({ type: "error", text: LOGIN_FAILED_MESSAGE }));
       }
     }
   }

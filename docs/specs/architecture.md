@@ -60,6 +60,62 @@ Cloudflare Pages 用 `npm run build` build 前端，這是 Cloudflare Pages 上�
 
 api-server 把 JWT 放在 HTTP-only cookie，前端的 JavaScript 讀不到；會修改資料的 request，前端從 CSRF cookie 讀出 CSRF token，放進 `X-CSRFToken` header。Prod 的前端在 `taigu.tw`、api-server 在 `api.taigu.tw`，dev 環境的兩者都在 `local.taigu.tw`，所以 prod 的 CSRF cookie 設在 `.taigu.tw`，前端才讀得到，放 JWT 的 cookie 則只屬於 api-server 的網域。登入狀態維持多久，以及 refresh token 的 rotation，見 ACCT-R5 與 ACCT-R6。
 
+### Google 授權
+
+登入（ACCT-R1）與改綁（ACCT-R11）的 request 照下圖的順序處理，授權要通過的檢查見 ACCT-R12：
+
+```mermaid
+sequenceDiagram
+  participant B as 瀏覽器（前端）
+  participant A as api-server
+  participant G as Google
+  B->>A: 開始 Google 授權
+  A-->>B: 回傳 Google 的授權網址，並把 state 與 code verifier 存進簽章的 cookie
+  B->>G: 開啟授權網址
+  G-->>B: 使用者同意授權之後，帶著 code 與 state 回到 Taigu
+  B->>A: 送出 code 與 state，並帶上 cookie
+  opt 改綁時 access token 已經過期
+    A-->>B: 回 401，不刪除 cookie
+    B->>A: 換發 access token 之後，重送同一個 request
+  end
+  alt state 跟 cookie 裡的不一致，或沒有 cookie
+    A-->>B: 回 400 與 ACCT-R13 的錯誤提示
+  else state 一致
+    A->>A: 刪除 cookie
+    A->>G: 用 code 與 code verifier 換 token
+    alt Google 接受授權結果
+      G-->>A: 回傳 ID token
+      A-->>B: 完成登入或改綁
+    else Google 不接受授權結果，或連不上 Google
+      A-->>B: 回 400 或 502 與 ACCT-R13 的錯誤提示
+    end
+  end
+```
+
+放 `state` 與 PKCE 的 code verifier 的 cookie 由 Django 的 `SECRET_KEY` 簽章，而且是 HTTP-only，只屬於 api-server 的網域，SameSite 是 `Strict`；cookie 的期限，以及同一個瀏覽器開始好幾次授權時哪一次能通過檢查，見 ACCT-R12。api-server 處理改綁的 request 時，先確認登入狀態，再比對 `state`，所以 access token 過期時，api-server 在刪除 cookie 之前就回 401，前端換發 access token 之後重送的 request 仍能通過檢查。
+
+> 設計理由：`state` 與 code verifier 存在 api-server 簽章的 cookie，而不是 Django session 或前端的 sessionStorage。不用 Django session，是因為 Taigu 的登入用的是 JWT cookie，沒有用 Django session，存進 Django session 的話，每次開始授權都要在資料庫寫一筆 session，還要另外清掉過期的 session；不存在前端的 sessionStorage、由前端比對 `state`，是因為這樣 api-server 仍然會拿任何送來的 `code` 去換 token，而且 code verifier 會變成 JavaScript 讀得到的值。完整討論見 [0001](../plans/archive/0001-oauth-state-check.md)。
+
+授權沒有完成時，api-server 把 ACCT-R13 的錯誤提示放在回應的 `message`，前端把 `message` 顯示成錯誤提示。回應的 status code 依原因而不同：
+
+- 沒通過 `state` 的檢查、Google 不接受授權結果，或無法確認 ID token 真的來自 Google 時，api-server 回 400。
+- 連不上 Google 或 Google 回 5xx 時，api-server 回 502。
+- Google 的 token endpoint 回 `invalid_grant` 以外的錯誤（例如 client secret 錯誤時的 `invalid_client`）時，api-server 不處理這些錯誤，request 會得到 500，因為這些錯誤代表 api-server 的設定有問題，不是這次授權的問題。
+
+上面這些情況都不能回 401 或 403，因為前端收到這兩個 status code 時會當成登入狀態結束，帳號綁定頁的使用者會因此被登出。Google 帶回的 `error` 只由前端處理，不會送到 api-server。
+
+Google 與瀏覽器在這個流程裡的行為如下：
+
+- Google 接受 web application 類型、帶 client secret 的 OAuth client 使用 PKCE。2026-10 實測時，授權網址帶 `code_challenge_method=S256` 時 Google 照常換到選擇帳號的畫面，帶不支援的值時 Google 顯示 `invalid_request`；token endpoint 同時收到 client secret 與 `code_verifier` 時，用不存在的 `code` 得到的是 `invalid_grant`，不是跟 PKCE 有關的錯誤。在桌面 Chrome 用真實的 Google 帳號執行 ACCT-R12.4 時，api-server 帶著 code verifier 換到了 token，使用者完成登入。
+- 在桌面 Chrome 用真實的 Google 帳號，以及在 Chromium（Playwright 1.64）實測時，頁面從 Google 或其他網站被帶回 Taigu 之後，前端送給 api-server 的 request 仍帶著 SameSite 為 `Strict` 的 cookie，這個 cookie 是頁面換到其他網站之前存下的。Prod 的前端與 api-server 分別在 `taigu.tw` 與 `api.taigu.tw`，屬於同一個 site，所以 SameSite 的規則跟 dev 環境一樣。
+- 在桌面 Chrome 實測時，使用者在 Google 的畫面取消授權之後，Google 帶回 Taigu 的網址有 `error=access_denied` 與 `state`，沒有 `code`。依 [Google 的文件](https://developers.google.com/identity/protocols/oauth2/web-server)，其他錯誤（例如 `redirect_uri_mismatch`、`admin_policy_enforced`）顯示在 Google 自己的錯誤頁，不會帶回 Taigu。
+
+### 需要登入的 Endpoint 的 Rate Limit
+
+需要登入的 endpoint 都先確認登入狀態，再套用 rate limit，所以未登入的 request 在確認登入狀態時就得到 401，不會用掉 rate limit 的額度。
+
+> 設計理由：Rate limit 把所有未登入的 request 算在同一個 key，所以 rate limit 放在確認登入狀態之前的話，access token 過期的 request 會跟其他未登入的 request 共用額度，剛好有其他未登入的 request 用完額度時，這個 request 會得到 429，前端也不會換發 access token 再重送。沒有改成在遇到未登入的 request 時用 IP 當 key，因為同一個 IP 後面的使用者（例如同一個公司網路裡的人）仍會共用 rate limit 的額度，而且 access token 過期的 request 會先用掉一次額度、得到 401，換發 access token 之後重送時再用一次。完整討論見 [0001](../plans/archive/0001-oauth-state-check.md)。
+
 ## 前端
 
 - 交易紀錄存在瀏覽器的 IndexedDB。api-server 用 `DataChangeLog` 記錄使用者每次新增、修改或刪除交易紀錄，前端記下最後同步到的 revision，之後只向 api-server 要這個 revision 之後變動的紀錄。大盤指數的歷史收盤價也存在 IndexedDB，前端只向 api-server 要最新一筆之後的資料。

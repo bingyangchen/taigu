@@ -72,9 +72,9 @@ def _start_subscription(request: HttpRequest) -> JsonResponse:
     return JsonResponse(checkout)
 
 
-@rate_limit(rate=0.5)
 @require_POST
 @require_login
+@rate_limit(rate=0.5)
 def cancel_subscription(request: HttpRequest) -> JsonResponse:
     profile = ensure_billing_profile(request.user)
     if profile.plan != Plan.STANDARD or profile.subscription_status not in [
