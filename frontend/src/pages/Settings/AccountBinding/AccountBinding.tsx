@@ -23,7 +23,7 @@ import Nav from "../../../utils/nav";
 import Util from "../../../utils/util";
 import styles from "./AccountBinding.module.scss";
 
-const BINDING_FAILED_MESSAGE = "綁定的帳號沒有更換，請重新更換綁定的帳號。";
+const BINDING_FAILED_MESSAGE = "更換綁定的帳號失敗，請再試一次。";
 
 function mapStateToProps(rootState: RootState) {
   const { email, isWaiting } = rootState.account;

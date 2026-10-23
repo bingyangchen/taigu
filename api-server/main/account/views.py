@@ -62,8 +62,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 GOOGLE_REQUEST_TIMEOUT_SECONDS = 10
-GOOGLE_LOGIN_FAILED_MESSAGE = "登入沒有完成，請重新登入。"
-GOOGLE_BINDING_FAILED_MESSAGE = "綁定的帳號沒有更換，請重新更換綁定的帳號。"
+GOOGLE_LOGIN_FAILED_MESSAGE = "登入失敗，請重新登入。"
+GOOGLE_BINDING_FAILED_MESSAGE = "更換綁定的帳號失敗，請再試一次。"
 OPEN_SESSION_LAST_LOGIN_UPDATE_INTERVAL = timedelta(minutes=5)
 
 

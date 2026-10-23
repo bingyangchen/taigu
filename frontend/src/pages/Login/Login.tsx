@@ -12,7 +12,7 @@ import Env from "../../utils/env";
 import Nav from "../../utils/nav";
 import styles from "./Login.module.scss";
 
-const LOGIN_FAILED_MESSAGE = "登入沒有完成，請重新登入。";
+const LOGIN_FAILED_MESSAGE = "登入失敗，請重新登入。";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.account;
