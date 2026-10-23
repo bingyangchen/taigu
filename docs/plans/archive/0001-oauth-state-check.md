@@ -1,7 +1,7 @@
 ---
 id: "0001"
 title: oauth-state-check
-status: approved
+status: done
 specs:
   - account.md
 depends_on: []

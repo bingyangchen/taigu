@@ -24,9 +24,9 @@ def create_or_list_trade_plans(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"message": "Method Not Allowed"}, status=405)
 
 
-@rate_limit(rate=1)
 @require_POST
 @require_login
+@rate_limit(rate=1)
 def create_trade_plan(request: HttpRequest) -> JsonResponse:
     payload = json.loads(request.body)
 
@@ -71,9 +71,9 @@ def create_trade_plan(request: HttpRequest) -> JsonResponse:
     )
 
 
-@rate_limit(rate=2)
 @require_GET
 @require_login
+@rate_limit(rate=2)
 def list_trade_plans(request: HttpRequest) -> JsonResponse:
     if sids := [
         sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid
@@ -100,8 +100,8 @@ def list_trade_plans(request: HttpRequest) -> JsonResponse:
     )
 
 
-@rate_limit(rate=1)
 @require_login
+@rate_limit(rate=1)
 @require_http_methods(["POST", "DELETE"])
 def update_or_delete_trade_plan(request: HttpRequest, id: str | int) -> JsonResponse:
     if request.method == "POST":

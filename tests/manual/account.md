@@ -1,6 +1,21 @@
 注意：這份檔案的指令會刪除或修改開發環境資料庫裡的資料，包括登入帳號的紀錄，所以要用只拿來測試的 Google 帳號登入，不要用存有真實資料的帳號。
 
-執行 `make start`，準備一個能登入的 Google 帳號，再用 Chrome 開啟 `https://local.taigu.tw`。ACCT-R11.1 另外需要第二個 Google 帳號。步驟寫「在桌面瀏覽器上」時直接用 Chrome；寫「在行動裝置上」時，開啟 DevTools 的裝置模擬（Toggle device toolbar）並選一款手機，再重新整理頁面，因為 Taigu 依 user agent 判斷是不是行動裝置。下面的指令要把 `<Email>` 換成登入用的 Google 帳號的 Email。步驟寫「登出」時，開啟 `https://local.taigu.tw/settings`，點「登出」，再點確認視窗裡的「登出」。步驟寫「用 Google 帳號登入」時，開啟 `https://local.taigu.tw/login`，點 Google 登入按鈕，在 Google 的畫面選擇帳號並同意授權。步驟寫「刪除短效的登入 cookie」時，在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`，這個 cookie 原本在 15 分鐘後過期，刪除它等於閒置超過 15 分鐘。
+執行 `make start`，準備一個能登入的 Google 帳號，再用 Chrome 開啟 `https://local.taigu.tw`。下面的指令要把 `<Email>` 換成登入用的 Google 帳號的 Email。
+
+ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 另外需要第二個 Google 帳號，而且第二個 Google 帳號不能綁定任何 Taigu 帳號。如果第二個 Google 帳號在本機登入過，先照 ACCT-R11.1 的步驟 1 刪除綁定它的 Taigu 帳號。這些情境開始之前，也要先照 ACCT-R11.1 的步驟 2 在 Chrome 登入第二個 Google 帳號，用到訪客視窗的情境也要在訪客視窗登入第二個 Google 帳號，否則 Google 可能直接用第一個帳號授權。
+
+步驟裡的下面這些說法代表固定的操作：
+
+- 「在桌面瀏覽器上」：直接用 Chrome。
+- 「在行動裝置上」：開啟 DevTools 的裝置模擬（Toggle device toolbar）並選一款手機，再重新整理頁面，因為 Taigu 依 user agent 判斷是不是行動裝置。
+- 「登出」：開啟 `https://local.taigu.tw/settings`，點「登出」，再點確認視窗裡的「登出」。
+- 「用 Google 帳號登入」：開啟 `https://local.taigu.tw/login`，點 Google 登入按鈕，在 Google 的畫面選擇帳號並同意授權。
+- 「刪除短效的登入 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。這個 cookie 原本在 15 分鐘後過期，所以刪除它等於閒置超過 15 分鐘。
+- 「開始更換綁定的帳號」：開啟 `https://local.taigu.tw/settings/account-binding`，點「更換綁定的帳號」，再點「綁定 Google 帳號」。
+- 「訪客視窗」：指 Chrome 選單的「開啟訪客視窗」開出來的視窗。訪客視窗的 cookie 跟原本的 Chrome 分開，所以可以當成另一個人的瀏覽器。
+- 「擋下 `<路徑>` 的 request」：在 DevTools 按 Cmd+Shift+P，執行「Show Network request blocking」，勾選「Enable network request blocking」，再新增 pattern `*<路徑>*`。
+- 「取消擋下 request」：取消勾選「Enable network request blocking」。
+- 「複製 Google 帶回的網址」：在 DevTools 的 Network 面板找到 Type 是 document、名稱以 `login?` 或 `account-binding?` 開頭的那一筆 request，按右鍵選 Copy > Copy URL。因為前端在送出授權結果之後就會移除網址上的參數，所以有這一步的情境，都要在開始授權之前先開啟 DevTools 的 Network 面板，並勾選「Preserve log」。
 
 ## ACCT-R1.1 從登入頁登入
 
@@ -348,7 +363,7 @@
 18. 用第二個 Google 帳號登入。
 19. 開啟 `https://local.taigu.tw/settings`。
 
-預期：改綁後畫面顯示「成功綁定」，綁定的帳號顯示第二個 Google 帳號的 Email；設定頁的名字與頭像換成第二個 Google 帳號的名字與頭像，不再是「小明」；用第二個 Google 帳號登入後進到同一個帳號，設定頁顯示的名字是「改綁測試」。檢查完之後，可以照步驟 7 到 10 改綁回第一個 Google 帳號。
+預期：改綁後畫面顯示「成功綁定」，綁定的帳號顯示第二個 Google 帳號的 Email；設定頁的名字與頭像換成第二個 Google 帳號的名字與頭像，不再是「小明」；用第二個 Google 帳號登入後進到同一個帳號，設定頁顯示的名字是「改綁測試」。檢查完之後，可以照步驟 7 到 10 改綁回第一個 Google 帳號，在步驟 10 改選第一個 Google 帳號。
 
 ## ACCT-R11.2 選了已經綁定 Taigu 帳號的 Google 帳號
 
@@ -363,3 +378,244 @@
 7. 等畫面回到 `/settings/account-binding`。
 
 預期：Taigu 不改綁，帳號綁定頁仍顯示步驟 3 記下的 Email。
+
+## ACCT-R12.1 開啟別人傳來的登入連結
+
+後端的 test 驗證了 api-server 拒絕沒有對應 cookie 的授權結果，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+
+1. 開啟訪客視窗。
+2. 在訪客視窗開啟 DevTools 的 Network 面板。
+3. 在 Network 面板勾選「Preserve log」。
+4. 在訪客視窗擋下 `/api/account/google-login` 的 request。
+5. 在訪客視窗開啟 `https://local.taigu.tw/login`。
+6. 點 Google 登入按鈕。
+7. 在 Google 的畫面選擇帳號並同意授權。
+8. 在訪客視窗複製 Google 帶回的網址。
+9. 關閉訪客視窗。
+10. 如果原本的 Chrome 已登入，登出。
+11. 在原本的 Chrome 開啟步驟 8 複製的網址。
+12. 確認畫面的狀態。
+13. 開啟 `https://local.taigu.tw/`。
+
+預期：步驟 12 的畫面留在登入頁，網址不再帶有 `code` 與 `state`，並顯示錯誤提示「登入沒有完成，請重新登入。」；步驟 13 的畫面換到歡迎頁 `/welcome`。
+
+## ACCT-R12.2 開啟別人傳來的改綁連結
+
+後端的 test 驗證了 api-server 拒絕沒有對應 cookie 的授權結果，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+
+1. 在原本的 Chrome 用 Google 帳號登入。
+2. 開啟 `https://local.taigu.tw/settings/account-binding`。
+3. 記下綁定的帳號顯示的 Email。
+4. 開啟訪客視窗。
+5. 在訪客視窗用同一個 Google 帳號登入。
+6. 在訪客視窗開啟 DevTools 的 Network 面板。
+7. 在 Network 面板勾選「Preserve log」。
+8. 在訪客視窗擋下 `/api/account/change-binding` 的 request。
+9. 在訪客視窗開始更換綁定的帳號。
+10. 在 Google 的畫面選擇第二個 Google 帳號並同意授權。
+11. 在訪客視窗複製 Google 帶回的網址。
+12. 關閉訪客視窗。
+13. 在原本的 Chrome 開啟步驟 11 複製的網址。
+14. 確認畫面的狀態。
+15. 登出。
+16. 用步驟 1 的 Google 帳號登入。
+17. 開啟 `https://local.taigu.tw/settings/account-binding`。
+
+預期：步驟 14 的帳號綁定頁仍顯示步驟 3 記下的 Email，網址不再帶有 `code` 與 `state`，並顯示錯誤提示「綁定的帳號沒有更換，請重新更換綁定的帳號。」；步驟 17 的帳號綁定頁也顯示步驟 3 記下的 Email。
+
+## ACCT-R12.3 開始登入超過 10 分鐘才回到 Taigu
+
+後端的 test 驗證了 api-server 拒絕開始超過 10 分鐘的授權，瀏覽器保存 cookie 的時間與畫面的變化要在瀏覽器上確認。
+
+1. 如果已登入，登出。
+2. 開啟 `https://local.taigu.tw/login`。
+3. 點 Google 登入按鈕。
+4. 在 Google 的畫面等 11 分鐘。
+5. 選擇帳號並同意授權。
+6. 確認畫面的狀態。
+7. 開啟 `https://local.taigu.tw/`。
+
+預期：步驟 6 的畫面回到登入頁，並顯示錯誤提示「登入沒有完成，請重新登入。」；步驟 7 的畫面換到歡迎頁 `/welcome`。
+
+## ACCT-R12.4 同一個瀏覽器先後開始兩次登入
+
+後端的 test 驗證了 api-server 只接受最近一次開始的授權，兩個分頁的畫面要在瀏覽器上確認。
+
+1. 如果已登入，登出。
+2. 如果 DevTools 的 Application > Local Storage > `https://local.taigu.tw` 有 `pathAndQueryString`，刪除這一筆。
+3. 在分頁 A 開啟 `https://local.taigu.tw/login`。
+4. 在分頁 A 點 Google 登入按鈕，停在 Google 的畫面。
+5. 在分頁 B 開啟 `https://local.taigu.tw/login`。
+6. 在分頁 B 點 Google 登入按鈕，停在 Google 的畫面。
+7. 在分頁 A 選擇帳號並同意授權。
+8. 確認分頁 A 的畫面。
+9. 在分頁 B 選擇帳號並同意授權。
+10. 確認分頁 B 的畫面。
+
+預期：步驟 8 的分頁 A 回到登入頁，並顯示錯誤提示「登入沒有完成，請重新登入。」；步驟 10 的分頁 B 完成登入，畫面換到儀表板 `/`。
+
+## ACCT-R12.5 未登入時開啟別人傳來的改綁連結
+
+前端沒有自動化 test。
+
+1. 在原本的 Chrome 用 Google 帳號登入。
+2. 開啟 `https://local.taigu.tw/settings/account-binding`。
+3. 記下綁定的帳號顯示的 Email。
+4. 登出。
+5. 開啟訪客視窗。
+6. 在訪客視窗用同一個 Google 帳號登入。
+7. 在訪客視窗開啟 DevTools 的 Network 面板。
+8. 在 Network 面板勾選「Preserve log」。
+9. 在訪客視窗擋下 `/api/account/change-binding` 的 request。
+10. 在訪客視窗開始更換綁定的帳號。
+11. 在 Google 的畫面選擇第二個 Google 帳號並同意授權。
+12. 在訪客視窗複製 Google 帶回的網址。
+13. 關閉訪客視窗。
+14. 在原本的 Chrome 開啟步驟 12 複製的網址。
+15. 確認畫面換到歡迎頁 `/welcome`。
+16. 用步驟 1 的 Google 帳號登入。
+
+預期：登入之後畫面換回帳號綁定頁，綁定的帳號顯示步驟 3 記下的 Email，網址不再帶有 `code` 與 `state`，並顯示錯誤提示「綁定的帳號沒有更換，請重新更換綁定的帳號。」。
+
+## ACCT-R12.6 Access Token 過期時更換綁定的帳號
+
+後端的 test 驗證了有一個未登入的 request 先送到更換綁定帳號的 API 之後，access token 過期的 request 仍得到 401、cookie 沒有被刪除，換發 access token 之後重送的 request 能完成改綁；前端換發 access token 之後重送 request 的部分沒有自動化 test。
+
+1. 用 Google 帳號登入。
+2. 開啟 `https://local.taigu.tw/settings/account-binding`。
+3. 刪除短效的登入 cookie。
+4. 點「更換綁定的帳號」。
+5. 點「綁定 Google 帳號」，停在 Google 的畫面。
+6. 在 repo 的根目錄執行下面的指令。這個指令會在接下來的 60 秒內，每秒送一個未登入、但通過 CSRF 檢查的 request 到更換綁定帳號的 API：
+
+   ```bash
+   curl -sk -c /tmp/taigu-anonymous -o /dev/null "https://local.taigu.tw/api/account/authorization-url?redirect_uri=https://local.taigu.tw/login" && for i in $(seq 60); do curl -sk -b /tmp/taigu-anonymous -H "X-CSRFToken: $(awk '$6=="csrftoken"{print $7}' /tmp/taigu-anonymous)" -H "Origin: https://local.taigu.tw" -o /dev/null -w "%{http_code}\n" -X POST https://local.taigu.tw/api/account/change-binding; sleep 1; done
+   ```
+
+7. 在指令執行的期間，在 Google 的畫面選擇第二個 Google 帳號並同意授權。
+8. 確認畫面的狀態。
+9. 確認指令印出的每一行 status code 都是 `401`。
+
+預期：步驟 8 的畫面回到帳號綁定頁並顯示「成功綁定」，綁定的帳號顯示第二個 Google 帳號的 Email；步驟 9 的每一行都是 `401`。檢查完之後，可以照 ACCT-R11.1 的步驟 7 到 10 改綁回第一個 Google 帳號，在步驟 10 改選第一個 Google 帳號。
+
+## ACCT-R13.1 登入時 Google 不接受授權結果
+
+後端的 test 驗證了 Google 不接受授權結果時 api-server 的回應，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+
+1. 如果已登入，登出。
+2. 開啟 DevTools 的 Network 面板。
+3. 在 Network 面板勾選「Preserve log」。
+4. 擋下 `/api/account/google-login` 的 request。
+5. 開啟 `https://local.taigu.tw/login`。
+6. 點 Google 登入按鈕。
+7. 在 Google 的畫面選擇帳號並同意授權。
+8. 複製 Google 帶回的網址。
+9. 把網址裡 `code=` 後面的值的最後一個字元換成別的字元，`state` 不改。
+10. 取消擋下 request。
+11. 在同一個分頁開啟步驟 9 改過的網址。
+12. 確認畫面的狀態。
+13. 開啟 `https://local.taigu.tw/`。
+
+預期：步驟 12 的畫面留在登入頁，網址不再帶有 `code` 與 `state`，並顯示錯誤提示「登入沒有完成，請重新登入。」；步驟 13 的畫面換到歡迎頁 `/welcome`。
+
+## ACCT-R13.2 改綁時 Google 不接受授權結果
+
+後端的 test 驗證了 Google 不接受授權結果時 api-server 的回應，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+
+1. 用 Google 帳號登入。
+2. 開啟 `https://local.taigu.tw/settings/account-binding`。
+3. 記下綁定的帳號顯示的 Email。
+4. 開啟 DevTools 的 Network 面板。
+5. 在 Network 面板勾選「Preserve log」。
+6. 擋下 `/api/account/change-binding` 的 request。
+7. 點「更換綁定的帳號」。
+8. 點「綁定 Google 帳號」。
+9. 在 Google 的畫面選擇第二個 Google 帳號並同意授權。
+10. 複製 Google 帶回的網址。
+11. 把網址裡 `code=` 後面的值的最後一個字元換成別的字元，`state` 不改。
+12. 取消擋下 request。
+13. 在同一個分頁開啟步驟 11 改過的網址。
+
+預期：帳號綁定頁仍顯示步驟 3 記下的 Email，網址不再帶有 `code` 與 `state`，並顯示錯誤提示「綁定的帳號沒有更換，請重新更換綁定的帳號。」。
+
+## ACCT-R13.3 登入時 Taigu 連不上 Google
+
+後端的 test 驗證了連不上 Google 時 api-server 的回應，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+
+1. 如果已登入，登出。
+2. 開啟 `https://local.taigu.tw/login`。
+3. 點 Google 登入按鈕，停在 Google 的畫面。
+4. 執行下面的指令，讓 api-server 的 container 連不上 Google 的 token endpoint：
+
+   ```bash
+   docker compose -f compose.dev.yaml exec api-server sh -c 'cp /etc/hosts /etc/hosts.bak && echo "127.0.0.1 oauth2.googleapis.com" >> /etc/hosts'
+   ```
+
+5. 在 Google 的畫面選擇帳號並同意授權。
+6. 確認畫面的狀態。
+7. 執行下面的指令，讓 api-server 的 container 恢復連線：
+
+   ```bash
+   docker compose -f compose.dev.yaml exec api-server sh -c 'cp /etc/hosts.bak /etc/hosts'
+   ```
+
+預期：步驟 6 的畫面留在登入頁，網址不再帶有 `code` 與 `state`，並顯示錯誤提示「登入沒有完成，請重新登入。」，使用者沒有登入。
+
+## ACCT-R13.4 Google 帶回取消授權以外的錯誤
+
+Google 帶回的錯誤只由前端處理，前端沒有自動化 test。
+
+1. 如果已登入，登出。
+2. 開啟 `https://local.taigu.tw/login?error=server_error&state=test`。
+3. 確認畫面的狀態。
+4. 開啟 `https://local.taigu.tw/`。
+
+預期：步驟 3 的畫面留在登入頁，網址不再帶有 `error` 與 `state`，並顯示錯誤提示「登入沒有完成，請重新登入。」；步驟 4 的畫面換到歡迎頁 `/welcome`。
+
+## ACCT-R13.5 沒通過檢查又選到已經綁定的 Google 帳號
+
+後端的 test 驗證了 api-server 先檢查 `state` 再檢查 Google 帳號有沒有綁定，兩個分頁的畫面要在瀏覽器上確認。
+
+1. 用 Google 帳號登入。
+2. 開啟 `https://local.taigu.tw/settings/account-binding`。
+3. 記下綁定的帳號顯示的 Email。
+4. 在分頁 A 開始更換綁定的帳號，停在 Google 的畫面。
+5. 在分頁 B 開始更換綁定的帳號，停在 Google 的畫面。
+6. 在分頁 A 選擇目前綁定的 Google 帳號並同意授權。
+
+預期：分頁 A 回到帳號綁定頁，仍顯示步驟 3 記下的 Email，並顯示錯誤提示「綁定的帳號沒有更換，請重新更換綁定的帳號。」。
+
+## ACCT-R14.1 登入時取消授權
+
+Google 帶回的錯誤只由前端處理，前端沒有自動化 test。
+
+1. 開啟 `https://myaccount.google.com/connections`。
+2. 如果登入用的 Google 帳號已經讓 Taigu 存取資料，移除這項存取權，因為已經同意過授權時，Google 會直接帶使用者回到 Taigu，畫面上沒有取消的按鈕。
+3. 如果已登入，登出。
+4. 開啟 DevTools 的 Network 面板。
+5. 在 Network 面板勾選「Preserve log」。
+6. 開啟 `https://local.taigu.tw/login`。
+7. 點 Google 登入按鈕。
+8. 在 Google 的畫面選擇帳號。
+9. 點「取消」。
+10. 確認畫面的狀態。
+11. 複製 Google 帶回的網址。
+12. 記下網址帶了哪些參數。
+
+預期：步驟 10 的畫面回到登入頁，網址沒有 Google 帶回來的參數，畫面上沒有錯誤提示，使用者沒有登入；步驟 12 的網址帶有 `error=access_denied` 與 `state`，沒有 `code`。
+
+## ACCT-R14.2 改綁時取消授權
+
+Google 帶回的錯誤只由前端處理，前端沒有自動化 test。
+
+1. 開啟 `https://myaccount.google.com/connections`。
+2. 如果第二個 Google 帳號已經讓 Taigu 存取資料，移除這項存取權。
+3. 用 Google 帳號登入。
+4. 開啟 `https://local.taigu.tw/settings/account-binding`。
+5. 記下綁定的帳號顯示的 Email。
+6. 點「更換綁定的帳號」。
+7. 點「綁定 Google 帳號」。
+8. 在 Google 的畫面選擇第二個 Google 帳號。
+9. 點「取消」。
+
+預期：畫面回到帳號綁定頁，仍顯示步驟 5 記下的 Email，網址沒有 Google 帶回來的參數，畫面上沒有錯誤提示。

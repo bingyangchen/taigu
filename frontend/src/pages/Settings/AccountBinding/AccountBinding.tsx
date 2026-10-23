@@ -14,12 +14,16 @@ import {
 import * as Icons from "../../../icons";
 import { changeAccountBinding } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
+import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import Api from "../../../utils/api";
 import { getHideModalCallback } from "../../../utils/modal";
+import Nav from "../../../utils/nav";
 import Util from "../../../utils/util";
 import styles from "./AccountBinding.module.scss";
+
+const BINDING_FAILED_MESSAGE = "綁定的帳號沒有更換，請重新更換綁定的帳號。";
 
 function mapStateToProps(rootState: RootState) {
   const { email, isWaiting } = rootState.account;
@@ -50,15 +54,25 @@ class AccountBinding extends React.Component<Props, State> {
           "code",
           this.props.router.search_params.get("code") as string,
         );
+        requestBody.append("state", this.props.router.search_params.get("state") ?? "");
         requestBody.append(
           "redirect_uri",
           `${window.location.origin}/settings/account-binding`,
         );
         await this.props.dispatch(changeAccountBinding(requestBody)).unwrap();
       } finally {
-        const currentUrl = new URL(window.location.href);
-        currentUrl.search = "";
-        window.history.replaceState({}, "", currentUrl.href);
+        Nav.clearSearchParams();
+      }
+    } else if (this.props.router.search_params.get("error")) {
+      // When logged out, this request's 401 already sends the user to the welcome
+      // page and saves this URL for after login, so return without clearing the
+      // URL; the error is handled when the user comes back logged in (ACCT-R12).
+      if (!(await Api.sendRequest("account/me", "get"))) return;
+      const isCanceled =
+        this.props.router.search_params.get("error") === "access_denied";
+      Nav.clearSearchParams();
+      if (!isCanceled) {
+        this.props.dispatch(pushToast({ type: "error", text: BINDING_FAILED_MESSAGE }));
       }
     }
   }

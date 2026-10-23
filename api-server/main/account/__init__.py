@@ -7,3 +7,4 @@ class OAuthOrganization:
 
 ACCESS_COOKIE_NAME = "__Host-access_token"
 REFRESH_COOKIE_NAME = "__Secure-refresh_token"
+OAUTH_COOKIE_NAME = "__Secure-oauth_state"

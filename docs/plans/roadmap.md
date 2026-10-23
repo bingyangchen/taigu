@@ -6,7 +6,7 @@
 
 ```mermaid
 flowchart TD
-  oauth_state_check("驗證 OAuth state<br/>已核准"):::approved
+  oauth_state_check("驗證 OAuth state<br/>已完成"):::done
   login_account_fixes("登入與帳號修正<br/>未規劃"):::unplanned
   billing_fixes("訂閱流程修正<br/>未規劃"):::unplanned
   calculation_fixes("投資數字的計算修正<br/>未規劃"):::unplanned
@@ -22,10 +22,6 @@ flowchart TD
 ## 功能願景
 
 這一節的功能都來自補寫 spec 時發現的問題。這些行為沒有寫進 spec，等寫 plan 時再決定怎麼修。
-
-### 驗證 OAuth `state`
-
-讓使用者從 Google 回到登入頁或帳號綁定頁時，Taigu 只在這次授權是從同一個瀏覽器開始的情況下才登入或換綁，所以別人傳來的連結不能讓使用者登入別人的帳號，也不能把使用者的 Taigu 帳號改綁到別人的 Google 帳號（[plan 0001](0001-oauth-state-check.md)）。
 
 ### 登入與帳號修正
 

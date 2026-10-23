@@ -96,6 +96,11 @@ export default class Nav {
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);
   }
+  public static clearSearchParams(): void {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.search = "";
+    window.history.replaceState({}, "", currentUrl.href);
+  }
   public static goToWelcomePage(from?: string): void {
     if (Nav.isAtWelcomePage) return;
     if (from) window.localStorage.setItem("pathAndQueryString", from);

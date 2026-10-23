@@ -21,9 +21,9 @@ from main.market.models import (
 logger = logging.getLogger(__name__)
 
 
-@rate_limit(rate=2)
 @require_GET
 @require_login
+@rate_limit(rate=2)
 def market_index(request: HttpRequest) -> JsonResponse:
     result: dict = {"date": None}
     for market_id in (TradeType.TSE, TradeType.OTC):
@@ -54,9 +54,9 @@ def market_index(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
-@rate_limit(rate=3)
 @require_GET
 @require_login
+@rate_limit(rate=3)
 def current_stock_info(request: HttpRequest) -> JsonResponse:
     result = {}
     sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
@@ -73,9 +73,9 @@ def current_stock_info(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
-@rate_limit(rate=2)
 @require_GET
 @require_login
+@rate_limit(rate=2)
 def market_index_historical_prices(request: HttpRequest) -> JsonResponse:
     market = request.GET.get("market")
     if not market:
@@ -97,9 +97,9 @@ def market_index_historical_prices(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
-@rate_limit(rate=3)
 @require_GET
 @require_login
+@rate_limit(rate=3)
 def intraday_prices(request: HttpRequest) -> JsonResponse:
     if not (sid := request.GET.get("sid")):
         return JsonResponse({"error": "Missing sid"}, status=400)
@@ -138,9 +138,9 @@ def intraday_prices(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
-@rate_limit(rate=3)
 @require_GET
 @require_login
+@rate_limit(rate=3)
 def historical_prices(request: HttpRequest) -> JsonResponse:
     if not (sid := request.GET.get("sid")):
         return JsonResponse({"error": "Missing sid"}, status=400)
@@ -157,9 +157,9 @@ def historical_prices(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
-@rate_limit(rate=3)
 @require_GET
 @require_login
+@rate_limit(rate=3)
 def search(request: HttpRequest) -> JsonResponse:
     result = {"data": []}
     if keyword := request.GET.get("keyword"):
@@ -178,9 +178,9 @@ def search(request: HttpRequest) -> JsonResponse:
     return JsonResponse(result)
 
 
-@rate_limit(rate=2)
 @require_GET
 @require_login
+@rate_limit(rate=2)
 def company_names(request: HttpRequest) -> JsonResponse:
     sids = [sid for sid in request.GET.get("sids", "").strip(",").split(",") if sid]
     result = dict.fromkeys(sids, None)

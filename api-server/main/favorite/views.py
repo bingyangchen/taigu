@@ -11,8 +11,8 @@ from main.favorite.models import Favorite
 from main.market.models import Company
 
 
-@rate_limit(rate=1)
 @require_login
+@rate_limit(rate=1)
 @require_http_methods(["POST", "DELETE"])
 def create_or_delete_favorite(request: HttpRequest, sid: str) -> JsonResponse:
     if request.method == "POST":
@@ -40,9 +40,9 @@ def _delete_favorite(request: HttpRequest, sid: str) -> JsonResponse:
     return JsonResponse({"sid": sid})
 
 
-@rate_limit(rate=2)
 @require_GET
 @require_login
+@rate_limit(rate=2)
 def list_favorites(request: HttpRequest) -> JsonResponse:
     query_set = Favorite.objects.filter(owner=request.user).select_related("company")
     return JsonResponse({"data": [favorite.company.pk for favorite in query_set]})

@@ -15,8 +15,8 @@ from main.core.decorators.rate_limit import rate_limit
 from main.market.models import Company
 
 
-@rate_limit(rate=2)
 @require_login
+@rate_limit(rate=2)
 @require_http_methods(["GET", "POST"])
 def create_or_list(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
@@ -103,8 +103,8 @@ def _create(request: HttpRequest) -> JsonResponse:
     )
 
 
-@rate_limit(rate=1)
 @require_login
+@rate_limit(rate=1)
 @require_http_methods(["POST", "DELETE"])
 def update_or_delete(request: HttpRequest, id: str | int) -> JsonResponse:
     if request.method == "POST":
