@@ -222,4 +222,4 @@ flowchart TD
 
 ### Mobile App
 
-讓使用者在 iOS 與 Android 上用 app 使用 Taigu，app 的程式碼目前在 `mobile` 分支，還沒合併進 `main`。合併時，app 也要照 USAGE-R1 記下使用紀錄，平台分成 iOS app 與 Android app；如果 app 提供問題回報，送出時也要照 ISSUE-R3 記下平台，另外記下 app 的版本與作業系統的版本。
+讓使用者在 iOS 與 Android 上用 app 使用 Taigu。App 也要照 USAGE-R1 記下使用紀錄，平台分成 iOS app 與 Android app；如果 app 提供問題回報，送出時也要照 ISSUE-R3 記下平台，另外記下 app 的版本與作業系統的版本。

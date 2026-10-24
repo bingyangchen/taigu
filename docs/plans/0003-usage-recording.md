@@ -21,13 +21,13 @@ Taigu 開始記下每位登入的使用者在哪幾天、用網頁還是 PWA 使
 
 - 要做：
   - 在 `product.md` 的「範圍」加上後台，這一項在這個 plan 的 PR 裡一起改。
-  - 已登入的使用者的畫面開始顯示需要登入的頁面，或這種頁面回到前景時，Taigu 記下這位使用者當天用哪個平台使用過 Taigu（USAGE-R1），使用紀錄保留到帳號刪除為止（USAGE-R2）。
+  - 已登入的使用者的畫面開始顯示要登入才能使用的頁面，或使用者切回顯示這種頁面的分頁或 PWA 時（例如從其他分頁或其他 app 切回來），Taigu 記下這位使用者當天用哪個平台使用過 Taigu（USAGE-R1），使用紀錄保留到帳號刪除為止（USAGE-R2）。
   - Taigu 在問題回報裡記下送出時的平台與 User-Agent（ISSUE-R3）。
   - 隱私權政策寫明 Taigu 記下的使用紀錄、問題回報的內容、平台與 User-Agent、使用紀錄的用途，以及使用紀錄與問題回報的保留期間（PUB-R11），條文寫在「做法要點」。
 - 刻意不做的事：
-  - 不回補這個 plan 上線之前的使用紀錄，因為 `User.last_login` 只留使用者最後一次開啟 Taigu 的時間，交易紀錄的建立時間則只代表使用者新增過資料，兩者都跟 USAGE-R1 的定義不同。
+  - 不回補這個 plan 上線之前的使用紀錄。
   - 不做後台與統計的畫面，這些留給 roadmap 的「後台」階段。
-  - 不記錄 iOS 與 Android app 的平台，因為 app 還在 `mobile` 分支，沒有合併進 `main`。Roadmap 的「Mobile App」已經記下 app 合併時要記錄 iOS app 與 Android app 的平台。
+  - 不記錄 iOS 與 Android app 的平台，這些留給 roadmap 的「Mobile App」。
   - Roadmap 的「介面文案與數字格式修正」列出的隱私權政策問題，例如沒有提到付款資料、綠界與 Gravatar，以及沒有寫交易紀錄、Google 帳號資料這些資料保存多久，留在那個階段。
 
 ## 設計稿
@@ -48,13 +48,13 @@ Taigu 開始記下每位登入的使用者在哪幾天、用網頁還是 PWA 使
 
 已登入的使用者在下面這些時候，Taigu 記下這位使用者在這一天用哪個平台使用過 Taigu，一天以台灣時間計算：
 
-- 畫面開始顯示 Taigu 需要登入的頁面（哪些頁面需要登入見 ACCT-R3）。
+- 畫面開始顯示 Taigu 裡要登入才能使用的頁面（哪些頁面要登入才能使用見 ACCT-R3）。
 
   開啟或重新整理這種頁面、登入後 Taigu 換到這種頁面，以及在 Taigu 裡換到這種頁面，都算開始顯示這種頁面。
 
-- 顯示這種頁面的瀏覽器分頁或 PWA 從背景回到前景。
+- 使用者切回顯示這種頁面的瀏覽器分頁或 PWA。
 
-  例如使用者切回瀏覽器的分頁，或從其他 app 切回 PWA。
+  切回指的是這個分頁或 PWA 原本看不到，又重新顯示在畫面上，例如使用者從其他分頁切回 Taigu 的分頁、從其他 app 切回 PWA，或解鎖手機之後看到 Taigu。
 
 平台分成網頁與 PWA：Taigu 安裝成 PWA、在自己的視窗裡執行，畫面上沒有瀏覽器的網址列時是 PWA，在瀏覽器的分頁裡執行時是網頁。同一位使用者在同一天、同一個平台只有一筆使用紀錄。記錄沒有成功時，除了登入狀態結束的情況（處理方式見 ACCT-R5），畫面不顯示錯誤提示，正在顯示的頁面照常運作。
 
@@ -87,14 +87,14 @@ Taigu 開始記下每位登入的使用者在哪幾天、用網頁還是 PWA 使
   - 動作：台灣時間 2026/10/25 00:10 切回 Taigu 的分頁。
   - 結果：Taigu 記下這位使用者在 2026/10/25 用網頁使用過 Taigu。
 - USAGE-R1.8 隔天在 Taigu 裡換頁
-  - 前提：使用者在台灣時間 2026/10/24 23:50 在瀏覽器裡開啟儀表板，之後 Taigu 的分頁一直顯示在前景。
+  - 前提：使用者在台灣時間 2026/10/24 23:50 在瀏覽器裡開啟儀表板，之後 Taigu 的分頁一直顯示在畫面上，使用者沒有切到其他分頁。
   - 動作：台灣時間 2026/10/25 00:10 點導覽列的「市場」。
   - 結果：Taigu 記下這位使用者在 2026/10/25 用網頁使用過 Taigu。
 - USAGE-R1.9 日期以台灣時間計算
   - 前提：使用者已經登入，台灣時間 2026/10/24 與 2026/10/25 都還沒使用過 Taigu，現在是台灣時間 2026/10/25 07:30，也就是 UTC 2026/10/24 23:30。
   - 動作：在瀏覽器裡開啟儀表板。
   - 結果：Taigu 記下這位使用者在 2026/10/25 用網頁使用過 Taigu，沒有記下 2026/10/24。
-- USAGE-R1.10 開啟不需要登入的頁面
+- USAGE-R1.10 開啟不用登入就能看的頁面
   - 前提：使用者已經登入，今天（台灣時間 2026/10/24）還沒使用過 Taigu。
   - 動作：在瀏覽器裡開啟隱私權政策 `/privacy-policy`。
   - 結果：Taigu 沒有記下這位使用者在 2026/10/24 使用過 Taigu。
@@ -115,7 +115,7 @@ Taigu 開始記下每位登入的使用者在哪幾天、用網頁還是 PWA 使
   - 動作：登入滿 30 天之後，切回 Taigu 的分頁。
   - 結果：畫面換到歡迎頁 `/welcome`，沒有出現錯誤提示；使用者重新登入後，畫面換回 `/settings`。
 
-> 設計理由：Taigu 以畫面有沒有顯示需要登入的頁面判斷使用者這一天有沒有使用 Taigu，而不是看 api-server 有沒有收到這位使用者的任何 request，因為前端會在背景定時重新讀取行情，開著沒關的分頁每天都會送出 request，算出來的人數會偏高；也不是看使用者有沒有新增或修改資料，因為很多使用者開啟 Taigu 只是查看持股與行情，不算進去的話人數會偏低。頁面回到前景與在 Taigu 裡換頁也算使用，因為分頁可以一直開著好幾天，只在載入頁面時記錄的話，隔天切回分頁或在 Taigu 裡換頁的使用者不會被記下。完整討論見 [0003](../plans/archive/0003-usage-recording.md)。
+> 設計理由：Taigu 以畫面有沒有顯示要登入才能使用的頁面判斷使用者這一天有沒有使用 Taigu，而不是看 api-server 有沒有收到這位使用者的任何 request，因為前端會在背景定時重新讀取行情，開著沒關的分頁每天都會送出 request，算出來的人數會偏高；也不是看使用者有沒有新增或修改資料，因為很多使用者開啟 Taigu 只是查看持股與行情，不算進去的話人數會偏低。使用者切回 Taigu 與在 Taigu 裡換頁也算使用，因為分頁可以一直開著好幾天，只在載入頁面時記錄的話，隔天切回分頁或在 Taigu 裡換頁的使用者不會被記下。完整討論見 [0003](../plans/archive/0003-usage-recording.md)。
 
 #### USAGE-R2 使用紀錄的保留期間
 
@@ -216,7 +216,7 @@ sequenceDiagram
 | 帳號 | `/login`、`/settings`、`/settings/user-info`、`/settings/account-binding` | `frontend/src/pages/Login/Login.tsx`、`frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/UserInfo/UserInfo.tsx`、`frontend/src/pages/Settings/AccountBinding/AccountBinding.tsx` | `api-server/main/account/` | [account.md](account.md) |
 | 方案與付款 | `/settings/current-plan` | `frontend/src/pages/Settings/CurrentPlan/CurrentPlan.tsx`、`frontend/src/components/PlanUpsellModal/PlanUpsellModal.tsx` | `api-server/main/billing/` | [billing.md](billing.md) |
 | 問題回報 | `/settings`、`/settings/issue-report` | `frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/IssueReport/IssueReport.tsx` | `api-server/main/issue_report/` | [issue-reports.md](issue-reports.md) |
-| 使用統計 | 需要登入的頁面（見 ACCT-R3） | `frontend/src/pages/Main/Main.tsx`、`frontend/src/pages/Settings/Settings.tsx`，判斷平台的是 `frontend/src/utils/util.ts` 的 `Util.isPWA` | `api-server/main/usage/`，記下使用紀錄的 `open-session` endpoint 在 `api-server/main/account/` | [usage-stats.md](usage-stats.md) |
+| 使用統計 | 要登入才能使用的頁面（見 ACCT-R3） | `frontend/src/pages/Main/Main.tsx`、`frontend/src/pages/Settings/Settings.tsx`，判斷平台的是 `frontend/src/utils/util.ts` 的 `Util.isPWA` | `api-server/main/usage/`，記下使用紀錄的 `open-session` endpoint 在 `api-server/main/account/` | [usage-stats.md](usage-stats.md) |
 | 公開頁面 | `/welcome`、`/privacy-policy`、`/terms-of-service`，以及其他找不到的網址 | `frontend/src/pages/Welcome/Welcome.tsx`、`frontend/src/pages/PrivacyPolicy/PrivacyPolicy.tsx`、`frontend/src/pages/TermsOfService/TermsOfService.tsx`、`frontend/src/pages/NotFound/NotFound.tsx`、`frontend/src/components/PageMeta/PageMeta.tsx`、`frontend/public/index.html`、`frontend/public/robots.txt`、`frontend/public/sitemap.xml`、`frontend/scripts/prerender.mjs` | 無 | [public-pages.md](public-pages.md) |
 
 ## 決策
@@ -224,10 +224,10 @@ sequenceDiagram
 ### 怎樣算使用者在某一天使用過 Taigu
 
 - 選項：
-  - 畫面開始顯示需要登入的頁面，或這種頁面回到前景。
+  - 畫面開始顯示要登入才能使用的頁面，或使用者切回顯示這種頁面的分頁或 PWA。
   - api-server 收到這位使用者的任何 request。
   - 使用者新增或修改了資料。
-- 結論：畫面開始顯示需要登入的頁面，或這種頁面回到前景。
+- 結論：畫面開始顯示要登入才能使用的頁面，或使用者切回顯示這種頁面的分頁或 PWA。
 - 併入：usage-stats.md#USAGE-R1
 
 ### 平台怎麼分
@@ -237,7 +237,7 @@ sequenceDiagram
   - 分成網頁與 app。
   - 分成網頁、PWA、iOS app 與 Android app。
 - 取捨：Taigu 沒有在記下使用紀錄時一起記下平台的話，之後沒辦法再替這些使用紀錄加上平台。
-- 結論：分成網頁、PWA、iOS app 與 Android app。不過 `main` 上還沒有 app，所以這個 plan 只記網頁與 PWA，app 合併進 `main` 時再加上 iOS 與 Android。
+- 結論：分成網頁、PWA、iOS app 與 Android app。不過 Taigu 還沒有 app，所以這個 plan 只記網頁與 PWA，iOS 與 Android 留給 roadmap 的「Mobile App」。
 - 併入：無
 
 ### 使用紀錄保留多久
@@ -290,7 +290,7 @@ sequenceDiagram
 - Cloudflare Pages 會先讓新版前端上線，api-server 要等 `make deploy` 之後才上線，這段期間新版前端送出的 `platform` 會被舊版 api-server 忽略，也還沒有使用紀錄。api-server 上線之後，舊版前端（見 architecture.md 的「使用統計」）不會帶 `platform`，api-server 照樣記下使用紀錄與問題回報，兩者的 `platform` 欄位都是空的，後台怎麼顯示這些紀錄記在 roadmap 的「後台」階段。
 - USAGE-R1 依賴下面這些瀏覽器行為，architecture.md 還沒有紀錄。實作時要在 iOS Safari 安裝的 PWA、Android Chrome 安裝的 PWA、桌面 Chrome 安裝的 PWA 與桌面 Chrome 的分頁上實測，並把結果寫進 architecture.md 的「使用統計」：
   - 前端判斷 PWA 沿用 `Util.isPWA`（`display-mode: standalone`），要達到的結果是在這三種 PWA 裡都記成 PWA。
-  - 要達到的結果是 Taigu 一段時間沒有顯示、使用者再看到它的時候都算回到前景，要實測的情況有：
+  - 要達到的結果是 Taigu 一段時間沒有顯示、使用者再看到它的時候都算使用者切回 Taigu，要實測的情況有：
     - 從 app 切換器切回 PWA。
     - 手機在 Taigu 顯示時鎖定螢幕，之後解鎖，瀏覽器與 PWA 都要測。
     - 從其他 app 切回手機的瀏覽器，而 Taigu 是目前的分頁。
@@ -299,7 +299,7 @@ sequenceDiagram
     - 從 back-forward cache 還原頁面。
   - 在這三種 PWA 裡用 Google 帳號登入之後，要達到的結果是登入當天記成 PWA，所以要確認從 Google 回到 Taigu 時，頁面是在 PWA 的視窗裡，還是在作業系統或瀏覽器另外開的瀏覽器畫面裡。
 - ISSUE-R3 記下的 User-Agent 要跟瀏覽器送出的一樣，所以實作時要確認 prod 的 request 經過 Cloudflare 與 Nginx 之後，api-server 讀到的 User-Agent 沒有被改掉。
-- 前端收到 403 時會把使用者登出（roadmap 的「登入與帳號修正」已經記下這個問題），而 CSRF cookie 是由 `me` 的回應設定的，所以前端在設定頁與回到前景這兩個新的時機呼叫 `open-session` 之前，都要確保 CSRF cookie 已經存在，例如沿用儀表板先等 `me` 回應的順序，否則沒有 CSRF cookie 的使用者會被登出。
+- 前端收到 403 時會把使用者登出（roadmap 的「登入與帳號修正」已經記下這個問題），而 CSRF cookie 是由 `me` 的回應設定的，所以前端在開啟設定頁與使用者切回 Taigu 這兩個新的時機呼叫 `open-session` 之前，都要確保 CSRF cookie 已經存在，例如沿用儀表板先等 `me` 回應的順序，否則沒有 CSRF cookie 的使用者會被登出。
 - 隱私權政策的「最後更新日期」改成這個 plan 上線的日期，並加上下面的條文：
   - 「個人資料之蒐集」的清單加上兩項：
     - 「您使用本網站的日期與方式，也就是當時是在瀏覽器裡使用本網站，還是使用安裝到裝置上的本網站（PWA）。」
@@ -320,7 +320,7 @@ sequenceDiagram
 | USAGE-R1.7 隔天切回一直開著的分頁 | unit、手動 |
 | USAGE-R1.8 隔天在 Taigu 裡換頁 | unit、手動 |
 | USAGE-R1.9 日期以台灣時間計算 | unit |
-| USAGE-R1.10 開啟不需要登入的頁面 | 手動 |
+| USAGE-R1.10 開啟不用登入就能看的頁面 | 手動 |
 | USAGE-R1.11 離線時切回分頁 | 手動 |
 | USAGE-R1.12 隔天從其他 app 切回 PWA | 手動 |
 | USAGE-R1.13 記錄失敗之後換頁 | 手動 |

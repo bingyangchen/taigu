@@ -4,7 +4,7 @@ prefix: PUB
 
 # 公開頁面
 
-公開頁面是不用登入就能看、也開放搜尋引擎收錄的三個頁面：歡迎頁 `/welcome` 向還沒使用 Taigu 的訪客介紹功能與方案，隱私權政策 `/privacy-policy` 與服務條款 `/terms-of-service`（本文件合稱法律頁面）寫出 Taigu 的法律條文。本文件也規定網址不存在時顯示的 404 頁面，以及 Taigu 的每個網址在搜尋引擎與社群平台上怎麼呈現。哪些頁面需要登入，以及未登入的訪客開啟需要登入的頁面時會被導去哪裡，見 ACCT-R3。
+公開頁面是不用登入就能看、也開放搜尋引擎收錄的三個頁面：歡迎頁 `/welcome` 向還沒使用 Taigu 的訪客介紹功能與方案，隱私權政策 `/privacy-policy` 與服務條款 `/terms-of-service`（本文件合稱法律頁面）寫出 Taigu 的法律條文。本文件也規定網址不存在時顯示的 404 頁面，以及 Taigu 的每個網址在搜尋引擎與社群平台上怎麼呈現。哪些頁面需要登入，以及未登入的訪客開啟要登入才能使用的頁面時會被導去哪裡，見 ACCT-R3。
 
 ## 需求
 
@@ -74,7 +74,7 @@ prefix: PUB
 | 服務條款 | 服務條款 \| Taigu | 開放收錄 | `https://taigu.tw/terms-of-service` |
 | 登入頁 | 登入 \| Taigu | 不開放收錄 | 無 |
 | 設定頁與 `/settings/` 底下的頁面 | 這些頁面共用一個以「 \| Taigu」結尾的設定頁標題 | 不開放收錄 | 無 |
-| 其他需要登入的頁面，例如儀表板 `/` 與歷史紀錄頁 `/records` | Taigu \| 台股記帳 | 不開放收錄 | 無 |
+| 其他要登入才能使用的頁面，例如儀表板 `/` 與歷史紀錄頁 `/records` | Taigu \| 台股記帳 | 不開放收錄 | 無 |
 | 404 頁面 | 找不到頁面 \| Taigu | 不開放收錄 | 無 |
 
 - PUB-R6.1 開啟隱私權政策
@@ -123,7 +123,7 @@ prefix: PUB
   - 動作：開啟 `/robots.txt`。
   - 結果：檔案寫著 `User-agent: *`、`Allow: /`，接著是 `/login`、`/settings`、`/records`、`/plans`、`/market`、`/market-index`、`/search`、`/earning-analysis`、`/handling-fee` 各一行 `Disallow`，最後一行是 `Sitemap: https://taigu.tw/sitemap.xml`。
 
-> 設計理由：`robots.txt` 擋下登入頁與上面這幾個需要登入的頁面所在的路徑，因為爬蟲抓這些網址只會拿到沒有內容的畫面，或是被導去歡迎頁，搜尋引擎會把這些網址判斷成 soft 404，也會用掉搜尋引擎分配給 Taigu 的抓取次數。
+> 設計理由：`robots.txt` 擋下登入頁與上面這幾個要登入才能使用的頁面所在的路徑，因為爬蟲抓這些網址只會拿到沒有內容的畫面，或是被導去歡迎頁，搜尋引擎會把這些網址判斷成 soft 404，也會用掉搜尋引擎分配給 Taigu 的抓取次數。
 
 ### PUB-R10 Sitemap 列出的網址
 
