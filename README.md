@@ -187,6 +187,22 @@ cd ~/taigu
 make deploy
 ```
 
+### Managing the Standard Whitelist
+
+Users on the whitelist get the Standard plan without paying (see BILL-R25 in `docs/specs/billing.md`).
+
+```bash
+cd ~/taigu
+make shell-api-server
+    # In the api-server container:
+    python manage.py standard_whitelist add <email or user id> --note "<why>"
+    python manage.py standard_whitelist remove <email or user id>
+    python manage.py standard_whitelist list
+    exit
+```
+
+Adding a user does not cancel their ECPay periodic charge. If `add` prints a warning about ECPay, ask the user to stop auto-renewal on the plan page.
+
 ### Environment Variable Management
 
 You can view `example.env` as the template for environment variable requirements. When you modify the environment variable requirements in `example.env`, you must also update the corresponding environment variables in the `.env` file on the production server.
