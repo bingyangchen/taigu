@@ -4,6 +4,7 @@
 2. 用一個專門用來測試的 Google 帳號，在桌面瀏覽器的 Chrome 登入 `https://local.taigu.tw`。下面的指令會刪除這個帳號的交易紀錄、現金股利紀錄、買賣計畫、自選股與付款紀錄，所以不要用平常記帳的帳號。
 3. 在 repo 的根目錄執行各節的指令，並把指令裡的 `<email>` 換成這個 Google 帳號的 email。
 4. 每次執行指令之後，重新整理瀏覽器的頁面，Taigu 才會載入新的資料。
+5. 如果上一節執行過「加入白名單」指令，執行「移出白名單」指令。
 
 各節用到下面這些說法：
 
@@ -13,12 +14,12 @@
 - 「升級提示視窗」指額度擋下新增時出現、有「查看 Standard 方案」按鈕的視窗；「關閉升級提示視窗」指點這個視窗右上角的關閉按鈕。
 - 「從方案頁前往綠界」指在方案頁的「方案選擇」區塊點那一節指定的付款週期，在「確認訂閱 Standard」視窗點「前往綠界付款」，等瀏覽器換到綠界的付款頁之後，按瀏覽器的「上一頁」回到方案頁，不在綠界付款。
 
-「設定訂閱狀態」指令會刪除這個帳號的付款紀錄，再把訂閱設成 `STATE` 指定的狀態：`'trialing'` 是試用中，試用期還剩 31 天；`'active'` 是月繳的自動續訂中，本期還剩 20 天；`'stopped'` 是月繳的已停止自動續訂，本期還剩 20 天；`'past_due'` 是扣款失敗，本期在 2 天前結束；`'free'` 是 Free，試用期在 9 天前結束，沒有訂閱過。
+「設定訂閱狀態」指令會刪除這個帳號的付款紀錄，再把訂閱設成 `STATE` 指定的狀態：`'trialing'` 是試用中，試用期還剩 31 天；`'active'` 是月繳的自動續訂中，本期還剩 20 天；`'stopped'` 是月繳的已停止自動續訂，本期還剩 20 天；`'past_due'` 是扣款失敗，本期在 2 天前結束；`'unsubscribed'` 是未訂閱，試用期在 9 天前結束，沒有訂閱過。
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
 EMAIL = '<email>'
-STATE = 'free'
+STATE = 'unsubscribed'
 from datetime import timedelta
 from django.utils import timezone
 from main.billing.models import BillingProfile, SubscriptionPayment
@@ -30,7 +31,7 @@ values = {
     'active': dict(plan='standard', subscription_status='active', trial_ends_at=now - 9 * day, current_period_started_at=now - 10 * day, current_period_ends_at=now + 20 * day, cancel_at_period_end=False),
     'stopped': dict(plan='standard', subscription_status='active', trial_ends_at=now - 9 * day, current_period_started_at=now - 10 * day, current_period_ends_at=now + 20 * day, cancel_at_period_end=True),
     'past_due': dict(plan='standard', subscription_status='past_due', trial_ends_at=now - 9 * day, current_period_started_at=now - 32 * day, current_period_ends_at=now - 2 * day, cancel_at_period_end=False),
-    'free': dict(plan='free', subscription_status='canceled', trial_ends_at=now - 9 * day, current_period_started_at=None, current_period_ends_at=None, cancel_at_period_end=False),
+    'unsubscribed': dict(plan='free', subscription_status='canceled', trial_ends_at=now - 9 * day, current_period_started_at=None, current_period_ends_at=None, cancel_at_period_end=False),
 }[STATE]
 BillingProfile.objects.filter(user__email=EMAIL).update(billing_interval='month', trial_started_at=values['trial_ends_at'] - 31 * day, **values)
 "
@@ -133,6 +134,16 @@ process_period_payment_callback({'MerchantTradeNo': first.provider_subscription_
 docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_due_billing_profiles
 ```
 
+「加入白名單」與「移出白名單」指令把這個帳號加進或移出白名單。沒有寫到白名單的各節都假設這個帳號不在白名單上。
+
+```bash
+docker compose -f compose.dev.yaml exec api-server python manage.py standard_whitelist add <email>
+```
+
+```bash
+docker compose -f compose.dev.yaml exec api-server python manage.py standard_whitelist remove <email>
+```
+
 ## BILL-R1.1 已停止自動續訂但本期還沒結束
 
 前端沒有自動化 test，後端也沒有 test 驗證已停止自動續訂的方案。
@@ -174,7 +185,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證試用期結束後再登入的結果。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 登出 Taigu。
 3. 用同一個 Google 帳號登入 `https://local.taigu.tw`。
 4. 開啟方案頁。
@@ -187,7 +198,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'trialing'`。
 2. 執行「準備資料」指令，`TRADE_RECORDS` 設成 25。
-3. 執行下面的指令，讓試用期在這一刻結束、訂閱變成 Free，這樣第 2 步的 25 筆紀錄都是在試用期間新增的，然後確認指令印出 `1`：
+3. 執行下面的指令，讓試用期在這一刻結束、使用者變成未訂閱，這樣第 2 步的 25 筆紀錄都是在試用期間新增的，然後確認指令印出 `1`：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -207,7 +218,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證每月額度以台灣時間的 1 日 0 點起算。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`TRADE_RECORDS` 設成 20。
 3. 執行下面的指令，把這 20 筆紀錄的新增時間改到上個月最後一天的 23:59（台灣時間）：
 
@@ -230,7 +241,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證每月額度跟交易日期無關。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`TRADE_RECORDS` 設成 19。
 3. 新增交易紀錄，「交易日期」改填上個月的任何一天。
 4. 開啟方案頁。
@@ -241,7 +252,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證刪除紀錄之後的額度。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`TRADE_RECORDS` 設成 20。
 3. 開啟 `https://local.taigu.tw/records`。
 4. 點其中一筆交易紀錄的「刪除」按鈕。
@@ -254,7 +265,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證買賣計畫的額度。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`TRADE_PLANS` 設成 10。
 3. 新增買賣計畫。
 4. 關閉升級提示視窗。
@@ -266,7 +277,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證持股檔數的額度。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`HOLDINGS` 設成 10。
 3. 新增交易紀錄，股票代號用 2603。
 4. 關閉升級提示視窗。
@@ -278,7 +289,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證持股檔數的額度。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`HOLDINGS` 設成 10。
 3. 新增交易紀錄，股票代號用 2330。
 4. 開啟方案頁。
@@ -289,7 +300,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證自選股檔數的額度。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`FAVORITES` 設成 10。
 3. 開啟 `https://local.taigu.tw/market/2603`。
 4. 點股票名稱上方工具列裡的空心愛心按鈕。
@@ -302,7 +313,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證編輯不受額度限制。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`HOLDINGS` 設成 10，`TRADE_RECORDS` 設成 1。
 3. 開啟 `https://local.taigu.tw/records`。
 4. 點其中一筆 2330 交易紀錄的「編輯」按鈕。
@@ -319,7 +330,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'trialing'`。
 2. 執行「準備資料」指令，`FAVORITES` 設成 12。
-3. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+3. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 4. 開啟 `https://local.taigu.tw/market`。
 5. 點「關注」分頁。
 
@@ -329,7 +340,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`TRADE_RECORDS` 設成 20。
 3. 新增交易紀錄。
 
@@ -339,7 +350,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`TRADE_RECORDS` 設成 20。
 3. 新增交易紀錄。
 4. 點升級提示視窗的「查看 Standard 方案」。
@@ -350,7 +361,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test，後端也沒有 test 驗證兩種額度都用完時先擋下哪一種。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`HOLDINGS` 設成 10，`TRADE_RECORDS` 設成 20。
 3. 新增交易紀錄，股票代號用 2603。
 
@@ -374,11 +385,73 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 預期：「目前方案」區塊顯示「Standard」、「有效至 <日期>」，以及「目前方案可使用至 <日期>。到期後會切換為 Free，不會再自動扣款。」，兩個日期都是今天的 20 天後。
 
+## BILL-R10.3 白名單上的使用者未訂閱
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
+2. 執行下面的指令，讓這個帳號像是以前訂閱過月繳的 Standard 方案，上一期在 33 天前結束：
+
+   ```bash
+   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
+   from datetime import timedelta
+   from django.utils import timezone
+   from main.billing.models import BillingProfile
+   now = timezone.now()
+   BillingProfile.objects.filter(user__email='<email>').update(current_period_started_at=now - timedelta(days=64), current_period_ends_at=now - timedelta(days=33))
+   "
+   ```
+
+3. 執行「加入白名單」指令。
+4. 開啟方案頁。
+
+預期：「目前方案」區塊裡只有「Standard」、標籤「使用中」、「行情更新 約每 30 秒」與「額度 交易與股利、買賣計畫、持股、關注皆不限量」。
+
+## BILL-R10.4 白名單上的使用者在試用中
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'trialing'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：「目前方案」區塊裡只有「Standard」、標籤「使用中」、「行情更新 約每 30 秒」與「額度 交易與股利、買賣計畫、持股、關注皆不限量」，沒有標籤「試用中」，也沒有「試用至」。
+
+## BILL-R10.5 白名單上的使用者扣款失敗
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'past_due'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：「目前方案」區塊裡只有「Standard」、標籤「使用中」、「行情更新 約每 30 秒」與「額度 交易與股利、買賣計畫、持股、關注皆不限量」，沒有「付款未完成，重新完成付款後可恢復 Standard 權益。」。
+
+## BILL-R10.6 白名單上的使用者已停止自動續訂
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'stopped'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：「目前方案」區塊裡只有「Standard」、標籤「使用中」、「行情更新 約每 30 秒」與「額度 交易與股利、買賣計畫、持股、關注皆不限量」，沒有「有效至」，也沒有「到期後會切換為 Free」。
+
+## BILL-R10.7 白名單上的使用者在自動續訂中
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'active'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：「目前方案」區塊顯示「Standard」、標籤「月繳」、「NT$65/月」，「下次續費」的日期是今天的 20 天後。
+
 ## BILL-R11.1 Free 方案的額度用量
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 執行「準備資料」指令，`HOLDINGS` 設成 2，`TRADE_RECORDS` 設成 5，`CASH_DIVIDENDS` 設成 2，`TRADE_PLANS` 設成 3，`FAVORITES` 設成 4。
 3. 開啟方案頁。
 
@@ -393,11 +466,11 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 預期：「方案選擇」區塊有「月繳 NT$65」與「年繳 NT$700」兩個選項。
 
-## BILL-R12.2 Free 狀態
+## BILL-R12.2 未訂閱
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 開啟方案頁。
 
 預期：「方案選擇」區塊有「月繳 NT$65」與「年繳 NT$700」兩個選項。
@@ -420,11 +493,61 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 預期：方案頁沒有「方案選擇」區塊。
 
+## BILL-R12.5 白名單上的使用者未訂閱
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：方案頁沒有「方案選擇」區塊。
+
+## BILL-R12.6 白名單上的使用者在試用中
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'trialing'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：方案頁沒有「方案選擇」區塊。
+
+## BILL-R12.7 白名單上的使用者扣款失敗
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'past_due'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：方案頁沒有「方案選擇」區塊。
+
+## BILL-R12.8 已停止自動續訂後本期結束
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'stopped'`。
+2. 執行下面的指令，讓本期在 1 分鐘前結束：
+
+   ```bash
+   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
+   from datetime import timedelta
+   from django.utils import timezone
+   from main.billing.models import BillingProfile
+   BillingProfile.objects.filter(user__email='<email>').update(current_period_ends_at=timezone.now() - timedelta(minutes=1))
+   "
+   ```
+
+3. 開啟方案頁。
+
+預期：「方案選擇」區塊有「月繳 NT$65」與「年繳 NT$700」兩個選項。
+
 ## BILL-R13.1 點選月繳
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 開啟方案頁。
 3. 點「方案選擇」區塊的「月繳」。
 
@@ -434,7 +557,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 開啟方案頁。
 3. 點「方案選擇」區塊的「月繳」。
 4. 點「前往綠界付款」。
@@ -467,7 +590,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 `test_late_success_callback_can_mark_expired_payment_paid` 只驗證這筆付款算付款成功，沒有驗證訂閱狀態。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 從方案頁前往綠界，付款週期選「月繳」。
 3. 執行下面的指令，把這筆付款的建立時間改到 31 分鐘前：
 
@@ -486,11 +609,11 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 預期：「目前方案」區塊顯示「Standard」與標籤「月繳」，「下次續費」的日期是今天的 1 個月後。
 
-## BILL-R15.1 Free 狀態付款失敗
+## BILL-R15.1 未訂閱時付款失敗
 
 前端沒有自動化 test，後端也沒有 test 驗證付款失敗之後的訂閱狀態。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 從方案頁前往綠界，付款週期選「月繳」。
 3. 執行「模擬付款結果」指令，`SUCCESS` 設成 `False`。
 4. 開啟方案頁。
@@ -501,7 +624,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 
 後端沒有 test 驗證檢查碼不對的通知不會讓付款算成功。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'free'`。
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
 2. 從方案頁前往綠界，付款週期選「月繳」。
 3. 執行下面的指令，印出這筆付款的編號：
 
@@ -617,6 +740,39 @@ docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_du
 6. 重新整理方案頁。
 
 預期：第 4 步之後確認視窗沒有關閉；重新整理之後，「目前方案」區塊仍顯示「下次續費」，「訂閱管理」區塊仍有「停止自動續訂」按鈕。
+
+## BILL-R23.6 白名單上的使用者在自動續訂中
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'active'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：「訂閱管理」區塊有「停止自動續訂」按鈕。
+
+## BILL-R23.7 白名單上的使用者開啟停止自動續訂的確認視窗
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'active'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+4. 點「訂閱管理」區塊的「停止自動續訂」。
+
+預期：畫面顯示確認視窗，標題是「停止 Standard 自動續訂？」，說明是「停止後不會再自動扣款。」，沒有「Standard 權益會保留至 <日期>。到期後會切換為 Free。」，也沒有「到期後會發生什麼？」，按鈕是「保留自動續訂」與「停止自動續訂」。
+
+## BILL-R23.8 白名單上的使用者確認停止自動續訂
+
+`test_whitelisted_user_stops_auto_renewal` 只驗證訂閱變成已停止自動續訂，前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'active'`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+4. 點「訂閱管理」區塊的「停止自動續訂」。
+5. 點確認視窗裡的「停止自動續訂」。
+
+預期：確認視窗關閉，頁面頂端顯示「已停止自動續訂，之後不會再扣款。」，方案頁沒有「訂閱管理」區塊。
 
 ## BILL-R24.1 本期剛結束
 

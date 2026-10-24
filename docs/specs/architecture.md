@@ -132,6 +132,16 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 - 綠界（ECPay）用 server 對 server 的通知，把付款結果與每期扣款的結果送到 api-server。api-server 回 `1|OK` 表示收到；回 `0|ERROR` 時，綠界會再送一次通知。
 - api-server 寫入資料之前，先用 `api-server/main/billing/services/entitlements.py` 檢查使用者的方案還有沒有額度，額度不足時回 402 與 `QUOTA_EXCEEDED`，前端收到這個回應時顯示 `PlanUpsellModal`（見 BILL-R9）。
 
+### 白名單
+
+白名單存在 `standard_whitelist` 資料表，一位使用者一列，另外記錄加入的原因（`note`）與加入的時間。
+
+> 設計理由：白名單不存成 `BillingProfile` 的欄位，因為 api-server 有些地方會讀出整筆 `BillingProfile` 再整筆存回去，白名單存在同一列的話，開發者修改白名單時，修改可能被同時進行的這些處理蓋掉。分開存的代價是每次判定方案都要多查一次 `standard_whitelist`，不過這次查詢只是用 user id 透過 index 找出一筆資料。完整討論見 [0002](../plans/archive/0002-standard-whitelist.md)。
+
+開發者用 management command `standard_whitelist` 把使用者加入或移出白名單，以及列出白名單上的使用者。
+
+> 設計理由：白名單不用 Django admin 或 Taigu 裡的管理頁面維護，因為 api-server 沒有啟用 Django admin，`User` 也沒有 `is_staff` 欄位，要另外做 staff 的權限與登入方式；也不寫在設定檔或環境變數裡，因為那樣每次修改白名單都要重新部署，或改 prod 的 `.env` 再重新啟動 api-server。完整討論見 [0002](../plans/archive/0002-standard-whitelist.md)。
+
 ## Domain 規則
 
 目前每個能力都有 spec，所以這一節沒有規則。

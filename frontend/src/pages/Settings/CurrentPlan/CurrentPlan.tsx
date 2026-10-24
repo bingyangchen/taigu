@@ -77,22 +77,27 @@ export default function CurrentPlan(): React.ReactElement {
       },
     [accountSubscription, billing],
   );
+  const isWhitelisted = subscription.is_whitelisted === true;
   const isStandard = subscription.plan === "standard";
   const isTrialing = subscription.status === "trialing";
-  const isActiveStandard = isStandard && subscription.status === "active";
-  const canCancelAutoRenewal =
-    subscription.plan === "standard" &&
-    subscription.status === "active" &&
-    !subscription.cancel_at_period_end;
+  const isWithinPaidPeriod =
+    subscription.is_current_period_active ??
+    (isStandard && subscription.status === "active");
+  const canCancelAutoRenewal = isWithinPaidPeriod && !subscription.cancel_at_period_end;
   const hasStoppedAutoRenewal =
-    subscription.plan === "standard" &&
-    subscription.status === "active" &&
-    subscription.cancel_at_period_end;
-  const showUpgradeOptions = !isActiveStandard;
+    isWithinPaidPeriod && subscription.cancel_at_period_end && !isWhitelisted;
+  const showWhitelistSummary = isWhitelisted && !canCancelAutoRenewal;
+  const showUpgradeOptions = !isWithinPaidPeriod && !isWhitelisted;
   const priceMonth = billing?.prices.month ?? 65;
   const priceYear = billing?.prices.year ?? 700;
   const yearlySavings = Math.max(priceMonth * 12 - priceYear, 0);
-  const keyDate = getKeyDate(subscription);
+  const keyDate = showWhitelistSummary ? null : getKeyDate(subscription);
+  const planBadgeLabel = showWhitelistSummary
+    ? "使用中"
+    : getPlanBadgeLabel(subscription);
+  const planBadgeTone = showWhitelistSummary
+    ? "planBadgeCurrent"
+    : getPlanBadgeTone(subscription);
   const pendingPrice =
     pendingBillingInterval === "year"
       ? priceYear
@@ -177,19 +182,17 @@ export default function CurrentPlan(): React.ReactElement {
           <div className={styles.summaryHeader}>
             <div className={styles.planIdentity}>
               <strong>{getPlanName(subscription)}</strong>
-              <span
-                className={`${styles.planBadge} ${
-                  styles[getPlanBadgeTone(subscription)]
-                }`}
-              >
-                {getPlanBadgeLabel(subscription)}
+              <span className={`${styles.planBadge} ${styles[planBadgeTone]}`}>
+                {planBadgeLabel}
               </span>
-              <span className={styles.planPrice}>
-                {getPlanPriceLabel(subscription, priceMonth, priceYear)}
-              </span>
+              {!showWhitelistSummary && (
+                <span className={styles.planPrice}>
+                  {getPlanPriceLabel(subscription, priceMonth, priceYear)}
+                </span>
+              )}
             </div>
           </div>
-          <p>{getPlanDescription(subscription)}</p>
+          {!showWhitelistSummary && <p>{getPlanDescription(subscription)}</p>}
           <div className={styles.summaryGrid}>
             {keyDate && (
               <div>
@@ -208,7 +211,7 @@ export default function CurrentPlan(): React.ReactElement {
               <strong>交易與股利、買賣計畫、持股、關注皆不限量</strong>
             </div>
           )}
-          {!isActiveStandard && isTrialing && (
+          {showUpgradeOptions && isTrialing && (
             <div className={styles.upgradeHint}>
               選擇付款週期後會前往綠界標準付款頁完成訂閱。
             </div>
@@ -380,7 +383,9 @@ export default function CurrentPlan(): React.ReactElement {
       setIsCancelDialogOpen(false);
       await refreshBilling();
       const periodEnd = formatDate(subscription.current_period_ends_at);
-      const text = `已停止自動續訂，Standard 權益會保留到 ${periodEnd}。`;
+      const text = isWhitelisted
+        ? "已停止自動續訂，之後不會再扣款。"
+        : `已停止自動續訂，Standard 權益會保留到 ${periodEnd}。`;
       setNotice({ type: "success", text });
       dispatch(pushToast({ type: "success", text: "已停止自動續訂" }));
     } catch (error) {

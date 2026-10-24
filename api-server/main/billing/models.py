@@ -128,6 +128,18 @@ class BillingProfile(CreateUpdateDateModel):
         ]
 
 
+class StandardWhitelist(CreateUpdateDateModel):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="standard_whitelist",
+    )
+    note = models.CharField(max_length=256, blank=True)
+
+    class Meta:
+        db_table = "standard_whitelist"
+
+
 class SubscriptionPayment(CreateUpdateDateModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(

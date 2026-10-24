@@ -24,6 +24,7 @@ from main.billing.services.ecpay import (
 from main.billing.services.entitlements import (
     ensure_billing_profile,
     is_standard_subscription_active,
+    is_standard_whitelisted,
 )
 
 STANDARD_PRICES = {BillingInterval.MONTH: 65, BillingInterval.YEAR: 700}
@@ -118,6 +119,8 @@ def _create_pending_subscription_payment(
     profile = BillingProfile.objects.select_for_update().get(user=user)
     if is_standard_subscription_active(profile):
         raise SubscriptionPaymentNotChargeableError("Subscription is already active")
+    if is_standard_whitelisted(user):
+        raise SubscriptionPaymentNotChargeableError("User is on the Standard whitelist")
     SubscriptionPayment.objects.filter(
         user=user, plan=Plan.STANDARD, status=PaymentStatus.PENDING
     ).update(
