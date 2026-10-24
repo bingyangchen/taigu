@@ -15,7 +15,7 @@ flowchart TD
   data_fixes("資料驗證與資料處理修正<br/>未規劃"):::unplanned
   ui_feedback_fixes("介面回饋與導覽修正<br/>未規劃"):::unplanned
   copy_fixes("介面文案與數字格式修正<br/>未規劃"):::unplanned
-  usage_recording("記錄使用情況<br/>已核准"):::approved
+  usage_recording("記錄使用情況<br/>已完成"):::done
   admin_console("後台<br/>未規劃"):::unplanned
   mobile_app("Mobile App<br/>未規劃"):::unplanned
   usage_recording --> admin_console
@@ -195,7 +195,7 @@ flowchart TD
 
 讓開發者在只有自己能使用的後台，看到有多少使用者在使用 Taigu、新使用者會不會持續使用、試用後有多少使用者付費訂閱，並處理使用者的問題回報。
 
-1. [記錄使用情況](0003-usage-recording.md)：記下使用者使用 Taigu 的日期與平台，以及送出問題回報時的平台與 User-Agent，讓後台上線時已經有資料可以統計。
+1. [記錄使用情況](archive/0003-usage-recording.md)：記下使用者使用 Taigu 的日期與平台，以及送出問題回報時的平台與 User-Agent，讓後台上線時已經有資料可以統計。
 2. 後台：加上後台的權限檢查，做出統計活躍、留存與付費轉換的畫面，以及問題回報的列表，並在有新的問題回報時通知開發者。開發者在討論 plan 0003 時已經決定下面這些事：
    - 後台放在現有前端的 `/admin`，只有 superuser 能使用。
    - api-server 把後台的 endpoint 都放在 `/api/admin/` 底下，在同一個地方檢查權限。
@@ -219,6 +219,17 @@ flowchart TD
    「記錄使用情況」上線之後，舊版前端送出的使用紀錄與問題回報，`platform` 欄位都是空的，而且新版前端每次上線之後，`platform` 欄位是空的使用紀錄，多半跟同一位使用者同一天 `platform` 欄位有值的那一筆來自同一次開啟 Taigu（見 architecture.md 的「使用統計」），所以寫這個階段的 plan 時要決定統計與列表怎麼顯示這些紀錄。
 
    隱私權政策寫明問題回報保存到帳號刪除為止，但 Telegram 上的通知不會隨帳號刪除而刪除，寫這個階段的 plan 時要決定帳號刪除時怎麼處理這些通知，或是改寫「個人資料之保存期間」的條文。
+
+   「記錄使用情況」只在桌面 Chrome 的分頁實測過瀏覽器的行為（見 architecture.md 的「使用統計」），所以後台依平台分開統計之前，要先在實機上確認下面這些事，並把結果寫進 architecture.md：
+
+   - iOS Safari 安裝的 PWA、Android Chrome 安裝的 PWA 與桌面 Chrome 安裝的 PWA 都記成 PWA。
+   - 下面這些情況，Taigu 回到畫面上時都會記下使用紀錄：
+     - 在手機上從其他 app 切回 PWA 或瀏覽器。
+     - 手機在 Taigu 顯示時鎖定螢幕，之後解鎖。
+     - 桌面視窗被其他 app 的視窗完全蓋住或縮到最小，之後再切回來。
+     - 桌面電腦從睡眠喚醒，或解除螢幕鎖定。
+     - 瀏覽器從 back-forward cache 還原頁面。
+   - 在這三種 PWA 裡用 Google 帳號登入之後，登入當天記成 PWA。
 
 ### Mobile App
 

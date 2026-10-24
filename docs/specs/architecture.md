@@ -142,6 +142,36 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 > 設計理由：白名單不用 Django admin 或 Taigu 裡的管理頁面維護，因為 api-server 沒有啟用 Django admin，`User` 也沒有 `is_staff` 欄位，要另外做 staff 的權限與登入方式；也不寫在設定檔或環境變數裡，因為那樣每次修改白名單都要重新部署，或改 prod 的 `.env` 再重新啟動 api-server。完整討論見 [0002](../plans/archive/0002-standard-whitelist.md)。
 
+## 使用統計
+
+使用紀錄（USAGE-R1）存在 `daily_activity` 資料表，帳號刪除時一併刪除（USAGE-R2）。前端在 USAGE-R1 規定的時候呼叫 `open-session`，並帶上 `platform` 參數。舊版前端呼叫 `open-session` 時不會帶 `platform` 參數，api-server 照樣記下這一天，這一列的 `platform` 欄位是空的；同一位使用者同一天，`platform` 欄位是空的列也只有一列。
+
+前端呼叫 `open-session` 時，如果瀏覽器還沒有 CSRF cookie，前端先等 `me` 的回應再呼叫，因為 `me` 的回應會設定 CSRF cookie，而前端收到 403 時會把使用者登出，所以沒有 CSRF cookie 時直接呼叫 `open-session`，使用者會被登出。
+
+2026-10 在 macOS 的桌面 Chrome 實測時，瀏覽器的行為如下：
+
+- Taigu 在 Chrome 的分頁裡執行時，`display-mode: standalone` 不成立，所以記成網頁。
+- 從其他分頁切回 Taigu 的分頁時，頁面觸發 `visibilitychange`，Taigu 記下使用紀錄。
+- api-server 存下的 User-Agent 跟瀏覽器的 `navigator.userAgent` 相同，request 經過 Cloudflare 與 Nginx 之後沒有被改掉。
+
+其他平台與情況還沒有實測，要測的項目記在 roadmap 的「後台」。
+
+舊版前端有兩種：新版前端上線之前就開著的頁面，以及新版前端上線之後，使用者第一次開啟 Taigu 時 service worker 從 cache 提供的頁面。Service worker 從 cache 提供舊版前端時，同一位使用者那一天可能同時有 `platform` 欄位是空的與有值的兩列，順序如下圖：
+
+```mermaid
+sequenceDiagram
+  participant SW as service worker
+  participant Old as 舊版前端
+  participant New as 新版前端
+  participant A as api-server
+  SW->>Old: 從 cache 提供舊版前端
+  Old->>A: 呼叫 open-session，不帶 platform 參數
+  A->>A: 新增一列，platform 欄位是空的
+  SW->>New: 更新完成，頁面重新載入成新版前端
+  New->>A: 呼叫 open-session，帶上 platform 參數
+  A->>A: 新增一列，platform 欄位有值
+```
+
 ## Domain 規則
 
 目前每個能力都有 spec，所以這一節沒有規則。
@@ -163,9 +193,14 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 | 帳號 | `/login`、`/settings`、`/settings/user-info`、`/settings/account-binding` | `frontend/src/pages/Login/Login.tsx`、`frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/UserInfo/UserInfo.tsx`、`frontend/src/pages/Settings/AccountBinding/AccountBinding.tsx` | `api-server/main/account/` | [account.md](account.md) |
 | 方案與付款 | `/settings/current-plan` | `frontend/src/pages/Settings/CurrentPlan/CurrentPlan.tsx`、`frontend/src/components/PlanUpsellModal/PlanUpsellModal.tsx` | `api-server/main/billing/` | [billing.md](billing.md) |
 | 問題回報 | `/settings`、`/settings/issue-report` | `frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/IssueReport/IssueReport.tsx` | `api-server/main/issue_report/` | [issue-reports.md](issue-reports.md) |
+| 使用統計 | 要登入才能使用的頁面（見 ACCT-R3） | `frontend/src/pages/Main/Main.tsx`、`frontend/src/pages/Settings/Settings.tsx`，判斷平台的是 `frontend/src/utils/util.ts` 的 `Util.isPWA` | `api-server/main/usage/`，記下使用紀錄的 `open-session` endpoint 在 `api-server/main/account/` | [usage-stats.md](usage-stats.md) |
 | 公開頁面 | `/welcome`、`/privacy-policy`、`/terms-of-service`，以及其他找不到的網址 | `frontend/src/pages/Welcome/Welcome.tsx`、`frontend/src/pages/PrivacyPolicy/PrivacyPolicy.tsx`、`frontend/src/pages/TermsOfService/TermsOfService.tsx`、`frontend/src/pages/NotFound/NotFound.tsx`、`frontend/src/components/PageMeta/PageMeta.tsx`、`frontend/public/index.html`、`frontend/public/robots.txt`、`frontend/public/sitemap.xml`、`frontend/scripts/prerender.mjs` | 無 | [public-pages.md](public-pages.md) |
 
 ## Data Model
 
 - 股票代號在 API 與前端叫做 `sid`，在參照股票的資料表裡是 `company_id`，在 `Company` 自己的資料表裡則是主鍵 `stock_id`，型別都是字串，例如 `"2330"`、`"0050"`。
 - `TradeRecord` 沒有記錄買賣方向的欄位，`deal_quantity` 在買進時是正數，賣出時是負數，前端依正負號判斷買賣。
+- `IssueReport` 的 `platform` 與 `user_agent` 可以是空的，空值出現在下面這些情況：
+  - Taigu 開始記錄這兩個欄位之前送出的問題回報，兩個欄位都是空的。
+  - 之後的問題回報由舊版前端送出，或 request 帶的 `platform` 不是 `web` 也不是 `pwa` 時，`platform` 是空的。
+  - Request 沒有帶 User-Agent 時，`user_agent` 是空的。

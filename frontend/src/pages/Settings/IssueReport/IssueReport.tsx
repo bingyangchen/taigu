@@ -60,7 +60,7 @@ export function IssueReportEditor({
       await Api.sendRequest(
         "issue-reports",
         "post",
-        JSON.stringify({ body: trimmedBody }),
+        JSON.stringify({ body: trimmedBody, platform: Util.platform }),
       );
       dispatch(pushToast({ type: "success", text: "問題回報已送出，感謝你的回饋。" }));
       hideModal(event);

@@ -1,9 +1,9 @@
 執行 `make start`，用 Chrome 開啟 `https://local.taigu.tw`，再用 Google 帳號登入。步驟寫「在行動裝置上」時，先開啟 Chrome DevTools 的裝置模擬（Toggle device toolbar），選一款手機機型（例如 iPhone 14 Pro），再重新整理頁面；步驟寫「在桌面瀏覽器上」時，先關閉裝置模擬，再重新整理頁面。
 
-要查看 Taigu 儲存的問題回報時，在 repo 的根目錄執行下面的指令。指令會在 `count:` 那一行印出問題回報的總數，在 `latest:` 那一行印出最新一則問題回報的字數、內容的前 100 個字、送出的使用者的 email 與送出的時間：
+要查看 Taigu 儲存的問題回報時，在 repo 的根目錄執行下面的指令。指令會在 `count:` 那一行印出問題回報的總數，在 `latest:` 那一行印出最新一則問題回報的字數、內容的前 100 個字、送出的使用者的 email、送出的時間、平台與 User-Agent：
 
 ```sh
-docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.issue_report.models import IssueReport; r = IssueReport.objects.order_by('-id').first(); print('count:', IssueReport.objects.count()); r and print('latest:', len(r.body), repr(r.body[:100]), r.user.email, r.created_at)"
+docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.issue_report.models import IssueReport; r = IssueReport.objects.order_by('-id').first(); print('count:', IssueReport.objects.count()); r and print('latest:', len(r.body), repr(r.body[:100]), r.user.email, r.created_at, r.platform, repr(r.user_agent))"
 ```
 
 ## ISSUE-R1.1 從設定頁開啟問題回報
@@ -77,7 +77,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## ISSUE-R3.1 送出一則問題回報
 
-Taigu 儲存的內容、使用者與時間由 unit test 驗證，這裡只檢查畫面，因為前端沒有自動化 test。
+Taigu 儲存的內容、使用者、時間、平台與 User-Agent 由 unit test 驗證，前端沒有自動化 test，所以這裡檢查畫面、前端送出的平台，以及 request 經過 Nginx 之後 api-server 讀到的 User-Agent。
 
 1. 在行動裝置上開啟 `https://local.taigu.tw/settings`。
 2. 點選「問題回報」。
@@ -88,8 +88,10 @@ Taigu 儲存的內容、使用者與時間由 unit test 驗證，這裡只檢查
 7. 點選「問題回報」。
 8. 在文字框輸入「點擊 Google 登入後畫面一直轉圈。」。
 9. 點選視窗裡的送出按鈕。
+10. 開啟 Chrome DevTools 的 Console，執行 `navigator.userAgent`。
+11. 執行查看問題回報的指令。
 
-預期：步驟 5 的確認成立；步驟 9 之後，視窗關閉，畫面留在設定頁 `/settings`，並出現提示「問題回報已送出，感謝你的回饋。」。
+預期：步驟 5 的確認成立；步驟 9 之後，視窗關閉，畫面留在設定頁 `/settings`，並出現提示「問題回報已送出，感謝你的回饋。」；步驟 11 的 `latest:` 那一行的平台是 `web`，User-Agent 跟步驟 10 印出的相同。
 
 ## ISSUE-R3.2 內容的頭尾有空白與換行
 
@@ -106,6 +108,21 @@ Taigu 儲存的內容、使用者與時間由 unit test 驗證，這裡只檢查
 9. 執行查看問題回報的指令。
 
 預期：`latest:` 那一行印出的字數是 `7`，內容是 `'第一行\n第二行'`。
+
+## ISSUE-R3.3 在 PWA 送出問題回報
+
+Taigu 記下的平台與 User-Agent 由 unit test 驗證，前端沒有自動化 test。本機的開發環境沒辦法從手機開啟，所以用桌面 Chrome 安裝的 PWA 檢查。
+
+1. 如果還沒把 Taigu 安裝成 app，在 Chrome 開啟 `https://local.taigu.tw`，再從 Chrome 選單的「投放、儲存及分享」選擇安裝的選項。
+2. 從 macOS 的 Dock 或「應用程式」資料夾開啟安裝成 app 的 Taigu。
+3. 點側邊欄的頭像，進入設定頁。
+4. 點選「問題回報」。
+5. 在文字框輸入「匯出的檔案打不開。」。
+6. 點選視窗裡的送出按鈕。
+7. 在 PWA 的視窗按 Cmd+Option+I 開啟 DevTools，在 Console 執行 `navigator.userAgent`。
+8. 執行查看問題回報的指令。
+
+預期：步驟 6 之後出現提示「問題回報已送出，感謝你的回饋。」；步驟 8 的 `latest:` 那一行的內容是 `'匯出的檔案打不開。'`，平台是 `pwa`，User-Agent 跟步驟 7 印出的相同。
 
 ## ISSUE-R4.1 網路中斷時送出
 

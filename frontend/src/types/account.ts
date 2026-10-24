@@ -1,3 +1,5 @@
+export type Platform = "web" | "pwa";
+
 export type SubscriptionPlan = "free" | "standard";
 
 export type PlanQuotaResource = "records" | "trade_plans" | "holdings" | "favorites";

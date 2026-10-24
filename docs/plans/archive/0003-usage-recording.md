@@ -1,11 +1,10 @@
 ---
 id: "0003"
 title: usage-recording
-status: approved
+status: done
 specs:
   - usage-stats.md
   - issue-reports.md
-  - public-pages.md
   - architecture.md
   - product.md
 depends_on: []
@@ -22,8 +21,8 @@ Taigu 開始記下每位登入的使用者在哪幾天、用網頁還是 PWA 使
 - 要做：
   - 在 `product.md` 的「範圍」加上後台，這一項在這個 plan 的 PR 裡一起改。
   - 已登入的使用者的畫面開始顯示要登入才能使用的頁面，或使用者切回顯示這種頁面的分頁或 PWA 時（例如從其他分頁或其他 app 切回來），Taigu 記下這位使用者當天用哪個平台使用過 Taigu（USAGE-R1），使用紀錄保留到帳號刪除為止（USAGE-R2）。
-  - Taigu 在問題回報裡記下送出時的平台與 User-Agent（ISSUE-R3）。
-  - 隱私權政策寫明 Taigu 記下的使用紀錄、問題回報的內容、平台與 User-Agent、使用紀錄的用途，以及使用紀錄與問題回報的保留期間（PUB-R11），條文寫在「做法要點」。
+  - Taigu 在問題回報裡記下送出時的平台與 User-Agent（ISSUE-R3），問題回報保留到帳號刪除為止（ISSUE-R7）。
+  - 隱私權政策寫明 Taigu 記下的使用紀錄、問題回報的內容、平台與 User-Agent、使用紀錄的用途，以及使用紀錄與問題回報的保留期間，條文寫在「做法要點」。
 - 刻意不做的事：
   - 不回補這個 plan 的實作上線之前的使用紀錄。
   - 不做後台與統計的畫面，這些留給 roadmap 的「後台」階段。
@@ -147,22 +146,16 @@ ISSUE-R3.1 的前提與結果加上平台與 User-Agent，ISSUE-R3.2 不變，�
   - 動作：點送出按鈕。
   - 結果：Taigu 新增一則問題回報，內容是「匯出的檔案打不開。」，平台是 PWA，User-Agent 是瀏覽器在這個 request 裡帶的 User-Agent。
 
-### public-pages.md
-
-#### PUB-R11 隱私權政策寫出使用紀錄與問題回報
+#### ISSUE-R7 問題回報的保留期間
 
 新增這條需求：
 
-隱私權政策寫明下面這些事：
+Taigu 不會因為時間經過而刪除問題回報，使用者的帳號刪除時，這位使用者送出的問題回報一併刪除。
 
-- Taigu 記下的使用紀錄（見 USAGE-R1），以及使用紀錄用來統計 Taigu 的使用情況。
-- Taigu 在問題回報裡記下的內容、平台與 User-Agent（見 ISSUE-R3）。
-- 使用紀錄的保留期間（見 USAGE-R2），以及問題回報保留到帳號刪除為止。
-
-- PUB-R11.1 查看隱私權政策寫的使用紀錄與問題回報
-  - 前提：使用者未登入。
-  - 動作：開啟隱私權政策 `/privacy-policy`。
-  - 結果：「個人資料之蒐集」一節列出使用 Taigu 的日期與平台，以及問題回報的內容、送出時的平台與瀏覽器的 User-Agent；「個人資料之使用」一節列出統計 Taigu 的使用情況；「個人資料之保存期間」一節寫明使用紀錄與使用者送出的問題回報都保留到帳號刪除為止。
+- ISSUE-R7.1 帳號刪除
+  - 前提：使用者送出過一則問題回報，內容是「畫面一直轉圈」。
+  - 動作：開發者依使用者的要求刪除這個帳號。
+  - 結果：這位使用者送出的問題回報全部刪除。
 
 ### architecture.md
 
@@ -314,7 +307,7 @@ sequenceDiagram
 | USAGE-R2.1 帳號刪除 | unit |
 | ISSUE-R3.1 送出一則問題回報 | unit、手動 |
 | ISSUE-R3.3 在 PWA 送出問題回報 | unit、手動 |
-| PUB-R11.1 查看隱私權政策寫的使用紀錄與問題回報 | 手動 |
+| ISSUE-R7.1 帳號刪除 | unit |
 
 ## 還沒定案的問題
 

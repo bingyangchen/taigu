@@ -54,6 +54,7 @@ class Main extends React.Component<Props, State> {
   private fetchStockInfoTimer: ReturnType<typeof setTimeout> | null;
   private scrollAnimationFrameId: number | null = null;
   private lastDispatchedScrollTop: number | null = null;
+  private removePageReturnListener: (() => void) | null = null;
   public constructor(props: Props) {
     super(props);
     this.state = { isLoading: true, prevLocationPathname: null };
@@ -67,6 +68,9 @@ class Main extends React.Component<Props, State> {
     this.syncMobileScrollMode();
     this.mainRef.current?.addEventListener("scroll", this.handleScroll);
     window.addEventListener("scroll", this.handleScroll);
+    this.removePageReturnListener = Util.addPageReturnListener(() =>
+      this.props.dispatch(openSession()),
+    );
 
     try {
       const account = await this.props.dispatch(fetchAccountInfo()).unwrap();
@@ -147,6 +151,7 @@ class Main extends React.Component<Props, State> {
       this.lastDispatchedScrollTop = 0;
       this.props.dispatch(updateScrollTop(0));
       this.props.dispatch(fetchAccountInfo());
+      this.props.dispatch(openSession());
     }
 
     // Conditionally navigate back one more time
@@ -168,6 +173,7 @@ class Main extends React.Component<Props, State> {
   public componentWillUnmount(): void {
     this.mainRef.current?.removeEventListener("scroll", this.handleScroll);
     window.removeEventListener("scroll", this.handleScroll);
+    this.removePageReturnListener?.();
     document.body.classList.remove("main-page-document-scroll");
     document.body.classList.remove("main-page-gradient-scroll");
     document.body.classList.remove("main-page-white-shell-scroll");

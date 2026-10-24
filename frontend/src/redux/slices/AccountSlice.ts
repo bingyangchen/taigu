@@ -3,6 +3,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import LocalDatabase from "../../storage/localDatabase";
 import type { Account, UpdateAccountInfoRequestBody } from "../../types";
 import Api from "../../utils/api";
+import Util from "../../utils/util";
 import { pushToast } from "./ToastSlice";
 
 interface AccountState extends Account {
@@ -40,8 +41,19 @@ export const updateAccountInfo = createAsyncThunk(
 
 export const openSession = createAsyncThunk(
   "account/openSession",
-  async (): Promise<void> => {
-    await Api.sendRequest("account/open-session", "post", new URLSearchParams());
+  async (_, thunkAPI): Promise<void> => {
+    // A page opened in a background tab is recorded once the user switches to it.
+    if (document.visibilityState !== "visible") return;
+
+    // `me` sets the CSRF cookie, and open-session without it gets a 403, which logs
+    // the user out.
+    if (!Api.hasCsrfToken) await thunkAPI.dispatch(fetchAccountInfo()).unwrap();
+    await Api.sendRequest(
+      "account/open-session",
+      "post",
+      new URLSearchParams({ platform: Util.platform }),
+      { silentOnFailure: true },
+    );
   },
 );
 

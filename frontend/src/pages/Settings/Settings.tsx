@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { Outlet } from "react-router-dom";
 
 import { HeaderForSettings, PageMeta, ToastList } from "../../components";
-import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
+import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
 import type { AppDispatch } from "../../redux/store";
 import { IRouter, settingsPagePath, withRouter } from "../../router";
 import Env from "../../utils/env";
@@ -19,6 +19,7 @@ interface State {
 
 class Settings extends React.Component<Props, State> {
   public state: State;
+  private removePageReturnListener: (() => void) | null = null;
   public constructor(props: Props) {
     super(props);
     this.state = { prevLocationPathname: null };
@@ -27,9 +28,17 @@ class Settings extends React.Component<Props, State> {
   public async componentDidMount(): Promise<void> {
     document.body.classList.toggle("settings-page-document-scroll", Util.isMobile);
     this.props.dispatch(fetchAccountInfo());
+    this.props.dispatch(openSession());
+    this.removePageReturnListener = Util.addPageReturnListener(() =>
+      this.props.dispatch(openSession()),
+    );
   }
 
   public componentDidUpdate(prevProps: Readonly<Props>): void {
+    if (prevProps.router.location.pathname !== this.props.router.location.pathname) {
+      this.props.dispatch(openSession());
+    }
+
     // Conditionally navigate back one more time
     if (prevProps.router.location.key !== this.props.router.location.key) {
       if (
@@ -48,6 +57,7 @@ class Settings extends React.Component<Props, State> {
 
   public componentWillUnmount(): void {
     document.body.classList.remove("settings-page-document-scroll");
+    this.removePageReturnListener?.();
   }
 
   public render(): React.ReactNode {

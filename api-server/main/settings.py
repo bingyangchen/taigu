@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "main.cash_dividend",
     "main.handling_fee",
     "main.issue_report",
+    "main.usage",
 ]
 
 MIDDLEWARE = [
