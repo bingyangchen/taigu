@@ -1,6 +1,7 @@
 import {
   CashDividendRecord,
   HandlingFeeDiscount,
+  Platform,
   TradePlan,
   TradeRecord,
 } from "../types";
@@ -20,6 +21,26 @@ export default class Util {
 
   public static get isPWA(): boolean {
     return window.matchMedia("(display-mode: standalone)").matches;
+  }
+
+  public static get platform(): Platform {
+    return Util.isPWA ? "pwa" : "web";
+  }
+
+  public static addPageReturnListener(listener: () => void): () => void {
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState === "visible") listener();
+    };
+    const handlePageShow = (event: PageTransitionEvent): void => {
+      // `persisted` means the page was restored from the back-forward cache.
+      if (event.persisted) listener();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
   }
 
   public static debounce = <T>(

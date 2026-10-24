@@ -43,7 +43,7 @@ class PrivacyPolicy extends React.Component<Props, State> {
           <h1>隱私權政策</h1>
         </div>
         <div className={styles.body}>
-          <div className={styles.effective_date}>最後更新日期：2026/01/03</div>
+          <div className={styles.effective_date}>最後更新日期：2026/10/24</div>
           <h2>適用範圍</h2>
           <p>
             本隱私權政策適用於您在 Taigu
@@ -58,6 +58,12 @@ class PrivacyPolicy extends React.Component<Props, State> {
                 您在本網站使用第三方服務時所提供的資料，例如：您使用 Google
                 登入本網站時所提供的 Google 帳號資料。
               </li>
+              <li>
+                您使用本網站的日期與方式，也就是當時是在瀏覽器裡使用本網站，還是使用安裝到裝置上的本網站（PWA）。
+              </li>
+              <li>
+                您送出的問題回報內容、送出時使用本網站的方式，以及您的瀏覽器提供的瀏覽器與作業系統資訊（User-Agent）。
+              </li>
             </ul>
           </p>
           <h2>個人資料之使用</h2>
@@ -67,7 +73,12 @@ class PrivacyPolicy extends React.Component<Props, State> {
               <li>提供您本網站的服務。</li>
               <li>回應您的詢問或要求。</li>
               <li>與您聯繫，提供您最新的資訊或服務。</li>
+              <li>統計本網站的使用情況，以改善本網站的服務。</li>
             </ul>
+          </p>
+          <h2>個人資料之保存期間</h2>
+          <p>
+            本網站保存您使用本網站的日期與方式的紀錄，以及您送出的問題回報，直到您的帳號刪除為止。
           </p>
           <h2>個人資料之分享</h2>
           <p>

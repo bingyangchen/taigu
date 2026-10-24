@@ -2,11 +2,12 @@
 import hashlib
 import json
 from base64 import urlsafe_b64encode
-from datetime import datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from json.decoder import JSONDecodeError
 from typing import Any
 from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlparse
+from zoneinfo import ZoneInfo
 
 import pytest
 import requests
@@ -51,7 +52,9 @@ from main.billing.models import (
     StandardWhitelist,
     SubscriptionStatus,
 )
+from main.usage.models import DailyActivity
 
+TAIPEI = ZoneInfo("Asia/Taipei")
 LOGIN_REDIRECT_URI = "https://local.taigu.tw/login"
 BINDING_REDIRECT_URI = "https://local.taigu.tw/settings/account-binding"
 
@@ -743,6 +746,152 @@ class TestOpenSessionView:
         assert response.status_code == 200
         user.refresh_from_db()
         assert user.last_login == recent_last_login
+
+    def _open_session_at(
+        self,
+        request: HttpRequest,
+        monkeypatch: pytest.MonkeyPatch,
+        now: datetime,
+        platform: str | None,
+    ) -> HttpResponse:
+        monkeypatch.setattr("main.account.views.timezone.now", lambda: now)
+        request.POST = QueryDict("" if platform is None else f"platform={platform}")
+        return open_session(request)
+
+    def _get_activities(self, user: User) -> list[tuple[date, str | None]]:
+        return list(
+            DailyActivity.objects.filter(user=user)
+            .order_by("date", "platform")
+            .values_list("date", "platform")
+        )
+
+    @pytest.mark.scenario("USAGE-R1.1")
+    def test_open_session_records_web_usage(
+        self, request_obj: HttpRequest, user: User, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        response = self._open_session_at(
+            request_obj, monkeypatch, datetime(2026, 10, 24, 9, 0, tzinfo=TAIPEI), "web"
+        )
+
+        assert response.status_code == 200
+        assert self._get_activities(user) == [(date(2026, 10, 24), "web")]
+
+    @pytest.mark.scenario("USAGE-R1.2")
+    def test_open_session_records_pwa_usage(
+        self, request_obj: HttpRequest, user: User, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        response = self._open_session_at(
+            request_obj, monkeypatch, datetime(2026, 10, 24, 9, 0, tzinfo=TAIPEI), "pwa"
+        )
+
+        assert response.status_code == 200
+        assert self._get_activities(user) == [(date(2026, 10, 24), "pwa")]
+
+    @pytest.mark.scenario("USAGE-R1.5")
+    def test_open_session_twice_on_one_day_keeps_one_record(
+        self, request_obj: HttpRequest, user: User, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._open_session_at(
+            request_obj, monkeypatch, datetime(2026, 10, 24, 9, 0, tzinfo=TAIPEI), "web"
+        )
+        response = self._open_session_at(
+            request_obj,
+            monkeypatch,
+            datetime(2026, 10, 24, 21, 0, tzinfo=TAIPEI),
+            "web",
+        )
+
+        assert response.status_code == 200
+        assert self._get_activities(user) == [(date(2026, 10, 24), "web")]
+
+    @pytest.mark.scenario("USAGE-R1.6")
+    def test_open_session_on_two_platforms_keeps_one_record_each(
+        self, request_obj: HttpRequest, user: User, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._open_session_at(
+            request_obj, monkeypatch, datetime(2026, 10, 24, 9, 0, tzinfo=TAIPEI), "web"
+        )
+        response = self._open_session_at(
+            request_obj,
+            monkeypatch,
+            datetime(2026, 10, 24, 21, 0, tzinfo=TAIPEI),
+            "pwa",
+        )
+
+        assert response.status_code == 200
+        assert self._get_activities(user) == [
+            (date(2026, 10, 24), "pwa"),
+            (date(2026, 10, 24), "web"),
+        ]
+
+    @pytest.mark.scenario("USAGE-R1.7", "USAGE-R1.8")
+    def test_open_session_after_midnight_records_the_new_day(
+        self, request_obj: HttpRequest, user: User, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._open_session_at(
+            request_obj,
+            monkeypatch,
+            datetime(2026, 10, 24, 23, 50, tzinfo=TAIPEI),
+            "web",
+        )
+        response = self._open_session_at(
+            request_obj,
+            monkeypatch,
+            datetime(2026, 10, 25, 0, 10, tzinfo=TAIPEI),
+            "web",
+        )
+
+        assert response.status_code == 200
+        assert self._get_activities(user) == [
+            (date(2026, 10, 24), "web"),
+            (date(2026, 10, 25), "web"),
+        ]
+
+    @pytest.mark.scenario("USAGE-R1.9")
+    def test_open_session_uses_taiwan_date(
+        self, request_obj: HttpRequest, user: User, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        response = self._open_session_at(
+            request_obj, monkeypatch, datetime(2026, 10, 24, 23, 30, tzinfo=UTC), "web"
+        )
+
+        assert response.status_code == 200
+        assert self._get_activities(user) == [(date(2026, 10, 25), "web")]
+
+    def test_open_session_without_platform_records_one_row_per_day(
+        self, request_obj: HttpRequest, user: User, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """
+        Frontends released before platforms were recorded send no platform, and
+        their visits still count a user once per day.
+        """
+        self._open_session_at(
+            request_obj, monkeypatch, datetime(2026, 10, 24, 9, 0, tzinfo=TAIPEI), None
+        )
+        response = self._open_session_at(
+            request_obj, monkeypatch, datetime(2026, 10, 24, 21, 0, tzinfo=TAIPEI), None
+        )
+
+        assert response.status_code == 200
+        assert self._get_activities(user) == [(date(2026, 10, 24), None)]
+
+    @pytest.mark.parametrize("platform", ["ios", ""])
+    def test_open_session_rejects_unknown_platform(
+        self,
+        request_obj: HttpRequest,
+        user: User,
+        monkeypatch: pytest.MonkeyPatch,
+        platform: str,
+    ) -> None:
+        response = self._open_session_at(
+            request_obj,
+            monkeypatch,
+            datetime(2026, 10, 24, 9, 0, tzinfo=TAIPEI),
+            platform,
+        )
+
+        assert response.status_code == 400
+        assert self._get_activities(user) == []
 
 
 @pytest.mark.django_db

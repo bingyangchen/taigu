@@ -15,7 +15,7 @@ flowchart TD
   data_fixes("資料驗證與資料處理修正<br/>未規劃"):::unplanned
   ui_feedback_fixes("介面回饋與導覽修正<br/>未規劃"):::unplanned
   copy_fixes("介面文案與數字格式修正<br/>未規劃"):::unplanned
-  usage_recording("記錄使用情況<br/>已核准"):::approved
+  usage_recording("記錄使用情況<br/>已完成"):::done
   admin_console("後台<br/>未規劃"):::unplanned
   mobile_app("Mobile App<br/>未規劃"):::unplanned
   usage_recording --> admin_console
@@ -195,7 +195,7 @@ flowchart TD
 
 讓開發者在只有自己能使用的後台，看到有多少使用者在使用 Taigu、新使用者會不會持續使用、試用後有多少使用者付費訂閱，並處理使用者的問題回報。
 
-1. [記錄使用情況](0003-usage-recording.md)：記下使用者使用 Taigu 的日期與平台，以及送出問題回報時的平台與 User-Agent，讓後台上線時已經有資料可以統計。
+1. [記錄使用情況](archive/0003-usage-recording.md)：記下使用者使用 Taigu 的日期與平台，以及送出問題回報時的平台與 User-Agent，讓後台上線時已經有資料可以統計。
 2. 後台：加上後台的權限檢查，做出統計活躍、留存與付費轉換的畫面，以及問題回報的列表，並在有新的問題回報時通知開發者。開發者在討論 plan 0003 時已經決定下面這些事：
    - 後台放在現有前端的 `/admin`，只有 superuser 能使用。
    - api-server 把後台的 endpoint 都放在 `/api/admin/` 底下，在同一個地方檢查權限。

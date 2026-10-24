@@ -35,6 +35,10 @@ export default class Api {
     }
   }
 
+  public static get hasCsrfToken(): boolean {
+    return Api.getCookie("csrftoken") !== null;
+  }
+
   private static getCookie(name: string): string | null {
     const cookies = document.cookie.split(";").map((c) => c.trim());
     for (const cookie of cookies) {
@@ -50,10 +54,15 @@ export default class Api {
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
   }
 
+  /**
+   * With `silentOnFailure`, a failed request shows neither an error toast nor the
+   * plan upsell; an ended login still takes the user to the welcome page.
+   */
   public static async sendRequest(
     endpoint: string,
     method: string,
     requestBody?: URLSearchParams | string,
+    { silentOnFailure = false }: { silentOnFailure?: boolean } = {},
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     method = method.toLowerCase();
@@ -86,7 +95,7 @@ export default class Api {
       }
       return await Api.handleResponse(response);
     } catch (error) {
-      if (method !== "get") {
+      if (method !== "get" && !silentOnFailure) {
         if (Api.isQuotaExceededError(error)) {
           await requestCloseActiveModal();
           store.dispatch(

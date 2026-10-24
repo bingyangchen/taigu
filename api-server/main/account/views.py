@@ -41,6 +41,7 @@ from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
 from main.env import env
 from main.origins import build_frontend_urls
+from main.usage.models import DailyActivity, Platform
 
 logger = logging.getLogger(__name__)
 
@@ -256,11 +257,18 @@ def me(request: HttpRequest) -> JsonResponse:
 @require_POST
 @require_login
 def open_session(request: HttpRequest) -> JsonResponse:
+    platform = request.POST.get("platform")
+    if platform is not None and platform not in Platform.values:
+        return JsonResponse({"message": "Invalid platform"}, status=400)
+
     now = timezone.now()
     update_before = now - OPEN_SESSION_LAST_LOGIN_UPDATE_INTERVAL
     User.objects.filter(pk=request.user.pk).filter(
         Q(last_login__isnull=True) | Q(last_login__lt=update_before)
     ).update(last_login=now)
+    DailyActivity.objects.get_or_create(
+        user=request.user, date=timezone.localdate(now), platform=platform
+    )
     return JsonResponse({})
 
 
