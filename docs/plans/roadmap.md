@@ -7,6 +7,7 @@
 ```mermaid
 flowchart TD
   oauth_state_check("驗證 OAuth state<br/>已完成"):::done
+  standard_whitelist("Standard 白名單<br/>已核准"):::approved
   login_account_fixes("登入與帳號修正<br/>未規劃"):::unplanned
   billing_fixes("訂閱流程修正<br/>未規劃"):::unplanned
   calculation_fixes("投資數字的計算修正<br/>未規劃"):::unplanned
@@ -21,7 +22,11 @@ flowchart TD
 
 ## 功能願景
 
-這一節的功能都來自補寫 spec 時發現的問題。這些行為沒有寫進 spec，等寫 plan 時再決定怎麼修。
+除了「Standard 白名單」，這一節的功能都來自補寫 spec 時發現的問題，這些行為沒有寫進 spec，等寫 plan 時再決定怎麼修。
+
+### Standard 白名單
+
+讓開發者指定的使用者不用付費就能使用 Standard 方案。這個功能只有一個階段，見 [plan 0002](0002-standard-whitelist.md)。
 
 ### 登入與帳號修正
 
@@ -41,6 +46,7 @@ flowchart TD
   - 方案頁不顯示「停止自動續訂」，但 api-server 允許停止。
   - 使用者再訂閱一次時，Taigu 會向綠界建立新的定期扣款，卻沒有取消舊的。
   - 扣款失敗的狀態不會自己變成 Free。
+  - 白名單上、扣款失敗的使用者同樣沒辦法停止自動續訂，綠界如果繼續扣款，他們會為本來就能免費使用的 Standard 方案付錢。
 - 停止自動續訂的確認視窗寫「你可以在到期前重新啟用自動續訂。」，但 Taigu 沒有重新啟用的功能。目標是確認視窗只寫 Taigu 做得到的事，做法（做出這個功能或拿掉這句話）在 plan 裡決定。
 - 停止自動續訂時填的原因會送到 api-server，但 api-server 沒有存下來。目標是不向使用者收集沒有用到的資料，做法（存下原因或拿掉這個欄位）在 plan 裡決定。
 - 確認訂閱 Standard 的視窗只寫金額，沒寫續訂日期，不符合 ui-guidelines.md 的「文案」。目標是加上第一次續訂的日期。
