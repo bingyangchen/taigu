@@ -154,7 +154,7 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 - 從其他分頁切回 Taigu 的分頁時，頁面觸發 `visibilitychange`，Taigu 記下使用紀錄。
 - api-server 存下的 User-Agent 跟瀏覽器的 `navigator.userAgent` 相同，request 經過 Cloudflare 與 Nginx 之後沒有被改掉。
 
-其他平台與情況還沒有實測，要測的項目記在 roadmap 的「後台」。
+其他平台與情況還沒有實測，要測的項目記在 roadmap 的「依平台分開的統計」。
 
 舊版前端有兩種：新版前端上線之前就開著的頁面，以及新版前端上線之後，使用者第一次開啟 Taigu 時 service worker 從 cache 提供的頁面。Service worker 從 cache 提供舊版前端時，同一位使用者那一天可能同時有 `platform` 欄位是空的與有值的兩列，順序如下圖：
 
