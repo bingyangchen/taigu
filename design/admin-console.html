@@ -1,0 +1,1447 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>後台 | Taigu 設計稿</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+    <style>
+      /* Colors copied from frontend/src/_design_system.scss, fonts from index.scss */
+      :root {
+        --white: #fff;
+        --noisy-white: #f5f5f5;
+        --page-bg: #f6f9fc;
+        --light-gray: #ddd;
+        --gray: #888;
+        --deep-gray: #444;
+        --red: #d4493f;
+        --green: #1aa260;
+        --blue: #4c8bf5;
+        --black-transparent-2: rgba(0, 0, 0, 0.1);
+        --black-transparent-3: rgba(0, 0, 0, 0.05);
+        --black-transparent-4: rgba(0, 0, 0, 0.02);
+        --blue-transparent-2: rgba(76, 139, 245, 0.25);
+        --blue-transparent-3: rgba(76, 139, 245, 0.1);
+
+        /* Type scale: five sizes only */
+        --t-xs: 0.75rem;
+        --t-sm: 0.875rem;
+        --t-base: 1rem;
+        --t-lg: 1.25rem;
+        --t-xl: 1.75rem;
+
+        /* Spacing scale on a 4px base */
+        --s1: 4px;
+        --s2: 8px;
+        --s3: 12px;
+        --s4: 16px;
+        --s5: 24px;
+        --s6: 32px;
+        --s7: 48px;
+
+        --hairline: 1px solid var(--black-transparent-2);
+        --hairline-soft: 1px solid var(--black-transparent-3);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+          "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+        font-size: var(--t-base);
+        letter-spacing: 1px;
+        color: var(--deep-gray);
+        background: var(--white);
+      }
+      button {
+        font: inherit;
+        letter-spacing: inherit;
+        color: inherit;
+      }
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 2px;
+      }
+      .num {
+        font-variant-numeric: tabular-nums;
+      }
+      .muted {
+        color: var(--gray);
+      }
+
+      /* Draft-only toolbar, not part of the design */
+      .draft-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 16px;
+        background: #222;
+        color: #eee;
+        font-size: 12px;
+      }
+      .draft-bar button {
+        padding: 2px 8px;
+        border: 1px solid #555;
+        border-radius: 4px;
+        background: transparent;
+        color: #eee;
+        cursor: pointer;
+      }
+      .draft-bar button[aria-pressed="true"] {
+        background: #eee;
+        color: #222;
+      }
+
+      /* ---------- Shell ---------- */
+      .shell {
+        display: grid;
+        grid-template-columns: 216px minmax(0, 1fr);
+        align-content: start;
+        min-height: calc(100vh - 30px);
+      }
+      .nav {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 30px);
+        padding: var(--s5) var(--s3);
+        border-right: var(--hairline);
+        background: var(--page-bg);
+      }
+      .nav-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--s4);
+        padding-left: var(--s3);
+      }
+      .nav-title {
+        font-size: var(--t-sm);
+        font-weight: 600;
+      }
+      .nav-title span {
+        margin-left: var(--s1);
+        font-weight: 400;
+        color: var(--gray);
+      }
+      .nav-items {
+        display: flex;
+        flex-direction: column;
+        gap: var(--s1);
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: var(--s3);
+        min-height: 40px;
+        padding: 0 var(--s3);
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        font-size: var(--t-sm);
+        text-align: left;
+        text-decoration: none;
+        color: var(--deep-gray);
+        cursor: pointer;
+      }
+      .nav-item svg {
+        flex: none;
+        fill: currentColor;
+      }
+      .nav-item:hover {
+        background: var(--black-transparent-3);
+      }
+      .nav-item[aria-current="page"] {
+        background: var(--white);
+        box-shadow: inset 0 0 0 1px var(--black-transparent-2);
+        color: var(--blue);
+        font-weight: 600;
+      }
+      .badge {
+        margin-left: auto;
+        min-width: 20px;
+        padding: 0 6px;
+        border-radius: 100px;
+        background: var(--blue);
+        color: var(--white);
+        font-size: var(--t-xs);
+        line-height: 20px;
+        text-align: center;
+        letter-spacing: 0;
+      }
+      .nav-collapse {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 8px;
+        background: none;
+        color: var(--gray);
+        fill: currentColor;
+        cursor: pointer;
+      }
+      .nav-collapse:hover {
+        background: var(--black-transparent-3);
+        color: var(--deep-gray);
+      }
+      .nav-back {
+        margin-top: auto;
+        color: var(--gray);
+      }
+      .nav-item {
+        position: relative;
+      }
+      .shell {
+        transition: grid-template-columns 0.2s ease-out;
+      }
+      @media (min-width: 780px) {
+      .shell.collapsed {
+        grid-template-columns: 64px minmax(0, 1fr);
+      }
+      .shell.collapsed .nav {
+        padding-left: var(--s2);
+        padding-right: var(--s2);
+      }
+      .shell.collapsed .nav-title {
+        display: none;
+      }
+      .shell.collapsed .nav-top {
+        justify-content: center;
+        padding-left: 0;
+      }
+      .shell.collapsed .nav-label {
+        display: none;
+      }
+      .shell.collapsed .nav-item {
+        justify-content: center;
+        padding: 0;
+      }
+      .shell.collapsed .nav-collapse svg {
+        transform: rotate(180deg);
+      }
+      .shell.collapsed .badge {
+        position: absolute;
+        top: 2px;
+        right: 4px;
+        min-width: 16px;
+        padding: 0 4px;
+        font-size: 10px;
+        line-height: 16px;
+      }
+      }
+      .content {
+        width: 100%;
+        max-width: 1440px;
+        padding: var(--s6) var(--s7) var(--s7) var(--s7);
+      }
+
+      /* ---------- Page and section headings ---------- */
+      .page-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: var(--s3) var(--s5);
+        margin-bottom: var(--s6);
+      }
+      .page-head h1 {
+        margin: 0;
+        font-size: var(--t-lg);
+        font-weight: 600;
+      }
+      .page-head p {
+        margin: var(--s1) 0 0;
+        font-size: var(--t-sm);
+        color: var(--gray);
+      }
+      .section + .section {
+        margin-top: var(--s7);
+      }
+      .section-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: var(--s2) var(--s5);
+        margin-bottom: var(--s4);
+      }
+      .section-head h2 {
+        margin: 0;
+        font-size: var(--t-base);
+        font-weight: 600;
+      }
+      .section-head p {
+        margin: var(--s1) 0 0;
+        font-size: var(--t-xs);
+        color: var(--gray);
+      }
+
+      /* ---------- Metrics ---------- */
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+        gap: var(--s5) var(--s6);
+      }
+      .summary {
+        margin-bottom: var(--s7);
+      }
+      .metric-label {
+        font-size: var(--t-sm);
+        color: var(--gray);
+      }
+      .metric-value {
+        margin-top: var(--s1);
+        font-size: var(--t-xl);
+        font-weight: 600;
+        letter-spacing: 0;
+        line-height: 1.2;
+      }
+      .metric-value small {
+        margin-left: 2px;
+        font-size: var(--t-sm);
+        font-weight: 400;
+        letter-spacing: 1px;
+      }
+      .metric-value.pending {
+        display: flex;
+        align-items: center;
+        min-height: calc(var(--t-xl) * 1.2);
+        font-size: var(--t-sm);
+        font-weight: 400;
+        letter-spacing: 1px;
+        color: var(--gray);
+      }
+      .metric-delta {
+        margin-top: var(--s1);
+        min-height: 1.2em;
+        font-size: var(--t-xs);
+      }
+      .up {
+        color: var(--red);
+      }
+      .down {
+        color: var(--green);
+      }
+
+      /* ---------- Segmented control, mirrors components/SegmentedControl (subtle) ---------- */
+      .seg {
+        display: inline-flex;
+        padding: 3px;
+        border-radius: 100px;
+        background: var(--black-transparent-3);
+      }
+      .seg button {
+        min-width: 64px;
+        height: 32px;
+        padding: 0 var(--s3);
+        border: none;
+        border-radius: 100px;
+        background: transparent;
+        font-size: var(--t-sm);
+        color: var(--gray);
+        cursor: pointer;
+      }
+      .seg button:hover {
+        color: var(--deep-gray);
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--white);
+        color: var(--deep-gray);
+        box-shadow: 0 1px 2px var(--black-transparent-2);
+      }
+
+      /* ---------- Charts ---------- */
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--s1) var(--s4);
+        font-size: var(--t-xs);
+        color: var(--gray);
+      }
+      .legend i {
+        display: inline-block;
+        width: 12px;
+        height: 2px;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+      .legend i.area {
+        height: 10px;
+        width: 10px;
+        background: var(--black-transparent-3);
+        box-shadow: inset 0 0 0 1px var(--black-transparent-2);
+      }
+      .chart {
+        width: 100%;
+        height: 280px;
+      }
+      .chart.small {
+        height: 180px;
+      }
+
+      /* ---------- Tables ---------- */
+      .table-wrap {
+        max-height: 440px;
+        overflow: auto;
+        border-top: var(--hairline);
+        border-bottom: var(--hairline);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--t-sm);
+      }
+      th,
+      td {
+        padding: var(--s3) var(--s4);
+        white-space: nowrap;
+        text-align: right;
+      }
+      th:first-child,
+      td:first-child {
+        position: sticky;
+        left: 0;
+        padding-left: 0;
+        text-align: left;
+        background: var(--white);
+      }
+      th:last-child,
+      td:last-child {
+        padding-right: 0;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: var(--white);
+        box-shadow: inset 0 -1px 0 var(--black-transparent-2);
+        font-size: var(--t-xs);
+        font-weight: 500;
+        color: var(--gray);
+      }
+      th:first-child {
+        z-index: 2;
+      }
+      td {
+        border-bottom: var(--hairline-soft);
+        font-variant-numeric: tabular-nums;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr:hover td {
+        background: var(--page-bg);
+      }
+      .pct {
+        display: inline-block;
+        min-width: 3.2em;
+        margin-left: var(--s2);
+        color: var(--gray);
+      }
+      .footnote {
+        margin: var(--s3) 0 0;
+        font-size: var(--t-xs);
+        color: var(--gray);
+      }
+
+      /* ---------- Issue reports ---------- */
+      .reports {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        max-width: 760px;
+        border-top: var(--hairline);
+      }
+      .report {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 44px;
+        column-gap: var(--s4);
+        padding: var(--s4) 0;
+        border-bottom: var(--hairline);
+      }
+      .report-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0 var(--s2);
+        font-size: var(--t-xs);
+        color: var(--gray);
+      }
+      .report .email {
+        font-size: var(--t-sm);
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
+      .report-meta .sep::before {
+        content: "·";
+      }
+      .report-body {
+        max-width: 68ch;
+        margin: var(--s3) 0 0;
+        font-size: var(--t-sm);
+        line-height: 1.7;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .report-body.clamped {
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .report.handled .report-body,
+      .report.handled .email {
+        color: var(--gray);
+      }
+      .ua {
+        max-width: 68ch;
+        margin-top: var(--s3);
+        padding: var(--s2) var(--s3);
+        border-radius: 6px;
+        background: var(--noisy-white);
+        font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+        font-size: var(--t-xs);
+        letter-spacing: 0;
+        overflow-wrap: anywhere;
+      }
+      .link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        margin-top: var(--s1);
+        padding: 0;
+        border: none;
+        background: none;
+        font-size: var(--t-xs);
+        color: var(--blue);
+        cursor: pointer;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .check {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        margin-top: -10px;
+        padding-top: 10px;
+        border: none;
+        border-radius: 8px;
+        background: none;
+        cursor: pointer;
+      }
+      .check-circle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border: 1.5px solid var(--gray);
+        border-radius: 50%;
+        fill: transparent;
+        transition:
+          background-color 0.15s ease-out,
+          border-color 0.15s ease-out;
+      }
+      .check:hover .check-circle {
+        border-color: var(--blue);
+        fill: var(--blue);
+      }
+      .check.checked .check-circle {
+        border-color: var(--blue);
+        background: var(--blue);
+        fill: var(--white);
+      }
+      .check.pending {
+        cursor: default;
+        opacity: 0.4;
+      }
+      .more {
+        margin-top: var(--s5);
+      }
+
+      /* ---------- Buttons, states, toast ---------- */
+      .btn {
+        min-height: 36px;
+        padding: 0 var(--s4);
+        border: var(--hairline);
+        border-radius: 8px;
+        background: var(--white);
+        font-size: var(--t-sm);
+        cursor: pointer;
+      }
+      .btn:hover {
+        background: var(--page-bg);
+      }
+      .state {
+        padding: var(--s5) 0;
+        border-top: var(--hairline);
+        font-size: var(--t-sm);
+        color: var(--gray);
+      }
+      .state .btn {
+        margin-left: var(--s3);
+      }
+      .skeleton {
+        border-radius: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--black-transparent-3) 25%,
+          var(--black-transparent-4) 50%,
+          var(--black-transparent-3) 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .skeleton {
+          animation: none;
+        }
+      }
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: var(--s5);
+        transform: translate(-50%, 8px);
+        padding: var(--s3) var(--s4);
+        border-radius: 8px;
+        background: var(--deep-gray);
+        color: var(--white);
+        font-size: var(--t-sm);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s ease-out,
+          transform 0.2s ease-out;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      /* ---------- Touch devices: 44px targets at any width ---------- */
+      @media (pointer: coarse) {
+        .nav-collapse {
+          width: 44px;
+          height: 44px;
+        }
+        .seg button,
+        .nav-item,
+        .btn {
+          min-height: 44px;
+          height: auto;
+        }
+        .link {
+          min-height: 44px;
+          min-width: 44px;
+          margin-top: 0;
+        }
+      }
+
+      /* ---------- Narrow widths: nav on top, one column ---------- */
+      @media (max-width: 1023px) {
+        .metrics {
+          --cols: 2 !important;
+        }
+        .metrics.compact {
+          display: block;
+          max-width: 480px;
+        }
+        .metrics.compact .metric {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          padding: var(--s2) 0;
+          border-bottom: var(--hairline-soft);
+        }
+        .metrics.compact .metric-value {
+          margin-top: 0;
+          font-size: var(--t-base);
+        }
+      }
+      @media (max-width: 779px) {
+        .shell {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .nav {
+          z-index: 10;
+          flex-direction: row;
+          align-items: center;
+          height: auto;
+          padding: var(--s2) var(--s4);
+          border-right: none;
+          border-bottom: var(--hairline);
+          overflow-x: auto;
+        }
+        .nav-top {
+          display: none;
+        }
+        .nav-items {
+          flex-direction: row;
+        }
+        .nav-item {
+          min-height: 44px;
+          white-space: nowrap;
+        }
+        .nav-items .nav-item svg {
+          display: none;
+        }
+        .badge {
+          margin-left: 0;
+        }
+        .nav-back {
+          justify-content: center;
+          min-width: 44px;
+          margin-top: 0;
+          margin-left: auto;
+          padding: 0;
+        }
+        .nav-back .nav-label {
+          display: none;
+        }
+        .nav-collapse {
+          display: none;
+        }
+        .content {
+          padding: var(--s5) var(--s4) var(--s7);
+        }
+        .page-head {
+          margin-bottom: var(--s5);
+        }
+        .section + .section {
+          margin-top: var(--s6);
+        }
+        .seg button {
+          height: 44px;
+        }
+        .link {
+          min-height: 44px;
+          margin-top: 0;
+        }
+        th,
+        td {
+          padding: var(--s3);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="draft-bar" role="toolbar" aria-label="設計稿控制">
+      <span>設計稿｜狀態：</span>
+      <button data-state="default" aria-pressed="true">有資料</button>
+      <button data-state="loading" aria-pressed="false">載入中</button>
+      <button data-state="empty" aria-pressed="false">沒有資料</button>
+      <button data-state="error" aria-pressed="false">載入失敗</button>
+      <label style="display: flex; align-items: center; gap: 4px"
+        ><input type="checkbox" id="fail-mark" />標記時失敗</label
+      >
+      <span style="margin-left: auto">今天假設是 2027/03/17，使用紀錄從 2026/10/27 開始</span>
+    </div>
+
+    <div class="shell">
+      <nav class="nav" aria-label="後台">
+        <div class="nav-top">
+          <div class="nav-title">Taigu<span>後台</span></div>
+          <button class="nav-collapse" onclick="toggleNav()" aria-expanded="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M11.752,23.994,1.879,14.121a3,3,0,0,1,0-4.242L11.746.012,13.16,1.426,3.293,11.293a1,1,0,0,0,0,1.414l9.873,9.873Z" />
+              <path d="M21.752,23.994,11.879,14.121a3,3,0,0,1,0-4.242L21.746.012,23.16,1.426,13.293,11.293a1,1,0,0,0,0,1.414l9.873,9.873Z" />
+            </svg>
+          </button>
+        </div>
+        <div class="nav-items">
+          <button class="nav-item" data-page="usage">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M23,22H5a3,3,0,0,1-3-3V1A1,1,0,0,0,0,1V19a5.006,5.006,0,0,0,5,5H23a1,1,0,0,0,0-2Z" />
+              <path d="M6,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,6,20Z" />
+              <path d="M10,10v9a1,1,0,0,0,2,0V10a1,1,0,0,0-2,0Z" />
+              <path d="M15,13v6a1,1,0,0,0,2,0V13a1,1,0,0,0-2,0Z" />
+              <path d="M20,9V19a1,1,0,0,0,2,0V9a1,1,0,0,0-2,0Z" />
+              <path d="M6,9a1,1,0,0,0,.707-.293l3.586-3.586a1.025,1.025,0,0,1,1.414,0l2.172,2.172a3,3,0,0,0,4.242,0l5.586-5.586A1,1,0,0,0,22.293.293L16.707,5.878a1,1,0,0,1-1.414,0L13.121,3.707a3,3,0,0,0-4.242,0L5.293,7.293A1,1,0,0,0,6,9Z" />
+            </svg>
+            <span class="nav-label">使用情況</span>
+          </button>
+          <button class="nav-item" data-page="subscriptions">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="5.5" cy="15.5" r="1.5" />
+              <path d="M19,3H5A5.006,5.006,0,0,0,0,8v8a5.006,5.006,0,0,0,5,5H19a5.006,5.006,0,0,0,5-5V8A5.006,5.006,0,0,0,19,3ZM5,5H19a3,3,0,0,1,3,3H2A3,3,0,0,1,5,5ZM19,19H5a3,3,0,0,1-3-3V10H22v6A3,3,0,0,1,19,19Z" />
+            </svg>
+            <span class="nav-label">訂閱</span>
+          </button>
+          <button class="nav-item" data-page="reports">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M24,24H12C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12v12ZM12,2C6.486,2,2,6.486,2,12s4.486,10,10,10h10V12c0-5.514-4.486-10-10-10Zm1,3h-2V15h2V5Zm0,12h-2v2h2v-2Z" />
+            </svg>
+            <span class="nav-label">問題回報</span>
+            <span class="badge num" id="unhandled-badge">3</span>
+          </button>
+        </div>
+        <a class="nav-item nav-back" href="#" aria-label="回到 Taigu" title="回到 Taigu">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19,24H5c-2.757,0-5-2.243-5-5V9.724c0-1.665,.824-3.215,2.204-4.145L9.203,.855c1.699-1.146,3.895-1.146,5.594,0l7,4.724c1.379,.93,2.203,2.479,2.203,4.145v9.276c0,2.757-2.243,5-5,5ZM12,1.997c-.584,0-1.168,.172-1.678,.517L3.322,7.237c-.828,.558-1.322,1.487-1.322,2.486v9.276c0,1.654,1.346,3,3,3h14c1.654,0,3-1.346,3-3V9.724c0-.999-.494-1.929-1.321-2.486L13.678,2.514c-.51-.345-1.094-.517-1.678-.517Z" />
+          </svg>
+          <span class="nav-label">回到 Taigu</span>
+        </a>
+      </nav>
+
+      <main class="content" id="content"></main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      // ---------- Mock data ----------
+      const TODAY = new Date(2027, 2, 17);
+      const RECORDING_START = new Date(2026, 9, 27);
+      const DAY = 86400000;
+      const addDays = (d, n) => new Date(d.getTime() + n * DAY);
+      const fmt = (d) =>
+        `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+      const fmtShort = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
+      const fmtMonth = (d) => `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const n = (v) => v.toLocaleString();
+
+      let seed = 7;
+      const rand = () => {
+        seed = (seed * 16807) % 2147483647;
+        return (seed - 1) / 2147483646;
+      };
+
+      // Daily active, signups, and rolling windows from RECORDING_START to TODAY
+      const days = [];
+      for (let d = RECORDING_START; d <= TODAY; d = addDays(d, 1)) days.push(d);
+      const users = [];
+      let pool = 180;
+      const dailyUsers = days.map((d, i) => {
+        const growth = 1 + i / 260;
+        const weekend = [0, 6].includes(d.getDay()) ? 0.72 : 1;
+        const signups = Math.round((1 + rand() * 3) * growth);
+        pool += signups;
+        const dau = Math.round((24 + rand() * 8) * growth * weekend);
+        const ids = new Set();
+        while (ids.size < dau) ids.add(Math.floor(rand() * pool));
+        users.push(ids);
+        return { date: d, dau, signups };
+      });
+      const windowCount = (i, len) => {
+        const s = new Set();
+        for (let k = Math.max(0, i - len + 1); k <= i; k++) users[k].forEach((u) => s.add(u));
+        return s.size;
+      };
+      dailyUsers.forEach((row, i) => {
+        row.wau = windowCount(i, 7);
+        row.mau = windowCount(i, 30);
+        row.incomplete = i < 29; // The 30-day window starts before recording
+      });
+      // Today is still in progress, so its numbers are partial
+      const todayRow = dailyUsers[dailyUsers.length - 1];
+      todayRow.dau = Math.round(todayRow.dau * 0.45);
+      todayRow.signups = 1;
+
+      const yIdx = dailyUsers.length - 2;
+      const yesterday = dailyUsers[yIdx];
+      const weekAgo = dailyUsers[yIdx - 7];
+      const totalUsers = 412;
+      const totalUsersWeekAgo = 397;
+
+      // Weekly cohorts: weeks whose Monday is on or after RECORDING_START
+      const cohorts = [];
+      let monday = new Date(2026, 10, 2);
+      while (monday <= TODAY) {
+        const size = Math.round(8 + rand() * 14);
+        const lastSignup = addDays(monday, 6);
+        const cell = (endOffset, rate) => {
+          const end = addDays(lastSignup, endOffset);
+          if (end >= TODAY) return null;
+          const c = Math.round(size * rate);
+          return { c, p: Math.round((c / size) * 100) };
+        };
+        cohorts.push({
+          start: monday,
+          size,
+          d1: cell(6, 0.45 + rand() * 0.2),
+          d7: cell(13, 0.28 + rand() * 0.15),
+          d30: cell(36, 0.15 + rand() * 0.12),
+        });
+        monday = addDays(monday, 7);
+      }
+      cohorts.reverse();
+      // A week in which nobody registered
+      Object.assign(cohorts[6], { size: 0, d1: null, d7: null, d30: null });
+
+      // Trial cohorts by the month the trial started, from billing launch
+      const months = [];
+      for (let m = 0; m < 10; m++) {
+        const start = new Date(2026, 5 + m, 1);
+        const end = new Date(2026, 6 + m, 0);
+        const size = Math.round(30 + m * 4 + rand() * 12);
+        const paid = Math.round(size * (0.06 + rand() * 0.06));
+        const deadline = addDays(end, 31 + 30);
+        months.push({ start, size, paid, inProgress: deadline >= TODAY, deadline });
+      }
+      months.reverse();
+      // A month in which nobody started a trial
+      Object.assign(months[7], { size: 0, paid: 0 });
+
+      const payments = [];
+      for (let m = 0; m < 10; m++) {
+        const month = new Date(2026, 5 + m, 1);
+        const count = Math.round(2 + m * 2.4 + rand() * 3);
+        const yearly = Math.round(count * 0.15);
+        payments.push({ month, count, amount: (count - yearly) * 65 + yearly * 700 });
+      }
+
+      const statuses = [
+        { label: "試用中", value: 96 },
+        { label: "自動續訂中", value: 41 },
+        { label: "已停止自動續訂", value: 6 },
+        { label: "扣款失敗", value: 2 },
+        { label: "未訂閱", value: 267 },
+      ];
+
+      const UA_IOS =
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1";
+      const UA_MAC =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
+      let reports = [
+        {
+          id: 1,
+          email: "chen.yuting@gmail.com",
+          platform: "PWA",
+          time: "2027/03/17 09:42",
+          ua: UA_IOS,
+          handled: false,
+          body: "從主畫面開啟之後，持股頁的 2330 現價一直停在昨天的收盤價，下拉重新整理也沒有用。\n關掉 app 重開才更新。",
+        },
+        {
+          id: 2,
+          email: "kevin.lin.tw@gmail.com",
+          platform: "網頁",
+          time: "2027/03/16 22:15",
+          ua: UA_MAC,
+          handled: false,
+          body:
+            "匯出交易紀錄的 CSV 用 Excel 開會變成亂碼，用 Numbers 開是正常的。\n\n" +
+            "我的步驟：\n1. 設定 → 資料控制 → 匯出\n2. 下載後直接雙擊開啟\n3. 股票名稱那一欄全部變成問號跟奇怪的符號\n\n" +
+            "我用的是 Windows 版 Excel 365，系統語言是繁體中文。希望可以加上 BOM 或提供 xlsx 格式。另外匯出的日期格式是 2027-03-01，能不能改成 2027/03/01 跟介面一致？",
+        },
+        {
+          id: 4,
+          email: "hsu.mingchieh@gmail.com",
+          platform: "網頁",
+          time: "2027/03/10 08:30",
+          ua: UA_MAC,
+          handled: true,
+          body: "試用期結束後方案頁顯示的日期少一天。",
+        },
+        {
+          id: 3,
+          email: "a.wang0507@gmail.com",
+          platform: "平台未記錄",
+          time: "2026/10/22 13:08",
+          ua: null,
+          handled: false,
+          body: "現金股利可以支援股票股利嗎？我有幾檔配股的，現在只能自己手動加買進紀錄。",
+        },
+      ];
+
+      // Mock: the 全部 view has older reports beyond the first page
+      const hasOlderReports = { unhandled: false, all: true };
+
+      // ---------- Rendering helpers ----------
+      let page = "usage";
+      let state = "default";
+      let activityRange = "90";
+      let reportFilter = "unhandled";
+      const expanded = new Set();
+      let charts = [];
+      const content = document.getElementById("content");
+
+      const escapeHtml = (s) =>
+        s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+      function pageHead(title, sub = "", tools = "") {
+        return `<header class="page-head"><div><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ""}</div>${tools}</header>`;
+      }
+
+      function section(title, body, { caption = "", tools = "" } = {}) {
+        return `<section class="section"><div class="section-head"><div><h2>${title}</h2>${caption ? `<p>${caption}</p>` : ""}</div>${tools}</div>${body}</section>`;
+      }
+
+      const stateBox = (text) => `<div class="state">${text}</div>`;
+      const errorBox = () =>
+        `<div class="state">無法載入資料。<button class="btn" onclick="reloadData()">重新載入</button></div>`;
+      const skeleton = (h, w = "100%") => `<div class="skeleton" style="height:${h}px;width:${w}"></div>`;
+      const skeletonRows = (k) =>
+        Array.from({ length: k })
+          .map(() => `<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,.05)">${skeleton(14)}</div>`)
+          .join("");
+      const muted = (t) => `<span class="muted">${t}</span>`;
+
+      function delta(now, before) {
+        const d = now - before;
+        if (d === 0) return `<span class="muted">±0 人</span>`;
+        return d > 0 ? `<span class="up">▲ +${n(d)} 人</span>` : `<span class="down">▼ −${n(-d)} 人</span>`;
+      }
+
+      function metric(label, value, deltaHtml = "") {
+        return `<div class="metric"><div class="metric-label">${label}</div><div class="metric-value num">${value}<small>人</small></div><div class="metric-delta num">${deltaHtml}</div></div>`;
+      }
+
+      // ---------- 使用情況 ----------
+      function renderUsage() {
+        const sub = `摘要數字統計到昨天（${fmtShort(yesterday.date)}），增減與 ${fmtShort(weekAgo.date)} 相比`;
+        if (state === "loading") {
+          return (
+            pageHead("使用情況", sub) +
+            `<div class="metrics summary">${Array.from({ length: 4 })
+              .map(() => `<div>${skeleton(14, "50%")}<div style="height:8px"></div>${skeleton(30, "40%")}</div>`)
+              .join("")}</div>` +
+            section("活躍人數", skeleton(280)) +
+            section("新註冊人數", skeleton(180)) +
+            section("留存", skeletonRows(6))
+          );
+        }
+        if (state === "error") return pageHead("使用情況", sub) + errorBox();
+        if (state === "empty") {
+          const pending = (label) =>
+            `<div class="metric"><div class="metric-label">${label}</div><div class="metric-value pending">尚未開始記錄</div><div class="metric-delta"></div></div>`;
+          return (
+            pageHead("使用情況", `摘要數字統計到昨天（${fmtShort(yesterday.date)}）`) +
+            `<div class="metrics summary">${pending("每日活躍（DAU）")}${pending("7 天活躍（WAU）")}${pending("30 天活躍（MAU）")}${metric(
+              "累計註冊",
+              n(totalUsers),
+              delta(totalUsers, totalUsersWeekAgo),
+            )}</div>` +
+            section("活躍人數", stateBox("還沒有使用紀錄。")) +
+            section("新註冊人數", stateBox("還沒有使用紀錄。")) +
+            section("留存", stateBox("還沒有可以統計的註冊週。"))
+          );
+        }
+
+        const cell = (c, v) =>
+          c.size === 0 ? muted("–") : v ? `${v.c} 人<span class="pct">${v.p}%</span>` : muted("進行中");
+        const rows = cohorts
+          .map(
+            (c) =>
+              `<tr><td>${fmt(c.start)} 週</td><td>${c.size} 人</td><td>${cell(c, c.d1)}</td><td>${cell(c, c.d7)}</td><td>${cell(c, c.d30)}</td></tr>`,
+          )
+          .join("");
+        const rangeTools = `<div class="seg" role="group" aria-label="期間">
+            <button aria-pressed="${activityRange === "90"}" onclick="setRange('90')">90 天</button>
+            <button aria-pressed="${activityRange === "all"}" onclick="setRange('all')">全部</button>
+          </div>`;
+        const legend = `<span class="legend">
+            <span><i style="background:var(--blue)"></i>DAU</span>
+            <span><i style="background:var(--deep-gray)"></i>WAU</span>
+            <span><i style="background:var(--gray)"></i>MAU</span>
+            <span><i class="area"></i>資料不完整</span>
+          </span>`;
+        return (
+          pageHead("使用情況", sub) +
+          `<div class="metrics summary">` +
+          metric("每日活躍（DAU）", n(yesterday.dau), delta(yesterday.dau, weekAgo.dau)) +
+          metric("7 天活躍（WAU）", n(yesterday.wau), delta(yesterday.wau, weekAgo.wau)) +
+          metric("30 天活躍（MAU）", n(yesterday.mau), delta(yesterday.mau, weekAgo.mau)) +
+          metric("累計註冊", n(totalUsers), delta(totalUsers, totalUsersWeekAgo)) +
+          `</div>` +
+          section("活躍人數", `<div class="chart" id="chart-activity"></div>`, { caption: legend, tools: rangeTools }) +
+          section("新註冊人數", `<div class="chart small" id="chart-signups"></div>`) +
+          section(
+            "留存",
+            `<div class="table-wrap"><table>
+              <thead><tr><th>註冊週</th><th>註冊人數</th><th>第 1–6 天</th><th>第 7–13 天</th><th>第 30–36 天</th></tr></thead>
+              <tbody>${rows}</tbody></table></div>
+              <p class="footnote">使用紀錄從 ${fmt(RECORDING_START)} 開始，所以從 ${fmt(cohorts[cohorts.length - 1].start)} 那一週列起。</p>`,
+            { caption: "依註冊週分批，註冊當天算第 0 天" },
+          )
+        );
+      }
+
+      // ---------- 訂閱 ----------
+      function renderSubscriptions() {
+        if (state === "loading") {
+          return (
+            pageHead("訂閱") +
+            section("目前的訂閱狀態", skeleton(48)) +
+            section("試用轉付費", skeletonRows(6)) +
+            section("每月付款", skeleton(180))
+          );
+        }
+        if (state === "error") return pageHead("訂閱") + errorBox();
+        const empty = state === "empty";
+        const statusMetrics = statuses
+          .map((s) => {
+            const v = empty ? (s.label === "未訂閱" ? totalUsers : 0) : s.value;
+            return `<div class="metric"><div class="metric-label">${s.label}</div><div class="metric-value num">${n(v)}<small>人</small></div></div>`;
+          })
+          .join("");
+        const rows = months
+          .map((m) => {
+            const rate = m.size === 0 ? muted("–") : `${(Math.round((m.paid / m.size) * 1000) / 10).toFixed(1)}%`;
+            const status =
+              m.size === 0 ? muted("–") : m.inProgress ? `進行中<span class="pct">${fmtShort(m.deadline)} 結算</span>` : muted("已結算");
+            return `<tr><td>${fmtMonth(m.start)}</td><td>${m.size} 人</td><td>${m.paid} 人</td><td>${rate}</td><td>${status}</td></tr>`;
+          })
+          .join("");
+        return (
+          pageHead("訂閱") +
+          section("目前的訂閱狀態", `<div class="metrics compact" style="--cols:5">${statusMetrics}</div>`, {
+            caption: `白名單上的使用者 ${empty ? 0 : 7} 人，已含在下面的人數裡`,
+          }) +
+          section(
+            "試用轉付費",
+            empty
+              ? stateBox("還沒有試用的使用者。")
+              : `<div class="table-wrap"><table>
+                <thead><tr><th>試用開始的月份</th><th>試用人數</th><th>付款人數</th><th>轉換率</th><th>狀態</th></tr></thead>
+                <tbody>${rows}</tbody></table></div>`,
+            { caption: "到試用結束後 30 天為止，第一次付款成功的比例，不含白名單上的使用者" },
+          ) +
+          section(
+            "每月付款",
+            empty ? stateBox("還沒有付款成功的紀錄。") : `<div class="chart small" id="chart-payments"></div>`,
+            { caption: "付款成功的金額與筆數，包含定期扣款" },
+          )
+        );
+      }
+
+      // ---------- 問題回報 ----------
+      function renderReports() {
+        const tools = `<div class="seg" role="group" aria-label="篩選">
+            <button aria-pressed="${reportFilter === "unhandled"}" onclick="setFilter('unhandled')">未處理</button>
+            <button aria-pressed="${reportFilter === "all"}" onclick="setFilter('all')">全部</button>
+          </div>`;
+        if (state === "loading") return pageHead("問題回報", "", tools) + skeletonRows(4);
+        if (state === "error") return pageHead("問題回報", "", tools) + errorBox();
+        const list = state === "empty" ? [] : reports.filter((r) => reportFilter === "all" || !r.handled);
+        if (list.length === 0) {
+          return (
+            pageHead("問題回報", "", tools) +
+            stateBox(reportFilter === "unhandled" ? "沒有未處理的問題回報。" : "還沒有人送出問題回報。")
+          );
+        }
+        const items = list
+          .map((r) => {
+            const open = expanded.has(r.id);
+            const label = r.handled ? "改回未處理" : "標記為已處理";
+            return `<li class="report ${r.handled ? "handled" : ""}">
+              <div>
+                <div class="email">${r.email}</div>
+                <div class="report-meta">
+                  <span>${r.platform}</span><span class="sep"></span><span class="num">${r.time}</span>
+                </div>
+                <p class="report-body ${open ? "" : "clamped"}">${escapeHtml(r.body)}</p>
+                ${open ? `<div class="ua">${r.ua ? escapeHtml(r.ua) : "User-Agent 未記錄"}</div>` : ""}
+                <button class="link" onclick="toggleExpand(${r.id})" aria-expanded="${open}">${open ? "收合" : "顯示 User-Agent"}</button>
+              </div>
+              <button class="check ${r.handled ? "checked" : ""}" onclick="setHandled(event, ${r.id}, ${!r.handled})"
+                aria-pressed="${r.handled}" aria-label="${label}" title="${label}">
+                <span class="check-circle"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></span>
+              </button>
+            </li>`;
+          })
+          .join("");
+        return (
+          pageHead("問題回報", "", tools) +
+          `<ul class="reports">${items}</ul>` +
+          (hasOlderReports[reportFilter] ? `<div class="more"><button class="btn" onclick="loadMore(event)">載入更多</button></div>` : "")
+        );
+      }
+
+      // Label the toggle by real truncation at the current width
+      function labelTruncatedReports() {
+        document.querySelectorAll(".report-body.clamped").forEach((el) => {
+          if (el.scrollHeight > el.clientHeight + 1) {
+            el.parentElement.querySelector(".link").textContent = "展開全文與 User-Agent";
+          }
+        });
+      }
+
+      // ---------- Charts ----------
+      const axis = () => ({
+        axisLine: { lineStyle: { color: "#ddd" } },
+        axisTick: { show: false },
+        axisLabel: { color: "#888", fontSize: 11 },
+      });
+      const valueAxis = (extra = {}) => ({
+        type: "value",
+        splitLine: { lineStyle: { color: "#f5f5f5" } },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: "#888", fontSize: 11 },
+        ...extra,
+      });
+
+      function drawCharts() {
+        charts.forEach((c) => c.dispose());
+        charts = [];
+        const rows = activityRange === "90" ? dailyUsers.slice(-90) : dailyUsers;
+        const last = rows.length - 1;
+
+        const el = document.getElementById("chart-activity");
+        if (el) {
+          const labels = rows.map((r) => fmtShort(r.date));
+          const solid = (key) => rows.map((r, i) => (i === last ? null : r[key]));
+          const dashed = (key) => rows.map((r, i) => (i >= last - 1 ? r[key] : null));
+          const firstComplete = rows.findIndex((r) => !r.incomplete);
+          const markArea =
+            firstComplete > 0
+              ? {
+                  silent: true,
+                  itemStyle: { color: "rgba(0,0,0,0.04)" },
+                  data: [[{ xAxis: labels[0] }, { xAxis: labels[firstComplete - 1] }]],
+                }
+              : undefined;
+          const line = (name, key, color, extra = {}) => [
+            { name, type: "line", data: solid(key), showSymbol: false, lineStyle: { width: 2, color }, itemStyle: { color }, ...extra },
+            {
+              name,
+              type: "line",
+              data: dashed(key),
+              showSymbol: false,
+              lineStyle: { width: 2, color, type: "dashed" },
+              itemStyle: { color },
+              tooltip: { show: false },
+            },
+          ];
+          const chart = echarts.init(el);
+          chart.setOption({
+            animation: false,
+            grid: { left: 36, right: 8, top: 24, bottom: 24 },
+            tooltip: {
+              trigger: "axis",
+              formatter: (ps) => {
+                const i = ps[0].dataIndex;
+                const r = rows[i];
+                const head = `${fmt(r.date)}${i === last ? "（進行中）" : ""}${r.incomplete ? "<br/><span style='color:#888'>30 天的區間早於使用紀錄開始</span>" : ""}`;
+                return `${head}<br/>DAU ${r.dau} 人<br/>WAU ${r.wau} 人<br/>MAU ${r.mau} 人`;
+              },
+            },
+            xAxis: { type: "category", data: labels, boundaryGap: false, ...axis() },
+            yAxis: valueAxis({ name: "人", nameTextStyle: { color: "#888", fontSize: 11, align: "right" } }),
+            series: [...line("MAU", "mau", "#888", { markArea }), ...line("WAU", "wau", "#444"), ...line("DAU", "dau", "#4c8bf5")],
+          });
+          charts.push(chart);
+        }
+
+        const el2 = document.getElementById("chart-signups");
+        if (el2) {
+          const chart = echarts.init(el2);
+          chart.setOption({
+            animation: false,
+            grid: { left: 36, right: 8, top: 24, bottom: 24 },
+            tooltip: {
+              trigger: "axis",
+              formatter: (ps) =>
+                `${fmt(rows[ps[0].dataIndex].date)}${ps[0].dataIndex === last ? "（進行中）" : ""}<br/>新註冊 ${ps[0].value} 人`,
+            },
+            xAxis: { type: "category", data: rows.map((r) => fmtShort(r.date)), ...axis() },
+            yAxis: valueAxis({ minInterval: 1, name: "人", nameTextStyle: { color: "#888", fontSize: 11, align: "right" } }),
+            series: [
+              {
+                type: "bar",
+                barMaxWidth: 8,
+                data: rows.map((r, i) => ({
+                  value: r.signups,
+                  itemStyle: { color: i === last ? "rgba(76,139,245,0.25)" : "rgba(76,139,245,0.6)" },
+                })),
+              },
+            ],
+          });
+          charts.push(chart);
+        }
+
+        const el3 = document.getElementById("chart-payments");
+        if (el3) {
+          const lastP = payments.length - 1;
+          const chart = echarts.init(el3);
+          chart.setOption({
+            animation: false,
+            grid: { left: 48, right: 8, top: 28, bottom: 24 },
+            tooltip: {
+              trigger: "axis",
+              formatter: (ps) => {
+                const p = payments[ps[0].dataIndex];
+                return `${fmtMonth(p.month)}${ps[0].dataIndex === lastP ? "（進行中）" : ""}<br/>${p.count} 筆，${n(p.amount)} 元`;
+              },
+            },
+            xAxis: {
+              type: "category",
+              data: payments.map((p) => `${p.month.getFullYear() % 100}/${String(p.month.getMonth() + 1).padStart(2, "0")}`),
+              ...axis(),
+            },
+            yAxis: valueAxis({
+              name: "元",
+              nameTextStyle: { color: "#888", fontSize: 11, align: "right" },
+              axisLabel: { color: "#888", fontSize: 11, formatter: (v) => n(v) },
+            }),
+            series: [
+              {
+                type: "bar",
+                barMaxWidth: 24,
+                data: payments.map((p, i) => ({
+                  value: p.amount,
+                  itemStyle: { color: i === lastP ? "rgba(76,139,245,0.25)" : "#4c8bf5", borderRadius: [2, 2, 0, 0] },
+                })),
+                label: {
+                  show: el3.clientWidth >= 480,
+                  position: "top",
+                  color: "#888",
+                  fontSize: 10,
+                  formatter: (p) => `${payments[p.dataIndex].count} 筆`,
+                },
+              },
+            ],
+          });
+          charts.push(chart);
+        }
+      }
+
+      // ---------- State and events ----------
+      function render() {
+        document.querySelectorAll(".nav-item[data-page]").forEach((b) => {
+          if (b.dataset.page === page) b.setAttribute("aria-current", "page");
+          else b.removeAttribute("aria-current");
+        });
+        const unhandled = state === "empty" ? 0 : reports.filter((r) => !r.handled).length;
+        const badge = document.getElementById("unhandled-badge");
+        badge.textContent = unhandled;
+        badge.setAttribute("aria-label", `未處理 ${unhandled} 則`);
+        badge.style.display = unhandled === 0 ? "none" : "";
+        content.innerHTML =
+          page === "usage" ? renderUsage() : page === "subscriptions" ? renderSubscriptions() : renderReports();
+        drawCharts();
+        labelTruncatedReports();
+      }
+
+      // Remember the collapsed sidebar in this browser only
+      function readNavCollapsed() {
+        try {
+          return localStorage.getItem("admin-nav-collapsed") === "1";
+        } catch {
+          return false;
+        }
+      }
+      function applyNav(collapsed) {
+        document.querySelector(".shell").classList.toggle("collapsed", collapsed);
+        const btn = document.querySelector(".nav-collapse");
+        btn.setAttribute("aria-expanded", String(!collapsed));
+        btn.setAttribute("aria-label", collapsed ? "展開側邊欄" : "收合側邊欄");
+        btn.setAttribute("title", collapsed ? "展開側邊欄" : "收合側邊欄");
+        document.querySelectorAll(".nav-item:not(.nav-back)").forEach((item) => {
+          const label = item.querySelector(".nav-label");
+          if (collapsed) item.setAttribute("title", label.textContent);
+          else item.removeAttribute("title");
+        });
+        setTimeout(() => charts.forEach((c) => c.resize()), 220);
+      }
+      function toggleNav() {
+        const collapsed = !document.querySelector(".shell").classList.contains("collapsed");
+        try {
+          localStorage.setItem("admin-nav-collapsed", collapsed ? "1" : "0");
+        } catch {}
+        applyNav(collapsed);
+      }
+
+      function setState(s) {
+        state = s;
+        document.querySelectorAll(".draft-bar button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.state === s));
+        render();
+      }
+      function setRange(r) {
+        activityRange = r;
+        render();
+      }
+      // Mock requests: show the loading state briefly, then the result
+      function withLoading(done) {
+        state = "loading";
+        render();
+        setTimeout(() => {
+          state = "default";
+          done();
+          render();
+        }, 600);
+      }
+      function setFilter(f) {
+        withLoading(() => (reportFilter = f));
+      }
+      function reloadData() {
+        document.querySelectorAll(".draft-bar button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.state === "default"));
+        withLoading(() => {});
+      }
+      function loadMore(e) {
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        btn.textContent = "載入中…";
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = "載入更多";
+        }, 700);
+      }
+      function toggleExpand(id) {
+        expanded.has(id) ? expanded.delete(id) : expanded.add(id);
+        render();
+      }
+      function showToast(text, ms) {
+        const t = document.getElementById("toast");
+        t.textContent = text;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), ms);
+      }
+      function setHandled(e, id, handled) {
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        btn.classList.add("pending");
+        setTimeout(() => {
+          if (document.getElementById("fail-mark").checked) {
+            render();
+            showToast("無法更新這則問題回報，請稍後再試。", 2400);
+            return;
+          }
+          reports = reports.map((r) => (r.id === id ? { ...r, handled } : r));
+          render();
+          showToast(handled ? "已標記為已處理。" : "已改回未處理。", 1800);
+        }, 700);
+      }
+
+      document.querySelectorAll(".nav-item[data-page]").forEach((b) => b.addEventListener("click", () => setPage(b.dataset.page)));
+      function setPage(p) {
+        page = p;
+        render();
+      }
+      document.querySelectorAll(".draft-bar button").forEach((b) => b.addEventListener("click", () => setState(b.dataset.state)));
+
+      const params = new URLSearchParams(location.search);
+      const hashPage = location.hash.replace("#", "");
+      if (["usage", "subscriptions", "reports"].includes(hashPage)) page = hashPage;
+      if (["default", "loading", "empty", "error"].includes(params.get("state"))) state = params.get("state");
+      if (params.get("filter") === "all") reportFilter = "all";
+      window.addEventListener("resize", () => {
+        charts.forEach((c) => c.resize());
+        if (page === "reports") render();
+      });
+      if (params.get("nav") === "collapsed") applyNav(true);
+      else applyNav(readNavCollapsed());
+      setState(state);
+    </script>
+  </body>
+</html>

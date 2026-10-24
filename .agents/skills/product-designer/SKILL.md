@@ -35,11 +35,14 @@ Never judge a design you have not seen. Screenshot the draft with headless Chrom
   --screenshot=<scratchpad>/<feature-name>-390.png "file://$PWD/design/<feature-name>.html"
 ```
 
-Repeat at `800,900` and `1280,800`. The 390px screenshot shows the mobile layout. At 800px, just above the 780px point below which the desktop sidebar collapses, the sidebar leaves the least room for content (about 570px). 1280px is a typical laptop screen. Increase the height to see content below the fold. The real app requires login, so when you need to see an existing screen you cannot render, ask the user for a screenshot instead of guessing.
+Repeat at `800,900` and `1280,800`. Headless Chrome does not lay out a page narrower than 500px, so a `390,844` window renders a 500px page and crops it. For the 390px screenshot, load the draft in a 390px-wide `<iframe>` inside a host page and screenshot the host at `500,<height>`. The 390px screenshot shows the mobile layout. At 800px, just above the 780px point below which the desktop sidebar collapses, the sidebar leaves the least room for content (about 570px). 1280px is a typical laptop screen. Increase the height to see content below the fold. The real app requires login, so when you need to see an existing screen you cannot render, ask the user for a screenshot instead of guessing.
+
+Before you show a draft to the user, and again after every redesign, read `frontend-design` and run `critique` and then `polish` from the impeccable-design sub-skills (see the last section) against the screenshots. Fix what they find before checking the list below. If `~/.agents/skills/impeccable-design/` does not exist, tell the user that this review was skipped.
 
 Check the screenshots against this list, fix what fails, and render again. Stop when every item passes and you find nothing else you would change:
 
 - The most important number or action is the first thing the eye lands on.
+- Every piece of copy on the draft, including captions, empty states, errors, toasts, and tooltips, says something the user cannot already see on the screen, and uses the same term for the same thing everywhere.
 - Elements share alignment edges, spacing follows a consistent rhythm, and elements of the same type share radius, weight, and size.
 - Nothing overflows, truncates unexpectedly, or scrolls horizontally at any of the three widths.
 - The desktop layout puts the extra width to use instead of stretching the mobile layout, keeps lines of text short enough to read, and supports mouse and keyboard: hover and focus states exist, and no action depends on swiping or long-pressing.
@@ -53,7 +56,7 @@ Copy is part of the design. When the user asks for copy, the copy is the deliver
 
 ## impeccable-design Sub-skills
 
-`~/.agents/skills/impeccable-design/` holds focused design skills. Read the one that fits the task, or skip this section if the directory does not exist.
+`~/.agents/skills/impeccable-design/` holds focused design skills. `frontend-design`, `critique`, and `polish` are required before showing any draft (see "Reviewing What You Made"); read the others when they fit the task.
 
 | Task | Sub-skill |
 | --- | --- |
