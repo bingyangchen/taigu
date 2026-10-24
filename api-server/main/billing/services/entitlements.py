@@ -7,7 +7,12 @@ from django.http import JsonResponse
 from django.utils import timezone
 
 from main.account.models import User
-from main.billing.models import BillingProfile, Plan, SubscriptionStatus
+from main.billing.models import (
+    BillingProfile,
+    Plan,
+    StandardWhitelist,
+    SubscriptionStatus,
+)
 from main.cash_dividend.models import CashDividendRecord
 from main.favorite.models import Favorite
 from main.trade_plan.models import TradePlan
@@ -40,6 +45,8 @@ class Entitlements:
     trial_ends_at: str | None
     current_period_ends_at: str | None
     cancel_at_period_end: bool
+    is_current_period_active: bool
+    is_whitelisted: bool
     market_refresh_interval_seconds: int
     quota: Quota
     usage: Usage
@@ -108,7 +115,14 @@ def is_standard_subscription_active(
     )
 
 
-def _get_effective_plan(profile: BillingProfile) -> Plan:
+def is_standard_whitelisted(user: User) -> bool:
+    return StandardWhitelist.objects.filter(user=user).exists()
+
+
+def _get_effective_plan(profile: BillingProfile, *, is_whitelisted: bool) -> Plan:
+    if is_whitelisted:
+        return Plan.STANDARD
+
     now = timezone.now()
     if (
         profile.plan == Plan.STANDARD
@@ -152,7 +166,8 @@ def _get_usage(user: User) -> Usage:
 
 def _get_entitlements(user: User) -> Entitlements:
     profile = ensure_billing_profile(user)
-    effective_plan = _get_effective_plan(profile)
+    is_whitelisted = is_standard_whitelisted(user)
+    effective_plan = _get_effective_plan(profile, is_whitelisted=is_whitelisted)
     quota = STANDARD_QUOTA if effective_plan == Plan.STANDARD else FREE_QUOTA
     return Entitlements(
         plan=effective_plan,
@@ -167,6 +182,8 @@ def _get_entitlements(user: User) -> Entitlements:
             else None
         ),
         cancel_at_period_end=profile.cancel_at_period_end,
+        is_current_period_active=is_standard_subscription_active(profile),
+        is_whitelisted=is_whitelisted,
         market_refresh_interval_seconds=30 if effective_plan == Plan.STANDARD else 600,
         quota=quota,
         usage=_get_usage(user),
@@ -182,6 +199,8 @@ def serialize_entitlements(user: User) -> dict:
         "trial_ends_at": entitlements.trial_ends_at,
         "current_period_ends_at": entitlements.current_period_ends_at,
         "cancel_at_period_end": entitlements.cancel_at_period_end,
+        "is_current_period_active": entitlements.is_current_period_active,
+        "is_whitelisted": entitlements.is_whitelisted,
         "market_refresh_interval_seconds": entitlements.market_refresh_interval_seconds,
         "quota": asdict(entitlements.quota),
         "usage": asdict(entitlements.usage),
@@ -190,7 +209,9 @@ def serialize_entitlements(user: User) -> dict:
 
 def serialize_account_subscription(user: User) -> dict:
     profile = ensure_billing_profile(user)
-    effective_plan = _get_effective_plan(profile)
+    effective_plan = _get_effective_plan(
+        profile, is_whitelisted=is_standard_whitelisted(user)
+    )
     return {
         "plan": effective_plan,
         "market_refresh_interval_seconds": 30

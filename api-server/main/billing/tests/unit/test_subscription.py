@@ -12,6 +12,7 @@ from main.billing.models import (
     BillingProfile,
     PaymentStatus,
     Plan,
+    StandardWhitelist,
     SubscriptionPayment,
     SubscriptionStatus,
 )
@@ -25,6 +26,7 @@ from main.billing.services.subscription import (
     create_subscription_checkout,
     expire_stale_pending_payments,
     mark_payment_paid,
+    process_period_payment_callback,
     reconcile_due_billing_profiles,
 )
 
@@ -121,7 +123,6 @@ class TestDueBillingProfileReconciliation:
         assert profile.subscription_status == SubscriptionStatus.PAST_DUE
         assert profile.current_period_ends_at == due_at
 
-    @pytest.mark.scenario("BILL-R24.2")
     def test_cancel_at_period_end_downgrades_without_charging(self, user: User) -> None:
         due_at = timezone.now() - timedelta(minutes=1)
         BillingProfile.objects.create(
@@ -236,6 +237,75 @@ class TestSubscriptionPaymentLifecycle:
 
         assert client.calls == 0
         assert not SubscriptionPayment.objects.filter(user=user).exists()
+
+    @pytest.mark.scenario("BILL-R18.3")
+    def test_whitelisted_user_cannot_start_subscription(self, user: User) -> None:
+        BillingProfile.objects.create(
+            user=user,
+            plan=Plan.FREE,
+            subscription_status=SubscriptionStatus.CANCELED,
+            trial_started_at=timezone.now() - timedelta(days=40),
+            trial_ends_at=timezone.now() - timedelta(days=9),
+        )
+        StandardWhitelist.objects.create(user=user)
+        client = FakeEcpayClient()
+
+        with pytest.raises(
+            SubscriptionPaymentNotChargeableError,
+            match="User is on the Standard whitelist",
+        ):
+            create_subscription_checkout(
+                user=user, interval=BillingInterval.MONTH, client=client
+            )
+
+        assert client.calls == 0
+        assert not SubscriptionPayment.objects.filter(user=user).exists()
+
+    @pytest.mark.scenario("BILL-R26.2")
+    def test_whitelisted_user_period_payment_renews_subscription(
+        self, user: User, monkeypatch: MonkeyPatch
+    ) -> None:
+        taipei = ZoneInfo("Asia/Taipei")
+        callback_at = datetime(2026, 10, 21, 11, 0, tzinfo=taipei)
+        monkeypatch.setattr(
+            "main.billing.services.subscription.timezone.now", lambda: callback_at
+        )
+        BillingProfile.objects.create(
+            user=user,
+            plan=Plan.STANDARD,
+            subscription_status=SubscriptionStatus.ACTIVE,
+            billing_interval=BillingInterval.MONTH,
+            current_period_started_at=datetime(2026, 9, 21, 10, 0, tzinfo=taipei),
+            current_period_ends_at=datetime(2026, 10, 21, 10, 0, tzinfo=taipei),
+        )
+        StandardWhitelist.objects.create(user=user)
+        SubscriptionPayment.objects.create(
+            user=user,
+            provider_request_id="S123",
+            provider_subscription_id="S123",
+            provider_transaction_id="ecpay-trade-no",
+            plan=Plan.STANDARD,
+            billing_interval=BillingInterval.MONTH,
+            amount=65,
+            status=PaymentStatus.PAID,
+            paid_at=datetime(2026, 9, 21, 10, 0, tzinfo=taipei),
+        )
+
+        process_period_payment_callback(
+            {
+                "MerchantTradeNo": "S123",
+                "RtnCode": 1,
+                "Gwsr": "ecpay-period-trade-no",
+                "Amount": 65,
+                "TotalSuccessTimes": 2,
+            }
+        )
+
+        profile = BillingProfile.objects.get(user=user)
+        assert profile.subscription_status == SubscriptionStatus.ACTIVE
+        assert profile.current_period_ends_at == datetime(
+            2026, 11, 21, 11, 0, tzinfo=taipei
+        )
 
     @pytest.mark.scenario("BILL-R17.1")
     def test_expires_stale_pending_payment_before_creating_new_payment(

@@ -51,6 +51,7 @@ export default function CancelSubscriptionDialog({
   const [reason, setReason] = useState<CancelReason | "">("");
   const [detail, setDetail] = useState("");
   const periodEnd = formatDate(subscription.current_period_ends_at);
+  const isWhitelisted = subscription.is_whitelisted === true;
 
   if (!isOpen) return null;
 
@@ -91,30 +92,37 @@ export default function CancelSubscriptionDialog({
               </h2>
             </Dialog.Title>
             <Dialog.Description className={styles.description}>
-              停止後不會再於下次續費日扣款，你仍可使用 Standard 到本期結束。
+              {isWhitelisted
+                ? "停止後不會再自動扣款。"
+                : "停止後不會再於下次續費日扣款，你仍可使用 Standard 到本期結束。"}
             </Dialog.Description>
           </header>
 
-          <div className={styles.retentionNotice}>
-            <Icons.IconInfoCircle sideLength="16" />
-            <p>
-              Standard 權益會保留至 <strong>{periodEnd}</strong>。到期後會切換為 Free。
-            </p>
-          </div>
+          {!isWhitelisted && (
+            <>
+              <div className={styles.retentionNotice}>
+                <Icons.IconInfoCircle sideLength="16" />
+                <p>
+                  Standard 權益會保留至 <strong>{periodEnd}</strong>。到期後會切換為
+                  Free。
+                </p>
+              </div>
 
-          <section className={styles.impactSection}>
-            <h3>到期後會發生什麼？</h3>
-            <ul>
-              {impactItems.map((item) => (
-                <li key={item}>
-                  <span className={styles.impactIcon} aria-hidden="true">
-                    i
-                  </span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
+              <section className={styles.impactSection}>
+                <h3>到期後會發生什麼？</h3>
+                <ul>
+                  {impactItems.map((item) => (
+                    <li key={item}>
+                      <span className={styles.impactIcon} aria-hidden="true">
+                        i
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </>
+          )}
 
           <section className={styles.reasonSection}>
             <div className={styles.reasonHeader}>

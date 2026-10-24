@@ -45,6 +45,12 @@ from main.account.views import (
     refresh_token,
     update,
 )
+from main.billing.models import (
+    BillingProfile,
+    Plan,
+    StandardWhitelist,
+    SubscriptionStatus,
+)
 
 LOGIN_REDIRECT_URI = "https://local.taigu.tw/login"
 BINDING_REDIRECT_URI = "https://local.taigu.tw/settings/account-binding"
@@ -519,6 +525,26 @@ class TestChangeGoogleBindingView:
             == "This Google account is already bound to another account."
         )
         self._assert_binding_unchanged(user)
+
+    @pytest.mark.scenario("BILL-R25.3")
+    def test_change_google_binding_keeps_user_on_standard_whitelist(
+        self, google: FakeGoogle, user: User
+    ) -> None:
+        BillingProfile.objects.create(
+            user=user,
+            plan=Plan.FREE,
+            subscription_status=SubscriptionStatus.CANCELED,
+            trial_started_at=timezone.now() - timedelta(days=40),
+            trial_ends_at=timezone.now() - timedelta(days=9),
+        )
+        StandardWhitelist.objects.create(user=user)
+        state, oauth_cookie = _start_authorization(BINDING_REDIRECT_URI)
+
+        response = change_google_binding(self._make_request(user, state, oauth_cookie))
+
+        assert response.status_code == 200
+        assert json.loads(response.content)["subscription"]["plan"] == "standard"
+        assert StandardWhitelist.objects.filter(user=user).exists()
 
     def test_change_google_binding_insufficient_data(self, user: User) -> None:
         request = HttpRequest()

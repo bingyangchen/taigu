@@ -9,6 +9,8 @@ export type SubscriptionEntitlements = {
   trial_ends_at: string | null;
   current_period_ends_at: string | null;
   cancel_at_period_end: boolean;
+  is_current_period_active?: boolean;
+  is_whitelisted?: boolean;
   market_refresh_interval_seconds: number;
   quota: {
     monthly_records: number | null;
