@@ -220,6 +220,17 @@ flowchart TD
 
    隱私權政策寫明問題回報保存到帳號刪除為止，但 Telegram 上的通知不會隨帳號刪除而刪除，寫這個階段的 plan 時要決定帳號刪除時怎麼處理這些通知，或是改寫「個人資料之保存期間」的條文。
 
+   「記錄使用情況」只在桌面 Chrome 的分頁實測過瀏覽器的行為（見 architecture.md 的「使用統計」），所以後台依平台分開統計之前，要先在實機上確認下面這些事，並把結果寫進 architecture.md：
+
+   - iOS Safari 安裝的 PWA、Android Chrome 安裝的 PWA 與桌面 Chrome 安裝的 PWA 都記成 PWA。
+   - 下面這些情況，Taigu 回到畫面上時都會記下使用紀錄：
+     - 在手機上從其他 app 切回 PWA 或瀏覽器。
+     - 手機在 Taigu 顯示時鎖定螢幕，之後解鎖。
+     - 桌面視窗被其他 app 的視窗完全蓋住或縮到最小，之後再切回來。
+     - 桌面電腦從睡眠喚醒，或解除螢幕鎖定。
+     - 瀏覽器從 back-forward cache 還原頁面。
+   - 在這三種 PWA 裡用 Google 帳號登入之後，登入當天記成 PWA。
+
 ### Mobile App
 
 讓使用者在 iOS 與 Android 上用 app 使用 Taigu。App 也要照 USAGE-R1 記下使用紀錄，平台分成 iOS app 與 Android app；如果 app 提供問題回報，送出時也要照 ISSUE-R3 記下平台，另外記下 app 的版本與作業系統的版本。

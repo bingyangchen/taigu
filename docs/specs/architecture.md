@@ -148,6 +148,14 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 前端呼叫 `open-session` 時，如果瀏覽器還沒有 CSRF cookie，前端先等 `me` 的回應再呼叫，因為 `me` 的回應會設定 CSRF cookie，而前端收到 403 時會把使用者登出，所以沒有 CSRF cookie 時直接呼叫 `open-session`，使用者會被登出。
 
+2026-10 在 macOS 的桌面 Chrome 實測時，瀏覽器的行為如下：
+
+- Taigu 在 Chrome 的分頁裡執行時，`display-mode: standalone` 不成立，所以記成網頁。
+- 從其他分頁切回 Taigu 的分頁時，頁面觸發 `visibilitychange`，Taigu 記下使用紀錄。
+- api-server 存下的 User-Agent 跟瀏覽器的 `navigator.userAgent` 相同，request 經過 Cloudflare 與 Nginx 之後沒有被改掉。
+
+其他平台與情況還沒有實測，要測的項目記在 roadmap 的「後台」。
+
 舊版前端有兩種：新版前端上線之前就開著的頁面，以及新版前端上線之後，使用者第一次開啟 Taigu 時 service worker 從 cache 提供的頁面。Service worker 從 cache 提供舊版前端時，同一位使用者那一天可能同時有 `platform` 欄位是空的與有值的兩列，順序如下圖：
 
 ```mermaid
