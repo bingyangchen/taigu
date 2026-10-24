@@ -15,7 +15,7 @@ depends_on: []
 
 ## 目標
 
-Taigu 開始記下每位登入的使用者在哪幾天、用網頁還是 PWA 使用過 Taigu，也在問題回報裡記下送出時的平台與 User-Agent，所以之後做出的後台可以用這個 plan 上線之後累積的資料統計活躍與留存，開發者查問題回報時也知道使用者用的是什麼環境。隱私權政策同時寫明 Taigu 記下這些資料、用在哪裡，以及使用紀錄保留多久。
+Taigu 開始記下每位登入的使用者在哪幾天、用網頁還是 PWA 使用過 Taigu，也在問題回報裡記下送出時的平台與 User-Agent，所以之後做出的後台可以用這個 plan 的實作上線之後累積的資料統計活躍與留存，開發者查問題回報時也知道使用者用的是什麼環境。隱私權政策同時寫明 Taigu 記下這些資料、用在哪裡，以及使用紀錄保留多久。
 
 ## 範圍
 
@@ -25,7 +25,7 @@ Taigu 開始記下每位登入的使用者在哪幾天、用網頁還是 PWA 使
   - Taigu 在問題回報裡記下送出時的平台與 User-Agent（ISSUE-R3）。
   - 隱私權政策寫明 Taigu 記下的使用紀錄、問題回報的內容、平台與 User-Agent、使用紀錄的用途，以及使用紀錄與問題回報的保留期間（PUB-R11），條文寫在「做法要點」。
 - 刻意不做的事：
-  - 不回補這個 plan 上線之前的使用紀錄。
+  - 不回補這個 plan 的實作上線之前的使用紀錄。
   - 不做後台與統計的畫面，這些留給 roadmap 的「後台」階段。
   - 不記錄 iOS 與 Android app 的平台，這些留給 roadmap 的「Mobile App」。
   - Roadmap 的「介面文案與數字格式修正」列出的隱私權政策問題，例如沒有提到付款資料、綠界與 Gravatar，以及沒有寫交易紀錄、Google 帳號資料這些資料保存多久，留在那個階段。
@@ -104,7 +104,7 @@ Taigu 開始記下每位登入的使用者在哪幾天、用網頁還是 PWA 使
   - 結果：畫面沒有出現錯誤提示，儀表板照常顯示。
 - USAGE-R1.12 隔天從其他 app 切回 PWA
   - 前提：使用者在台灣時間 2026/10/24 23:50 從裝置的主畫面開啟安裝成 PWA 的 Taigu，畫面顯示儀表板，之後切到其他 app，沒有關閉 PWA。
-  - 動作：台灣時間 2026/10/25 00:10 從 app 切換器切回 PWA。
+  - 動作：台灣時間 2026/10/25 00:10 從其他 app 切回 PWA。
   - 結果：Taigu 記下這位使用者在 2026/10/25 用 PWA 使用過 Taigu。
 - USAGE-R1.13 記錄失敗之後換頁
   - 前提：使用者已經登入，在瀏覽器裡開著前一天開啟的儀表板，台灣時間 2026/10/24 還沒使用過 Taigu；2026/10/24 裝置的網路中斷時，使用者切回 Taigu 的分頁，這次記錄沒有成功。
@@ -190,10 +190,8 @@ sequenceDiagram
 
 #### Data Model
 
-問題回報的平台與 User-Agent 可以是空的。以「股票代號在 API 與前端叫做 `sid`」開始的清單改成：
+在以「`TradeRecord` 沒有記錄買賣方向的欄位」開始的那一項之後新增一項，寫出問題回報的平台與 User-Agent 什麼時候是空的，其他項目不變：
 
-- 股票代號在 API 與前端叫做 `sid`，在參照股票的資料表裡是 `company_id`，在 `Company` 自己的資料表裡則是主鍵 `stock_id`，型別都是字串，例如 `"2330"`、`"0050"`。
-- `TradeRecord` 沒有記錄買賣方向的欄位，`deal_quantity` 在買進時是正數，賣出時是負數，前端依正負號判斷買賣。
 - `IssueReport` 的 `platform` 與 `user_agent` 可以是空的，空值出現在下面這些情況：
   - Taigu 開始記錄這兩個欄位之前送出的問題回報，兩個欄位都是空的。
   - 之後的問題回報由舊版前端送出，或 request 帶的 `platform` 不是 `web` 也不是 `pwa` 時，`platform` 是空的。
@@ -201,23 +199,11 @@ sequenceDiagram
 
 #### 能力與程式碼對照
 
-新增「使用統計」一列。以「| 能力 | 網址 | 前端頁面 |」開始的表格改成：
+在「問題回報」那一列之後新增「使用統計」一列，其他列不變：
 
 | 能力 | 網址 | 前端頁面 | 後端 app | Spec |
 | --- | --- | --- | --- | --- |
-| 交易紀錄與現金股利 | `/`、`/records`、`/records/trade/new`、`/records/trade/:recordId/edit`、`/records/cash-dividend/new`、`/records/cash-dividend/:recordId/edit`、`/settings/data-controls` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/Records/Records.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx`、`frontend/src/pages/Settings/DataControls/DataControls.tsx` | `api-server/main/trade_record/`、`api-server/main/cash_dividend/` | [records.md](records.md) |
-| 持股 | `/`、`/market`、`/market/holding/:sid` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx`，計算在 `frontend/src/workers/tradeRecordWorker.ts` 與 `frontend/src/utils/market.ts` | 無，由前端依交易紀錄計算；Free 方案的持股檔數由 `api-server/main/billing/services/entitlements.py` 計算 | [holdings.md](holdings.md) |
-| 投資績效 | `/`、`/earning-analysis`、`/market`、`/market/:sid` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/EarningAnalysis/EarningAnalysis.tsx`、`frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx`，計算在 `frontend/src/workers/tradeRecordWorker.ts` 與 `frontend/src/utils/util.ts` | 無，在前端計算 | [performance.md](performance.md) |
-| 手續費 | `/`、`/handling-fee`、`/handling-fee/discounts/new`、`/handling-fee/discounts/:discountId/edit` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/HandlingFee/HandlingFee.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx` | `api-server/main/handling_fee/` | [handling-fees.md](handling-fees.md) |
-| 市場行情 | `/`、`/market-index/:market`、`/search`、`/market`、`/market/:sid`，以及各編輯器的「股票」欄位 | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/MarketIndexDetails/MarketIndexDetails.tsx`、`frontend/src/pages/Main/Search/Search.tsx`、`frontend/src/components/StockSearchContent/StockSearchContent.tsx`（搜尋頁與桌面瀏覽器的搜尋視窗 `frontend/src/components/StockSearchModal/StockSearchModal.tsx` 共用）、`frontend/src/components/StockPicker/StockPicker.tsx`，重新抓行情的間隔在 `frontend/src/pages/Main/Main.tsx`、`Market.tsx` 與 `Details.tsx` | `api-server/main/market/` | [market-data.md](market-data.md) |
-| 個股詳情 | `/market/:sid`、`/market/holding/:sid`、`/market/favorites/:sid` | `frontend/src/pages/Main/Details/Details.tsx` | `api-server/main/market/`、`api-server/main/stock_memo/` | [stock-details.md](stock-details.md) |
-| 自選股 | `/market`、`/market/favorites/:sid` | `frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx` | `api-server/main/favorite/` | [favorites.md](favorites.md) |
-| 買賣計畫 | `/plans`、`/plans/new`、`/plans/:planId/edit`、`/market` | `frontend/src/pages/Main/Plans/Plans.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx`、`frontend/src/components/TradePlanEditor/TradePlanEditor.tsx`、`frontend/src/pages/Main/Market/Market.tsx` | `api-server/main/trade_plan/` | [trade-plans.md](trade-plans.md) |
-| 帳號 | `/login`、`/settings`、`/settings/user-info`、`/settings/account-binding` | `frontend/src/pages/Login/Login.tsx`、`frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/UserInfo/UserInfo.tsx`、`frontend/src/pages/Settings/AccountBinding/AccountBinding.tsx` | `api-server/main/account/` | [account.md](account.md) |
-| 方案與付款 | `/settings/current-plan` | `frontend/src/pages/Settings/CurrentPlan/CurrentPlan.tsx`、`frontend/src/components/PlanUpsellModal/PlanUpsellModal.tsx` | `api-server/main/billing/` | [billing.md](billing.md) |
-| 問題回報 | `/settings`、`/settings/issue-report` | `frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/IssueReport/IssueReport.tsx` | `api-server/main/issue_report/` | [issue-reports.md](issue-reports.md) |
 | 使用統計 | 要登入才能使用的頁面（見 ACCT-R3） | `frontend/src/pages/Main/Main.tsx`、`frontend/src/pages/Settings/Settings.tsx`，判斷平台的是 `frontend/src/utils/util.ts` 的 `Util.isPWA` | `api-server/main/usage/`，記下使用紀錄的 `open-session` endpoint 在 `api-server/main/account/` | [usage-stats.md](usage-stats.md) |
-| 公開頁面 | `/welcome`、`/privacy-policy`、`/terms-of-service`，以及其他找不到的網址 | `frontend/src/pages/Welcome/Welcome.tsx`、`frontend/src/pages/PrivacyPolicy/PrivacyPolicy.tsx`、`frontend/src/pages/TermsOfService/TermsOfService.tsx`、`frontend/src/pages/NotFound/NotFound.tsx`、`frontend/src/components/PageMeta/PageMeta.tsx`、`frontend/public/index.html`、`frontend/public/robots.txt`、`frontend/public/sitemap.xml`、`frontend/scripts/prerender.mjs` | 無 | [public-pages.md](public-pages.md) |
 
 ## 決策
 
@@ -261,7 +247,7 @@ sequenceDiagram
 - 結論：記下平台與 User-Agent，因為開發者查問題時最常需要知道使用者用的是哪個瀏覽器與版本，而 api-server 本來就會在每個 request 的 header 收到 User-Agent。
 - 併入：無
 
-### 記錄使用情況與後台要不要分成兩個 plan
+### 記錄使用情況與後台要不要分成兩個 Plan
 
 - 選項：
   - 一個 plan 做完記錄與後台。
@@ -291,7 +277,7 @@ sequenceDiagram
 - USAGE-R1 依賴下面這些瀏覽器行為，architecture.md 還沒有紀錄。實作時要在 iOS Safari 安裝的 PWA、Android Chrome 安裝的 PWA、桌面 Chrome 安裝的 PWA 與桌面 Chrome 的分頁上實測，並把結果寫進 architecture.md 的「使用統計」：
   - 前端判斷 PWA 沿用 `Util.isPWA`（`display-mode: standalone`），要達到的結果是在這三種 PWA 裡都記成 PWA。
   - 要達到的結果是 Taigu 一段時間沒有顯示、使用者再看到它的時候都算使用者切回 Taigu，要實測的情況有：
-    - 從 app 切換器切回 PWA。
+    - 在手機上從其他 app 切回 PWA。
     - 手機在 Taigu 顯示時鎖定螢幕，之後解鎖，瀏覽器與 PWA 都要測。
     - 從其他 app 切回手機的瀏覽器，而 Taigu 是目前的分頁。
     - 桌面瀏覽器的視窗或桌面 Chrome 安裝的 PWA 的視窗被其他 app 的視窗完全蓋住或縮到最小，之後再切回來。
@@ -300,7 +286,7 @@ sequenceDiagram
   - 在這三種 PWA 裡用 Google 帳號登入之後，要達到的結果是登入當天記成 PWA，所以要確認從 Google 回到 Taigu 時，頁面是在 PWA 的視窗裡，還是在作業系統或瀏覽器另外開的瀏覽器畫面裡。
 - ISSUE-R3 記下的 User-Agent 要跟瀏覽器送出的一樣，所以實作時要確認 prod 的 request 經過 Cloudflare 與 Nginx 之後，api-server 讀到的 User-Agent 沒有被改掉。
 - 前端收到 403 時會把使用者登出（roadmap 的「登入與帳號修正」已經記下這個問題），而 CSRF cookie 是由 `me` 的回應設定的，所以前端在開啟設定頁與使用者切回 Taigu 這兩個新的時機呼叫 `open-session` 之前，都要確保 CSRF cookie 已經存在，例如沿用儀表板先等 `me` 回應的順序，否則沒有 CSRF cookie 的使用者會被登出。
-- 隱私權政策的「最後更新日期」改成這個 plan 上線的日期，並加上下面的條文：
+- 隱私權政策的「最後更新日期」改成這個 plan 的實作上線的日期，並加上下面的條文：
   - 「個人資料之蒐集」的清單加上兩項：
     - 「您使用本網站的日期與方式，也就是當時是在瀏覽器裡使用本網站，還是使用安裝到裝置上的本網站（PWA）。」
     - 「您送出的問題回報內容、送出時使用本網站的方式，以及您的瀏覽器提供的瀏覽器與作業系統資訊（User-Agent）。」
