@@ -1,4 +1,4 @@
-注意：這份檔案的指令會刪除或修改開發環境資料庫裡登入帳號的使用紀錄與登入憑證，所以要用只拿來測試的 Google 帳號登入，不要用存有真實資料的帳號。
+注意：這份檔案的指令會刪除或修改開發環境資料庫裡登入帳號的使用紀錄與 refresh token，所以要用只拿來測試的 Google 帳號登入，不要用存有真實資料的帳號。
 
 執行 `make start`，用 Chrome 開啟 `https://local.taigu.tw`，再用 Google 帳號登入。下面的指令要把 `<Email>` 換成登入用的 Google 帳號的 Email。
 
@@ -22,7 +22,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 - 「用 PWA 開啟 Taigu」：如果 Taigu 還沒安裝成 PWA，先在 Chrome 開啟 `https://local.taigu.tw`，再從 Chrome 選單的「投放、儲存及分享」選擇安裝的選項，把 Taigu 安裝成 PWA；接著從 macOS 的 Dock 或「應用程式」資料夾開啟安裝成 PWA 的 Taigu。
 - 「清空 Network 的紀錄」：點 DevTools 的 Network 面板左上角的「Clear network log」按鈕。
 - 「查看 open-session request」：在 DevTools 的 Network 面板的篩選欄輸入 `open-session`，點最新的一筆，在 Payload 看 `platform` 的值，在 Headers 看 status code。
-- 「刪除短效的登入 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。
+- 「刪除 access token 的 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。
 
 ## USAGE-R1.1 在網頁上開啟 Taigu
 
@@ -171,11 +171,11 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## USAGE-R1.14 登入狀態到期之後切回分頁
 
-前端沒有自動化 test。這裡照 ACCT-R5.2 的手動檢查，把登入憑證的到期時間改到過去，模擬登入滿 30 天。
+前端沒有自動化 test。這裡照 ACCT-R5.2 的手動檢查，把 refresh token 的到期時間改到過去，模擬登入滿 30 天。
 
 1. 在 Chrome 開啟 `https://local.taigu.tw/settings`。
 2. 在 Chrome 開一個新分頁。
-3. 執行下面的指令，把這個帳號登入憑證的到期時間改到 1 秒前：
+3. 執行下面的指令，把這個帳號 refresh token 的到期時間改到 1 秒前：
 
    ```sh
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from datetime import timedelta; from django.utils import timezone; from main.account.models import RefreshToken; RefreshToken.objects.filter(user__email='<Email>', revoked_at__isnull=True).update(expires_at=timezone.now() - timedelta(seconds=1))"
@@ -183,7 +183,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 4. 切回 Chrome。
 5. 在新分頁開啟 `https://local.taigu.tw/privacy-policy`。
-6. 在顯示隱私權政策的分頁刪除短效的登入 cookie。
+6. 在顯示隱私權政策的分頁刪除 access token 的 cookie。
 7. 點顯示設定頁的分頁。
 8. 確認畫面換到歡迎頁 `/welcome`，而且沒有出現錯誤提示。
 9. 用 Google 帳號登入。

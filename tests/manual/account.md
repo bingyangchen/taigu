@@ -10,7 +10,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 - 「在行動裝置上」：開啟 DevTools 的裝置模擬（Toggle device toolbar）並選一款手機，再重新整理頁面，因為 Taigu 依 user agent 判斷是不是行動裝置。
 - 「登出」：開啟 `https://local.taigu.tw/settings`，點「登出」，再點確認視窗裡的「登出」。
 - 「用 Google 帳號登入」：開啟 `https://local.taigu.tw/login`，點 Google 登入按鈕，在 Google 的畫面選擇帳號並同意授權。
-- 「刪除短效的登入 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。這個 cookie 原本在 15 分鐘後過期，所以刪除它等於閒置超過 15 分鐘。
+- 「刪除 access token 的 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。這個 cookie 原本在 15 分鐘後過期，所以刪除它等於閒置超過 15 分鐘。
 - 「開始更換綁定的帳號」：開啟 `https://local.taigu.tw/settings/account-binding`，點「更換綁定的帳號」，再點「綁定 Google 帳號」。
 - 「訪客視窗」：指 Chrome 選單的「開啟訪客視窗」開出來的視窗。訪客視窗的 cookie 跟原本的 Chrome 分開，所以可以當成另一個人的瀏覽器。
 - 「擋下 `<路徑>` 的 request」：在 DevTools 按 Cmd+Shift+P，執行「Show Network request blocking」，勾選「Enable network request blocking」，再新增 pattern `*<路徑>*`。
@@ -94,7 +94,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 1. 用 Google 帳號登入。
 2. 在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 確認 `__Secure-refresh_token` 的 Expires 是一個日期，不是「Session」。
-3. 刪除短效的登入 cookie。
+3. 刪除 access token 的 cookie。
 4. 按 Cmd+Q 結束 Chrome，因為在 macOS 上只關閉視窗時，Chrome 會保留只在這次瀏覽期間有效的 cookie。
 5. 開啟 Chrome。
 6. 開啟 `https://local.taigu.tw/records`。
@@ -119,7 +119,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.account.models import RefreshToken; print(list(RefreshToken.objects.filter(user__email='<Email>', revoked_at__isnull=True).values_list('expires_at', flat=True)))"
    ```
 
-5. 刪除短效的登入 cookie。
+5. 刪除 access token 的 cookie。
 6. 重新整理頁面。
 7. 再執行一次步驟 4 的指令。
 8. 確認印出的到期時間只有一個，而且跟步驟 4 記下的時間相同。
@@ -129,7 +129,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from datetime import timedelta; from django.utils import timezone; from main.account.models import RefreshToken; RefreshToken.objects.filter(user__email='<Email>', revoked_at__isnull=True).update(expires_at=timezone.now() - timedelta(seconds=1))"
    ```
 
-10. 刪除短效的登入 cookie。
+10. 刪除 access token 的 cookie。
 11. 開啟 `https://local.taigu.tw/records`。
 12. 確認畫面換到歡迎頁 `/welcome`。
 13. 用 Google 帳號登入。
@@ -150,7 +150,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R7.1 登出
 
-沒有自動化 test 驗證登出時讓登入憑證失效，畫面與瀏覽器保存的資料在前端，前端也沒有自動化 test。
+沒有自動化 test 驗證登出時讓 refresh token 失效，畫面與瀏覽器保存的資料在前端，前端也沒有自動化 test。
 
 1. 如果已登入，登出。
 2. 執行下面的指令，讓這個帳號在本機其他瀏覽器的登入都失效：
@@ -177,7 +177,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 13. 在 DevTools 重新整理 IndexedDB 的 `tradeRecords`。
 14. 開啟 `https://local.taigu.tw/`。
 
-預期：登出後畫面換到登入頁 `/login`；步驟 12 印出 `0`，這次登入換發過的登入憑證都失效；`tradeRecords` 沒有任何資料；步驟 14 開啟儀表板時畫面換到歡迎頁 `/welcome`。
+預期：登出後畫面換到登入頁 `/login`；步驟 12 印出 `0`，這次登入換發過的 refresh token 都失效；`tradeRecords` 沒有任何資料；步驟 14 開啟儀表板時畫面換到歡迎頁 `/welcome`。
 
 ## ACCT-R7.2 取消登出
 
@@ -199,7 +199,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 2. 開啟 Chrome 的無痕視窗（以下稱瀏覽器 B）。
 3. 在瀏覽器 B 用同一個 Google 帳號登入。
 4. 在瀏覽器 A 登出。
-5. 在瀏覽器 B 刪除短效的登入 cookie。
+5. 在瀏覽器 B 刪除 access token 的 cookie。
 6. 在瀏覽器 B 開啟 `https://local.taigu.tw/records`。
 
 預期：瀏覽器 B 顯示歷史紀錄頁，不必重新登入。
@@ -483,7 +483,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 1. 用 Google 帳號登入。
 2. 開啟 `https://local.taigu.tw/settings/account-binding`。
-3. 刪除短效的登入 cookie。
+3. 刪除 access token 的 cookie。
 4. 點「更換綁定的帳號」。
 5. 點「綁定 Google 帳號」，停在 Google 的畫面。
 6. 在 repo 的根目錄執行下面的指令。這個指令會在接下來的 60 秒內，每秒送一個未登入、但通過 CSRF 檢查的 request 到更換綁定帳號的 API：
