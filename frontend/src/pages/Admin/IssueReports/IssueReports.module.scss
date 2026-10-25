@@ -1,0 +1,147 @@
+@use "../../../design_system" as _;
+
+$hairline: 1px solid _.$black-transparent-2;
+
+.reports {
+  margin: 0;
+  padding: 0;
+  border-top: $hairline;
+  list-style: none;
+}
+
+.report {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  column-gap: 16px;
+  padding: 16px 0;
+  border-bottom: $hairline;
+  &.handled .email,
+  &.handled .body {
+    color: _.$gray;
+  }
+}
+
+.email {
+  font-size: 0.875 * _.$base-font-size;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  font-size: 0.75 * _.$base-font-size;
+  color: _.$gray;
+  font-variant-numeric: tabular-nums;
+}
+
+.body {
+  max-width: _.$admin-text-max-width;
+  margin: 12px 0 0;
+  font-size: 0.875 * _.$base-font-size;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  &.clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.user_agent {
+  max-width: _.$admin-text-max-width;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: block;
+  background-color: _.$noisy-white;
+  font-size: 0.75 * _.$base-font-size;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.expand_button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.75 * _.$base-font-size;
+  letter-spacing: inherit;
+  color: _.$blue;
+  cursor: pointer;
+  &:focus-visible {
+    outline: 2px solid _.$blue;
+    outline-offset: 2px;
+  }
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  @media (pointer: coarse), (max-width: _.$width-780) {
+    min-width: 44px;
+    min-height: 44px;
+    margin-top: 0;
+  }
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-top: -10px;
+  padding-top: 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  &:focus-visible {
+    outline: 2px solid _.$blue;
+    outline-offset: 2px;
+  }
+  &:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+}
+
+.check_circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid _.$gray;
+  border-radius: 50%;
+  color: transparent;
+  transition:
+    background-color 0.15s ease-out,
+    border-color 0.15s ease-out;
+  @media (hover: hover) {
+    .check:hover:not(:disabled) & {
+      border-color: _.$blue;
+      color: _.$blue;
+    }
+  }
+  .checked & {
+    border-color: _.$blue;
+    background-color: _.$blue;
+    color: _.$white;
+  }
+}
+
+.more {
+  margin-top: 24px;
+}

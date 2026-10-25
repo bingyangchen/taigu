@@ -119,7 +119,7 @@ stateDiagram-v2
 
 ### ACCT-R8 設定頁總覽
 
-設定頁 `/settings` 顯示使用者的頭像、名字、Email 與目前方案的名稱（Standard 或 Free），並提供頭像與名字頁、帳號綁定頁、資料控制頁、方案頁、隱私權政策、服務條款與問題回報的入口，以及登出（見 ACCT-R7）。
+設定頁 `/settings` 顯示使用者的頭像、名字、Email 與目前方案的名稱（Standard 或 Free），並提供頭像與名字頁、帳號綁定頁、資料控制頁、方案頁、隱私權政策、服務條款與問題回報的入口，以及登出（見 ACCT-R7）；superuser 的設定頁另外有後台的入口（見 ADMIN-R3）。
 
 方案的判定見 BILL-R1。
 

@@ -16,12 +16,14 @@ type ApiErrorPayload = {
 export class ApiError extends Error {
   public readonly code?: string;
   public readonly resource?: PlanQuotaResource;
+  public readonly status?: number;
 
-  public constructor(payload: ApiErrorPayload) {
+  public constructor(payload: ApiErrorPayload, status?: number) {
     super(payload.message ?? "Unknown error occurred");
     this.name = "ApiError";
     this.code = payload.code;
     this.resource = payload.resource;
+    this.status = status;
   }
 }
 
@@ -56,13 +58,17 @@ export default class Api {
 
   /**
    * With `silentOnFailure`, a failed request shows neither an error toast nor the
-   * plan upsell; an ended login still takes the user to the welcome page.
+   * plan upsell; an ended login still takes the user to the welcome page. With
+   * `redirectOnNotFound: false`, a 404 throws instead of opening the 404 page.
    */
   public static async sendRequest(
     endpoint: string,
     method: string,
     requestBody?: URLSearchParams | string,
-    { silentOnFailure = false }: { silentOnFailure?: boolean } = {},
+    {
+      silentOnFailure = false,
+      redirectOnNotFound = true,
+    }: { silentOnFailure?: boolean; redirectOnNotFound?: boolean } = {},
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     method = method.toLowerCase();
@@ -93,7 +99,7 @@ export default class Api {
           response = await fetch(`${Env.backendUrl}${endpoint}`, options);
         }
       }
-      return await Api.handleResponse(response);
+      return await Api.handleResponse(response, redirectOnNotFound);
     } catch (error) {
       if (method !== "get" && !silentOnFailure) {
         if (Api.isQuotaExceededError(error)) {
@@ -152,9 +158,12 @@ export default class Api {
     return response.ok;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static async handleResponse(response: Response): Promise<any> {
-    if (response.status === 404) Nav.goTo404Page();
+  private static async handleResponse(
+    response: Response,
+    redirectOnNotFound: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<any> {
+    if (response.status === 404 && redirectOnNotFound) Nav.goTo404Page();
     else if ([401, 403].includes(response.status)) {
       if (response.status === 403) Api.deleteCookie("csrftoken");
       const url = new URL(response.url);
@@ -167,7 +176,7 @@ export default class Api {
       }
     } else if (!response.ok) {
       const error = await response.json().catch(() => null);
-      throw new ApiError(error ?? {});
+      throw new ApiError(error ?? {}, response.status);
     } else return await response.json();
   }
 }

@@ -7,6 +7,7 @@ from django.db.models import (
     DateTimeField,
     EmailField,
     ForeignKey,
+    Index,
     Model,
     UUIDField,
 )
@@ -69,6 +70,7 @@ class User(AbstractUser):
     class Meta:
         db_table = "user"
         unique_together = [["oauth_org", "oauth_id"]]
+        indexes = [Index(fields=["date_joined"], name="user_date_joined_idx")]
 
     def __str__(self) -> str:
         return str(self.username)

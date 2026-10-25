@@ -203,6 +203,20 @@ make shell-api-server
 
 Adding a user does not cancel their ECPay periodic charge. If `add` prints a warning about ECPay, ask the user to stop auto-renewal on the plan page.
 
+### Managing Superusers
+
+Superusers can open the admin console at `/admin` (see ADMIN-R1 and ADMIN-R2 in `docs/specs/admin.md`). The user must have signed in to Taigu at least once, so that the account exists.
+
+```bash
+cd ~/taigu
+make shell-api-server
+    # In the api-server container:
+    python manage.py superuser add <email>
+    python manage.py superuser remove <email>
+    python manage.py superuser list
+    exit
+```
+
 ### Environment Variable Management
 
 You can view `example.env` as the template for environment variable requirements. When you modify the environment variable requirements in `example.env`, you must also update the corresponding environment variables in the `.env` file on the production server.

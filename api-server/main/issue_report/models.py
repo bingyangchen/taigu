@@ -1,4 +1,12 @@
-from django.db.models import CASCADE, CharField, ForeignKey, TextField
+from django.db.models import (
+    CASCADE,
+    CharField,
+    DateTimeField,
+    ForeignKey,
+    Index,
+    Q,
+    TextField,
+)
 
 from main.account.models import User
 from main.core.models import CreateUpdateDateModel
@@ -14,9 +22,18 @@ class IssueReport(CreateUpdateDateModel):
     body = TextField(max_length=BODY_MAX_LENGTH)
     platform = CharField(max_length=8, choices=Platform.choices, null=True)
     user_agent = TextField(null=True)
+    handled_at = DateTimeField(null=True)
 
     class Meta:
         db_table = "issue_report"
+        indexes = [
+            Index(fields=["-created_at", "-id"], name="issue_report_created_idx"),
+            Index(
+                fields=["-created_at", "-id"],
+                condition=Q(handled_at__isnull=True),
+                name="issue_report_unhandled_idx",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.user_id}_{self.pk}"

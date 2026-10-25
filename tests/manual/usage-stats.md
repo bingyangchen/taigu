@@ -189,3 +189,44 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 9. 用 Google 帳號登入。
 
 預期：步驟 8 的確認成立；步驟 9 之後畫面換回 `/settings`。
+
+## USAGE-R1.15 開啟後台
+
+前端沒有自動化 test，這裡檢查前端在後台的頁面不會記下使用紀錄，包括在後台裡換頁與切回後台的分頁。
+
+1. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py superuser add <Email>`，把這個帳號設成 superuser。
+2. 只留一個空白分頁。
+3. 執行刪除今天的使用紀錄的指令。
+4. 在 Chrome 的空白分頁開啟 `https://local.taigu.tw/admin/usage`，確認畫面顯示使用情況頁。
+5. 點導覽的「訂閱」，確認畫面顯示訂閱頁。
+6. 在 Chrome 開一個新分頁，再切回後台的分頁。
+7. 執行查看使用紀錄的指令。
+
+預期：步驟 7 的 `usage:` 那一行沒有今天的日期。
+
+## USAGE-R1.16 從設定頁進入後台
+
+前端沒有自動化 test，這裡檢查從設定頁進入後台時，開啟設定頁記下了使用紀錄。
+
+1. 確認這個帳號是 superuser（見 USAGE-R1.15 的步驟 1）。
+2. 只留一個空白分頁。
+3. 執行刪除今天的使用紀錄的指令。
+4. 在 Chrome 的空白分頁開啟 `https://local.taigu.tw/settings`，點「管理」區塊的「後台」。
+5. 確認網址換成 `/admin/usage`，畫面顯示使用情況頁。
+6. 執行查看使用紀錄的指令。
+
+預期：步驟 6 的 `usage:` 那一行有今天的日期與 `web` 一筆。
+
+## USAGE-R1.17 從後台回到 Taigu
+
+前端沒有自動化 test，這裡檢查從後台回到儀表板時，前端會記下使用紀錄。
+
+1. 確認這個帳號是 superuser（見 USAGE-R1.15 的步驟 1）。
+2. 只留一個空白分頁。
+3. 執行刪除今天的使用紀錄的指令。
+4. 在 Chrome 的空白分頁開啟 `https://local.taigu.tw/admin/usage`。
+5. 執行查看使用紀錄的指令，確認 `usage:` 那一行沒有今天的日期。
+6. 點後台導覽的「回到 Taigu」。
+7. 確認畫面顯示儀表板，再執行查看使用紀錄的指令。
+
+預期：步驟 7 的 `usage:` 那一行有今天的日期與 `web` 一筆。
