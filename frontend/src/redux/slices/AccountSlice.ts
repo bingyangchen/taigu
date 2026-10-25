@@ -15,13 +15,15 @@ const initialState: AccountState = {
   email: "",
   username: "",
   avatar_url: "",
+  is_superuser: false,
   subscription: { plan: "free", market_refresh_interval_seconds: 600 },
   isWaiting: false,
 };
 
 export const fetchAccountInfo = createAsyncThunk(
   "account/fetchAccountInfo",
-  async (): Promise<Account> => {
+  // Undefined while Api takes the user to another page, such as the welcome page.
+  async (): Promise<Account | undefined> => {
     return await Api.sendRequest("account/me", "get");
   },
 );
@@ -111,10 +113,15 @@ export const accountSlice = createSlice({
         state.isWaiting = true;
       })
       .addCase(fetchAccountInfo.fulfilled, (state, action) => {
+        if (!action.payload) {
+          state.isWaiting = false;
+          return;
+        }
         state.id = action.payload.id;
         state.email = action.payload.email;
         state.username = action.payload.username;
         state.avatar_url = action.payload.avatar_url;
+        state.is_superuser = action.payload.is_superuser;
         state.subscription = action.payload.subscription;
 
         state.isWaiting = false;
@@ -131,6 +138,7 @@ export const accountSlice = createSlice({
         state.email = action.payload.email;
         state.username = action.payload.username;
         state.avatar_url = action.payload.avatar_url;
+        state.is_superuser = action.payload.is_superuser;
         state.subscription = action.payload.subscription;
 
         state.isWaiting = false;
@@ -147,6 +155,7 @@ export const accountSlice = createSlice({
         state.email = action.payload.email;
         state.username = action.payload.username;
         state.avatar_url = action.payload.avatar_url;
+        state.is_superuser = action.payload.is_superuser;
         state.subscription = action.payload.subscription;
 
         state.isWaiting = false;

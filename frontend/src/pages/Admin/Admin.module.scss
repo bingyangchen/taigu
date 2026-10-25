@@ -1,0 +1,244 @@
+@use "../../design_system" as _;
+
+// Matches the border of MainSideBar, so the console reads as part of Taigu.
+$nav-border: 0.5px solid _.$light-gray;
+
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.access_failure {
+  max-width: _.$admin-narrow-content-max-width;
+  margin: 0 auto;
+  padding: 64px 16px;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: _.$admin-side-bar-width minmax(0, 1fr);
+  height: 100%;
+  background-color: _.$white;
+  transition: grid-template-columns 0.2s ease-out;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px 12px 24px;
+  border-right: $nav-border;
+  background-color: _.$white;
+  overflow-y: auto;
+}
+
+.nav_top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.nav_brand {
+  display: flex;
+  align-items: center;
+  & > span {
+    font-size: 0.75 * _.$base-font-size;
+    color: _.$gray;
+    white-space: nowrap;
+  }
+}
+
+.collapse_button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: _.$gray;
+  cursor: pointer;
+  &:focus-visible {
+    outline: 2px solid _.$blue;
+    outline-offset: 2px;
+  }
+  @media (hover: hover) {
+    &:hover {
+      background-color: _.$black-transparent-3;
+      color: _.$deep-gray;
+    }
+  }
+  @media (pointer: coarse) {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.nav_items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav_item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 0.875 * _.$base-font-size;
+  color: _.$gray;
+  & svg {
+    flex: none;
+  }
+  &:focus-visible {
+    outline: 2px solid _.$blue;
+    outline-offset: 2px;
+  }
+  @media (hover: hover) {
+    &:hover {
+      background-color: _.$black-transparent-3;
+    }
+  }
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+  &[aria-current="page"] {
+    background-color: _.$blue-transparent-3;
+    color: _.$blue;
+  }
+}
+
+.nav_label {
+  white-space: nowrap;
+}
+
+.back_link {
+  margin-top: auto;
+}
+
+.badge {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 100px;
+  background-color: _.$blue;
+  color: _.$white;
+  font-size: 0.75 * _.$base-font-size;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.content {
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.content_inner {
+  width: 100%;
+  max-width: _.$admin-content-max-width;
+  margin: 0 auto;
+  padding: 32px 48px 48px;
+}
+
+@media (min-width: _.$width-780 + 1px) {
+  .collapsed {
+    grid-template-columns: _.$admin-collapsed-side-bar-width minmax(0, 1fr);
+    & .nav {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    & .nav_top {
+      justify-content: center;
+    }
+    & .nav_brand {
+      display: none;
+    }
+    & .nav_item {
+      justify-content: center;
+      padding: 0;
+    }
+    & .nav_label {
+      @include visually-hidden;
+    }
+    & .badge {
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      min-width: 16px;
+      padding: 0 4px;
+      font-size: 0.625 * _.$base-font-size;
+      line-height: 16px;
+    }
+  }
+}
+
+@media (max-width: _.$width-780) {
+  .shell {
+    display: flex;
+    flex-direction: column;
+  }
+  .nav {
+    flex: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    border-right: none;
+    border-bottom: $nav-border;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .nav_top {
+    display: none;
+  }
+  .nav_items {
+    flex-direction: row;
+  }
+  .nav_item {
+    min-height: 44px;
+    & svg {
+      display: none;
+    }
+  }
+  .badge {
+    margin-left: 0;
+  }
+  .back_link {
+    justify-content: center;
+    min-width: 44px;
+    margin-top: 0;
+    margin-left: auto;
+    padding: 0;
+    & svg {
+      display: block;
+    }
+    & .nav_label {
+      @include visually-hidden;
+    }
+  }
+  .content {
+    flex: 1;
+  }
+  .content_inner {
+    padding: 24px 16px 48px;
+  }
+}

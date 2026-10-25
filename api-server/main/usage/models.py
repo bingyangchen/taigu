@@ -28,3 +28,4 @@ class DailyActivity(models.Model):
                 nulls_distinct=False,
             )
         ]
+        indexes = [models.Index(fields=["date"], name="daily_activity_date_idx")]

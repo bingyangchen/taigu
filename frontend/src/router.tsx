@@ -10,6 +10,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 
+import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
 import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Main/Dashboard/Dashboard";
 import Details from "./pages/Main/Details/Details";
@@ -45,6 +46,10 @@ import Welcome from "./pages/Welcome/Welcome";
 import Env from "./utils/env";
 
 export const settingsPagePath = "settings";
+export const adminPagePath = "admin";
+
+// Loaded on demand, so pages other than the admin console never load its code.
+const Admin = React.lazy(() => import("./pages/Admin/Admin"));
 
 const myRouter = createBrowserRouter(
   createRoutesFromElements(
@@ -97,6 +102,14 @@ const myRouter = createBrowserRouter(
       </Route>
       <Route path="privacy-policy" element={<PrivacyPolicy />}></Route>
       <Route path="terms-of-service" element={<TermsOfService />}></Route>
+      <Route
+        path={`${adminPagePath}/*`}
+        element={
+          <React.Suspense fallback={<LoadingScreen />}>
+            <Admin />
+          </React.Suspense>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Route>,
   ),

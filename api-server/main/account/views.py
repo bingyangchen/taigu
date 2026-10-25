@@ -158,6 +158,17 @@ def _require_google_authorization(failure_message: str) -> Callable:
     return decorator
 
 
+def _serialize_account(user: User) -> dict:
+    return {
+        "id": str(user.id),
+        "username": user.username,
+        "email": user.email,
+        "avatar_url": user.avatar_url or None,
+        "is_superuser": user.is_superuser,
+        "subscription": serialize_account_subscription(user),
+    }
+
+
 def _set_new_token_pair(response: JsonResponse, user: User) -> JsonResponse:
     token_pair = issue_token_pair(user)
     return set_auth_cookies(response, token_pair.access_token, token_pair.refresh_token)
@@ -226,15 +237,7 @@ def change_google_binding(
     user.avatar_url = google_account.picture
     user.save()
 
-    response = JsonResponse(
-        {
-            "id": str(user.id),
-            "email": user.email,
-            "username": user.username,
-            "avatar_url": user.avatar_url,
-            "subscription": serialize_account_subscription(user),
-        }
-    )
+    response = JsonResponse(_serialize_account(user))
     return _set_new_token_pair(response, user)
 
 
@@ -243,15 +246,7 @@ def change_google_binding(
 @require_login
 @rate_limit(rate=5)
 def me(request: HttpRequest) -> JsonResponse:
-    return JsonResponse(
-        {
-            "id": request.user.pk,
-            "username": request.user.username,
-            "email": request.user.email,
-            "avatar_url": request.user.avatar_url or None,
-            "subscription": serialize_account_subscription(request.user),
-        }
-    )
+    return JsonResponse(_serialize_account(request.user))
 
 
 @require_POST
@@ -303,14 +298,6 @@ def update(request: HttpRequest) -> JsonResponse:
         elif avatar_url == "":
             user.avatar_url = None  # type: ignore
         user.save()
-        return JsonResponse(
-            {
-                "id": user.pk,
-                "username": user.username,
-                "email": user.email,
-                "avatar_url": user.avatar_url or None,
-                "subscription": serialize_account_subscription(user),
-            }
-        )
+        return JsonResponse(_serialize_account(user))
     except ValidationError as e:
         return JsonResponse({"message": e.messages[0]}, status=400)

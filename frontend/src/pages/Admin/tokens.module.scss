@@ -1,0 +1,17 @@
+@use "../../design_system" as _;
+
+// Exposes design tokens to TypeScript, for ECharts options and media queries.
+:export {
+  blue: _.$blue;
+  blueTransparent1: _.$blue-transparent-1;
+  blueTransparent2: _.$blue-transparent-2;
+  blackTransparent3: _.$black-transparent-3;
+  deepGray: _.$deep-gray;
+  gray: _.$gray;
+  lightGray: _.$light-gray;
+  noisyWhite: _.$noisy-white;
+  width780: _.$width-780;
+  adminChartLabelMinWidth: _.$admin-chart-label-min-width;
+  adminChartHeight: _.$admin-chart-height;
+  adminSmallChartHeight: _.$admin-small-chart-height;
+}

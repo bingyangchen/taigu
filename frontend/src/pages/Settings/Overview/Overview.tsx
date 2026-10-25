@@ -8,7 +8,7 @@ import * as Icons from "../../../icons";
 import { logout } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, settingsPagePath, withRouter } from "../../../router";
+import { adminPagePath, IRouter, settingsPagePath, withRouter } from "../../../router";
 import Env from "../../../utils/env";
 import { getHideModalCallback } from "../../../utils/modal";
 import Nav from "../../../utils/nav";
@@ -17,8 +17,9 @@ import { IssueReportEditor } from "../IssueReport/IssueReport";
 import styles from "./Overview.module.scss";
 
 function mapStateToProps(rootState: RootState) {
-  const { email, username, avatar_url, isWaiting, subscription } = rootState.account;
-  return { email, username, avatar_url, isWaiting, subscription };
+  const { email, username, avatar_url, isWaiting, is_superuser, subscription } =
+    rootState.account;
+  return { email, username, avatar_url, isWaiting, is_superuser, subscription };
 }
 
 interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
@@ -143,6 +144,20 @@ class Overview extends React.Component<Props, State> {
               </div>
             </BeautifulRow>
           </BeautifulBlock>
+          {this.props.is_superuser && (
+            <BeautifulBlock id="admin" title="管理">
+              <BeautifulRow
+                onClick={() =>
+                  this.props.router.navigate(`${Env.frontendRootPath}${adminPagePath}`)
+                }
+              >
+                <div className={styles.row_inner}>
+                  <Icons.IconChartHistogram sideLength="16px" />
+                  後台
+                </div>
+              </BeautifulRow>
+            </BeautifulBlock>
+          )}
           <BeautifulBlock id="logout">
             <BeautifulRow
               onClick={() => {

@@ -507,6 +507,22 @@ class TestChangeGoogleBindingView:
         user.refresh_from_db()
         assert user.oauth_id == "google_oauth_id"
 
+    @pytest.mark.scenario("ADMIN-R2.5")
+    def test_change_google_binding_keeps_superuser(
+        self, google: FakeGoogle, user: User
+    ) -> None:
+        user.is_superuser = True
+        user.save()
+        state, oauth_cookie = _start_authorization(BINDING_REDIRECT_URI)
+
+        response = change_google_binding(self._make_request(user, state, oauth_cookie))
+        browser = Client()
+        browser.cookies[ACCESS_COOKIE_NAME] = response.cookies[ACCESS_COOKIE_NAME].value
+
+        assert response.status_code == 200
+        assert json.loads(response.content)["is_superuser"] is True
+        assert browser.get("/api/admin/usage").status_code == 200
+
     @pytest.mark.scenario("ACCT-R11.2")
     def test_change_google_binding_already_bound(
         self, google: FakeGoogle, user: User
@@ -679,6 +695,18 @@ class TestMeView:
             "plan": "standard",
             "market_refresh_interval_seconds": 30,
         }
+
+    def test_me_tells_whether_user_is_superuser(
+        self, request_obj: HttpRequest, user: User
+    ) -> None:
+        request_obj.method = "GET"
+        before = json.loads(me(request_obj).content)
+        user.is_superuser = True
+        user.save()
+        after = json.loads(me(request_obj).content)
+
+        assert before["is_superuser"] is False
+        assert after["is_superuser"] is True
 
     @pytest.mark.scenario("ACCT-R9.3")
     def test_me_without_avatar(self, request_obj: HttpRequest, user: User) -> None:

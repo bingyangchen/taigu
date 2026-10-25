@@ -74,22 +74,25 @@ class Main extends React.Component<Props, State> {
 
     try {
       const account = await this.props.dispatch(fetchAccountInfo()).unwrap();
+      if (account) {
+        const independentPromises = Promise.allSettled([
+          this.props.dispatch(openSession()).unwrap(),
+          this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
+          this.props.dispatch(fetchAllFavorites()).unwrap(),
+          this.props.dispatch(fetchAllTradePlans()).unwrap(),
+          this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
+          this.props.dispatch(fetchAllDiscounts()).unwrap(),
+        ]);
 
-      const independentPromises = Promise.allSettled([
-        this.props.dispatch(openSession()).unwrap(),
-        this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
-        this.props.dispatch(fetchAllFavorites()).unwrap(),
-        this.props.dispatch(fetchAllTradePlans()).unwrap(),
-        this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
-        this.props.dispatch(fetchAllDiscounts()).unwrap(),
-      ]);
+        const res = await this.props
+          .dispatch(fetchAllTradeRecords(account.id))
+          .unwrap();
 
-      const res = await this.props.dispatch(fetchAllTradeRecords(account.id)).unwrap();
-
-      await Promise.allSettled([
-        this.fetchHoldingStockInfo(res.stockWarehouse),
-        independentPromises,
-      ]);
+        await Promise.allSettled([
+          this.fetchHoldingStockInfo(res.stockWarehouse),
+          independentPromises,
+        ]);
+      }
     } catch (error) {
       console.error(
         "Failed to load critical user or trade records in componentDidMount:",

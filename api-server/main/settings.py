@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "main.handling_fee",
     "main.issue_report",
     "main.usage",
+    "main.admin_console",
 ]
 
 MIDDLEWARE = [

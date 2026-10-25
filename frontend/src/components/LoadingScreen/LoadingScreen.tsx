@@ -1,7 +1,9 @@
 import React from "react";
 
 import loadingSpinner from "../../assets/loading.svg";
-import { FullLogo } from "../../components";
+// Imported directly, not through ../../components, because router.tsx imports this
+// component and the barrel imports components that import router.tsx.
+import FullLogo from "../FullLogo/FullLogo";
 import styles from "./LoadingScreen.module.scss";
 
 interface Props {}

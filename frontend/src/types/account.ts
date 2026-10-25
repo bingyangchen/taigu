@@ -38,5 +38,6 @@ export type Account = {
   email: string;
   username: string;
   avatar_url: string | null;
+  is_superuser: boolean;
   subscription: AccountSubscription;
 };
