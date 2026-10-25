@@ -41,7 +41,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 步驟裡的下面這些說法代表固定的操作：
 
 - 「改寫 `<網址>` 的回應」：在 DevTools 的 Network 面板開啟頁面，對網址是 `<網址>` 的 request 按右鍵，選「Override content」（第一次使用時，依畫面選一個本機的資料夾存放改寫的內容，並允許 DevTools 存取），把 Sources 面板開啟的回應內容整個換成步驟給的 JSON，按 Cmd+S 儲存，再重新整理頁面。檢查完之後，在 Sources 面板的 Overrides 分頁取消勾選「Enable Local Overrides」。
-- 「刪除短效的登入 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。
+- 「刪除 access token 的 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。
 - 「刪除側邊欄的收合狀態」：在 DevTools 的 Application > Local storage > `https://local.taigu.tw` 刪除 `admin-nav-collapsed`。
 - 「在桌面瀏覽器上」：關閉 DevTools 的裝置模擬（Toggle device toolbar），Chrome 的視窗寬度至少 1024px。
 - 「在手機上」：開啟 DevTools 的裝置模擬，選一款手機機型（例如 iPhone 14 Pro），再重新整理頁面。
@@ -87,11 +87,11 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## ADMIN-R1.6 Access token 過期之後操作後台
 
-前端換發 access token 再重送的流程沒有自動化 test，這裡用刪除短效的登入 cookie 模擬 access token 過期。
+前端換發 access token 再重送的流程沒有自動化 test，這裡用刪除 access token 的 cookie 模擬 access token 過期。
 
 1. 把登入的帳號設成 superuser，建立測試用的問題回報。
 2. 開啟 `https://local.taigu.tw/admin/issue-reports`。
-3. 刪除短效的登入 cookie。
+3. 刪除 access token 的 cookie。
 4. 點 `u6@taigu-check.test` 那則問題回報右側的勾選按鈕。
 
 預期：畫面出現提示「已標記為已處理。」，這則問題回報從列表消失，網址維持 `/admin/issue-reports`，沒有換到歡迎頁。
