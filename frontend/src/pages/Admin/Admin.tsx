@@ -20,6 +20,7 @@ import {
 import * as Icons from "../../icons";
 import { useAppDispatch } from "../../redux/hooks";
 import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
+import { adminPagePath } from "../../router";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
 import NotFound from "../NotFound/NotFound";
@@ -35,6 +36,11 @@ type Access = "checking" | "allowed" | "denied" | "failed";
 
 const NAV_COLLAPSED_STORAGE_KEY = "admin-nav-collapsed";
 const NARROW_MEDIA_QUERY = `(max-width: ${tokens.width780})`;
+
+// Absolute, because relative links inside the `admin/*` splat route resolve
+// against the whole current URL, so "usage" on /admin/subscriptions would lead
+// to /admin/subscriptions/usage.
+const ADMIN_PATH = `${Env.frontendRootPath}${adminPagePath}`;
 
 const NAV_ITEMS = [
   { path: "usage", label: "使用情況", Icon: Icons.IconChartHistogram },
@@ -122,7 +128,7 @@ export default function Admin(): React.ReactElement {
     <LostAccessContext.Provider value={denyAccess}>
       <Routes>
         <Route element={<AdminShell unhandledCount={unhandledCount} />}>
-          <Route index element={<Navigate to="usage" replace />} />
+          <Route index element={<Navigate to={`${ADMIN_PATH}/usage`} replace />} />
           <Route path="usage" element={<Usage />} />
           <Route path="subscriptions" element={<Subscriptions />} />
           <Route
@@ -190,7 +196,7 @@ function AdminShell({
         <div className={styles.nav_items}>
           {NAV_ITEMS.map(({ path, label, Icon }) => (
             <WithTooltip key={path} content={label} enabled={showsIconOnly}>
-              <NavLink className={styles.nav_item} to={path}>
+              <NavLink className={styles.nav_item} to={`${ADMIN_PATH}/${path}`}>
                 <Icon sideLength="16" />
                 <span className={styles.nav_label}>{label}</span>
                 {path === "issue-reports" && !!unhandledCount && (
