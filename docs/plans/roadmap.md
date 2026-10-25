@@ -35,10 +35,11 @@ flowchart TD
 
 ### 登入與帳號修正
 
-讓使用者在登入期限內不會被登出、Google 回傳的資料不完整時也能登入、需要登出時確實登出，換綁帳號之後也不會留下舊的 refresh token 或多出一次試用期。
+讓使用者在登入期限內不會被登出、Google 回傳的資料不完整時也能登入、需要登出時確實登出，換綁帳號之後也不會留下舊的 refresh token。
 
 - 同一個瀏覽器的兩個分頁同時換發 refresh token 時（例如還原整個瀏覽器的分頁之後），api-server 把第二個分頁送來的舊 refresh token 當成被重複使用，結束這次登入，兩個分頁都被登出。目標是同一個瀏覽器同時換發時不會登出。
-- 換綁 Google 帳號時，api-server 另外發一組重新算 30 天的 refresh token，舊的那組沒有作廢；換綁之後，舊的 Google 帳號再登入會建立一個新的 Taigu 帳號，也再得到一次試用期。目標是換綁時作廢舊的 refresh token，舊的 Google 帳號能不能再拿到試用期在 plan 裡決定。
+- 換綁 Google 帳號時，api-server 另外發一組重新算 30 天的 refresh token，舊的那組沒有作廢。目標是換綁時作廢舊的 refresh token。
+- 換綁 Google 帳號之後，舊的 Google 帳號再登入會建立一個新的 Taigu 帳號，也再得到一次試用期。目標是在 plan 裡決定舊的 Google 帳號能不能再拿到試用期。
 - Google 回傳的資料沒有名字或頭像，或名字超過 64 個字時，登入或換綁會得到 500，使用者沒辦法登入。目標是改用預設的名字與頭像，照常登入。
 - CSRF 檢查失敗（403）時，前端把它當成登入狀態結束，帶使用者到歡迎頁，但送出的登出 request 也因為同樣的原因失敗，所以 api-server 上的登入沒有結束。目標是 CSRF 檢查失敗時重新取得 CSRF token，或確實登出。
 
