@@ -10,6 +10,7 @@ import { IRouter, withRouter } from "../../router";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
 import Nav from "../../utils/nav";
+import { clearReturnUrl, consumeReturnUrl } from "../../utils/returnUrl";
 import styles from "./Login.module.scss";
 
 const LOGIN_FAILED_MESSAGE = "登入失敗，請重新登入。";
@@ -42,6 +43,7 @@ class Login extends React.Component<Props, State> {
     });
 
     if (await Api.sendRequest("account/me", "get")) {
+      clearReturnUrl();
       // Go to root if already login
       this.props.router.navigate(Env.frontendRootPath, { replace: true });
     } else if (this.props.router.search_params.get("code")) {
@@ -57,10 +59,7 @@ class Login extends React.Component<Props, State> {
 
         Nav.clearSearchParams();
 
-        const pathAndQueryString =
-          window.localStorage.getItem("pathAndQueryString") ?? Env.frontendRootPath;
-        window.localStorage.removeItem("pathAndQueryString");
-        this.props.router.navigate(pathAndQueryString, { replace: true });
+        this.props.router.navigate(consumeReturnUrl(), { replace: true });
       } catch (error) {
         Nav.clearSearchParams();
       }

@@ -8,6 +8,8 @@ class TestAccountUrls:
     def test_all_url_patterns_resolve_correctly(self) -> None:
         """Test that all URL patterns resolve to the correct view functions."""
         url_patterns = [
+            ("/api/account/csrf-token/", views.csrf_token),
+            ("/api/account/csrf-token", views.csrf_token),
             ("/api/account/authorization-url/", views.get_authorization_url),
             ("/api/account/authorization-url", views.get_authorization_url),
             ("/api/account/google-login/", views.google_login),
@@ -34,8 +36,7 @@ class TestAccountUrls:
         """Test that URL patterns are configured correctly with expected count and no duplicates."""
         from main.account.urls import urlpatterns
 
-        # Should have exactly 8 active patterns
-        assert len(urlpatterns) == 8
+        assert len(urlpatterns) == 9
 
         # Check for duplicate patterns
         patterns = []
@@ -50,6 +51,7 @@ class TestAccountUrls:
         from main.account.urls import urlpatterns
 
         expected_patterns = [
+            r"^csrf-token[/]?$",
             r"^authorization-url[/]?$",
             r"^google-login[/]?$",
             r"^refresh-token[/]?$",

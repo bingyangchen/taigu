@@ -1,4 +1,5 @@
 import Env from "./env";
+import { rememberReturnUrl } from "./returnUrl";
 
 export default class Nav {
   public static isLocalhost = Boolean(
@@ -103,7 +104,7 @@ export default class Nav {
   }
   public static goToWelcomePage(from?: string): void {
     if (Nav.isAtWelcomePage) return;
-    if (from) window.localStorage.setItem("pathAndQueryString", from);
+    if (from) rememberReturnUrl(from);
 
     // Don't use window.location.pathname = `${Env.frontendRootPath}welcome`;
     // because this approach will push a new history.

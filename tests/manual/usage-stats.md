@@ -186,7 +186,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 6. 在顯示隱私權政策的分頁刪除 access token 的 cookie。
 7. 點顯示設定頁的分頁。
 8. 確認畫面換到歡迎頁 `/welcome`，而且沒有出現錯誤提示。
-9. 用 Google 帳號登入。
+9. 在原分頁從記住網址起算未滿 30 分鐘時，用 Google 帳號完成登入。
 
 預期：步驟 8 的確認成立；步驟 9 之後畫面換回 `/settings`。
 

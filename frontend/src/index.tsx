@@ -8,6 +8,15 @@ import { store } from "./redux/store";
 import reportWebVitals from "./reportWebVitals";
 import myRouter from "./router";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
+import Api from "./utils/api";
+import { SESSION_VERSION_KEY } from "./utils/session";
+
+window.addEventListener("storage", (event) => {
+  if (event.key === SESSION_VERSION_KEY) {
+    Api.clearAccountMemory();
+    window.location.replace("/login");
+  }
+});
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 

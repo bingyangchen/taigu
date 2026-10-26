@@ -6,7 +6,7 @@ from django.test import Client
 
 from main.account import ACCESS_COOKIE_NAME, OAuthOrganization
 from main.account.models import User
-from main.account.tokens import issue_token_pair
+from main.account.services.tokens import issue_token_pair
 
 
 def _run_command(*args: str) -> str:

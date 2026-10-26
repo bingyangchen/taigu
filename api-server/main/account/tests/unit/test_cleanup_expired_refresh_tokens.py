@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from main.account import OAuthOrganization
 from main.account.models import RefreshToken, User
-from main.account.tokens import delete_expired_refresh_tokens, issue_token_pair
+from main.account.services.tokens import delete_expired_refresh_tokens, issue_token_pair
 
 
 @pytest.mark.django_db

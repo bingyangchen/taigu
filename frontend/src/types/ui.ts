@@ -7,6 +7,6 @@ export type Subpage = {
   path: string;
 };
 
-export type ToastMessage = { type: "success" | "error"; text: string };
+export type ToastMessage = { type: "success" | "warning" | "error"; text: string };
 
 export type SelectedStock = { sid: string; name?: string };

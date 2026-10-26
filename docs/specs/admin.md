@@ -31,20 +31,20 @@ prefix: ADMIN
   - 結果：後端拒絕讀取問題回報列表的 request，不回傳任何問題回報，回應的 status code 與內容跟 request 送到不存在的網址（例如 `/api/does-not-exist`）時相同；設定頁照常顯示這位使用者的名字與 Email，使用者沒有被登出。
 - ADMIN-R1.4 未登入時開啟後台
   - 前提：使用者是 superuser，沒有登入。
-  - 動作：開啟 `/admin/usage`，畫面換到歡迎頁之後，用 Google 帳號登入。
+  - 動作：開啟 `/admin/usage`，畫面換到歡迎頁之後，在原分頁從記住網址起算未滿 30 分鐘時，用 Google 帳號完成登入。
   - 結果：畫面換到 `/admin/usage`，顯示使用情況頁。
 - ADMIN-R1.5 取消 superuser 之後重新整理
   - 前提：使用者是 superuser，開著使用情況頁 `/admin/usage`，之後開發者取消了這位使用者的 superuser。
   - 動作：重新整理頁面。
   - 結果：網址維持 `/admin/usage`，畫面顯示 404 頁面。
 - ADMIN-R1.6 Access token 過期之後操作後台
-  - 前提：Superuser 在登入滿 30 天之前開著問題回報頁的「未處理」，最後換發的 access token 已經過期。
+  - 前提：Superuser 在登入滿 30 天之前開著問題回報頁的「未處理」，最後取得的 access token 已經過期。
   - 動作：點一則問題回報的勾選按鈕。
   - 結果：畫面出現提示「已標記為已處理。」，這則問題回報從列表消失，superuser 沒有被登出。
 
 ### ADMIN-R2 設定與取消 Superuser
 
-開發者可以依 email 把 Taigu 的使用者設成 superuser、取消 superuser，以及列出所有 superuser 的 email。輸入的 email 找不到 Taigu 的帳號時，開發者看到錯誤訊息，後端不改變任何帳號。使用者改綁 Google 帳號（見 ACCT-R11）之後仍是 superuser。
+開發者可以依 email 把 Taigu 的使用者設成 superuser、取消 superuser，以及列出所有 superuser 的 email。輸入的 email 找不到 Taigu 的帳號時，開發者看到錯誤訊息，後端不改變任何帳號。使用者更換綁定的 Google 帳號（見 ACCT-R11）之後仍是 superuser。
 
 - ADMIN-R2.1 設成 superuser
   - 前提：Email 是 `dev@example.com` 的使用者不是 superuser。
@@ -62,9 +62,9 @@ prefix: ADMIN
   - 前提：Email 是 `dev@example.com` 與 `ops@example.com` 的使用者是 superuser，其他使用者都不是。
   - 動作：開發者列出所有 superuser。
   - 結果：列出的 email 只有 `dev@example.com` 與 `ops@example.com`。
-- ADMIN-R2.5 改綁 Google 帳號
+- ADMIN-R2.5 更換綁定的 Google 帳號
   - 前提：使用者是 superuser。
-  - 動作：使用者把帳號改綁到另一個 Google 帳號，再開啟 `/admin/usage`。
+  - 動作：使用者把綁定的 Google 帳號換成另一個 Google 帳號，再開啟 `/admin/usage`。
   - 結果：畫面顯示使用情況頁。
 
 ### ADMIN-R3 設定頁的後台入口

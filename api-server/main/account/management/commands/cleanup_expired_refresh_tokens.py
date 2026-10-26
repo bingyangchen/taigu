@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from main.account.tokens import delete_expired_refresh_tokens
+from main.account.services.tokens import delete_expired_refresh_tokens
 
 
 class Command(BaseCommand):
