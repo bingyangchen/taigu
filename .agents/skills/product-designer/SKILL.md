@@ -58,6 +58,7 @@ Copy is part of the design. When the user asks for copy, the copy is the deliver
 
 `~/.agents/skills/impeccable-design/` holds focused design skills. `frontend-design`, `critique`, and `polish` are required before showing any draft (see "Reviewing What You Made"); read the others when they fit the task.
 
+<!-- prettier-ignore -->
 | Task | Sub-skill |
 | --- | --- |
 | Critique an existing screen or draft | `critique`, `audit` |
