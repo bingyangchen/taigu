@@ -22,7 +22,7 @@
    "
    ```
 
-段落裡的「桌面瀏覽器」指關閉 Chrome DevTools 裝置模擬的頁面，「行動裝置」指在 DevTools 開啟裝置模擬並選一款手機（例如 iPhone 14 Pro）的頁面。Taigu 依瀏覽器的 user agent 判斷是不是行動裝置，所以每次切換裝置模擬之後都要重新整理頁面。
+段落裡的「桌面瀏覽器」指關閉 Chrome DevTools 裝置模擬的頁面，「行動裝置」指在 DevTools 開啟裝置模擬並選一款手機（例如 iPhone 14 Pro）的頁面。前端依瀏覽器的 user agent 判斷是不是行動裝置，所以每次切換裝置模擬之後都要重新整理頁面。
 
 段落提到下面這些準備時，照這裡的做法執行：
 
@@ -49,7 +49,7 @@
 
 - 讓一檔股票成為持股：在桌面瀏覽器上點選側邊欄的「新增」，在新增交易紀錄的視窗選這檔股票，成交單價輸入 100、成交股數輸入 1000，再點選「送出」。
 - 把一檔股票加入關注：開啟這檔股票的個股詳情頁 `https://local.taigu.tw/market/<股票代號>`，愛心按鈕是空心時點選它；已經是實心時不要點，因為點了會移除這檔自選股。
-- 設定股價：在第一個用到設定股價的段落開始前，先執行 `docker compose -f compose.dev.yaml stop scheduler`，讓 scheduler 不會蓋掉設定的股價，再執行下面的指令，把 2330 與 2317 原本的行情備份到 api-server container 的 `/tmp/trade_plans_backup.json`（全部檢查完之前不要重建 api-server container，也不要再執行一次備份）：
+- 設定股價：在第一個用到設定股價的段落開始前，先執行 `docker compose -f compose.dev.yaml stop scheduler`，讓 scheduler 不會蓋掉設定的股價，再執行下面的指令，把 2330 與 2317 原本的行情備份到 `api-server` container 的 `/tmp/trade_plans_backup.json`（全部檢查完之前不要重建 `api-server` container，也不要再執行一次備份）：
 
   ```sh
   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -176,7 +176,7 @@
 
 ## PLAN-R5.1 在桌面瀏覽器上新增
 
-後端的 test 只驗證 Taigu 儲存了計畫，同一檔股票可以有兩筆計畫與畫面上的結果都要手動確認。
+後端的 test 只驗證計畫已經儲存，同一檔股票可以有兩筆計畫與畫面上的結果都要手動確認。
 
 1. 建立自己的買賣計畫：2330、sell、650、1000。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/plans`。
@@ -304,11 +304,11 @@
    "
    ```
 
-預期：指令印出 `False 400 0`，也就是股票清單裡沒有 0000，Taigu 拒絕這個要求，這個帳號的買賣計畫沒有增加。
+預期：指令印出 `False 400 0`，也就是股票清單裡沒有 0000，後端拒絕這個要求，這個帳號的買賣計畫沒有增加。
 
 ## PLAN-R9.1 在桌面瀏覽器上修改
 
-後端的 test 只驗證 Taigu 儲存了修改，畫面上的結果要手動確認。
+後端的 test 只驗證修改已經儲存，畫面上的結果要手動確認。
 
 1. 建立自己的買賣計畫：2330、buy、500、1000。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/plans`。
@@ -320,7 +320,7 @@
 
 ## PLAN-R9.2 在行動裝置上修改
 
-後端的 test 只驗證 Taigu 儲存了修改，畫面上的結果要手動確認。
+後端的 test 只驗證修改已經儲存，畫面上的結果要手動確認。
 
 1. 建立自己的買賣計畫：2330、buy、500、1000，記下印出的 ID。
 2. 在行動裝置上開啟 `https://local.taigu.tw/plans`。
@@ -373,7 +373,7 @@
 
 ## PLAN-R12.2 從編輯器刪除
 
-後端的 test 只驗證 Taigu 刪除了計畫，畫面上的結果要手動確認。
+後端的 test 只驗證計畫已經刪除，畫面上的結果要手動確認。
 
 1. 建立自己的買賣計畫：2330、buy、500、1000。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/plans`。

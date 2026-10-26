@@ -3,7 +3,7 @@
 1. 執行 `make start`。
 2. 用一個專門用來測試的 Google 帳號，在桌面瀏覽器的 Chrome 登入 `https://local.taigu.tw`。下面的指令會刪除這個帳號的交易紀錄、現金股利紀錄、買賣計畫、自選股與付款紀錄，所以不要用平常記帳的帳號。
 3. 在 repo 的根目錄執行各節的指令，並把指令裡的 `<email>` 換成這個 Google 帳號的 email。
-4. 每次執行指令之後，重新整理瀏覽器的頁面，Taigu 才會載入新的資料。
+4. 每次執行指令之後，重新整理瀏覽器的頁面，前端才會載入新的資料。
 5. 如果上一節執行過「加入白名單」指令，執行「移出白名單」指令。
 
 各節用到下面這些說法：
@@ -98,7 +98,7 @@ BillingProfile.objects.filter(user=user).update(subscription_status=STATE, curre
 "
 ```
 
-「模擬付款結果」指令假裝綠界通知 Taigu 這個帳號最近一筆付款的結果，`SUCCESS = True` 是付款成功，`SUCCESS = False` 是付款失敗：
+「模擬付款結果」指令假裝綠界通知後端這個帳號最近一筆付款的結果，`SUCCESS = True` 是付款成功，`SUCCESS = False` 是付款失敗：
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -114,7 +114,7 @@ else:
 "
 ```
 
-「模擬定期扣款結果」指令假裝綠界通知 Taigu 定期扣款的結果，執行之前要先用「建立已付款的訂閱」指令建立訂閱。`SUCCESS = True` 是扣款成功，`SUCCESS = False` 是扣款失敗：
+「模擬定期扣款結果」指令假裝綠界通知後端定期扣款的結果，執行之前要先用「建立已付款的訂閱」指令建立訂閱。`SUCCESS = True` 是扣款成功，`SUCCESS = False` 是扣款失敗：
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -166,7 +166,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 `test_new_user_gets_standard_trial` 只驗證新使用者的訂閱與方案，沒有驗證試用期的長度與方案頁顯示的日期。
 
-1. 執行下面的指令，刪除這個帳號的方案資料，讓 Taigu 把下一次登入當成第一次登入：
+1. 執行下面的指令，刪除這個帳號的方案資料，讓後端把下一次登入當成第一次登入：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -365,7 +365,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 2. 執行「準備資料」指令，`HOLDINGS` 設成 10，`TRADE_RECORDS` 設成 20。
 3. 新增交易紀錄，股票代號用 2603。
 
-預期：Taigu 沒有新增這筆交易紀錄，升級提示視窗的標題是「這個月的新增額度已用完」，不是「持股檔數已達 Free 上限」。
+預期：後端沒有新增這筆交易紀錄，升級提示視窗的標題是「這個月的新增額度已用完」，不是「持股檔數已達 Free 上限」。
 
 ## BILL-R10.1 自動續訂中
 
@@ -671,7 +671,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 ## BILL-R19.1 從綠界回到方案頁
 
-`test_ecpay_order_result_redirects_to_checkout_result` 與 `test_checkout_result_url_flags_ecpay_checkout` 只驗證 Taigu 把瀏覽器導到帶 `?checkout=ecpay` 的方案頁，畫面上的提示只能人工確認。
+`test_ecpay_order_result_redirects_to_checkout_result` 與 `test_checkout_result_url_flags_ecpay_checkout` 只驗證後端把瀏覽器導到帶 `?checkout=ecpay` 的方案頁，畫面上的提示只能人工確認。
 
 1. 開啟 `https://local.taigu.tw/settings/current-plan?checkout=ecpay`。
 
@@ -730,7 +730,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 ## BILL-R23.3 綠界沒有取消定期扣款
 
-前端沒有自動化 test，後端也沒有 test 驗證綠界回傳錯誤時的結果。這項檢查假設綠界的測試環境收到取消一筆不存在的定期定額訂單時會回傳錯誤；「建立已付款的訂閱」指令建立的訂閱沒有真的在綠界建立，所以 Taigu 請綠界取消時會收到錯誤。
+前端沒有自動化 test，後端也沒有 test 驗證綠界回傳錯誤時的結果。這項檢查假設綠界的測試環境收到取消一筆不存在的定期定額訂單時會回傳錯誤；「建立已付款的訂閱」指令建立的訂閱沒有真的在綠界建立，所以後端請綠界取消時會收到錯誤。
 
 1. 執行「建立已付款的訂閱」指令，`STATE` 設成 `'active'`，`PERIOD_ENDS_IN_HOURS` 設成 `480`。
 2. 開啟方案頁。

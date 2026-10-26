@@ -4,7 +4,7 @@
 
 1. 如果服務還沒啟動，執行 `make start`。下一步停掉 scheduler 之後，全部檢查完之前不要再執行 `make start`，因為它會把 scheduler 重新啟動。
 2. 執行 `docker compose -f compose.dev.yaml stop scheduler`，避免 scheduler 在檢查途中蓋掉手動設定的價格。
-3. 執行下面的指令，把 2330、2317、1301、0050、2412、3008 的行情備份到 api-server container 的 `/tmp/favorites_backup.json`（全部檢查完之前不要重建 api-server container）：
+3. 執行下面的指令，把 2330、2317、1301、0050、2412、3008 的行情備份到 `api-server` container 的 `/tmp/favorites_backup.json`（全部檢查完之前不要重建 `api-server` container）：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "import json; from main.market.models import StockInfo; json.dump(list(StockInfo.objects.filter(company_id__in=['2330', '2317', '1301', '0050', '2412', '3008']).values('company_id', 'close_price', 'fluct_price', 'quantity')), open('/tmp/favorites_backup.json', 'w'))"
@@ -22,7 +22,7 @@
 
 各節用到下面這些說法與指令：
 
-- 指令裡的 `<email>` 換成登入用的 Google 帳號 email。用指令改過自選股或價格之後，要重新整理頁面，Taigu 才會載入新的資料。
+- 指令裡的 `<email>` 換成登入用的 Google 帳號 email。用指令改過自選股或價格之後，要重新整理頁面，前端才會載入新的資料。
 - 「關注」分頁上方顯示自選股檔數的數字，目前的標籤是「最愛檔數」。
 - 各節用到的股票代號只是範例。如果你的帳號已經有某一檔股票的交易紀錄，而那一節要求股票不是持股，就換成其他沒有交易紀錄的股票，後面步驟裡的股票代號也跟著換；換上的股票要一起加進步驟 3 的備份與步驟 6 的還原指令，而且要在做步驟 3 之前決定。
 

@@ -20,7 +20,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py update_compa
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.account.models import User; user = User.objects.get(email='<email>'); user.trade_records.all().delete(); user.cash_dividend_records.all().delete(); user.handling_fee_discount_records.all().delete()"
 ```
 
-執行完上面的指令後，在 Chrome DevTools 的 Application 分頁點「Clear site data」，再重新登入，因為前端會在瀏覽器裡保存交易紀錄，之後只向 api-server 讀取有變動的部分。紀錄不多時，也可以改在畫面上逐筆刪除：交易紀錄與現金股利紀錄在歷史紀錄頁 `https://local.taigu.tw/records` 刪除，手續費折讓在手續費頁 `https://local.taigu.tw/handling-fee` 刪除。
+執行完上面的指令後，在 Chrome DevTools 的 Application 分頁點「Clear site data」，再重新登入，因為前端會在瀏覽器裡保存交易紀錄，之後只向後端讀取有變動的部分。紀錄不多時，也可以改在畫面上逐筆刪除：交易紀錄與現金股利紀錄在歷史紀錄頁 `https://local.taigu.tw/records` 刪除，手續費折讓在手續費頁 `https://local.taigu.tw/handling-fee` 刪除。
 
 PERF-R3 與 PERF-R4 的段落要在台灣時間 08:00 以後執行。
 

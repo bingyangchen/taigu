@@ -7,7 +7,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 步驟裡的下面這些說法代表固定的操作：
 
 - 「在桌面瀏覽器上」：直接用 Chrome。
-- 「在行動裝置上」：開啟 DevTools 的裝置模擬（Toggle device toolbar）並選一款手機，再重新整理頁面，因為 Taigu 依 user agent 判斷是不是行動裝置。
+- 「在行動裝置上」：開啟 DevTools 的裝置模擬（Toggle device toolbar）並選一款手機，再重新整理頁面，因為前端依 user agent 判斷是不是行動裝置。
 - 「登出」：開啟 `https://local.taigu.tw/settings`，點「登出」，再點確認視窗裡的「登出」。
 - 「用 Google 帳號登入」：開啟 `https://local.taigu.tw/login`，點 Google 登入按鈕，在 Google 的畫面選擇帳號並同意授權。
 - 「刪除 access token 的 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。這個 cookie 原本在 15 分鐘後過期，所以刪除它等於閒置超過 15 分鐘。
@@ -90,7 +90,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R5.1 閒置並關閉瀏覽器後再開啟
 
-後端的 test 只驗證伺服器換發新的登入 cookie，瀏覽器自動維持登入狀態的部分在前端，前端沒有自動化 test。
+後端的 test 只驗證換發新的登入 cookie，瀏覽器自動維持登入狀態的部分在前端，前端沒有自動化 test。
 
 1. 用 Google 帳號登入。
 2. 在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 確認 `__Secure-refresh_token` 的 Expires 是一個日期，不是「Session」。
@@ -232,7 +232,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R9.1 修改名字
 
-後端的 test 驗證了 Taigu 儲存新的名字，畫面的部分在前端，前端沒有自動化 test。
+後端的 test 驗證了新的名字有存下來，畫面的部分在前端，前端沒有自動化 test。
 
 1. 用 Google 帳號登入。
 2. 開啟 `https://local.taigu.tw/settings/user-info`。
@@ -243,7 +243,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R9.2 修改頭像
 
-後端的 test 驗證了 Taigu 儲存新的頭像網址，畫面的部分在前端，前端沒有自動化 test。
+後端的 test 驗證了新的頭像網址有存下來，畫面的部分在前端，前端沒有自動化 test。
 
 1. 用 Google 帳號登入。
 2. 開啟 `https://local.taigu.tw/settings/user-info`。
@@ -255,7 +255,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R9.3 清空頭像位置
 
-後端的 test 驗證了 Taigu 清除頭像網址，畫面的部分在前端，前端沒有自動化 test。
+後端的 test 驗證了頭像網址已清除，畫面的部分在前端，前端沒有自動化 test。
 
 1. 用 Google 帳號登入。
 2. 開啟 `https://local.taigu.tw/settings/user-info`。
@@ -344,7 +344,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.account.models import User; User.objects.filter(email='<第二個 Email>').delete()"
    ```
 
-2. 開啟 `https://accounts.google.com`，在這個 Chrome 也登入第二個 Google 帳號。Taigu 送出的授權網址沒有要求 Google 每次都顯示選擇帳號的畫面，所以 Chrome 只登入一個 Google 帳號時，Google 可能直接用那一個帳號授權。
+2. 開啟 `https://accounts.google.com`，在這個 Chrome 也登入第二個 Google 帳號。後端產生的授權網址沒有要求 Google 每次都顯示選擇帳號的畫面，所以 Chrome 只登入一個 Google 帳號時，Google 可能直接用那一個帳號授權。
 3. 用第一個 Google 帳號登入。
 4. 開啟 `https://local.taigu.tw/settings/user-info`。
 5. 把名字改成「小明」。
@@ -367,7 +367,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R11.2 選了已經綁定 Taigu 帳號的 Google 帳號
 
-後端的 test 驗證了 Taigu 拒絕改綁，帳號綁定頁的顯示在前端，前端沒有自動化 test。
+後端的 test 驗證了改綁被拒絕，帳號綁定頁的顯示在前端，前端沒有自動化 test。
 
 1. 用 Google 帳號登入。
 2. 開啟 `https://local.taigu.tw/settings/account-binding`。
@@ -377,11 +377,11 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 6. 在 Google 的畫面選擇目前綁定的這個 Google 帳號並同意授權。
 7. 等畫面回到 `/settings/account-binding`。
 
-預期：Taigu 不改綁，帳號綁定頁仍顯示步驟 3 記下的 Email。
+預期：後端不改綁，帳號綁定頁仍顯示步驟 3 記下的 Email。
 
 ## ACCT-R12.1 開啟別人傳來的登入連結
 
-後端的 test 驗證了 api-server 拒絕沒有對應 cookie 的授權結果，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+後端的 test 驗證了沒有對應 cookie 的授權結果會被拒絕，錯誤提示與網址的變化在前端，前端沒有自動化 test。
 
 1. 開啟訪客視窗。
 2. 在訪客視窗開啟 DevTools 的 Network 面板。
@@ -401,7 +401,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R12.2 開啟別人傳來的改綁連結
 
-後端的 test 驗證了 api-server 拒絕沒有對應 cookie 的授權結果，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+後端的 test 驗證了沒有對應 cookie 的授權結果會被拒絕，錯誤提示與網址的變化在前端，前端沒有自動化 test。
 
 1. 在原本的 Chrome 用 Google 帳號登入。
 2. 開啟 `https://local.taigu.tw/settings/account-binding`。
@@ -425,7 +425,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R12.3 開始登入超過 10 分鐘才回到 Taigu
 
-後端的 test 驗證了 api-server 拒絕開始超過 10 分鐘的授權，瀏覽器保存 cookie 的時間與畫面的變化要在瀏覽器上確認。
+後端的 test 驗證了開始超過 10 分鐘的授權會被拒絕，瀏覽器保存 cookie 的時間與畫面的變化要在瀏覽器上確認。
 
 1. 如果已登入，登出。
 2. 開啟 `https://local.taigu.tw/login`。
@@ -439,7 +439,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R12.4 同一個瀏覽器先後開始兩次登入
 
-後端的 test 驗證了 api-server 只接受最近一次開始的授權，兩個分頁的畫面要在瀏覽器上確認。
+後端的 test 驗證了只有最近一次開始的授權會被接受，兩個分頁的畫面要在瀏覽器上確認。
 
 1. 如果已登入，登出。
 2. 如果 DevTools 的 Application > Local Storage > `https://local.taigu.tw` 有 `pathAndQueryString`，刪除這一筆。
@@ -500,7 +500,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R13.1 登入時 Google 不接受授權結果
 
-後端的 test 驗證了 Google 不接受授權結果時 api-server 的回應，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+後端的 test 驗證了 Google 不接受授權結果時的回應，錯誤提示與網址的變化在前端，前端沒有自動化 test。
 
 1. 如果已登入，登出。
 2. 開啟 DevTools 的 Network 面板。
@@ -520,7 +520,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 ## ACCT-R13.2 改綁時 Google 不接受授權結果
 
-後端的 test 驗證了 Google 不接受授權結果時 api-server 的回應，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+後端的 test 驗證了 Google 不接受授權結果時的回應，錯誤提示與網址的變化在前端，前端沒有自動化 test。
 
 1. 用 Google 帳號登入。
 2. 開啟 `https://local.taigu.tw/settings/account-binding`。
@@ -538,14 +538,14 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 預期：帳號綁定頁仍顯示步驟 3 記下的 Email，網址不再帶有 `code` 與 `state`，並顯示錯誤提示「更換綁定的帳號失敗，請再試一次。」。
 
-## ACCT-R13.3 登入時 Taigu 連不上 Google
+## ACCT-R13.3 登入時後端連不上 Google
 
-後端的 test 驗證了連不上 Google 時 api-server 的回應，錯誤提示與網址的變化在前端，前端沒有自動化 test。
+後端的 test 驗證了連不上 Google 時的回應，錯誤提示與網址的變化在前端，前端沒有自動化 test。
 
 1. 如果已登入，登出。
 2. 開啟 `https://local.taigu.tw/login`。
 3. 點 Google 登入按鈕，停在 Google 的畫面。
-4. 執行下面的指令，讓 api-server 的 container 連不上 Google 的 token endpoint：
+4. 執行下面的指令，讓 `api-server` 的 container 連不上 Google 的 token endpoint：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server sh -c 'cp /etc/hosts /etc/hosts.bak && echo "127.0.0.1 oauth2.googleapis.com" >> /etc/hosts'
@@ -553,7 +553,7 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 5. 在 Google 的畫面選擇帳號並同意授權。
 6. 確認畫面的狀態。
-7. 執行下面的指令，讓 api-server 的 container 恢復連線：
+7. 執行下面的指令，讓 `api-server` 的 container 恢復連線：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server sh -c 'cp /etc/hosts.bak /etc/hosts'
@@ -574,7 +574,7 @@ Google 帶回的錯誤只由前端處理，前端沒有自動化 test。
 
 ## ACCT-R13.5 沒通過檢查又選到已經綁定的 Google 帳號
 
-後端的 test 驗證了 api-server 先檢查 `state` 再檢查 Google 帳號有沒有綁定，兩個分頁的畫面要在瀏覽器上確認。
+後端的 test 驗證了先檢查 `state`，再檢查 Google 帳號有沒有綁定，兩個分頁的畫面要在瀏覽器上確認。
 
 1. 用 Google 帳號登入。
 2. 開啟 `https://local.taigu.tw/settings/account-binding`。

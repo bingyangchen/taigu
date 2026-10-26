@@ -2,7 +2,7 @@
 
 每一節開始前，先執行 `make start`，再用 Google 帳號登入 `https://local.taigu.tw`。開發環境的股票清單裡要有 2330 台積電與 2317 鴻海。除了 REC-R7 的兩節之外，登入的帳號要是 Standard 方案或在試用期內，可以在 `https://local.taigu.tw/settings/current-plan` 確認。
 
-步驟寫「在桌面瀏覽器上」時，用電腦的瀏覽器操作；寫「在行動裝置上」時，用手機開啟，或在 Chrome DevTools 開啟 device toolbar、選一款手機之後重新整理頁面，因為 Taigu 依 user agent 判斷版面。步驟寫「沒有連上網路」時，在 Chrome DevTools 的 Network 分頁把 throttling 設成「Offline」，做完那一節再改回「No throttling」。
+步驟寫「在桌面瀏覽器上」時，用電腦的瀏覽器操作；寫「在行動裝置上」時，用手機開啟，或在 Chrome DevTools 開啟 device toolbar、選一款手機之後重新整理頁面，因為前端依 user agent 判斷版面。步驟寫「沒有連上網路」時，在 Chrome DevTools 的 Network 分頁把 throttling 設成「Offline」，做完那一節再改回「No throttling」。
 
 下面的指令都在 repo 的根目錄執行，執行前把指令裡的 `<你的 email>` 換成登入用的 Google 帳號 email，執行完再重新整理瀏覽器裡的 Taigu。這些指令會一併刪除這個帳號的修改紀錄（`DataChangeLog`），所以另一個登入同一個帳號的瀏覽器可能留著舊的 cache，看到已經刪掉的紀錄；遇到時在那個瀏覽器的 Chrome DevTools 的 Application 分頁按「Clear site data」，再重新登入。
 
@@ -38,7 +38,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## REC-R1.1 新增一筆買進的交易紀錄
 
-後端的儲存由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
+後端儲存紀錄的部分由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
 
 1. 執行「清空紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
@@ -69,7 +69,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## REC-R2.1 新增一筆現金股利紀錄
 
-後端的儲存由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
+後端儲存紀錄的部分由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
 
 1. 執行「清空紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
@@ -195,7 +195,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## REC-R8.1 修改交易紀錄
 
-後端的修改由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
+後端修改紀錄的部分由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
 
 1. 執行「建立範例紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
@@ -208,7 +208,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## REC-R8.2 修改現金股利紀錄
 
-後端的修改由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
+後端修改紀錄的部分由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
 
 1. 執行「建立範例紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
@@ -220,7 +220,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## REC-R9.1 在桌面瀏覽器上刪除交易紀錄
 
-後端的刪除由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
+後端刪除紀錄的部分由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
 
 1. 執行「建立範例紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
@@ -232,7 +232,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## REC-R9.2 在行動裝置上刪除現金股利紀錄
 
-後端的刪除由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
+後端刪除紀錄的部分由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
 
 1. 執行「建立範例紀錄」的指令。
 2. 在行動裝置上開啟 `https://local.taigu.tw/records`。
@@ -245,7 +245,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## REC-R9.3 在編輯器裡刪除
 
-後端的刪除由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
+後端刪除紀錄的部分由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
 
 1. 執行「建立範例紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。

@@ -1,6 +1,6 @@
 執行 `make start`，用 Chrome 開啟 `https://local.taigu.tw`，再用 Google 帳號登入。步驟寫「在行動裝置上」時，先開啟 Chrome DevTools 的裝置模擬（Toggle device toolbar），選一款手機機型（例如 iPhone 14 Pro），再重新整理頁面；步驟寫「在桌面瀏覽器上」時，先關閉裝置模擬，再重新整理頁面。
 
-要查看 Taigu 儲存的問題回報時，在 repo 的根目錄執行下面的指令。指令會在 `count:` 那一行印出問題回報的總數，在 `latest:` 那一行印出最新一則問題回報的字數、內容的前 100 個字、送出的使用者的 email、送出的時間、平台與 User-Agent：
+要查看後端儲存的問題回報時，在 repo 的根目錄執行下面的指令。指令會在 `count:` 那一行印出問題回報的總數，在 `latest:` 那一行印出最新一則問題回報的字數、內容的前 100 個字、送出的使用者的 email、送出的時間、平台與 User-Agent：
 
 ```sh
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.issue_report.models import IssueReport; r = IssueReport.objects.order_by('-id').first(); print('count:', IssueReport.objects.count()); r and print('latest:', len(r.body), repr(r.body[:100]), r.user.email, r.created_at, r.platform, repr(r.user_agent))"
@@ -20,7 +20,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## ISSUE-R2.1 內容只有空白
 
-前端沒有自動化 test。Taigu 拒絕直接送來的空白內容這部分由 unit test 驗證，這裡只檢查編輯器。
+前端沒有自動化 test。後端拒絕直接送來的空白內容這部分由 unit test 驗證，這裡只檢查編輯器。
 
 1. 執行查看問題回報的指令，記下 `count:` 的數字。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/settings`。
@@ -59,7 +59,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 10. 執行查看問題回報的指令。
 
-預期：步驟 8 的確認成立；步驟 9 的 Console 印出 `400`，代表 Taigu 拒絕了這則問題回報；步驟 10 的 `count:` 與步驟 1 的數字相同。
+預期：步驟 8 的確認成立；步驟 9 的 Console 印出 `400`，代表後端拒絕了這則問題回報；步驟 10 的 `count:` 與步驟 1 的數字相同。
 
 ## ISSUE-R2.3 內容剛好 5,000 個字
 
@@ -77,7 +77,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## ISSUE-R3.1 送出一則問題回報
 
-Taigu 儲存的內容、使用者、時間、平台與 User-Agent 由 unit test 驗證，前端沒有自動化 test，所以這裡檢查畫面、前端送出的平台，以及 request 經過 Nginx 之後 api-server 讀到的 User-Agent。
+後端儲存的內容、使用者、時間、平台與 User-Agent 由 unit test 驗證，前端沒有自動化 test，所以這裡檢查畫面、前端送出的平台，以及 request 經過 Nginx 之後後端讀到的 User-Agent。
 
 1. 在行動裝置上開啟 `https://local.taigu.tw/settings`。
 2. 點選「問題回報」。
@@ -111,7 +111,7 @@ Taigu 儲存的內容、使用者、時間、平台與 User-Agent 由 unit test 
 
 ## ISSUE-R3.3 在 PWA 送出問題回報
 
-Taigu 記下的平台與 User-Agent 由 unit test 驗證，前端沒有自動化 test。本機的開發環境沒辦法從手機開啟，所以用桌面 Chrome 安裝的 PWA 檢查。
+後端記下的平台與 User-Agent 由 unit test 驗證，前端沒有自動化 test。本機的開發環境沒辦法從手機開啟，所以用桌面 Chrome 安裝的 PWA 檢查。
 
 1. 如果還沒把 Taigu 安裝成 app，在 Chrome 開啟 `https://local.taigu.tw`，再從 Chrome 選單的「投放、儲存及分享」選擇安裝的選項。
 2. 從 macOS 的 Dock 或「應用程式」資料夾開啟安裝成 app 的 Taigu。

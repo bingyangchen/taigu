@@ -19,7 +19,7 @@
    ```
 
 5. 如果某檔測試股票印出的數字不全是 0，換一檔印出全是 0 的股票，並把下文所有段落裡的那個股票代號一起換掉。
-6. 執行以下指令，把 2330 與三檔測試股票的行情，以及 2330 的主要經營業務備份到 api-server container 的 `/tmp/stock_details_backup.json`（全部檢查完之前不要重建 api-server container）：
+6. 執行以下指令，把 2330 與三檔測試股票的行情，以及 2330 的主要經營業務備份到 `api-server` container 的 `/tmp/stock_details_backup.json`（全部檢查完之前不要重建 `api-server` container）：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -30,7 +30,7 @@
    "
    ```
 
-7. 執行以下指令，確認股票清單上有環球晶（6488）而且有行情；STOCK-R9、R10、R12、R13 都用這檔股票。指令印出 `True True` 才繼續，否則先在交易日的盤中啟動 scheduler 讓 Taigu 抓到 6488 的行情，或換一檔股票清單上有行情的上櫃股票，並把下文段落裡的 6488 一起換掉：
+7. 執行以下指令，確認股票清單上有環球晶（6488）而且有行情；STOCK-R9、R10、R12、R13 都用這檔股票。指令印出 `True True` 才繼續，否則先在交易日的盤中啟動 scheduler，讓後端的 cron job 抓到 6488 的行情，或換一檔股票清單上有行情的上櫃股票，並把下文段落裡的 6488 一起換掉：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -160,7 +160,7 @@
 
 前端沒有自動化 test。
 
-1. 執行以下指令，印出一檔有行情、但 Taigu 沒有任何盤中走勢的股票：
+1. 執行以下指令，印出一檔有行情、但沒有任何盤中走勢的股票：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.market.models import Company; print(Company.objects.filter(stock_prices_per_minute__isnull=True, stock_info__isnull=False).values_list('pk', 'name').first())"
@@ -209,7 +209,7 @@
 
 前端沒有自動化 test。
 
-1. 照 STOCK-R4.1 的步驟 1，印出一檔 Taigu 沒有任何盤中走勢的股票。
+1. 照 STOCK-R4.1 的步驟 1，印出一檔沒有任何盤中走勢的股票。
 2. 開啟 `https://local.taigu.tw/market/<步驟 1 印出的股票代號>`。
 3. 如果走勢圖沒有選「今日」，點選「今日」。
 
@@ -219,7 +219,7 @@
 
 前端沒有自動化 test。
 
-1. 在交易日 09:00 之後，執行以下指令，印出 Taigu 保留的 2330 最早一天的日期與收盤價，以及 2330 現在的價格：
+1. 在交易日 09:00 之後，執行以下指令，印出 2330 保留下來的最早一天的日期與收盤價，以及 2330 現在的價格：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -296,7 +296,7 @@
 
 前端沒有自動化 test。
 
-1. 執行以下指令，印出一檔有主要經營業務、但 Taigu 沒有任何重大消息的股票：
+1. 執行以下指令，印出一檔有主要經營業務、但沒有任何重大消息的股票：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.market.models import Company; print(Company.objects.filter(material_facts__isnull=True, stock_info__isnull=False).exclude(business='').values_list('pk', 'name').first())"
@@ -329,7 +329,7 @@
 
 前端沒有自動化 test。
 
-1. 照 STOCK-R9.1 的步驟 1，印出一檔 Taigu 沒有任何重大消息的股票。
+1. 照 STOCK-R9.1 的步驟 1，印出一檔沒有任何重大消息的股票。
 2. 開啟 `https://local.taigu.tw/market/<步驟 1 印出的股票代號>`。
 
 預期：「公司與重大消息」區塊顯示「目前沒有重大消息」。
@@ -378,9 +378,9 @@
 
 ## STOCK-R12.1 公司發布新的重大消息
 
-現有的 test 沒有驗證抓到的重大消息會存進 Taigu。這個檢查用一份只有測試資料的假公開資料，不會新增或修改 Taigu 原本存的重大消息；不過每次抓取完，Taigu 都會刪除發布時間超過約 29 天 16 小時的重大消息，這些重大消息本來就會在 scheduler 下一次抓取時被刪除。
+現有的 test 沒有驗證後端會存下抓到的重大消息。這個檢查用一份只有測試資料的假公開資料，不會新增或修改原本存的重大消息；不過每次抓取完，後端都會刪除發布時間超過約 29 天 16 小時的重大消息，這些重大消息本來就會在 scheduler 下一次抓取時被刪除。
 
-1. 執行以下指令。指令讓 Taigu 抓到的證交所資料是空的、櫃買中心資料只有一則環球晶（6488）今天 00:01:23 發布的「測試重大消息」，抓取一次後印出 Taigu 存下的測試重大消息：
+1. 執行以下指令。指令讓後端抓到的證交所資料是空的、櫃買中心資料只有一則環球晶（6488）今天 00:01:23 發布的「測試重大消息」，抓取一次後印出存下的測試重大消息：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -411,9 +411,9 @@
 
 ## STOCK-R12.2 再次抓到同一則重大消息
 
-現有的 test 沒有驗證重複抓到的重大消息只存一則。這個檢查用一份只有測試資料的假公開資料，不會新增或修改 Taigu 原本存的重大消息；不過每次抓取完，Taigu 都會刪除發布時間超過約 29 天 16 小時的重大消息，這些重大消息本來就會在 scheduler 下一次抓取時被刪除。
+現有的 test 沒有驗證重複抓到的重大消息只存一則。這個檢查用一份只有測試資料的假公開資料，不會新增或修改原本存的重大消息；不過每次抓取完，後端都會刪除發布時間超過約 29 天 16 小時的重大消息，這些重大消息本來就會在 scheduler 下一次抓取時被刪除。
 
-1. 執行以下指令。指令讓 Taigu 連續抓取兩次，兩次的櫃買中心資料都只有環球晶（6488）今天 00:01:23 發布的同一則重大消息，第二次的標題改成「測試重大消息（修改後）」，抓完後印出 Taigu 存下的測試重大消息：
+1. 執行以下指令。指令讓後端連續抓取兩次，兩次的櫃買中心資料都只有環球晶（6488）今天 00:01:23 發布的同一則重大消息，第二次的標題改成「測試重大消息（修改後）」，抓完後印出存下的測試重大消息：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -441,9 +441,9 @@
 
 ## STOCK-R12.3 證交所的資料抓取失敗
 
-現有的 test 沒有驗證一個市場抓取失敗時，另一個市場照常存入。這個檢查用一份只有測試資料的假公開資料，不會新增或修改 Taigu 原本存的重大消息；不過每次抓取完，Taigu 都會刪除發布時間超過約 29 天 16 小時的重大消息，這些重大消息本來就會在 scheduler 下一次抓取時被刪除。
+現有的 test 沒有驗證一個市場抓取失敗時，另一個市場照常存入。這個檢查用一份只有測試資料的假公開資料，不會新增或修改原本存的重大消息；不過每次抓取完，後端都會刪除發布時間超過約 29 天 16 小時的重大消息，這些重大消息本來就會在 scheduler 下一次抓取時被刪除。
 
-1. 執行以下指令。指令讓 Taigu 抓證交所資料時連線失敗、櫃買中心資料只有一則環球晶（6488）的「測試重大消息」，抓取一次後印出 Taigu 存下的測試重大消息：
+1. 執行以下指令。指令讓後端抓證交所資料時連線失敗、櫃買中心資料只有一則環球晶（6488）的「測試重大消息」，抓取一次後印出存下的測試重大消息：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -470,7 +470,7 @@
 
 ## STOCK-R13.1 超過 30 天
 
-現有的 test 沒有驗證重大消息的保留期間。這一節第 2 步讓 Taigu 真的向證交所與櫃買中心抓一次重大消息，所以需要連上網路，而且會像 scheduler 每小時的抓取一樣，存下當天的重大消息，也可能把新公司加進股票清單。
+現有的 test 沒有驗證重大消息的保留期間。這一節第 2 步讓後端真的向證交所與櫃買中心抓一次重大消息，所以需要連上網路，而且會像 scheduler 每小時的抓取一樣，存下當天的重大消息，也可能把新公司加進股票清單。
 
 1. 執行以下指令，替環球晶（6488）新增 31 天前與 29 天前各 1 則測試用的重大消息：
 
@@ -485,7 +485,7 @@
    "
    ```
 
-2. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py update_material_facts`。
+2. 執行 `docker compose -f compose.dev.yaml exec 後端 python manage.py update_material_facts`。
 3. 開啟 `https://local.taigu.tw/market/6488`。
 4. 點選「完整資料」。
 5. 確認公司資訊的內容。
@@ -515,7 +515,7 @@
 2. 點選頁面上方的「編輯備註」圖示。
 3. 輸入兩個空白、「等法說會」與兩個空白。
 4. 點選儲存按鈕。
-5. 執行以下指令，印出 Taigu 存下的 1102 個股筆記：
+5. 執行以下指令，印出後端存下的 1102 個股筆記：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.stock_memo.models import StockMemo; print(repr(StockMemo.objects.get(owner__email='<email>', company_id='1102').note))"
