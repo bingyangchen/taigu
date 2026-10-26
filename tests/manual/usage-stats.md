@@ -2,13 +2,13 @@
 
 執行 `make start`，用 Chrome 開啟 `https://local.taigu.tw`，再用 Google 帳號登入。下面的指令要把 `<Email>` 換成登入用的 Google 帳號的 Email。
 
-要查看 Taigu 記下的使用紀錄時，在 repo 的根目錄執行下面的指令。指令會在 `usage:` 那一行依日期列出這個帳號的每一筆使用紀錄，每一筆是日期與平台，`web` 是網頁，`pwa` 是 PWA：
+要查看後端記下的使用紀錄時，在 repo 的根目錄執行下面的指令。指令會在 `usage:` 那一行依日期列出這個帳號的每一筆使用紀錄，每一筆是日期與平台，`web` 是網頁，`pwa` 是 PWA：
 
 ```sh
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.usage.models import DailyActivity; print('usage:', [(str(d), p) for d, p in DailyActivity.objects.filter(user__email='<Email>').order_by('date', 'platform').values_list('date', 'platform')])"
 ```
 
-要讓 Taigu 把今天當成這個帳號還沒使用過的一天時，執行下面的指令刪除這個帳號今天的使用紀錄。USAGE-R1.7、USAGE-R1.12 與 USAGE-R1.13 用這個指令模擬換日，因為換日要等到半夜；換日之後記下的是哪一天由 unit test 驗證，所以這幾個情境與 USAGE-R1.8 只檢查前端有沒有記下使用紀錄：
+要讓後端把今天當成這個帳號還沒使用過的一天時，執行下面的指令刪除這個帳號今天的使用紀錄。USAGE-R1.7、USAGE-R1.12 與 USAGE-R1.13 用這個指令模擬換日，因為換日要等到半夜；換日之後記下的是哪一天由 unit test 驗證，所以這幾個情境與 USAGE-R1.8 只檢查前端有沒有通知後端記下使用紀錄：
 
 ```sh
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from django.utils import timezone; from main.usage.models import DailyActivity; print('deleted:', DailyActivity.objects.filter(user__email='<Email>', date=timezone.localdate()).delete()[0])"
@@ -16,7 +16,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 步驟裡的下面這些說法代表固定的操作：
 
-- 「只留一個空白分頁」：關閉 Taigu 的分頁與 PWA 的視窗，在 Chrome 只留一個開啟 `about:blank` 的分頁。這樣切到終端機執行指令、再切回 Chrome 時，畫面上沒有 Taigu 的頁面，所以 Taigu 不會因為使用者切回來而記下使用紀錄。
+- 「只留一個空白分頁」：關閉 Taigu 的分頁與 PWA 的視窗，在 Chrome 只留一個開啟 `about:blank` 的分頁。這樣切到終端機執行指令、再切回 Chrome 時，畫面上沒有 Taigu 的頁面，所以前端不會因為使用者切回來而通知後端記下使用紀錄。
 - 「登出」：開啟 `https://local.taigu.tw/settings`，點「登出」，再點確認視窗裡的「登出」。
 - 「用 Google 帳號登入」：開啟 `https://local.taigu.tw/login`，點 Google 登入按鈕，在 Google 的畫面選擇帳號並同意授權。
 - 「用 PWA 開啟 Taigu」：如果 Taigu 還沒安裝成 PWA，先在 Chrome 開啟 `https://local.taigu.tw`，再從 Chrome 選單的「投放、儲存及分享」選擇安裝的選項，把 Taigu 安裝成 PWA；接著從 macOS 的 Dock 或「應用程式」資料夾開啟安裝成 PWA 的 Taigu。
@@ -94,7 +94,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## USAGE-R1.8 隔天在 Taigu 裡換頁
 
-前端沒有自動化 test。切到終端機再切回 Chrome 時，Taigu 就會因為使用者切回來而記下使用紀錄，所以這裡不刪除使用紀錄，改成檢查前端在換頁時送出的 open-session request。
+前端沒有自動化 test。切到終端機再切回 Chrome 時，前端就會因為使用者切回來而通知後端記下使用紀錄，所以這裡不刪除使用紀錄，改成檢查前端在換頁時送出的 open-session request。
 
 1. 在 Chrome 開啟 `https://local.taigu.tw/`。
 2. 確認畫面顯示儀表板。
@@ -194,7 +194,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 前端沒有自動化 test，這裡檢查前端在後台的頁面不會記下使用紀錄，包括在後台裡換頁與切回後台的分頁。
 
-1. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py superuser add <Email>`，把這個帳號設成 superuser。
+1. 執行 `docker compose -f compose.dev.yaml exec 後端 python manage.py superuser add <Email>`，把這個帳號設成 superuser。
 2. 只留一個空白分頁。
 3. 執行刪除今天的使用紀錄的指令。
 4. 在 Chrome 的空白分頁開啟 `https://local.taigu.tw/admin/usage`，確認畫面顯示使用情況頁。

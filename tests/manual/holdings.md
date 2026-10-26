@@ -6,7 +6,7 @@
 2. 執行 `docker compose -f compose.dev.yaml stop scheduler`，讓 scheduler 在檢查期間不會改掉用指令設定的價格。
 3. 用試用期內或 Standard 方案的 Google 帳號登入 `https://local.taigu.tw`，這樣行情每 30 秒重新抓取一次，交易紀錄也不受額度限制。
 4. 把下面每個指令裡的 `EMAIL` 換成這個帳號的 email。
-5. 執行下面的指令，把這份檔案會改到的 2330、2002、2317、0050 的行情備份到 api-server container 的 `/tmp/holdings_backup.json`。全部檢查完之前不要重建 api-server container。
+5. 執行下面的指令，把這份檔案會改到的 2330、2002、2317、0050 的行情備份到 `api-server` container 的 `/tmp/holdings_backup.json`。全部檢查完之前不要重建 `api-server` container。
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -53,7 +53,7 @@ with transaction.atomic():
 "
 ```
 
-段落裡寫「執行『設定價格』」時，執行下面的指令，把 `PRICES` 列出的股票設成指定的價格、漲跌與成交股數，每檔股票寫成 `'股票代號': (價格, 漲跌, 成交股數)`。價格寫 0 代表 Taigu 還沒有這檔股票的價格。
+段落裡寫「執行『設定價格』」時，執行下面的指令，把 `PRICES` 列出的股票設成指定的價格、漲跌與成交股數，每檔股票寫成 `'股票代號': (價格, 漲跌, 成交股數)`。價格寫 0 代表這檔股票還沒有價格。
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "

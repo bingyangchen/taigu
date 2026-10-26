@@ -2,7 +2,7 @@
 
 步驟寫「換成新帳號」時，照下面的做法取得一個沒有任何資料、還在試用期的新帳號。第 1 步會刪除這個帳號在本機資料庫的所有資料：
 
-1. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.account.models import User; User.objects.filter(email='<email>').delete()"`。
+1. 執行 `docker compose -f compose.dev.yaml exec 後端 python manage.py shell -c "from main.account.models import User; User.objects.filter(email='<email>').delete()"`。
 2. 重新整理頁面。
 3. 如果畫面沒有回到歡迎頁或登入頁，開啟 `https://local.taigu.tw/login`。
 4. 用同一個 Google 帳號登入。
@@ -92,7 +92,7 @@
 
 ## FEE-R7.1 在桌面瀏覽器上新增
 
-`test_create_discount_valid` 只驗證 Taigu 儲存的內容，畫面的變化要人工確認。
+`test_create_discount_valid` 只驗證後端儲存的內容，畫面的變化要人工確認。
 
 1. 換成新帳號。
 2. 新增一筆交易紀錄，交易日期是今天，手續費用 1000。
@@ -106,7 +106,7 @@
 
 ## FEE-R7.2 在行動裝置上新增，不填備註
 
-`test_create_discount_without_memo` 只驗證 Taigu 儲存的備註是空白，畫面要人工確認。
+`test_create_discount_without_memo` 只驗證後端儲存的備註是空白，畫面要人工確認。
 
 1. 換成新帳號。
 2. 切換到行動裝置。
@@ -129,7 +129,7 @@
 
 ## FEE-R9.1 在行動裝置上修改折讓金額
 
-`test_update_discount_all_fields` 只驗證 Taigu 儲存修改後的日期、金額與備註，畫面要人工確認。
+`test_update_discount_all_fields` 只驗證後端儲存修改後的日期、金額與備註，畫面要人工確認。
 
 1. 換成新帳號。
 2. 新增一筆交易紀錄，交易日期是今天，手續費用 1000。
@@ -145,7 +145,7 @@
 
 ## FEE-R10.1 在桌面瀏覽器上刪除
 
-`test_delete_discount_success` 只驗證 Taigu 刪除了這筆手續費折讓，確認視窗與畫面的變化要人工確認。
+`test_delete_discount_success` 只驗證後端刪除了這筆手續費折讓，確認視窗與畫面的變化要人工確認。
 
 1. 換成新帳號。
 2. 新增一筆交易紀錄，交易日期是今天，手續費用 1000。
@@ -226,7 +226,7 @@
 沒有 test 驗證 Free 方案用完額度時仍能新增手續費折讓，前端也沒有自動化 test。
 
 1. 換成新帳號。
-2. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from datetime import date; from main.account.models import User; from main.billing.models import BillingProfile, Plan, SubscriptionStatus; from main.market.models import Company; from main.trade_record.models import TradeRecord; u = User.objects.get(email='<email>'); BillingProfile.objects.filter(user=u).update(plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED); c = Company.objects.get(pk='2330'); TradeRecord.objects.bulk_create([TradeRecord(owner=u, company=c, deal_time=date.today(), deal_price=100, deal_quantity=1, handling_fee=1) for _ in range(20)])"`，把帳號改成 Free 方案，並新增這個月的 20 筆交易紀錄。
+2. 執行 `docker compose -f compose.dev.yaml exec 後端 python manage.py shell -c "from datetime import date; from main.account.models import User; from main.billing.models import BillingProfile, Plan, SubscriptionStatus; from main.market.models import Company; from main.trade_record.models import TradeRecord; u = User.objects.get(email='<email>'); BillingProfile.objects.filter(user=u).update(plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED); c = Company.objects.get(pk='2330'); TradeRecord.objects.bulk_create([TradeRecord(owner=u, company=c, deal_time=date.today(), deal_price=100, deal_quantity=1, handling_fee=1) for _ in range(20)])"`，把帳號改成 Free 方案，並新增這個月的 20 筆交易紀錄。
 3. 重新整理頁面。
 4. 開啟手續費頁。
 5. 新增一筆手續費折讓，折讓金額 200。
