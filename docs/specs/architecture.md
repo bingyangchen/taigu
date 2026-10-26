@@ -198,9 +198,18 @@ sequenceDiagram
 
 ### 分頁儲存與版本相容性
 
-前端將返回網址存在 sessionStorage，保留 path、query string 與最初記住網址的時間。[瀏覽器文件](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) 說明頁面還原可能保留 sessionStorage，有 opener 的新分頁也可能取得一份副本。因此前端接受瀏覽器還原或複製分頁時帶回的紀錄，仍依 ACCT-R3 的原期限判定；一般另開分頁不共用紀錄。這些行為尚未在本次開發環境實測。
+前端將返回網址存在 sessionStorage，保留 path、query string 與最初記住網址的時間。[瀏覽器文件](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) 說明頁面還原可能保留 sessionStorage，有 opener 的新分頁也可能取得一份副本。因此前端接受瀏覽器還原或複製分頁時帶回的紀錄，仍依 ACCT-R3 的原期限判定；一般另開分頁不共用紀錄。2026-10 在 Linux ARM64 的 Chromium 156.0.8078.47 實測，一般新分頁不共用返回紀錄，有 opener 的新分頁則取得相同的網址與原始時間。瀏覽器選單的還原與複製分頁尚未實測。
 
-跨分頁協調使用同源的 Web Locks API；沒有使用新版協調機制的舊頁面不會遵守這把鎖，因此與舊版頁面並存時仍可能觸發 ACCT-R6。瀏覽器未提供 Web Locks API 時，前端停止需要鎖的操作，避免在無法協調時送出並行的 access token 更新 request。跨分頁、PWA 與舊版 service worker 並存的實際行為，仍需要依手動檢查確認。
+跨分頁協調使用同源的 Web Locks API；沒有使用新版協調機制的舊頁面不會遵守這把鎖，因此與舊版頁面並存時仍可能觸發 ACCT-R6。瀏覽器未提供 Web Locks API 時，前端停止需要鎖的操作，避免在無法協調時送出並行的 access token 更新 request。
+
+2026-10 在上述 Chromium，以 production build、service worker 與本機後端實測時，結果如下：
+
+- 2 個與 4 個分頁同時需要更新 access token 時，各分頁都成功讀取資料，沒有因正常更新觸發 replay detection。
+- 登出時，其他分頁重新開啟登入頁；清除暫停期間，其他分頁等待同一輪清除，登入版本只改變一次。執行清除的分頁關閉後，其他分頁能沿用同一個登入版本完成清除。
+- 帳號 A 的 API 回應延遲 5 秒才完成時，登入版本改變後不會把資料寫回帳號 B 使用的 API cache。IndexedDB、舊 API cache、最近點選股票與舊返回網址都會清除；帳號 B 離線時沒有讀到帳號 A 的資料。這項檢查以固定的成功登入回應與測試帳號 cookie 代替 Google 授權。
+- 以不回覆帳號資料隔離訊息、使用舊 cache 名稱的 worker 模擬舊版時，前端停止寫入並提示重新整理；換回新版 worker 後，操作成功。這項檢查沒有涵蓋所有舊版前端與 worker 的組合。
+
+實際 Google 授權、更換綁定的 Google 帳號與更新 access token 同時發生，以及安裝後的 PWA，仍需要依手動檢查確認。
 
 ### Google 授權
 
