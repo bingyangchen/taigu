@@ -59,7 +59,7 @@ class AccountBinding extends React.Component<Props, State> {
           "redirect_uri",
           `${window.location.origin}/settings/account-binding`,
         );
-        await this.props.dispatch(changeAccountBinding(requestBody)).unwrap();
+        await this.props.dispatch(changeAccountBinding(requestBody));
       } finally {
         Nav.clearSearchParams();
       }
