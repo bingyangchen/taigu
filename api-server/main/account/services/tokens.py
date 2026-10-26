@@ -58,6 +58,7 @@ def _create_refresh_token(
 def _get_refresh_token(raw_token: str) -> RefreshToken | None:
     if not raw_token:
         return None
+
     try:
         return (
             RefreshToken.objects.select_for_update()
@@ -80,6 +81,26 @@ def revoke_refresh_token(raw_token: str) -> None:
             RefreshToken.objects.filter(
                 family_id=refresh_token.family_id, revoked_at__isnull=True
             ).update(revoked_at=timezone.now())
+
+
+def replace_refresh_token(user: User, raw_token: str) -> TokenPair:
+    """Run inside the binding transaction so identity and token changes commit together."""
+    current_token = _get_refresh_token(raw_token)
+    now = timezone.now()
+    if (
+        current_token is None
+        or current_token.user_id != user.pk
+        or current_token.revoked_at is not None
+        or current_token.expires_at <= now
+        or not user.is_active
+    ):
+        raise InvalidRefreshTokenError
+
+    RefreshToken.objects.filter(
+        family_id=current_token.family_id, revoked_at__isnull=True
+    ).update(revoked_at=now)
+    new_token = _create_refresh_token(user, expires_at=current_token.expires_at)
+    return TokenPair(_make_access_token(str(user.id)), new_token)
 
 
 def rotate_refresh_token(raw_token: str) -> TokenPair:
@@ -105,7 +126,6 @@ def rotate_refresh_token(raw_token: str) -> TokenPair:
                 return TokenPair(
                     _make_access_token(str(current_token.user.id)), refresh_token
                 )
-
     raise InvalidRefreshTokenError
 
 

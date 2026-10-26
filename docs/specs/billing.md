@@ -69,7 +69,7 @@ stateDiagram-v2
 
 ### BILL-R2 試用期
 
-使用者第一次登入時開始 31 天的 Standard 試用期，試用期結束時使用者變成未訂閱，而且每位使用者只有一次試用期。
+每個 Taigu 帳號第一次登入時開始 31 天的 Standard 試用期，試用期結束時變成未訂閱，同一個 Taigu 帳號只有一次試用期。更換綁定的 Google 帳號不改變這個 Taigu 帳號的試用期；原本的 Google 帳號之後依 ACCT-R2 建立另一個 Taigu 帳號時，新帳號仍有自己的試用期。
 
 - BILL-R2.1 第一次登入
   - 前提：使用者從來沒有登入過 Taigu。
@@ -83,6 +83,16 @@ stateDiagram-v2
   - 前提：使用者的試用期已經結束，而且未訂閱。
   - 動作：使用者登出後，再用同一個 Google 帳號登入。
   - 結果：使用者仍未訂閱，試用期不會重新開始。
+- BILL-R2.4 舊 Google 帳號重新註冊
+  - 前提：Taigu 帳號 A 的試用期已結束，使用者把它綁定的 Google 帳號從 G1 換成 G2。
+  - 動作：登出後，用 G1 再次登入。
+  - 結果：建立不同於 A 的 Taigu 帳號 B，B 開始自己的 31 天試用期；A 的試用期不變。
+- BILL-R2.5 更換綁定的 Google 帳號不重算試用期
+  - 前提：Taigu 帳號的試用期還剩 10 天。
+  - 動作：成功把綁定的 Google 帳號換成另一個 Google 帳號。
+  - 結果：這個 Taigu 帳號的試用到期時間不變。
+
+> 設計理由：試用資格以 Taigu 帳號判定，接受使用者在更換綁定的 Google 帳號後，用原本的 Google 帳號重新註冊取得另一次試用，因此不另存曾經使用過的 Google 身分來限制試用。完整討論見 [0005](../plans/archive/0005-login-account-fixes.md)。
 
 ### BILL-R3 每月新增的交易紀錄與現金股利紀錄
 
@@ -470,7 +480,7 @@ stateDiagram-v2
 
 ### BILL-R25 白名單
 
-開發者可以把 Taigu 的使用者加進白名單，也可以把使用者移出白名單；使用者改綁 Google 帳號（見 ACCT-R11）之後仍在白名單上。白名單上的使用者的方案見 BILL-R1。
+開發者可以把 Taigu 的使用者加進白名單，也可以把使用者移出白名單；使用者更換綁定的 Google 帳號（見 ACCT-R11）之後仍在白名單上。白名單上的使用者的方案見 BILL-R1。
 
 - BILL-R25.1 加入白名單
   - 前提：使用者未訂閱。
@@ -480,12 +490,12 @@ stateDiagram-v2
   - 前提：使用者在白名單上，而且未訂閱。
   - 動作：開發者把使用者移出白名單。
   - 結果：方案變成 Free。
-- BILL-R25.3 改綁 Google 帳號
+- BILL-R25.3 更換綁定的 Google 帳號
   - 前提：使用者在白名單上，而且未訂閱。
-  - 動作：使用者把帳號改綁到另一個 Google 帳號。
+  - 動作：使用者把綁定的 Google 帳號換成另一個 Google 帳號。
   - 結果：使用者仍在白名單上，方案是 Standard。
 
-> 設計理由：白名單記的是 Taigu 的帳號，不是 Google 帳號的 Email，所以使用者改綁 Google 帳號之後仍在白名單上；也因為記的是 Taigu 的帳號，開發者只能把已經登入過 Taigu 的人加進白名單。完整討論見 [0002](../plans/archive/0002-standard-whitelist.md)。
+> 設計理由：白名單記的是 Taigu 的帳號，不是 Google 帳號的 Email，所以使用者更換綁定的 Google 帳號之後仍在白名單上；也因為記的是 Taigu 的帳號，開發者只能把已經登入過 Taigu 的人加進白名單。完整討論見 [0002](../plans/archive/0002-standard-whitelist.md)。
 
 ### BILL-R26 加入或移出白名單不改變訂閱
 

@@ -26,6 +26,16 @@
       &.error {
         background-color: _.$red;
       }
+      &.warning {
+        background-color: _.$yellow;
+        color: _.$deep-gray;
+        & > .close_button {
+          color: _.$deep-gray;
+        }
+        &::after {
+          background-color: _.$black-transparent-2;
+        }
+      }
       &::after {
         content: "";
         position: absolute;
@@ -38,6 +48,7 @@
         transform-origin: left;
       }
       & > .close_button {
+        color: _.$white;
         position: absolute;
         right: 4px;
         top: 4px;

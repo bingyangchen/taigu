@@ -5,9 +5,13 @@ from datetime import timedelta
 from functools import partial, wraps
 
 import requests
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
+from django.http.request import HttpHeaders
+from django.middleware.csrf import REASON_NO_CSRF_COOKIE
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
@@ -27,9 +31,10 @@ from main.account.cookies import (
     set_oauth_cookie,
 )
 from main.account.models import User
-from main.account.tokens import (
+from main.account.services.tokens import (
     InvalidRefreshTokenError,
     issue_token_pair,
+    replace_refresh_token,
     revoke_refresh_token,
     rotate_refresh_token,
 )
@@ -71,8 +76,11 @@ OPEN_SESSION_LAST_LOGIN_UPDATE_INTERVAL = timedelta(minutes=5)
 class TokenVerificationResult(BaseModel):
     sub: str
     email: str
-    name: str
-    picture: str
+    name: str = ""
+    picture: str = ""
+
+    def get_username(self) -> str:
+        return self.name[:64] if self.name.strip() else "使用者"
 
 
 class GoogleAuthorizationError(Exception):
@@ -198,14 +206,13 @@ def get_authorization_url(request: HttpRequest) -> JsonResponse:
 def google_login(
     request: HttpRequest, google_account: TokenVerificationResult
 ) -> JsonResponse:
-    # login an existing user or register a new user
     user, _ = User.objects.get_or_create(
         oauth_org=OAuthOrganization.GOOGLE,
         oauth_id=google_account.sub,
         defaults={
             "email": google_account.email,
-            "username": google_account.name,
-            "avatar_url": google_account.picture,
+            "username": google_account.get_username(),
+            "avatar_url": google_account.picture or None,
         },
     )
     ensure_billing_profile(user)
@@ -220,32 +227,87 @@ def google_login(
 def change_google_binding(
     request: HttpRequest, google_account: TokenVerificationResult
 ) -> JsonResponse:
-    # Check if the given google account is not bound to any other account
-    if User.objects.filter(
-        oauth_org=OAuthOrganization.GOOGLE, oauth_id=google_account.sub
-    ).exists():
-        return JsonResponse(
-            {"message": "This Google account is already bound to another account."},
-            status=400,
-        )
+    already_bound_message = "這個 Google 帳號已綁定其他 Taigu 帳號，請選擇其他帳號。"
+    try:
+        with transaction.atomic():
+            user = User.objects.select_for_update().get(pk=request.user.pk)
+            if (
+                user.oauth_org == OAuthOrganization.GOOGLE
+                and user.oauth_id == google_account.sub
+            ):
+                return JsonResponse(
+                    {
+                        "code": "GOOGLE_ALREADY_BOUND",
+                        "message": "目前已綁定這個 Google 帳號，無需更換。",
+                    },
+                    status=400,
+                )
 
-    user: User = request.user
-    user.oauth_org = OAuthOrganization.GOOGLE
-    user.oauth_id = google_account.sub
-    user.email = google_account.email
-    user.username = google_account.name
-    user.avatar_url = google_account.picture
-    user.save()
+            if User.objects.filter(
+                oauth_org=OAuthOrganization.GOOGLE, oauth_id=google_account.sub
+            ).exists():
+                return JsonResponse({"message": already_bound_message}, status=400)
 
-    response = JsonResponse(_serialize_account(user))
-    return _set_new_token_pair(response, user)
+            token_pair = replace_refresh_token(user, get_refresh_token(request))
+            user.oauth_org = OAuthOrganization.GOOGLE
+            user.oauth_id = google_account.sub
+            user.email = google_account.email
+            user.username = google_account.get_username()
+            user.avatar_url = google_account.picture or None
+            user.save()
+            response = JsonResponse(_serialize_account(user))
+    except InvalidRefreshTokenError:
+        return delete_auth_cookies(JsonResponse({}, status=401))
+    except IntegrityError:
+        # A different account can bind the same Google identity after the check.
+        if (
+            User.objects.filter(
+                oauth_org=OAuthOrganization.GOOGLE, oauth_id=google_account.sub
+            )
+            .exclude(pk=request.user.pk)
+            .exists()
+        ):
+            return JsonResponse({"message": already_bound_message}, status=400)
+        raise
+    return set_auth_cookies(response, token_pair.access_token, token_pair.refresh_token)
+
+
+def csrf_failure(request: HttpRequest, reason: str = "") -> JsonResponse:
+    # Match only Django's known missing/mismatched-token reasons, never origin errors.
+    recoverable_reasons = {
+        REASON_NO_CSRF_COOKIE,
+        "CSRF token missing.",
+        "CSRF token from POST incorrect.",
+        f"CSRF token from the {HttpHeaders.parse_header_name(settings.CSRF_HEADER_NAME)!r} HTTP header incorrect.",
+    }
+    return JsonResponse(
+        {
+            "code": "CSRF_TOKEN_RECOVERABLE"
+            if reason in recoverable_reasons
+            else "CSRF_FAILED",
+            "message": "無法完成操作，請重新整理後再試一次。",
+        },
+        status=403,
+    )
+
+
+@ensure_csrf_cookie
+@require_GET
+def csrf_token(request: HttpRequest) -> JsonResponse:
+    return JsonResponse({})
 
 
 @ensure_csrf_cookie
 @require_GET
 @require_login
-@rate_limit(rate=5)
 def me(request: HttpRequest) -> JsonResponse:
+    if request.GET.get("check_session") == "1":
+        return JsonResponse({})
+    return _get_account(request)
+
+
+@rate_limit(rate=5)
+def _get_account(request: HttpRequest) -> JsonResponse:
     return JsonResponse(_serialize_account(request.user))
 
 
@@ -292,7 +354,10 @@ def update(request: HttpRequest) -> JsonResponse:
         payload = json.loads(request.body)
         user: User = request.user  # type: ignore
         if (username := payload.get("username")) is not None:
-            user.username = username
+            trimmed_username = username.strip() if isinstance(username, str) else ""
+            if not 1 <= len(trimmed_username) <= 64:
+                return JsonResponse({"message": "名字需為 1 到 64 個字。"}, status=400)
+            user.username = trimmed_username
         if avatar_url := payload.get("avatar_url"):
             user.avatar_url = avatar_url
         elif avatar_url == "":

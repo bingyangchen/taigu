@@ -3,7 +3,7 @@ from django.http import HttpRequest, HttpResponse
 from django.utils.crypto import constant_time_compare
 
 from main.account import ACCESS_COOKIE_NAME, OAUTH_COOKIE_NAME, REFRESH_COOKIE_NAME
-from main.account.tokens import ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE
+from main.account.services.tokens import ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE
 from main.env import Env, env
 from main.origins import get_public_frontend_host
 

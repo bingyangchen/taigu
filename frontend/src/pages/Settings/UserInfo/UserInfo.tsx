@@ -239,6 +239,13 @@ class UserInfo extends React.Component<Props, State> {
   };
 
   private handleClickSave = async (): Promise<void> => {
+    const username = this.state.username.trim();
+    if (Array.from(username).length < 1 || Array.from(username).length > 64) {
+      this.props.dispatch(
+        pushToast({ type: "error", text: "名字需為 1 到 64 個字。" }),
+      );
+      return;
+    }
     const validatedAvatarUrl = Util.validateAndSanitizeUrl(this.state.avatarUrl);
 
     if (this.state.avatarUrl && !validatedAvatarUrl) {
@@ -249,12 +256,7 @@ class UserInfo extends React.Component<Props, State> {
     }
 
     await this.props
-      .dispatch(
-        updateAccountInfo({
-          avatar_url: validatedAvatarUrl ?? "",
-          username: this.state.username,
-        }),
-      )
+      .dispatch(updateAccountInfo({ avatar_url: validatedAvatarUrl ?? "", username }))
       .unwrap();
     this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
       replace: true,

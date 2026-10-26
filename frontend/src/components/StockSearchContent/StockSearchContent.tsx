@@ -3,6 +3,7 @@ import React, { MouseEvent, MouseEventHandler } from "react";
 import * as Icons from "../../icons";
 import type { StockInfo } from "../../types";
 import Api from "../../utils/api";
+import { assertCurrentSession, getDocumentSessionVersion } from "../../utils/session";
 import Util from "../../utils/util";
 import DollarSign from "../DollarSign/DollarSign";
 import RoundButton from "../RoundButton/RoundButton";
@@ -10,10 +11,12 @@ import SearchKeywordInput from "../SearchKeywordInput/SearchKeywordInput";
 import styles from "./StockSearchContent.module.scss";
 
 class StockSearchLRUCache {
+  private readonly sessionVersion = getDocumentSessionVersion();
   private readonly CACHE_KEY = "stock_search_lru_cache";
   private readonly MAX_SIZE = 10;
 
   public add(sid: string): void {
+    assertCurrentSession(this.sessionVersion);
     const cache = this.getAll();
     const filteredCache = cache.filter((cached) => cached !== sid);
     const newCache = [sid, ...filteredCache];

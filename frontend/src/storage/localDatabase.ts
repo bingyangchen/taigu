@@ -2,6 +2,11 @@ import { Dexie, type Table } from "dexie";
 
 import type { TradeRecord, TradeRecordSyncResponse } from "../types";
 import { dateStringToDate } from "../utils/date";
+import {
+  assertCurrentSession,
+  getDocumentSessionVersion,
+  SessionChangedError,
+} from "../utils/session";
 
 type Metadata = { key: string; value: number | string };
 export type MarketId = "tse" | "otc";
@@ -40,7 +45,24 @@ const tradeRecordsCacheVersionKey = "tradeRecordsCacheVersion";
 const tradeRecordsLastRevisionKey = "tradeRecordsLastRevision";
 
 export default class LocalDatabase {
+  private static accountVersion: string | null = null;
+
+  public static async hasAccountData(): Promise<boolean> {
+    return (await database.metadata.get(accountIdKey)) !== undefined;
+  }
+
+  public static invalidateAccount(): void {
+    LocalDatabase.accountVersion = null;
+  }
+
+  private static assertAccount(): void {
+    if (LocalDatabase.accountVersion === null)
+      throw new SessionChangedError("Account session changed");
+    assertCurrentSession(LocalDatabase.accountVersion);
+  }
+
   public static async prepareForAccount(accountId: string): Promise<void> {
+    const version = getDocumentSessionVersion();
     const cachedAccountId = (await database.metadata.get(accountIdKey))?.value;
     const cachedTradeRecordsCacheVersion = (
       await database.metadata.get(tradeRecordsCacheVersionKey)
@@ -49,6 +71,8 @@ export default class LocalDatabase {
       cachedAccountId === accountId &&
       cachedTradeRecordsCacheVersion === tradeRecordsCacheVersion
     ) {
+      assertCurrentSession(version);
+      LocalDatabase.accountVersion = version;
       return;
     }
 
@@ -57,6 +81,7 @@ export default class LocalDatabase {
       database.tradeRecords,
       database.metadata,
       async () => {
+        assertCurrentSession(version);
         await database.tradeRecords.clear();
         await database.metadata.clear();
         await database.metadata.put({ key: accountIdKey, value: accountId });
@@ -66,6 +91,8 @@ export default class LocalDatabase {
         });
       },
     );
+    assertCurrentSession(version);
+    LocalDatabase.accountVersion = version;
   }
 
   public static async clearAll(): Promise<void> {
@@ -97,6 +124,7 @@ export default class LocalDatabase {
       database.tradeRecords,
       database.metadata,
       async () => {
+        LocalDatabase.assertAccount();
         if (response.is_full_snapshot) {
           await database.tradeRecords.clear();
         }
@@ -116,11 +144,17 @@ export default class LocalDatabase {
   }
 
   public static async upsertTradeRecord(record: TradeRecord): Promise<void> {
-    await database.tradeRecords.put(record);
+    await database.transaction("rw", database.tradeRecords, async () => {
+      LocalDatabase.assertAccount();
+      await database.tradeRecords.put(record);
+    });
   }
 
   public static async deleteTradeRecord(id: number | string): Promise<void> {
-    await database.tradeRecords.delete(Number(id));
+    await database.transaction("rw", database.tradeRecords, async () => {
+      LocalDatabase.assertAccount();
+      await database.tradeRecords.delete(Number(id));
+    });
   }
 
   public static async getMarketIndexHistoricalPrices(

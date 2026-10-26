@@ -44,7 +44,7 @@ class ToastList extends React.Component<Props, State> {
                   onClick={() => this.handleClickRemoveMessage(idx)}
                   className={styles.close_button}
                 >
-                  <Icons.IconXLarge sideLength="8" color="#FFF" />
+                  <Icons.IconXLarge sideLength="8" />
                 </RoundButton>
               </div>
             </div>

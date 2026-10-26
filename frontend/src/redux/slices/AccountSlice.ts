@@ -2,7 +2,8 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import LocalDatabase from "../../storage/localDatabase";
 import type { Account, UpdateAccountInfoRequestBody } from "../../types";
-import Api from "../../utils/api";
+import Api, { ApiError } from "../../utils/api";
+import { SessionChangedError } from "../../utils/session";
 import Util from "../../utils/util";
 import { pushToast } from "./ToastSlice";
 
@@ -22,7 +23,6 @@ const initialState: AccountState = {
 
 export const fetchAccountInfo = createAsyncThunk(
   "account/fetchAccountInfo",
-  // Undefined while Api takes the user to another page, such as the welcome page.
   async (): Promise<Account | undefined> => {
     return await Api.sendRequest("account/me", "get");
   },
@@ -47,8 +47,7 @@ export const openSession = createAsyncThunk(
     // A page opened in a background tab is recorded once the user switches to it.
     if (document.visibilityState !== "visible") return;
 
-    // `me` sets the CSRF cookie, and open-session without it gets a 403, which logs
-    // the user out.
+    // Wait for `me` to set the cookie before the first activity write.
     if (!Api.hasCsrfToken) await thunkAPI.dispatch(fetchAccountInfo()).unwrap();
     await Api.sendRequest(
       "account/open-session",
@@ -62,11 +61,25 @@ export const openSession = createAsyncThunk(
 export const changeAccountBinding = createAsyncThunk(
   "account/changeAccountBinding",
   async (requestBody: URLSearchParams, thunkAPI): Promise<Account> => {
-    const response = await Api.sendRequest(
-      "account/change-binding",
-      "post",
-      requestBody,
-    );
+    let response;
+    try {
+      response = await Api.sendRequest("account/change-binding", "post", requestBody, {
+        silentOnFailure: true,
+      });
+    } catch (error) {
+      if (error instanceof SessionChangedError) throw error;
+      thunkAPI.dispatch(
+        pushToast({
+          type:
+            error instanceof ApiError && error.code === "GOOGLE_ALREADY_BOUND"
+              ? "warning"
+              : "error",
+          text:
+            error instanceof Error ? error.message : "更換綁定的帳號失敗，請再試一次。",
+        }),
+      );
+      throw error;
+    }
     thunkAPI.dispatch(pushToast({ type: "success", text: "成功綁定" }));
     return response;
   },
@@ -99,8 +112,6 @@ export const loginWithGoogle = createAsyncThunk(
 
 export const logout = createAsyncThunk("account/logout", async (): Promise<void> => {
   await Api.sendRequest("account/logout", "post", new URLSearchParams());
-  await Api.clearCache();
-  await LocalDatabase.clearAll();
 });
 
 export const accountSlice = createSlice({

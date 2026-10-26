@@ -14,6 +14,7 @@ import requests
 from django.conf import settings
 from django.core import signing
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.http import HttpRequest, HttpResponse, QueryDict
 from django.test import Client
 from django.utils import timezone
@@ -32,8 +33,8 @@ from main.account.cookies import (
     OAUTH_COOKIE_PATH,
     OAUTH_COOKIE_SALT,
 )
-from main.account.models import User
-from main.account.tokens import issue_token_pair
+from main.account.models import RefreshToken, User
+from main.account.services.tokens import issue_token_pair
 from main.account.views import (
     GOOGLE_BINDING_FAILED_MESSAGE,
     GOOGLE_LOGIN_FAILED_MESSAGE,
@@ -477,6 +478,7 @@ class TestChangeGoogleBindingView:
             BINDING_REDIRECT_URI, state, oauth_cookie, code=code
         )
         request.user = user
+        request.COOKIES[REFRESH_COOKIE_NAME] = issue_token_pair(user).refresh_token
         return request
 
     def _assert_binding_unchanged(self, user: User) -> None:
@@ -534,16 +536,20 @@ class TestChangeGoogleBindingView:
             username="Existing User",
         )
         state, oauth_cookie = _start_authorization(BINDING_REDIRECT_URI)
-
-        response = change_google_binding(self._make_request(user, state, oauth_cookie))
+        request = self._make_request(user, state, oauth_cookie)
+        before_tokens = list(RefreshToken.objects.values())
+        before_username, before_avatar = user.username, user.avatar_url
+        response = change_google_binding(request)
 
         assert response.status_code == 400
         data = json.loads(response.content)
         assert (
-            data["message"]
-            == "This Google account is already bound to another account."
+            data["message"] == "這個 Google 帳號已綁定其他 Taigu 帳號，請選擇其他帳號。"
         )
         self._assert_binding_unchanged(user)
+        assert user.username == before_username
+        assert user.avatar_url == before_avatar
+        assert list(RefreshToken.objects.values()) == before_tokens
 
     @pytest.mark.scenario("BILL-R25.3")
     def test_change_google_binding_keeps_user_on_standard_whitelist(
@@ -1156,3 +1162,295 @@ class TestUpdateView:
         # Verify user was not updated in database
         user.refresh_from_db()
         assert user.email == "test@example.com"
+
+
+@pytest.mark.django_db
+class TestLoginAccountFixes:
+    @pytest.fixture
+    def user(self) -> User:
+        return User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="original_oauth_id",
+            email="original@example.com",
+            username="Original Name",
+            avatar_url="https://example.com/original.png",
+        )
+
+    def _make_browser(self, user: User, *, csrf: bool = False) -> Client:
+        browser = Client(enforce_csrf_checks=csrf)
+        tokens = issue_token_pair(user)
+        browser.cookies[ACCESS_COOKIE_NAME] = tokens.access_token
+        browser.cookies[REFRESH_COOKIE_NAME] = tokens.refresh_token
+        return browser
+
+    def _bind(self, browser: Client) -> HttpResponse:
+        response = browser.get(
+            "/api/account/authorization-url", {"redirect_uri": BINDING_REDIRECT_URI}
+        )
+        state = parse_qs(urlparse(response.json()["authorization_url"]).query)["state"][
+            0
+        ]
+        return browser.post(
+            "/api/account/change-binding",
+            {
+                "code": "google_code",
+                "state": state,
+                "redirect_uri": BINDING_REDIRECT_URI,
+            },
+        )
+
+    @pytest.mark.scenario(
+        "ACCT-R9.5", "ACCT-R9.6", "ACCT-R9.7", "ACCT-R9.8", "ACCT-R9.9"
+    )
+    @pytest.mark.parametrize(
+        "name", [" 小明 ", "", " \t\n ", "字" * 65, "字", "😀" * 64, "😀" * 65, 123]
+    )
+    def test_validates_name_before_saving_any_profile_field(
+        self, user: User, name: object
+    ) -> None:
+        """An invalid name must not partially save a simultaneously edited avatar."""
+        browser = self._make_browser(user)
+        response = browser.post(
+            "/api/account/update",
+            json.dumps({"username": name, "avatar_url": "https://example.com/new.png"}),
+            content_type="application/json",
+        )
+        user.refresh_from_db()
+        valid = isinstance(name, str) and 1 <= len(name.strip()) <= 64
+        assert response.status_code == (200 if valid else 400)
+        if valid:
+            assert user.username == name.strip()
+            assert user.avatar_url == "https://example.com/new.png"
+        else:
+            assert response.json()["message"] == "名字需為 1 到 64 個字。"
+            assert user.username == "Original Name"
+            assert user.avatar_url == "https://example.com/original.png"
+
+    @pytest.mark.scenario("ACCT-R15.1", "ACCT-R15.2", "ACCT-R15.3", "ACCT-R15.4")
+    @pytest.mark.parametrize("binding", [False, True])
+    @pytest.mark.parametrize("name", [None, "", "   ", "😀" * 65, "😀" * 64])
+    @pytest.mark.parametrize("picture", [None, ""])
+    def test_optional_google_profile(
+        self,
+        google: FakeGoogle,
+        user: User,
+        binding: bool,
+        name: str | None,
+        picture: str | None,
+    ) -> None:
+        """Missing profile display fields must not reject a verified Google identity."""
+        if name is None:
+            google.claims.pop("name")
+        else:
+            google.claims["name"] = name
+        if picture is None:
+            google.claims.pop("picture")
+        else:
+            google.claims["picture"] = picture
+        browser = self._make_browser(user) if binding else Client()
+        if binding:
+            response = self._bind(browser)
+            profile = User.objects.get(pk=user.pk)
+        else:
+            state, cookie = _start_authorization(LOGIN_REDIRECT_URI)
+            response = google_login(
+                _make_callback_request(LOGIN_REDIRECT_URI, state, cookie)
+            )
+            profile = User.objects.get(oauth_id=google.claims["sub"])
+        assert response.status_code == 200
+        assert profile.username == (name[:64] if name and name.strip() else "使用者")
+        assert profile.avatar_url is None
+
+    @pytest.mark.scenario("ACCT-R15.5")
+    def test_existing_google_login_keeps_custom_profile(
+        self, google: FakeGoogle, user: User
+    ) -> None:
+        google.claims["sub"] = user.oauth_id
+        google.claims.pop("name")
+        google.claims.pop("picture")
+        state, cookie = _start_authorization(LOGIN_REDIRECT_URI)
+        response = google_login(
+            _make_callback_request(LOGIN_REDIRECT_URI, state, cookie)
+        )
+        user.refresh_from_db()
+        assert response.status_code == 200
+        assert user.username == "Original Name"
+        assert user.avatar_url == "https://example.com/original.png"
+
+    @pytest.mark.scenario("ACCT-R11.3")
+    def test_binding_current_google_identity_is_explicit_noop(
+        self, google: FakeGoogle, user: User
+    ) -> None:
+        google.claims["sub"] = user.oauth_id
+        browser = self._make_browser(user)
+        token = browser.cookies[REFRESH_COOKIE_NAME].value
+        before = list(RefreshToken.objects.values())
+        response = self._bind(browser)
+        user.refresh_from_db()
+        assert response.status_code == 400
+        assert response.json() == {
+            "code": "GOOGLE_ALREADY_BOUND",
+            "message": "目前已綁定這個 Google 帳號，無需更換。",
+        }
+        assert browser.cookies[REFRESH_COOKIE_NAME].value == token
+        assert list(RefreshToken.objects.values()) == before
+        assert user.username == "Original Name"
+        assert user.avatar_url == "https://example.com/original.png"
+
+    @pytest.mark.scenario("ACCT-R11.4", "ACCT-R11.5", "ACCT-R11.6", "BILL-R2.5")
+    def test_binding_replaces_only_current_family_and_preserves_deadlines(
+        self, google: FakeGoogle, user: User
+    ) -> None:
+        from main.account.models import RefreshToken
+        from main.account.services.tokens import (
+            InvalidRefreshTokenError,
+            rotate_refresh_token,
+        )
+        from main.billing.services.entitlements import ensure_billing_profile
+
+        browser = self._make_browser(user)
+        other_browser = self._make_browser(user)
+        old_token = browser.cookies[REFRESH_COOKIE_NAME].value
+        old_family = RefreshToken.objects.get(
+            token_hash=hashlib.sha256(old_token.encode()).hexdigest()
+        )
+        deadline = timezone.now() + timedelta(days=10)
+        old_family.expires_at = deadline
+        old_family.save()
+        profile = ensure_billing_profile(user)
+        trial_deadline = profile.trial_ends_at
+        response = self._bind(browser)
+        assert response.status_code == 200
+        new_token = browser.cookies[REFRESH_COOKIE_NAME].value
+        new_family = RefreshToken.objects.get(
+            token_hash=hashlib.sha256(new_token.encode()).hexdigest()
+        )
+        old_family.refresh_from_db()
+        assert old_family.revoked_at is not None
+        assert new_family.family_id != old_family.family_id
+        assert new_family.expires_at == deadline
+        with pytest.raises(InvalidRefreshTokenError):
+            rotate_refresh_token(old_token)
+        assert rotate_refresh_token(new_token)
+        assert other_browser.post("/api/account/refresh-token").status_code == 200
+        assert other_browser.get("/api/account/me").status_code == 200
+        profile.refresh_from_db()
+        assert profile.trial_ends_at == trial_deadline
+
+    def test_binding_rolls_back_tokens_if_saving_identity_fails(
+        self, google: FakeGoogle, user: User
+    ) -> None:
+        browser = self._make_browser(user)
+        before = list(RefreshToken.objects.values())
+        with (
+            patch.object(User, "save", side_effect=RuntimeError("write failed")),
+            pytest.raises(RuntimeError, match="write failed"),
+        ):
+            self._bind(browser)
+        assert list(RefreshToken.objects.values()) == before
+        user.refresh_from_db()
+        assert user.oauth_id == "original_oauth_id"
+
+    @pytest.mark.scenario("ACCT-R11.2")
+    @pytest.mark.parametrize("same_email", [False, True])
+    def test_binding_race_returns_conflict_and_rolls_back_tokens(
+        self, google: FakeGoogle, user: User, same_email: bool
+    ) -> None:
+        """A competing binding must preserve the losing account and its login."""
+        User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id=google.claims["sub"],
+            email=google.claims["email"] if same_email else "competing@example.com",
+        )
+        browser = self._make_browser(user)
+        before_tokens = list(RefreshToken.objects.values())
+        before_cookies = browser.cookies.copy()
+        competing_users = User.objects.filter(
+            oauth_org=OAuthOrganization.GOOGLE, oauth_id=google.claims["sub"]
+        )
+        with (
+            patch.object(User.objects, "filter", return_value=competing_users),
+            patch.object(competing_users, "exists", return_value=False),
+        ):
+            response = self._bind(browser)
+
+        assert response.status_code == 400
+        assert response.json() == {
+            "message": "這個 Google 帳號已綁定其他 Taigu 帳號，請選擇其他帳號。"
+        }
+        user.refresh_from_db()
+        assert user.oauth_id == "original_oauth_id"
+        assert user.email == "original@example.com"
+        assert user.username == "Original Name"
+        assert user.avatar_url == "https://example.com/original.png"
+        assert list(RefreshToken.objects.values()) == before_tokens
+        for name in (ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME):
+            assert browser.cookies[name].value == before_cookies[name].value
+
+    def test_binding_does_not_mask_email_uniqueness_errors(
+        self, google: FakeGoogle, user: User
+    ) -> None:
+        """An email conflict must not be reported as an OAuth identity conflict."""
+        User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="different_google_identity",
+            email=google.claims["email"],
+        )
+        browser = self._make_browser(user)
+        before_tokens = list(RefreshToken.objects.values())
+
+        with pytest.raises(IntegrityError):
+            self._bind(browser)
+
+        user.refresh_from_db()
+        assert user.oauth_id == "original_oauth_id"
+        assert user.email == "original@example.com"
+        assert list(RefreshToken.objects.values()) == before_tokens
+
+    @pytest.mark.scenario("BILL-R2.4")
+    def test_old_google_identity_gets_a_separate_trial(
+        self, google: FakeGoogle, user: User
+    ) -> None:
+        from main.billing.services.entitlements import ensure_billing_profile
+
+        profile = ensure_billing_profile(user)
+        profile.trial_started_at = timezone.now() - timedelta(days=40)
+        profile.trial_ends_at = timezone.now() - timedelta(days=9)
+        profile.save()
+        trial_deadline = profile.trial_ends_at
+        browser = self._make_browser(user)
+        assert self._bind(browser).status_code == 200
+        google.claims["sub"] = "original_oauth_id"
+        google.claims["email"] = "original@example.com"
+        state, cookie = _start_authorization(LOGIN_REDIRECT_URI)
+        assert (
+            google_login(
+                _make_callback_request(LOGIN_REDIRECT_URI, state, cookie)
+            ).status_code
+            == 200
+        )
+        new_user = User.objects.get(oauth_id="original_oauth_id")
+        assert new_user.pk != user.pk
+        new_profile = BillingProfile.objects.get(user=new_user)
+        assert new_profile.trial_ends_at - new_profile.trial_started_at == timedelta(
+            days=31
+        )
+        profile.refresh_from_db()
+        assert profile.trial_ends_at == trial_deadline
+
+    def test_session_probes_do_not_consume_account_read_quota(self, user: User) -> None:
+        """Waiting tabs must not spend the quota needed by the original account reads."""
+        browser = self._make_browser(user)
+        with patch(
+            "main.core.decorators.rate_limit.LUA_SCRIPT", return_value=0
+        ) as limiter:
+            for _ in range(8):
+                response = browser.get("/api/account/me", {"check_session": "1"})
+                assert response.status_code == 200
+                assert response.json() == {}
+            limiter.assert_not_called()
+            assert browser.get("/api/account/me").status_code == 429
+            limiter.assert_called_once()
+        assert (
+            Client().get("/api/account/me", {"check_session": "1"}).status_code == 401
+        )

@@ -24,6 +24,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [get_public_frontend_origin()]
 CSRF_COOKIE_SAMESITE = "Strict"
 CSRF_COOKIE_SECURE = True
+CSRF_FAILURE_VIEW = "main.account.views.csrf_failure"
 CSRF_COOKIE_DOMAIN = get_csrf_cookie_domain()
 CSRF_TRUSTED_ORIGINS = [get_public_frontend_origin()]
 

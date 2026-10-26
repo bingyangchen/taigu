@@ -12,7 +12,7 @@ from jose import jwt
 
 from main.account import ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, OAuthOrganization
 from main.account.models import User
-from main.account.tokens import issue_token_pair
+from main.account.services.tokens import issue_token_pair
 from main.issue_report.models import IssueReport
 from main.issue_report.views import create_issue_report
 from main.usage.models import DailyActivity, Platform

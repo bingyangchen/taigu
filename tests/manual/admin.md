@@ -71,9 +71,12 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 1. 把登入的帳號設成 superuser。
 2. 開啟 `https://local.taigu.tw/settings`，點「登出」，再點確認視窗裡的「登出」。
 3. 開啟 `https://local.taigu.tw/admin/usage`，確認畫面換到歡迎頁 `/welcome`。
-4. 開啟 `https://local.taigu.tw/login`，點 Google 登入按鈕，在 Google 的畫面選擇帳號並同意授權。
+4. 在原分頁開啟 `https://local.taigu.tw/login`。
+5. 點 Google 登入按鈕。
+6. 在 Google 的畫面選擇帳號。
+7. 從記住網址起算未滿 30 分鐘時，同意授權並完成登入。
 
-預期：步驟 4 之後畫面換到 `/admin/usage`，顯示使用情況頁。
+預期：步驟 7 之後畫面換到 `/admin/usage`，顯示使用情況頁。
 
 ## ADMIN-R1.5 取消 superuser 之後重新整理
 
@@ -87,7 +90,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## ADMIN-R1.6 Access token 過期之後操作後台
 
-前端換發 access token 再重送的流程沒有自動化 test，這裡用刪除 access token 的 cookie 模擬 access token 過期。
+前端更新 access token 再重送的流程沒有自動化 test，這裡用刪除 access token 的 cookie 模擬 access token 過期。
 
 1. 把登入的帳號設成 superuser，建立測試用的問題回報。
 2. 開啟 `https://local.taigu.tw/admin/issue-reports`。

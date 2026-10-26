@@ -58,15 +58,162 @@ Cloudflare Pages 用 `npm run build` build 前端（這是 Cloudflare Pages 上�
 
 ## 登入
 
+### 登入 Cookie
+
 後端把 JWT 放在 HTTP-only cookie，前端的 JavaScript 讀不到；會修改資料的 request，前端從 CSRF cookie 讀出 CSRF token，放進 header。
 
 Prod 的前端在 `taigu.tw`、後端在 `api.taigu.tw`，dev 環境的兩者都在 `local.taigu.tw`，所以 prod 的 CSRF cookie 設在 `.taigu.tw`，前端才讀得到，放 JWT 的 cookie 則只屬於後端的網域。
 
+### 跨分頁更新 Access Token
+
 登入狀態維持多久，以及 refresh token 的 rotation，見 ACCT-R5 與 ACCT-R6。
+
+Access token 過期時，前端用 refresh token 向後端取得新的 access token，後端同時替換 refresh token。
+
+更新 access token 與更換綁定的 Google 帳號都會修改目前瀏覽器的登入 cookie，因此前端跨分頁協調這兩種操作，同一時間只由一個分頁執行。多個分頁需要更新 access token 時的流程如下圖。
+
+```mermaid
+sequenceDiagram
+  participant A as 分頁 A
+  participant B as 分頁 B
+  participant C as 跨分頁協調
+  participant S as 後端
+  A->>C: 等待執行權
+  C-->>A: 取得執行權
+  B->>C: 等待執行權
+  A->>S: 確認目前登入狀態
+  alt 仍需更新 access token
+    A->>S: 更新 access token
+    S-->>A: 更新登入 cookie
+  end
+  A->>C: 釋放執行權
+  C-->>B: 取得執行權
+  B->>S: 確認目前登入狀態
+  S-->>B: 登入狀態已由其他分頁更新
+  B->>C: 釋放執行權
+  A->>S: 使用最新 cookie 與重新組合的 CSRF header 重送原 request
+  B->>S: 使用最新 cookie 與重新組合的 CSRF header 重送原 request
+```
+
+> 設計理由：多分頁更新 access token 時由前端協調，後端仍依 ACCT-R6 拒絕已失效的 refresh token。不提供允許舊 token 再使用的短暫期間，因為那也會允許遭竊的舊 token 在這段期間繼續使用。後端已發出新的 token，但瀏覽器沒收到回應時，使用者仍可能需要重新登入。完整討論見 [0005](../plans/archive/0005-login-account-fixes.md)。
+
+登入狀態檢查只驗證 access token，不讀取完整帳號資料，也不占用帳號資料讀取的 rate limit。
+
+### CSRF 失敗與重試
+
+後端在 CSRF 檢查失敗時回傳錯誤原因，前端依 ACCT-R16 決定是否重試。取得 CSRF cookie 的 GET 不要求有效的 access token，因此 access token 過期時仍能恢復 refresh request；取得 cookie 不會登入、更換綁定的 Google 帳號或修改帳號資料。被 CSRF middleware 拒絕的 request 不進入原本的 view，也不消耗 OAuth state。
+
+```mermaid
+flowchart TD
+  send("送出 request") --> result{"結果"}
+  result -->|CSRF token 缺少或不一致| recover("取得 CSRF token")
+  recover -->|成功| retry("重新組合 header 並重送一次")
+  recover -->|失敗| failure("依原操作顯示失敗")
+  retry --> after{"結果"}
+  after -->|成功| done("完成操作")
+  after -->|再次 CSRF 失敗| failure
+  after -->|確認登入失效| cleanup("依 ACCT-R5 處理")
+  result -->|來源失敗或其他 CSRF 原因| failure
+  result -->|成功| done
+```
+
+### 更換綁定的 Google 帳號時替換 Refresh Token Family
+
+更換綁定的 Google 帳號時，後端在同一個資料庫 transaction 內更新帳號資料、撤銷目前 refresh token 的舊 family，並建立沿用舊 family 到期時間的新 family。其他瀏覽器的 family 不變，access token 的驗證方式也不變。
+
+> 設計理由：更換綁定的 Google 帳號時建立新的 family，舊 family 的 token 再被使用時只影響已作廢的舊 family，避免連帶撤銷新 family 的 refresh token。其他裝置的登出屬於另一個功能，不在更換綁定的 Google 帳號時加入。完整討論見 [0005](../plans/archive/0005-login-account-fixes.md)。
+
+### 登入後的返回網址
+
+前端把登入後要返回的網址與儲存當下的時間存進原分頁的 sessionStorage。前端依 ACCT-R3 判定能否使用，先移除紀錄再換頁。前端載入時會清除舊版存在 localStorage、沒有期限的返回網址，不把舊紀錄轉成新的有效紀錄。
+
+### 跨分頁清除帳號資料
+
+主動登出與登入失效時的清除規則見 ACCT-R17。登入時，前端也會清除殘留的舊帳號資料，並保留原分頁有效的返回紀錄。這些操作共用以下跨分頁清除機制。
+
+前端會一併清除 IndexedDB、localStorage、sessionStorage、service worker cache 與記憶體中的帳號資料，避免仍開著的分頁把舊資料重新寫回。
+
+前端在送出 request、重試、處理回應與寫入交易紀錄前檢查登入版本，並透過 Redux 忽略清除前開始的非同步操作結果。跨分頁清除與失敗後接手的流程如下：
+
+```mermaid
+sequenceDiagram
+  participant A as 執行清除的分頁
+  participant B as 其他分頁
+  participant L as 清除用的 Web Lock
+  participant S as localStorage
+  A->>L: 等待清除鎖
+  L-->>A: 取得清除鎖
+  A->>S: 設定待清除標記並更新登入版本
+  S-->>B: 通知登入版本已改變
+  B->>B: 重新載入登入頁
+  B->>L: 等待同一輪清除
+  alt 原分頁完成清除
+    A->>A: 清除帳號資料
+    A->>S: 移除待清除標記
+    A->>L: 釋放清除鎖
+    L-->>B: 取得清除鎖
+    B->>S: 確認已沒有待清除標記
+    B->>L: 釋放鎖並繼續讀寫
+  else 原分頁關閉或清除失敗
+    A-->>L: 釋放清除鎖
+    L-->>B: 取得清除鎖
+    B->>S: 讀取待清除標記與既有登入版本
+    B->>B: 沿用既有版本完成剩餘清除
+    B->>S: 移除待清除標記
+    B->>L: 釋放鎖並繼續讀寫
+  end
+```
+
+### Service Worker 的帳號資料隔離
+
+前端送出 API request 前，依下圖確認目前的 service worker 是否支援帳號資料隔離：
+
+```mermaid
+flowchart TD
+  check{"目前有 service worker 嗎？"}
+  check -->|沒有| send("前端向後端送出 request")
+  check -->|有| confirm("前端詢問是否支援帳號資料隔離")
+  confirm -->|2 秒內確認支援| send
+  confirm -->|2 秒內未確認支援| stop("前端停止操作並提示重新整理")
+```
+
+支援帳號資料隔離的 service worker 收到清除通知後，依下圖完成清除：
+
+```mermaid
+sequenceDiagram
+  participant F as 執行清除的分頁
+  participant W as Service Worker
+  participant P as 其他分頁
+  F->>W: 通知清除帳號資料
+  W->>P: 重新開啟登入頁
+  W->>W: 清除 API cache
+  alt 確認清除完成
+    W-->>F: 回覆清除完成
+  else 未確認清除完成
+    F->>F: 保留待清除標記並停止操作
+  end
+```
+
+新版 service worker 使用獨立名稱的 API cache，不讀取舊 worker 可能繼續寫入的 cache。前端為可放入 API cache 的 GET request 加上 `_account_session` 查詢參數，以登入版本區分 cache key；後端忽略這個參數。即使舊回應在清除後才完成寫入，新登入的 request 也不會讀到舊版本的 key。
+
+### 分頁儲存與版本相容性
+
+前端將返回網址存在 sessionStorage，保留 path、query string 與最初記住網址的時間。[瀏覽器文件](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) 說明頁面還原可能保留 sessionStorage，有 opener 的新分頁也可能取得一份副本。因此前端接受瀏覽器還原或複製分頁時帶回的紀錄，仍依 ACCT-R3 的原期限判定；一般另開分頁不共用紀錄。2026-10 在 Linux ARM64 的 Chromium 156.0.8078.47 實測，一般新分頁不共用返回紀錄，有 opener 的新分頁則取得相同的網址與原始時間。瀏覽器選單的還原與複製分頁尚未實測。
+
+跨分頁協調使用同源的 Web Locks API；沒有使用新版協調機制的舊頁面不會遵守這把鎖，因此與舊版頁面並存時仍可能觸發 ACCT-R6。瀏覽器未提供 Web Locks API 時，前端停止需要鎖的操作，避免在無法協調時送出並行的 access token 更新 request。
+
+2026-10 在上述 Chromium，以 production build、service worker 與本機後端實測時，結果如下：
+
+- 2 個與 4 個分頁同時需要更新 access token 時，各分頁都成功讀取資料，沒有因正常更新觸發 replay detection。
+- 登出時，其他分頁重新開啟登入頁；清除暫停期間，其他分頁等待同一輪清除，登入版本只改變一次。執行清除的分頁關閉後，其他分頁能沿用同一個登入版本完成清除。
+- 帳號 A 的 API 回應延遲 5 秒才完成時，登入版本改變後不會把資料寫回帳號 B 使用的 API cache。IndexedDB、舊 API cache、最近點選股票與舊返回網址都會清除；帳號 B 離線時沒有讀到帳號 A 的資料。這項檢查以固定的成功登入回應與測試帳號 cookie 代替 Google 授權。
+- 以不回覆帳號資料隔離訊息、使用舊 cache 名稱的 worker 模擬舊版時，前端停止寫入並提示重新整理；換回新版 worker 後，操作成功。這項檢查沒有涵蓋所有舊版前端與 worker 的組合。
+
+實際 Google 授權、更換綁定的 Google 帳號與更新 access token 同時發生，以及安裝後的 PWA，仍需要依手動檢查確認。
 
 ### Google 授權
 
-登入（ACCT-R1）與改綁（ACCT-R11）的 request 照下圖的順序處理，授權要通過的檢查見 ACCT-R12：
+登入（ACCT-R1）與更換綁定的 Google 帳號（ACCT-R11）的 request 照下圖的順序處理，授權要通過的檢查見 ACCT-R12：
 
 ```mermaid
 sequenceDiagram
@@ -78,9 +225,9 @@ sequenceDiagram
   B->>G: 開啟授權網址
   G-->>B: 使用者同意授權之後，帶著 code 與 state 回到 Taigu
   B->>A: 送出 code 與 state，並帶上 cookie
-  opt 改綁時 access token 已經過期
+  opt 更換綁定的 Google 帳號時 access token 已經過期
     A-->>B: 回 401，不刪除 cookie
-    B->>A: 換發 access token 之後，重送同一個 request
+    B->>A: 更新 access token 之後，重送同一個 request
   end
   alt state 跟 cookie 裡的不一致，或沒有 cookie
     A-->>B: 回 400 與 ACCT-R13 的錯誤提示
@@ -89,7 +236,7 @@ sequenceDiagram
     A->>G: 用 code 與 code verifier 換 token
     alt Google 接受授權結果
       G-->>A: 回傳 ID token
-      A-->>B: 完成登入或改綁
+      A-->>B: 完成登入或更換綁定的 Google 帳號
     else Google 不接受授權結果，或連不上 Google
       A-->>B: 回 400 或 502 與 ACCT-R13 的錯誤提示
     end
@@ -98,7 +245,7 @@ sequenceDiagram
 
 放 `state` 與 PKCE 的 code verifier 的 cookie 由 Django 的 `SECRET_KEY` 簽章，而且是 HTTP-only，只屬於後端的網域，SameSite 是 `Strict`；cookie 的期限，以及同一個瀏覽器開始好幾次授權時哪一次能通過檢查，見 ACCT-R12。
 
-後端處理改綁的 request 時，先確認登入狀態，再比對 `state`，所以 access token 過期時，後端在刪除 cookie 之前就回 401，前端換發 access token 之後重送的 request 仍能通過檢查。
+後端處理更換綁定的 Google 帳號的 request 時，先確認登入狀態，再比對 `state`，所以 access token 過期時，後端在刪除 cookie 之前就回 401，前端更新 access token 之後重送的 request 仍能通過檢查。
 
 > 設計理由：`state` 與 code verifier 存在後端簽章的 cookie，而不是 Django session 或前端的 sessionStorage。不用 Django session，是因為後端用 JWT cookie 維持登入，沒有用 Django session，存進 Django session 的話，每次開始授權都要在資料庫寫一筆 session，還要另外清掉過期的 session；不存在前端的 sessionStorage、由前端比對 `state`，是因為這樣後端仍然會拿任何送來的 `code` 去換 token，而且 code verifier 會變成 JavaScript 讀得到的值。完整討論見 [0001](../plans/archive/0001-oauth-state-check.md)。
 
@@ -108,7 +255,7 @@ sequenceDiagram
 - 連不上 Google 或 Google 回 5xx 時，後端回 502。
 - Google 的 token endpoint 回 `invalid_grant` 以外的錯誤（例如 client secret 錯誤時的 `invalid_client`）時，後端不處理這些錯誤，request 會得到 500，因為這些錯誤代表後端的設定有問題，不是這次授權的問題。
 
-上面這些情況都不能回 401 或 403，因為前端收到這兩個 status code 時會當成登入狀態結束，帳號綁定頁的使用者會因此被登出。Google 帶回的 `error` 只由前端處理，不會送到後端。
+上面這些授權失敗都不能回 401 或 403，因為前端收到 401 時會先更新 access token，403 則保留給 CSRF 檢查失敗，由 ACCT-R16 處理。Google 帶回的 `error` 只由前端處理，不會送到後端。
 
 Google 與瀏覽器在這個流程裡的行為如下：
 
@@ -120,7 +267,7 @@ Google 與瀏覽器在這個流程裡的行為如下：
 
 需要登入的 endpoint 都先確認登入狀態，再套用 rate limit，所以未登入的 request 在確認登入狀態時就得到 401，不會用掉 rate limit 的額度。
 
-> 設計理由：Rate limit 把所有未登入的 request 算在同一個 key，所以 rate limit 放在確認登入狀態之前的話，access token 過期的 request 會跟其他未登入的 request 共用額度，剛好有其他未登入的 request 用完額度時，這個 request 會得到 429，前端也不會換發 access token 再重送。沒有改成在遇到未登入的 request 時用 IP 當 key，因為同一個 IP 後面的使用者（例如同一個公司網路裡的人）仍會共用 rate limit 的額度，而且 access token 過期的 request 會先用掉一次額度、得到 401，換發 access token 之後重送時再用一次。完整討論見 [0001](../plans/archive/0001-oauth-state-check.md)。
+> 設計理由：Rate limit 把所有未登入的 request 算在同一個 key，所以 rate limit 放在確認登入狀態之前的話，access token 過期的 request 會跟其他未登入的 request 共用額度，剛好有其他未登入的 request 用完額度時，這個 request 會得到 429，前端也不會更新 access token 再重送。沒有改成在遇到未登入的 request 時用 IP 當 key，因為同一個 IP 後面的使用者（例如同一個公司網路裡的人）仍會共用 rate limit 的額度，而且 access token 過期的 request 會先用掉一次額度、得到 401，更新 access token 之後重送時再用一次。完整討論見 [0001](../plans/archive/0001-oauth-state-check.md)。
 
 ## 前端
 
@@ -152,7 +299,7 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 使用紀錄（USAGE-R1）存在 `daily_activity` 資料表，帳號刪除時一併刪除（USAGE-R2）。前端在 USAGE-R1 規定的時候呼叫 `open-session`，並帶上 `platform` 參數。舊版前端呼叫 `open-session` 時不會帶 `platform` 參數，後端照樣記下這一天，這一列的 `platform` 欄位是空的；同一位使用者同一天，`platform` 欄位是空的列也只有一列。
 
-前端呼叫 `open-session` 時，如果瀏覽器還沒有 CSRF cookie，前端先等 `me` 的回應再呼叫，因為 `me` 的回應會設定 CSRF cookie，而前端收到 403 時會把使用者登出，所以沒有 CSRF cookie 時直接呼叫 `open-session`，使用者會被登出。
+前端呼叫 `open-session` 時，如果瀏覽器還沒有 CSRF cookie，先等 `me` 的回應設定 cookie，再呼叫 `open-session`，避免第一次記錄使用情況就得到可預防的 CSRF 錯誤；實際發生 CSRF 失敗時依 ACCT-R16 處理，提示則依 USAGE-R1。
 
 2026-10 在 macOS 的桌面 Chrome 實測時，瀏覽器的行為如下：
 
@@ -180,9 +327,9 @@ sequenceDiagram
 
 ## 後台
 
-後端把後台的 endpoint 都放在 `/api/admin/` 底下，由 `api-server/main/admin_console/` 這個 app 處理，每支 endpoint 都用同一個權限檢查：先確認登入狀態，沒有登入時跟其他需要登入的 endpoint 一樣回 401（見 ACCT-R4），前端照常換發 access token 再重送；已經登入但不是 superuser 時回 404。會修改資料的 endpoint 先確認是不是 superuser，再檢查 CSRF token，所以不是 superuser 的 request 沒帶 CSRF token 時也回 404，不會因為 CSRF 檢查失敗而回 403。
+後端把後台的 endpoint 都放在 `/api/admin/` 底下，由 `api-server/main/admin_console/` 這個 app 處理，每支 endpoint 都用同一個權限檢查：先確認登入狀態，沒有登入時跟其他需要登入的 endpoint 一樣回 401（見 ACCT-R4），前端照常更新 access token 再重送；已經登入但不是 superuser 時回 404。會修改資料的 endpoint 先確認是不是 superuser，再檢查 CSRF token，所以不是 superuser 的 request 沒帶 CSRF token 時也回 404，不會因為 CSRF 檢查失敗而回 403。
 
-> 設計理由：不是 superuser 時回 404 而不是 403，因為前端收到 403 時會把使用者登出，而且回 404 時，一般使用者看到的結果跟網址不存在時相同，看不出 Taigu 有後台。完整討論見 [0004](../plans/archive/0004-admin-console.md)。
+> 設計理由：不是 superuser 時回 404，讓一般使用者看到的結果跟網址不存在時相同，看不出 Taigu 有後台。完整討論見 [0004](../plans/archive/0004-admin-console.md)。
 
 使用者是不是 superuser，記在 `User` 從 Django 的 `AbstractUser` 繼承的 `is_superuser` 欄位，開發者用 management command `superuser` 設定 superuser（見 ADMIN-R2）。`me` 的回應帶有 `is_superuser`，前端用它決定要不要顯示後台的入口與頁面。
 

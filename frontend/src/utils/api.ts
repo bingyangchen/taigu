@@ -1,17 +1,38 @@
 import { openPlanUpsell } from "../redux/slices/PlanUpsellSlice";
 import { pushToast } from "../redux/slices/ToastSlice";
 import { store } from "../redux/store";
+import LocalDatabase from "../storage/localDatabase";
 import type { PlanQuotaResource } from "../types";
-import { API_CACHE_NAME } from "./cache";
+import {
+  AccountCacheError,
+  ensureAccountCacheIsolation,
+  invalidateAccountCache,
+} from "./accountCache";
+import { API_CACHE_NAME, API_CACHE_PATHS, LEGACY_API_CACHE_NAMES } from "./cache";
 import Env from "./env";
 import { requestCloseActiveModal } from "./modal";
 import Nav from "./nav";
+import { clearReturnUrl } from "./returnUrl";
+import {
+  acceptCurrentSession,
+  ACCOUNT_DATA_CLEARED,
+  assertCurrentSession,
+  getDocumentSessionVersion,
+  getSessionVersion,
+  SESSION_CLEANUP_KEY,
+  SESSION_VERSION_KEY,
+  SessionChangedError,
+  withAccountDataLock,
+  withSessionLock,
+} from "./session";
 
 type ApiErrorPayload = {
   code?: string;
   resource?: PlanQuotaResource;
   message?: string;
 };
+
+const CSRF_FAILED_MESSAGE = "無法完成操作，請重新整理後再試一次。";
 
 export class ApiError extends Error {
   public readonly code?: string;
@@ -30,10 +51,55 @@ export class ApiError extends Error {
 export default class Api {
   private static safeMethods = ["get", "head", "options"];
   private static refreshRequest: Promise<boolean> | null = null;
+  private static cleanupRequest: Promise<void> | null = null;
 
   public static async clearCache(): Promise<void> {
     if ("caches" in window) {
-      await caches.delete(API_CACHE_NAME);
+      await Promise.all([
+        caches.delete(API_CACHE_NAME),
+        ...LEGACY_API_CACHE_NAMES.map((name) => caches.delete(name)),
+      ]);
+    }
+  }
+
+  public static async clearAccountData({
+    preserveReturnUrl = false,
+    onlyIfPending = false,
+  }: { preserveReturnUrl?: boolean; onlyIfPending?: boolean } = {}): Promise<void> {
+    if (Api.cleanupRequest === null) {
+      Api.cleanupRequest = withAccountDataLock(async () => {
+        const isPending = localStorage.getItem(SESSION_CLEANUP_KEY) !== null;
+        if (onlyIfPending && !isPending) return;
+        if (!isPending) {
+          localStorage.setItem(SESSION_CLEANUP_KEY, "1");
+          localStorage.setItem(SESSION_VERSION_KEY, crypto.randomUUID());
+        }
+        acceptCurrentSession();
+        await Api.clearLocalAccountData(preserveReturnUrl);
+        localStorage.removeItem(SESSION_CLEANUP_KEY);
+      }).finally(() => {
+        Api.cleanupRequest = null;
+      });
+    }
+    await Api.cleanupRequest;
+  }
+
+  public static clearAccountMemory(preserveReturnUrl = false): void {
+    LocalDatabase.invalidateAccount();
+    store.dispatch({ type: ACCOUNT_DATA_CLEARED });
+    if (!preserveReturnUrl) clearReturnUrl();
+  }
+
+  private static async clearLocalAccountData(
+    preserveReturnUrl: boolean,
+  ): Promise<void> {
+    Api.clearAccountMemory(preserveReturnUrl);
+    localStorage.removeItem("stock_search_lru_cache");
+    localStorage.removeItem("accountId");
+    try {
+      await invalidateAccountCache();
+    } finally {
+      await Promise.all([Api.clearCache(), LocalDatabase.clearAll()]);
     }
   }
 
@@ -42,7 +108,7 @@ export default class Api {
   }
 
   private static getCookie(name: string): string | null {
-    const cookies = document.cookie.split(";").map((c) => c.trim());
+    const cookies = document.cookie.split(";").map((cookie) => cookie.trim());
     for (const cookie of cookies) {
       if (cookie.startsWith(name + "=")) {
         return decodeURIComponent(cookie.substring(name.length + 1));
@@ -51,15 +117,9 @@ export default class Api {
     return null;
   }
 
-  private static deleteCookie(name: string): void {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.taigu.tw`;
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-  }
-
   /**
-   * With `silentOnFailure`, a failed request shows neither an error toast nor the
-   * plan upsell; an ended login still takes the user to the welcome page. With
-   * `redirectOnNotFound: false`, a 404 throws instead of opening the 404 page.
+   * Silent failures suppress toasts and upsells, but confirmed login expiry still
+   * clears account data and redirects. A disabled 404 redirect throws instead.
    */
   public static async sendRequest(
     endpoint: string,
@@ -75,33 +135,63 @@ export default class Api {
     if (method === "post" && requestBody === undefined) {
       throw Error("requestBody is needed in POST request");
     }
-
-    const header = new Headers();
-    header.append("Accept", "application/json");
-    if (typeof requestBody === "string") {
-      header.append("Content-Type", "application/json");
-    }
-    if (!Api.safeMethods.includes(method)) {
-      const csrfToken = Api.getCookie("csrftoken") ?? "";
-      if (csrfToken) header.append("X-CSRFToken", csrfToken);
-    }
-
-    const options: RequestInit = {
-      method: method,
-      headers: header,
-      body: requestBody,
-      credentials: "include",
-    };
-    try {
-      let response = await fetch(`${Env.backendUrl}${endpoint}`, options);
+    let sessionVersion = getDocumentSessionVersion();
+    const sessionEndpoint = endpoint.replace(/\/$/, "");
+    const needsLock = [
+      "account/change-binding",
+      "account/logout",
+      "account/google-login",
+    ].includes(sessionEndpoint);
+    const operation = async () => {
+      assertCurrentSession(sessionVersion);
+      if (localStorage.getItem(SESSION_CLEANUP_KEY)) {
+        await Api.clearAccountData({
+          preserveReturnUrl: Nav.isAtLoginPage,
+          onlyIfPending: true,
+        });
+        sessionVersion = getDocumentSessionVersion();
+      }
+      await ensureAccountCacheIsolation();
+      const recovery = { attempted: false };
+      let response = await Api.fetchWithCsrf(
+        endpoint,
+        method,
+        requestBody,
+        recovery,
+        sessionVersion,
+      );
+      assertCurrentSession(sessionVersion);
       if (response.status === 401 && !Api.isSessionEndpoint(endpoint)) {
-        if (await Api.refreshAccessToken()) {
-          response = await fetch(`${Env.backendUrl}${endpoint}`, options);
+        if (await Api.refreshAccessToken(needsLock)) {
+          assertCurrentSession(sessionVersion);
+          response = await Api.fetchWithCsrf(
+            endpoint,
+            method,
+            requestBody,
+            recovery,
+            sessionVersion,
+          );
         }
       }
-      return await Api.handleResponse(response, redirectOnNotFound);
+      assertCurrentSession(sessionVersion);
+      const result = await Api.handleResponse(response, redirectOnNotFound);
+      if (result !== undefined) assertCurrentSession(sessionVersion);
+      if (sessionEndpoint === "account/me" && result?.id) {
+        localStorage.setItem("accountId", result.id);
+      }
+      if (sessionEndpoint === "account/logout") await Api.clearAccountData();
+      if (sessionEndpoint === "account/google-login")
+        await Api.clearAccountData({ preserveReturnUrl: true });
+      return result;
+    };
+    try {
+      return needsLock ? await withSessionLock(operation) : await operation();
     } catch (error) {
-      if (method !== "get" && !silentOnFailure) {
+      if (
+        (method !== "get" || error instanceof AccountCacheError) &&
+        !silentOnFailure &&
+        !(error instanceof SessionChangedError)
+      ) {
         if (Api.isQuotaExceededError(error)) {
           await requestCloseActiveModal();
           store.dispatch(
@@ -121,6 +211,65 @@ export default class Api {
     }
   }
 
+  private static async fetchWithCsrf(
+    endpoint: string,
+    method: string,
+    requestBody: URLSearchParams | string | undefined,
+    recovery: { attempted: boolean },
+    sessionVersion: string,
+  ): Promise<Response> {
+    assertCurrentSession(sessionVersion);
+    const headers = new Headers({ Accept: "application/json" });
+    if (typeof requestBody === "string") {
+      headers.set("Content-Type", "application/json");
+    }
+    if (!Api.safeMethods.includes(method)) {
+      const csrfToken = Api.getCookie("csrftoken");
+      if (csrfToken) headers.set("X-CSRFToken", csrfToken);
+    }
+    const url = new URL(`${Env.backendUrl}${endpoint}`);
+
+    // A cache write started before cleanup may finish after the next login.
+    if (
+      method === "get" &&
+      API_CACHE_PATHS.has(url.pathname.replace(/^\/api\/?/, ""))
+    ) {
+      url.searchParams.set("_account_session", sessionVersion);
+    }
+    const response = await fetch(url.href, {
+      method,
+      headers,
+      body: requestBody,
+      credentials: "include",
+    });
+    if (response.status === 403 && !recovery.attempted) {
+      const error = await response
+        .clone()
+        .json()
+        .catch(() => null);
+      if (error?.code === "CSRF_TOKEN_RECOVERABLE") {
+        recovery.attempted = true;
+        try {
+          const csrfResponse = await fetch(`${Env.backendUrl}account/csrf-token`, {
+            credentials: "include",
+            cache: "no-store",
+          });
+          if (!csrfResponse.ok) throw new Error(CSRF_FAILED_MESSAGE);
+        } catch {
+          throw new ApiError({ message: CSRF_FAILED_MESSAGE }, 403);
+        }
+        return await Api.fetchWithCsrf(
+          endpoint,
+          method,
+          requestBody,
+          recovery,
+          sessionVersion,
+        );
+      }
+    }
+    return response;
+  }
+
   private static isQuotaExceededError(
     error: unknown,
   ): error is ApiError & { resource: PlanQuotaResource } {
@@ -130,14 +279,19 @@ export default class Api {
   }
 
   private static isSessionEndpoint(endpoint: string): boolean {
-    return ["account/refresh-token", "account/logout"].includes(
+    return ["account/refresh-token", "account/logout", "account/google-login"].includes(
       endpoint.replace(/\/$/, ""),
     );
   }
 
-  private static async refreshAccessToken(): Promise<boolean> {
+  private static async refreshAccessToken(alreadyLocked: boolean): Promise<boolean> {
+    if (alreadyLocked) return await Api.sendRefreshRequest();
     if (Api.refreshRequest === null) {
-      Api.refreshRequest = Api.sendRefreshRequest().finally(() => {
+      const version = getSessionVersion();
+      Api.refreshRequest = withSessionLock(async () => {
+        assertCurrentSession(version);
+        return await Api.sendRefreshRequest();
+      }).finally(() => {
         Api.refreshRequest = null;
       });
     }
@@ -145,17 +299,29 @@ export default class Api {
   }
 
   private static async sendRefreshRequest(): Promise<boolean> {
-    const header = new Headers({ Accept: "application/json" });
-    const csrfToken = Api.getCookie("csrftoken") ?? "";
-    if (csrfToken) header.append("X-CSRFToken", csrfToken);
-    const response = await fetch(`${Env.backendUrl}account/refresh-token`, {
-      method: "post",
-      headers: header,
-      body: new URLSearchParams(),
+    const version = getDocumentSessionVersion();
+
+    // A previous 401 can predate another tab's refresh or binding cookie update.
+    const current = await fetch(`${Env.backendUrl}account/me?check_session=1`, {
       credentials: "include",
+      cache: "no-store",
     });
-    if (response.status === 403) Api.deleteCookie("csrftoken");
-    return response.ok;
+    if (current.ok) return true;
+    if (current.status !== 401) {
+      throw new ApiError({ message: CSRF_FAILED_MESSAGE }, current.status);
+    }
+    const response = await Api.fetchWithCsrf(
+      "account/refresh-token",
+      "post",
+      new URLSearchParams(),
+      { attempted: false },
+      version,
+    );
+    if (response.status === 401) return false;
+    if (!response.ok) {
+      throw new ApiError({ message: CSRF_FAILED_MESSAGE }, response.status);
+    }
+    return true;
   }
 
   private static async handleResponse(
@@ -164,19 +330,29 @@ export default class Api {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     if (response.status === 404 && redirectOnNotFound) Nav.goTo404Page();
-    else if ([401, 403].includes(response.status)) {
-      if (response.status === 403) Api.deleteCookie("csrftoken");
-      const url = new URL(response.url);
-      if (url.pathname !== "/api/account/logout") {
-        await Api.sendRequest("account/logout", "post", new URLSearchParams());
+    else if (response.status === 401) {
+      if (Nav.isAtLoginPage) {
+        if (
+          localStorage.getItem("accountId") ||
+          localStorage.getItem("stock_search_lru_cache") ||
+          (await LocalDatabase.hasAccountData())
+        ) {
+          await Api.clearAccountData();
+        }
+        return undefined;
       }
-      await Api.clearCache();
-      if (!Nav.isAtLoginPage) {
-        Nav.goToWelcomePage(window.location.pathname + window.location.search);
-      }
+      const from = window.location.pathname + window.location.search;
+      await Api.clearAccountData();
+      Nav.goToWelcomePage(from);
+      throw new SessionChangedError("Account session ended");
     } else if (!response.ok) {
       const error = await response.json().catch(() => null);
-      throw new ApiError(error ?? {}, response.status);
+      throw new ApiError(
+        response.status === 403
+          ? { ...error, message: CSRF_FAILED_MESSAGE }
+          : (error ?? {}),
+        response.status,
+      );
     } else return await response.json();
   }
 }

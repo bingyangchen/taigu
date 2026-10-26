@@ -13,11 +13,11 @@ import {
 import { registerRoute } from "workbox-routing";
 import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
-import { API_CACHE_NAME } from "./utils/cache";
+import { API_CACHE_NAME, API_CACHE_PATHS, LEGACY_API_CACHE_NAMES } from "./utils/cache";
 
 declare const self: ServiceWorkerGlobalScope;
 
-const VERSION = "2026.10.22.01";
+const VERSION = "2026.10.26.01";
 console.log(`Service worker version: ${VERSION}`);
 
 clientsClaim();
@@ -66,49 +66,68 @@ registerRoute(
 );
 
 const getApiPath = (url: URL): string => url.pathname.replace(/^\/api\/?/, "");
-const apiCachePaths = new Set([
-  "cash-dividends",
-  "market/market-index",
-  "market/market-index-historical-prices",
-  "market/historical-prices",
-  "market/intraday-prices",
-  "trade-plans",
-  "stock-memo/company-info",
-  "favorites",
-  "handling-fee/discount",
-]);
+let accountCacheVersion = 0;
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "CHECK_ACCOUNT_CACHE") {
+    event.ports[0]?.postMessage("isolated");
+  }
+  if (event.data?.type === "CLEAR_ACCOUNT_DATA") {
+    accountCacheVersion += 1;
+    event.waitUntil(
+      (async () => {
+        const clients = await self.clients.matchAll({
+          type: "window",
+          includeUncontrolled: true,
+        });
+        await Promise.all(
+          clients.map(async (client) => {
+            if (event.source && "id" in event.source && client.id === event.source.id)
+              return;
+            await client.navigate("/login");
+          }),
+        );
+        await caches.delete(API_CACHE_NAME);
+        event.ports[0]?.postMessage("cleared");
+      })(),
+    );
+  }
+});
 registerRoute(
-  ({ request, url }) => request.method === "GET" && apiCachePaths.has(getApiPath(url)),
+  ({ request, url }) =>
+    request.method === "GET" && API_CACHE_PATHS.has(getApiPath(url)),
   new NetworkFirst({
     cacheName: API_CACHE_NAME,
     networkTimeoutSeconds: 3,
     plugins: [
       {
-        cacheWillUpdate: async ({ response }) => {
-          return response.status < 400 ? response : null;
+        handlerWillStart: async ({ state }) => {
+          if (state) state.accountCacheVersion = accountCacheVersion;
+        },
+        cacheWillUpdate: async ({ response, state }) => {
+          return response.status < 400 &&
+            state?.accountCacheVersion === accountCacheVersion
+            ? response
+            : null;
+        },
+        cacheDidUpdate: async ({ cacheName, request, state }) => {
+          if (state?.accountCacheVersion !== accountCacheVersion) {
+            const cache = await caches.open(cacheName);
+            await cache.delete(request);
+          }
         },
       },
     ],
   }),
 );
 
-registerRoute(
-  ({ request, url }) =>
-    (request.method === "POST" && getApiPath(url) === "account/logout") ||
-    (request.method === "DELETE" && getApiPath(url) === "account/delete"),
-  async ({ request }) => {
-    await caches.delete(API_CACHE_NAME);
-    return fetch(request);
-  },
-);
-
 self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
-// Service workers before PR #185 stored API responses in a cache named "taigu".
-// Nothing reads it anymore, so delete it to drop the user data it still holds.
-const LEGACY_API_CACHE_NAME = "taigu";
+// Old workers can finish requests after activation, so new code never reads these caches.
 self.addEventListener("activate", (event) => {
-  event.waitUntil(caches.delete(LEGACY_API_CACHE_NAME));
+  event.waitUntil(
+    Promise.all(LEGACY_API_CACHE_NAMES.map((name) => caches.delete(name))),
+  );
 });

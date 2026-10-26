@@ -8,7 +8,7 @@
 flowchart TD
   oauth_state_check("驗證 OAuth state<br/>已完成"):::done
   standard_whitelist("Standard 白名單<br/>已完成"):::done
-  login_account_fixes("登入與帳號修正<br/>已核准"):::approved
+  login_account_fixes("登入與帳號修正<br/>已完成"):::done
   billing_fixes("訂閱流程修正<br/>未規劃"):::unplanned
   calculation_fixes("投資數字的計算修正<br/>未規劃"):::unplanned
   market_data_fixes("行情與重大消息修正<br/>未規劃"):::unplanned
@@ -65,10 +65,6 @@ flowchart TD
 ## 已知問題
 
 這一節的每個小節列的，都是 `main` 已經有的行為裡發現的問題，大多是補寫 spec 時發現的。已有 plan 的修正方式見該 plan，其餘等寫 plan 時再決定。
-
-### 登入與帳號修正
-
-讓使用者在多分頁同時換發 token 時維持登入、換綁後作廢目前瀏覽器的舊 refresh token，並正確處理 Google 資料缺漏、CSRF 失敗、名字驗證與換綁提示；登入結束後清除帳號資料，登入後只返回近期在原分頁開啟的網址。試用資格以 Taigu 帳號判定，接受舊 Google 帳號重新註冊後再次試用。見 [plan 0005](0005-login-account-fixes.md)。
 
 ### 訂閱流程修正
 
