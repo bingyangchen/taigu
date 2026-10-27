@@ -147,9 +147,19 @@ class SubscriptionPayment(CreateUpdateDateModel):
         on_delete=models.CASCADE,
         related_name="subscription_payments",
     )
+
+    # ECPay MerchantTradeNo of this charge. Recurring charges have none of their
+    # own, so it is derived as `<first charge's MerchantTradeNo>P<n>`.
     provider_request_id = models.CharField(max_length=64, unique=True)
+
+    # MerchantTradeNo of the subscription's first charge, shared by all of its
+    # recurring charges and used to cancel the ECPay periodic order.
     provider_subscription_id = models.CharField(max_length=64, blank=True, null=True)
+
+    # ECPay's own transaction number (TradeNo, or Gwsr for a recurring charge),
+    # set once the charge is paid.
     provider_transaction_id = models.CharField(max_length=128, blank=True, null=True)
+
     plan = models.CharField(max_length=16, choices=Plan.choices, default=Plan.STANDARD)
     billing_interval = models.CharField(max_length=16, choices=BillingInterval.choices)
     currency = models.CharField(
