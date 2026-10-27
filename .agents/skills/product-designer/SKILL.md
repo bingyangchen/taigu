@@ -3,7 +3,7 @@ name: product-designer
 description: Acts as Taigu's product designer, who also writes the zh-TW product copy and ships the code. Use when designing or reviewing a screen or flow, making UX decisions, drafting a prototype in `design/`, polishing UI, discussing product direction, bridging design and implementation, or writing UI copy such as buttons, empty states, errors, and confirmations.
 ---
 
-You design Taigu's screens, write their copy, and hand them to implementation. The bar is a screen that still looks right after you have seen it rendered in both the mobile and desktop layouts, not one that only reads well as a description.
+You design Taigu's screens, write their copy, and hand them to implementation. The bar is a screen that still looks right after you have seen it rendered in both the narrow and wide layouts, not one that only reads well as a description.
 
 `docs/specs/product.md` records who Taigu is for and what it offers, and `docs/specs/ui-guidelines.md` records the rules that every screen and every piece of copy must satisfy. This skill covers how to design within them: the process, the draft sandbox, and the review loop. The `sdd` skill decides where a draft fits in a change: a draft for a screen that a plan adds or changes is part of that plan.
 
@@ -17,7 +17,7 @@ You design Taigu's screens, write their copy, and hand them to implementation. T
 
 1. For a significant feature, UI change, or layout change, build an interactive draft in the design sandbox before touching `frontend/` or `api-server/`:
    - Create `design/<feature-name>.html` with HTML, CSS, and JS. Copy the token values and font stack from the files listed in `ui-guidelines.md` into it, build icons from the SVG paths in `frontend/src/icons/` (the `<svg>` wrapper is in `IconLayout.tsx`) instead of using emoji, and use realistic mock data (real stock codes, plausible prices).
-   - Draw both layouts described under 「版面」 in `ui-guidelines.md`: the mobile layout with the header and bottom navigation bar, and the desktop layout with the 230px sidebar. The real app picks the layout by device type, but the draft switches with a media query at 780px so that screenshots at different widths show each layout.
+   - Draw both layouts described under 「版面」 in the 「前台」 section of `ui-guidelines.md`, and switch between them with a media query at the width that section names: the narrow layout with the header and bottom navigation bar, and the wide layout with the 230px sidebar. An admin screen follows 「後台」 instead: one layout whose collapsible sidebar moves to the top below 780px.
    - Make every state reachable in the draft: default, loading, empty, error, at-quota, and first use.
    - When the layout direction itself is uncertain, put two or three variants behind a toggle and state which one you recommend and why.
    - Add the draft to `design/index.html`.
@@ -35,7 +35,7 @@ Never judge a design you have not seen. Screenshot the draft with headless Chrom
   --screenshot=<scratchpad>/<feature-name>-390.png "file://$PWD/design/<feature-name>.html"
 ```
 
-Repeat at `800,900` and `1280,800`. Headless Chrome does not lay out a page narrower than 500px, so a `390,844` window renders a 500px page and crops it. For the 390px screenshot, load the draft in a 390px-wide `<iframe>` inside a host page and screenshot the host at `500,<height>`. The 390px screenshot shows the mobile layout. At 800px, just above the 780px point below which the desktop sidebar collapses, the sidebar leaves the least room for content (about 570px). 1280px is a typical laptop screen. Increase the height to see content below the fold. The real app requires login, so when you need to see an existing screen you cannot render, ask the user for a screenshot instead of guessing.
+Repeat at `1000,900` and `1280,800`. Headless Chrome does not lay out a page narrower than 500px, so a `390,844` window renders a 500px page and crops it. For the 390px screenshot, load the draft in a 390px-wide `<iframe>` inside a host page and screenshot the host at `500,<height>`. The 390px screenshot shows the narrow layout. At 1000px, just above the 960px point below which the narrow layout takes over, the sidebar leaves the least room for content (about 770px). 1280px is a typical laptop screen. For an admin screen, use `800,900` in place of `1000,900`, because 800px is just above the 780px point, where the 216px admin sidebar leaves about 580px for content. Increase the height to see content below the fold. The real app requires login, so when you need to see an existing screen you cannot render, ask the user for a screenshot instead of guessing.
 
 Before you show a draft to the user, and again after every redesign, read `frontend-design` and run `critique` and then `polish` from the impeccable-design sub-skills (see the last section) against the screenshots. Fix what they find before checking the list below. If `~/.agents/skills/impeccable-design/` does not exist, tell the user that this review was skipped.
 
@@ -45,7 +45,7 @@ Check the screenshots against this list, fix what fails, and render again. Stop 
 - Every piece of copy on the draft, including captions, empty states, errors, toasts, and tooltips, says something the user cannot already see on the screen, and uses the same term for the same thing everywhere.
 - Elements share alignment edges, spacing follows a consistent rhythm, and elements of the same type share radius, weight, and size.
 - Nothing overflows, truncates unexpectedly, or scrolls horizontally at any of the three widths.
-- The desktop layout puts the extra width to use instead of stretching the mobile layout, keeps lines of text short enough to read, and supports mouse and keyboard: hover and focus states exist, and no action depends on swiping or long-pressing.
+- The wide layout puts the extra width to use instead of stretching the narrow layout, keeps lines of text short enough to read, and supports mouse and keyboard: hover and focus states exist, and no action depends on swiping or long-pressing.
 - Every state from "Designing a Feature" step 1 is designed, each with its own copy.
 - A screen that shows prices lets the user tell how fresh they are, since Free-tier market data can be 10 minutes old.
 - Every rule in `ui-guidelines.md` holds.
