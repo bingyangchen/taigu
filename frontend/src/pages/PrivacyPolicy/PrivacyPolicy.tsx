@@ -43,7 +43,7 @@ class PrivacyPolicy extends React.Component<Props, State> {
           <h1>隱私權政策</h1>
         </div>
         <div className={styles.body}>
-          <div className={styles.effective_date}>最後更新日期：2026/10/26</div>
+          <div className={styles.effective_date}>最後更新日期：2026/10/28</div>
           <h2>適用範圍</h2>
           <p>
             本隱私權政策適用於您在 Taigu
@@ -63,6 +63,10 @@ class PrivacyPolicy extends React.Component<Props, State> {
               </li>
               <li>
                 您送出的問題回報內容、送出時使用本網站的方式，以及您的瀏覽器提供的瀏覽器與作業系統資訊（User-Agent）。
+              </li>
+              <li>
+                您訂閱 Standard
+                方案時的付款紀錄，包括付款週期、金額、付款時間，以及綠界科技（ECPay）提供的交易編號。付款在綠界科技的付款頁完成，本網站會把您的帳號編號與付款金額提供給綠界科技，以對應這筆付款，但不會取得您完整的信用卡卡號。
               </li>
             </ul>
           </p>

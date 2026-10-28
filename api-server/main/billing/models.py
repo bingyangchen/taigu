@@ -14,7 +14,6 @@ class Plan(models.TextChoices):
 class SubscriptionStatus(models.TextChoices):
     TRIALING = "trialing", "Trialing"
     ACTIVE = "active", "Active"
-    PAST_DUE = "past_due", "Past due"
     CANCELED = "canceled", "Canceled"
 
 
@@ -55,6 +54,21 @@ class BillingProfile(CreateUpdateDateModel):
     current_period_ends_at = models.DateTimeField(blank=True, null=True)
     cancel_at_period_end = models.BooleanField(default=False)
 
+    # The payment that made the subscription auto-renewing. Its ECPay periodic order
+    # is the subscription's own (BILL-R27), and its paid_at anchors the end of every
+    # period (BILL-R14).
+    initial_payment = models.ForeignKey(
+        "SubscriptionPayment",
+        on_delete=models.SET_NULL,
+        related_name="+",
+        blank=True,
+        null=True,
+    )
+
+    # Whether the last subscription ended because a period went unpaid (BILL-R22),
+    # with no subscription since.
+    ended_by_failed_renewal = models.BooleanField(default=False, db_default=False)
+
     class Meta:
         db_table = "billing_profile"
         indexes = [
@@ -80,7 +94,6 @@ class BillingProfile(CreateUpdateDateModel):
                         subscription_status__in=[
                             SubscriptionStatus.TRIALING,
                             SubscriptionStatus.ACTIVE,
-                            SubscriptionStatus.PAST_DUE,
                         ]
                     )
                 ),
@@ -98,12 +111,7 @@ class BillingProfile(CreateUpdateDateModel):
             models.CheckConstraint(
                 name="billing_profile_period_dates",
                 condition=(
-                    ~models.Q(
-                        subscription_status__in=[
-                            SubscriptionStatus.ACTIVE,
-                            SubscriptionStatus.PAST_DUE,
-                        ]
-                    )
+                    ~models.Q(subscription_status=SubscriptionStatus.ACTIVE)
                     | (
                         models.Q(current_period_started_at__isnull=False)
                         & models.Q(current_period_ends_at__isnull=False)
@@ -116,12 +124,7 @@ class BillingProfile(CreateUpdateDateModel):
                     models.Q(cancel_at_period_end=False)
                     | (
                         models.Q(plan=Plan.STANDARD)
-                        & models.Q(
-                            subscription_status__in=[
-                                SubscriptionStatus.ACTIVE,
-                                SubscriptionStatus.PAST_DUE,
-                            ]
-                        )
+                        & models.Q(subscription_status=SubscriptionStatus.ACTIVE)
                     )
                 ),
             ),
@@ -173,6 +176,12 @@ class SubscriptionPayment(CreateUpdateDateModel):
     failure_message = models.CharField(max_length=256, blank=True)
     raw_response = models.JSONField(default=dict, blank=True)
 
+    # Set while the ECPay periodic order of a payment that arrived after the
+    # subscription was already auto-renewing still has to be terminated (BILL-R27).
+    provider_subscription_termination_pending = models.BooleanField(
+        default=False, db_default=False
+    )
+
     class Meta:
         db_table = "subscription_payment"
         indexes = [
@@ -183,6 +192,11 @@ class SubscriptionPayment(CreateUpdateDateModel):
             models.Index(
                 fields=["user", "provider_subscription_id", "-created_at"],
                 name="sub_payment_subscription_idx",
+            ),
+            models.Index(
+                fields=["provider_subscription_termination_pending"],
+                condition=models.Q(provider_subscription_termination_pending=True),
+                name="sub_payment_termination_idx",
             ),
         ]
         constraints = [

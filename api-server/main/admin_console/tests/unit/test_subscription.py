@@ -287,13 +287,6 @@ class TestSubscriptionStatusCounts:
         for i in range(2):
             self._create_active(f"active{i}", later, cancel_at_period_end=False)
         self._create_active("stopped", later, cancel_at_period_end=True)
-        self._create_profile(
-            "past_due",
-            plan=Plan.STANDARD,
-            subscription_status=SubscriptionStatus.PAST_DUE,
-            current_period_started_at=timezone.now() - timedelta(days=33),
-            current_period_ends_at=timezone.now() - timedelta(days=2),
-        )
         unsubscribed = [self._create_unsubscribed(f"free{i}") for i in range(4)]
         StandardWhitelist.objects.create(user=unsubscribed[0])
 
@@ -301,7 +294,6 @@ class TestSubscriptionStatusCounts:
             "trialing": 3,
             "auto_renewing": 2,
             "auto_renewal_stopped": 1,
-            "past_due": 1,
             "unsubscribed": 4,
         }
         assert count_whitelisted_users() == 1
@@ -349,10 +341,7 @@ class TestSubscriptionStatusCounts:
             "a", timezone.now() - timedelta(hours=1), cancel_at_period_end=False
         )
 
-        counts = get_subscription_status_counts()
-
-        assert counts["auto_renewing"] == 1
-        assert counts["past_due"] == 0
+        assert get_subscription_status_counts()["auto_renewing"] == 1
 
 
 @pytest.mark.django_db

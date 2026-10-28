@@ -24,6 +24,24 @@
   width: 100%;
 }
 
+.loadFailure {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 720px;
+  padding: 32px 16px;
+  text-align: center;
+
+  & > p {
+    margin: 0;
+    color: _.$deep-gray;
+    line-height: 1.6;
+  }
+}
+
 .notice {
   box-sizing: border-box;
   max-width: 720px;

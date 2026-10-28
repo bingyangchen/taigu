@@ -1,29 +1,26 @@
 from types import SimpleNamespace
 
 import pytest
+import requests
 from _pytest.monkeypatch import MonkeyPatch
 from django.test import RequestFactory
 
 from main.billing import views
 from main.billing.services.ecpay import (
+    EcpayApiError,
     EcpayClient,
-    EcpayConfig,
     generate_check_mac_value,
     generate_merchant_trade_no,
     get_aio_order_result_url,
     get_ecpay_checkout_result_url,
     verify_check_mac_value,
 )
+from main.billing.tests.unit.fake_ecpay import STAGE_ECPAY_CONFIG
 
 
 class ConfiguredEcpayClient(EcpayClient):
     def __init__(self) -> None:
-        self.config = EcpayConfig(
-            merchant_id="3002607",
-            hash_key="pwFHCqoQZGmho4w6",
-            hash_iv="EkRm7iFT261dpevs",
-            aio_base_url="https://payment-stage.ecpay.com.tw",
-        )
+        self.config = STAGE_ECPAY_CONFIG
 
 
 def test_generate_merchant_trade_no() -> None:
@@ -199,3 +196,20 @@ def test_ecpay_order_result_redirects_to_checkout_result(
         response["Location"]
         == "https://local.taigu.tw/settings/current-plan?checkout=ecpay"
     )
+
+
+def test_periodic_order_http_error_raises_ecpay_api_error(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """
+    Callers treat EcpayApiError as ECPay being unavailable (BILL-R22, BILL-R23), so
+    an HTTP error must not escape as another exception.
+    """
+    response = requests.Response()
+    response.status_code = 503
+    monkeypatch.setattr(
+        "main.billing.services.ecpay.requests.post", lambda *args, **kwargs: response
+    )
+
+    with pytest.raises(EcpayApiError):
+        ConfiguredEcpayClient().cancel_aio_periodic_order(merchant_trade_no="S123")

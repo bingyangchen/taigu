@@ -282,8 +282,49 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 ## 付款與額度
 
-- 綠界（ECPay）用 server 對 server 的通知，把付款結果與每期扣款的結果送到後端。後端回 `1|OK` 表示收到；回 `0|ERROR` 時，綠界會再送一次通知。
+- 綠界（ECPay）用 server 對 server 的通知，把第一次付款的結果送到 `ReturnURL`，把之後每期扣款的結果送到 `PeriodReturnURL`，後端回 `1|OK` 表示收到。後端對 `ReturnURL` 回 `0|ERROR` 時，綠界會在 5 到 15 分鐘後再送一次，當天共送 4 次（[綠界文件 2878](https://developers.ecpay.com.tw/2878/)）；`PeriodReturnURL` 每期只送一次通知（[綠界文件 5631](https://developers.ecpay.com.tw/5631/)），文件沒有寫到重送。
 - 後端寫入資料之前，先用 `api-server/main/billing/services/entitlements.py` 檢查使用者的方案還有沒有額度，額度不足時回 402 與 `QUOTA_EXCEEDED`，前端收到這個回應時顯示 `PlanUpsellModal`（見 BILL-R9）。
+
+### 綠界的定期扣款
+
+後端依賴綠界定期扣款的這些行為：
+
+- 每期的扣款日固定在第一次扣款的那一天，那個月沒有那一天時改在月底；扣款失敗時，沒有補授權的話，綠界要到下一期的扣款日才會再扣款（[綠界文件 2868](https://developers.ecpay.com.tw/2868/)）。BILL-R14 依此推算每期的結束時間，BILL-R22 依此在本期沒有扣款成功時結束訂閱。
+- 授權時卡片已經到期，或連續 6 次扣款失敗時，綠界自動終止定期扣款（[綠界客服中心 16214](https://support.ecpay.com.tw/16214/)）。
+- 終止的定期扣款不能重新啟用（[綠界文件 2900](https://developers.ecpay.com.tw/2900/)）。
+
+2026-10 在綠界的 stage 環境（測試特店 3002607）實測的結果如下：
+
+- `QueryCreditCardPeriodInfo` 回傳的 `TotalSuccessTimes` 算進第一次扣款，`ExecLog` 也列出第一次扣款，所以剛付款的定期扣款，`TotalSuccessTimes` 是 1。
+- 請綠界終止已經終止的定期扣款時，`CreditCardPeriodAction` 回傳 `RtnCode` `90100149`（「該訂單狀態為停用中」），後端照 BILL-R22 算成終止成功；查詢這份定期扣款時，`RtnCode` 是 1，`ExecStatus` 是 `0`。
+- 查詢與終止不存在的定期扣款時，分別回傳 `RtnCode` `10200047` 與 `90100150`。
+- 綠界每期的扣款日從第一次授權的日期起算，還是從結帳建立的時間（`MerchantTradeDate`）起算、在扣款日的哪個時段扣款，以及第二期以後 `PeriodReturnURL` 送來的 `TotalSuccessTimes` 是不是跟查詢的結果一樣算進第一次扣款，都還沒有實測，因為 stage 環境要等一個月才會扣第二期。要測的項目記在 roadmap 的「訂閱流程少見情況的修正」。
+
+### 付款紀錄
+
+後端用 `SubscriptionPayment` 記下每一筆付款與每期扣款，下面這些機制跨了好幾個檔案：
+
+- `BillingProfile.initial_payment` 指向讓訂閱變成自動續訂中的那筆付款。這筆付款的 `provider_subscription_id`（綠界的 `MerchantTradeNo`）就是 BILL-R27 所說訂閱自己的定期扣款，`paid_at` 則是 BILL-R14 推算每期結束時間的起點。自動續訂中的訂閱一定有 `initial_payment`；沒有的話，後端不知道要向綠界查詢或終止哪一份定期扣款，所以停止自動續訂時回錯誤，每天的到期處理也不處理這份訂閱，只記下錯誤。
+- 定期扣款成功的紀錄，`provider_request_id` 是「第一次付款的 `MerchantTradeNo`」加上 `P` 與 `TotalSuccessTimes`。後端從 `PeriodReturnURL` 的通知記下扣款，或照 BILL-R22 從查詢的結果記下扣款時，都用這個編號，所以只要兩邊的 `TotalSuccessTimes` 一樣算進第一次扣款，同一次扣款不論先從哪一邊記下，另一邊都會對到同一筆紀錄，本期只延後一次（BILL-R20）；通知這一邊還沒有實測（見「綠界的定期扣款」）。扣款失敗的紀錄改用 `F` 加上通知裡的 `Gwsr`，因為扣款失敗不會增加 `TotalSuccessTimes`。
+- 後端送給綠界的定期扣款 request，連線與讀取的逾時加起來不超過 13 秒，因為等待期內停止自動續訂要依序查詢與終止，兩個 request 都要在 gunicorn 預設 30 秒的 worker timeout 之內結束，後端才回得了 BILL-R23 的錯誤訊息。
+- 訂閱已經是自動續訂中時又付款成功的那筆付款（BILL-R27），在綠界終止它的定期扣款之前，`provider_subscription_termination_pending` 是 true，每天的到期處理依這個欄位再請綠界終止。
+- 每天的到期處理逐份處理等待期內的訂閱，處理其中一份時綠界回傳錯誤的話，這份訂閱留到下一次再處理，不影響其他訂閱。
+
+### 等待期的判定
+
+等待期內的訂閱何時、依什麼判定這一期有沒有扣款成功，見 BILL-R21 與 BILL-R22。
+
+> 設計理由：不依定期扣款失敗的通知判定，因為綠界文件對扣款失敗時會不會通知寫得前後不一致，依失敗通知判定的路徑可能永遠不會執行，仍要靠查詢處理沒收到通知的情況。在本期結束日的隔天查詢的代價是，本期在 00:00 結束的使用者，等待期最長約 27 小時 40 分。完整討論見 [0006](../plans/archive/0006-billing-fixes.md)。
+
+### 等待期內停止自動續訂
+
+等待期內停止自動續訂的處理見 BILL-R23。
+
+> 設計理由：等待期內不能停止的話，知道卡片刷不過的使用者最多要等約一天才能重新訂閱；停止之前不查詢的話，後端漏收這一期的成功通知時，已經付了這一期的使用者會被當成未訂閱。完整討論見 [0006](../plans/archive/0006-billing-fixes.md)。
+
+### 從綠界付款頁回到方案頁
+
+2026-10 在 macOS 的 Chrome（headless）以 dev 環境實測，從綠界的付款頁按上一頁時，瀏覽器重新載入方案頁，沒有從 bfcache 還原。重新載入的網址帶著「確認訂閱 Standard」視窗加上的 `##`，下一個開啟的視窗再加上 `##` 時，新的歷史紀錄跟目前的網址相同，設定頁（`frontend/src/pages/Settings/Settings.tsx`）會從這筆重複的紀錄往回退，視窗因此一開啟就關閉，所以前端載入方案頁時先把 `##` 拿掉。從 bfcache 還原的情況還沒有實測：前端在 `pageshow` 事件的 `persisted` 是 true 時關閉視窗，並讓付款週期的按鈕可以再點選（BILL-R17.2），這段處理只用手動觸發的 `pageshow` 事件確認過，要測的項目記在 roadmap 的「訂閱流程少見情況的修正」。
 
 ### 白名單
 
@@ -345,7 +386,7 @@ sequenceDiagram
 
 > 設計理由：統計不存成每天的快照，因為帳號只會由開發者依使用者的要求刪除，刪除後過去的數字跟著變小的影響不大，而且留存與試用轉付費是依時間分批，就算每天存下快照，帳號刪除之後各批的數字還是會變。完整討論見 [0004](../plans/archive/0004-admin-console.md)。
 
-各訂閱狀態的人數（ADMIN-R10）讀的是 `BillingProfile` 記下的 `subscription_status` 與 `cancel_at_period_end`：`subscription_status` 是 `past_due` 的使用者一律算成扣款失敗，不看 `cancel_at_period_end`；沒有 `BillingProfile` 的使用者，就是 ADMIN-R10 所說沒有記下訂閱狀態的使用者。
+各訂閱狀態的人數（ADMIN-R10）讀的是 `BillingProfile` 記下的 `subscription_status` 與 `cancel_at_period_end`；沒有 `BillingProfile` 的使用者，就是 ADMIN-R10 所說還沒記下訂閱狀態的使用者。
 
 ## Domain 規則
 

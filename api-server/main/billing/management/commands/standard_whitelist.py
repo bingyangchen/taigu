@@ -52,14 +52,6 @@ class Command(BaseCommand):
                     "page."
                 )
             )
-        elif profile.subscription_status == SubscriptionStatus.PAST_DUE:
-            self.stdout.write(
-                self.style.WARNING(
-                    "The user's last periodic charge failed, so ECPay may keep "
-                    "charging the user, and the user cannot stop auto-renewal on the "
-                    "plan page for now."
-                )
-            )
 
     def _remove(self, user_identifier: str) -> None:
         user = _get_user(user_identifier)

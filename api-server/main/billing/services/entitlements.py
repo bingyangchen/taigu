@@ -13,6 +13,7 @@ from main.billing.models import (
     StandardWhitelist,
     SubscriptionStatus,
 )
+from main.billing.services.periods import get_next_period_end
 from main.cash_dividend.models import CashDividendRecord
 from main.favorite.models import Favorite
 from main.trade_plan.models import TradePlan
@@ -44,8 +45,11 @@ class Entitlements:
     billing_interval: str
     trial_ends_at: str | None
     current_period_ends_at: str | None
+    next_period_ends_at: str | None
     cancel_at_period_end: bool
     is_current_period_active: bool
+    is_awaiting_renewal: bool
+    ended_by_failed_renewal: bool
     is_whitelisted: bool
     market_refresh_interval_seconds: int
     quota: Quota
@@ -107,6 +111,28 @@ def is_standard_subscription_active(
     profile: BillingProfile, *, now: datetime | None = None
 ) -> bool:
     now = now or timezone.now()
+    return _is_within_current_period(profile, now=now) or is_awaiting_renewal(
+        profile, now=now
+    )
+
+
+def is_auto_renewing(profile: BillingProfile) -> bool:
+    return (
+        profile.plan == Plan.STANDARD
+        and profile.subscription_status == SubscriptionStatus.ACTIVE
+        and not profile.cancel_at_period_end
+    )
+
+
+def is_awaiting_renewal(profile: BillingProfile, *, now: datetime) -> bool:
+    return (
+        is_auto_renewing(profile)
+        and profile.current_period_ends_at is not None
+        and profile.current_period_ends_at <= now
+    )
+
+
+def _is_within_current_period(profile: BillingProfile, *, now: datetime) -> bool:
     return (
         profile.plan == Plan.STANDARD
         and profile.subscription_status == SubscriptionStatus.ACTIVE
@@ -166,6 +192,8 @@ def _get_usage(user: User) -> Usage:
 
 def _get_entitlements(user: User) -> Entitlements:
     profile = ensure_billing_profile(user)
+    now = timezone.now()
+    is_awaiting = is_awaiting_renewal(profile, now=now)
     is_whitelisted = is_standard_whitelisted(user)
     effective_plan = _get_effective_plan(profile, is_whitelisted=is_whitelisted)
     quota = STANDARD_QUOTA if effective_plan == Plan.STANDARD else FREE_QUOTA
@@ -181,8 +209,15 @@ def _get_entitlements(user: User) -> Entitlements:
             if profile.current_period_ends_at
             else None
         ),
+        next_period_ends_at=(
+            get_next_period_end(profile).isoformat()
+            if is_awaiting and profile.initial_payment_id
+            else None
+        ),
         cancel_at_period_end=profile.cancel_at_period_end,
-        is_current_period_active=is_standard_subscription_active(profile),
+        is_current_period_active=_is_within_current_period(profile, now=now),
+        is_awaiting_renewal=is_awaiting,
+        ended_by_failed_renewal=profile.ended_by_failed_renewal,
         is_whitelisted=is_whitelisted,
         market_refresh_interval_seconds=30 if effective_plan == Plan.STANDARD else 600,
         quota=quota,
@@ -198,8 +233,11 @@ def serialize_entitlements(user: User) -> dict:
         "billing_interval": entitlements.billing_interval,
         "trial_ends_at": entitlements.trial_ends_at,
         "current_period_ends_at": entitlements.current_period_ends_at,
+        "next_period_ends_at": entitlements.next_period_ends_at,
         "cancel_at_period_end": entitlements.cancel_at_period_end,
         "is_current_period_active": entitlements.is_current_period_active,
+        "is_awaiting_renewal": entitlements.is_awaiting_renewal,
+        "ended_by_failed_renewal": entitlements.ended_by_failed_renewal,
         "is_whitelisted": entitlements.is_whitelisted,
         "market_refresh_interval_seconds": entitlements.market_refresh_interval_seconds,
         "quota": asdict(entitlements.quota),
