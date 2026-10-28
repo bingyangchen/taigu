@@ -9,8 +9,10 @@ from main.account import OAuthOrganization
 from main.account.models import User
 from main.billing.models import (
     BillingProfile,
+    PaymentStatus,
     Plan,
     StandardWhitelist,
+    SubscriptionPayment,
     SubscriptionStatus,
 )
 from main.billing.services.entitlements import (
@@ -80,10 +82,21 @@ class TestEntitlements:
     @pytest.mark.scenario("BILL-R1.6")
     def test_waiting_period_keeps_standard(self, user: User) -> None:
         period_ends_at = timezone.now() - timedelta(hours=1)
+        initial_payment = SubscriptionPayment.objects.create(
+            user=user,
+            provider_request_id="S1",
+            provider_subscription_id="S1",
+            provider_transaction_id="T1",
+            billing_interval="month",
+            amount=65,
+            status=PaymentStatus.PAID,
+            paid_at=period_ends_at - timedelta(days=31),
+        )
         BillingProfile.objects.create(
             user=user,
             plan=Plan.STANDARD,
             subscription_status=SubscriptionStatus.ACTIVE,
+            initial_payment=initial_payment,
             current_period_started_at=period_ends_at - timedelta(days=31),
             current_period_ends_at=period_ends_at,
         )
@@ -235,10 +248,21 @@ class TestStandardWhitelistEntitlements:
         layout and the stop-auto-renewal button.
         """
         period_ends_at = timezone.now() + period_ends_in
+        initial_payment = SubscriptionPayment.objects.create(
+            user=user,
+            provider_request_id="S1",
+            provider_subscription_id="S1",
+            provider_transaction_id="T1",
+            billing_interval="month",
+            amount=65,
+            status=PaymentStatus.PAID,
+            paid_at=period_ends_at - timedelta(days=31),
+        )
         BillingProfile.objects.create(
             user=user,
             plan=Plan.STANDARD,
             subscription_status=SubscriptionStatus.ACTIVE,
+            initial_payment=initial_payment,
             current_period_started_at=period_ends_at - timedelta(days=31),
             current_period_ends_at=period_ends_at,
         )

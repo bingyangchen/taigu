@@ -14,7 +14,7 @@
 - 「升級提示視窗」指額度擋下新增時出現、有「查看 Standard 方案」按鈕的視窗；「關閉升級提示視窗」指點這個視窗右上角的關閉按鈕。
 - 「從方案頁前往綠界」指在方案頁的「方案選擇」區塊點那一節指定的付款週期，在「確認訂閱 Standard」視窗點「前往綠界付款」，等瀏覽器換到綠界的付款頁之後，按瀏覽器的「上一頁」回到方案頁，不在綠界付款。
 
-「設定訂閱狀態」指令會刪除這個帳號的付款紀錄，再把訂閱設成 `STATE` 指定的狀態：`'trialing'` 是試用中，試用期還剩 31 天；`'active'` 是月繳的自動續訂中，本期還剩 20 天；`'stopped'` 是月繳的已停止自動續訂，本期還剩 20 天；`'awaiting'` 是月繳的自動續訂中，本期在 1 小時前結束，後端還沒確定這一期有沒有扣款成功；`'unsubscribed'` 是未訂閱，試用期在 9 天前結束，沒有訂閱過。這個指令建立的訂閱沒有付款紀錄，後端不知道要終止哪一份定期扣款，所以 `'active'` 與 `'awaiting'` 的訂閱要停止自動續訂時，後端會回錯誤；要停止自動續訂的各節改用「建立已付款的訂閱」指令。
+「設定訂閱狀態」指令會刪除這個帳號的付款紀錄，再把訂閱設成 `STATE` 指定的狀態：`'trialing'` 是試用中，試用期還剩 31 天；`'active'` 是月繳的自動續訂中，本期還剩 20 天；`'stopped'` 是月繳的已停止自動續訂，本期還剩 20 天；`'unsubscribed'` 是未訂閱，試用期在 9 天前結束，沒有訂閱過。這個指令建立的訂閱沒有付款紀錄，後端不知道要終止哪一份定期扣款，所以 `'active'` 的訂閱要停止自動續訂時，後端會回錯誤；要停止自動續訂或進入等待期的各節改用「建立已付款的訂閱」指令。
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -25,13 +25,11 @@ from django.utils import timezone
 from main.billing.models import BillingProfile, SubscriptionPayment
 now = timezone.now()
 day = timedelta(days=1)
-hour = timedelta(hours=1)
 SubscriptionPayment.objects.filter(user__email=EMAIL).delete()
 values = {
     'trialing': dict(plan='standard', subscription_status='trialing', trial_ends_at=now + 31 * day, current_period_started_at=None, current_period_ends_at=None, cancel_at_period_end=False),
     'active': dict(plan='standard', subscription_status='active', trial_ends_at=now - 9 * day, current_period_started_at=now - 10 * day, current_period_ends_at=now + 20 * day, cancel_at_period_end=False),
     'stopped': dict(plan='standard', subscription_status='active', trial_ends_at=now - 9 * day, current_period_started_at=now - 10 * day, current_period_ends_at=now + 20 * day, cancel_at_period_end=True),
-    'awaiting': dict(plan='standard', subscription_status='active', trial_ends_at=now - 9 * day, current_period_started_at=now - 31 * day - hour, current_period_ends_at=now - hour, cancel_at_period_end=False),
     'unsubscribed': dict(plan='free', subscription_status='canceled', trial_ends_at=now - 9 * day, current_period_started_at=None, current_period_ends_at=None, cancel_at_period_end=False),
 }[STATE]
 BillingProfile.objects.filter(user__email=EMAIL).update(billing_interval='month', trial_started_at=values['trial_ends_at'] - 31 * day, ended_by_failed_renewal=False, **values)
@@ -173,7 +171,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 
 前端沒有自動化 test，`test_waiting_period_keeps_standard` 只驗證後端判定的方案。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'awaiting'`。
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
 2. 開啟方案頁。
 
 預期：「目前方案」區塊顯示「Standard」，方案頁沒有「額度使用」區塊。
@@ -457,7 +455,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'awaiting'`。
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
 2. 開啟方案頁。
 
 預期：「目前方案」區塊顯示「Standard」、標籤「月繳」、「NT$65/月」、「扣款日 <日期>」與「正在確認本期的扣款結果，確認前仍可使用 Standard 方案。」，日期是 1 小時前的日期。
@@ -487,7 +485,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'awaiting'`。
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
 2. 執行「加入白名單」指令。
 3. 開啟方案頁。
 
@@ -628,7 +626,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'awaiting'`。
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
 2. 開啟方案頁。
 
 預期：方案頁沒有「方案選擇」區塊。
@@ -932,7 +930,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'awaiting'`。
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
 2. 執行「加入白名單」指令。
 3. 開啟方案頁。
 
@@ -978,7 +976,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 
 前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'awaiting'`。
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
 2. 開啟方案頁。
 
 預期：「訂閱管理」區塊寫「本期的扣款結果還在確認中。停止後不會再自動扣款。」，並有「停止自動續訂」按鈕。

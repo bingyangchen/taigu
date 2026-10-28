@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
+from io import StringIO
 from zoneinfo import ZoneInfo
 
 import pytest
 import requests
 from _pytest.monkeypatch import MonkeyPatch
+from django.core.management import call_command
 from django.utils import timezone
 
 from main.account import OAuthOrganization
@@ -24,6 +26,7 @@ from main.billing.services.subscription import (
     SUPERSEDED_PAYMENT_FAILURE_MESSAGE,
     SubscriptionPaymentNotChargeableError,
     SubscriptionPaymentValidationError,
+    _settle_renewal,
     create_subscription_checkout,
     expire_stale_pending_payments,
     mark_payment_failed,
@@ -31,7 +34,6 @@ from main.billing.services.subscription import (
     process_period_payment_callback,
     reconcile_due_billing_profiles,
     stop_auto_renewal,
-    terminate_pending_provider_subscriptions,
 )
 from main.billing.tests.unit.fake_ecpay import (
     ORDER_DISABLED_RTN_CODE,
@@ -556,6 +558,37 @@ class TestRenewalSettlement:
         assert ecpay.terminated_trade_nos == ["S1"]
         assert _get_profile(user).subscription_status == SubscriptionStatus.CANCELED
 
+    def test_profile_that_left_the_waiting_period_is_not_settled(
+        self, user: User, ecpay: FakeEcpay, monkeypatch: MonkeyPatch
+    ) -> None:
+        """
+        The daily job lists the waiting subscriptions before settling them one by
+        one, so a subscription can leave the waiting period in between, and its
+        ECPay order must then be left alone.
+        """
+        _subscribe(user, ecpay, monkeypatch, paid_at=_taipei_time(2026, 9, 20, 10, 0))
+        profile = _get_profile(user)
+        BillingProfile.objects.filter(pk=profile.pk).update(cancel_at_period_end=True)
+
+        _settle_renewal(profile.pk, now=_taipei_time(2026, 10, 21, 3, 40))
+
+        assert ecpay.queried_trade_nos == []
+        assert ecpay.terminated_trade_nos == []
+
+    @pytest.mark.scenario("BILL-R23.9")
+    def test_waiting_period_reports_next_period_end(
+        self, user: User, ecpay: FakeEcpay, monkeypatch: MonkeyPatch
+    ) -> None:
+        _subscribe(user, ecpay, monkeypatch, paid_at=_taipei_time(2026, 9, 21, 10, 0))
+        _freeze_time(monkeypatch, _taipei_time(2026, 10, 21, 15, 0))
+
+        subscription = serialize_entitlements(user)
+
+        assert subscription["is_awaiting_renewal"] is True
+        assert subscription["next_period_ends_at"] == (
+            _taipei_time(2026, 11, 21, 10, 0).isoformat()
+        )
+
     @pytest.mark.scenario("BILL-R10.13")
     def test_resubscribing_clears_failed_renewal(
         self, user: User, ecpay: FakeEcpay, monkeypatch: MonkeyPatch
@@ -764,7 +797,7 @@ class TestPaymentWhileAutoRenewing:
         )
         assert yearly.provider_subscription_termination_pending is True
 
-        terminate_pending_provider_subscriptions()
+        call_command("reconcile_due_billing_profiles", stdout=StringIO())
 
         assert ecpay.terminated_trade_nos == ["S2", "S2"]
 
@@ -782,11 +815,11 @@ class TestPaymentWhileAutoRenewing:
             trade_no="S2",
         )
         ecpay.termination_rtn_code = ORDER_DISABLED_RTN_CODE
-        terminate_pending_provider_subscriptions()
+        call_command("reconcile_due_billing_profiles", stdout=StringIO())
         assert ecpay.terminated_trade_nos == ["S2", "S2"]
         ecpay.terminated_trade_nos.clear()
 
-        terminate_pending_provider_subscriptions()
+        call_command("reconcile_due_billing_profiles", stdout=StringIO())
 
         assert ecpay.terminated_trade_nos == []
 

@@ -31,7 +31,11 @@ from main.billing.services.entitlements import (
     is_standard_subscription_active,
     is_standard_whitelisted,
 )
-from main.billing.services.periods import get_next_period_end, get_period_end
+from main.billing.services.periods import (
+    get_initial_payment,
+    get_next_period_end,
+    get_period_end,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +168,7 @@ def stop_auto_renewal(user: User) -> None:
     if not is_auto_renewing(profile):
         raise SubscriptionNotRenewingError("No active subscription to cancel")
 
-    initial_payment = _get_initial_payment(profile)
+    initial_payment = get_initial_payment(profile)
     ecpay_client = EcpayClient()
     unrecorded_charge = (
         _query_unrecorded_charge(initial_payment, client=ecpay_client)
@@ -194,7 +198,7 @@ def _settle_renewal(profile_id: int, *, now: datetime) -> None:
     )
     if not is_awaiting_renewal(profile, now=now):
         return
-    initial_payment = _get_initial_payment(profile)
+    initial_payment = get_initial_payment(profile)
     ecpay_client = EcpayClient()
     unrecorded_charge = _query_unrecorded_charge(initial_payment, client=ecpay_client)
     if unrecorded_charge is not None:
@@ -216,14 +220,6 @@ def _settle_renewal(profile_id: int, *, now: datetime) -> None:
             # periodic order is terminated now and will not charge again.
             profile.cancel_at_period_end = True
             profile.save()
-
-
-def _get_initial_payment(profile: BillingProfile) -> SubscriptionPayment:
-    if profile.initial_payment is None:
-        raise ValueError(
-            f"Auto-renewing billing profile {profile.pk} has no initial payment"
-        )
-    return profile.initial_payment
 
 
 def _query_unrecorded_charge(
@@ -253,6 +249,7 @@ def _query_unrecorded_charge(
     if SubscriptionPayment.objects.filter(
         Q(provider_request_id=provider_request_id)
         | Q(
+            user=first_payment.user,
             provider_subscription_id=first_payment.provider_subscription_id,
             provider_transaction_id__in=[
                 charge.gwsr,
@@ -342,7 +339,7 @@ def _record_payment_paid(
     payment = SubscriptionPayment.objects.select_for_update().get(pk=payment.pk)
     if payment.status == PaymentStatus.PAID:
         return False
-    _mark_paid(payment, data, expected_merchant_id=expected_merchant_id)
+    _apply_paid_callback(payment, data, expected_merchant_id=expected_merchant_id)
     payment.provider_subscription_id = payment.provider_subscription_id or data.get(
         "OrderInfo", {}
     ).get("MerchantTradeNo")
@@ -379,7 +376,7 @@ def mark_payment_failed(provider_request_id: str, data: dict) -> None:
     payment.save()
 
 
-def _mark_paid(
+def _apply_paid_callback(
     payment: SubscriptionPayment, data: dict, *, expected_merchant_id: str | None
 ) -> None:
     order_info = data.get("OrderInfo", {})
@@ -525,7 +522,7 @@ def _record_period_charge(
             currency=STANDARD_CURRENCY,
             amount=int(order_info.get("TotalAmount") or first_payment.amount),
         )
-    _mark_paid(payment, data, expected_merchant_id=expected_merchant_id)
+    _apply_paid_callback(payment, data, expected_merchant_id=expected_merchant_id)
     payment.save()
 
     if profile.initial_payment_id == first_payment.pk and is_auto_renewing(profile):

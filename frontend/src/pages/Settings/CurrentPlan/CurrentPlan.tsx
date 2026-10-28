@@ -146,7 +146,10 @@ export default function CurrentPlan(): React.ReactElement {
         {noticeElement}
         <div className={styles.loadFailure} role="alert">
           <p>暫時無法取得方案資料，請稍後再試。</p>
-          <Button className="white border l" onClick={() => void loadBilling()}>
+          <Button
+            className={`white border l ${styles.reloadButton}`}
+            onClick={() => void loadBilling()}
+          >
             重新載入
           </Button>
         </div>

@@ -45,7 +45,6 @@ class Entitlements:
     billing_interval: str
     trial_ends_at: str | None
     current_period_ends_at: str | None
-    next_period_ends_at: str | None
     cancel_at_period_end: bool
     is_current_period_active: bool
     is_awaiting_renewal: bool
@@ -209,11 +208,6 @@ def _get_entitlements(user: User) -> Entitlements:
             if profile.current_period_ends_at
             else None
         ),
-        next_period_ends_at=(
-            get_next_period_end(profile).isoformat()
-            if is_awaiting and profile.initial_payment_id
-            else None
-        ),
         cancel_at_period_end=profile.cancel_at_period_end,
         is_current_period_active=_is_within_current_period(profile, now=now),
         is_awaiting_renewal=is_awaiting,
@@ -233,7 +227,13 @@ def serialize_entitlements(user: User) -> dict:
         "billing_interval": entitlements.billing_interval,
         "trial_ends_at": entitlements.trial_ends_at,
         "current_period_ends_at": entitlements.current_period_ends_at,
-        "next_period_ends_at": entitlements.next_period_ends_at,
+        "next_period_ends_at": (
+            get_next_period_end(
+                BillingProfile.objects.select_related("initial_payment").get(user=user)
+            ).isoformat()
+            if entitlements.is_awaiting_renewal
+            else None
+        ),
         "cancel_at_period_end": entitlements.cancel_at_period_end,
         "is_current_period_active": entitlements.is_current_period_active,
         "is_awaiting_renewal": entitlements.is_awaiting_renewal,
