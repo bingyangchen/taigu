@@ -10,8 +10,6 @@ def migrate_subscriptions(apps, schema_editor):
     BillingProfile = apps.get_model("billing", "BillingProfile")
     SubscriptionPayment = apps.get_model("billing", "SubscriptionPayment")
 
-    # The past-due status no longer exists; a past-due subscription is one whose
-    # period went unpaid (BILL-R22).
     BillingProfile.objects.filter(subscription_status="past_due").update(
         plan="free",
         subscription_status="canceled",
@@ -19,7 +17,6 @@ def migrate_subscriptions(apps, schema_editor):
         ended_by_failed_renewal=True,
     )
 
-    # A subscription's own periodic order is that of its latest paid first charge.
     BillingProfile.objects.filter(subscription_status="active").update(
         initial_payment=Subquery(
             SubscriptionPayment.objects.filter(

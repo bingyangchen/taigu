@@ -54,9 +54,7 @@ class BillingProfile(CreateUpdateDateModel):
     current_period_ends_at = models.DateTimeField(blank=True, null=True)
     cancel_at_period_end = models.BooleanField(default=False)
 
-    # The payment that made the subscription auto-renewing. Its ECPay periodic order
-    # is the subscription's own (BILL-R27), and its paid_at anchors the end of every
-    # period (BILL-R14).
+    # The first successful payment of the user's latest subscription.
     initial_payment = models.ForeignKey(
         "SubscriptionPayment",
         on_delete=models.SET_NULL,
@@ -65,8 +63,6 @@ class BillingProfile(CreateUpdateDateModel):
         null=True,
     )
 
-    # Whether the last subscription ended because a period went unpaid (BILL-R22),
-    # with no subscription since.
     ended_by_failed_renewal = models.BooleanField(default=False, db_default=False)
 
     class Meta:
