@@ -48,7 +48,6 @@ class EcpayPeriodicCharge:
 
 @dataclass(frozen=True)
 class EcpayPeriodicOrder:
-    # Counts the first charge too.
     total_success_times: int
     latest_successful_charge: EcpayPeriodicCharge | None
 

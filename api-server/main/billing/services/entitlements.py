@@ -192,7 +192,6 @@ def _get_usage(user: User) -> Usage:
 def _get_entitlements(user: User) -> Entitlements:
     profile = ensure_billing_profile(user)
     now = timezone.now()
-    is_awaiting = is_awaiting_renewal(profile, now=now)
     is_whitelisted = is_standard_whitelisted(user)
     effective_plan = _get_effective_plan(profile, is_whitelisted=is_whitelisted)
     quota = STANDARD_QUOTA if effective_plan == Plan.STANDARD else FREE_QUOTA
@@ -210,7 +209,7 @@ def _get_entitlements(user: User) -> Entitlements:
         ),
         cancel_at_period_end=profile.cancel_at_period_end,
         is_current_period_active=_is_within_current_period(profile, now=now),
-        is_awaiting_renewal=is_awaiting,
+        is_awaiting_renewal=is_awaiting_renewal(profile, now=now),
         ended_by_failed_renewal=profile.ended_by_failed_renewal,
         is_whitelisted=is_whitelisted,
         market_refresh_interval_seconds=30 if effective_plan == Plan.STANDARD else 600,

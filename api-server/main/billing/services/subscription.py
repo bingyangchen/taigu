@@ -123,6 +123,7 @@ def reconcile_due_billing_profiles(*, now: datetime | None = None) -> int:
             )
             continue
         settled_renewal_count += 1
+
     canceled_subscription_count = BillingProfile.objects.filter(
         plan=Plan.STANDARD,
         subscription_status=SubscriptionStatus.ACTIVE,
@@ -134,6 +135,7 @@ def reconcile_due_billing_profiles(*, now: datetime | None = None) -> int:
         cancel_at_period_end=False,
         updated_at=now,
     )
+
     expired_trial_count = BillingProfile.objects.filter(
         plan=Plan.STANDARD,
         subscription_status=SubscriptionStatus.TRIALING,
@@ -184,6 +186,7 @@ def stop_auto_renewal(user: User) -> None:
         profile = BillingProfile.objects.select_for_update().get(pk=profile.pk)
         if not is_auto_renewing(profile):
             return
+
         if profile.current_period_ends_at > timezone.now():
             profile.cancel_at_period_end = True
         else:
@@ -198,6 +201,7 @@ def _settle_renewal(profile_id: int, *, now: datetime) -> None:
     )
     if not is_awaiting_renewal(profile, now=now):
         return
+
     initial_payment = get_initial_payment(profile)
     ecpay_client = EcpayClient()
     unrecorded_charge = _query_unrecorded_charge(initial_payment, client=ecpay_client)
@@ -283,6 +287,7 @@ def _terminate_extra_provider_subscription(payment_id: uuid.UUID) -> bool:
             exc_info=True,
         )
         return False
+
     SubscriptionPayment.objects.filter(pk=payment_id).update(
         provider_subscription_termination_pending=False, updated_at=timezone.now()
     )
@@ -295,12 +300,15 @@ def _create_pending_subscription_payment(
 ) -> SubscriptionPayment:
     if interval not in STANDARD_PRICES:
         raise ValueError("Unsupported billing interval")
+
     ensure_billing_profile(user)
     profile = BillingProfile.objects.select_for_update().get(user=user)
     if is_standard_subscription_active(profile):
         raise SubscriptionPaymentNotChargeableError("Subscription is already active")
+
     if is_standard_whitelisted(user):
         raise SubscriptionPaymentNotChargeableError("User is on the Standard whitelist")
+
     SubscriptionPayment.objects.filter(
         user=user, plan=Plan.STANDARD, status=PaymentStatus.PENDING
     ).update(
@@ -339,6 +347,7 @@ def _record_payment_paid(
     payment = SubscriptionPayment.objects.select_for_update().get(pk=payment.pk)
     if payment.status == PaymentStatus.PAID:
         return False
+
     _apply_paid_callback(payment, data, expected_merchant_id=expected_merchant_id)
     payment.provider_subscription_id = payment.provider_subscription_id or data.get(
         "OrderInfo", {}
@@ -347,8 +356,8 @@ def _record_payment_paid(
         payment.provider_subscription_termination_pending = True
         payment.save()
         return True
-    payment.save()
 
+    payment.save()
     profile.plan = Plan.STANDARD
     profile.subscription_status = SubscriptionStatus.ACTIVE
     profile.billing_interval = payment.billing_interval
@@ -370,6 +379,7 @@ def mark_payment_failed(provider_request_id: str, data: dict) -> None:
     )
     if payment.status == PaymentStatus.PAID:
         return
+
     payment.status = PaymentStatus.FAILED
     payment.failure_message = data.get("RtnMsg", "")[:256]
     payment.raw_response = data
@@ -430,6 +440,7 @@ def _validate_paid_payment_callback(
     callback_amount = order_info.get("TotalAmount")
     if callback_amount is None and expected_merchant_id is not None:
         raise SubscriptionPaymentValidationError("Payment amount missing")
+
     if callback_amount is None:
         return
 
@@ -512,6 +523,7 @@ def _record_period_charge(
     )
     if payment is not None and payment.status == PaymentStatus.PAID:
         return
+
     if payment is None:
         payment = SubscriptionPayment(
             user=first_payment.user,

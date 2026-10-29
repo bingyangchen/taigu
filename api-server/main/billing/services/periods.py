@@ -7,8 +7,16 @@ from main.billing.models import BillingInterval, BillingProfile, SubscriptionPay
 
 
 def get_period_end(first_paid_at: datetime, interval: str, period: int) -> datetime:
-    # Counted in Taiwan time, so that a period ends on ECPay's charge day even when
-    # the first payment arrived between 00:00 and 08:00.
+    """
+    Calculate the period end using Taiwan calendar dates.
+
+    Adding calendar months or years in UTC can shift the billing date.
+    For a first payment at 2026-10-01 02:00 UTC+8
+    (2026-09-30 18:00 UTC), adding one month gives:
+
+    - Convert to UTC+8, then add one month: 2026-11-01 02:00 UTC+8.
+    - Add one month in UTC, then convert to UTC+8: 2026-10-31 02:00 UTC+8.
+    """
     started_at = timezone.localtime(first_paid_at)
     if interval == BillingInterval.YEAR:
         return started_at + relativedelta(years=period)
@@ -17,9 +25,9 @@ def get_period_end(first_paid_at: datetime, interval: str, period: int) -> datet
 
 def get_next_period_end(profile: BillingProfile) -> datetime:
     """
-    The end of the period after the current one, counted from the subscription's
-    first payment rather than from the current period's end, because a month
-    without the first payment's day shortens only that period (BILL-R14).
+    Counted from the subscription's first payment rather than from the current period's
+    end, because a month without the first payment's day shortens only that period
+    (BILL-R14).
     """
     first_paid_at = get_initial_payment(profile).paid_at
     started_at = timezone.localtime(first_paid_at)

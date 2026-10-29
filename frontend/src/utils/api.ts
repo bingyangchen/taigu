@@ -34,7 +34,6 @@ type ApiErrorPayload = {
 
 const CSRF_FAILED_MESSAGE = "無法完成操作，請重新整理後再試一次。";
 
-// The message of an error response whose body has none, such as a proxy's 502 page.
 export const UNKNOWN_API_ERROR_MESSAGE = "Unknown error occurred";
 
 export class ApiError extends Error {
