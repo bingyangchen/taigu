@@ -176,8 +176,8 @@ class SubscriptionPayment(CreateUpdateDateModel):
     failure_message = models.CharField(max_length=256, blank=True)
     raw_response = models.JSONField(default=dict, blank=True)
 
-    # Set while the ECPay periodic order of a payment that arrived after the
-    # subscription was already auto-renewing still has to be terminated (BILL-R27).
+    # Set when another payment succeeds while the subscription is auto-renewing.
+    # Cleared once this payment's ECPay periodic order is terminated (BILL-R27).
     provider_subscription_termination_pending = models.BooleanField(
         default=False, db_default=False
     )

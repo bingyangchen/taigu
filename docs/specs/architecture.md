@@ -307,7 +307,7 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 - `BillingProfile.initial_payment` 指向讓訂閱變成自動續訂中的那筆付款。這筆付款的 `provider_subscription_id`（綠界的 `MerchantTradeNo`）就是 BILL-R27 所說訂閱自己的定期扣款，`paid_at` 則是 BILL-R14 推算每期結束時間的起點。自動續訂中的訂閱一定有 `initial_payment`；沒有的話，後端不知道要向綠界查詢或終止哪一份定期扣款，所以停止自動續訂時回錯誤，每天的到期處理也不處理這份訂閱，只記下錯誤。
 - 定期扣款成功的紀錄，`provider_request_id` 是「第一次付款的 `MerchantTradeNo`」加上 `P` 與 `TotalSuccessTimes`。後端從 `PeriodReturnURL` 的通知記下扣款，或照 BILL-R22 從查詢的結果記下扣款時，都用這個編號，所以只要兩邊的 `TotalSuccessTimes` 一樣算進第一次扣款，同一次扣款不論先從哪一邊記下，另一邊都會對到同一筆紀錄，本期只延後一次（BILL-R20）；通知這一邊還沒有實測（見「綠界的定期扣款」）。扣款失敗的紀錄改用 `F` 加上通知裡的 `Gwsr`，因為扣款失敗不會增加 `TotalSuccessTimes`。
 - 後端送給綠界的定期扣款 request，連線與讀取的逾時加起來不超過 13 秒，因為等待期內停止自動續訂要依序查詢與終止，兩個 request 都要在 gunicorn 預設 30 秒的 worker timeout 之內結束，後端才回得了 BILL-R23 的錯誤訊息。
-- 訂閱已經是自動續訂中時又付款成功的那筆付款（BILL-R27），在綠界終止它的定期扣款之前，`provider_subscription_termination_pending` 是 true，每天的到期處理依這個欄位再請綠界終止。
+- 訂閱已經是自動續訂中時，若另一筆付款成功（BILL-R27），後端會將這筆付款的 `provider_subscription_termination_pending` 欄位設為 true，直到綠界終止這筆付款的定期扣款。每天的到期處理依這個欄位再請綠界終止。
 - 每天的到期處理逐份處理等待期內的訂閱，處理其中一份時綠界回傳錯誤的話，這份訂閱留到下一次再處理，不影響其他訂閱。
 
 ### 等待期的判定
