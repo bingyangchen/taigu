@@ -541,3 +541,71 @@
 5. 把 throttling 設回 No throttling。
 
 預期：第 4 步後欄位下方顯示「目前無法搜尋股票，請稍後再試一次。」。
+
+### Tooltip 測試資料
+
+MKT-R22.1 檢查下列三個頁面的「今日」走勢：`https://local.taigu.tw/market-index/tse`、`https://local.taigu.tw/market-index/otc` 與 `https://local.taigu.tw/market/T01`。其餘手動檢查各選一個大盤指數頁與 T01，涵蓋兩種圖表元件。
+
+每次更換資料後，重新整理頁面再檢查。
+
+這些檢查會改動大盤指數，開始前先完成共用準備的備份，結束後照共用準備第 12 步還原。
+
+選點的回歸測試使用實際 ECharts，可執行 `docker compose -f compose.dev.yaml exec frontend npm test -- --watchAll=false --runInBand intradayTooltip.test.tsx`。
+
+下面指令準備昨收價 100、11:30 的 99 與 11:35 的 103 兩筆行情。各節需要不同資料時，照該節說明替換指令裡的 `points` 再執行。`points` 的每一組值是從 09:00 起算的分鐘數與價格。
+
+```bash
+docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
+from datetime import date
+from main.market.cache import TimeSeriesStockInfoCacheManager
+from main.market.models import MarketIndexPerMinute, StockInfo, StockPricePerMinute
+points = [(150, 99.0), (155, 103.0)]
+today = date.today()
+for market in ('tse', 'otc'):
+    MarketIndexPerMinute.objects.filter(market=market).delete()
+    for minute, price in points:
+        MarketIndexPerMinute.objects.create(market=market, date=today, number=minute, price=price, fluct_price=price - 100.0)
+    TimeSeriesStockInfoCacheManager.delete(market)
+StockPricePerMinute.objects.filter(company_id='T01').delete()
+for minute, price in points:
+    StockPricePerMinute.objects.create(company_id='T01', date=today, number=minute, price=price, fluct_price=price - 100.0)
+last_price = points[-1][1]
+StockInfo.objects.filter(company_id='T01').update(date=today, close_price=last_price, fluct_price=last_price - 100.0)
+TimeSeriesStockInfoCacheManager.delete('T01')
+"
+```
+
+## MKT-R22.1 在缺少行情的分鐘之間移動
+
+回歸測試驗證 ECharts 的選點結果，這裡另外確認實際顯示的 tooltip 與指示線，也檢查觸控操作。
+
+1. 執行「Tooltip 測試資料」的指令。
+2. 開啟加權指數頁的今日走勢。
+3. 在繪圖區把游標從 11:30 水平移到 11:35，過程中讓游標與折線保持一段垂直距離。
+4. 在櫃買指數頁與 T01 的個股詳情頁重複第 3 步。
+5. 開啟 DevTools 的行動裝置模擬。
+6. 重新整理這三個頁面。
+7. 在三個頁面的今日走勢圖，依序觸控 11:31 與 11:34 的時間位置。
+
+預期：移動期間 tooltip 持續顯示，滑鼠與觸控在 11:31 位置都顯示 11:30 的行情，在 11:34 位置都顯示 11:35 的行情，垂直指示線與 tooltip 的時間一致。
+
+## MKT-R22.5 只有一筆資料
+
+回歸測試驗證只有一筆時的選點結果，這裡另外確認整個繪圖區都能查閱。
+
+1. 把「Tooltip 測試資料」指令裡的 `points` 改成 `[(150, 100.0)]`。
+2. 執行修改後的指令。
+3. 把游標從大盤指數與 T01 今日走勢圖繪圖區的 09:00 水平移到 13:30。
+
+預期：Tooltip 持續顯示 11:30 的行情，垂直指示線維持在 11:30。
+
+## MKT-R22.7 離開繪圖區
+
+這個情境需要實際操作滑鼠確認顯示與隱藏。
+
+1. 執行「Tooltip 測試資料」的指令。
+2. 把游標移進大盤指數與 T01 今日走勢圖的繪圖區。
+3. 確認這兩個頁面的 tooltip 都出現。
+4. 把游標移到圖表外的頁面標題。
+
+預期：Tooltip 與垂直指示線都消失。

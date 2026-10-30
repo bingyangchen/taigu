@@ -3,7 +3,9 @@
 The rules are in "Spec Conventions" of .agents/skills/sdd/SKILL.md.
 """
 
+import argparse
 import ast
+import json
 import re
 import sys
 from dataclasses import dataclass
@@ -60,16 +62,26 @@ class _ScenarioMention:
 
 
 @dataclass(frozen=True)
-class _Reference:
+class ScenarioReference:
     path: str
     line: int
     id: str
 
 
+@dataclass(frozen=True)
+class FrontendTestReport:
+    references: list[ScenarioReference]
+    problems: list[Problem]
+
+
 def check_scenarios(
-    *, specs: list[SourceFile], tests: list[SourceFile], manuals: list[SourceFile]
+    *,
+    specs: list[SourceFile],
+    tests: list[SourceFile],
+    manuals: list[SourceFile],
+    frontend_report: FrontendTestReport | None = None,
 ) -> ScenarioReport:
-    problems: list[Problem] = []
+    problems = list(frontend_report.problems) if frontend_report else []
 
     id_to_scenario: dict[str, _ScenarioMention] = {}
     for spec in specs:
@@ -86,19 +98,21 @@ def check_scenarios(
                     )
                 )
 
-    tested_ids: set[str] = set()
+    references = list(frontend_report.references) if frontend_report else []
     for test_file in tests:
-        for reference in _parse_test_references(test_file, problems):
-            if reference.id in id_to_scenario:
-                tested_ids.add(reference.id)
-            else:
-                problems.append(
-                    Problem(
-                        reference.path,
-                        reference.line,
-                        f"The test names {reference.id}, which no spec has",
-                    )
+        references.extend(_parse_test_references(test_file, problems))
+    tested_ids: set[str] = set()
+    for reference in references:
+        if reference.id in id_to_scenario:
+            tested_ids.add(reference.id)
+        else:
+            problems.append(
+                Problem(
+                    reference.path,
+                    reference.line,
+                    f"The test names {reference.id}, which no spec has",
                 )
+            )
 
     manual_ids: set[str] = set()
     for manual_file in manuals:
@@ -225,8 +239,8 @@ def _parse_scenarios(
 
 def _parse_test_references(
     test_file: SourceFile, problems: list[Problem]
-) -> list[_Reference]:
-    references: list[_Reference] = []
+) -> list[ScenarioReference]:
+    references: list[ScenarioReference] = []
     tree = ast.parse(test_file.text, filename=test_file.path)
     called_marks = {
         id(node.func)
@@ -259,7 +273,7 @@ def _parse_test_references(
                 and _SCENARIO_ID.match(argument.value)
             ):
                 references.append(
-                    _Reference(test_file.path, argument.lineno, argument.value)
+                    ScenarioReference(test_file.path, argument.lineno, argument.value)
                 )
             else:
                 problems.append(
@@ -361,9 +375,19 @@ def _read_files(directory: Path, name_pattern: re.Pattern[str]) -> list[SourceFi
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--frontend-report", type=Path, required=True)
+    args = parser.parse_args()
+    frontend_data = json.loads(args.frontend_report.read_text(encoding="utf-8"))
     report = check_scenarios(
         specs=_read_files(_SPECS_DIRECTORY, _MARKDOWN_FILE),
         tests=_read_files(_API_SERVER_DIRECTORY, _TEST_FILE),
+        frontend_report=FrontendTestReport(
+            references=[
+                ScenarioReference(**item) for item in frontend_data["references"]
+            ],
+            problems=[Problem(**item) for item in frontend_data["problems"]],
+        ),
         # tests/manual/ holds no file until the first scenario needs a manual check,
         # and Git does not keep an empty directory.
         manuals=_read_files(_MANUAL_DIRECTORY, _MARKDOWN_FILE)
