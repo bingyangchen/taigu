@@ -76,6 +76,10 @@ Taigu is a stock portfolio tracker built for the Taiwan stock market. This READM
 
   Once started, the application will automatically open or be accessible at `https://local.taigu.tw` in your browser.
 
+### Validation
+
+Run `make test` to check spelling, formatting, lint, backend tests, frontend Jest tests, and spec scenario coverage in Docker. Frontend tests run once without watch mode and also run in CI when frontend files or the lint-and-test workflow change.
+
 ### The Development Workflow
 
 - **Step 1:** Create a branch from `main`, named as [Spec-Driven Development](#spec-driven-development) describes.
@@ -93,7 +97,7 @@ Every change to spec'd behavior or architecture starts from a plan, and code fol
 - `docs/plans/` holds approved changes, and `docs/plans/roadmap.md` shows what comes next.
 - `tests/manual/` holds the steps for the scenarios that need a manual check.
 - A change that alters behavior goes through a `plan/NNNN-xxx` branch, then an `impl/NNNN-xxx` branch. A behavior-preserving change, such as a bug fix that restores spec'd behavior or a refactor, uses a `change/xxx` branch, writing the spec of an existing capability uses a `backfill/xxx` branch, and abandoning an approved plan uses an `abandon/NNNN-xxx` branch. A trivial change on the skill's whitelist, such as a typo fix, takes any branch name.
-- `make check-scenarios` checks that every scenario in `docs/specs/` has a test or a manual check; `make test` and CI run it too.
+- `make check-scenarios` checks that every scenario in `docs/specs/` has a backend test, a frontend Jest test, or a manual check; `make test` and CI run it too. Frontend tests name their scenarios in literal titles such as `test("[MKT-R22.2] selects the earlier quote", ...)`. See the SDD skill for the full marker rules.
 
 A behavior change reaches `main` in two merges, the plan first and then its implementation:
 

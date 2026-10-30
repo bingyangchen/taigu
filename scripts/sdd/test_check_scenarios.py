@@ -1,5 +1,11 @@
 import pytest
-from check_scenarios import Problem, SourceFile, check_scenarios
+from check_scenarios import (
+    FrontendTestReport,
+    Problem,
+    ScenarioReference,
+    SourceFile,
+    check_scenarios,
+)
 
 _SPEC_PATH = "docs/specs/demo.md"
 _TEST_PATH = "api-server/main/demo/tests/unit/test_views.py"
@@ -77,6 +83,45 @@ def test_reads_every_scenario_id_of_a_mark() -> None:
 
     assert report.problems == []
     assert report.tested_count == 2
+
+
+def test_frontend_references_cover_scenarios_without_manual_sections() -> None:
+    report = check_scenarios(
+        specs=[_SPEC],
+        tests=[],
+        manuals=[],
+        frontend_report=FrontendTestReport(
+            references=[
+                ScenarioReference("frontend/src/demo.test.tsx", 3, "DEMO-R1.1"),
+                ScenarioReference("frontend/src/demo.test.tsx", 4, "DEMO-R1.2"),
+            ],
+            problems=[],
+        ),
+    )
+
+    assert report.problems == []
+    assert report.tested_count == 2
+    assert report.manual_count == 0
+
+
+def test_frontend_unknown_ids_and_parser_errors_fail_the_check() -> None:
+    report = check_scenarios(
+        specs=[_SPEC],
+        tests=[_make_test_file(['scenario("DEMO-R1.1", "DEMO-R1.2")'])],
+        manuals=[],
+        frontend_report=FrontendTestReport(
+            references=[
+                ScenarioReference("frontend/src/demo.test.tsx", 3, "DEMO-R1.9")
+            ],
+            problems=[Problem("frontend/src/demo.test.tsx", 4, "Invalid test title")],
+        ),
+    )
+
+    assert _make_locations(report.problems) == [
+        ("frontend/src/demo.test.tsx", 3),
+        ("frontend/src/demo.test.tsx", 4),
+    ]
+    assert "no spec has" in report.problems[0].message
 
 
 def test_reports_marks_that_name_an_unknown_scenario_or_misformat_their_ids() -> None:
