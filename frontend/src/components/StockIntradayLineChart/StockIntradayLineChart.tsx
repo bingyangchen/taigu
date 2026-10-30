@@ -2,6 +2,7 @@ import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 
+import { makeIntradayTooltipSeries } from "../intradayTooltip";
 import {
   getStockIntradayMaxPrice,
   getStockIntradayMinPrice,
@@ -101,11 +102,14 @@ class StockIntradayLineChart extends React.Component<Props> {
           symbol: "none",
           lineStyle: { color: segment.color, width: 2 },
           z: 2,
+          tooltip: { show: false },
         })),
+        makeIntradayTooltipSeries(data),
         {
           type: "line",
           data: [],
           z: 1,
+          tooltip: { show: false },
           markLine: {
             silent: true,
             symbol: "none",

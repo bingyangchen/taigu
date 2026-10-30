@@ -125,5 +125,5 @@ function getDescription(subscription: SubscriptionEntitlements): string {
     const nextPeriodEnd = formatDate(subscription.next_period_ends_at ?? null);
     return `停止後不會再自動扣款。如果本期已經扣款成功，Standard 權益會保留到 ${nextPeriodEnd}；如果沒有，會立刻切換為 Free 方案。`;
   }
-  return "停止後不會再於下次續費日扣款，你仍可使用 Standard 到本期結束。";
+  return "停止後不會再自動扣款，你仍可使用 Standard 到本期結束。";
 }

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import { BeautifulBlock, Button, Modal, Skeleton } from "../../../components";
 import { useAppDispatch } from "../../../redux/hooks";
@@ -39,8 +39,6 @@ const confirmationBenefitItems = [
 export default function CurrentPlan(): React.ReactElement {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const hasCheckedLoadedHash = useRef(false);
   const [billing, setBilling] = useState<BillingResponse | null>(null);
   const [isBillingLoading, setIsBillingLoading] = useState(true);
   const [isBillingLoadFailed, setIsBillingLoadFailed] = useState(false);
@@ -86,17 +84,6 @@ export default function CurrentPlan(): React.ReactElement {
     dispatch(updateHeaderTitle("付款與方案"));
     void loadBilling();
   }, [dispatch, loadBilling]);
-
-  useEffect(() => {
-    // Going back from ECPay's payment page reloads this page with the "##" that the
-    // confirmation dialog added to the URL. The next dialog would add the same URL
-    // again, which Settings takes for a duplicate entry and goes back from, closing
-    // the dialog. Checked only on load, since an open dialog adds "##" too.
-    if (hasCheckedLoadedHash.current) return;
-    hasCheckedLoadedHash.current = true;
-    const { hash, pathname, search } = window.location;
-    if (hash === "##") navigate(`${pathname}${search}`, { replace: true });
-  }, [navigate]);
 
   useEffect(() => {
     // Going back from ECPay's payment page may restore this page as it was left,
@@ -317,6 +304,7 @@ export default function CurrentPlan(): React.ReactElement {
           {canCancelAutoRenewal ? (
             <SubscriptionManagementPanel
               isAwaitingRenewal={isAwaitingRenewal}
+              nextRenewalDate={formatDate(subscription.current_period_ends_at)}
               onStopAutoRenewal={handleOpenCancelDialog}
             />
           ) : (
@@ -363,7 +351,7 @@ export default function CurrentPlan(): React.ReactElement {
               <strong>NT${pendingPrice.toLocaleString()}</strong>
             </div>
             <div>
-              <span>下次續費</span>
+              <span>下次扣款日</span>
               <strong>{pendingCheckout.nextRenewalDate}</strong>
             </div>
             <div>
@@ -500,9 +488,11 @@ function CurrentPlanSkeleton(): React.ReactElement {
 
 function SubscriptionManagementPanel({
   isAwaitingRenewal,
+  nextRenewalDate,
   onStopAutoRenewal,
 }: {
   isAwaitingRenewal: boolean;
+  nextRenewalDate: string;
   onStopAutoRenewal: () => void;
 }): React.ReactElement {
   return (
@@ -512,7 +502,7 @@ function SubscriptionManagementPanel({
         <p>
           {isAwaitingRenewal
             ? "本期的扣款結果還在確認中。停止後不會再自動扣款。"
-            : "目前 Standard 會在下次續費日自動續訂。你可以停止下次扣款，權益會保留到本期結束。"}
+            : `下次將於 ${nextRenewalDate} 自動扣款。你可以停止自動續訂，權益會保留到本期結束。`}
         </p>
       </div>
       <Button
@@ -682,7 +672,7 @@ function getKeyDate(
   }
   if (isWithinPaidPeriod(subscription) && subscription.current_period_ends_at) {
     return {
-      label: subscription.cancel_at_period_end ? "有效至" : "下次續費",
+      label: subscription.cancel_at_period_end ? "有效至" : "下次扣款日",
       value: formatDate(subscription.current_period_ends_at),
     };
   }

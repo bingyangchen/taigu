@@ -2,6 +2,7 @@ import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 
+import { makeIntradayTooltipSeries } from "../intradayTooltip";
 import {
   getMarketIndexMaxPrice,
   getMarketIndexMinPrice,
@@ -95,10 +96,13 @@ class MarketIndexIntradayLineChart extends React.Component<Props> {
           connectNulls: true,
           symbol: "none",
           lineStyle: { color: segment.color, width: 2 },
+          tooltip: { show: false },
         })),
+        makeIntradayTooltipSeries(data),
         {
           type: "line",
           data: [],
+          tooltip: { show: false },
           markLine: {
             silent: true,
             symbol: "none",

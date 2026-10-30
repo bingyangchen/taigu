@@ -454,7 +454,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'active'`。
 2. 開啟方案頁。
 
-預期：「目前方案」區塊顯示「Standard」、標籤「月繳」、「NT$65/月」，「下次續費」的日期是今天的 20 天後。
+預期：「目前方案」區塊顯示「Standard」、標籤「月繳」、「NT$65/月」，「下次扣款日」的日期是今天的 20 天後。
 
 ## BILL-R10.2 已停止自動續訂
 
@@ -515,7 +515,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 2. 執行「加入白名單」指令。
 3. 開啟方案頁。
 
-預期：「目前方案」區塊顯示「Standard」、標籤「月繳」、「NT$65/月」，「下次續費」的日期是今天的 20 天後。
+預期：「目前方案」區塊顯示「Standard」、標籤「月繳」、「NT$65/月」，「下次扣款日」的日期是今天的 20 天後。
 
 ## BILL-R10.8 等待期內
 
@@ -705,7 +705,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 2. 開啟方案頁。
 3. 點「方案選擇」區塊的「月繳」。
 
-預期：畫面顯示「確認訂閱 Standard」視窗，寫出「付款週期 月繳」、「每期金額 NT$65」與「下次續費 <日期>」，日期是今天（台灣時間）的 1 個月後，視窗裡有關閉視窗的按鈕與「前往綠界付款」按鈕。
+預期：畫面顯示「確認訂閱 Standard」視窗，寫出「付款週期 月繳」、「每期金額 NT$65」與「下次扣款日 <日期>」，日期是今天（台灣時間）的 1 個月後，視窗裡有關閉視窗的按鈕與「前往綠界付款」按鈕。
 
 ## BILL-R13.2 前往綠界付款
 
@@ -741,7 +741,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 
 4. 點「方案選擇」區塊的「月繳」。
 
-預期：「確認訂閱 Standard」視窗寫出「下次續費 2027/02/28」。
+預期：「確認訂閱 Standard」視窗寫出「下次扣款日 2027/02/28」。
 
 ## BILL-R13.4 點選年繳
 
@@ -751,7 +751,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 2. 開啟方案頁。
 3. 點「方案選擇」區塊的「年繳」。
 
-預期：「確認訂閱 Standard」視窗寫出「付款週期 年繳」、「每期金額 NT$700」與「下次續費 <日期>」，日期是今天（台灣時間）的 1 年後。
+預期：「確認訂閱 Standard」視窗寫出「付款週期 年繳」、「每期金額 NT$700」與「下次扣款日 <日期>」，日期是今天（台灣時間）的 1 年後。
 
 ## BILL-R14.1 試用中付款
 
@@ -773,7 +773,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 4. 執行「模擬付款結果」指令，`SUCCESS` 設成 `True`。
 5. 開啟方案頁。
 
-預期：「目前方案」區塊顯示「Standard」與標籤「月繳」，「下次續費」的日期是今天的 1 個月後，不是 10 天後。
+預期：「目前方案」區塊顯示「Standard」與標籤「月繳」，「下次扣款日」的日期是今天的 1 個月後，不是 10 天後。
 
 ## BILL-R14.3 開啟付款頁超過 30 分鐘才付款成功
 
@@ -796,7 +796,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 5. 執行「模擬付款結果」指令，`SUCCESS` 設成 `True`。
 6. 開啟方案頁。
 
-預期：「目前方案」區塊顯示「Standard」與標籤「月繳」，「下次續費」的日期是今天的 1 個月後。
+預期：「目前方案」區塊顯示「Standard」與標籤「月繳」，「下次扣款日」的日期是今天的 1 個月後。
 
 ## BILL-R15.1 未訂閱時付款失敗
 
@@ -923,7 +923,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 5. 點「保留自動續訂」。
 6. 重新整理方案頁。
 
-預期：第 4 步之後確認視窗沒有關閉，並顯示「綠界暫時無法處理，請稍後再試。」；重新整理之後，「目前方案」區塊仍顯示「下次續費」，「訂閱管理」區塊仍有「停止自動續訂」按鈕。
+預期：第 4 步之後確認視窗沒有關閉，並顯示「綠界暫時無法處理，請稍後再試。」；重新整理之後，「目前方案」區塊仍顯示「下次扣款日」，「訂閱管理」區塊仍有「停止自動續訂」按鈕。
 
 ## BILL-R23.6 白名單上的使用者在自動續訂中
 
@@ -1023,7 +1023,7 @@ connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan'
 
 7. 點「保留自動續訂」，再重新整理方案頁。
 
-預期：第 5 步之後確認視窗沒有關閉，並顯示「綠界暫時無法處理，請稍後再試。」；重新整理之後，「目前方案」區塊仍顯示「下次續費」，「訂閱管理」區塊仍有「停止自動續訂」按鈕。
+預期：第 5 步之後確認視窗沒有關閉，並顯示「綠界暫時無法處理，請稍後再試。」；重新整理之後，「目前方案」區塊仍顯示「下次扣款日」，「訂閱管理」區塊仍有「停止自動續訂」按鈕。
 
 ## BILL-R23.15 白名單上的使用者在等待期內停止自動續訂，這一期沒有扣款成功
 

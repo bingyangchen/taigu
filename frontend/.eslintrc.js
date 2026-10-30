@@ -139,7 +139,18 @@ module.exports = {
       ],
     },
   },
-  overrides: [{ files: ["src/service-worker.ts"], env: { serviceworker: true } }],
+  overrides: [
+    { files: ["src/service-worker.ts"], env: { serviceworker: true } },
+    {
+      files: ["src/**/*.test.tsx"],
+      env: { jest: true },
+      parserOptions: { project: null },
+      rules: {
+        "@typescript-eslint/prefer-nullish-coalescing": "off",
+        "@typescript-eslint/prefer-optional-chain": "off",
+      },
+    },
+  ],
   ignorePatterns: [
     "node_modules/",
     "build/",

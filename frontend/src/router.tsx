@@ -51,6 +51,12 @@ export const adminPagePath = "admin";
 // Loaded on demand, so pages other than the admin console never load its code.
 const Admin = React.lazy(() => import("./pages/Admin/Admin"));
 
+// UI state resets on load, so remove its history marker before the router reads it.
+const { hash, pathname, search } = window.location;
+if (["##", "#@", "#!"].includes(hash)) {
+  window.history.replaceState(window.history.state, "", `${pathname}${search}`);
+}
+
 const myRouter = createBrowserRouter(
   createRoutesFromElements(
     <Route path={Env.frontendRootPath}>
