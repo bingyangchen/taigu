@@ -172,12 +172,18 @@ stateDiagram-v2
 
 設定頁（`/settings`）顯示使用者的頭像、名字、Email 與目前方案的名稱（Standard 或 Free），並提供頭像與名字頁、帳號綁定頁、資料控制頁、方案頁、隱私權政策、服務條款與問題回報的入口，以及登出（見 ACCT-R7）；superuser 的設定頁另外有後台的入口（見 ADMIN-R3）。
 
+頁尾的 Taigu Logo 連到歡迎頁（`/welcome`），在同一個瀏覽器分頁開啟，保留登入狀態，使用者按瀏覽器的上一頁可回到設定頁。
+
 方案的判定見 BILL-R1。
 
 - ACCT-R8.1 開啟設定頁
   - 前提：使用者已登入，帳號在試用期內。
   - 動作：開啟設定頁（`/settings`）。
   - 結果：設定頁顯示使用者的頭像、名字與 Email，目前方案顯示「Standard」；點頭像與名字、Email、資料控制、目前方案，畫面分別換到頭像與名字頁（`/settings/user-info`）、帳號綁定頁（`/settings/account-binding`）、資料控制頁（`/settings/data-controls`）、方案頁（`/settings/current-plan`）；頁面上另有隱私權政策、服務條款、問題回報與登出的入口。
+- ACCT-R8.2 從設定頁的 Logo 查看歡迎頁
+  - 前提：使用者已登入，畫面在設定頁（`/settings`）。
+  - 動作：點頁尾的 Taigu Logo，再按瀏覽器的上一頁。
+  - 結果：同一個瀏覽器分頁先顯示歡迎頁（`/welcome`），按上一頁後回到設定頁（`/settings`），使用者仍是登入狀態。
 
 ### ACCT-R9 修改名字與頭像
 

@@ -398,6 +398,23 @@ window.mockTaiguCsrf = (code, limit = Infinity) => {
 
 預期：設定頁顯示使用者的頭像、名字與 Email，目前方案顯示「Standard」；點頭像與名字、Email、資料控制、目前方案，畫面分別換到 `/settings/user-info`、`/settings/account-binding`、`/settings/data-controls`、`/settings/current-plan`；頁面上另有隱私權政策、服務條款、問題回報與登出的入口。
 
+## ACCT-R8.2 從設定頁的 Logo 查看歡迎頁
+
+1. 用 Google 帳號登入。
+2. 開啟 `https://local.taigu.tw/settings`。
+3. 捲到頁尾。
+4. 將滑鼠移到 Taigu Logo。
+5. 確認出現「前往 Taigu 介紹頁」的 tooltip。
+6. 點 Taigu Logo。
+7. 確認同一個瀏覽器分頁顯示 `/welcome`。
+8. 按瀏覽器的上一頁。
+9. 確認回到 `/settings`，仍顯示原本帳號的資料。
+10. 按 Tab，直到焦點移到頁尾的 Taigu Logo。
+11. 確認焦點外框清楚可見，並顯示「前往 Taigu 介紹頁」的 tooltip。
+12. 按 Enter。
+
+預期：滑鼠與鍵盤都能透過 Logo 在同一個瀏覽器分頁開啟歡迎頁，按上一頁能回到設定頁，使用者仍是登入狀態。
+
 ## ACCT-R9.1 修改名字
 
 後端的 test 驗證了新的名字有存下來，畫面的部分在前端，前端沒有自動化 test。
