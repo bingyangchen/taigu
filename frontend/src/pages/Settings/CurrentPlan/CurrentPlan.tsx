@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import { BeautifulBlock, Button, Modal, Skeleton } from "../../../components";
 import { useAppDispatch } from "../../../redux/hooks";
@@ -39,8 +39,6 @@ const confirmationBenefitItems = [
 export default function CurrentPlan(): React.ReactElement {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const hasCheckedLoadedHash = useRef(false);
   const [billing, setBilling] = useState<BillingResponse | null>(null);
   const [isBillingLoading, setIsBillingLoading] = useState(true);
   const [isBillingLoadFailed, setIsBillingLoadFailed] = useState(false);
@@ -86,17 +84,6 @@ export default function CurrentPlan(): React.ReactElement {
     dispatch(updateHeaderTitle("付款與方案"));
     void loadBilling();
   }, [dispatch, loadBilling]);
-
-  useEffect(() => {
-    // Going back from ECPay's payment page reloads this page with the "##" that the
-    // confirmation dialog added to the URL. The next dialog would add the same URL
-    // again, which Settings takes for a duplicate entry and goes back from, closing
-    // the dialog. Checked only on load, since an open dialog adds "##" too.
-    if (hasCheckedLoadedHash.current) return;
-    hasCheckedLoadedHash.current = true;
-    const { hash, pathname, search } = window.location;
-    if (hash === "##") navigate(`${pathname}${search}`, { replace: true });
-  }, [navigate]);
 
   useEffect(() => {
     // Going back from ECPay's payment page may restore this page as it was left,
