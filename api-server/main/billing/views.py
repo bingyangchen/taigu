@@ -5,31 +5,23 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
-from main.billing.models import (
-    BillingInterval,
-    Plan,
-    SubscriptionPayment,
-    SubscriptionStatus,
-)
+from main.billing.models import BillingInterval, Plan, SubscriptionPayment
 from main.billing.services.ecpay import (
     EcpayApiError,
-    EcpayClient,
     get_ecpay_checkout_result_url,
     get_ecpay_config,
     verify_check_mac_value,
 )
-from main.billing.services.entitlements import (
-    ensure_billing_profile,
-    serialize_entitlements,
-)
+from main.billing.services.entitlements import serialize_entitlements
 from main.billing.services.subscription import (
     STANDARD_PRICES,
+    SubscriptionNotRenewingError,
     SubscriptionPaymentNotChargeableError,
     create_subscription_checkout,
-    get_active_provider_subscription_id,
     mark_payment_failed,
     mark_payment_paid,
     process_period_payment_callback,
+    stop_auto_renewal,
 )
 from main.core.decorators.auth import require_login
 from main.core.decorators.rate_limit import rate_limit
@@ -76,26 +68,13 @@ def _start_subscription(request: HttpRequest) -> JsonResponse:
 @require_login
 @rate_limit(rate=0.5)
 def cancel_subscription(request: HttpRequest) -> JsonResponse:
-    profile = ensure_billing_profile(request.user)
-    if profile.plan != Plan.STANDARD or profile.subscription_status not in [
-        SubscriptionStatus.ACTIVE,
-        SubscriptionStatus.PAST_DUE,
-    ]:
-        return JsonResponse({"message": "No active subscription to cancel"}, status=400)
-
-    if profile.cancel_at_period_end:
-        return JsonResponse({"subscription": serialize_entitlements(request.user)})
-
-    if provider_subscription_id := get_active_provider_subscription_id(request.user):
-        try:
-            EcpayClient().cancel_aio_periodic_order(
-                merchant_trade_no=provider_subscription_id
-            )
-        except EcpayApiError as error:
-            logger.warning("Failed to cancel ECPay periodic subscription: %s", error)
-            return JsonResponse({"message": str(error)}, status=502)
-    profile.cancel_at_period_end = True
-    profile.save()
+    try:
+        stop_auto_renewal(request.user)
+    except SubscriptionNotRenewingError as error:
+        return JsonResponse({"message": str(error)}, status=400)
+    except EcpayApiError as error:
+        logger.warning("Failed to stop ECPay auto-renewal: %s", error)
+        return JsonResponse({"message": "綠界暫時無法處理，請稍後再試。"}, status=502)
     return JsonResponse({"subscription": serialize_entitlements(request.user)})
 
 

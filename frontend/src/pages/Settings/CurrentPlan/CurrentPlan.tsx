@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { BeautifulBlock, Button, Modal, Skeleton } from "../../../components";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { useAppDispatch } from "../../../redux/hooks";
 import { fetchAccountInfo } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { SubscriptionEntitlements } from "../../../types";
-import Api from "../../../utils/api";
-import CancelSubscriptionDialog, {
-  type CancelSubscriptionFeedback,
-} from "./CancelSubscriptionDialog";
+import Api, { UNKNOWN_API_ERROR_MESSAGE } from "../../../utils/api";
+import { SessionChangedError } from "../../../utils/session";
+import CancelSubscriptionDialog from "./CancelSubscriptionDialog";
 import styles from "./CurrentPlan.module.scss";
+import { formatDate, getFirstPeriodEndDate } from "./date";
 
 type BillingResponse = {
   subscription: SubscriptionEntitlements;
@@ -22,17 +22,7 @@ type CheckoutResponse = { action_url: string; params: Record<string, string | nu
 
 type BillingInterval = "month" | "year";
 
-const fallbackSubscription: SubscriptionEntitlements = {
-  plan: "free",
-  status: "canceled",
-  billing_interval: "month",
-  trial_ends_at: null,
-  current_period_ends_at: null,
-  cancel_at_period_end: false,
-  market_refresh_interval_seconds: 600,
-  quota: { monthly_records: 20, monthly_trade_plans: 10, holdings: 10, favorites: 10 },
-  usage: { monthly_records: 0, monthly_trade_plans: 0, holdings: 0, favorites: 0 },
-};
+type PendingCheckout = { interval: BillingInterval; nextRenewalDate: string };
 
 const standardBenefitItems = [
   "交易紀錄與現金股利不限筆數",
@@ -48,90 +38,84 @@ const confirmationBenefitItems = [
 
 export default function CurrentPlan(): React.ReactElement {
   const dispatch = useAppDispatch();
-  const accountSubscription = useAppSelector((state) => state.account.subscription);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const hasCheckedLoadedHash = useRef(false);
   const [billing, setBilling] = useState<BillingResponse | null>(null);
   const [isBillingLoading, setIsBillingLoading] = useState(true);
+  const [isBillingLoadFailed, setIsBillingLoadFailed] = useState(false);
+  const latestBillingRequestId = useRef(0);
   const [isWaiting, setIsWaiting] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [isCancelingSubscription, setIsCancelingSubscription] = useState(false);
-  const [pendingBillingInterval, setPendingBillingInterval] =
-    useState<BillingInterval | null>(null);
+  const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(null);
   const [cancelSubscriptionError, setCancelSubscriptionError] = useState<string | null>(
     null,
   );
-  const [cancelSubscriptionFeedback, setCancelSubscriptionFeedback] =
-    useState<CancelSubscriptionFeedback>({ reason: "", detail: "" });
   const [notice, setNotice] = useState<{
     type: "success" | "error" | "info";
     text: string;
   } | null>(null);
+  const noticeRef = useRef<HTMLDivElement>(null);
+  const dialogTriggerRef = useRef<HTMLElement | null>(null);
 
-  const subscription = useMemo<SubscriptionEntitlements>(
-    () =>
-      billing?.subscription ?? {
-        ...fallbackSubscription,
-        plan: accountSubscription.plan,
-        market_refresh_interval_seconds:
-          accountSubscription.market_refresh_interval_seconds,
-      },
-    [accountSubscription, billing],
-  );
-  const isWhitelisted = subscription.is_whitelisted === true;
-  const isStandard = subscription.plan === "standard";
-  const isTrialing = subscription.status === "trialing";
-  const isWithinPaidPeriod =
-    subscription.is_current_period_active ??
-    (isStandard && subscription.status === "active");
-  const canCancelAutoRenewal = isWithinPaidPeriod && !subscription.cancel_at_period_end;
-  const hasStoppedAutoRenewal =
-    isWithinPaidPeriod && subscription.cancel_at_period_end && !isWhitelisted;
-  const showWhitelistSummary = isWhitelisted && !canCancelAutoRenewal;
-  const showUpgradeOptions = !isWithinPaidPeriod && !isWhitelisted;
-  const priceMonth = billing?.prices.month ?? 65;
-  const priceYear = billing?.prices.year ?? 700;
-  const yearlySavings = Math.max(priceMonth * 12 - priceYear, 0);
-  const keyDate = showWhitelistSummary ? null : getKeyDate(subscription);
-  const planBadgeLabel = showWhitelistSummary
-    ? "使用中"
-    : getPlanBadgeLabel(subscription);
-  const planBadgeTone = showWhitelistSummary
-    ? "planBadgeCurrent"
-    : getPlanBadgeTone(subscription);
-  const pendingPrice =
-    pendingBillingInterval === "year"
-      ? priceYear
-      : pendingBillingInterval === "month"
-        ? priceMonth
-        : null;
-  const pendingIntervalLabel =
-    pendingBillingInterval === "year"
-      ? "年繳"
-      : pendingBillingInterval === "month"
-        ? "月繳"
-        : "";
-
-  const refreshBilling = useCallback(async (): Promise<void> => {
+  const loadBilling = useCallback(async (): Promise<void> => {
+    const requestId = ++latestBillingRequestId.current;
+    setIsBillingLoading(true);
+    setIsBillingLoadFailed(false);
     try {
-      const response = (await Api.sendRequest(
-        "billing/subscription",
-        "get",
-      )) as BillingResponse;
+      const response = (await Api.sendRequest("billing/subscription", "get")) as
+        | BillingResponse
+        | undefined;
+
+      // No response means Api is already taking the user to another page.
+      if (response === undefined || requestId !== latestBillingRequestId.current)
+        return;
       setBilling(response);
-      await dispatch(fetchAccountInfo()).unwrap();
-    } finally {
+      setIsBillingLoading(false);
+      void dispatch(fetchAccountInfo());
+    } catch (error) {
+      if (error instanceof SessionChangedError) return;
+      if (requestId !== latestBillingRequestId.current) return;
+      setIsBillingLoadFailed(true);
       setIsBillingLoading(false);
     }
   }, [dispatch]);
 
   useEffect(() => {
     dispatch(updateHeaderTitle("付款與方案"));
-    void refreshBilling().catch((error) => {
-      const text = getUserFacingError(error, "暫時無法取得方案資料，請稍後再試。");
-      setNotice({ type: "error", text });
-      dispatch(pushToast({ type: "error", text }));
-    });
-  }, [dispatch, refreshBilling]);
+    void loadBilling();
+  }, [dispatch, loadBilling]);
+
+  useEffect(() => {
+    // Going back from ECPay's payment page reloads this page with the "##" that the
+    // confirmation dialog added to the URL. The next dialog would add the same URL
+    // again, which Settings takes for a duplicate entry and goes back from, closing
+    // the dialog. Checked only on load, since an open dialog adds "##" too.
+    if (hasCheckedLoadedHash.current) return;
+    hasCheckedLoadedHash.current = true;
+    const { hash, pathname, search } = window.location;
+    if (hash === "##") navigate(`${pathname}${search}`, { replace: true });
+  }, [navigate]);
+
+  useEffect(() => {
+    // Going back from ECPay's payment page may restore this page as it was left,
+    // with the confirmation dialog open and its button still waiting.
+    function handlePageShow(event: PageTransitionEvent): void {
+      if (!event.persisted) return;
+      setIsWaiting(false);
+      setPendingCheckout(null);
+      void loadBilling();
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [loadBilling]);
+
+  useEffect(() => {
+    // The dialog's trigger is gone after stopping auto-renewal, so focus moves to
+    // the notice that reports the result.
+    if (notice?.type === "success") noticeRef.current?.focus();
+  }, [notice]);
 
   useEffect(() => {
     const checkout = searchParams.get("checkout");
@@ -145,25 +129,35 @@ export default function CurrentPlan(): React.ReactElement {
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
-  const quotaRows = useMemo<[string, number, number | null][]>(
-    () => [
-      [
-        "交易與股利",
-        subscription.usage.monthly_records,
-        subscription.quota.monthly_records,
-      ],
-      [
-        "買賣計畫",
-        subscription.usage.monthly_trade_plans,
-        subscription.quota.monthly_trade_plans,
-      ],
-      ["持股", subscription.usage.holdings, subscription.quota.holdings],
-      ["關注", subscription.usage.favorites, subscription.quota.favorites],
-    ],
-    [subscription],
+  const noticeElement = notice && (
+    <div
+      ref={noticeRef}
+      className={`${styles.notice} ${styles[notice.type]}`}
+      role="status"
+      tabIndex={-1}
+    >
+      {notice.text}
+    </div>
   );
 
-  if (isBillingLoading) {
+  if (isBillingLoadFailed) {
+    return (
+      <div className={styles.main}>
+        {noticeElement}
+        <div className={styles.loadFailure} role="alert">
+          <p>暫時無法取得方案資料，請稍後再試。</p>
+          <Button
+            className={`white border l ${styles.reloadButton}`}
+            onClick={() => void loadBilling()}
+          >
+            重新載入
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isBillingLoading || billing === null) {
     return (
       <div className={styles.main}>
         <CurrentPlanSkeleton />
@@ -171,11 +165,53 @@ export default function CurrentPlan(): React.ReactElement {
     );
   }
 
+  const { subscription, prices } = billing;
+  const isWhitelisted = subscription.is_whitelisted === true;
+  const isStandard = subscription.plan === "standard";
+  const isTrialing = subscription.status === "trialing";
+  const isAwaitingRenewal = subscription.is_awaiting_renewal === true;
+  const canCancelAutoRenewal =
+    (isWithinPaidPeriod(subscription) || isAwaitingRenewal) &&
+    !subscription.cancel_at_period_end;
+  const hasStoppedAutoRenewal =
+    isWithinPaidPeriod(subscription) &&
+    subscription.cancel_at_period_end &&
+    !isWhitelisted;
+  const showWhitelistSummary =
+    isWhitelisted &&
+    !(isWithinPaidPeriod(subscription) && !subscription.cancel_at_period_end);
+  const showUpgradeOptions =
+    !isWithinPaidPeriod(subscription) && !isAwaitingRenewal && !isWhitelisted;
+  const priceMonth = prices.month;
+  const priceYear = prices.year;
+  const yearlySavings = Math.max(priceMonth * 12 - priceYear, 0);
+  const keyDate = showWhitelistSummary ? null : getKeyDate(subscription);
+  const planBadgeLabel = showWhitelistSummary
+    ? "使用中"
+    : getPlanBadgeLabel(subscription);
+  const planBadgeTone = showWhitelistSummary
+    ? "planBadgeCurrent"
+    : getPlanBadgeTone(subscription);
+  const pendingPrice = pendingCheckout?.interval === "year" ? priceYear : priceMonth;
+  const pendingIntervalLabel = pendingCheckout?.interval === "year" ? "年繳" : "月繳";
+  const quotaRows: [string, number, number | null][] = [
+    [
+      "交易與股利",
+      subscription.usage.monthly_records,
+      subscription.quota.monthly_records,
+    ],
+    [
+      "買賣計畫",
+      subscription.usage.monthly_trade_plans,
+      subscription.quota.monthly_trade_plans,
+    ],
+    ["持股", subscription.usage.holdings, subscription.quota.holdings],
+    ["關注", subscription.usage.favorites, subscription.quota.favorites],
+  ];
+
   return (
     <div className={styles.main}>
-      {notice && (
-        <div className={`${styles.notice} ${styles[notice.type]}`}>{notice.text}</div>
-      )}
+      {noticeElement}
 
       <BeautifulBlock title="目前方案">
         <div className={styles.summary}>
@@ -238,7 +274,13 @@ export default function CurrentPlan(): React.ReactElement {
             priceMonth={priceMonth}
             priceYear={priceYear}
             yearlySavings={yearlySavings}
-            onSelect={setPendingBillingInterval}
+            onSelect={(interval) => {
+              rememberDialogTrigger();
+              setPendingCheckout({
+                interval,
+                nextRenewalDate: getFirstPeriodEndDate(interval, new Date()),
+              });
+            }}
           />
         </BeautifulBlock>
       )}
@@ -273,14 +315,17 @@ export default function CurrentPlan(): React.ReactElement {
       {(canCancelAutoRenewal || hasStoppedAutoRenewal) && (
         <BeautifulBlock title="訂閱管理">
           {canCancelAutoRenewal ? (
-            <SubscriptionManagementPanel onStopAutoRenewal={handleOpenCancelDialog} />
+            <SubscriptionManagementPanel
+              isAwaitingRenewal={isAwaitingRenewal}
+              onStopAutoRenewal={handleOpenCancelDialog}
+            />
           ) : (
             <SubscriptionStoppedPanel />
           )}
         </BeautifulBlock>
       )}
 
-      {pendingBillingInterval && pendingPrice !== null && (
+      {pendingCheckout && (
         <Modal
           title="確認訂閱 Standard"
           layout="compact"
@@ -288,13 +333,16 @@ export default function CurrentPlan(): React.ReactElement {
           discardButtonProps={{
             className: "secondary l",
             children: "取消",
-            onClick: () => setPendingBillingInterval(null),
+            onClick: () => {
+              setPendingCheckout(null);
+              restoreDialogTriggerFocus();
+            },
           }}
           submitButtonProps={{
             className: "primary_fill l",
             children: "前往綠界付款",
             waiting: isWaiting,
-            onClick: () => handleStartSubscription(pendingBillingInterval),
+            onClick: () => handleStartSubscription(pendingCheckout.interval),
           }}
         >
           <p className={styles.confirmNotice}>
@@ -313,6 +361,10 @@ export default function CurrentPlan(): React.ReactElement {
             <div>
               <span>每期金額</span>
               <strong>NT${pendingPrice.toLocaleString()}</strong>
+            </div>
+            <div>
+              <span>下次續費</span>
+              <strong>{pendingCheckout.nextRenewalDate}</strong>
             </div>
             <div>
               <span>付款服務</span>
@@ -334,7 +386,6 @@ export default function CurrentPlan(): React.ReactElement {
         errorMessage={cancelSubscriptionError}
         onClose={handleCloseCancelDialog}
         onConfirm={handleCancelSubscription}
-        onReasonChange={setCancelSubscriptionFeedback}
       />
     </div>
   );
@@ -357,7 +408,19 @@ export default function CurrentPlan(): React.ReactElement {
     }
   }
 
+  // Neither dialog has a Radix trigger, so focus would fall to the page body when
+  // it closes.
+  function rememberDialogTrigger(): void {
+    dialogTriggerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  }
+
+  function restoreDialogTriggerFocus(): void {
+    requestAnimationFrame(() => dialogTriggerRef.current?.focus());
+  }
+
   function handleOpenCancelDialog(): void {
+    rememberDialogTrigger();
     setCancelSubscriptionError(null);
     setIsCancelDialogOpen(true);
   }
@@ -366,28 +429,28 @@ export default function CurrentPlan(): React.ReactElement {
     if (isCancelingSubscription) return;
     setIsCancelDialogOpen(false);
     setCancelSubscriptionError(null);
+    restoreDialogTriggerFocus();
   }
 
   async function handleCancelSubscription(): Promise<void> {
     setIsCancelingSubscription(true);
     setCancelSubscriptionError(null);
     try {
-      await Api.sendRequest(
+      const response = (await Api.sendRequest(
         "billing/subscription/cancel",
         "post",
-        JSON.stringify({
-          reason: cancelSubscriptionFeedback.reason || null,
-          reason_detail: cancelSubscriptionFeedback.detail || null,
-        }),
+        JSON.stringify({}),
+        // The dialog shows the error itself.
+        { silentOnFailure: true },
+      )) as { subscription: SubscriptionEntitlements } | undefined;
+      if (response === undefined) return;
+      setBilling(
+        (current) => current && { ...current, subscription: response.subscription },
       );
       setIsCancelDialogOpen(false);
-      await refreshBilling();
-      const periodEnd = formatDate(subscription.current_period_ends_at);
-      const text = isWhitelisted
-        ? "已停止自動續訂，之後不會再扣款。"
-        : `已停止自動續訂，Standard 權益會保留到 ${periodEnd}。`;
-      setNotice({ type: "success", text });
+      setNotice({ type: "success", text: getStopNotice(response.subscription) });
       dispatch(pushToast({ type: "success", text: "已停止自動續訂" }));
+      void dispatch(fetchAccountInfo());
     } catch (error) {
       setCancelSubscriptionError(getCancelSubscriptionError(error));
     } finally {
@@ -436,8 +499,10 @@ function CurrentPlanSkeleton(): React.ReactElement {
 }
 
 function SubscriptionManagementPanel({
+  isAwaitingRenewal,
   onStopAutoRenewal,
 }: {
+  isAwaitingRenewal: boolean;
   onStopAutoRenewal: () => void;
 }): React.ReactElement {
   return (
@@ -445,8 +510,9 @@ function SubscriptionManagementPanel({
       <div>
         <strong>自動續訂</strong>
         <p>
-          目前 Standard
-          會在下次續費日自動續訂。你可以停止下次扣款，權益會保留到本期結束。
+          {isAwaitingRenewal
+            ? "本期的扣款結果還在確認中。停止後不會再自動扣款。"
+            : "目前 Standard 會在下次續費日自動續訂。你可以停止下次扣款，權益會保留到本期結束。"}
         </p>
       </div>
       <Button
@@ -543,6 +609,13 @@ function PlanActionGroup({
   );
 }
 
+function isWithinPaidPeriod(subscription: SubscriptionEntitlements): boolean {
+  return (
+    subscription.is_current_period_active ??
+    (subscription.plan === "standard" && subscription.status === "active")
+  );
+}
+
 function getPlanName(subscription: SubscriptionEntitlements): string {
   return subscription.plan === "standard" ? "Standard" : "Free";
 }
@@ -584,13 +657,16 @@ function getPlanDescription(subscription: SubscriptionEntitlements): string {
   if (subscription.plan === "standard" && subscription.status === "trialing") {
     return "試用期間可使用 Standard 全部額度。試用結束後會回到 Free。";
   }
-  if (subscription.plan === "standard" && subscription.status === "active") {
+  if (subscription.is_awaiting_renewal === true) {
+    return "正在確認本期的扣款結果，確認前仍可使用 Standard 方案。";
+  }
+  if (isWithinPaidPeriod(subscription)) {
     return subscription.cancel_at_period_end
       ? `目前方案可使用至 ${formatDate(subscription.current_period_ends_at)}。到期後會切換為 Free，不會再自動扣款。`
       : "已啟用自動續訂，以下是目前的帳務摘要。";
   }
-  if (subscription.status === "past_due") {
-    return "付款未完成，重新完成付款後可恢復 Standard 權益。";
+  if (subscription.ended_by_failed_renewal === true) {
+    return "上一期的扣款沒有成功，自動續訂已經結束。重新訂閱即可恢復 Standard 方案。";
   }
   return "適合開始記錄台股交易；升級後可解除額度限制並取得更即時的行情更新。";
 }
@@ -601,29 +677,30 @@ function getKeyDate(
   if (subscription.status === "trialing" && subscription.trial_ends_at) {
     return { label: "試用至", value: formatDate(subscription.trial_ends_at) };
   }
-  if (subscription.status === "active" && subscription.current_period_ends_at) {
+  if (subscription.is_awaiting_renewal === true) {
+    return { label: "扣款日", value: formatDate(subscription.current_period_ends_at) };
+  }
+  if (isWithinPaidPeriod(subscription) && subscription.current_period_ends_at) {
     return {
       label: subscription.cancel_at_period_end ? "有效至" : "下次續費",
       value: formatDate(subscription.current_period_ends_at),
     };
   }
-  if (subscription.status === "canceled" && subscription.current_period_ends_at) {
-    return { label: "有效至", value: formatDate(subscription.current_period_ends_at) };
-  }
   return null;
 }
 
-function formatDate(value: string | null): string {
-  if (!value) return "";
-  return new Date(value).toLocaleDateString("zh-TW", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+function getStopNotice(subscription: SubscriptionEntitlements): string {
+  if (subscription.is_whitelisted === true) return "已停止自動續訂，之後不會再扣款。";
+  if (subscription.status === "canceled") return "已停止自動續訂，目前方案是 Free。";
+  return `已停止自動續訂，Standard 權益會保留到 ${formatDate(subscription.current_period_ends_at)}。`;
 }
 
 function getUserFacingError(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message ? error.message : fallback;
+  return error instanceof Error &&
+    error.message &&
+    error.message !== UNKNOWN_API_ERROR_MESSAGE
+    ? error.message
+    : fallback;
 }
 
 function getCancelSubscriptionError(error: unknown): string {

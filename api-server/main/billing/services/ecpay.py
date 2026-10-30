@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import json
 import urllib.parse
 import uuid
 from dataclasses import dataclass
@@ -15,6 +16,15 @@ TAIPEI = ZoneInfo("Asia/Taipei")
 ECPAY_STAGE_AIO_URL = "https://payment-stage.ecpay.com.tw"
 ECPAY_PROD_AIO_URL = "https://payment.ecpay.com.tw"
 
+# CreditCardPeriodAction returns this for an order that is already disabled, which
+# includes an order ECPay terminated on its own after six failed charges.
+_PERIODIC_ORDER_DISABLED_RTN_CODE = "90100149"
+
+# (connect, read) seconds. Stopping auto-renewal in the waiting period calls ECPay
+# twice, and both calls must end within gunicorn's 30-second worker timeout, so that
+# the view can still answer with its own error.
+_PERIODIC_ORDER_REQUEST_TIMEOUT = (5, 8)
+
 
 class EcpayApiError(Exception):
     def __init__(
@@ -27,6 +37,19 @@ class EcpayApiError(Exception):
         self.trans_code = trans_code
         self.rtn_code = rtn_code
         super().__init__(message)
+
+
+@dataclass(frozen=True)
+class EcpayPeriodicCharge:
+    gwsr: str
+    amount: int
+    exec_log_entry: dict
+
+
+@dataclass(frozen=True)
+class EcpayPeriodicOrder:
+    total_success_times: int
+    latest_successful_charge: EcpayPeriodicCharge | None
 
 
 @dataclass(frozen=True)
@@ -151,24 +174,64 @@ class EcpayClient:
             "params": params,
         }
 
-    def cancel_aio_periodic_order(self, *, merchant_trade_no: str) -> dict:
+    def cancel_aio_periodic_order(self, *, merchant_trade_no: str) -> None:
         # Ref: https://developers.ecpay.com.tw/2900/
+        response_text = self._post_periodic_order_request(
+            "CreditCardPeriodAction",
+            {"MerchantTradeNo": merchant_trade_no, "Action": "Cancel"},
+        )
+        payload = dict(urllib.parse.parse_qsl(response_text, keep_blank_values=True))
+        if str(payload.get("RtnCode")) not in {"1", _PERIODIC_ORDER_DISABLED_RTN_CODE}:
+            raise EcpayApiError(payload.get("RtnMsg") or "ECPay period action error")
+
+    def query_aio_periodic_order(self, *, merchant_trade_no: str) -> EcpayPeriodicOrder:
+        # Ref: https://developers.ecpay.com.tw/2892/
+        response_text = self._post_periodic_order_request(
+            "QueryCreditCardPeriodInfo", {"MerchantTradeNo": merchant_trade_no}
+        )
+        try:
+            payload = json.loads(response_text)
+            if str(payload.get("RtnCode")) != "1":
+                raise EcpayApiError(payload.get("RtnMsg") or "ECPay period query error")
+            successful_charges = [
+                entry for entry in payload["ExecLog"] if str(entry["RtnCode"]) == "1"
+            ]
+            latest_charge = max(
+                successful_charges,
+                key=lambda entry: entry["process_date"],
+                default=None,
+            )
+            return EcpayPeriodicOrder(
+                total_success_times=int(payload["TotalSuccessTimes"]),
+                latest_successful_charge=(
+                    EcpayPeriodicCharge(
+                        gwsr=str(latest_charge["gwsr"]),
+                        amount=int(latest_charge["amount"]),
+                        exec_log_entry=latest_charge,
+                    )
+                    if latest_charge
+                    else None
+                ),
+            )
+        except (AttributeError, KeyError, TypeError, ValueError) as error:
+            raise EcpayApiError("Malformed ECPay periodic order info") from error
+
+    def _post_periodic_order_request(self, path: str, params: dict) -> str:
         params = {
             "MerchantID": self.config.merchant_id,
-            "MerchantTradeNo": merchant_trade_no,
-            "Action": "Cancel",
+            **params,
             "TimeStamp": int(datetime.now(TAIPEI).timestamp()),
         }
         params["CheckMacValue"] = generate_check_mac_value(
             params, self.config.hash_key, self.config.hash_iv
         )
-        response = requests.post(
-            f"{self.config.aio_base_url}/Cashier/CreditCardPeriodAction",
-            data=params,
-            timeout=30,
-        )
-        response.raise_for_status()
-        payload = dict(urllib.parse.parse_qsl(response.text, keep_blank_values=True))
-        if payload and str(payload.get("RtnCode")) != "1":
-            raise EcpayApiError(payload.get("RtnMsg", "ECPay period action error"))
-        return payload
+        try:
+            response = requests.post(
+                f"{self.config.aio_base_url}/Cashier/{path}",
+                data=params,
+                timeout=_PERIODIC_ORDER_REQUEST_TIMEOUT,
+            )
+            response.raise_for_status()
+        except requests.RequestException as error:
+            raise EcpayApiError(f"ECPay request failed: {error}") from error
+        return response.text

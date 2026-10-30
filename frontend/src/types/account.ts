@@ -6,12 +6,15 @@ export type PlanQuotaResource = "records" | "trade_plans" | "holdings" | "favori
 
 export type SubscriptionEntitlements = {
   plan: SubscriptionPlan;
-  status: "trialing" | "active" | "past_due" | "canceled";
+  status: "trialing" | "active" | "canceled";
   billing_interval: "month" | "year";
   trial_ends_at: string | null;
   current_period_ends_at: string | null;
+  next_period_ends_at?: string | null;
   cancel_at_period_end: boolean;
   is_current_period_active?: boolean;
+  is_awaiting_renewal?: boolean;
+  ended_by_failed_renewal?: boolean;
   is_whitelisted?: boolean;
   market_refresh_interval_seconds: number;
   quota: {

@@ -14,7 +14,18 @@
 - 「升級提示視窗」指額度擋下新增時出現、有「查看 Standard 方案」按鈕的視窗；「關閉升級提示視窗」指點這個視窗右上角的關閉按鈕。
 - 「從方案頁前往綠界」指在方案頁的「方案選擇」區塊點那一節指定的付款週期，在「確認訂閱 Standard」視窗點「前往綠界付款」，等瀏覽器換到綠界的付款頁之後，按瀏覽器的「上一頁」回到方案頁，不在綠界付款。
 
-「設定訂閱狀態」指令會刪除這個帳號的付款紀錄，再把訂閱設成 `STATE` 指定的狀態：`'trialing'` 是試用中，試用期還剩 31 天；`'active'` 是月繳的自動續訂中，本期還剩 20 天；`'stopped'` 是月繳的已停止自動續訂，本期還剩 20 天；`'past_due'` 是扣款失敗，本期在 2 天前結束；`'unsubscribed'` 是未訂閱，試用期在 9 天前結束，沒有訂閱過。
+### 設定訂閱狀態
+
+這個指令會刪除這個帳號的付款紀錄，再把訂閱設成 `STATE` 指定的狀態。
+
+| `STATE` | 訂閱狀態 | 期間 |
+| --- | --- | --- |
+| `'trialing'` | 試用中。 | 試用期還剩 31 天。 |
+| `'active'` | 月繳，自動續訂中。 | 本期還剩 20 天。 |
+| `'stopped'` | 月繳，已停止自動續訂。 | 本期還剩 20 天。 |
+| `'unsubscribed'` | 未訂閱，沒有訂閱過。 | 試用期在 9 天前結束。 |
+
+這個指令建立的訂閱沒有付款紀錄，後端不知道要終止哪一份定期扣款，所以 `'active'` 的訂閱要停止自動續訂時，後端會回錯誤。要停止自動續訂或進入等待期的各節，改用「建立已付款的訂閱」指令。
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -30,14 +41,23 @@ values = {
     'trialing': dict(plan='standard', subscription_status='trialing', trial_ends_at=now + 31 * day, current_period_started_at=None, current_period_ends_at=None, cancel_at_period_end=False),
     'active': dict(plan='standard', subscription_status='active', trial_ends_at=now - 9 * day, current_period_started_at=now - 10 * day, current_period_ends_at=now + 20 * day, cancel_at_period_end=False),
     'stopped': dict(plan='standard', subscription_status='active', trial_ends_at=now - 9 * day, current_period_started_at=now - 10 * day, current_period_ends_at=now + 20 * day, cancel_at_period_end=True),
-    'past_due': dict(plan='standard', subscription_status='past_due', trial_ends_at=now - 9 * day, current_period_started_at=now - 32 * day, current_period_ends_at=now - 2 * day, cancel_at_period_end=False),
     'unsubscribed': dict(plan='free', subscription_status='canceled', trial_ends_at=now - 9 * day, current_period_started_at=None, current_period_ends_at=None, cancel_at_period_end=False),
 }[STATE]
-BillingProfile.objects.filter(user__email=EMAIL).update(billing_interval='month', trial_started_at=values['trial_ends_at'] - 31 * day, **values)
+BillingProfile.objects.filter(user__email=EMAIL).update(billing_interval='month', trial_started_at=values['trial_ends_at'] - 31 * day, ended_by_failed_renewal=False, **values)
 "
 ```
 
-「準備資料」指令會先刪除這個帳號的交易紀錄、現金股利紀錄、買賣計畫與自選股，再依開頭的數字建立資料。`HOLDINGS` 是上個月買進的持股檔數，依序是 2330、2317、2454、2412、2882、2881、1301、1303、2002、2308；`TRADE_RECORDS` 是本月新增、買進 1 張 2330 的交易紀錄筆數；`CASH_DIVIDENDS` 與 `TRADE_PLANS` 是本月新增的 2330 現金股利紀錄與買賣計畫筆數；`FAVORITES` 是自選股檔數，依序是 2330、2317、2454、2412、2882、2881、1301、1303、2002、2308、2603、0050。各節沒有提到的數字設成 0。
+### 準備資料
+
+這個指令會先刪除這個帳號的交易紀錄、現金股利紀錄、買賣計畫與自選股，再依開頭的數字建立資料。各節沒有提到的數字設成 0。
+
+| 參數 | 說明 |
+| --- | --- |
+| `HOLDINGS` | 設定上個月買進的持股檔數，依序是 2330、2317、2454、2412、2882、2881、1301、1303、2002、2308。 |
+| `TRADE_RECORDS` | 設定本月新增的交易紀錄筆數，每筆買進 1 張 2330。 |
+| `CASH_DIVIDENDS` | 設定本月新增的 2330 現金股利紀錄筆數。 |
+| `TRADE_PLANS` | 設定本月新增的 2330 買賣計畫筆數。 |
+| `FAVORITES` | 設定自選股檔數，依序是 2330、2317、2454、2412、2882、2881、1301、1303、2002、2308、2603、0050。 |
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -77,28 +97,72 @@ with transaction.atomic():
 "
 ```
 
-「建立已付款的訂閱」指令會刪除這個帳號的付款紀錄，建立一筆已付款的月繳訂閱，再把訂閱設成 `STATE`（`'active'` 是自動續訂中，`'past_due'` 是扣款失敗），並讓本期在 `PERIOD_ENDS_IN_HOURS` 小時之後結束，負數表示本期已經結束。這筆訂閱沒有真的在綠界建立，所以停止自動續訂時綠界會回傳錯誤。
+### 建立綠界測試訂單
+
+這些步驟會在綠界的 stage 環境建立一份真的定期扣款。
+
+同一份測試訂單可以在各節重複使用，因為定期扣款已經終止後，綠界再次收到終止這份定期扣款的要求時，會回傳這份定期扣款已經終止，後端算成終止成功（見 BILL-R22）。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
+2. 開啟方案頁，點「方案選擇」區塊的「月繳」，再點「前往綠界付款」。
+3. 記下綠界付款頁「訂單編號」的值，這就是之後各節所說的「綠界測試訂單編號」。
+4. 點綠界付款頁右側「綠界支付掃碼」下方的「測試付款請點此」。
+5. 在新開的「模擬付款」頁填入以下資料：
+
+   | 欄位 | 填入內容 |
+   | --- | --- |
+   | 卡號 | `4311-9522-2222-2222` |
+   | 「信用卡有效年(YY)」 | `30` |
+   | 「信用卡有效月(MM)」 | `12` |
+   | 「信用卡安全碼」 | `222` |
+   | 其他空白欄位 | 任意填寫。 |
+
+6. 點「交易成功」。
+7. 在「交易驗證碼確認」頁點「取得OTP服務密碼」，在輸入框填 `1234`，點「送出(Submit)」。
+8. 等原本的分頁回到方案頁。綠界送出的付款成功通知到不了本機的後端，所以方案頁仍顯示 Free，各節再用「建立已付款的訂閱」指令把這份訂單記成付款成功。
+
+### 建立已付款的訂閱
+
+這個指令會刪除這個帳號的付款紀錄，再建立一筆自動續訂中的已付款月繳訂閱。
+
+| 參數 | 說明 |
+| --- | --- |
+| `ORDER` | 填入「綠界測試訂單編號」，讓這筆訂閱使用那份測試訂單的定期扣款。 |
+| `PERIOD_ENDS_IN_HOURS` | 設定本期在幾小時之後結束，負數表示本期已經結束。 |
+
+`ORDER` 是空字串時，這筆訂閱沒有真的在綠界建立，所以後端向綠界查詢或請綠界終止定期扣款時，綠界會回傳錯誤。
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
 EMAIL = '<email>'
-STATE = 'active'
+ORDER = ''
 PERIOD_ENDS_IN_HOURS = 480
 import uuid
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 from main.account.models import User
 from main.billing.models import BillingProfile, SubscriptionPayment
 from main.billing.services.subscription import mark_payment_paid
 user = User.objects.get(email=EMAIL)
 SubscriptionPayment.objects.filter(user=user).delete()
-payment = SubscriptionPayment.objects.create(user=user, provider_request_id='M' + uuid.uuid4().hex[:19], billing_interval='month', amount=65)
+BillingProfile.objects.filter(user=user).update(plan='free', subscription_status='canceled', current_period_started_at=None, current_period_ends_at=None, cancel_at_period_end=False)
+payment = SubscriptionPayment.objects.create(user=user, provider_request_id=ORDER or 'M' + uuid.uuid4().hex[:19], billing_interval='month', amount=65)
 mark_payment_paid(payment, {'RtnCode': 1, 'OrderInfo': {'MerchantTradeNo': payment.provider_request_id, 'TradeNo': 'T' + payment.provider_request_id, 'TotalAmount': 65}})
-BillingProfile.objects.filter(user=user).update(subscription_status=STATE, current_period_ends_at=timezone.now() + timedelta(hours=PERIOD_ENDS_IN_HOURS))
+ends_at = timezone.localtime() + timedelta(hours=PERIOD_ENDS_IN_HOURS)
+SubscriptionPayment.objects.filter(pk=payment.pk).update(paid_at=ends_at)
+BillingProfile.objects.filter(user=user).update(current_period_started_at=ends_at - relativedelta(months=1), current_period_ends_at=ends_at)
 "
 ```
 
-「模擬付款結果」指令假裝綠界通知後端這個帳號最近一筆付款的結果，`SUCCESS = True` 是付款成功，`SUCCESS = False` 是付款失敗：
+### 模擬付款結果
+
+這個指令會模擬綠界通知後端這個帳號最近一筆付款的結果。
+
+| `SUCCESS` | 付款結果 |
+| --- | --- |
+| `True` | 付款成功。 |
+| `False` | 付款失敗。 |
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
@@ -114,34 +178,50 @@ else:
 "
 ```
 
-「模擬定期扣款結果」指令假裝綠界通知後端定期扣款的結果，執行之前要先用「建立已付款的訂閱」指令建立訂閱。`SUCCESS = True` 是扣款成功，`SUCCESS = False` 是扣款失敗：
+### 執行到期處理
 
-```bash
-docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
-EMAIL = '<email>'
-SUCCESS = True
-from main.billing.models import SubscriptionPayment
-from main.billing.services.subscription import process_period_payment_callback
-first = SubscriptionPayment.objects.filter(user__email=EMAIL, status='paid').earliest('created_at')
-times = SubscriptionPayment.objects.filter(user__email=EMAIL).count() + 1
-process_period_payment_callback({'MerchantTradeNo': first.provider_subscription_id, 'RtnCode': 1 if SUCCESS else 0, 'RtnMsg': 'manual test', 'Gwsr': first.provider_request_id + str(times), 'Amount': first.amount, 'TotalSuccessTimes': times})
-"
-```
-
-「執行到期處理」指令立刻執行每天的到期處理：
+這個指令會立刻執行每天的到期處理，處理範圍是本機資料庫裡每一個帳號的到期訂閱。
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py reconcile_due_billing_profiles
 ```
 
-「加入白名單」與「移出白名單」指令把這個帳號加進或移出白名單。沒有寫到白名單的各節都假設這個帳號不在白名單上。
+### 加入白名單
+
+這個指令會把這個帳號加進白名單。沒有寫到白名單的各節都假設這個帳號不在白名單上。
 
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py standard_whitelist add <email>
 ```
 
+### 移出白名單
+
+這個指令會把這個帳號移出白名單。
+
 ```bash
 docker compose -f compose.dev.yaml exec api-server python manage.py standard_whitelist remove <email>
+```
+
+### 讓方案資料取得失敗
+
+這個指令會把買賣計畫的資料表改名。改名之後，後端計算方案頁的額度用量時讀不到這個資料表，前端取得方案資料時，後端回應 500；登入與其他帳號資料不受影響。
+
+```bash
+docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
+from django.db import connection
+connection.cursor().execute('ALTER TABLE trade_plan RENAME TO trade_plan_paused')
+"
+```
+
+### 恢復方案資料
+
+這個指令會把買賣計畫的資料表改回原名，讓後端能重新取得方案資料。
+
+```bash
+docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
+from django.db import connection
+connection.cursor().execute('ALTER TABLE trade_plan_paused RENAME TO trade_plan')
+"
 ```
 
 ## BILL-R1.1 已停止自動續訂但本期還沒結束
@@ -153,14 +233,14 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 預期：「目前方案」區塊顯示「Standard」，方案頁沒有「額度使用」區塊。
 
-## BILL-R1.2 扣款失敗
+## BILL-R1.6 等待期內
 
-前端沒有自動化 test，後端也沒有 test 驗證扣款失敗的方案。
+前端沒有自動化 test，`test_waiting_period_keeps_standard` 只驗證後端判定的方案。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'past_due'`。
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
 2. 開啟方案頁。
 
-預期：「目前方案」區塊顯示「Free」與「付款未完成，重新完成付款後可恢復 Standard 權益。」，方案頁有「額度使用」區塊。
+預期：「目前方案」區塊顯示「Standard」，方案頁沒有「額度使用」區塊。
 
 ## BILL-R2.1 第一次登入
 
@@ -417,16 +497,6 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 預期：「目前方案」區塊裡只有「Standard」、標籤「使用中」、「行情更新 約每 30 秒」與「額度 交易與股利、買賣計畫、持股、關注皆不限量」，沒有標籤「試用中」，也沒有「試用至」。
 
-## BILL-R10.5 白名單上的使用者扣款失敗
-
-前端沒有自動化 test。
-
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'past_due'`。
-2. 執行「加入白名單」指令。
-3. 開啟方案頁。
-
-預期：「目前方案」區塊裡只有「Standard」、標籤「使用中」、「行情更新 約每 30 秒」與「額度 交易與股利、買賣計畫、持股、關注皆不限量」，沒有「付款未完成，重新完成付款後可恢復 Standard 權益。」。
-
 ## BILL-R10.6 白名單上的使用者已停止自動續訂
 
 前端沒有自動化 test。
@@ -446,6 +516,91 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 3. 開啟方案頁。
 
 預期：「目前方案」區塊顯示「Standard」、標籤「月繳」、「NT$65/月」，「下次續費」的日期是今天的 20 天後。
+
+## BILL-R10.8 等待期內
+
+前端沒有自動化 test。
+
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+2. 開啟方案頁。
+
+預期：「目前方案」區塊顯示「Standard」、標籤「月繳」、「NT$65/月」、「扣款日 <日期>」與「正在確認本期的扣款結果，確認前仍可使用 Standard 方案。」，日期是 1 小時前的日期。
+
+## BILL-R10.9 以前訂閱過的使用者未訂閱
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
+2. 執行下面的指令，讓這個帳號像是以前訂閱過月繳的 Standard 方案，上一期在 33 天前結束：
+
+   ```bash
+   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
+   from datetime import timedelta
+   from django.utils import timezone
+   from main.billing.models import BillingProfile
+   now = timezone.now()
+   BillingProfile.objects.filter(user__email='<email>').update(current_period_started_at=now - timedelta(days=64), current_period_ends_at=now - timedelta(days=33))
+   "
+   ```
+
+3. 開啟方案頁。
+
+預期：「目前方案」區塊顯示「Free」，沒有「有效至」，也沒有任何日期。
+
+## BILL-R10.10 白名單上的使用者在等待期內
+
+前端沒有自動化 test。
+
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：「目前方案」區塊裡只有「Standard」、標籤「使用中」、「行情更新 約每 30 秒」與「額度 交易與股利、買賣計畫、持股、關注皆不限量」，沒有「扣款日」，也沒有「正在確認本期的扣款結果，確認前仍可使用 Standard 方案。」。
+
+## BILL-R10.11 本期沒有扣款成功而結束訂閱之後
+
+前端沒有自動化 test，`test_unpaid_period_ends_subscription` 只驗證後端記下的訂閱。
+
+1. 執行「建立綠界測試訂單」的步驟，取得「綠界測試訂單編號」；已經有的話沿用。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填「綠界測試訂單編號」，`PERIOD_ENDS_IN_HOURS` 設成 `-48`。
+3. 執行「執行到期處理」指令。
+4. 開啟方案頁。
+
+預期：「目前方案」區塊顯示「Free」與「上一期的扣款沒有成功，自動續訂已經結束。重新訂閱即可恢復 Standard 方案。」，方案頁有「方案選擇」區塊。
+
+## BILL-R10.12 等待期內停止自動續訂而變成未訂閱之後
+
+前端沒有自動化 test，`test_stop_in_waiting_period_without_charge` 只驗證後端記下的訂閱。
+
+1. 執行「建立綠界測試訂單」的步驟，取得「綠界測試訂單編號」；已經有的話沿用。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填「綠界測試訂單編號」，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+3. 開啟方案頁，點「訂閱管理」區塊的「停止自動續訂」，再點確認視窗裡的「停止自動續訂」。
+4. 確認視窗關閉之後，重新整理方案頁。
+
+預期：「目前方案」區塊顯示「Free」，沒有「上一期的扣款沒有成功，自動續訂已經結束。重新訂閱即可恢復 Standard 方案。」。
+
+## BILL-R10.13 本期沒有扣款成功而結束之後重新訂閱，停止自動續訂後到期
+
+前端沒有自動化 test，`test_resubscribing_clears_failed_renewal` 只驗證後端記下的訂閱。
+
+1. 完成「BILL-R10.11 本期沒有扣款成功而結束訂閱之後」的第 1 到 3 步。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填「綠界測試訂單編號」，`PERIOD_ENDS_IN_HOURS` 設成 `480`。
+3. 開啟方案頁，點「訂閱管理」區塊的「停止自動續訂」，再點確認視窗裡的「停止自動續訂」。
+4. 執行下面的指令，讓本期在 1 分鐘前結束：
+
+   ```bash
+   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
+   from datetime import timedelta
+   from django.utils import timezone
+   from main.billing.models import BillingProfile
+   BillingProfile.objects.filter(user__email='<email>').update(current_period_ends_at=timezone.now() - timedelta(minutes=1))
+   "
+   ```
+
+5. 執行「執行到期處理」指令。
+6. 開啟方案頁。
+
+預期：「目前方案」區塊顯示「Free」，沒有「上一期的扣款沒有成功，自動續訂已經結束。重新訂閱即可恢復 Standard 方案。」。
 
 ## BILL-R11.1 Free 方案的額度用量
 
@@ -513,16 +668,6 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 預期：方案頁沒有「方案選擇」區塊。
 
-## BILL-R12.7 白名單上的使用者扣款失敗
-
-前端沒有自動化 test。
-
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'past_due'`。
-2. 執行「加入白名單」指令。
-3. 開啟方案頁。
-
-預期：方案頁沒有「方案選擇」區塊。
-
 ## BILL-R12.8 已停止自動續訂後本期結束
 
 前端沒有自動化 test。
@@ -543,6 +688,15 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 預期：「方案選擇」區塊有「月繳 NT$65」與「年繳 NT$700」兩個選項。
 
+## BILL-R12.9 等待期內
+
+前端沒有自動化 test。
+
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+2. 開啟方案頁。
+
+預期：方案頁沒有「方案選擇」區塊。
+
 ## BILL-R13.1 點選月繳
 
 前端沒有自動化 test。
@@ -551,7 +705,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 2. 開啟方案頁。
 3. 點「方案選擇」區塊的「月繳」。
 
-預期：畫面顯示「確認訂閱 Standard」視窗，寫出「付款週期 月繳」與「每期金額 NT$65」，視窗裡有關閉視窗的按鈕與「前往綠界付款」按鈕。
+預期：畫面顯示「確認訂閱 Standard」視窗，寫出「付款週期 月繳」、「每期金額 NT$65」與「下次續費 <日期>」，日期是今天（台灣時間）的 1 個月後，視窗裡有關閉視窗的按鈕與「前往綠界付款」按鈕。
 
 ## BILL-R13.2 前往綠界付款
 
@@ -563,6 +717,41 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 4. 點「前往綠界付款」。
 
 預期：瀏覽器換到網址以 `https://payment-stage.ecpay.com.tw` 開頭的綠界付款頁。
+
+## BILL-R13.3 在月底點選月繳
+
+前端沒有自動化 test。前提的日期要在瀏覽器裡改，所以用 Chrome 開發者工具的 Console 把頁面的時間固定在 2027/01/31。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
+2. 開啟方案頁。
+3. 開啟 Chrome 開發者工具的 Console，執行下面的程式，讓頁面取得的現在時間固定是台灣時間 2027/01/31 12:00：
+
+   ```js
+   const fixedTime = new Date("2027-01-31T12:00:00+08:00").getTime();
+   const RealDate = Date;
+   window.Date = class extends RealDate {
+     constructor(...args) {
+       super(...(args.length ? args : [fixedTime]));
+     }
+     static now() {
+       return fixedTime;
+     }
+   };
+   ```
+
+4. 點「方案選擇」區塊的「月繳」。
+
+預期：「確認訂閱 Standard」視窗寫出「下次續費 2027/02/28」。
+
+## BILL-R13.4 點選年繳
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
+2. 開啟方案頁。
+3. 點「方案選擇」區塊的「年繳」。
+
+預期：「確認訂閱 Standard」視窗寫出「付款週期 年繳」、「每期金額 NT$700」與「下次續費 <日期>」，日期是今天（台灣時間）的 1 年後。
 
 ## BILL-R14.1 試用中付款
 
@@ -603,7 +792,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
    "
    ```
 
-4. 執行「執行到期處理」指令。這個指令會處理本機資料庫裡每一個帳號的到期訂閱，不只是測試帳號。
+4. 執行「執行到期處理」指令。
 5. 執行「模擬付款結果」指令，`SUCCESS` 設成 `True`。
 6. 開啟方案頁。
 
@@ -645,6 +834,18 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 預期：「目前方案」區塊仍顯示「Free」。
 
+## BILL-R17.2 從綠界付款頁按上一頁
+
+前端沒有自動化 test，按瀏覽器的上一頁之後的畫面只能在瀏覽器上確認。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'unsubscribed'`。
+2. 開啟方案頁。
+3. 點「方案選擇」區塊的「月繳」，再點「前往綠界付款」。
+4. 等瀏覽器換到綠界的付款頁之後，按瀏覽器的上一頁。
+5. 點「方案選擇」區塊的「年繳」。
+
+預期：第 4 步之後畫面顯示方案頁，沒有開著的「確認訂閱 Standard」視窗，「月繳」與「年繳」可以點選；第 5 步之後畫面顯示「確認訂閱 Standard」視窗，寫出「付款週期 年繳」，而且視窗沒有自己關閉。
+
 ## BILL-R18.2 已停止自動續訂後再訂閱
 
 後端沒有 test 驗證已停止自動續訂的使用者不能再訂閱，方案頁也沒有讓這類使用者訂閱的按鈕，所以用指令直接要求訂閱。
@@ -677,35 +878,17 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 預期：頁面頂端顯示「若已完成付款，系統會在收到綠界通知後更新方案狀態。」這段提示。
 
-## BILL-R20.1 自動續訂中的定期扣款成功
+## BILL-R22.6 白名單上的使用者這一期沒有扣款成功
 
-後端沒有 test 驗證定期扣款成功之後的訂閱狀態。
+前端沒有自動化 test，`test_whitelisted_user_unpaid_period_ends_subscription` 只驗證後端記下的訂閱。
 
-1. 執行「建立已付款的訂閱」指令，`STATE` 設成 `'active'`，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
-2. 執行「模擬定期扣款結果」指令，`SUCCESS` 設成 `True`。
-3. 開啟方案頁。
+1. 執行「建立綠界測試訂單」的步驟，取得「綠界測試訂單編號」；已經有的話沿用。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填「綠界測試訂單編號」，`PERIOD_ENDS_IN_HOURS` 設成 `-48`。
+3. 執行「加入白名單」指令。
+4. 執行「執行到期處理」指令。
+5. 開啟方案頁。
 
-預期：「目前方案」區塊顯示「Standard」與標籤「月繳」，「下次續費」的日期是今天的 1 個月後。
-
-## BILL-R20.2 扣款失敗後定期扣款成功
-
-後端沒有 test 驗證定期扣款成功之後的訂閱狀態。
-
-1. 執行「建立已付款的訂閱」指令，`STATE` 設成 `'past_due'`，`PERIOD_ENDS_IN_HOURS` 設成 `-48`。
-2. 執行「模擬定期扣款結果」指令，`SUCCESS` 設成 `True`。
-3. 開啟方案頁。
-
-預期：「目前方案」區塊顯示「Standard」與標籤「月繳」，「下次續費」的日期是今天的 1 個月後。
-
-## BILL-R21.1 定期扣款失敗
-
-後端沒有 test 驗證定期扣款失敗之後的訂閱狀態。
-
-1. 執行「建立已付款的訂閱」指令，`STATE` 設成 `'active'`，`PERIOD_ENDS_IN_HOURS` 設成 `480`。
-2. 執行「模擬定期扣款結果」指令，`SUCCESS` 設成 `False`。
-3. 開啟方案頁。
-
-預期：「目前方案」區塊顯示「Free」與「付款未完成，重新完成付款後可恢復 Standard 權益。」。
+預期：「目前方案」區塊裡只有「Standard」、標籤「使用中」、「行情更新 約每 30 秒」與「額度 交易與股利、買賣計畫、持股、關注皆不限量」，沒有「上一期的扣款沒有成功，自動續訂已經結束。重新訂閱即可恢復 Standard 方案。」，方案頁沒有「訂閱管理」區塊。
 
 ## BILL-R23.1 開啟停止自動續訂的確認視窗
 
@@ -715,31 +898,32 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 2. 開啟方案頁。
 3. 點「訂閱管理」區塊的「停止自動續訂」。
 
-預期：畫面顯示確認視窗，標題是「停止 Standard 自動續訂？」，寫出「Standard 權益會保留至 <日期>。到期後會切換為 Free。」，日期是今天的 20 天後，按鈕是「保留自動續訂」與「停止自動續訂」。
+預期：畫面顯示確認視窗，標題是「停止 Standard 自動續訂？」，寫出「Standard 權益會保留至 <日期>。到期後會切換為 Free。」，日期是今天的 20 天後；「到期後會發生什麼？」裡沒有「你可以在到期前重新啟用自動續訂。」，視窗裡沒有「可以告訴我們原因嗎？」，按鈕是「保留自動續訂」與「停止自動續訂」。
 
 ## BILL-R23.2 確認停止自動續訂
 
 前端沒有自動化 test，後端也沒有 test 驗證停止自動續訂成功的結果。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'active'`。
-2. 開啟方案頁。
-3. 點「訂閱管理」區塊的「停止自動續訂」。
-4. 點確認視窗裡的「停止自動續訂」。
+1. 執行「建立綠界測試訂單」的步驟，取得「綠界測試訂單編號」；已經有的話沿用。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填「綠界測試訂單編號」，`PERIOD_ENDS_IN_HOURS` 設成 `480`。
+3. 開啟方案頁。
+4. 點「訂閱管理」區塊的「停止自動續訂」。
+5. 點確認視窗裡的「停止自動續訂」。
 
 預期：確認視窗關閉，頁面頂端顯示「已停止自動續訂，Standard 權益會保留到 <日期>。」，日期是今天的 20 天後；「目前方案」區塊顯示「有效至」，「訂閱管理」區塊沒有「停止自動續訂」按鈕。
 
-## BILL-R23.3 綠界沒有取消定期扣款
+## BILL-R23.3 綠界沒有終止定期扣款
 
-前端沒有自動化 test，後端也沒有 test 驗證綠界回傳錯誤時的結果。這項檢查假設綠界的測試環境收到取消一筆不存在的定期定額訂單時會回傳錯誤；「建立已付款的訂閱」指令建立的訂閱沒有真的在綠界建立，所以後端請綠界取消時會收到錯誤。
+前端沒有自動化 test，`test_ecpay_failure_keeps_auto_renewal` 只驗證後端的回應。「建立已付款的訂閱」指令在 `ORDER` 是空字串時建立的訂閱沒有真的在綠界建立，所以後端請綠界終止定期扣款時，綠界回傳這份訂單不存在。
 
-1. 執行「建立已付款的訂閱」指令，`STATE` 設成 `'active'`，`PERIOD_ENDS_IN_HOURS` 設成 `480`。
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `480`。
 2. 開啟方案頁。
 3. 點「訂閱管理」區塊的「停止自動續訂」。
 4. 點確認視窗裡的「停止自動續訂」。
 5. 點「保留自動續訂」。
 6. 重新整理方案頁。
 
-預期：第 4 步之後確認視窗沒有關閉；重新整理之後，「目前方案」區塊仍顯示「下次續費」，「訂閱管理」區塊仍有「停止自動續訂」按鈕。
+預期：第 4 步之後確認視窗沒有關閉，並顯示「綠界暫時無法處理，請稍後再試。」；重新整理之後，「目前方案」區塊仍顯示「下次續費」，「訂閱管理」區塊仍有「停止自動續訂」按鈕。
 
 ## BILL-R23.6 白名單上的使用者在自動續訂中
 
@@ -766,13 +950,112 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 `test_whitelisted_user_stops_auto_renewal` 只驗證訂閱變成已停止自動續訂，前端沒有自動化 test。
 
-1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'active'`。
+1. 執行「建立綠界測試訂單」的步驟，取得「綠界測試訂單編號」；已經有的話沿用。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填「綠界測試訂單編號」，`PERIOD_ENDS_IN_HOURS` 設成 `480`。
+3. 執行「加入白名單」指令。
+4. 開啟方案頁。
+5. 點「訂閱管理」區塊的「停止自動續訂」。
+6. 點確認視窗裡的「停止自動續訂」。
+
+預期：確認視窗關閉，頁面頂端顯示「已停止自動續訂，之後不會再扣款。」，方案頁沒有「訂閱管理」區塊。
+
+## BILL-R23.9 等待期內開啟停止自動續訂的確認視窗
+
+前端沒有自動化 test。
+
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+2. 開啟方案頁。
+3. 點「訂閱管理」區塊的「停止自動續訂」。
+
+預期：確認視窗的說明是「停止後不會再自動扣款。如果本期已經扣款成功，Standard 權益會保留到 <日期>；如果沒有，會立刻切換為 Free 方案。」，日期是 1 小時前的日期的 1 個月後；視窗裡沒有「Standard 權益會保留至」，有「到期後會發生什麼？」。
+
+## BILL-R23.10 等待期內停止自動續訂，這一期已經扣款成功
+
+前端沒有自動化 test，`test_stop_in_waiting_period_after_unnotified_charge` 只驗證後端記下的訂閱。這一節需要一份綠界在第一次扣款之後又扣款成功過的測試訂單，綠界的 stage 環境要在建立訂單的 1 個月後才會扣第二期。
+
+1. 準備一份在 1 個月以前照「建立綠界測試訂單」的步驟建立、之後沒有終止過的測試訂單，用它的訂單編號當「綠界測試訂單編號」。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填這份測試訂單的編號，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+3. 開啟方案頁，點「訂閱管理」區塊的「停止自動續訂」。
+4. 點確認視窗裡的「停止自動續訂」。
+
+預期：確認視窗關閉，頁面頂端顯示「已停止自動續訂，Standard 權益會保留到 <日期>。」，日期是 1 小時前的日期的 1 個月後；「目前方案」區塊顯示「有效至 <同一個日期>」。
+
+## BILL-R23.11 等待期內停止自動續訂，這一期沒有扣款成功
+
+前端沒有自動化 test，`test_stop_in_waiting_period_without_charge` 只驗證後端記下的訂閱。
+
+1. 執行「建立綠界測試訂單」的步驟，取得「綠界測試訂單編號」；已經有的話沿用。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填「綠界測試訂單編號」，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+3. 開啟方案頁，點「訂閱管理」區塊的「停止自動續訂」。
+4. 點確認視窗裡的「停止自動續訂」。
+
+預期：確認視窗關閉，頁面頂端顯示「已停止自動續訂，目前方案是 Free。」，「目前方案」區塊顯示「Free」，方案頁有「方案選擇」區塊。
+
+## BILL-R23.12 白名單上的使用者在等待期內
+
+前端沒有自動化 test。
+
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+2. 執行「加入白名單」指令。
+3. 開啟方案頁。
+
+預期：「訂閱管理」區塊寫「本期的扣款結果還在確認中。停止後不會再自動扣款。」，並有「停止自動續訂」按鈕。
+
+## BILL-R23.13 請綠界終止定期扣款時連線逾時
+
+前端沒有自動化 test，`test_ecpay_timeout_keeps_auto_renewal` 只驗證後端的回應。這一節讓 `api-server` 的 container 把綠界的網域解析到不會回應的位址，後端連線綠界時就會逾時。
+
+1. 執行「建立綠界測試訂單」的步驟，取得「綠界測試訂單編號」；已經有的話沿用。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填「綠界測試訂單編號」，`PERIOD_ENDS_IN_HOURS` 設成 `480`。
+3. 執行下面的指令，讓後端連不上綠界：
+
+   ```bash
+   docker compose -f compose.dev.yaml exec api-server sh -c "echo '10.255.255.1 payment-stage.ecpay.com.tw' >> /etc/hosts"
+   ```
+
+4. 開啟方案頁，點「訂閱管理」區塊的「停止自動續訂」。
+5. 點確認視窗裡的「停止自動續訂」，等到確認視窗裡出現錯誤訊息。
+6. 執行下面的指令，讓後端恢復連線：
+
+   ```bash
+   docker compose -f compose.dev.yaml exec api-server sh -c "sed '/10.255.255.1 payment-stage.ecpay.com.tw/d' /etc/hosts > /tmp/hosts && cat /tmp/hosts > /etc/hosts"
+   ```
+
+7. 點「保留自動續訂」，再重新整理方案頁。
+
+預期：第 5 步之後確認視窗沒有關閉，並顯示「綠界暫時無法處理，請稍後再試。」；重新整理之後，「目前方案」區塊仍顯示「下次續費」，「訂閱管理」區塊仍有「停止自動續訂」按鈕。
+
+## BILL-R23.15 白名單上的使用者在等待期內停止自動續訂，這一期沒有扣款成功
+
+前端沒有自動化 test，`test_whitelisted_user_stop_in_waiting_period_without_charge` 只驗證後端記下的訂閱。
+
+1. 執行「建立綠界測試訂單」的步驟，取得「綠界測試訂單編號」；已經有的話沿用。
+2. 執行「建立已付款的訂閱」指令，`ORDER` 填「綠界測試訂單編號」，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+3. 執行「加入白名單」指令。
+4. 開啟方案頁，點「訂閱管理」區塊的「停止自動續訂」。
+5. 點確認視窗裡的「停止自動續訂」。
+
+預期：確認視窗關閉，頁面頂端顯示「已停止自動續訂，之後不會再扣款。」，方案頁沒有「訂閱管理」區塊，也沒有「方案選擇」區塊。
+
+## BILL-R23.16 等待期內的「訂閱管理」區塊
+
+前端沒有自動化 test。
+
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
+2. 開啟方案頁。
+
+預期：「訂閱管理」區塊寫「本期的扣款結果還在確認中。停止後不會再自動扣款。」，並有「停止自動續訂」按鈕。
+
+## BILL-R23.17 白名單上的使用者在等待期內開啟停止自動續訂的確認視窗
+
+前端沒有自動化 test。
+
+1. 執行「建立已付款的訂閱」指令，`ORDER` 設成空字串，`PERIOD_ENDS_IN_HOURS` 設成 `-1`。
 2. 執行「加入白名單」指令。
 3. 開啟方案頁。
 4. 點「訂閱管理」區塊的「停止自動續訂」。
-5. 點確認視窗裡的「停止自動續訂」。
 
-預期：確認視窗關閉，頁面頂端顯示「已停止自動續訂，之後不會再扣款。」，方案頁沒有「訂閱管理」區塊。
+預期：確認視窗的說明只有「停止後不會再自動扣款。」，沒有「如果本期已經扣款成功」，也沒有「到期後會發生什麼？」。
 
 ## BILL-R24.1 本期剛結束
 
@@ -792,4 +1075,38 @@ docker compose -f compose.dev.yaml exec api-server python manage.py standard_whi
 
 3. 開啟方案頁。
 
-預期：「目前方案」區塊顯示「Free」，方案頁有「額度使用」區塊。
+預期：「目前方案」區塊顯示「Free」，沒有「有效至」，方案頁有「額度使用」區塊。
+
+## BILL-R28.1 取得方案資料失敗
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'trialing'`。
+2. 執行「讓方案資料取得失敗」指令。
+3. 開啟方案頁。
+4. 執行「恢復方案資料」指令。
+
+預期：第 3 步之後方案頁只顯示「暫時無法取得方案資料，請稍後再試。」與「重新載入」按鈕，沒有「目前方案」區塊。
+
+## BILL-R28.2 重新載入成功
+
+前端沒有自動化 test。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'trialing'`。
+2. 執行「讓方案資料取得失敗」指令。
+3. 開啟方案頁，確認畫面顯示「暫時無法取得方案資料，請稍後再試。」。
+4. 執行「恢復方案資料」指令。
+5. 點「重新載入」。
+
+預期：方案頁顯示「目前方案」區塊，標籤是「試用中」。
+
+## BILL-R28.3 從綠界回到方案頁時取得方案資料失敗
+
+前端沒有自動化 test。從綠界回到方案頁時，綠界把瀏覽器導到 `https://local.taigu.tw/settings/current-plan?checkout=ecpay`（見 BILL-R19.1 的手動檢查），所以這一節直接開啟這個網址。
+
+1. 執行「設定訂閱狀態」指令，`STATE` 設成 `'trialing'`。
+2. 執行「讓方案資料取得失敗」指令。
+3. 開啟 `https://local.taigu.tw/settings/current-plan?checkout=ecpay`。
+4. 執行「恢復方案資料」指令。
+
+預期：第 3 步之後方案頁頂端顯示「若已完成付款，系統會在收到綠界通知後更新方案狀態。」，下方只有「暫時無法取得方案資料，請稍後再試。」與「重新載入」按鈕。

@@ -34,13 +34,15 @@ type ApiErrorPayload = {
 
 const CSRF_FAILED_MESSAGE = "無法完成操作，請重新整理後再試一次。";
 
+export const UNKNOWN_API_ERROR_MESSAGE = "Unknown error occurred";
+
 export class ApiError extends Error {
   public readonly code?: string;
   public readonly resource?: PlanQuotaResource;
   public readonly status?: number;
 
   public constructor(payload: ApiErrorPayload, status?: number) {
-    super(payload.message ?? "Unknown error occurred");
+    super(payload.message ?? UNKNOWN_API_ERROR_MESSAGE);
     this.name = "ApiError";
     this.code = payload.code;
     this.resource = payload.resource;

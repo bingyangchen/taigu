@@ -9,8 +9,10 @@ from main.account import OAuthOrganization
 from main.account.models import User
 from main.billing.models import (
     BillingProfile,
+    PaymentStatus,
     Plan,
     StandardWhitelist,
+    SubscriptionPayment,
     SubscriptionStatus,
 )
 from main.billing.services.entitlements import (
@@ -28,7 +30,6 @@ from main.market.models import Company
 from main.trade_plan.models import TradePlan
 from main.trade_plan.views import create_trade_plan
 from main.trade_record.models import TradeRecord
-from main.trade_record.views import _create as create_trade_record
 
 
 @pytest.mark.django_db
@@ -77,6 +78,34 @@ class TestEntitlements:
 
         assert entitlements.plan == Plan.FREE
         assert entitlements.market_refresh_interval_seconds == 600
+
+    @pytest.mark.scenario("BILL-R1.6")
+    def test_waiting_period_keeps_standard(self, user: User) -> None:
+        period_ends_at = timezone.now() - timedelta(hours=1)
+        initial_payment = SubscriptionPayment.objects.create(
+            user=user,
+            provider_request_id="S1",
+            provider_subscription_id="S1",
+            provider_transaction_id="T1",
+            billing_interval="month",
+            amount=65,
+            status=PaymentStatus.PAID,
+            paid_at=period_ends_at - timedelta(days=31),
+        )
+        BillingProfile.objects.create(
+            user=user,
+            plan=Plan.STANDARD,
+            subscription_status=SubscriptionStatus.ACTIVE,
+            initial_payment=initial_payment,
+            current_period_started_at=period_ends_at - timedelta(days=31),
+            current_period_ends_at=period_ends_at,
+        )
+
+        serialized = serialize_entitlements(user)
+
+        assert serialized["plan"] == Plan.STANDARD
+        assert serialized["is_awaiting_renewal"] is True
+        assert serialized["quota"]["monthly_records"] is None
 
     @pytest.mark.scenario("BILL-R3.1")
     def test_free_record_monthly_quota_counts_trade_and_dividend(
@@ -166,46 +195,6 @@ class TestStandardWhitelistEntitlements:
         assert response.status_code == 200
         assert Favorite.objects.filter(owner=user, company=company).exists()
 
-    @pytest.mark.scenario("BILL-R1.4")
-    def test_whitelisted_past_due_user_creates_trade_record_beyond_free_quota(
-        self, user: User, company: Company
-    ) -> None:
-        BillingProfile.objects.create(
-            user=user,
-            plan=Plan.STANDARD,
-            subscription_status=SubscriptionStatus.PAST_DUE,
-            current_period_started_at=timezone.now() - timedelta(days=33),
-            current_period_ends_at=timezone.now() - timedelta(days=2),
-        )
-        for _ in range(20):
-            TradeRecord.objects.create(
-                owner=user,
-                company=company,
-                deal_time=timezone.localdate(),
-                deal_price=100,
-                deal_quantity=1000,
-                handling_fee=1,
-            )
-        request = RequestFactory().post(
-            "/",
-            data=json.dumps(
-                {
-                    "deal_time": timezone.localdate().isoformat(),
-                    "sid": company.pk,
-                    "deal_price": 100,
-                    "deal_quantity": 1000,
-                    "handling_fee": 1,
-                }
-            ),
-            content_type="application/json",
-        )
-        request.user = user
-
-        response = create_trade_record(request)
-
-        assert response.status_code == 200
-        assert TradeRecord.objects.filter(owner=user).count() == 21
-
     @pytest.mark.scenario("BILL-R1.5")
     def test_whitelisted_user_creates_trade_plan_after_stopped_period_ends(
         self, user: User, company: Company
@@ -259,10 +248,21 @@ class TestStandardWhitelistEntitlements:
         layout and the stop-auto-renewal button.
         """
         period_ends_at = timezone.now() + period_ends_in
+        initial_payment = SubscriptionPayment.objects.create(
+            user=user,
+            provider_request_id="S1",
+            provider_subscription_id="S1",
+            provider_transaction_id="T1",
+            billing_interval="month",
+            amount=65,
+            status=PaymentStatus.PAID,
+            paid_at=period_ends_at - timedelta(days=31),
+        )
         BillingProfile.objects.create(
             user=user,
             plan=Plan.STANDARD,
             subscription_status=SubscriptionStatus.ACTIVE,
+            initial_payment=initial_payment,
             current_period_started_at=period_ends_at - timedelta(days=31),
             current_period_ends_at=period_ends_at,
         )

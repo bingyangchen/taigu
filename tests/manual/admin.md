@@ -356,7 +356,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 2. 開啟 `https://local.taigu.tw/admin/subscriptions`，改寫 `https://local.taigu.tw/api/admin/subscriptions` 的回應：
 
    ```json
-   {"statuses": {"trialing": 3, "auto_renewing": 2, "auto_renewal_stopped": 1, "past_due": 1, "unsubscribed": 4}, "whitelisted": 1, "monthly_payments": [], "trial_conversions": [
+   {"statuses": {"trialing": 3, "auto_renewing": 2, "auto_renewal_stopped": 1, "unsubscribed": 4}, "whitelisted": 1, "monthly_payments": [], "trial_conversions": [
      {"month": "2026-12", "trials": 4, "paid": 0, "conversion_rate": "0.0", "status": "in_progress", "settles_on": "2027-03-02"},
      {"month": "2026-11", "trials": 0, "paid": 0, "conversion_rate": null, "status": null, "settles_on": null},
      {"month": "2026-10", "trials": 76, "paid": 9, "conversion_rate": "11.8", "status": "in_progress", "settles_on": "2026-12-31"},
@@ -374,7 +374,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 2. 開啟 `https://local.taigu.tw/admin/subscriptions`，改寫 `https://local.taigu.tw/api/admin/subscriptions` 的回應：
 
    ```json
-   {"statuses": {"trialing": 0, "auto_renewing": 0, "auto_renewal_stopped": 0, "past_due": 0, "unsubscribed": 5}, "whitelisted": 0, "monthly_payments": [], "trial_conversions": [
+   {"statuses": {"trialing": 0, "auto_renewing": 0, "auto_renewal_stopped": 0, "unsubscribed": 5}, "whitelisted": 0, "monthly_payments": [], "trial_conversions": [
      {"month": "2026-09", "trials": 2, "paid": 0, "conversion_rate": "0.0", "status": "settled", "settles_on": null},
      {"month": "2026-08", "trials": 0, "paid": 0, "conversion_rate": null, "status": null, "settles_on": null},
      {"month": "2026-07", "trials": 3, "paid": 1, "conversion_rate": "33.3", "status": "settled", "settles_on": null}
@@ -391,7 +391,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 2. 開啟 `https://local.taigu.tw/admin/subscriptions`，改寫 `https://local.taigu.tw/api/admin/subscriptions` 的回應：
 
    ```json
-   {"statuses": {"trialing": 0, "auto_renewing": 0, "auto_renewal_stopped": 0, "past_due": 0, "unsubscribed": 3}, "whitelisted": 0, "trial_conversions": [], "monthly_payments": []}
+   {"statuses": {"trialing": 0, "auto_renewing": 0, "auto_renewal_stopped": 0, "unsubscribed": 3}, "whitelisted": 0, "trial_conversions": [], "monthly_payments": []}
    ```
 
 預期：試用轉付費表的位置只顯示「還沒有試用的使用者。」；目前的訂閱狀態的未訂閱是 3 人，其他狀態都是 0 人。
@@ -404,7 +404,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 2. 開啟 `https://local.taigu.tw/admin/subscriptions`，改寫 `https://local.taigu.tw/api/admin/subscriptions` 的回應：
 
    ```json
-   {"statuses": {"trialing": 0, "auto_renewing": 1, "auto_renewal_stopped": 0, "past_due": 0, "unsubscribed": 3}, "whitelisted": 0, "trial_conversions": [], "monthly_payments": [
+   {"statuses": {"trialing": 0, "auto_renewing": 1, "auto_renewal_stopped": 0, "unsubscribed": 3}, "whitelisted": 0, "trial_conversions": [], "monthly_payments": [
      {"month": "2026-09", "count": 1, "amount": 65},
      {"month": "2026-10", "count": 0, "amount": 0},
      {"month": "2026-11", "count": 4, "amount": 895},

@@ -126,45 +126,6 @@ class TestStandardWhitelistCommand:
 
         assert "ECPay will keep charging the user" in output
 
-    def test_add_warns_that_ecpay_may_keep_charging_past_due_user(
-        self, user: User
-    ) -> None:
-        """
-        A past-due user cannot stop auto-renewal on the plan page, so the developer
-        has to handle the ECPay periodic order some other way.
-        """
-        BillingProfile.objects.create(
-            user=user,
-            plan=Plan.STANDARD,
-            subscription_status=SubscriptionStatus.PAST_DUE,
-            current_period_started_at=timezone.now() - timedelta(days=33),
-            current_period_ends_at=timezone.now() - timedelta(days=2),
-        )
-
-        output = _run_command("add", user.email)
-
-        assert "ECPay may keep charging the user" in output
-
-    def test_add_does_not_warn_after_past_due_user_stopped_auto_renewal(
-        self, user: User
-    ) -> None:
-        """
-        Stopping auto-renewal already canceled the ECPay periodic order, so a
-        warning would send the developer after a charge that cannot happen.
-        """
-        BillingProfile.objects.create(
-            user=user,
-            plan=Plan.STANDARD,
-            subscription_status=SubscriptionStatus.PAST_DUE,
-            current_period_started_at=timezone.now() - timedelta(days=33),
-            current_period_ends_at=timezone.now() - timedelta(days=2),
-            cancel_at_period_end=True,
-        )
-
-        output = _run_command("add", user.email)
-
-        assert "ECPay" not in output
-
     def test_add_does_not_warn_for_free_user(
         self, user: User, free_profile: BillingProfile
     ) -> None:

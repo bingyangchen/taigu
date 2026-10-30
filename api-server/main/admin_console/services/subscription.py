@@ -24,7 +24,6 @@ class _SubscriptionStatusKey(StrEnum):
     TRIALING = "trialing"
     AUTO_RENEWING = "auto_renewing"
     AUTO_RENEWAL_STOPPED = "auto_renewal_stopped"
-    PAST_DUE = "past_due"
     UNSUBSCRIBED = "unsubscribed"
 
 
@@ -152,8 +151,6 @@ def _get_status_key(
                 if cancel_at_period_end
                 else _SubscriptionStatusKey.AUTO_RENEWING
             )
-        case SubscriptionStatus.PAST_DUE:
-            return _SubscriptionStatusKey.PAST_DUE
         case SubscriptionStatus.CANCELED:
             return _SubscriptionStatusKey.UNSUBSCRIBED
         case _:

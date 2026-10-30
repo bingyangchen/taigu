@@ -1,7 +1,7 @@
 ---
 id: "0006"
 title: billing-fixes
-status: approved
+status: done
 specs: [billing.md, admin.md, product.md]
 depends_on: []
 ---

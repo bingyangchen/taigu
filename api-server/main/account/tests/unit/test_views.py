@@ -253,6 +253,29 @@ class TestGoogleLoginView:
         assert ACCESS_COOKIE_NAME in response.cookies
         assert User.objects.filter(oauth_id="google_oauth_id").count() == 1
 
+    @pytest.mark.scenario("BILL-R2.6")
+    def test_google_login_starts_trial_of_user_registered_before_billing(
+        self, google: FakeGoogle, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        user = User.objects.create_user(
+            oauth_org=OAuthOrganization.GOOGLE,
+            oauth_id="google_oauth_id",
+            email="test@example.com",
+            username="Test User",
+        )
+        User.objects.filter(pk=user.pk).update(
+            date_joined=datetime(2021, 3, 1, tzinfo=TAIPEI)
+        )
+        login_at = datetime(2026, 10, 21, 10, 0, tzinfo=TAIPEI)
+        monkeypatch.setattr("django.utils.timezone.now", lambda: login_at)
+        state, oauth_cookie = _start_authorization(LOGIN_REDIRECT_URI)
+
+        google_login(_make_callback_request(LOGIN_REDIRECT_URI, state, oauth_cookie))
+
+        profile = BillingProfile.objects.get(user=user)
+        assert profile.subscription_status == SubscriptionStatus.TRIALING
+        assert timezone.localdate(profile.trial_ends_at) == date(2026, 11, 21)
+
     def test_google_login_insufficient_data(self) -> None:
         request = HttpRequest()
         request.method = "POST"

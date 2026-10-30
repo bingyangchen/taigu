@@ -35,7 +35,6 @@ const STATUS_KEY_TO_LABEL: Record<SubscriptionStatusKey, string> = {
   trialing: "試用中",
   auto_renewing: "自動續訂中",
   auto_renewal_stopped: "已停止自動續訂",
-  past_due: "扣款失敗",
   unsubscribed: "未訂閱",
 };
 const STATUS_ENTRIES = Object.entries(STATUS_KEY_TO_LABEL) as [

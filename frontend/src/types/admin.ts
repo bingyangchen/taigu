@@ -50,7 +50,6 @@ export type SubscriptionStatusKey =
   | "trialing"
   | "auto_renewing"
   | "auto_renewal_stopped"
-  | "past_due"
   | "unsubscribed";
 
 export type TrialConversion = { month: string; trials: number; paid: number } & (
