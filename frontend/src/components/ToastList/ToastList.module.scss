@@ -10,7 +10,7 @@
   user-select: none;
   & > .toast_outer {
     padding: 16px;
-    animation: leftflyinout 5s ease;
+    animation: leftflyinout 5s ease forwards;
     width: 420px;
     & > .toast {
       position: relative;
@@ -44,7 +44,7 @@
         height: 3px;
         width: 100%;
         background-color: _.$white-transparent;
-        animation: countdown 4.8s linear;
+        animation: countdown 4.8s linear forwards;
         transform-origin: left;
       }
       & > .close_button {

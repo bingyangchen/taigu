@@ -4,7 +4,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { ToastMessage } from "../../types";
 
 interface ToastState {
-  toasts: ToastMessage[];
+  toasts: (ToastMessage & { id: string })[];
 }
 
 const initialState: ToastState = { toasts: [] };
@@ -37,8 +37,8 @@ export const toastSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(pushToast.fulfilled, (state, action: PayloadAction<ToastMessage>) => {
-        state.toasts.push(action.payload);
+      .addCase(pushToast.fulfilled, (state, action) => {
+        state.toasts.push({ ...action.payload, id: action.meta.requestId });
       })
       .addCase(setAutoRemoveToastTimer.fulfilled, (state) => {
         state.toasts.splice(0, 1);
