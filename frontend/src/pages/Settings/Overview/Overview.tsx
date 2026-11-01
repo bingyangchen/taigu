@@ -1,9 +1,16 @@
 import React from "react";
 import { connect } from "react-redux";
+import { Link } from "react-router-dom";
 
 import googleLogo from "../../../assets/google.png";
 import imgPersonFill from "../../../assets/person-fill.svg";
-import { BeautifulBlock, BeautifulRow, FullLogo, Modal } from "../../../components";
+import {
+  BeautifulBlock,
+  BeautifulRow,
+  FullLogo,
+  Modal,
+  Tooltip,
+} from "../../../components";
 import * as Icons from "../../../icons";
 import { logout } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
@@ -171,7 +178,15 @@ class Overview extends React.Component<Props, State> {
             </BeautifulRow>
           </BeautifulBlock>
           <div className={styles.copyright}>
-            <FullLogo size="m" />
+            <Tooltip content="前往 Taigu 介紹頁" side="top">
+              <Link
+                to={`${Env.frontendRootPath}welcome`}
+                className={styles.logo_link}
+                aria-label="前往 Taigu 介紹頁"
+              >
+                <FullLogo size="m" />
+              </Link>
+            </Tooltip>
             Copyright {new Date().getFullYear()} Taigu All rights reserved.
           </div>
         </div>

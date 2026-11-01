@@ -61,5 +61,17 @@
     font-size: 0.75 * _.$base-font-size;
     margin-top: 30px;
     color: _.$gray;
+    & > .logo_link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: 6px;
+      &:focus-visible {
+        outline: 2px solid _.$blue;
+        outline-offset: 4px;
+      }
+    }
   }
 }
