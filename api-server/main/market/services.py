@@ -50,7 +50,7 @@ def fetch_and_store_realtime_stock_info() -> None:
         start = datetime.now()
         url = f"{ThirdPartyApi.realtime['stock']}{'|'.join(all[:batch_size])}"
         try:
-            json_data = requests.get(url, timeout=4, verify=False).json()  # noqa: S501
+            json_data = requests.get(url, timeout=(2, 8), verify=False).json()  # noqa: S501
             to_update_batch = []
             to_store_stock_price_batch = []
             intraday_slot_number = _get_intraday_five_minute_slot(timezone.localtime())
@@ -148,10 +148,10 @@ def fetch_and_store_realtime_stock_info() -> None:
                 unique_fields=["company_id"],
             )
             _bulk_store_stock_price_per_minute(to_store_stock_price_batch)
-        except ReadTimeout:
-            logger.warning("ReadTimeout")
         except ConnectTimeout:
             logger.warning("ConnectTimeout")
+        except ReadTimeout:
+            logger.warning("ReadTimeout")
         except JSONDecodeError:
             logger.warning("JSONDecodeError")
         except Exception as e:
