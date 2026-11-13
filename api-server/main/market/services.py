@@ -1,16 +1,18 @@
 import csv
 import logging
 import math
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, date, datetime, time, timedelta
 from datetime import timezone as stdlib_timezone
 from io import StringIO
-from time import sleep
+from threading import BoundedSemaphore, Condition
+from time import monotonic, sleep
 from typing import Literal
 
 import requests
 import urllib3
 from dateutil.relativedelta import relativedelta
-from django.db import transaction
+from django.db import close_old_connections, connections, transaction
 from django.utils import timezone
 from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 
@@ -33,32 +35,109 @@ from main.market.models import (
 logger = logging.getLogger(__name__)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+MARKET_INDICES = ("t00", "o00")
+
+
+class OutBoundRequestRateLimiter:
+    def __init__(self, interval: float = 1.7) -> None:
+        self.interval = interval
+        self.condition = Condition()
+        self.next_batch_index = 0
+        self.next_request_at = monotonic()
+
+    def wait(self, batch_index: int) -> None:
+        with self.condition:
+            self.condition.wait_for(lambda: batch_index == self.next_batch_index)
+            wait_time = self.next_request_at - monotonic()
+            if wait_time > 0:
+                sleep(wait_time)
+            self.next_request_at = monotonic() + self.interval
+            self.next_batch_index += 1
+            self.condition.notify_all()
+
 
 def fetch_and_store_realtime_stock_info() -> None:
     batch_size = 145
-    market_indices = ("t00", "o00")
+    wait_interval = 1.7  # There's a 3 requests per 5 seconds API rate limit.
+    db_connection_count = 4
+    logger.info("Start fetching realtime sotck info. Batch size: %d", batch_size)
 
-    logger.info("Start fetching realtime sotck info.")
     query_set = Company.objects.filter(trade_type__isnull=False).values(
         "pk", "trade_type"
     )
-    all = [f"tse_{market_indices[0]}.tw", f"otc_{market_indices[1]}.tw"] + [
+    symbols = [f"tse_{MARKET_INDICES[0]}.tw", f"otc_{MARKET_INDICES[1]}.tw"] + [
         f"{x['trade_type']}_{x['pk']}.tw" for x in query_set
     ]
-    logger.info(f"Expected request count: {math.ceil(len(all) / batch_size)}")
-    while len(all) > 0:
-        start = datetime.now()
-        url = f"{ThirdPartyApi.realtime['stock']}{'|'.join(all[:batch_size])}"
+    batches = [symbols[i : i + batch_size] for i in range(0, len(symbols), batch_size)]
+    batch_count = len(batches)
+    logger.info(f"# of threads: {batch_count}")
+
+    rate_limiter = OutBoundRequestRateLimiter(interval=wait_interval)
+    db_semaphore = BoundedSemaphore(db_connection_count)
+    futures = {}
+    with ThreadPoolExecutor(max_workers=batch_count) as executor:
+        for batch_index, batch in enumerate(batches):
+            future = executor.submit(
+                _fetch_and_store_realtime_stock_batch,
+                batch,
+                batch_index,
+                rate_limiter,
+                db_semaphore,
+            )
+            futures[future] = batch_index + 1
+
+        failed_batches = 0
+        for future in as_completed(futures):
+            batch_number = futures[future]
+            try:
+                future.result()
+            except ConnectTimeout:
+                failed_batches += 1
+                logger.warning("ConnectTimeout: batch %s", batch_number)
+            except ReadTimeout:
+                failed_batches += 1
+                logger.warning("ReadTimeout: batch %s", batch_number)
+            except JSONDecodeError:
+                failed_batches += 1
+                logger.warning("JSONDecodeError: batch %s", batch_number)
+            except Exception:
+                failed_batches += 1
+                logger.exception("Failed to process batch %s", batch_number)
+
+    if failed_batches:
+        logger.warning(
+            "Realtime stock info update completed with %s failed batches.",
+            failed_batches,
+        )
+    else:
+        logger.info("All realtime stock info updated!")
+
+
+def _fetch_and_store_realtime_stock_batch(
+    batch: list[str],
+    batch_index: int,
+    rate_limiter: OutBoundRequestRateLimiter,
+    db_semaphore: BoundedSemaphore,
+) -> None:
+    url = f"{ThirdPartyApi.realtime['stock']}{'|'.join(batch)}"
+    rate_limiter.wait(batch_index)
+    response = requests.get(url, timeout=(6, 24), verify=False)  # noqa: S501
+    response.raise_for_status()
+    json_data = response.json()
+    received_at = timezone.localtime()
+    with db_semaphore:
+        close_old_connections()
         try:
-            json_data = requests.get(url, timeout=(2, 8), verify=False).json()  # noqa: S501
             to_update_batch = []
             to_store_stock_price_batch = []
-            intraday_slot_number = _get_intraday_five_minute_slot(timezone.localtime())
+            intraday_slot_number = _get_intraday_five_minute_slot(received_at)
+            today = timezone.localdate(received_at)
             for row in json_data["msgArray"]:
                 try:
                     company_id = row["c"]
                     if not company_id:
                         continue
+
                     date_ = datetime.strptime(row["d"], "%Y%m%d").date()
                     quantity = (
                         int(v) * 1000 if (v := row.get("v")) not in (None, "-") else 0
@@ -108,9 +187,9 @@ def fetch_and_store_realtime_stock_info() -> None:
                         price = yesterday_price
 
                     # Do nothing if market is not opened or price is not available
-                    if date.today() == date_ and price:
+                    if today == date_ and price:
                         fluct_price = round(price - yesterday_price, 2)
-                        if company_id in market_indices:
+                        if company_id in MARKET_INDICES:
                             _store_market_index_per_minute(
                                 id=company_id,
                                 date_=date_,
@@ -141,6 +220,7 @@ def fetch_and_store_realtime_stock_info() -> None:
                     logger.error(f"<{type(e).__name__}>: {e}")
                     logger.error(f"Row: {row}")
                     continue
+
             StockInfo.objects.bulk_create(
                 to_update_batch,
                 update_conflicts=True,
@@ -148,22 +228,8 @@ def fetch_and_store_realtime_stock_info() -> None:
                 unique_fields=["company_id"],
             )
             _bulk_store_stock_price_per_minute(to_store_stock_price_batch)
-        except ConnectTimeout:
-            logger.warning("ConnectTimeout")
-        except ReadTimeout:
-            logger.warning("ReadTimeout")
-        except JSONDecodeError:
-            logger.warning("JSONDecodeError")
-        except Exception as e:
-            logger.error(f"<{type(e).__name__}>: {e}")
-            logger.error(f"URL: {url}")
         finally:
-            all = all[batch_size:]
-
-            # API rate limit: 3 requests per 5 seconds
-            if all:
-                sleep(max(0, 2 - (datetime.now() - start).total_seconds()))
-    logger.info("All realtime stock info updated!")
+            connections.close_all()
 
 
 def _get_minutes_after_opening(now: datetime) -> int | None:

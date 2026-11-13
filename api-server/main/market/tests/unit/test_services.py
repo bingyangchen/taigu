@@ -100,16 +100,19 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_get.return_value = mock_response
 
         with (
-            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services.timezone.localdate",
+                return_value=date(2023, 12, 1),
+            ),
             patch(
                 "main.market.services._get_intraday_five_minute_slot", return_value=90
             ),
         ):
-            mock_date.today.return_value = date(2023, 12, 1)
-
             fetch_and_store_realtime_stock_info()
 
-        mock_logger.info.assert_any_call("Start fetching realtime sotck info.")
+        mock_logger.info.assert_any_call(
+            "Start fetching realtime sotck info. Batch size: %d", 145
+        )
         mock_logger.info.assert_any_call("All realtime stock info updated!")
 
         mock_store_market.assert_called_once_with(
@@ -146,12 +149,14 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_get.return_value = mock_response
 
         with (
-            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services.timezone.localdate",
+                return_value=date(2023, 12, 1),
+            ),
             patch(
                 "main.market.services._get_intraday_five_minute_slot", return_value=None
             ),
         ):
-            mock_date.today.return_value = date(2023, 12, 1)
             fetch_and_store_realtime_stock_info()
 
         mock_bulk_create.assert_called_once()
@@ -193,12 +198,14 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_get.return_value = mock_response
 
         with (
-            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services.timezone.localdate",
+                return_value=date(2023, 12, 1),
+            ),
             patch(
                 "main.market.services._get_intraday_five_minute_slot", return_value=90
             ),
         ):
-            mock_date.today.return_value = date(2023, 12, 1)
             fetch_and_store_realtime_stock_info()
 
         stock_price_batch = mock_store_stock_price.call_args[0][0]
@@ -244,12 +251,14 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_get.return_value = mock_response
 
         with (
-            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services.timezone.localdate",
+                return_value=date(2023, 12, 1),
+            ),
             patch(
                 "main.market.services._get_intraday_five_minute_slot", return_value=90
             ),
         ):
-            mock_date.today.return_value = date(2023, 12, 1)
             fetch_and_store_realtime_stock_info()
 
         mock_bulk_create.assert_called_once_with(
@@ -296,12 +305,14 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_get.return_value = mock_response
 
         with (
-            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services.timezone.localdate",
+                return_value=date(2023, 12, 1),
+            ),
             patch(
                 "main.market.services._get_intraday_five_minute_slot", return_value=90
             ),
         ):
-            mock_date.today.return_value = date(2023, 12, 1)
             fetch_and_store_realtime_stock_info()
 
         mock_bulk_create.assert_called_once_with(
@@ -312,6 +323,7 @@ class TestFetchAndStoreRealtimeStockInfo:
         )
         assert mock_store_stock_price.call_args[0][0] == []
 
+    @pytest.mark.django_db(transaction=True)
     @pytest.mark.scenario("MKT-R2.1")
     @patch("main.market.services.TimeSeriesStockInfoCacheManager.delete_many")
     @patch("main.market.services.requests.get")
@@ -352,12 +364,14 @@ class TestFetchAndStoreRealtimeStockInfo:
         mock_get.return_value = mock_response
 
         with (
-            patch("main.market.services.date") as mock_date,
+            patch(
+                "main.market.services.timezone.localdate",
+                return_value=date(2023, 12, 1),
+            ),
             patch(
                 "main.market.services._get_intraday_five_minute_slot", return_value=90
             ),
         ):
-            mock_date.today.return_value = date(2023, 12, 1)
             fetch_and_store_realtime_stock_info()
 
         record = StockPricePerMinute.objects.get(
