@@ -23,18 +23,18 @@ interface State {}
 class SimpleCashInvestedLineChart extends React.Component<Props, State> {
   public state: State;
   private resizeObserver: ResizeObserver | null = null;
+  private resizeAnimationFrameId: number | null = null;
   public constructor(props: Props) {
     super(props);
     this.state = {};
   }
   public componentDidUpdate(): void {
     if (!this.hasChartData()) {
-      this.resizeObserver?.disconnect();
-      this.resizeObserver = null;
+      this.clearResizeObserver();
     }
   }
   public componentWillUnmount(): void {
-    this.resizeObserver?.disconnect();
+    this.clearResizeObserver();
   }
   public render(): React.ReactNode {
     if (!this.hasChartData()) return null;
@@ -53,19 +53,32 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
       throw new Error("Cash invested chart has no parent container.");
     }
 
-    this.resizeObserver?.disconnect();
+    this.clearResizeObserver();
     this.resizeObserver = new ResizeObserver(() => {
-      const { clientWidth, clientHeight } = chartContainer;
-      if (
-        clientWidth > 0 &&
-        clientHeight > 0 &&
-        (chart.getWidth() !== clientWidth || chart.getHeight() !== clientHeight)
-      ) {
-        chart.resize({ width: clientWidth, height: clientHeight });
-      }
+      if (this.resizeAnimationFrameId !== null) return;
+      this.resizeAnimationFrameId = requestAnimationFrame(() => {
+        this.resizeAnimationFrameId = null;
+        const { clientWidth, clientHeight } = chartContainer;
+        if (
+          clientWidth > 0 &&
+          clientHeight > 0 &&
+          (chart.getWidth() !== clientWidth || chart.getHeight() !== clientHeight)
+        ) {
+          chart.resize({ width: clientWidth, height: clientHeight });
+        }
+      });
     });
     this.resizeObserver.observe(chartContainer);
   };
+
+  private clearResizeObserver(): void {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    if (this.resizeAnimationFrameId !== null) {
+      cancelAnimationFrame(this.resizeAnimationFrameId);
+      this.resizeAnimationFrameId = null;
+    }
+  }
 
   private hasChartData(): boolean {
     return (
