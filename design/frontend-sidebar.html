@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>前台桌面側邊欄 | Taigu 設計稿</title>
+    <style>
+      :root {
+        --white: #fff;
+        --noisy-white: #f5f5f5;
+        --page-bg: #f6f9fc;
+        --light-gray: #ddd;
+        --gray: #888;
+        --deep-gray: #444;
+        --blue: #4c8bf5;
+        --red: #d4493f;
+        --green: #1aa260;
+        --black-transparent-2: rgba(0, 0, 0, 0.1);
+        --black-transparent-3: rgba(0, 0, 0, 0.05);
+        --black-transparent-4: rgba(0, 0, 0, 0.02);
+        --blue-transparent-3: rgba(76, 139, 245, 0.1);
+        --main-shell-gradient-top: #d1eeff;
+        --main-shell-gradient-bottom: #feedff;
+        --base-font-size: 16px;
+        --base-letter-spacing: 1px;
+        --sidebar-width: 230px;
+        --collapsed-sidebar-width: 64px;
+        --focus-ring: 0 0 0 2px var(--white), 0 0 0 5px var(--blue);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        color: var(--deep-gray);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+          "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+        font-size: var(--base-font-size);
+        letter-spacing: var(--base-letter-spacing);
+      }
+
+      button,
+      select {
+        font: inherit;
+        letter-spacing: inherit;
+      }
+
+      button:focus-visible,
+      a:focus-visible,
+      select:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 2px;
+      }
+
+      .prototype_controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 44px;
+        padding: 0 16px;
+        border-bottom: 1px solid #333;
+        background: #222;
+        color: var(--white);
+        font-size: 12px;
+      }
+
+      .prototype_controls label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .prototype_controls select {
+        min-height: 32px;
+        padding: 0 8px;
+        border: 1px solid #666;
+        border-radius: 6px;
+        background: #333;
+        color: var(--white);
+      }
+
+      .prototype_controls .hint {
+        margin-left: auto;
+        color: #ddd;
+      }
+
+      .app {
+        position: relative;
+        display: flex;
+        height: calc(100dvh - 44px);
+        min-height: 0;
+        background: linear-gradient(
+          180deg,
+          var(--main-shell-gradient-top) 0%,
+          var(--main-shell-gradient-bottom) 100%
+        );
+      }
+
+      .sidebar {
+        position: relative;
+        display: flex;
+        flex: 0 0 var(--sidebar-width);
+        flex-direction: column;
+        min-height: 0;
+        padding: 12px 10px 16px;
+        border-right: 1px solid var(--light-gray);
+        background: var(--white);
+        transition: flex-basis 180ms ease-out;
+      }
+
+      .sidebar_top {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-height: 64px;
+        padding: 4px 2px 12px;
+        border-bottom: 1px solid var(--noisy-white);
+      }
+
+      .profile {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .avatar {
+        display: grid;
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--blue-transparent-3);
+        color: var(--blue);
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .profile_text {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      .profile_name {
+        overflow: hidden;
+        font-size: 14px;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .profile_hint {
+        color: var(--blue);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .icon_button {
+        position: relative;
+        display: grid;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--gray);
+        cursor: pointer;
+      }
+
+      .icon_button:hover {
+        background: var(--black-transparent-3);
+        color: var(--deep-gray);
+      }
+
+      .sidebar_nav {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 4px;
+        min-height: 0;
+        padding-top: 12px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .nav_link,
+      .nav_action {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 48px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: var(--gray);
+        font-size: 14px;
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .nav_link:hover,
+      .nav_action:hover {
+        background: var(--black-transparent-3);
+      }
+
+      .nav_link[aria-current="page"] {
+        background: var(--blue-transparent-3);
+        color: var(--blue);
+        font-weight: 600;
+      }
+
+      .nav_icon {
+        display: grid;
+        flex: 0 0 20px;
+        width: 20px;
+        height: 20px;
+        place-items: center;
+      }
+
+      .nav_icon svg,
+      .icon_button svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+      }
+
+      .nav_action .chevron {
+        margin-left: auto;
+        font-size: 18px;
+      }
+
+      .sidebar_bottom {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding-top: 12px;
+        color: var(--gray);
+        font-size: 11px;
+      }
+
+      .brand {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+
+      .main_content {
+        flex: 1;
+        min-width: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .content_inner {
+        width: 100%;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 40px 48px 56px;
+      }
+
+      .page_header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .updated {
+        color: var(--gray);
+        font-size: 12px;
+      }
+
+      .section + .section {
+        margin-top: 40px;
+      }
+
+      .section_heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      h2 {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+        padding: 20px 0;
+        border-top: 1px solid var(--black-transparent-2);
+        border-bottom: 1px solid var(--black-transparent-2);
+      }
+
+      .metric_label {
+        color: var(--gray);
+        font-size: 12px;
+      }
+
+      .metric_value {
+        margin-top: 8px;
+        font-size: 21px;
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .gain {
+        color: var(--red);
+      }
+
+      .holdings {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      .holdings th,
+      .holdings td {
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--black-transparent-3);
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .holdings th:first-child,
+      .holdings td:first-child {
+        padding-left: 0;
+        text-align: left;
+      }
+
+      .holdings th {
+        color: var(--gray);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .stock_name {
+        display: block;
+        margin-bottom: 3px;
+        font-weight: 600;
+      }
+
+      .stock_id {
+        color: var(--gray);
+        font-size: 11px;
+      }
+
+      .notice {
+        margin-top: 20px;
+        padding: 12px 0;
+        border-top: 1px solid var(--black-transparent-2);
+        color: var(--gray);
+        font-size: 12px;
+      }
+
+      .state_panel {
+        display: none;
+        max-width: 640px;
+        padding: 24px 0;
+        border-top: 1px solid var(--black-transparent-2);
+      }
+
+      .state_panel p {
+        margin-top: 8px;
+        color: var(--gray);
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .state_panel button {
+        min-height: 44px;
+        margin-top: 16px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--blue);
+        color: var(--white);
+        cursor: pointer;
+      }
+
+      .skeleton {
+        height: 54px;
+        margin-top: 12px;
+        border-radius: 6px;
+        background: linear-gradient(
+          90deg,
+          var(--noisy-white) 25%,
+          #ececec 50%,
+          var(--noisy-white) 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.3s ease-in-out infinite;
+      }
+
+      .sr_only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .app.collapsed .sidebar {
+        flex-basis: var(--collapsed-sidebar-width);
+        padding-right: 8px;
+        padding-left: 8px;
+      }
+
+      .app.collapsed .sidebar_top {
+        flex-direction: column;
+      }
+
+      .app.collapsed .profile {
+        flex: none;
+        min-width: 44px;
+        min-height: 44px;
+        justify-content: center;
+      }
+
+      .app.collapsed .avatar {
+        flex-basis: 44px;
+        width: 44px;
+        height: 44px;
+      }
+
+      .app.collapsed .profile_text,
+      .app.collapsed .nav_label,
+      .app.collapsed .nav_action .chevron,
+      .app.collapsed .sidebar_bottom {
+        display: none;
+      }
+
+      .app.collapsed .nav_link,
+      .app.collapsed .nav_action {
+        justify-content: center;
+        padding: 0;
+      }
+
+      .tooltip::after {
+        position: absolute;
+        z-index: 4;
+        top: 50%;
+        left: calc(100% + 10px);
+        padding: 7px 10px;
+        transform: translateY(-50%);
+        border-radius: 6px;
+        background: var(--deep-gray);
+        color: var(--white);
+        content: attr(data-tooltip);
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: 0.5px;
+        line-height: 1.3;
+        opacity: 0;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+
+      .tooltip:hover::after,
+      .tooltip:focus-visible::after {
+        opacity: 1;
+      }
+
+      .app.collapsed .nav_link[aria-current="page"] {
+        color: var(--blue);
+      }
+
+      .mobile_header,
+      .mobile_bottom_nav {
+        display: none;
+      }
+
+      .app[data-state="loading"] .default_content,
+      .app[data-state="empty"] .default_content,
+      .app[data-state="error"] .default_content,
+      .app[data-state="quota"] .default_content,
+      .app[data-state="first-use"] .default_content {
+        display: none;
+      }
+
+      .app[data-state="loading"] .loading_panel,
+      .app[data-state="empty"] .empty_panel,
+      .app[data-state="error"] .error_panel,
+      .app[data-state="quota"] .quota_panel,
+      .app[data-state="first-use"] .first_use_panel {
+        display: block;
+      }
+
+      @keyframes shimmer {
+        to {
+          background-position: -200% 0;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      @media (max-width: 959px) {
+        .collapse_button {
+          display: none;
+        }
+
+        .app.collapsed .sidebar {
+          flex-basis: var(--sidebar-width);
+          padding-right: 10px;
+          padding-left: 10px;
+        }
+
+        .app.collapsed .sidebar_top {
+          flex-direction: row;
+        }
+
+        .app.collapsed .profile {
+          flex: 1;
+        }
+
+        .app.collapsed .profile_text,
+        .app.collapsed .sidebar_bottom {
+          display: flex;
+        }
+
+        .app.collapsed .nav_label,
+        .app.collapsed .nav_action .chevron {
+          display: inline;
+        }
+
+        .app.collapsed .nav_link,
+        .app.collapsed .nav_action {
+          justify-content: flex-start;
+          padding: 0 12px;
+        }
+      }
+
+      @media (max-width: 780px) {
+        .app {
+          display: flex;
+          flex-direction: column;
+          height: calc(100dvh - 44px);
+        }
+
+        .desktop_sidebar {
+          display: none;
+        }
+
+        .mobile_header {
+          display: flex;
+          flex: none;
+          align-items: center;
+          justify-content: space-between;
+          height: 56px;
+          padding: 0 16px;
+          border-bottom: 1px solid var(--light-gray);
+          background: var(--white);
+        }
+
+        .mobile_header .brand {
+          font-size: 16px;
+        }
+
+        .mobile_header .avatar {
+          width: 32px;
+          height: 32px;
+          flex-basis: 32px;
+          font-size: 14px;
+        }
+
+        .main_content {
+          flex: 1;
+        }
+
+        .content_inner {
+          padding: 24px 16px 96px;
+        }
+
+        .page_header {
+          align-items: start;
+          flex-direction: column;
+          gap: 6px;
+          margin-bottom: 24px;
+        }
+
+        .summary {
+          grid-template-columns: 1fr;
+          gap: 12px;
+          padding: 12px 0;
+        }
+
+        .metric {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 5px 0;
+        }
+
+        .metric_value {
+          margin-top: 0;
+          font-size: 16px;
+        }
+
+        .holdings_wrap {
+          overflow-x: auto;
+        }
+
+        .mobile_bottom_nav {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          display: flex;
+          justify-content: space-around;
+          min-height: 64px;
+          padding: 8px 8px env(safe-area-inset-bottom);
+          border-top: 1px solid var(--light-gray);
+          background: var(--white);
+        }
+
+        .mobile_bottom_nav a {
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          color: var(--gray);
+          font-size: 11px;
+          text-decoration: none;
+        }
+
+        .mobile_bottom_nav a[aria-current="page"] {
+          color: var(--blue);
+        }
+
+        .mobile_bottom_nav .nav_icon {
+          width: 18px;
+          height: 18px;
+          flex-basis: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="prototype_controls" aria-label="設計稿預覽控制">
+      <label for="state_select">
+        儀表板狀態
+        <select id="state_select">
+          <option value="default">一般資料</option>
+          <option value="loading">載入中</option>
+          <option value="empty">沒有資料</option>
+          <option value="error">讀取失敗</option>
+          <option value="quota">額度用完</option>
+          <option value="first-use">第一次使用</option>
+        </select>
+      </label>
+      <span class="hint">桌面版可點側邊欄上方按鈕收合</span>
+    </div>
+    <div class="app" id="app" data-state="default">
+      <aside class="sidebar desktop_sidebar" aria-label="前台導覽">
+        <div class="sidebar_top">
+          <a class="profile tooltip" href="#" aria-label="帳號，查看帳號與設定" data-tooltip="帳號與設定">
+            <span class="avatar" aria-hidden="true">林</span>
+            <span class="profile_text">
+              <span class="profile_name">林小姐</span>
+              <span class="profile_hint">查看帳號與設定</span>
+            </span>
+          </a>
+          <button
+                class="icon_button tooltip collapse_button"
+            id="collapse_button"
+            type="button"
+            aria-expanded="true"
+            aria-label="收合側邊欄"
+            data-tooltip="收合側邊欄"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19,2H5C2.243,2,0,4.243,0,7v10c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5V7c0-2.757-2.243-5-5-5ZM2,17V7c0-1.654,1.346-3,3-3h4V20H5c-1.654,0-3-1.346-3-3Zm20,0c0,1.654-1.346,3-3,3H11V4h8c1.654,0,3,1.346,3,3v10Z" />
+            </svg>
+          </button>
+        </div>
+        <nav class="sidebar_nav">
+          <a class="nav_link tooltip" href="#" aria-current="page" aria-label="儀表板" data-tooltip="儀表板">
+            <span class="nav_icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M19,24H5c-2.757,0-5-2.243-5-5V9.724c0-1.665,.824-3.215,2.204-4.145L9.203,.855c1.699-1.146,3.895-1.146,5.594,0l7,4.724c1.379,.93,2.203,2.479,2.203,4.145v9.276c0,2.757-2.243,5-5,5ZM12,1.997c-.584,0-1.168,.172-1.678,.517L3.322,7.237c-.828,.558-1.322,1.487-1.322,2.486v9.276c0,1.654,1.346,3,3,3h14c1.654,0,3-1.346,3-3V9.724c0-.999-.494-1.929-1.321-2.486L13.678,2.514c-.51-.345-1.094-.517-1.678-.517Z" />
+              </svg>
+            </span>
+            <span class="nav_label">儀表板</span>
+          </a>
+          <a class="nav_link tooltip" href="#" aria-label="市場" data-tooltip="市場">
+            <span class="nav_icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M23,22H5a3,3,0,0,1-3-3V1A1,1,0,0,0,0,1V19a5.006,5.006,0,0,0,5,5H23a1,1,0,0,0,0-2Z" />
+                <path d="M6,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,6,20Z" />
+                <path d="M10,10v9a1,1,0,0,0,2,0V10a1,1,0,0,0-2,0Z" />
+                <path d="M15,13v6a1,1,0,0,0,2,0V13a1,1,0,0,0-2,0Z" />
+                <path d="M20,9V19a1,1,0,0,0,2,0V9a1,1,0,0,0-2,0Z" />
+              </svg>
+            </span>
+            <span class="nav_label">市場</span>
+          </a>
+          <a class="nav_link tooltip" href="#" aria-label="歷史紀錄" data-tooltip="歷史紀錄">
+            <span class="nav_icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12,0A11.972,11.972,0,0,0,4,3.073V1A1,1,0,0,0,2,1V4A3,3,0,0,0,5,7H8A1,1,0,0,0,8,5H5a.854.854,0,0,1-.1-.021A9.987,9.987,0,1,1,2,12a1,1,0,0,0-2,0A12,12,0,1,0,12,0Z" />
+                <path d="M12,6a1,1,0,0,0-1,1v5a1,1,0,0,0,.293.707l3,3a1,1,0,0,0,1.414-1.414L13,11.586V7A1,1,0,0,0,12,6Z" />
+              </svg>
+            </span>
+            <span class="nav_label">歷史紀錄</span>
+          </a>
+          <a class="nav_link tooltip" href="#" aria-label="買賣計畫" data-tooltip="買賣計畫">
+            <span class="nav_icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M1,24a1,1,0,0,0,.707-.293l6.619-6.619L9.574,18.38a5.169,5.169,0,0,0,3.605,1.614,3.991,3.991,0,0,0,1.339-.227,3.63,3.63,0,0,0,2.435-3.122,8.486,8.486,0,0,0-.222-3.027l-.214-1.042a1,1,0,0,1,.264-.943l1.587-1.588a.34.34,0,0,1,.236-.1.17.17,0,0,1,.167.065,3.077,3.077,0,0,0,3.971.432,3,3,0,0,0,.379-4.565L18.2,.954a3.085,3.085,0,0,0-3.938-.4,3,3,0,0,0-.38,4.565l.076.076a.308.308,0,0,1,0,.434l-1.6,1.6a1,1,0,0,1-.954.261l-.817-.209a8.632,8.632,0,0,0-3.082-.233A3.863,3.863,0,0,0,4.25,9.634a4,4,0,0,0,.928,4.2l1.758,1.82L.293,22.293A1,1,0,0,0,1,24Z" />
+              </svg>
+            </span>
+            <span class="nav_label">買賣計畫</span>
+          </a>
+          <button class="nav_action tooltip" type="button" aria-label="新增" data-tooltip="新增">
+            <span class="nav_icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M23,11H13V1a1,1,0,0,0-1-1h0a1,1,0,0,0-1,1V11H1a1,1,0,0,0-1,1H0a1,1,0,0,0,1,1H11V23a1,1,0,0,0,1,1h0a1,1,0,0,0,1-1V13H23a1,1,0,0,0,0-2Z" />
+              </svg>
+            </span>
+            <span class="nav_label">新增</span>
+            <span class="chevron" aria-hidden="true">⌄</span>
+          </button>
+          <button class="nav_action tooltip" type="button" aria-label="搜尋" data-tooltip="搜尋">
+            <span class="nav_icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z" />
+              </svg>
+            </span>
+            <span class="nav_label">搜尋</span>
+          </button>
+        </nav>
+        <div class="sidebar_bottom" aria-hidden="true">
+          <span class="brand">Taigu</span>
+          <span>© Taigu 2021 到 2026</span>
+        </div>
+      </aside>
+      <header class="mobile_header">
+        <span class="brand">Taigu</span>
+        <span class="avatar" aria-hidden="true">林</span>
+      </header>
+      <main class="main_content" id="main_content">
+        <div class="content_inner">
+          <header class="page_header">
+            <h1>投資總覽</h1>
+            <p class="updated">行情資料時間：2026/11/19 13:30</p>
+          </header>
+          <div class="default_content">
+            <section class="section" aria-labelledby="summary_heading">
+              <div class="section_heading">
+                <h2 id="summary_heading">資產摘要</h2>
+                <span class="updated">示意資料</span>
+              </div>
+              <div class="summary">
+                <div class="metric">
+                  <p class="metric_label">目前市值</p>
+                  <p class="metric_value">1,258,400 元</p>
+                </div>
+                <div class="metric">
+                  <p class="metric_label">現金投入</p>
+                  <p class="metric_value">1,040,000 元</p>
+                </div>
+                <div class="metric">
+                  <p class="metric_label">未實現損益</p>
+                  <p class="metric_value gain">+218,400 元</p>
+                </div>
+              </div>
+            </section>
+            <section class="section" aria-labelledby="holdings_heading">
+              <div class="section_heading">
+                <h2 id="holdings_heading">持股追蹤</h2>
+                <span class="updated">目前持有 3 檔</span>
+              </div>
+              <div class="holdings_wrap">
+                <table class="holdings">
+                  <thead>
+                    <tr>
+                      <th scope="col">股票</th>
+                      <th scope="col">價格</th>
+                      <th scope="col">庫存</th>
+                      <th scope="col">市值</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="stock_name">台積電</span><span class="stock_id">2330</span></td>
+                      <td>1,225 元</td>
+                      <td>1,000 股</td>
+                      <td>1,225,000 元</td>
+                    </tr>
+                    <tr>
+                      <td><span class="stock_name">中華電</span><span class="stock_id">2412</span></td>
+                      <td>137 元</td>
+                      <td>200 股</td>
+                      <td>27,400 元</td>
+                    </tr>
+                    <tr>
+                      <td><span class="stock_name">元大台灣 50</span><span class="stock_id">0050</span></td>
+                      <td>120 元</td>
+                      <td>50 股</td>
+                      <td>6,000 元</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section class="section" aria-labelledby="records_heading">
+              <div class="section_heading">
+                <h2 id="records_heading">近期交易紀錄</h2>
+                <span class="updated">最近 30 天</span>
+              </div>
+              <div class="holdings_wrap">
+                <table class="holdings">
+                  <thead>
+                    <tr>
+                      <th scope="col">日期與股票</th>
+                      <th scope="col">類型</th>
+                      <th scope="col">股數</th>
+                      <th scope="col">成交金額</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="stock_name">2026/11/18 台積電</span><span class="stock_id">2330</span></td>
+                      <td>買進</td>
+                      <td>100 股</td>
+                      <td>122,500 元</td>
+                    </tr>
+                    <tr>
+                      <td><span class="stock_name">2026/11/12 中華電</span><span class="stock_id">2412</span></td>
+                      <td>買進</td>
+                      <td>100 股</td>
+                      <td>13,700 元</td>
+                    </tr>
+                    <tr>
+                      <td><span class="stock_name">2026/11/05 元大台灣 50</span><span class="stock_id">0050</span></td>
+                      <td>買進</td>
+                      <td>50 股</td>
+                      <td>6,000 元</td>
+                    </tr>
+                    <tr>
+                      <td><span class="stock_name">2026/10/29 台積電</span><span class="stock_id">2330</span></td>
+                      <td>買進</td>
+                      <td>100 股</td>
+                      <td>119,000 元</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <p class="notice">畫面中的帳號與投資數字都是設計稿的示意資料。</p>
+          </div>
+          <section class="state_panel loading_panel" aria-live="polite">
+            <h2>載入投資資料</h2>
+            <div class="skeleton" aria-hidden="true"></div>
+            <div class="skeleton" aria-hidden="true"></div>
+            <div class="skeleton" aria-hidden="true"></div>
+          </section>
+          <section class="state_panel empty_panel">
+            <h2>還沒有交易紀錄</h2>
+            <p>新增第一筆交易紀錄後，就能在這裡查看持股與投資數字。</p>
+            <button type="button">新增交易紀錄</button>
+          </section>
+          <section class="state_panel error_panel" role="alert">
+            <h2>目前無法載入投資資料</h2>
+            <p>請檢查網路連線後再試一次；你原有的紀錄不會受到影響。</p>
+            <button type="button">重新載入</button>
+          </section>
+          <section class="state_panel quota_panel">
+            <h2>本月新增紀錄的額度已用完</h2>
+            <p>下個月會重新計算額度；也可以查看 Standard 方案的內容。</p>
+            <button type="button">查看方案</button>
+          </section>
+          <section class="state_panel first_use_panel">
+            <h2>從第一筆交易開始記錄</h2>
+            <p>新增交易紀錄後，Taigu 會依你的紀錄整理持股與投資數字。</p>
+            <button type="button">新增交易紀錄</button>
+          </section>
+        </div>
+      </main>
+      <nav class="mobile_bottom_nav" aria-label="主要導覽">
+        <a href="#" aria-current="page">
+          <span class="nav_icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M19,24H5c-2.757,0-5-2.243-5-5V9.724c0-1.665,.824-3.215,2.204-4.145L9.203,.855c1.699-1.146,3.895-1.146,5.594,0l7,4.724c1.379,.93,2.203,2.479,2.203,4.145v9.276c0,2.757-2.243,5-5,5ZM12,1.997c-.584,0-1.168,.172-1.678,.517L3.322,7.237c-.828,.558-1.322,1.487-1.322,2.486v9.276c0,1.654,1.346,3,3,3h14c1.654,0,3-1.346,3-3V9.724c0-.999-.494-1.929-1.321-2.486L13.678,2.514c-.51-.345-1.094-.517-1.678-.517Z" />
+            </svg>
+          </span>
+          儀表板
+        </a>
+        <a href="#">
+          <span class="nav_icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M23,22H5a3,3,0,0,1-3-3V1A1,1,0,0,0,0,1V19a5.006,5.006,0,0,0,5,5H23a1,1,0,0,0,0-2Z" />
+            </svg>
+          </span>
+          市場
+        </a>
+        <a href="#">
+          <span class="nav_icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12,0A11.972,11.972,0,0,0,4,3.073V1A1,1,0,0,0,2,1V4A3,3,0,0,0,5,7H8A1,1,0,0,0,8,5H5a.854.854,0,0,1-.1-.021A9.987,9.987,0,1,1,2,12a1,1,0,0,0-2,0A12,12,0,1,0,12,0Z" />
+            </svg>
+          </span>
+          紀錄
+        </a>
+        <a href="#">
+          <span class="nav_icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M1,24a1,1,0,0,0,.707-.293l6.619-6.619L9.574,18.38a5.169,5.169,0,0,0,3.605,1.614,3.991,3.991,0,0,0,1.339-.227,3.63,3.63,0,0,0,2.435-3.122,8.486,8.486,0,0,0-.222-3.027l-.214-1.042a1,1,0,0,1,.264-.943l1.587-1.588a.34.34,0,0,1,.236-.1.17.17,0,0,1,.167.065,3.077,3.077,0,0,0,3.971.432,3,3,0,0,0,.379-4.565L18.2,.954a3.085,3.085,0,0,0-3.938-.4,3,3,0,0,0-.38,4.565l.076.076a.308.308,0,0,1,0,.434l-1.6,1.6a1,1,0,0,1-.954.261l-.817-.209a8.632,8.632,0,0,0-3.082-.233A3.863,3.863,0,0,0,4.25,9.634a4,4,0,0,0,.928,4.2l1.758,1.82L.293,22.293A1,1,0,0,0,1,24Z" />
+            </svg>
+          </span>
+          計畫
+        </a>
+        <a href="#">
+          <span class="nav_icon" aria-hidden="true">
+            <span class="avatar" style="width: 18px; height: 18px; flex-basis: 18px; font-size: 9px">林</span>
+          </span>
+          帳號
+        </a>
+      </nav>
+    </div>
+    <script>
+      const app = document.getElementById("app");
+      const collapseButton = document.getElementById("collapse_button");
+      const stateSelect = document.getElementById("state_select");
+
+      collapseButton.addEventListener("click", () => {
+        const isCollapsed = app.classList.toggle("collapsed");
+        const label = isCollapsed ? "展開側邊欄" : "收合側邊欄";
+        collapseButton.setAttribute("aria-expanded", String(!isCollapsed));
+        collapseButton.setAttribute("aria-label", label);
+        collapseButton.dataset.tooltip = label;
+      });
+
+      stateSelect.addEventListener("change", () => {
+        app.dataset.state = stateSelect.value;
+        document.getElementById("main_content").scrollTop = 0;
+      });
+    </script>
+  </body>
+</html>
