@@ -188,8 +188,8 @@ class TestFetchAndStoreRealtimeStockInfo:
                     "d": "20231201",
                     "v": "1000",
                     "y": "100.0",
-                    "a": "103.0_103.5",
-                    "b": "101.5_102.0",
+                    "a": "0.0000_103.0_103.5",
+                    "b": "0.0000_101.5_102.0",
                     "u": "110.0",
                     "w": "90.0",
                 }
@@ -214,6 +214,57 @@ class TestFetchAndStoreRealtimeStockInfo:
         assert stock_price_batch[0].number == 90
         assert stock_price_batch[0].price == 102.5
         assert stock_price_batch[0].fluct_price == 2.5
+
+    @patch("main.market.services._bulk_store_stock_price_per_minute")
+    @patch("main.market.services.requests.get")
+    @patch("main.market.services._store_market_index_per_minute")
+    @patch("main.market.services.StockInfo.objects.bulk_create")
+    @patch("main.market.services.Company.objects.filter")
+    def test_fetch_uses_lower_price_bound_when_ask_has_zero_placeholder(
+        self,
+        mock_filter: Mock,
+        mock_bulk_create: Mock,
+        mock_store_market: Mock,
+        mock_get: Mock,
+        mock_store_stock_price: Mock,
+    ) -> None:
+        mock_filter.return_value.values.return_value = [
+            {"pk": "5274", "trade_type": TradeType.OTC}
+        ]
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "msgArray": [
+                {
+                    "c": "5274",
+                    "d": "20231119",
+                    "v": "262",
+                    "y": "9700.0",
+                    "z": "-",
+                    "a": "0.0000_8730.0000_8740.0000_",
+                    "b": "-",
+                    "u": "10670.0",
+                    "w": "8730.0",
+                }
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        with (
+            patch(
+                "main.market.services.timezone.localdate",
+                return_value=date(2023, 11, 19),
+            ),
+            patch(
+                "main.market.services._get_intraday_five_minute_slot", return_value=90
+            ),
+        ):
+            fetch_and_store_realtime_stock_info()
+
+        stock_price_batch = mock_store_stock_price.call_args[0][0]
+        assert len(stock_price_batch) == 1
+        assert stock_price_batch[0].company_id == "5274"
+        assert stock_price_batch[0].price == 8730.0
+        assert stock_price_batch[0].fluct_price == -970.0
 
     @pytest.mark.scenario("MKT-R2.5")
     @patch("main.market.services._bulk_store_stock_price_per_minute")
