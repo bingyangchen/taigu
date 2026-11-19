@@ -50,12 +50,34 @@
     background: _.$page-bg;
   }
 
+  .content {
+    flex: 1;
+    min-width: 0;
+  }
+
   &:not(.mobile_editor_shell) {
     @media (max-width: _.$width-780) {
       min-height: 100dvh;
       height: auto;
       overflow: visible;
     }
+  }
+}
+
+@media screen and (min-width: 960px) {
+  .main {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .body {
+    height: 100dvh;
+    min-height: 0;
+  }
+  .content {
+    height: 100dvh;
+    overflow-y: auto;
+    container-name: main-content;
+    container-type: inline-size;
   }
 }
 

@@ -1,3 +1,4 @@
+import type { ECharts } from "echarts";
 import type { CallbackDataParams, EChartsOption } from "echarts/types/dist/shared";
 import ReactECharts from "echarts-for-react";
 import React from "react";
@@ -21,23 +22,69 @@ interface State {}
 
 class SimpleCashInvestedLineChart extends React.Component<Props, State> {
   public state: State;
+  private resizeObserver: ResizeObserver | null = null;
+  private resizeAnimationFrameId: number | null = null;
   public constructor(props: Props) {
     super(props);
     this.state = {};
   }
-  public render(): React.ReactNode {
-    if (
-      this.props.tradeRecords.length === 0 ||
-      this.props.dates.length === 0 ||
-      this.props.values.length === 0
-    ) {
-      return null;
+  public componentDidUpdate(): void {
+    if (!this.hasChartData()) {
+      this.clearResizeObserver();
     }
+  }
+  public componentWillUnmount(): void {
+    this.clearResizeObserver();
+  }
+  public render(): React.ReactNode {
+    if (!this.hasChartData()) return null;
     return (
       <ReactECharts
         option={this.chartOption}
         style={{ height: "100%", width: "100%" }}
+        onChartReady={this.handleChartReady}
       />
+    );
+  }
+
+  private readonly handleChartReady = (chart: ECharts): void => {
+    const chartContainer = chart.getDom().parentElement;
+    if (!chartContainer) {
+      throw new Error("Cash invested chart has no parent container.");
+    }
+
+    this.clearResizeObserver();
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.resizeAnimationFrameId !== null) return;
+      this.resizeAnimationFrameId = requestAnimationFrame(() => {
+        this.resizeAnimationFrameId = null;
+        const { clientWidth, clientHeight } = chartContainer;
+        if (
+          clientWidth > 0 &&
+          clientHeight > 0 &&
+          (chart.getWidth() !== clientWidth || chart.getHeight() !== clientHeight)
+        ) {
+          chart.resize({ width: clientWidth, height: clientHeight });
+        }
+      });
+    });
+    this.resizeObserver.observe(chartContainer);
+  };
+
+  private clearResizeObserver(): void {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    if (this.resizeAnimationFrameId !== null) {
+      cancelAnimationFrame(this.resizeAnimationFrameId);
+      this.resizeAnimationFrameId = null;
+    }
+  }
+
+  private hasChartData(): boolean {
+    return (
+      this.props.tradeRecords.length > 0 &&
+      this.props.dates.length > 0 &&
+      this.props.values.length > 0
     );
   }
 

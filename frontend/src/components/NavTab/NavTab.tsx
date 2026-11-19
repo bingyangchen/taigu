@@ -4,6 +4,7 @@ import { NavLink } from "react-router-dom";
 import { IRouter, withRouter } from "../../router";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
+import Tooltip from "../Tooltip/Tooltip";
 import styles from "./NavTab.module.scss";
 
 interface Props extends IRouter {
@@ -13,6 +14,8 @@ interface Props extends IRouter {
   replace?: boolean;
   end?: boolean;
   isCustomActive?: boolean;
+  iconOnlyLabel?: string;
+  iconOnly?: boolean;
 }
 
 interface State {}
@@ -32,25 +35,35 @@ class NavTab extends React.Component<Props, State> {
   ];
 
   public render(): React.ReactNode {
-    return (this.props.isCustomActive === undefined && this.isActive) ||
+    const tab =
+      (this.props.isCustomActive === undefined && this.isActive) ||
       this.props.isCustomActive ? (
-      <div // prevent auto navigate one more time
-        className={`${styles.tab} ${this.props.changeColor ? styles.active : ""}`}
-      >
-        <div className={styles.icon_outer}>{this.props.page.icon}</div>
-        {this.props.page.name}
-      </div>
+        <div // prevent auto navigate one more time
+          className={`${styles.tab} ${this.props.changeColor ? styles.active : ""} ${this.props.iconOnly ? styles.icon_only : ""}`}
+          aria-label={this.props.iconOnlyLabel}
+        >
+          <div className={styles.icon_outer}>{this.props.page.icon}</div>
+          <span className={styles.label}>{this.props.page.name}</span>
+        </div>
+      ) : (
+        <NavLink
+          to={this.props.page.path}
+          end={this.props.end ?? false}
+          className={`${styles.tab} ${this.props.iconOnly ? styles.icon_only : ""}`}
+          onClick={this.props.onClick}
+          replace={this.props.replace ?? false}
+          aria-label={this.props.iconOnlyLabel}
+        >
+          <div className={styles.icon_outer}>{this.props.page.icon}</div>
+          <span className={styles.label}>{this.props.page.name}</span>
+        </NavLink>
+      );
+    return this.props.iconOnly ? (
+      <Tooltip content={this.props.page.name} side="right">
+        {tab}
+      </Tooltip>
     ) : (
-      <NavLink
-        to={this.props.page.path}
-        end={this.props.end ?? false}
-        className={styles.tab}
-        onClick={this.props.onClick}
-        replace={this.props.replace ?? false}
-      >
-        <div className={styles.icon_outer}>{this.props.page.icon}</div>
-        {this.props.page.name}
-      </NavLink>
+      tab
     );
   }
 

@@ -1,7 +1,7 @@
 ---
 id: "0007"
 title: frontend-sidebar-collapse
-status: approved
+status: done
 specs:
   - desktop-sidebar.md
 depends_on: []
