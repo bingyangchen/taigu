@@ -98,7 +98,7 @@ class StockIntradayLineChart extends React.Component<Props> {
           type: "line" as const,
           data: segment.data,
           connectNulls: true,
-          smooth: 0.35,
+          smooth: false,
           symbol: "none",
           lineStyle: { color: segment.color, width: 2 },
           z: 2,
