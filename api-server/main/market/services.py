@@ -152,16 +152,26 @@ def _fetch_and_store_realtime_stock_batch(
                         if (z := row.get("z")) not in (None, "-")
                         else None
                     )
-                    lowest_ask_price = (
-                        round(min(map(float, filter(None, a.split("_")))), 2)
+                    ask_prices = (
+                        [
+                            round(float(ask_price), 2)
+                            for ask_price in filter(None, a.split("_"))
+                            if float(ask_price) > 0
+                        ]
                         if (a := row.get("a")) not in (None, "-")
-                        else None
+                        else []
                     )
-                    highest_bid_price = (
-                        round(max(map(float, filter(None, b.split("_")))), 2)
+                    lowest_ask_price = min(ask_prices) if ask_prices else None
+                    bid_prices = (
+                        [
+                            round(float(bid_price), 2)
+                            for bid_price in filter(None, b.split("_"))
+                            if float(bid_price) > 0
+                        ]
                         if (b := row.get("b")) not in (None, "-")
-                        else None
+                        else []
                     )
+                    highest_bid_price = max(bid_prices) if bid_prices else None
                     price_upper_bound = (
                         round(float(u), 2)
                         if (u := row.get("u")) not in (None, "-")
@@ -177,11 +187,13 @@ def _fetch_and_store_realtime_stock_batch(
                     price = 0.0
                     if current_dealt_price:
                         price = current_dealt_price
-                    elif lowest_ask_price and highest_bid_price:
+                    elif lowest_ask_price is not None and highest_bid_price is not None:
                         price = round((lowest_ask_price + highest_bid_price) / 2, 2)
-                    elif highest_bid_price and price_upper_bound:
+                    elif (
+                        highest_bid_price is not None and price_upper_bound is not None
+                    ):
                         price = price_upper_bound
-                    elif lowest_ask_price and price_lower_bound:
+                    elif lowest_ask_price is not None and price_lower_bound is not None:
                         price = price_lower_bound
                     elif yesterday_price:
                         price = yesterday_price
