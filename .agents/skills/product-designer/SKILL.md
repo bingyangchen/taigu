@@ -37,7 +37,7 @@ Never judge a design you have not seen. Screenshot the draft with headless Chrom
 
 Repeat at `1000,900` and `1280,800`. Headless Chrome does not lay out a page narrower than 500px, so a `390,844` window renders a 500px page and crops it. For the 390px screenshot, load the draft in a 390px-wide `<iframe>` inside a host page and screenshot the host at `500,<height>`. The 390px screenshot shows the narrow layout. At 1000px, just above the 960px point below which the narrow layout takes over, the sidebar leaves the least room for content (about 770px). 1280px is a typical laptop screen. For an admin screen, use `800,900` in place of `1000,900`, because 800px is just above the 780px point, where the 216px admin sidebar leaves about 580px for content. Increase the height to see content below the fold. The real app requires login, so when you need to see an existing screen you cannot render, ask the user for a screenshot instead of guessing.
 
-Before you show a draft to the user, and again after every redesign, read `frontend-design` and run `critique` and then `polish` from the impeccable-design sub-skills (see the last section) against the screenshots. Fix what they find before checking the list below. If `~/.agents/skills/impeccable-design/` does not exist, tell the user that this review was skipped.
+Before you show a draft to the user, and again after every redesign, use the `impeccable` skill's `context`, `critique`, and `polish` workflows against the rendered draft. Run `context` once per session, then follow the current references for `critique` and `polish`. Fix what they find before checking the list below. If the `impeccable` skill is unavailable, tell the user that this review was skipped.
 
 Check the screenshots against this list, fix what fails, and render again. Stop when every item passes and you find nothing else you would change:
 
@@ -54,21 +54,4 @@ Check the screenshots against this list, fix what fails, and render again. Stop 
 
 Copy is part of the design. When the user asks for copy, the copy is the deliverable. Follow the rules under 「文案」 in `ui-guidelines.md`, and give the empty, loading, error, and at-quota states each their own copy that says what happened and what the user can do next.
 
-## impeccable-design Sub-skills
-
-`~/.agents/skills/impeccable-design/` holds focused design skills. `frontend-design`, `critique`, and `polish` are required before showing any draft (see "Reviewing What You Made"); read the others when they fit the task.
-
-<!-- prettier-ignore -->
-| Task | Sub-skill |
-| --- | --- |
-| Critique an existing screen or draft | `critique`, `audit` |
-| Final pass before showing a draft | `polish` |
-| Responsive behavior | `adapt` |
-| Error, edge, and overflow states | `harden` |
-| Empty states and first use | `onboard` |
-| UX copy | `clarify` |
-| Too busy or visually loud | `distill`, `quieter` |
-| Too flat or plain | `bolder` |
-| Motion and micro-interactions | `animate` |
-
-`ui-guidelines.md` and the frontend tokens override this skill, and this skill overrides impeccable-design. Several sub-skills say to read `frontend-design` first. Use its anti-pattern lists and `reference/` files, but ignore its "Design Direction" section and its font and color mandates (for example, avoiding system fonts and pure white), because Taigu's visual language is already set and these skills are for working within it. Do not run `teach-impeccable`, because `product.md` and `ui-guidelines.md` already hold the design context it would collect.
+Use `impeccable` to choose and run any relevant design commands. Before showing a draft, and again after every redesign, run its `critique` and `polish` workflows as described above. `ui-guidelines.md` and the frontend tokens override recommendations from `impeccable`. Do not run `impeccable init` (also called `teach`): `product.md` and `ui-guidelines.md` already hold Taigu's product and design context.
