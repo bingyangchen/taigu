@@ -50,6 +50,7 @@ interface State {
 class Main extends React.Component<Props, State> {
   public state: State;
   private mainRef: React.RefObject<HTMLDivElement>;
+  private contentRef: React.RefObject<HTMLDivElement>;
   private subpages: Subpage[];
   private fetchStockInfoTimer: ReturnType<typeof setTimeout> | null;
   private scrollAnimationFrameId: number | null = null;
@@ -59,6 +60,7 @@ class Main extends React.Component<Props, State> {
     super(props);
     this.state = { isLoading: true, prevLocationPathname: null };
     this.mainRef = React.createRef();
+    this.contentRef = React.createRef();
     this.subpages = [];
     this.fetchStockInfoTimer = null;
   }
@@ -67,6 +69,7 @@ class Main extends React.Component<Props, State> {
     oncontextmenu = (e) => e.preventDefault();
     this.syncMobileScrollMode();
     this.mainRef.current?.addEventListener("scroll", this.handleScroll);
+    this.contentRef.current?.addEventListener("scroll", this.handleScroll);
     window.addEventListener("scroll", this.handleScroll);
     this.removePageReturnListener = Util.addPageReturnListener(() =>
       this.props.dispatch(openSession()),
@@ -150,6 +153,8 @@ class Main extends React.Component<Props, State> {
     if (prevProps.router.location.pathname !== this.props.router.location.pathname) {
       this.syncMobileScrollMode();
       if (this.shouldUseDocumentScroll) window.scrollTo(0, 0);
+      else if (window.matchMedia("(min-width: 960px)").matches)
+        this.contentRef.current?.scrollTo(0, 0);
       else this.mainRef.current?.scrollTo(0, 0);
       this.lastDispatchedScrollTop = 0;
       this.props.dispatch(updateScrollTop(0));
@@ -175,6 +180,7 @@ class Main extends React.Component<Props, State> {
 
   public componentWillUnmount(): void {
     this.mainRef.current?.removeEventListener("scroll", this.handleScroll);
+    this.contentRef.current?.removeEventListener("scroll", this.handleScroll);
     window.removeEventListener("scroll", this.handleScroll);
     this.removePageReturnListener?.();
     document.body.classList.remove("main-page-document-scroll");
@@ -215,7 +221,9 @@ class Main extends React.Component<Props, State> {
               subpages={Util.isMobile ? this.subpages : this.subpages.slice(0, 4)}
             />
           )}
-          <Outlet />
+          <div className={styles.content} ref={this.contentRef}>
+            <Outlet />
+          </div>
         </div>
         {Util.isMobile && !this.isMobileEditorRoute && (
           <Footer subpages={this.subpages} />
@@ -232,7 +240,9 @@ class Main extends React.Component<Props, State> {
 
       const scrollTop = this.shouldUseDocumentScroll
         ? window.scrollY
-        : this.mainRef.current?.scrollTop;
+        : window.matchMedia("(min-width: 960px)").matches
+          ? this.contentRef.current?.scrollTop
+          : this.mainRef.current?.scrollTop;
       if (scrollTop === undefined || scrollTop === this.lastDispatchedScrollTop) return;
 
       this.lastDispatchedScrollTop = scrollTop;

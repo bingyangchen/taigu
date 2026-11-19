@@ -18,7 +18,7 @@ flowchart TD
   data_fixes("資料驗證與資料處理修正<br/>未規劃"):::unplanned
   ui_feedback_fixes("介面回饋與導覽修正<br/>未規劃"):::unplanned
   copy_fixes("介面文案與數字格式修正<br/>未規劃"):::unplanned
-  frontend_layout_fixes("前台版面修正<br/>已核准"):::approved
+  frontend_layout_fixes("前台版面修正<br/>已完成"):::done
   usage_recording("記錄使用情況<br/>已完成"):::done
   admin_console("後台<br/>已完成"):::done
   issue_report_notification("問題回報通知<br/>未規劃"):::unplanned
@@ -262,6 +262,6 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 
 讓前台的頁面照 ui-guidelines.md 的「版面」，依可用寬度切換版面。
 
-- 桌面前台側邊欄可以收合，主內容捲動時側邊欄維持固定位置，並在同一個瀏覽器保留收合狀態，見 [plan 0007](0007-frontend-sidebar-collapse.md)。
+- 桌面前台側邊欄已依 [plan 0007](archive/0007-frontend-sidebar-collapse.md) 完成收合、固定捲動與瀏覽器內狀態保存。
 
 - 前端用 `Util.isMobile` 從 User-Agent 判斷是不是行動裝置，再依結果選擇版面，行動裝置用頁首與底部導覽列，其他裝置用側邊欄；編輯器、圖表與大部分頁面也依同一個判斷調整畫面。所以在桌面瀏覽器把視窗縮到小於 960px 時，畫面仍是側邊欄的版面；前端從 iPad 的 User-Agent 判斷不出是行動裝置，所以直立時可用寬度小於 960px 的 iPad 也顯示側邊欄的版面。目標是可用寬度小於 960px 時用窄版的導覽與字級，960px 起用寬版的側邊欄與字級。

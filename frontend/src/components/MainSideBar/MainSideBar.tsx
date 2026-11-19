@@ -7,6 +7,7 @@ import {
   FullLogo,
   NavTab,
   StockSearchModal,
+  Tooltip,
   TradePlanEditor,
   TradeRecordEditor,
 } from "../../components";
@@ -17,6 +18,11 @@ import { Subpage } from "../../types";
 import Env from "../../utils/env";
 import { getHideModalCallback } from "../../utils/modal";
 import styles from "./MainSideBar.module.scss";
+import {
+  isMainNavCollapsedInStorage,
+  saveMainNavCollapsed,
+  toggleMainNavCollapsed,
+} from "./sidebarState";
 
 function mapStateToProps(rootState: RootState) {
   const { isWaiting } = rootState.account;
@@ -30,7 +36,11 @@ interface Props extends ReturnType<typeof mapStateToProps> {
   dispatch: AppDispatch;
 }
 
+const WIDE_MEDIA_QUERY = "(min-width: 960px)";
+
 interface State {
+  isCollapsed: boolean;
+  isWide: boolean;
   activeModalName:
     | "createTradeRecord"
     | "createCashDividendRecord"
@@ -42,28 +52,60 @@ interface State {
 
 class MainSideBar extends React.Component<Props, State> {
   public state: State;
+  private wideMediaQueryList: MediaQueryList;
   public constructor(props: Props) {
     super(props);
-    this.state = { activeModalName: null, isContextMenuOpen: false };
+    this.wideMediaQueryList = window.matchMedia(WIDE_MEDIA_QUERY);
+    this.state = {
+      isCollapsed: isMainNavCollapsedInStorage(),
+      isWide: this.wideMediaQueryList.matches,
+      activeModalName: null,
+      isContextMenuOpen: false,
+    };
   }
   public componentDidMount(): void {
     document.addEventListener("click", this.handleDocumentClick);
+    this.wideMediaQueryList.addEventListener("change", this.handleWideMediaChange);
   }
   public componentWillUnmount(): void {
     document.removeEventListener("click", this.handleDocumentClick);
+    this.wideMediaQueryList.removeEventListener("change", this.handleWideMediaChange);
   }
   public render(): React.ReactNode {
+    const showsIconOnly = this.state.isCollapsed && this.state.isWide;
+    const collapseLabel = this.state.isCollapsed ? "展開側邊欄" : "收合側邊欄";
     return (
-      <div className={styles.main}>
-        <NavLink to={`${Env.frontendRootPath}${settingsPagePath}`}>
-          <div className={styles.user_info}>
-            <img src={this.props.avatarUrl} alt="" />
-            <div className={styles.middle}>
-              <div className={styles.username}>{this.props.username}</div>
-              <div className={styles.hint}>查看帳號與設定</div>
-            </div>
-          </div>
-        </NavLink>
+      <div className={`${styles.main} ${showsIconOnly ? styles.collapsed : ""}`}>
+        <div className={styles.profile_row}>
+          <WithTooltip content="查看帳號與設定" enabled={showsIconOnly}>
+            <NavLink
+              to={`${Env.frontendRootPath}${settingsPagePath}`}
+              className={styles.profile_link}
+              aria-label={showsIconOnly ? "查看帳號與設定" : undefined}
+            >
+              <div className={styles.user_info}>
+                <img src={this.props.avatarUrl} alt="" />
+                <div className={styles.middle}>
+                  <div className={styles.username}>{this.props.username}</div>
+                  <div className={styles.hint}>查看帳號與設定</div>
+                </div>
+              </div>
+            </NavLink>
+          </WithTooltip>
+          {this.state.isWide && (
+            <Tooltip content={collapseLabel} side="right">
+              <button
+                type="button"
+                className={styles.collapse_button}
+                aria-expanded={!this.state.isCollapsed}
+                aria-label={collapseLabel}
+                onClick={this.toggleCollapsed}
+              >
+                <Icons.IconSidebar sideLength="16" />
+              </button>
+            </Tooltip>
+          )}
+        </div>
         <div className={styles.subpage_list}>
           {this.props.subpages.map((subpage, idx) => {
             return (
@@ -72,116 +114,124 @@ class MainSideBar extends React.Component<Props, State> {
                 key={idx}
                 changeColor
                 end={subpage.path === Env.frontendRootPath}
+                iconOnlyLabel={showsIconOnly ? subpage.name : undefined}
+                iconOnly={showsIconOnly}
               />
             );
           })}
-          <div
-            className={styles.action_button}
-            onClick={this.handleAddButtonClick}
-            onKeyDown={this.handleAddButtonKeyDown}
-            role="button"
-            tabIndex={0}
-          >
-            <div className={styles.icon_outer}>
-              <Icons.IconPlus sideLength="100%" />
-            </div>
-            新增
+          <WithTooltip content="新增" enabled={showsIconOnly}>
             <div
-              className={styles.triangle}
-              onClick={this.handleTriangleClick}
-              onKeyDown={this.handleTriangleKeyDown}
+              className={styles.action_button}
+              onClick={this.handleAddButtonClick}
+              onKeyDown={this.handleAddButtonKeyDown}
               role="button"
               tabIndex={0}
-            ></div>
-            {this.state.isContextMenuOpen && (
-              <div className={styles.context_menu}>
-                <div
-                  className={styles.context_menu_item}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    this.setState({
-                      isContextMenuOpen: false,
-                      activeModalName: "createTradeRecord",
-                    });
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
+              aria-label={showsIconOnly ? "新增" : undefined}
+            >
+              <div className={styles.icon_outer}>
+                <Icons.IconPlus sideLength="100%" />
+              </div>
+              <span className={styles.action_label}>新增</span>
+              <div
+                className={styles.triangle}
+                onClick={this.handleTriangleClick}
+                onKeyDown={this.handleTriangleKeyDown}
+                role="button"
+                tabIndex={0}
+              ></div>
+              {this.state.isContextMenuOpen && (
+                <div className={styles.context_menu}>
+                  <div
+                    className={styles.context_menu_item}
+                    onClick={(e) => {
                       e.stopPropagation();
                       this.setState({
                         isContextMenuOpen: false,
                         activeModalName: "createTradeRecord",
                       });
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className={styles.text}>新增交易紀錄</div>
-                </div>
-                <div
-                  className={styles.context_menu_item}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    this.setState({
-                      isContextMenuOpen: false,
-                      activeModalName: "createCashDividendRecord",
-                    });
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.setState({
+                          isContextMenuOpen: false,
+                          activeModalName: "createTradeRecord",
+                        });
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className={styles.text}>新增交易紀錄</div>
+                  </div>
+                  <div
+                    className={styles.context_menu_item}
+                    onClick={(e) => {
                       e.stopPropagation();
                       this.setState({
                         isContextMenuOpen: false,
                         activeModalName: "createCashDividendRecord",
                       });
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className={styles.text}>新增現金股利</div>
-                </div>
-                <div
-                  className={styles.context_menu_item}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    this.setState({
-                      isContextMenuOpen: false,
-                      activeModalName: "createTradePlan",
-                    });
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.setState({
+                          isContextMenuOpen: false,
+                          activeModalName: "createCashDividendRecord",
+                        });
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className={styles.text}>新增現金股利</div>
+                  </div>
+                  <div
+                    className={styles.context_menu_item}
+                    onClick={(e) => {
                       e.stopPropagation();
                       this.setState({
                         isContextMenuOpen: false,
                         activeModalName: "createTradePlan",
                       });
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className={styles.text}>新增買賣計畫</div>
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.setState({
+                          isContextMenuOpen: false,
+                          activeModalName: "createTradePlan",
+                        });
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className={styles.text}>新增買賣計畫</div>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-          <div
-            className={styles.action_button}
-            onClick={this.handleSearchButtonClick}
-            onKeyDown={this.handleSearchButtonKeyDown}
-            role="button"
-            tabIndex={0}
-          >
-            <div className={styles.icon_outer}>
-              <Icons.IconMagnifier sideLength="100%" />
+              )}
             </div>
-            搜尋
-          </div>
+          </WithTooltip>
+          <WithTooltip content="搜尋" enabled={showsIconOnly}>
+            <div
+              className={styles.action_button}
+              onClick={this.handleSearchButtonClick}
+              onKeyDown={this.handleSearchButtonKeyDown}
+              role="button"
+              tabIndex={0}
+              aria-label={showsIconOnly ? "搜尋" : undefined}
+            >
+              <div className={styles.icon_outer}>
+                <Icons.IconMagnifier sideLength="100%" />
+              </div>
+              <span className={styles.action_label}>搜尋</span>
+            </div>
+          </WithTooltip>
         </div>
         {this.activeModal}
         <div className={styles.lower}>
@@ -245,6 +295,14 @@ class MainSideBar extends React.Component<Props, State> {
       this.handleSearchButtonClick();
     }
   };
+  private toggleCollapsed = (): void => {
+    const nextIsCollapsed = toggleMainNavCollapsed(this.state.isCollapsed);
+    this.setState({ isCollapsed: nextIsCollapsed });
+    saveMainNavCollapsed(nextIsCollapsed);
+  };
+  private handleWideMediaChange = (event: MediaQueryListEvent): void => {
+    this.setState({ isWide: event.matches });
+  };
   private handleDocumentClick = (e: Event): void => {
     if (
       this.state.isContextMenuOpen &&
@@ -256,4 +314,23 @@ class MainSideBar extends React.Component<Props, State> {
   };
 }
 
+function WithTooltip({
+  content,
+  enabled,
+  children,
+}: {
+  content: string;
+  enabled: boolean;
+  children: React.ReactElement;
+}): React.ReactElement {
+  return enabled ? (
+    <Tooltip content={content} side="right">
+      {children}
+    </Tooltip>
+  ) : (
+    children
+  );
+}
+
+export { MainSideBar };
 export default connect(mapStateToProps)(MainSideBar);
