@@ -409,9 +409,19 @@ class TestIntradayPricesView:
         data = json.loads(response.content)
         assert data["error"] == "Unknown Stock ID"
 
+    @patch("main.market.views.TimeSeriesStockInfoCacheManager.get")
+    @patch("main.market.views.TimeSeriesStockInfoCacheManager.set")
     def test_intraday_prices_no_data(
-        self, request_factory: RequestFactory, company: Company, user: User
+        self,
+        mock_set: Mock,
+        mock_get: Mock,
+        request_factory: RequestFactory,
+        company: Company,
+        user: User,
     ) -> None:
+        mock_get.return_value = None
+        assert not StockPricePerMinute.objects.filter(company=company).exists()
+
         request = request_factory.get("/api/market/intraday-prices/?sid=2330")
         request.user = user
 
@@ -423,6 +433,7 @@ class TestIntradayPricesView:
         assert data["date"] is None
         assert data["yesterday_price"] == 0
         assert data["last_fluct_price"] == 0
+        mock_set.assert_called_once()
 
 
 @pytest.mark.django_db
