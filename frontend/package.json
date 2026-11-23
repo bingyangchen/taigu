@@ -80,7 +80,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "prettier": "^3.6.2",
-    "puppeteer": "^24.0.0",
+    "puppeteer": "^25.16.0",
     "serve": "^14.2.6"
   }
 }
