@@ -18,6 +18,12 @@ flowchart TD
   data_fixes("資料驗證與資料處理修正<br/>未規劃"):::unplanned
   ui_feedback_fixes("介面回饋與導覽修正<br/>未規劃"):::unplanned
   copy_fixes("介面文案與數字格式修正<br/>未規劃"):::unplanned
+  dependency_vulnerability_fixes("依賴套件漏洞修正<br/>未規劃"):::unplanned
+  backend_uv_migration("後端套件管理改用 uv<br/>未規劃"):::unplanned
+  frontend_vite_migration("前端改用 Vite<br/>未規劃"):::unplanned
+  backend_profiling("後端效能分析工具<br/>未規劃"):::unplanned
+  security_classification("證券分類與證交稅判定<br/>未規劃"):::unplanned
+  pull_to_refresh("下拉更新資料<br/>未規劃"):::unplanned
   frontend_layout_fixes("前台版面修正<br/>已完成"):::done
   usage_recording("記錄使用情況<br/>已完成"):::done
   admin_console("後台<br/>已完成"):::done
@@ -37,6 +43,14 @@ flowchart TD
 ```
 
 ## 功能願景
+
+### 下拉更新資料
+
+讓使用者在手機網頁與 PWA 的頁面頂端下拉，留在原頁取得最新資料。先從歷史紀錄頁同步其他裝置新增、編輯或刪除的紀錄做起，提供可點選的更新入口。更新時保留畫面上的資料，失敗時提示使用者重試。之後擴及行情頁面時，更新仍依各方案的行情更新規則。
+
+### 證券分類與證交稅判定
+
+後端依證交所與櫃買中心的資料補齊並維護股票清單上的證券類型，能區分一般股票、ETF、債券 ETF 與尚未分類的證券，供後續依交易日期與當時適用的規則判定證交稅。
 
 ### 後台
 
@@ -98,6 +112,22 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 ## 已知問題
 
 這一節的每個小節列的，都是 `main` 已經有的行為裡發現的問題。已有 plan 的修正方式見該 plan，其餘等寫 plan 時再決定。
+
+### 依賴套件漏洞修正
+
+修復 GitHub Dependabot 回報的所有依賴套件漏洞，優先處理風險最高的項目。修正合併到 `main` 後，在 GitHub 確認這批警示都已標示為修復。
+
+### 後端套件管理改用 uv
+
+後端的 Docker build 目前先用 Poetry 匯出套件清單，再交給 pip 安裝。改用 uv 與 `uv.lock` 管理開發及正式環境的依賴，同步更新本機開發文件。完成後，兩種 image 都能依 lockfile 安裝套件，後端與 scheduler 能正常啟動，CI 的後端測試也能通過。
+
+### 前端改用 Vite
+
+前端目前用已停止積極維護的 Create React App 啟動開發環境、build 與執行測試。改用 Vite 後，本機 Docker 開發與 Cloudflare Pages 部署都能正常運作，既有前端測試在 CI 通過，公開頁面照常做 prerender，已安裝的 PWA 也能正常更新與離線開啟。
+
+### 後端效能分析工具
+
+讓開發者在本機 Docker 環境按需執行 profiling，找出 API request 與 cron job 耗時最多的呼叫路徑。先各選一個 API endpoint 與 cron job，確認可以重複收集並解讀結果，並記下操作方式。
 
 ### 投資數字的計算修正
 
