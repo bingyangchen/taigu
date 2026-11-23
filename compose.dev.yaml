@@ -55,7 +55,7 @@ services:
         max-size: "2m"
         max-file: "1"
   design-server:
-    image: nginx:1.27.4-alpine
+    image: nginx:1.30.7-alpine
     volumes:
       - ./design:/usr/share/nginx/html:ro
     restart: unless-stopped
@@ -65,7 +65,7 @@ services:
         max-size: "2m"
         max-file: "1"
   reverse-proxy:
-    image: nginx:1.27.4-alpine
+    image: nginx:1.30.7-alpine
     ports:
       - "80:80"
       - "443:443"
