@@ -27,7 +27,7 @@ services:
         max-size: "2m"
         max-file: "1"
   reverse-proxy:
-    image: nginx:1.27.4
+    image: nginx:1.30.7
     ports:
       - "80:80"
       - "443:443"
