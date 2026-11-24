@@ -373,89 +373,321 @@
 
 預期：進入個股詳情頁時出現 `current-stock-info?sids=2330` 與 `intraday-prices?sid=2330` 的 request，之後每隔約 30 秒再出現一組。
 
+### 大盤指數測試資料
+
+先完成共用準備。下列指令會替換兩個指數的盤中走勢與歷史收盤指數，全部檢查完後照共用準備第 12 步還原。
+
+```bash
+docker compose -f compose.dev.yaml exec -T api-server python manage.py shell -c "
+from datetime import date, timedelta
+from main.market.cache import TimeSeriesStockInfoCacheManager
+from main.market.models import MarketIndexHistory, MarketIndexPerMinute
+
+today = date.today()
+MarketIndexPerMinute.objects.all().delete()
+MarketIndexHistory.objects.all().delete()
+for market, number, price, change in [
+    ('tse', 0, 23010.0, 10.0), ('tse', 90, 23100.5, 100.5),
+    ('otc', 0, 249.0, -1.0), ('otc', 90, 252.5, 2.5),
+]:
+    MarketIndexPerMinute.objects.create(
+        market=market, date=today, number=number, price=price, fluct_price=change
+    )
+MarketIndexHistory.objects.bulk_create([
+    MarketIndexHistory(market='tse', date=today - timedelta(days=days), close_price=23000 - days * 5)
+    for days in [*range(1, 36), 400]
+] + [
+    MarketIndexHistory(market='otc', date=today - timedelta(days=days), close_price=250 - days / 10)
+    for days in range(50)
+])
+for market in ('tse', 'otc'):
+    TimeSeriesStockInfoCacheManager.delete(market)
+"
+```
+
+切換測試資料前關閉其他 Taigu 分頁，並在 DevTools 的 Application 面板清除 `taigu` IndexedDB 裡的 `marketIndexHistoricalPrices` 資料。執行 MKT-R14.8 時則保留這些資料。檢查讀取較慢、讀取失敗或舊版回應時，在 Application 的 Service Workers 面板勾選 Bypass for network，避免 service worker 的 cache 影響檢查。
+
+需要模擬個別 request 較慢或讀取失敗時，在 [Chrome DevTools 的 Request conditions 面板](https://developer.chrome.com/docs/devtools/request-conditions) 依各節指定的網址啟用限速或封鎖，檢查完關閉該規則。封鎖盤中行情用 `*/api/market/market-index?*`，限制櫃買歷史查詢用 `*/api/market/market-index-historical-prices?market=otc*`。
+
 ## MKT-R13.1 休市的日子
 
-前端沒有自動化 test。這一段會改動大盤指數的資料，全部檢查完照共用準備第 12 步還原。
+自動化 test 用模擬的回應檢查，所以要用後端的實際資料再確認卡片的日期與走勢。
 
-1. 執行下面的指令，讓加權指數最後記錄的盤中走勢是 3 天前的資料，最後一點是 22,880 點、漲跌 -120 點，模擬休市的日子：
+1. 複製「大盤指數測試資料」的指令，把 `today = date.today()` 改成上週五的日期（例如 `today = date(2026, 11, 20)`），再把 `('tse', 90, 23100.5, 100.5)` 改成 `('tse', 90, 22880.0, -120.0)`。
+2. 執行改好的指令。
+3. 開啟 [儀表板](https://local.taigu.tw/)。
+
+預期：「大盤指數」卡片只顯示一個行情日期，日期是週五。兩個摘要都有週五的走勢，加權指數顯示「22,880」與「▼120 (0.52%)」。
+
+## MKT-R13.2 兩筆行情共用同一個入口
+
+自動化 test 無法確認點選卡片內各個位置時實際點到的元素。
+
+1. 在 [儀表板](https://local.taigu.tw/) 點選加權指數那一筆摘要。
+2. 在大盤指數頁按「回儀表板」。
+3. 對櫃買指數那一筆摘要、卡片標題、兩筆摘要之間的留白，各重複第 1 步與第 2 步。
+4. 按 Tab 將焦點移到「大盤指數」卡片。
+5. 按 Enter。
+
+預期：每次都開啟 `/market-index`。整張卡片在鍵盤導覽順序中只出現一次。
+
+## MKT-R13.3 首次查詢期間
+
+自動化 test 只檢查卡片本身，無法確認儀表板的其他內容不用等盤中行情回應就會出現。
+
+1. 在 Request conditions 面板啟用盤中行情的限速規則，設成 Slow 3G。
+2. 重新整理 [儀表板](https://local.taigu.tw/)。
+
+預期：盤中行情回應之前，「大盤指數」卡片的圖表與數值位置顯示載入狀態，投入金額等其他內容已經出現。
+
+## MKT-R13.4 查詢成功但沒有行情
+
+自動化 test 用模擬的回應檢查，所以要在實際畫面上再確認一次。
+
+1. 執行以下指令，清除兩個指數的盤中行情。
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
-   from datetime import date, timedelta
    from main.market.cache import TimeSeriesStockInfoCacheManager
    from main.market.models import MarketIndexPerMinute
-   day = date.today() - timedelta(days=3)
    MarketIndexPerMinute.objects.all().delete()
-   for market, number, price, fluct in [('tse', 0, 22990.0, -10.0), ('tse', 270, 22880.0, -120.0), ('otc', 270, 251.25, 1.25)]:
-       MarketIndexPerMinute.objects.create(market=market, date=day, number=number, price=price, fluct_price=fluct)
-   TimeSeriesStockInfoCacheManager.delete('tse')
-   TimeSeriesStockInfoCacheManager.delete('otc')
+   for market in ('tse', 'otc'):
+       TimeSeriesStockInfoCacheManager.delete(market)
    "
    ```
 
-2. 在桌面瀏覽器開啟 `https://local.taigu.tw/`。
-3. 查看「加權指數」卡片。
+2. 重新整理 [儀表板](https://local.taigu.tw/)。
+3. 點選「大盤指數」卡片。
 
-預期：加權指數卡片的日期是 3 天前的日期，走勢圖畫的是那一天 09:00 到 13:30 的資料，最新的指數是 22880，漲跌是 ▼120。
+預期：卡片顯示「目前沒有行情」，點選後開啟 `/market-index`。
+
+## MKT-R13.5 更新失敗時仍有行情
+
+自動化 test 用模擬的回應檢查，所以要在實際畫面上再確認一次。
+
+1. 執行「大盤指數測試資料」的指令。
+2. 開啟 [儀表板](https://local.taigu.tw/)，等兩個摘要出現。
+3. 在 Request conditions 面板啟用盤中行情的封鎖規則。
+4. 等 Network 面板出現前端下一次送出、被封鎖的盤中行情 request。
+
+預期：卡片保留兩個摘要與走勢，並標示「更新失敗，顯示上次行情」。
+
+## MKT-R13.6 首次讀取失敗
+
+自動化 test 用模擬的回應檢查，所以要在實際畫面上再確認一次。
+
+1. 在 Request conditions 面板啟用盤中行情的封鎖規則。
+2. 重新整理 [儀表板](https://local.taigu.tw/)。
+3. 點選「大盤指數」卡片。
+
+預期：卡片顯示「行情讀取失敗」，點選後開啟 `/market-index`。
+
+## MKT-R13.7 離線開啟時使用 Cache
+
+自動化 test 用模擬的 service worker 回應檢查，所以要用實際的 service worker cache 再確認一次。
+
+1. 確認 Service Workers 面板沒有勾選 Bypass for network。
+2. 執行「大盤指數測試資料」的指令。
+3. 開啟 [儀表板](https://local.taigu.tw/)，等兩個摘要出現。
+4. 在 DevTools 的 Network 面板切換為 Offline。
+5. 重新整理儀表板。
+
+預期：卡片顯示兩個指數的摘要與走勢，並標示「更新失敗，顯示上次行情」。
 
 ## MKT-R14.1 從儀表板進入
 
-前端沒有自動化 test。這一段會改動大盤指數的資料，全部檢查完照共用準備第 12 步還原。
+自動化 test 無法確認回到儀表板後的捲動位置。
 
-1. 執行下面的指令，準備今天的加權指數：昨收價 23,000 點，09:00 是 23,010 點，10:30 是 23,100.5 點。
+1. 執行「大盤指數測試資料」的指令。
+2. 在 [儀表板](https://local.taigu.tw/) 把「大盤指數」卡片捲到視窗中間。
+3. 點選「大盤指數」卡片。
+4. 查看摘要和今日走勢。
+5. 按「回儀表板」。
+6. 重複第 3 步，再按瀏覽器的上一頁。
 
-   ```bash
-   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
-   from datetime import date
-   from main.market.cache import TimeSeriesStockInfoCacheManager
-   from main.market.models import MarketIndexPerMinute
-   MarketIndexPerMinute.objects.all().delete()
-   for market, number, price, fluct in [('tse', 0, 23010.0, 10.0), ('tse', 90, 23100.5, 100.5), ('otc', 0, 250.0, 0.0)]:
-       MarketIndexPerMinute.objects.create(market=market, date=date.today(), number=number, price=price, fluct_price=fluct)
-   TimeSeriesStockInfoCacheManager.delete('tse')
-   TimeSeriesStockInfoCacheManager.delete('otc')
-   "
-   ```
+預期：`/market-index` 選取「今日」，同時顯示行情日期與兩個指數。加權指數顯示「23,100.5」與「▲100.5 (0.44%)」，兩張今日走勢圖上都有 09:00 與 10:30 的點。兩種方式回到儀表板後，頁面捲動位置都與進入前相同。
 
-2. 在桌面瀏覽器開啟 `https://local.taigu.tw/`。
-3. 點選「加權指數」卡片。
+## MKT-R14.2 直接開啟大盤指數頁
 
-預期：畫面換到 `/market-index/tse`，顯示「加權指數」、今天的日期、最新的指數 23100.5 與漲跌 ▲100.5；「今日」是選取狀態，走勢圖畫出 09:00 與 10:30 兩點。
+自動化 test 已驗證圖表與返回按鈕，但沒有涵蓋從網址列直接載入頁面的情況。
+
+1. 登入後，在新分頁開啟 [大盤指數](https://local.taigu.tw/market-index)。
+2. 確認頁面顯示兩張今日走勢圖。
+3. 按「回儀表板」。
+
+預期：按「回儀表板」後開啟儀表板。
+
+## MKT-R14.3 不用捲動就看到兩張圖
+
+兩個指數的數值、圖表與控制項能不能不用捲動就完整看到，取決於實際的版面與字型，所以自動化 test 無法量測。
+
+1. 執行「大盤指數測試資料」的指令。
+2. 以預設文字大小，把可用畫面設成 1280 × 800 CSS px，開啟 [大盤指數](https://local.taigu.tw/market-index)。
+3. 捲到頁面最上方，查看「今日」。
+4. 捲到頁面最上方，點選「歷史」。
+5. 把桌面瀏覽器的可用畫面縮到 390 × 700 CSS px，重複第 3 步與第 4 步。
+6. 改用相同尺寸的行動裝置模擬並重新整理，重複第 3 步與第 4 步。
+
+預期：1280 × 800 CSS px 時兩個指數左右並排，390 × 700 CSS px 時上下排列。兩種走勢都不用捲動就看得到兩組數值、右側點數刻度、時間或日期刻度及共用控制項。
+
+## MKT-R14.4 縮短視窗或放大文字
+
+捲動與文字放大後的版面取決於實際的瀏覽器，所以自動化 test 無法量測。
+
+1. 在行動裝置模擬中，把可用畫面設成 320 × 568 CSS px，重新整理 [大盤指數](https://local.taigu.tw/market-index)。
+2. 垂直捲動並查看兩張圖。
+3. 點選「歷史」，再點選「ALL」。
+4. 將文字放大至 200%，重複第 2 步與第 3 步。
+
+預期：可以垂直捲動到兩組數值與圖表，控制項仍可操作，頁面沒有橫向捲動。
+
+## MKT-R14.5 一張圖表先取得資料
+
+自動化 test 用模擬的回應檢查，所以要用實際的慢速 request 再確認畫面。
+
+1. 在 Application 面板清除 `taigu` IndexedDB 裡的 `marketIndexHistoricalPrices` 資料。
+2. 啟用櫃買歷史查詢的限速規則，把延遲設成 5 秒。
+3. 重新整理 [大盤指數](https://local.taigu.tw/market-index)。
+4. 點選「歷史」。
+5. 等櫃買歷史查詢結束。
+
+預期：加權指數的走勢圖先出現，櫃買走勢圖的位置顯示載入狀態，等櫃買歷史查詢成功後才出現走勢圖。
+
+## MKT-R14.6 一個指數沒有可繪製的資料
+
+自動化 test 用模擬的回應檢查，所以要用後端的實際資料再確認畫面。
+
+1. 複製「大盤指數測試資料」的指令，刪掉 `bulk_create` 參數裡 `market='otc'` 的那一個 list（從 `] + [` 到 `for days in range(50)`），只留加權的收盤指數。
+2. 執行改好的指令。
+3. 在 Application 面板清除 `taigu` IndexedDB 裡的 `marketIndexHistoricalPrices` 資料。
+4. 用 DevTools 的 Local Overrides 把盤中行情回應的 `dates.otc` 設為 `null`，保留櫃買點數。
+5. 重新整理 [大盤指數](https://local.taigu.tw/market-index)。
+6. 點選「歷史」。
+
+預期：加權指數照常顯示走勢圖。櫃買摘要顯示最新指數及「行情日期不明」，走勢圖的位置顯示「目前沒有歷史走勢」。
+
+## MKT-R14.7 一個指數讀取失敗
+
+自動化 test 用模擬的回應檢查，所以要用實際失敗的 request 再確認重試。
+
+1. 執行「大盤指數測試資料」的指令。
+2. 在 Application 面板清除 `taigu` IndexedDB 裡的 `marketIndexHistoricalPrices` 資料。
+3. 啟用櫃買歷史查詢的封鎖規則。
+4. 重新整理 [大盤指數](https://local.taigu.tw/market-index)。
+5. 點選「歷史」，等櫃買走勢圖的位置顯示「歷史走勢讀取失敗」。
+6. 關閉櫃買歷史查詢的封鎖規則。
+7. 按櫃買走勢圖位置的「重試」。
+8. 在 Network 面板查看這次送出的 request。
+
+預期：Network 面板只多出一筆櫃買歷史查詢的 request，前端沒有重新送出加權的查詢。加權走勢圖持續顯示，重試成功後櫃買走勢圖也出現。
+
+## MKT-R14.8 更新失敗時仍有可用資料
+
+自動化 test 用模擬的回應檢查，所以要用實際的 IndexedDB 資料再確認畫面。
+
+1. 執行「大盤指數測試資料」的指令。
+2. 開啟 [大盤指數](https://local.taigu.tw/market-index)，點選「歷史」，等兩張走勢圖出現。
+3. 不要清除 IndexedDB 資料，啟用櫃買歷史查詢的封鎖規則。
+4. 按「回儀表板」。
+5. 點選「大盤指數」卡片。
+6. 點選「歷史」。
+
+預期：櫃買仍顯示原本的走勢，並標示「更新失敗，顯示上次取得的走勢」。
+
+## MKT-R14.9 兩個指數的行情日期不同
+
+自動化 test 用模擬的回應檢查，所以要用後端的實際資料再確認兩個頁面的日期與圖上的點。
+
+1. 複製「大盤指數測試資料」的指令，把 `MarketIndexPerMinute.objects.create(` 裡的 `date=today` 改成 `date=today if market == 'tse' else today - timedelta(days=1)`，再把櫃買收盤指數的 `range(50)` 改成 `range(1, 50)`。
+2. 執行改好的指令。
+3. 查看 [儀表板](https://local.taigu.tw/)。
+4. 點選「大盤指數」卡片。
+5. 點選「歷史」。
+6. 將游標移到櫃買走勢圖的最後一點。
+
+預期：兩個頁面分別標示各指數的行情日期，櫃買歷史走勢圖的最後一點是前一天的 252.5 點。
+
+## MKT-R14.10 首次讀取兩個指數的盤中行情失敗
+
+自動化 test 用模擬的回應檢查，所以要用實際失敗的 request 再確認重試。
+
+1. 在 Request conditions 面板啟用盤中行情的封鎖規則。
+2. 重新整理 [大盤指數](https://local.taigu.tw/market-index)，等畫面出現「重試」。
+3. 關閉盤中行情的封鎖規則。
+4. 按「重試」。
+
+預期：兩張圖共用一個重試入口。Network 面板記錄一筆重試的盤中行情查詢，成功後兩張圖都出現。
+
+## MKT-R14.11 窄版保留加號選單
+
+加號選單的展開與收合取決於實際的觸控與版面，自動化 test 沒有涵蓋。
+
+1. 開啟行動裝置模擬，重新整理 [大盤指數](https://local.taigu.tw/market-index)。
+2. 展開加號選單，再點選選單外側收合。
+3. 按 Tab 將焦點移到加號。
+4. 按 Enter 展開選單。
+5. 按 Tab 依序將焦點移到各選項。
+6. 按 Esc 收合選單。
+7. 關閉行動裝置模擬。
+8. 把可用畫面縮至 844 × 360 CSS px。
+9. 用加號選單開啟「搜尋」。
+10. 按 Esc 關閉搜尋。
+11. 在新分頁開啟[含加號選單 hash 的大盤指數網址](https://local.taigu.tw/market-index#@)。
+
+預期：兩種視窗大小下都能操作「新增交易紀錄」、「新增現金股利」、「新增買賣計畫」與「搜尋」。關閉選單或搜尋視窗後，焦點回到加號。從新分頁直接開啟大盤指數頁時，加號選單維持收合。
+
+## MKT-R14.12 行情回應缺少個別日期
+
+自動化 test 用模擬的回應檢查，所以要用 DevTools 把實際的盤中行情回應改寫成舊版格式（沒有 `dates` 欄位），再確認畫面。
+
+1. 複製「大盤指數測試資料」的指令，把櫃買收盤指數的 `range(50)` 改成 `range(1, 50)`，讓兩個指數最新的收盤指數都是前一天的。
+2. 執行改好的指令。
+3. 用 DevTools 的 Local Overrides 移除盤中行情回應的 `dates`，保留 `date` 和點數。
+4. 重新整理 [儀表板](https://local.taigu.tw/)。
+5. 點選「大盤指數」卡片。
+6. 點選「歷史」。
+7. 將游標分別移到兩張走勢圖的最後一點。
+
+預期：兩個頁面都顯示兩個指數的最新指數及「行情日期不明」。兩張歷史走勢圖的最後一點仍是前一天的收盤指數。
+
+## MKT-R14.13 開啟舊的大盤指數網址
+
+自動化 test 已確認這兩個網址由 404 頁面處理，但沒有確認瀏覽器實際顯示的內容與網址列。
+
+1. 開啟 `https://local.taigu.tw/market-index/tse`。
+2. 開啟 `https://local.taigu.tw/market-index/otc`。
+
+預期：兩個網址都顯示 PUB-R5 的「找不到頁面」，網址列維持各自開啟的網址。
 
 ## MKT-R15.1 切換到「歷史」與「ALL」
 
-前端沒有自動化 test。這一段會改動大盤指數的資料，全部檢查完照共用準備第 12 步還原。
+自動化 test 用模擬的回應檢查，所以要用後端的實際資料再確認點數與區間。
 
-1. 執行下面的指令，讓加權指數保存 400 天前一筆，以及 1 到 35 天前每天各一筆收盤指數，並讓今天目前的指數是 23,100.5 點：
+1. 執行「大盤指數測試資料」的指令。
+2. 重新整理 [大盤指數](https://local.taigu.tw/market-index)，讓歷史區間回到預設值。
+3. 點選「歷史」。
+4. 將游標移到兩張走勢圖的第一點與最後一點，記下 tooltip 的日期與點數。
+5. 點選「ALL」，重複第 4 步。
+6. 點選「今日」，再點選「歷史」。
 
-   ```bash
-   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
-   from datetime import date, timedelta
-   from main.market.cache import TimeSeriesStockInfoCacheManager
-   from main.market.models import MarketIndexHistory, MarketIndexPerMinute
-   today = date.today()
-   MarketIndexHistory.objects.filter(market='tse').delete()
-   MarketIndexHistory.objects.create(market='tse', date=today - timedelta(days=400), close_price=15000.0)
-   for days_ago in range(1, 36):
-       MarketIndexHistory.objects.create(market='tse', date=today - timedelta(days=days_ago), close_price=23000.0 - days_ago * 10)
-   MarketIndexPerMinute.objects.all().delete()
-   for market, number, price, fluct in [('tse', 0, 23010.0, 10.0), ('tse', 90, 23100.5, 100.5), ('otc', 0, 250.0, 0.0)]:
-       MarketIndexPerMinute.objects.create(market=market, date=today, number=number, price=price, fluct_price=fluct)
-   TimeSeriesStockInfoCacheManager.delete('tse')
-   TimeSeriesStockInfoCacheManager.delete('otc')
-   "
-   ```
+預期：
 
-2. 在桌面瀏覽器開啟 `https://local.taigu.tw/`。
-3. 開啟 DevTools 的 Console，執行 `indexedDB.deleteDatabase('taigu')`。
-4. 重新整理頁面。
-5. 點選「加權指數」卡片。
-6. 點選「歷史」。
-7. 把滑鼠移到走勢圖的第一點與最後一點。
-8. 點選「ALL」。
-9. 把滑鼠移到走勢圖的第一點。
+- 點選「歷史」後選取的是「1M」，兩張圖都顯示最近 30 個點。兩張圖的最後一點是當天的盤中指數，加權是 23,100.5 點，櫃買是 252.5 點。
+- 點選「ALL」後，加權第一點的日期是 400 天前，櫃買第一點的日期是 49 天前。
+- 切回「歷史」時仍選取「ALL」。
 
-預期：第 6 步後「1M」是選取狀態；第 7 步第一點的日期是 29 天前（30 個點裡最早的一點），最後一點的日期是今天、值是 23,100.5；第 9 步第一點的日期是 400 天前。
+## MKT-R15.2 歷史走勢只有最新盤中指數
+
+自動化 test 用模擬的回應檢查，所以要在實際走勢圖上再確認單一點與 tooltip。
+
+1. 複製「大盤指數測試資料」的指令，刪掉 `bulk_create` 參數裡 `market='tse'` 的那一個 list（從開頭的 `[` 到 `] + `），只留櫃買的收盤指數。
+2. 執行改好的指令。
+3. 在 Application 面板清除 `taigu` IndexedDB 裡的 `marketIndexHistoricalPrices` 資料。
+4. 開啟 [大盤指數](https://local.taigu.tw/market-index)。
+5. 點選「歷史」。
+6. 將游標移到加權走勢圖的資料點上。
+
+預期：加權指數走勢圖只顯示當天的 23,100.5 點，tooltip 顯示這一點的日期與點數。
 
 ## MKT-R17.1 點選搜尋結果
 
@@ -544,7 +776,7 @@
 
 ### Tooltip 測試資料
 
-MKT-R22.1 檢查下列三個頁面的「今日」走勢：`https://local.taigu.tw/market-index/tse`、`https://local.taigu.tw/market-index/otc` 與 `https://local.taigu.tw/market/T01`。其餘手動檢查各選一個大盤指數頁與 T01，涵蓋兩種圖表元件。
+MKT-R22.1 檢查 [大盤指數](https://local.taigu.tw/market-index) 上的兩張今日走勢，以及 [T01 個股詳情頁](https://local.taigu.tw/market/T01) 的今日走勢。其餘手動檢查從大盤指數頁選一張圖，並在 T01 個股詳情頁重複操作。
 
 每次更換資料後，重新整理頁面再檢查。
 
@@ -580,12 +812,12 @@ TimeSeriesStockInfoCacheManager.delete('T01')
 回歸測試驗證 ECharts 的選點結果，這裡另外確認實際顯示的 tooltip 與指示線，也檢查觸控操作。
 
 1. 執行「Tooltip 測試資料」的指令。
-2. 開啟加權指數頁的今日走勢。
+2. 開啟大盤指數頁的「今日」，找到加權指數圖表。
 3. 在繪圖區把游標從 11:30 水平移到 11:35，過程中讓游標與折線保持一段垂直距離。
-4. 在櫃買指數頁與 T01 的個股詳情頁重複第 3 步。
+4. 在櫃買指數走勢圖與 T01 個股詳情頁的今日走勢圖重複第 3 步。
 5. 開啟 DevTools 的行動裝置模擬。
-6. 重新整理這三個頁面。
-7. 在三個頁面的今日走勢圖，依序觸控 11:31 與 11:34 的時間位置。
+6. 重新整理大盤指數頁與 T01 個股詳情頁。
+7. 在三張今日走勢圖上依序觸控 11:31 與 11:34 的時間位置。
 
 預期：移動期間 tooltip 持續顯示，滑鼠與觸控在 11:31 位置都顯示 11:30 的行情，在 11:34 位置都顯示 11:35 的行情，垂直指示線與 tooltip 的時間一致。
 

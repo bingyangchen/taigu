@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 
 import {
   DollarSign,
-  MarketIndexLineChart,
+  MarketIndexSummary,
   MarketValuePieChart,
   PercentSign,
   SegmentedControl,
@@ -33,12 +33,7 @@ function mapStateToProps(rootState: RootState) {
     averageCashInvested,
   } = rootState.tradeRecord;
   const { cashDividendRecords } = rootState.cashDividend;
-  const {
-    sidStockInfoMap,
-    realtimePriceDate,
-    tseIndexRealtimePrices,
-    otcIndexRealtimePrices,
-  } = rootState.stockInfo;
+  const { sidStockInfoMap } = rootState.stockInfo;
   const { handlingFeeDiscountRecords } = rootState.handlingFeeDiscount;
   const { dashboardDaysToShow } = rootState.mainPage;
   return {
@@ -52,9 +47,6 @@ function mapStateToProps(rootState: RootState) {
     averageCashInvested,
     sidStockInfoMap,
     stockWarehouse,
-    realtimePriceDate,
-    tseIndexRealtimePrices,
-    otcIndexRealtimePrices,
     dashboardDaysToShow,
   };
 }
@@ -64,8 +56,6 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 }
 
 interface State {
-  tseIndexLineChart: React.ReactElement | null;
-  otcIndexLineChart: React.ReactElement | null;
   cashInvestedLineChart: React.ReactElement | null;
   marketValuePieChart: React.ReactElement | null;
   sidMarketValueMap: { [sid: string]: number };
@@ -82,8 +72,6 @@ class Dashboard extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {
-      tseIndexLineChart: null,
-      otcIndexLineChart: null,
       cashInvestedLineChart: null,
       marketValuePieChart: null,
       sidMarketValueMap: {},
@@ -96,7 +84,6 @@ class Dashboard extends React.Component<Props, State> {
   }
 
   public componentDidMount(): void {
-    this.updateIndexLineCharts();
     this.updateCashInvestedLineChart();
     this.updateMarketRelatedData();
     this.updateXIRR();
@@ -115,12 +102,6 @@ class Dashboard extends React.Component<Props, State> {
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
   ): void {
-    if (
-      prevProps.tseIndexRealtimePrices !== this.props.tseIndexRealtimePrices ||
-      prevProps.otcIndexRealtimePrices !== this.props.otcIndexRealtimePrices
-    ) {
-      this.updateIndexLineCharts();
-    }
     if (
       prevProps.totalCashInvested !== this.props.totalCashInvested ||
       prevProps.dashboardDaysToShow !== this.props.dashboardDaysToShow
@@ -155,54 +136,7 @@ class Dashboard extends React.Component<Props, State> {
       <div className={styles.main}>
         {Util.isMobile && <SpeedDial />}
         <div className={styles.left}>
-          <div className={styles.upper}>
-            <button
-              type="button"
-              className={styles.market_index}
-              onClick={() => this.handleMarketIndexChartClick("tse")}
-              aria-label="查看加權指數走勢"
-            >
-              <div className={styles.left}>
-                <div className={styles.title}>加權指數</div>
-                <div className={styles.date}>{this.props.realtimePriceDate}</div>
-              </div>
-              <div className={styles.chart_container}>
-                {this.state.tseIndexLineChart}
-              </div>
-              <div className={`${styles.price} ${this.getIndexPriceClass("tse")}`}>
-                <div className={styles.price}>{this.latestTsePrice}</div>
-                <div className={styles.fluct_price}>
-                  {this.getIndexFluctPriceText(
-                    this.props.tseIndexRealtimePrices.last_fluct_price ?? 0,
-                  )}{" "}
-                  {this.getIndexFluctPercentText(this.latestTseFluctPercent)}
-                </div>
-              </div>
-            </button>
-            <button
-              type="button"
-              className={styles.market_index}
-              onClick={() => this.handleMarketIndexChartClick("otc")}
-              aria-label="查看櫃買指數走勢"
-            >
-              <div className={styles.left}>
-                <div className={styles.title}>櫃買指數</div>
-                <div className={styles.date}>{this.props.realtimePriceDate}</div>
-              </div>
-              <div className={styles.chart_container}>
-                {this.state.otcIndexLineChart}
-              </div>
-              <div className={`${styles.price} ${this.getIndexPriceClass("otc")}`}>
-                <div className={styles.price}>{this.latestOtcPrice}</div>
-                <div className={styles.fluct_price}>
-                  {this.getIndexFluctPriceText(
-                    this.props.otcIndexRealtimePrices.last_fluct_price ?? 0,
-                  )}{" "}
-                  {this.getIndexFluctPercentText(this.latestOtcFluctPercent)}
-                </div>
-              </div>
-            </button>
-          </div>
+          <MarketIndexSummary />
           <div className={styles.lower}>
             <div className={styles.cash_invested_text}>
               <div className={styles.title}>投入金額</div>
@@ -289,71 +223,6 @@ class Dashboard extends React.Component<Props, State> {
     return null;
   }
 
-  private get latestTsePrice(): number {
-    const numbers = Object.keys(this.props.tseIndexRealtimePrices)
-      .map((k) => parseInt(k))
-      .filter((n) => !Number.isNaN(n));
-    if (numbers.length === 0) return 0;
-    const maxNum = Math.max(...numbers);
-    return this.props.tseIndexRealtimePrices[maxNum.toString()] ?? 0;
-  }
-
-  private get latestOtcPrice(): number {
-    const numbers = Object.keys(this.props.otcIndexRealtimePrices)
-      .map((k) => parseInt(k))
-      .filter((n) => !Number.isNaN(n));
-    if (numbers.length === 0) return 0;
-    const maxNum = Math.max(...numbers);
-    return this.props.otcIndexRealtimePrices[maxNum.toString()] ?? 0;
-  }
-
-  private get latestTseFluctPercent(): number {
-    const latestTseFluctPrice = this.props.tseIndexRealtimePrices.last_fluct_price ?? 0;
-    return (
-      Math.round(
-        (latestTseFluctPrice / (this.latestTsePrice + latestTseFluctPrice)) * 10000,
-      ) / 100
-    );
-  }
-
-  private get latestOtcFluctPercent(): number {
-    const latestOtcFluctPrice = this.props.otcIndexRealtimePrices.last_fluct_price ?? 0;
-    return (
-      Math.round(
-        (latestOtcFluctPrice / (this.latestOtcPrice + latestOtcFluctPrice)) * 10000,
-      ) / 100
-    );
-  }
-
-  private getIndexPriceClass(index: "tse" | "otc"): string {
-    if (index === "tse") {
-      return this.latestTsePrice >
-        (this.props.tseIndexRealtimePrices.yesterday_price ?? 0)
-        ? styles.red
-        : this.latestTsePrice < (this.props.tseIndexRealtimePrices.yesterday_price ?? 0)
-          ? styles.green
-          : styles.gray;
-    } else {
-      return this.latestOtcPrice >
-        (this.props.otcIndexRealtimePrices.yesterday_price ?? 0)
-        ? styles.red
-        : this.latestOtcPrice < (this.props.otcIndexRealtimePrices.yesterday_price ?? 0)
-          ? styles.green
-          : styles.gray;
-    }
-  }
-
-  private getIndexFluctPriceText(fluctPrice: number): string {
-    return (
-      (fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "-") +
-      (fluctPrice !== 0 ? Math.abs(fluctPrice) : "")
-    );
-  }
-
-  private getIndexFluctPercentText(fluctPercent: number): string {
-    return `(${fluctPercent !== 0 ? Math.abs(fluctPercent) + "%" : "-"})`;
-  }
-
   private updateTotalEarning(): void {
     this.setState({
       totalEarning:
@@ -379,10 +248,6 @@ class Dashboard extends React.Component<Props, State> {
     this.props.router.navigate(`${Env.frontendRootPath}handling-fee`);
   };
 
-  private handleMarketIndexChartClick = (market: "tse" | "otc"): void => {
-    this.props.router.navigate(`${Env.frontendRootPath}market-index/${market}`);
-  };
-
   private handleCreateTradeRecordClick = (): void => {
     if (Util.isMobile) {
       this.props.router.navigate(`${Env.frontendRootPath}records/trade/new`);
@@ -390,49 +255,6 @@ class Dashboard extends React.Component<Props, State> {
     }
     this.setState({ activeModalName: "createTradeRecord" });
   };
-
-  private updateIndexLineCharts(): void {
-    this.setState((state, props) => {
-      const tseChartData: [number, number | null][] = [];
-      for (let i = 0; i <= 270; i++) {
-        if (
-          Object.prototype.hasOwnProperty.call(
-            props.tseIndexRealtimePrices,
-            i.toString(),
-          )
-        ) {
-          tseChartData.push([i, props.tseIndexRealtimePrices[i]]);
-        } else tseChartData.push([i, null]);
-      }
-
-      const otcChartData: [number, number | null][] = [];
-      for (let i = 0; i <= 270; i++) {
-        if (
-          Object.prototype.hasOwnProperty.call(
-            props.otcIndexRealtimePrices,
-            i.toString(),
-          )
-        ) {
-          otcChartData.push([i, props.otcIndexRealtimePrices[i]]);
-        } else otcChartData.push([i, null]);
-      }
-
-      return {
-        tseIndexLineChart: (
-          <MarketIndexLineChart
-            data={tseChartData}
-            prevClosePrice={this.props.tseIndexRealtimePrices.yesterday_price ?? 0}
-          />
-        ),
-        otcIndexLineChart: (
-          <MarketIndexLineChart
-            data={otcChartData}
-            prevClosePrice={this.props.otcIndexRealtimePrices.yesterday_price ?? 0}
-          />
-        ),
-      };
-    });
-  }
 
   private updateCashInvestedLineChart(): void {
     this.setState((state, props) => {

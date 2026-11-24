@@ -2,7 +2,9 @@ import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 
+import { MARKET_CLOSE_MINUTE } from "../../utils/marketIndex";
 import {
+  getChartPreviousClose,
   getMarketIndexMaxPrice,
   getMarketIndexMinPrice,
   splitMarketIndexDataIntoColoredSegments,
@@ -10,7 +12,7 @@ import {
 
 interface Props {
   data: [number, number | null][];
-  prevClosePrice: number;
+  prevClosePrice: number | null;
 }
 
 interface State {}
@@ -34,7 +36,8 @@ class MarketIndexLineChart extends React.Component<Props, State> {
   }
 
   private get chartOption(): EChartsOption {
-    const { data, prevClosePrice } = this.props;
+    const { data } = this.props;
+    const prevClosePrice = getChartPreviousClose(this.props.prevClosePrice);
     const segments = splitMarketIndexDataIntoColoredSegments(data, prevClosePrice);
     const minPrice = getMarketIndexMinPrice(data, prevClosePrice);
     const maxPrice = getMarketIndexMaxPrice(data, prevClosePrice);
@@ -45,7 +48,7 @@ class MarketIndexLineChart extends React.Component<Props, State> {
       xAxis: {
         type: "value",
         min: 0,
-        max: 270,
+        max: MARKET_CLOSE_MINUTE,
         show: false,
         axisLabel: { show: false },
         axisLine: { show: false },
@@ -68,23 +71,28 @@ class MarketIndexLineChart extends React.Component<Props, State> {
           type: "line" as const,
           data: segment.data,
           connectNulls: true,
-          symbol: "none",
+          symbol: data.length === 1 ? "circle" : "none",
+          itemStyle: { color: segment.color },
           lineStyle: { color: segment.color, width: 2 },
         })),
-        {
-          type: "line",
-          data: [],
-          markLine: {
-            silent: true,
-            symbol: "none",
-            lineStyle: { color: "#ddd", width: 1, type: "solid" },
-            data: [{ yAxis: prevClosePrice }],
-            label: { show: false },
-          },
-        },
+        ...(prevClosePrice === null
+          ? []
+          : [
+              {
+                type: "line" as const,
+                data: [],
+                markLine: {
+                  silent: true,
+                  symbol: "none",
+                  lineStyle: { color: "#ddd", width: 1, type: "solid" as const },
+                  data: [{ yAxis: prevClosePrice }],
+                  label: { show: false },
+                },
+              },
+            ]),
       ],
       tooltip: { show: false },
-      animationDurationUpdate: 0,
+      animation: false,
     };
   }
 }

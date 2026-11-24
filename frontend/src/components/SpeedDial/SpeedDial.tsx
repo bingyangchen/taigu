@@ -1,9 +1,10 @@
-import React, { MouseEvent } from "react";
+import React, { type MouseEvent } from "react";
 
 import {
   CashDividendRecordEditor,
   Modal,
   StockSearchModal,
+  Tooltip,
   TradePlanEditor,
   TradeRecordEditor,
 } from "../../components";
@@ -19,7 +20,6 @@ interface Props extends IRouter {
 }
 
 interface State {
-  isActive: boolean;
   activeModalName:
     | "createTradeRecord"
     | "createCashDividendRecord"
@@ -30,55 +30,129 @@ interface State {
 
 class SpeedDial extends React.Component<Props, State> {
   public state: State;
+  private readonly trigger = React.createRef<HTMLButtonElement>();
+  private readonly options = React.createRef<HTMLDivElement>();
+  private previousOverscroll: string | null = null;
   public constructor(props: Props) {
     super(props);
-    this.state = { isActive: false, activeModalName: null };
+    this.state = { activeModalName: null };
   }
-  public componentDidMount(): void {}
-  public componentDidUpdate(prevProps: Readonly<Props>): void {
-    if (
+  public componentDidMount(): void {
+    this.syncOverscroll();
+  }
+  public getSnapshotBeforeUpdate(prevProps: Readonly<Props>): boolean {
+    return (
       prevProps.router.location.hash === "#@" &&
-      this.props.router.location.hash === ""
-    ) {
-      this.hide();
+      !this.isActive &&
+      (this.options.current?.contains(document.activeElement) ?? false)
+    );
+  }
+  public componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevState: Readonly<State>,
+    focusWasInOptions: boolean,
+  ): void {
+    if (prevProps.router.location.hash !== this.props.router.location.hash) {
+      this.syncOverscroll();
+    }
+    if (this.state.activeModalName) return;
+    if (prevState.activeModalName) {
+      requestAnimationFrame(() => this.trigger.current?.focus({ preventScroll: true }));
+    } else if (focusWasInOptions) {
+      this.trigger.current?.focus({ preventScroll: true });
     }
   }
-  public componentWillUnmount(): void {}
+  public componentWillUnmount(): void {
+    this.restoreOverscroll();
+  }
+
+  private get isActive(): boolean {
+    return this.props.router.location.hash === "#@";
+  }
+
+  private syncOverscroll(): void {
+    if (this.isActive) {
+      this.previousOverscroll ??= document.body.style.overscrollBehaviorY;
+      document.body.style.overscrollBehaviorY = "contain";
+      window.addEventListener("keydown", this.handleKeyDown, true);
+    } else {
+      this.restoreOverscroll();
+    }
+  }
+
+  private restoreOverscroll(): void {
+    window.removeEventListener("keydown", this.handleKeyDown, true);
+    if (this.previousOverscroll === null) return;
+    document.body.style.overscrollBehaviorY = this.previousOverscroll;
+    this.previousOverscroll = null;
+  }
+
   public render(): React.ReactNode {
     return (
       <>
         {this.activeModal}
-        <div
-          className={`${styles.main} ${this.state.isActive ? styles.active : ""}`}
-          onClick={this.toggle}
-        >
-          <Icons.IconPlus sideLength="26" />
-          <div className={styles.button_container}>
-            <div className={styles.button} onClick={this.handleCreateTradeRecord}>
+        <div className={`${styles.main} ${this.isActive ? styles.active : ""}`}>
+          <Tooltip content="新增或搜尋" side="left">
+            <button
+              type="button"
+              className={styles.trigger}
+              ref={this.trigger}
+              aria-label="新增或搜尋"
+              aria-expanded={this.isActive}
+              onClick={this.toggle}
+            >
+              <Icons.IconPlus sideLength="26" />
+            </button>
+          </Tooltip>
+          <div className={styles.button_container} ref={this.options}>
+            <button
+              type="button"
+              className={styles.button}
+              onClick={this.handleCreateTradeRecord}
+            >
               <Icons.IconPencilSquare sideLength="20" />
-              <div className={styles.hint_text}>新增交易紀錄</div>
-            </div>
-            <div
+              <span className={styles.hint_text}>新增交易紀錄</span>
+            </button>
+            <button
+              type="button"
               className={styles.button}
               onClick={this.handleCreateCashDividendRecord}
             >
               <Icons.IconCoin sideLength="20" />
-              <div className={styles.hint_text}>新增現金股利</div>
-            </div>
-            <div className={styles.button} onClick={this.handleCreateTradePlan}>
+              <span className={styles.hint_text}>新增現金股利</span>
+            </button>
+            <button
+              type="button"
+              className={styles.button}
+              onClick={this.handleCreateTradePlan}
+            >
               <Icons.IconThumbtack sideLength="20" />
-              <div className={styles.hint_text}>新增買賣計畫</div>
-            </div>
-            <div className={styles.button} onClick={this.handleSearch}>
+              <span className={styles.hint_text}>新增買賣計畫</span>
+            </button>
+            <button type="button" className={styles.button} onClick={this.handleSearch}>
               <Icons.IconMagnifier sideLength="20" />
-              <div className={styles.hint_text}>搜尋</div>
-            </div>
+              <span className={styles.hint_text}>搜尋</span>
+            </button>
           </div>
         </div>
         <div className={styles.background} onClick={this.hide} />
       </>
     );
   }
+  private handleKeyDown = (event: KeyboardEvent): void => {
+    if (
+      event.key !== "Escape" ||
+      event.defaultPrevented ||
+      !this.isActive ||
+      this.state.activeModalName
+    ) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    this.trigger.current?.focus();
+    this.hide();
+  };
   private get activeModal(): React.ReactElement<typeof Modal> | null {
     if (this.state.activeModalName === "createTradeRecord") {
       return (
@@ -106,30 +180,30 @@ class SpeedDial extends React.Component<Props, State> {
     }
     return null;
   }
-  private toggle = (e: MouseEvent): void => {
-    e.stopPropagation();
-    this.setState((state) => {
-      if (state.isActive) {
-        setTimeout(() => {
-          if (this.props.router.location.hash === "#@") {
-            this.props.router.navigate(-1);
-          }
-          document.body.style.overscrollBehaviorY = "initial";
-        });
-      } else {
-        document.body.style.overscrollBehaviorY = "contain";
-        setTimeout(() => {
-          const { location, navigate } = this.props.router;
-          navigate({ search: location.search, hash: "#@" });
-        });
-      }
-      return { isActive: !state.isActive };
-    });
+  private toggle = (event: MouseEvent): void => {
+    event.stopPropagation();
+    if (this.isActive) {
+      this.hide();
+      return;
+    }
+
+    const { location, navigate } = this.props.router;
+    navigate(
+      { search: location.search, hash: "#@" },
+      { state: { ...location.state, speedDialOpen: true } },
+    );
   };
   private hide = (): void => {
-    if (this.props.router.location.hash === "#@") this.props.router.navigate(-1);
-    document.body.style.overscrollBehaviorY = "initial";
-    this.setState({ isActive: false });
+    if (!this.isActive) return;
+    const { location, navigate } = this.props.router;
+    if (location.state?.speedDialOpen === true) {
+      navigate(-1);
+    } else {
+      navigate(
+        { search: location.search, hash: "" },
+        { replace: true, state: location.state },
+      );
+    }
   };
   private handleCreateTradeRecord = (e: MouseEvent): void => {
     e.stopPropagation();
@@ -155,10 +229,8 @@ class SpeedDial extends React.Component<Props, State> {
   private handleSearch = (e: MouseEvent): void => {
     e.stopPropagation();
     if (Util.isMobile) {
-      document.body.style.overscrollBehaviorY = "initial";
-      this.setState({ isActive: false, activeModalName: null });
       this.props.router.navigate(`${Env.frontendRootPath}search`, {
-        replace: this.props.router.location.hash === "#@",
+        replace: this.isActive,
       });
       return;
     }
@@ -170,11 +242,7 @@ class SpeedDial extends React.Component<Props, State> {
     modalName: Exclude<State["activeModalName"], "search" | null>,
   ): void => {
     if (Util.isMobile) {
-      document.body.style.overscrollBehaviorY = "initial";
-      this.setState({ isActive: false, activeModalName: null });
-      this.props.router.navigate(mobilePath, {
-        replace: this.props.router.location.hash === "#@",
-      });
+      this.props.router.navigate(mobilePath, { replace: this.isActive });
       return;
     }
     this.hide();

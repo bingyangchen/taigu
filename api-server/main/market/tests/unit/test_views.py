@@ -90,6 +90,10 @@ class TestMarketIndexView:
         assert TradeType.OTC in data
         assert "date" in data
         assert data["date"] == "2023-12-01"
+        assert data["dates"] == {
+            TradeType.TSE: "2023-12-01",
+            TradeType.OTC: "2023-12-01",
+        }
 
         expected_data = {
             "30": 15000.0,
@@ -145,6 +149,40 @@ class TestMarketIndexView:
         assert TradeType.OTC in data
 
         assert mock_set.call_count == 2
+
+    @pytest.mark.parametrize("otc_date", [date(2023, 11, 30), None])
+    @patch("main.market.views.TimeSeriesStockInfoCacheManager.get")
+    def test_returns_each_markets_date_and_preserves_the_legacy_date(
+        self,
+        mock_get: Mock,
+        otc_date: date | None,
+        request_factory: RequestFactory,
+        user: User,
+    ) -> None:
+        tse_date = date(2023, 12, 1)
+        market_to_date = {TradeType.TSE: tse_date, TradeType.OTC: otc_date}
+
+        def get_cached_market(market: str) -> TimeSeriesStockInfo:
+            market_date = market_to_date[market]
+            return TimeSeriesStockInfo.model_validate(
+                {
+                    "data": {30: {"date": market_date, "price": 100, "fluct_price": 1}}
+                    if market_date
+                    else {}
+                }
+            )
+
+        mock_get.side_effect = get_cached_market
+        request = request_factory.get("/api/market/market-index/")
+        request.user = user
+
+        data = json.loads(market_index(request).content)
+
+        assert data["dates"] == {
+            TradeType.TSE: tse_date.isoformat(),
+            TradeType.OTC: otc_date.isoformat() if otc_date else None,
+        }
+        assert data["date"] == (otc_date or tse_date).isoformat()
 
     def test_market_index_method_not_allowed(
         self, request_factory: RequestFactory

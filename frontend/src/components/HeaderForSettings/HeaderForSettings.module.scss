@@ -1,6 +1,8 @@
 @use "../../design_system" as _;
 
 .main {
+  @include _.page-header-title-size;
+
   position: sticky;
   top: 0;
   display: flex;
@@ -8,9 +10,5 @@
   gap: 10px;
   height: _.$header-height;
   padding: 0 12px 0 8px;
-  font-size: 1.25 * _.$base-font-size;
-  @media (max-width: _.$width-512) {
-    font-size: 1.1 * _.$base-font-size;
-  }
   z-index: 2;
 }

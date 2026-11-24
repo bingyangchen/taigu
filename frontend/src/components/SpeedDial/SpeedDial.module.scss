@@ -1,5 +1,18 @@
 @use "../../design_system" as _;
 
+.trigger {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
 .main {
   $side-length: 60px;
   position: fixed;
@@ -70,6 +83,7 @@
     transition-duration: 200ms;
     z-index: 7;
     opacity: 0;
+    pointer-events: none;
     transform: translate(-50%, 0);
     & > .button {
       position: relative;
@@ -85,6 +99,8 @@
       box-shadow: 0 0 20px -10px _.$black;
       overflow: hidden;
       cursor: pointer;
+      padding: 0;
+      pointer-events: auto;
       & > .hint_text {
         position: absolute;
         top: 50%;
@@ -109,6 +125,22 @@
           }
         }
       }
+
+      &:focus-visible {
+        overflow: visible;
+
+        & > .hint_text {
+          opacity: 1;
+        }
+      }
+
+      @media (hover: none) {
+        overflow: visible;
+
+        & > .hint_text {
+          opacity: 1;
+        }
+      }
     }
   }
 }
@@ -116,6 +148,51 @@
 .background {
   animation: 300ms fadein ease;
   display: none;
+}
+
+@media (max-height: 450px) {
+  .main.active > .button_container {
+    bottom: calc(100% + 8px);
+    right: -4px;
+    left: auto;
+    gap: 6px;
+    max-height: calc(100dvh - _.$footer-height - env(safe-area-inset-bottom) - 88px);
+    padding: 4px;
+    overflow-y: auto;
+    pointer-events: auto;
+    transform: none;
+
+    & > .button {
+      flex: none;
+      justify-content: flex-start;
+      gap: 8px;
+      min-height: 44px;
+      height: auto;
+      width: 100%;
+      padding: 4px 12px;
+
+      & > .hint_text {
+        position: static;
+        transform: none;
+        opacity: 1;
+        padding: 0;
+        background: transparent;
+        color: inherit;
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main,
+  .main > .button_container,
+  .main > .button_container > .button > .hint_text {
+    transition: none;
+  }
+
+  .background {
+    animation: none;
+  }
 }
 
 @keyframes fadein {

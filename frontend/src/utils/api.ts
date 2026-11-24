@@ -8,7 +8,12 @@ import {
   ensureAccountCacheIsolation,
   invalidateAccountCache,
 } from "./accountCache";
-import { API_CACHE_NAME, API_CACHE_PATHS, LEGACY_API_CACHE_NAMES } from "./cache";
+import {
+  API_CACHE_FALLBACK_HEADER,
+  API_CACHE_NAME,
+  API_CACHE_PATHS,
+  LEGACY_API_CACHE_NAMES,
+} from "./cache";
 import Env from "./env";
 import { requestCloseActiveModal } from "./modal";
 import Nav from "./nav";
@@ -130,7 +135,12 @@ export default class Api {
     {
       silentOnFailure = false,
       redirectOnNotFound = true,
-    }: { silentOnFailure?: boolean; redirectOnNotFound?: boolean } = {},
+      onCacheFallback,
+    }: {
+      silentOnFailure?: boolean;
+      redirectOnNotFound?: boolean;
+      onCacheFallback?: () => void;
+    } = {},
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     method = method.toLowerCase();
@@ -178,6 +188,7 @@ export default class Api {
       assertCurrentSession(sessionVersion);
       const result = await Api.handleResponse(response, redirectOnNotFound);
       if (result !== undefined) assertCurrentSession(sessionVersion);
+      if (response.headers.has(API_CACHE_FALLBACK_HEADER)) onCacheFallback?.();
       if (sessionEndpoint === "account/me" && result?.id) {
         localStorage.setItem("accountId", result.id);
       }

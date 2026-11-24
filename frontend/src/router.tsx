@@ -86,7 +86,7 @@ const myRouter = createBrowserRouter(
       </Route>
       <Route path="" element={<Main />}>
         <Route path="" element={<Dashboard />}></Route>
-        <Route path="market-index/:market" element={<MarketIndexDetails />}></Route>
+        <Route path="market-index" element={<MarketIndexDetails />} />
         <Route path="records" element={<SearchScopedRoute page={Records} />}></Route>
         <Route path="records/trade/new" element={<TradeRecordCreateRoute />}></Route>
         <Route

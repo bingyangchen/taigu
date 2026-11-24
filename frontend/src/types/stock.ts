@@ -25,14 +25,15 @@ export type StockIntradayPrices = {
   [minute: string]: number | string | null | undefined;
 };
 
-export type MarketIndex = {
-  date: string;
-  tse: { [number: string]: number } & {
-    yesterday_price?: number;
-    last_fluct_price?: number;
-  };
-  otc: { [number: string]: number } & {
-    yesterday_price?: number;
-    last_fluct_price?: number;
-  };
+export type MarketId = "tse" | "otc";
+
+export type MarketIndexIntradayPrices = {
+  [minute: number]: number | undefined;
+  yesterday_price?: number;
+  last_fluct_price?: number;
+};
+
+export type MarketIndex = Record<MarketId, MarketIndexIntradayPrices> & {
+  date: string | null;
+  dates?: Record<MarketId, string | null>;
 };

@@ -49,3 +49,11 @@ $width-512: 511px;
 $width-780: 779px;
 $width-1024: 1023px;
 $width-1280: 1279px;
+
+@mixin page-header-title-size {
+  font-size: 1.25 * $base-font-size;
+
+  @media (max-width: $width-512) {
+    font-size: 1.1 * $base-font-size;
+  }
+}

@@ -4,6 +4,7 @@ import React from "react";
 import styles from "./SegmentedControl.module.scss";
 
 export interface SegmentedControlOption {
+  ariaLabel?: string;
   label: React.ReactNode;
   value: string;
 }
@@ -52,6 +53,7 @@ export default function SegmentedControl({
         <div className={styles.sliding_background} />
         {options.map((option) => (
           <Tabs.Trigger
+            aria-label={option.ariaLabel}
             key={option.value}
             className={styles.trigger}
             value={option.value}

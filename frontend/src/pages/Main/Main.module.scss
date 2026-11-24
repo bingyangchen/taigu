@@ -89,3 +89,22 @@
   width: 28px;
   border-radius: 100px;
 }
+
+.sidebar,
+.footer {
+  display: contents;
+}
+
+.market_index_shell {
+  @media (width < 960px) {
+    .sidebar {
+      display: none;
+    }
+  }
+
+  @media (width >= 960px) {
+    .footer {
+      display: none;
+    }
+  }
+}
