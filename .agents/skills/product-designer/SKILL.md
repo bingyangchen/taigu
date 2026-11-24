@@ -54,4 +54,4 @@ Check the screenshots against this list, fix what fails, and render again. Stop 
 
 Copy is part of the design. When the user asks for copy, the copy is the deliverable. Follow the rules under 「文案」 in `ui-guidelines.md`, and give the empty, loading, error, and at-quota states each their own copy that says what happened and what the user can do next.
 
-Use `impeccable` to choose and run any relevant design commands. Before showing a draft, and again after every redesign, run its `critique` and `polish` workflows as described above. `ui-guidelines.md` and the frontend tokens override recommendations from `impeccable`. Do not run `impeccable init` (also called `teach`): `product.md` and `ui-guidelines.md` already hold Taigu's product and design context.
+Use `impeccable` to choose and run any relevant design commands. Before showing a draft, and again after every redesign, run its `critique` and `polish` workflows as described above. `ui-guidelines.md` and the frontend tokens override recommendations from `impeccable`. When `impeccable` asks for `init` (also called `teach`), you may run it; edit `PRODUCT.md` only as its header describes.
