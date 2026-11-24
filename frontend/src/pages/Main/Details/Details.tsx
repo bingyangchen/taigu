@@ -1,3 +1,4 @@
+import { createSelector } from "@reduxjs/toolkit";
 import React from "react";
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
@@ -22,6 +23,7 @@ import {
   buildStockIntradayChartData,
   hasStockIntradayPlottedData,
 } from "../../../components/StockIntradayLineChart/stockIntradayChartData";
+import Tooltip from "../../../components/Tooltip/Tooltip";
 import * as Icons from "../../../icons";
 import {
   changeStockDetailChartMode,
@@ -51,8 +53,47 @@ import { getHideModalCallback } from "../../../utils/modal";
 import Util from "../../../utils/util";
 import styles from "./Details.module.scss";
 
+const selectNavigableSids = createSelector(
+  [
+    (_state: RootState, tab: MarketTab) => tab,
+    (_state: RootState, _tab: MarketTab, searchText: string) => searchText,
+    (state: RootState) => state.mainPage.marketSortKey,
+    (state: RootState) => state.tradeRecord.stockWarehouse,
+    (state: RootState) => state.memo.favorites,
+    (state: RootState) => state.stockInfo.sidStockInfoMap,
+    (state: RootState) => state.tradeRecord.sidTradeRecordsMap,
+    (state: RootState) => state.cashDividend.cashDividendRecords,
+    (_state: RootState, _tab: MarketTab, _searchText: string, xirrDate?: string) =>
+      xirrDate,
+  ],
+  (
+    tab,
+    searchText,
+    sortKey,
+    stockWarehouse,
+    favorites,
+    sidStockInfoMap,
+    sidTradeRecordsMap,
+    cashDividendRecords,
+  ) =>
+    getVisibleMarketSids({
+      tab,
+      searchText,
+      sortKey,
+      stockWarehouse,
+      favorites,
+      sidStockInfoMap,
+      sidTradeRecordsMap,
+      cashDividendRecords,
+    }),
+  { memoizeOptions: { maxSize: 2 } },
+);
+
 function mapStateToProps(rootState: RootState, ownProps: IRouter) {
   const sid = ownProps.router.params.sid ?? "";
+  const [, , routeTab, routeSid] = ownProps.router.location.pathname.split("/");
+  const stockListTab =
+    routeSid && (routeTab === "holding" || routeTab === "favorites") ? routeTab : null;
   const {
     sidStockInfoMap,
     sidHistoricalPricesMap,
@@ -71,8 +112,26 @@ function mapStateToProps(rootState: RootState, ownProps: IRouter) {
   const { sidCompanyInfoMap, favorites } = rootState.memo;
   const { tradePlans } = rootState.tradePlan;
   const { subscription } = rootState.account;
-  const { stockDetailChartMode } = rootState.mainPage;
+  const { stockDetailChartMode, marketSearchText, marketSortKey } = rootState.mainPage;
+  let previousStockSid: string | undefined;
+  let nextStockSid: string | undefined;
+  if (stockListTab) {
+    const xirrDate = marketSortKey === "xirr" ? new Date().toDateString() : undefined;
+    let sids = selectNavigableSids(rootState, stockListTab, marketSearchText, xirrDate);
+    let index = sids.indexOf(sid);
+    if (index < 0 && marketSearchText.trim()) {
+      sids = selectNavigableSids(rootState, stockListTab, "", xirrDate);
+      index = sids.indexOf(sid);
+    }
+    if (index >= 0) {
+      previousStockSid = sids[index - 1];
+      nextStockSid = sids[index + 1];
+    }
+  }
   return {
+    stockListTab,
+    previousStockSid,
+    nextStockSid,
     stockInfo: sidStockInfoMap[sid],
     intradayPrices: sidIntradayPricesMap[sid],
     inventory: stockWarehouse[sid],
@@ -113,14 +172,12 @@ interface State {
   hasVibrated: boolean;
   activeMaterialFact: MaterialFact | null;
   didStockInfoFail: boolean;
-  isPageSwitching: boolean;
 }
 
 class Details extends React.Component<Props, State> {
   public state: State;
   private mainRef: React.RefObject<HTMLDivElement>;
   private fetchStockInfoTimer: ReturnType<typeof setInterval> | null = null;
-  private pageSwitchTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly SCROLLING_THRESHOLD: number = 10;
   private readonly SWITCHING_THRESHOLD: number = 85;
   public constructor(props: Props) {
@@ -141,13 +198,12 @@ class Details extends React.Component<Props, State> {
       hasVibrated: false,
       activeMaterialFact: null,
       didStockInfoFail: false,
-      isPageSwitching: false,
     };
     this.mainRef = React.createRef();
   }
 
   public async componentDidMount(): Promise<void> {
-    if (this.listName !== null && this.mainRef.current) {
+    if (this.props.stockListTab && this.mainRef.current) {
       // Do not write this using React inline event handling
       this.mainRef.current.addEventListener("touchstart", this.handleTouchStart, true);
       this.mainRef.current.addEventListener("touchmove", this.handleTouchMove, true);
@@ -272,7 +328,7 @@ class Details extends React.Component<Props, State> {
   }
 
   public componentWillUnmount(): void {
-    if (this.listName !== null && this.mainRef.current) {
+    if (this.props.stockListTab && this.mainRef.current) {
       this.mainRef.current.removeEventListener("touchstart", this.handleTouchStart);
       this.mainRef.current.removeEventListener("touchmove", this.handleTouchMove);
       this.mainRef.current.removeEventListener("touchend", this.handleTouchEnd);
@@ -281,23 +337,14 @@ class Details extends React.Component<Props, State> {
       clearInterval(this.fetchStockInfoTimer);
       this.fetchStockInfoTimer = null;
     }
-    if (this.pageSwitchTimer) {
-      clearTimeout(this.pageSwitchTimer);
-      this.pageSwitchTimer = null;
-    }
   }
 
   public render(): React.ReactNode {
-    const stockInfo = this.props.stockInfo;
+    const { stockInfo, stockListTab, previousStockSid, nextStockSid } = this.props;
     return (
       <>
         {this.activeModal}
-        <div
-          className={`${styles.main} ${
-            this.state.isPageSwitching ? styles.is_switching : ""
-          }`}
-          ref={this.mainRef}
-        >
+        <div className={styles.main} ref={this.mainRef}>
           {Util.isMobile && (
             <ScrollThresholdContainer
               className={styles.mobile_back_button_container}
@@ -597,30 +644,40 @@ class Details extends React.Component<Props, State> {
                 }`}
               />
             </>
-          ) : (
+          ) : stockListTab ? (
             <>
-              <div
-                className={`${styles.switch_hint_icon_container_for_desktop} ${styles.left}`}
-              >
-                <div
-                  className={`${styles.switch_hint_icon} ${styles.left} ${
-                    this.state.switchDirection === "prev" ? styles.active : ""
-                  }`}
-                  onClick={this.handleClickPrevButton}
-                />
+              <div className={`${styles.stock_switch_control} ${styles.left}`}>
+                <Tooltip content="上一檔">
+                  <button
+                    type="button"
+                    aria-label="上一檔"
+                    aria-disabled={!previousStockSid}
+                    tabIndex={previousStockSid ? 0 : -1}
+                    onClick={() => this.switchToStock(previousStockSid)}
+                  >
+                    <span aria-hidden="true">
+                      <Icons.IconChevronLeft sideLength="18" />
+                    </span>
+                  </button>
+                </Tooltip>
               </div>
-              <div
-                className={`${styles.switch_hint_icon_container_for_desktop} ${styles.right}`}
-              >
-                <div
-                  className={`${styles.switch_hint_icon} ${styles.right} ${
-                    this.state.switchDirection === "next" ? styles.active : ""
-                  }`}
-                  onClick={this.handleClickNextButton}
-                />
+              <div className={`${styles.stock_switch_control} ${styles.right}`}>
+                <Tooltip content="下一檔">
+                  <button
+                    type="button"
+                    aria-label="下一檔"
+                    aria-disabled={!nextStockSid}
+                    tabIndex={nextStockSid ? 0 : -1}
+                    onClick={() => this.switchToStock(nextStockSid)}
+                  >
+                    <span aria-hidden="true">
+                      <Icons.IconChevronRight sideLength="18" />
+                    </span>
+                  </button>
+                </Tooltip>
               </div>
             </>
-          )}
+          ) : null}
         </div>
       </>
     );
@@ -666,11 +723,6 @@ class Details extends React.Component<Props, State> {
 
   private get sid(): string {
     return this.props.router.params.sid ?? "";
-  }
-
-  private get listName(): string | null {
-    const pathList = this.props.router.location.pathname.split("/");
-    return pathList.length < 4 ? null : pathList[2];
   }
 
   private get fluctPriceClass(): string {
@@ -974,8 +1026,10 @@ class Details extends React.Component<Props, State> {
   };
 
   private handleTouchEnd = (): void => {
-    if (this.state.switchDirection === "next") this.goToNextOne();
-    else if (this.state.switchDirection === "prev") this.goToPrevOne();
+    if (this.state.switchDirection === "next")
+      this.switchToStock(this.props.nextStockSid);
+    else if (this.state.switchDirection === "prev")
+      this.switchToStock(this.props.previousStockSid);
     this.setState({
       touchStartX: 0,
       touchStartY: 0,
@@ -985,14 +1039,6 @@ class Details extends React.Component<Props, State> {
       isScrollingVertically: false,
       hasVibrated: false,
     });
-  };
-
-  private handleClickPrevButton = (): void => {
-    this.goToPrevOne();
-  };
-
-  private handleClickNextButton = (): void => {
-    this.goToNextOne();
   };
 
   private returnToList = (): void => {
@@ -1019,61 +1065,12 @@ class Details extends React.Component<Props, State> {
       .catch(() => this.setState({ didStockInfoFail: true }));
   };
 
-  private get navigableSids(): string[] {
-    const tab = this.listName;
-    if (tab !== "holding" && tab !== "favorites") return [];
-
-    const { stockInfo, tradeRecord, mainPage } = store.getState();
-    const context = {
-      tab: tab as MarketTab,
-      searchText: mainPage.marketSearchText,
-      sortKey: mainPage.marketSortKey,
-      stockWarehouse: tradeRecord.stockWarehouse,
-      favorites: this.props.favorites,
-      sidStockInfoMap: stockInfo.sidStockInfoMap,
-      sidTradeRecordsMap: tradeRecord.sidTradeRecordsMap,
-      cashDividendRecords: this.props.cashDividendRecords,
-    };
-    const visibleSids = getVisibleMarketSids(context);
-    if (visibleSids.includes(this.sid)) return visibleSids;
-    return getVisibleMarketSids({ ...context, searchText: "" });
-  }
-
-  private goToPrevOne(): void {
-    const sids = this.navigableSids;
-    const prevIndex = sids.findIndex((e) => e === this.sid) - 1;
-    if (prevIndex < 0) return;
-    // if (navigator.vibrate) navigator.vibrate(10);
-    this.switchToSid(
-      this.props.router.location.pathname
-        .replace(/\/+$/, "")
-        .replace(/\/[^/]+$/, `/${sids[prevIndex]}`),
-    );
-  }
-
-  private goToNextOne(): void {
-    const sids = this.navigableSids;
-    const nextIndex = sids.findIndex((e) => e === this.sid) + 1;
-    if (nextIndex >= sids.length) return;
-    // if (navigator.vibrate) navigator.vibrate(10);
-    this.switchToSid(
-      this.props.router.location.pathname
-        .replace(/\/+$/, "")
-        .replace(/\/[^/]+$/, `/${sids[nextIndex]}`),
-    );
-  }
-
-  private switchToSid(path: string): void {
-    if (this.pageSwitchTimer) {
-      clearTimeout(this.pageSwitchTimer);
-      this.pageSwitchTimer = null;
-    }
-    this.setState({ isPageSwitching: true });
+  private switchToStock(sid: string | undefined): void {
+    if (!sid) return;
+    const path = this.props.router.location.pathname
+      .replace(/\/+$/, "")
+      .replace(/\/[^/]+$/, `/${sid}`);
     this.props.router.navigate(path, { replace: true });
-    this.pageSwitchTimer = setTimeout(() => {
-      this.setState({ isPageSwitching: false });
-      this.pageSwitchTimer = null;
-    }, 220);
   }
 
   private get isFavorite(): boolean {

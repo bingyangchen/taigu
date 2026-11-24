@@ -105,24 +105,6 @@ function compareMarketSids(
       "zh-Hant",
     );
   }
-  if (context.sortKey === "xirr") {
-    return (
-      getStockXirr(
-        rightSid,
-        context.sidStockInfoMap[rightSid],
-        context.stockWarehouse,
-        context.sidTradeRecordsMap,
-        context.cashDividendRecords,
-      ) -
-      getStockXirr(
-        leftSid,
-        context.sidStockInfoMap[leftSid],
-        context.stockWarehouse,
-        context.sidTradeRecordsMap,
-        context.cashDividendRecords,
-      )
-    );
-  }
   if (context.sortKey === "fluct") {
     return (
       getAbsoluteFluctPercent(context.sidStockInfoMap[rightSid]) -
@@ -143,15 +125,39 @@ function compareMarketSids(
 
 export function getVisibleMarketSids(context: MarketSidsContext): string[] {
   const keyword = context.searchText.trim().toLowerCase();
-  return getAllMarketSids(context.tab, context.stockWarehouse, context.favorites)
-    .filter((sid) => {
-      if (!keyword) return true;
-      const name = getStockName(
+  const visibleSids = getAllMarketSids(
+    context.tab,
+    context.stockWarehouse,
+    context.favorites,
+  ).filter((sid) => {
+    if (!keyword) return true;
+    const name = getStockName(
+      sid,
+      context.sidStockInfoMap,
+      context.sidTradeRecordsMap,
+    ).toLowerCase();
+    return sid.toLowerCase().includes(keyword) || name.includes(keyword);
+  });
+
+  if (context.sortKey === "xirr") {
+    const xirrBySid = Object.fromEntries(
+      visibleSids.map((sid) => [
         sid,
-        context.sidStockInfoMap,
-        context.sidTradeRecordsMap,
-      ).toLowerCase();
-      return sid.toLowerCase().includes(keyword) || name.includes(keyword);
-    })
-    .sort((leftSid, rightSid) => compareMarketSids(leftSid, rightSid, context));
+        getStockXirr(
+          sid,
+          context.sidStockInfoMap[sid],
+          context.stockWarehouse,
+          context.sidTradeRecordsMap,
+          context.cashDividendRecords,
+        ),
+      ]),
+    );
+    return visibleSids.sort(
+      (leftSid, rightSid) => xirrBySid[rightSid] - xirrBySid[leftSid],
+    );
+  }
+
+  return visibleSids.sort((leftSid, rightSid) =>
+    compareMarketSids(leftSid, rightSid, context),
+  );
 }

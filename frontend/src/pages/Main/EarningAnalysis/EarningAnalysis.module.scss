@@ -9,8 +9,8 @@
   & > .back_button_container {
     position: fixed;
     top: 0;
-    left: _.$side-bar-width;
     display: flex;
+    align-self: flex-start;
     align-items: center;
     height: _.$header-height;
     width: fit-content;

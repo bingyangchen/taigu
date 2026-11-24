@@ -1,10 +1,12 @@
 @use "../../../design_system" as _;
 
-$detail-layout-width: 1180px;
+$detail-inline-padding: 24px;
+$stock-switch-button-size: 44px;
+$stock-switch-edge-gap: 4px;
 $text-muted: #6f7c8d;
-$switch-single-column-width: 760px;
 
 .main {
+  --detail-max-width: 760px;
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -18,9 +20,9 @@ $switch-single-column-width: 760px;
   gap: 20px;
   box-sizing: border-box;
   width: 100%;
-  max-width: 760px;
+  max-width: var(--detail-max-width);
   min-height: 100%;
-  padding: 28px 24px 92px;
+  padding: 28px $detail-inline-padding 92px;
   margin: 0 auto;
   color: _.$deep-gray;
   font-variant-numeric: tabular-nums;
@@ -35,11 +37,8 @@ $switch-single-column-width: 760px;
     background: _.$page-bg;
   }
 
-  &.is_switching {
-    animation: page-switch 200ms ease-out both;
-  }
-
   @media (min-width: (_.$width-1280 + 1px)) {
+    --detail-max-width: 1180px;
     grid-template-columns: minmax(0, 68fr) minmax(300px, 32fr);
     grid-template-areas:
       "notice notice"
@@ -48,7 +47,6 @@ $switch-single-column-width: 760px;
       "inventory inventory"
       "company company";
     gap: 24px;
-    max-width: $detail-layout-width;
     padding-top: 32px;
   }
 
@@ -59,17 +57,6 @@ $switch-single-column-width: 760px;
     max-width: none;
     padding: 0 0 calc(_.$footer-height + env(safe-area-inset-bottom) + 92px);
     background: _.$page-bg;
-  }
-}
-
-@keyframes page-switch {
-  from {
-    opacity: 0.72;
-    transform: translateX(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 
@@ -856,42 +843,84 @@ $switch-single-column-width: 760px;
   }
 }
 
-.switch_hint_icon_container_for_desktop {
+.stock_switch_control {
   position: fixed;
-  top: 0;
-  height: 100dvh;
-  width: 54px;
+  top: 50dvh;
+  margin-inline: $stock-switch-edge-gap - $detail-inline-padding;
   z-index: 2;
+  transform: translateY(-50%);
+
+  & > button {
+    display: grid;
+    place-items: center;
+    width: $stock-switch-button-size;
+    height: $stock-switch-button-size;
+    padding: 0;
+    border: 1px solid _.$light-gray;
+    border-radius: 50%;
+    background: _.$white;
+    color: _.$deep-gray;
+    cursor: pointer;
+
+    &[aria-disabled="true"] {
+      color: _.$gray;
+      background: _.$noisy-white;
+      cursor: default;
+    }
+
+    @media (hover: hover) {
+      &:hover:not([aria-disabled="true"]) {
+        background: _.$page-bg;
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid _.$blue;
+      outline-offset: 2px;
+    }
+  }
+
+  svg {
+    display: block;
+  }
 
   &.left {
-    left: calc(
-      _.$side-bar-width +
-        max(0px, (100vw - _.$side-bar-width - $switch-single-column-width) / 2)
-    );
+    justify-self: start;
   }
 
   &.right {
-    right: max(0px, (100vw - _.$side-bar-width - $switch-single-column-width) / 2);
+    justify-self: end;
   }
 
-  @media (min-width: (_.$width-1280 + 1px)) {
+  @container main-content (width > 0px) {
+    margin-inline: calc(
+      -1 *
+        clamp(
+          #{$detail-inline-padding - $stock-switch-edge-gap},
+          #{$detail-inline-padding - $stock-switch-edge-gap} +
+            (100cqw - var(--detail-max-width)) / 2,
+          #{$stock-switch-button-size + $stock-switch-edge-gap}
+        )
+    );
+  }
+
+  @media (max-width: _.$width-780) {
+    margin-inline: $stock-switch-edge-gap;
+
     &.left {
-      left: calc(
-        _.$side-bar-width +
-          max(0px, (100vw - _.$side-bar-width - $detail-layout-width) / 2)
-      );
+      align-self: flex-start;
     }
 
     &.right {
-      right: max(0px, (100vw - _.$side-bar-width - $detail-layout-width) / 2);
+      align-self: flex-end;
     }
   }
 }
 
-.switch_hint_icon,
 .switch_hint_icon_for_mobile {
-  position: absolute;
+  position: fixed;
   top: 50%;
+  z-index: 4;
   width: 44px;
   height: 88px;
   opacity: 0;
@@ -940,21 +969,6 @@ $switch-single-column-width: 760px;
   &.active {
     opacity: 1;
   }
-}
-
-.switch_hint_icon {
-  cursor: pointer;
-
-  @media (hover: hover) {
-    .switch_hint_icon_container_for_desktop:hover & {
-      opacity: 1;
-    }
-  }
-}
-
-.switch_hint_icon_for_mobile {
-  position: fixed;
-  z-index: 4;
 
   &.left.active {
     transform: translate(14px, -50%);
