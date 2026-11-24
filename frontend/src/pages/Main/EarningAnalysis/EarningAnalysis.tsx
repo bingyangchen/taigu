@@ -11,8 +11,9 @@ import {
 } from "../../../components";
 import * as Icons from "../../../icons";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
+import { IRouter, navigateBack, withRouter } from "../../../router";
 import Api from "../../../utils/api";
+import Env from "../../../utils/env";
 import Util from "../../../utils/util";
 import styles from "./EarningAnalysis.module.scss";
 
@@ -72,7 +73,7 @@ class EarningAnalysis extends React.Component<Props, State> {
           scrolledClassName={styles.scrolled}
         >
           <RoundButton
-            onClick={() => this.props.router.navigate(-1)}
+            onClick={() => navigateBack(this.props.router, Env.frontendRootPath)}
             className="p-12"
             hint_text="回儀表板"
           >
@@ -94,7 +95,7 @@ class EarningAnalysis extends React.Component<Props, State> {
             }
           />
         </div>
-        <div className={styles.chart_container}>
+        <div className={styles.chart_container} data-page-scroll>
           {chartData.length === 0 ? (
             <div className={styles.empty_section}>
               {this.state.activeChartType === "gain"

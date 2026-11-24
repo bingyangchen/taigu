@@ -42,7 +42,7 @@ import {
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { store } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
+import { IRouter, navigateBack, withRouter } from "../../../router";
 import type { MarketTab, MaterialFact } from "../../../types";
 import { formatDateWithWeekday } from "../../../utils/date";
 import Env from "../../../utils/env";
@@ -304,7 +304,7 @@ class Details extends React.Component<Props, State> {
               scrolledClassName={styles.scrolled}
             >
               <RoundButton
-                onClick={() => this.props.router.navigate(-1)}
+                onClick={this.returnToList}
                 className="p-12"
                 hint_text="回列表"
                 aria-label="回列表"
@@ -357,7 +357,7 @@ class Details extends React.Component<Props, State> {
             <div className={styles.hero_toolbar}>
               {!Util.isMobile && (
                 <RoundButton
-                  onClick={() => this.props.router.navigate(-1)}
+                  onClick={this.returnToList}
                   className={styles.toolbar_button}
                   hint_text="回列表"
                   aria-label="回列表"
@@ -993,6 +993,10 @@ class Details extends React.Component<Props, State> {
 
   private handleClickNextButton = (): void => {
     this.goToNextOne();
+  };
+
+  private returnToList = (): void => {
+    navigateBack(this.props.router, `${Env.frontendRootPath}market`);
   };
 
   private handleScrollToTop = (): void => {

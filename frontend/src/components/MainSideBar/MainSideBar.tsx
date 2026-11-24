@@ -16,6 +16,7 @@ import { AppDispatch, RootState } from "../../redux/store";
 import { settingsPagePath } from "../../router";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
+import { mainTabNavigationState } from "../../utils/mainNavigation";
 import { getHideModalCallback } from "../../utils/modal";
 import styles from "./MainSideBar.module.scss";
 import {
@@ -80,6 +81,7 @@ class MainSideBar extends React.Component<Props, State> {
           <WithTooltip content="查看帳號與設定" enabled={showsIconOnly}>
             <NavLink
               to={`${Env.frontendRootPath}${settingsPagePath}`}
+              state={mainTabNavigationState}
               className={styles.profile_link}
               aria-label={showsIconOnly ? "查看帳號與設定" : undefined}
             >
@@ -113,6 +115,7 @@ class MainSideBar extends React.Component<Props, State> {
                 page={subpage}
                 key={idx}
                 changeColor
+                restoreTabPosition
                 end={subpage.path === Env.frontendRootPath}
                 iconOnlyLabel={showsIconOnly ? subpage.name : undefined}
                 iconOnly={showsIconOnly}

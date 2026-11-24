@@ -39,10 +39,10 @@ class BottomSheet extends React.Component<Props, State> {
   }
   public componentDidMount(): void {
     setTimeout(() => {
-      this.props.router.navigate("#!");
+      const { location, navigate } = this.props.router;
+      navigate({ search: location.search, hash: "#!" });
       document.body.style.overscrollBehaviorY = "contain";
     });
-
     this.setState({ initialMainHeight: this.mainRef.current?.clientHeight ?? 0 });
   }
   public componentDidUpdate(prevProps: Readonly<Props>): void {

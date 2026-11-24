@@ -20,11 +20,12 @@ import * as Icons from "../../../icons";
 import { deleteDiscount } from "../../../redux/slices/HandlingFeeDiscountSlice";
 import { selectNetHandlingFee } from "../../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
+import { IRouter, navigateBack, withRouter } from "../../../router";
 import type { HandlingFeeDiscount } from "../../../types";
 import Env from "../../../utils/env";
 import { getHideModalCallback } from "../../../utils/modal";
 import Util from "../../../utils/util";
+import { getViewHistory } from "../viewHistory";
 import styles from "./HandlingFee.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -53,15 +54,20 @@ interface State {
 
 class HandlingFee extends React.Component<Props, State> {
   public state: State;
+  private readonly viewHistory = getViewHistory();
   private readonly TIME_SPAN_OPTIONS_IN_DAYS: number[] = [182, 365, 1825, Infinity];
 
   public constructor(props: Props) {
     super(props);
+    const list = this.viewHistory.get(
+      props.router.location,
+      props.router.navigationType,
+    )?.list;
     this.state = {
       animatedHandlingFee: 0,
-      daysToShow: this.TIME_SPAN_OPTIONS_IN_DAYS[0],
+      daysToShow: list?.daysToShow ?? this.TIME_SPAN_OPTIONS_IN_DAYS[0],
       activeModalName: null,
-      numberToShow: 15,
+      numberToShow: list?.numberToShow ?? 15,
       handlingFeeChart: null,
     };
   }
@@ -75,6 +81,12 @@ class HandlingFee extends React.Component<Props, State> {
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
   ): Promise<void> {
+    if (prevProps.router.location.key !== this.props.router.location.key) {
+      const { daysToShow, numberToShow } = prevState;
+      this.viewHistory.save(prevProps.router.location, {
+        list: { daysToShow, numberToShow },
+      });
+    }
     if (prevProps.netHandlingFee !== this.props.netHandlingFee) {
       this.animateHandlingFee();
     }
@@ -85,6 +97,13 @@ class HandlingFee extends React.Component<Props, State> {
     ) {
       this.updateHandlingFeeChart();
     }
+  }
+
+  public componentWillUnmount(): void {
+    const { daysToShow, numberToShow } = this.state;
+    this.viewHistory.save(this.props.router.location, {
+      list: { daysToShow, numberToShow },
+    });
   }
 
   public render(): React.ReactNode {
@@ -99,7 +118,7 @@ class HandlingFee extends React.Component<Props, State> {
               scrolledClassName={styles.scrolled}
             >
               <RoundButton
-                onClick={() => this.props.router.navigate(-1)}
+                onClick={this.returnToDashboard}
                 className="p-12"
                 hint_text="回儀表板"
               >
@@ -111,7 +130,7 @@ class HandlingFee extends React.Component<Props, State> {
             {!Util.isMobile && (
               <div className={styles.desktop_back_button_container}>
                 <RoundButton
-                  onClick={() => this.props.router.navigate(-1)}
+                  onClick={this.returnToDashboard}
                   className="p-12"
                   hint_text="回儀表板"
                 >
@@ -162,7 +181,7 @@ class HandlingFee extends React.Component<Props, State> {
               {this.props.handlingFeeDiscountRecords.length === 0 ? (
                 <div className={styles.empty_section}>目前沒有手續費折讓紀錄</div>
               ) : (
-                <div className={styles.record_list}>
+                <div className={styles.record_list} data-page-scroll>
                   {this.props.handlingFeeDiscountRecords
                     .slice(0, this.state.numberToShow)
                     .map((discount: HandlingFeeDiscount) => (
@@ -339,6 +358,10 @@ class HandlingFee extends React.Component<Props, State> {
 
   private handleTimeSpanSegmentChange = (value: string): void => {
     this.setState({ daysToShow: value === "Infinity" ? Infinity : Number(value) });
+  };
+
+  private returnToDashboard = (): void => {
+    navigateBack(this.props.router, Env.frontendRootPath);
   };
 
   private handleLoadMore = (): void => {

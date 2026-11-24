@@ -17,7 +17,7 @@ import {
   fetchRealtimeMarketIndex,
 } from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
+import { IRouter, navigateBack, withRouter } from "../../../router";
 import { dateStringToDate } from "../../../utils/date";
 import Env from "../../../utils/env";
 import Util from "../../../utils/util";
@@ -125,7 +125,7 @@ class MarketIndexDetails extends React.Component<Props, State> {
           scrolledClassName={styles.scrolled}
         >
           <RoundButton
-            onClick={() => this.props.router.navigate(-1)}
+            onClick={() => navigateBack(this.props.router, Env.frontendRootPath)}
             className="p-12"
             hint_text="回儀表板"
           >

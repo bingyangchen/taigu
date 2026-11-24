@@ -21,6 +21,7 @@ import { IRouter, withRouter } from "../../../router";
 import type { CashDividendRecord, TradeRecord } from "../../../types";
 import Env from "../../../utils/env";
 import Util from "../../../utils/util";
+import { getViewHistory } from "../viewHistory";
 import styles from "./Records.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -46,11 +47,19 @@ interface State {
 
 class Records extends React.Component<Props, State> {
   public state: State;
+  private readonly viewHistory = getViewHistory();
   public constructor(props: Props) {
     super(props);
+    const list = this.viewHistory.get(
+      props.router.location,
+      props.router.navigationType,
+    )?.list;
     this.state = {
-      searchKeyword: this.props.router.search_params.get("sid"),
-      numberToShow: 15,
+      searchKeyword:
+        list?.searchKeyword === undefined
+          ? props.router.search_params.get("sid")
+          : list.searchKeyword,
+      numberToShow: list?.numberToShow ?? 15,
     };
   }
 
@@ -58,7 +67,17 @@ class Records extends React.Component<Props, State> {
     this.props.dispatch(updateHeaderTitle(null));
   }
 
+  public componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevState: Readonly<State>,
+  ): void {
+    if (prevProps.router.location.key !== this.props.router.location.key) {
+      this.viewHistory.save(prevProps.router.location, { list: prevState });
+    }
+  }
+
   public componentWillUnmount(): void {
+    this.viewHistory.save(this.props.router.location, { list: this.state });
     this.props.dispatch(updateHeaderTitle(null));
   }
 
@@ -82,7 +101,7 @@ class Records extends React.Component<Props, State> {
         {this.filteredRecords.length === 0 ? (
           <div className={styles.empty_section}>目前沒有紀錄</div>
         ) : (
-          <div className={styles.record_list}>
+          <div className={styles.record_list} data-page-scroll>
             {this.filteredRecords
               .slice(0, this.state.numberToShow)
               .map((record: TradeRecord | CashDividendRecord) => {

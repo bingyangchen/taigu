@@ -4,6 +4,7 @@ import { NavLink } from "react-router-dom";
 import { IRouter, withRouter } from "../../router";
 import type { Subpage } from "../../types";
 import Env from "../../utils/env";
+import { getMainTabPath, mainTabNavigationState } from "../../utils/mainNavigation";
 import styles from "./Footer.module.scss";
 
 interface Props extends IRouter {
@@ -30,7 +31,8 @@ class Footer extends React.Component<Props, State> {
     return (
       <div className={styles.main}>
         {this.props.subpages.map((subpage, idx) => {
-          return this.isActive(subpage) ? (
+          const isHighlighted = this.isActive(subpage);
+          return getMainTabPath(this.props.router.location) === subpage.path ? (
             <div // prevent auto navigate one more time
               key={idx}
               className={`${styles.icon_outer} ${styles.active}`}
@@ -46,10 +48,12 @@ class Footer extends React.Component<Props, State> {
               to={subpage.path}
               key={idx}
               end={subpage.path === Env.frontendRootPath}
-              className={styles.icon_outer}
-              replace={this.shouldReplacePath(subpage)}
+              className={`${styles.icon_outer} ${isHighlighted ? styles.active : ""}`}
+              state={mainTabNavigationState}
             >
-              <div className={styles.icon_inner}>{subpage.icon}</div>
+              <div className={styles.icon_inner}>
+                {isHighlighted ? (subpage.icon_bold ?? subpage.icon) : subpage.icon}
+              </div>
               <div className={styles.label}>{subpage.name}</div>
             </NavLink>
           );
@@ -69,17 +73,6 @@ class Footer extends React.Component<Props, State> {
       return this.dashboardSubpages.includes(this.currentPath);
     }
     return this.currentPath === pagePath || this.currentPath.startsWith(`${pagePath}/`);
-  }
-
-  private shouldReplacePath(subpage: Subpage): boolean {
-    const prioritizedPaths = [`${Env.frontendRootPath}market`, Env.frontendRootPath];
-    if (prioritizedPaths.indexOf(this.currentPath) !== -1) {
-      return (
-        prioritizedPaths.indexOf(subpage.path) >
-        prioritizedPaths.indexOf(this.currentPath)
-      );
-    }
-    return true;
   }
 }
 
