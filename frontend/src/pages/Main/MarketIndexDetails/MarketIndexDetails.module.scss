@@ -1,12 +1,14 @@
 @use "../../../design_system" as _;
 
+$page-inline-padding: 30px;
+
 .main {
   position: relative;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   min-height: 100%;
-  padding: 0 30px 30px;
+  padding: 0 $page-inline-padding 30px;
   color: _.$deep-gray;
 
   &::before {
@@ -29,18 +31,20 @@
   & > .back_button_container {
     position: fixed;
     top: 0;
-    left: _.$side-bar-width;
     display: flex;
+    align-self: flex-start;
     align-items: center;
     height: _.$header-height;
     width: fit-content;
     padding-left: 13px;
+    margin-left: -$page-inline-padding;
     margin-right: auto;
     z-index: 3;
     transition: top 300ms ease;
 
     @media (max-width: _.$width-780) {
       left: 0;
+      margin-left: 0;
     }
 
     &.scrolled {

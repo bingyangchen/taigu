@@ -53,6 +53,10 @@
   .content {
     flex: 1;
     min-width: 0;
+
+    &:focus-visible {
+      outline: none;
+    }
   }
 
   @media (max-width: _.$width-780) {
