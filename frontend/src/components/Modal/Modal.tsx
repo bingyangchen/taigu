@@ -44,7 +44,10 @@ class Modal extends React.Component<Props, State> {
       this.handleGlobalCloseActiveModalEvent,
     );
     setTimeout(() => {
-      if (this.shouldManageHistory) this.props.router.navigate("##");
+      if (this.shouldManageHistory) {
+        const { location, navigate } = this.props.router;
+        navigate({ search: location.search, hash: "##" });
+      }
       if (this.shouldManageBodyScroll) {
         document.body.style.overscrollBehaviorY = "contain";
       }

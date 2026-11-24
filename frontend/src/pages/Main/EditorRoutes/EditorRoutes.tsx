@@ -9,19 +9,13 @@ import {
   TradeRecordEditor,
 } from "../../../components";
 import { useAppSelector } from "../../../redux/hooks";
+import { navigateBack } from "../../../router";
 import Env from "../../../utils/env";
 
 function useCloseEditor(fallbackPath: string): MouseEventHandler {
   const navigate = useNavigate();
   const location = useLocation();
-
-  return () => {
-    if (location.key === "default") {
-      navigate(fallbackPath, { replace: true });
-      return;
-    }
-    navigate(-1);
-  };
+  return () => navigateBack({ location, navigate }, fallbackPath);
 }
 
 function MissingEditorTarget({

@@ -6,6 +6,7 @@ import {
   Route,
   useLocation,
   useNavigate,
+  useNavigationType,
   useParams,
   useSearchParams,
 } from "react-router-dom";
@@ -57,6 +58,19 @@ if (["##", "#@", "#!"].includes(hash)) {
   window.history.replaceState(window.history.state, "", `${pathname}${search}`);
 }
 
+function SearchScopedRoute({ page: Page }: { page: React.ComponentType }) {
+  const location = useLocation();
+  const [view, setView] = React.useState({ location, key: location.key });
+  if (view.location.key !== location.key) {
+    const samePageOverlay =
+      view.location.pathname === location.pathname &&
+      view.location.search === location.search &&
+      Boolean(view.location.hash || location.hash);
+    setView({ location, key: samePageOverlay ? view.key : location.key });
+  }
+  return <Page key={view.key} />;
+}
+
 const myRouter = createBrowserRouter(
   createRoutesFromElements(
     <Route path={Env.frontendRootPath}>
@@ -73,7 +87,7 @@ const myRouter = createBrowserRouter(
       <Route path="" element={<Main />}>
         <Route path="" element={<Dashboard />}></Route>
         <Route path="market-index/:market" element={<MarketIndexDetails />}></Route>
-        <Route path="records" element={<Records />}></Route>
+        <Route path="records" element={<SearchScopedRoute page={Records} />}></Route>
         <Route path="records/trade/new" element={<TradeRecordCreateRoute />}></Route>
         <Route
           path="records/trade/:recordId/edit"
@@ -92,7 +106,7 @@ const myRouter = createBrowserRouter(
         <Route path="market/:sid" element={<Details />} />
         <Route path="market/holding/:sid" element={<Details />} />
         <Route path="market/favorites/:sid" element={<Details />} />
-        <Route path="plans" element={<Plans />}></Route>
+        <Route path="plans" element={<SearchScopedRoute page={Plans} />}></Route>
         <Route path="plans/new" element={<TradePlanCreateRoute />}></Route>
         <Route path="plans/:planId/edit" element={<TradePlanEditRoute />}></Route>
         <Route path="earning-analysis" element={<EarningAnalysis />}></Route>
@@ -126,6 +140,7 @@ export default myRouter;
 export interface IRouter {
   router: {
     location: Location;
+    navigationType: ReturnType<typeof useNavigationType>;
     navigate: NavigateFunction;
     params: Params;
     search_params: URLSearchParams;
@@ -133,16 +148,37 @@ export interface IRouter {
   };
 }
 
+export function navigateBack(
+  { location, navigate }: Pick<IRouter["router"], "location" | "navigate">,
+  fallbackPath: string,
+): void {
+  const index = window.history.state?.idx;
+  // Replacing a deep link creates a key but keeps the router at its initial index.
+  if (location.key === "default" || !Number.isInteger(index) || index <= 0) {
+    navigate(fallbackPath, { replace: true });
+    return;
+  }
+  navigate(-1);
+}
+
 export function withRouter<T extends IRouter>(Component: React.ComponentType<T>) {
   const WrappedComponent = (props: Omit<T, keyof IRouter>) => {
     const location = useLocation();
+    const navigationType = useNavigationType();
     const navigate = useNavigate();
     const params = useParams();
     const [search_params, set_search_params] = useSearchParams();
     return (
       <Component
         {...(props as T)}
-        router={{ location, navigate, params, search_params, set_search_params }}
+        router={{
+          location,
+          navigationType,
+          navigate,
+          params,
+          search_params,
+          set_search_params,
+        }}
       />
     );
   };

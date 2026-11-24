@@ -19,6 +19,7 @@ import { IRouter, withRouter } from "../../../router";
 import type { TradePlan } from "../../../types";
 import Env from "../../../utils/env";
 import Util from "../../../utils/util";
+import { getViewHistory } from "../viewHistory";
 import styles from "./Plans.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -38,11 +39,19 @@ interface State {
 
 class Plans extends React.Component<Props, State> {
   public state: State;
+  private readonly viewHistory = getViewHistory();
   public constructor(props: Props) {
     super(props);
+    const list = this.viewHistory.get(
+      props.router.location,
+      props.router.navigationType,
+    )?.list;
     this.state = {
-      searchKeyword: this.props.router.search_params.get("sid"),
-      numberToShow: 15,
+      searchKeyword:
+        list?.searchKeyword === undefined
+          ? props.router.search_params.get("sid")
+          : list.searchKeyword,
+      numberToShow: list?.numberToShow ?? 15,
     };
   }
 
@@ -50,7 +59,17 @@ class Plans extends React.Component<Props, State> {
     this.props.dispatch(updateHeaderTitle(null));
   }
 
+  public componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevState: Readonly<State>,
+  ): void {
+    if (prevProps.router.location.key !== this.props.router.location.key) {
+      this.viewHistory.save(prevProps.router.location, { list: prevState });
+    }
+  }
+
   public componentWillUnmount(): void {
+    this.viewHistory.save(this.props.router.location, { list: this.state });
     this.props.dispatch(updateHeaderTitle(null));
   }
 
@@ -74,13 +93,13 @@ class Plans extends React.Component<Props, State> {
         {this.filteredAndSortedPlans.length === 0 ? (
           <div className={styles.empty_section}>目前沒有買賣計畫</div>
         ) : (
-          <div className={styles.record_list}>
+          <div className={styles.record_list} data-page-scroll>
             {this.filteredAndSortedPlans
               .slice(0, this.state.numberToShow)
-              .map((plan: TradePlan, idx) => {
+              .map((plan: TradePlan) => {
                 return (
                   <ListRow
-                    key={idx}
+                    key={plan.id}
                     target={plan}
                     editModal={this.renderEditModal(plan)}
                     deleteModal={this.renderDeleteModal(plan)}

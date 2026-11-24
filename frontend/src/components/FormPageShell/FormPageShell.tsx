@@ -51,7 +51,9 @@ export default class FormPageShell extends React.Component<Props, State> {
               )}
             </div>
           </header>
-          <div className={styles.body}>{this.props.children}</div>
+          <div className={styles.body} data-page-scroll="always">
+            {this.props.children}
+          </div>
         </section>
         {this.state.isConfirmingDiscard && (
           <Modal

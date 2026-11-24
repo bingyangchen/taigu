@@ -45,6 +45,7 @@ class ListRow extends React.Component<Props, State> {
       <>
         {this.activeModal}
         <div
+          data-scroll-anchor={this.props.editPath}
           className={`${styles.main} ${
             this.state.activatedForMobile ? styles.active : ""
           }`}

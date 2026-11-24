@@ -119,7 +119,8 @@ class SpeedDial extends React.Component<Props, State> {
       } else {
         document.body.style.overscrollBehaviorY = "contain";
         setTimeout(() => {
-          this.props.router.navigate("#@");
+          const { location, navigate } = this.props.router;
+          navigate({ search: location.search, hash: "#@" });
         });
       }
       return { isActive: !state.isActive };

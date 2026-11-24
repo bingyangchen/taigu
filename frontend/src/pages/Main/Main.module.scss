@@ -55,8 +55,8 @@
     min-width: 0;
   }
 
-  &:not(.mobile_editor_shell) {
-    @media (max-width: _.$width-780) {
+  @media (max-width: _.$width-780) {
+    :global(body.main-page-document-scroll) & {
       min-height: 100dvh;
       height: auto;
       overflow: visible;

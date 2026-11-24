@@ -123,7 +123,13 @@ class Market extends React.Component<Props, State> {
         visibleSids.every((sid) => !(sid in this.props.sidStockInfoMap)));
 
     return (
-      <div className={styles.main}>
+      <div
+        className={styles.main}
+        data-scroll-view-key={JSON.stringify([
+          activeTab,
+          this.props.marketSearchText.trim().toLowerCase(),
+        ])}
+      >
         <section className={styles.summary_panel}>
           <div className={styles.summary_copy}>
             <h1>{this.getTitle(activeTab)}</h1>
@@ -294,6 +300,7 @@ class Market extends React.Component<Props, State> {
       <button
         key={sid}
         aria-label={accessibleLabel}
+        data-scroll-anchor={`${activeTab}/${sid}`}
         className={`${styles.stock_card} ${styles[tone]}`}
         type="button"
         onClick={() => this.navigateToDetail(activeTab, sid)}
@@ -348,6 +355,7 @@ class Market extends React.Component<Props, State> {
       <button
         key={sid}
         aria-label={accessibleLabel}
+        data-scroll-anchor={`${activeTab}/${sid}`}
         className={styles.mobile_stock_row}
         type="button"
         onClick={() => this.navigateToDetail(activeTab, sid)}

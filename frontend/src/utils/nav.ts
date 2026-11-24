@@ -100,7 +100,7 @@ export default class Nav {
   public static clearSearchParams(): void {
     const currentUrl = new URL(window.location.href);
     currentUrl.search = "";
-    window.history.replaceState({}, "", currentUrl.href);
+    window.history.replaceState(window.history.state, "", currentUrl.href);
   }
   public static goToWelcomePage(from?: string): void {
     if (Nav.isAtWelcomePage) return;
