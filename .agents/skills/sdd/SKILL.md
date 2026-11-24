@@ -39,6 +39,7 @@ Nothing in `docs/specs/` or `roadmap.md` is final. If you see a better approach 
    - Doc-only fixes that make `docs/specs/` match current code. Never add new behavior this way.
    - Edits to the roadmap's text outside the graph; adding, splitting, or removing `unplanned` nodes and re-linking their edges; removing edges that "Roadmap Conventions" leaves out; collapsing finished features.
    - Edits to AGENTS.md and to the skills in `.agents/skills/`.
+   - Adding or fixing links in `PRODUCT.md`, as its header describes.
    - Edits to the positioning, target users, scope, or non-goals in `product.md`, or to `ui-guidelines.md`, that the user explicitly asks for, together with the glossary terms that text uses.
    - Drafts in `design/` that no plan lists.
 
