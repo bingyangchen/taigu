@@ -1,7 +1,9 @@
+@use "sass:color";
 @use "../../../design_system" as _;
 
 .main {
   $border-radius: 25px;
+  --dashboard-label-color: #{color.mix(_.$deep-gray, _.$gray, 50%)};
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
   width: 100%;
@@ -21,7 +23,7 @@
   }
   & > .left {
     display: grid;
-    grid-template-rows: 1fr 6fr;
+    grid-template-rows: auto 1fr;
     gap: 20px;
     min-width: 0;
     @media (max-width: _.$width-1280) {
@@ -31,98 +33,6 @@
     }
     @media (max-width: _.$width-512) {
       gap: 60px;
-    }
-    & > .upper {
-      position: relative;
-      display: flex;
-      align-items: stretch;
-      padding: 15px 20px;
-      gap: 20px;
-      background-color: _.$white-transparent;
-      box-shadow: 0 0 15px -10px _.$black-transparent-3;
-      border-radius: $border-radius;
-      overflow: hidden;
-      overflow-x: auto;
-      @media (max-width: _.$width-512) {
-        flex-direction: column;
-        margin: 0 15px;
-        gap: 15px;
-      }
-      & > .market_index {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        width: 100%;
-        padding: 0;
-        border: none;
-        background: transparent;
-        text-align: inherit;
-        border-radius: 12px;
-        transition: background-color 150ms ease;
-
-        @media (hover: hover) {
-          &:hover {
-            background-color: _.$blue-transparent-4;
-          }
-        }
-
-        &:active {
-          background-color: _.$blue-transparent-3;
-        }
-
-        @media (max-width: _.$width-512) {
-          height: 40px;
-        }
-        & > .left {
-          display: flex;
-          flex-direction: column;
-          gap: 3px;
-          width: 22%;
-          white-space: nowrap;
-          & > .title {
-            color: _.$gray;
-            font-size: 0.9 * _.$base-font-size;
-          }
-          & > .date {
-            color: _.$gray;
-            font-size: 0.65 * _.$base-font-size;
-          }
-        }
-
-        & > .chart_container {
-          height: 40px;
-          width: 48%;
-
-          @media (max-width: _.$width-512) {
-            height: 100%;
-          }
-        }
-        & > .price {
-          display: flex;
-          flex-direction: column;
-          text-align: right;
-          gap: 3px;
-          white-space: nowrap;
-          width: 30%;
-          &.red {
-            color: _.$red;
-          }
-          &.green {
-            color: _.$green;
-          }
-          &.gray {
-            color: _.$gray;
-          }
-          & > .price {
-            font-size: 1.1 * _.$base-font-size;
-            font-weight: bold;
-          }
-          & > .fluct_price {
-            font-size: 0.65 * _.$base-font-size;
-            letter-spacing: 0.7 * _.$base-letter-spacing;
-          }
-        }
-      }
     }
     & > .lower {
       display: flex;
@@ -150,7 +60,7 @@
           padding: 0 20px;
         }
         & > .title {
-          color: _.$gray;
+          color: var(--dashboard-label-color);
         }
         & > .cash_invested {
           font-size: 2.9lvw;
@@ -235,7 +145,7 @@
         padding: 0;
       }
       & > .title {
-        color: _.$gray;
+        color: var(--dashboard-label-color);
         text-align: center;
         font-weight: normal;
         font-size: _.$base-font-size;
@@ -264,6 +174,7 @@
           gap: 8px;
           color: _.$gray;
           & > .upper {
+            color: var(--dashboard-label-color);
             font-size: 0.8 * _.$base-font-size;
           }
           & > .lower {

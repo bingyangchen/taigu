@@ -23,8 +23,7 @@ class Footer extends React.Component<Props, State> {
   private readonly dashboardSubpages = [
     `${Env.frontendRootPath}handling-fee`,
     `${Env.frontendRootPath}earning-analysis`,
-    `${Env.frontendRootPath}market-index/tse`,
-    `${Env.frontendRootPath}market-index/otc`,
+    `${Env.frontendRootPath}market-index`,
   ];
 
   public render(): React.ReactNode {

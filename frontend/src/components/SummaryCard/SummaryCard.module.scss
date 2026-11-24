@@ -16,7 +16,7 @@
   & > .title {
     min-width: max-content;
     font-size: 0.9 * _.$base-font-size;
-    color: _.$gray;
+    color: var(--dashboard-label-color, #{_.$gray});
   }
   & > .price {
     text-align: right;

@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "../../design_system" as _;
 
 .main {
@@ -24,12 +25,9 @@
   // The selected option sits inside a ring of the track, so its edge stays
   // visible on a white page.
   width: calc(var(--option-count) * var(--option-width) + 6px);
-  height: 46px;
+  height: 50px;
   padding: 3px;
   background-color: _.$black-transparent-3;
-  @media (pointer: coarse) {
-    height: 50px;
-  }
 }
 
 .subtle .sliding_background {
@@ -87,7 +85,7 @@
   border: none;
   border-radius: 100px;
   background: transparent;
-  color: _.$gray;
+  color: color.mix(_.$deep-gray, _.$gray, 65%);
   font: inherit;
   font-size: 0.8 * _.$base-font-size;
   letter-spacing: inherit;
@@ -125,5 +123,12 @@
     &:hover {
       color: _.$deep-gray;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sliding_background,
+  .trigger {
+    transition: none;
   }
 }

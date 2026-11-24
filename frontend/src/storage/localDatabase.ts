@@ -1,7 +1,6 @@
 import { Dexie, type Table } from "dexie";
 
-import type { TradeRecord, TradeRecordSyncResponse } from "../types";
-import { dateStringToDate } from "../utils/date";
+import type { MarketId, TradeRecord, TradeRecordSyncResponse } from "../types";
 import {
   assertCurrentSession,
   getDocumentSessionVersion,
@@ -9,9 +8,14 @@ import {
 } from "../utils/session";
 
 type Metadata = { key: string; value: number | string };
-export type MarketId = "tse" | "otc";
-export type MarketIndexHistoricalPriceRow = {
-  market: MarketId;
+type MarketIndexHistoryCacheKey = MarketId | `exchange-date:${MarketId}`;
+
+// Legacy rows used the browser's local date and could be a day early.
+const marketIndexHistoryCacheKey = (market: MarketId): MarketIndexHistoryCacheKey =>
+  `exchange-date:${market}`;
+
+type MarketIndexHistoricalPriceRow = {
+  market: MarketIndexHistoryCacheKey;
   date: string;
   price: number;
 };
@@ -21,7 +25,7 @@ class TaiguDatabase extends Dexie {
   metadata!: Table<Metadata, string>;
   marketIndexHistoricalPrices!: Table<
     MarketIndexHistoricalPriceRow,
-    [MarketId, string]
+    [MarketIndexHistoryCacheKey, string]
   >;
 
   public constructor() {
@@ -160,9 +164,10 @@ export default class LocalDatabase {
   public static async getMarketIndexHistoricalPrices(
     market: MarketId,
   ): Promise<{ [date: string]: number }> {
+    const key = marketIndexHistoryCacheKey(market);
     const rows = await database.marketIndexHistoricalPrices
       .where("[market+date]")
-      .between([market, Dexie.minKey], [market, Dexie.maxKey])
+      .between([key, Dexie.minKey], [key, Dexie.maxKey])
       .toArray();
     return Object.fromEntries(rows.map((row) => [row.date, row.price]));
   }
@@ -178,9 +183,9 @@ export default class LocalDatabase {
       if (dates[i] > latestDate) latestDate = dates[i];
     }
 
-    const nextDate = dateStringToDate(latestDate);
-    nextDate.setDate(nextDate.getDate() + 1);
-    return nextDate.toLocaleDateString("af");
+    const nextDate = new Date(latestDate);
+    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+    return nextDate.toISOString().slice(0, 10);
   }
 
   public static async putMarketIndexHistoricalPrices(
@@ -189,7 +194,11 @@ export default class LocalDatabase {
   ): Promise<void> {
     if (prices.length === 0) return;
     await database.marketIndexHistoricalPrices.bulkPut(
-      prices.map((row) => ({ market, date: row.date, price: row.price })),
+      prices.map((row) => ({
+        market: marketIndexHistoryCacheKey(market),
+        date: row.date,
+        price: row.price,
+      })),
     );
   }
 }

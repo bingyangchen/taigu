@@ -2,6 +2,7 @@ import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 
+import { formatMarketMinute } from "../../utils/marketIndex";
 import { makeIntradayTooltipSeries } from "../intradayTooltip";
 import {
   getStockIntradayMaxPrice,
@@ -17,12 +18,6 @@ interface Props {
 }
 
 const MAJOR_MINUTES = [60, 120, 180, 240, 270];
-
-function formatMarketMinute(minuteAfterOpen: number): string {
-  const hour = 9 + Math.floor(minuteAfterOpen / 60);
-  const minute = minuteAfterOpen % 60;
-  return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
-}
 
 function formatStockPrice(value: number): string {
   return value.toFixed(2);

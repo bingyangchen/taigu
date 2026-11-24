@@ -4,7 +4,7 @@ import type { EChartsOption } from "echarts";
 import * as echarts from "echarts";
 import React from "react";
 
-import MarketIndexIntradayLineChart from "./MarketIndexIntradayLineChart/MarketIndexIntradayLineChart";
+import { makeMarketIndexIntradayChartOption } from "./MarketIndexIntradayLineChart/MarketIndexIntradayLineChart";
 import StockIntradayLineChart from "./StockIntradayLineChart/StockIntradayLineChart";
 
 // ECharts aligns one-pixel strokes to half-pixel coordinates.
@@ -14,22 +14,64 @@ function buildData(prices: Record<number, number>): [number, number | null][] {
   return Array.from({ length: 271 }, (_, minute) => [minute, prices[minute] ?? null]);
 }
 
+test.each([
+  { prevClosePrice: null, expected: "較昨收 -- (--)" },
+  { prevClosePrice: 0, expected: "較昨收 ▲103 (--)" },
+])(
+  "reports unavailable market index changes from a $prevClosePrice close",
+  ({ prevClosePrice, expected }) => {
+    const option = makeMarketIndexIntradayChartOption(
+      buildData({ 155: 103 }),
+      prevClosePrice,
+    );
+    if (!option) throw new Error("Expected an intraday chart");
+    const { series, tooltip } = option;
+    if (!Array.isArray(series) || !tooltip || Array.isArray(tooltip)) {
+      throw new Error("Expected chart series and a tooltip");
+    }
+    const formatter = tooltip.formatter;
+    if (typeof formatter !== "function")
+      throw new Error("Expected a tooltip formatter");
+
+    // Offer the quote on every series; the formatter reads the tooltip series.
+    const params = series.map((item, seriesIndex) => ({
+      seriesIndex,
+      seriesId: item.id,
+      value: [155, 103],
+    }));
+    const content = formatter(params as never, "", () => {});
+    expect(content).toContain(expected);
+  },
+);
+
 describe.each([
-  ["market index", MarketIndexIntradayLineChart],
-  ["stock", StockIntradayLineChart],
-])("%s intraday tooltip", (_, Chart) => {
+  {
+    name: "market index",
+    makeOption: (props: { data: [number, number | null][]; prevClosePrice: number }) =>
+      makeMarketIndexIntradayChartOption(props.data, props.prevClosePrice),
+    expectedPrice: (price: number) => `指數 ${price.toLocaleString()}`,
+  },
+  {
+    name: "stock",
+    makeOption: (props: {
+      data: [number, number | null][];
+      prevClosePrice: number;
+    }) => {
+      const element = new StockIntradayLineChart(props).render();
+      return React.isValidElement<{ option: EChartsOption }>(element)
+        ? element.props.option
+        : null;
+    },
+    expectedPrice: (price: number) => `價格 $${price.toFixed(2)}`,
+  },
+])("$name intraday tooltip", ({ makeOption, expectedPrice }) => {
   function getSelectedQuote(
     prices: Record<number, number>,
     minute: number,
   ): { minute: number; tooltip: string } {
-    const element = new Chart({
-      data: buildData(prices),
-      prevClosePrice: 100,
-    }).render();
-    if (!React.isValidElement<{ option: EChartsOption }>(element)) {
-      throw new Error("Expected an intraday chart");
-    }
-    const { series, tooltip } = element.props.option;
+    const option = makeOption({ data: buildData(prices), prevClosePrice: 100 });
+    if (!option) throw new Error("Expected an intraday chart");
+    const { series, tooltip } = option;
     if (!Array.isArray(series) || !tooltip || Array.isArray(tooltip)) {
       throw new Error("Expected chart series and a tooltip");
     }
@@ -43,7 +85,7 @@ describe.each([
       height: 400,
     });
     try {
-      chart.setOption({ ...element.props.option, animation: false });
+      chart.setOption({ ...option, animation: false });
       let selectedMinute: number | undefined;
       let tooltipText: string | undefined;
       chart.on("updateAxisPointer", (event: { axesInfo: { value: number }[] }) => {
@@ -60,6 +102,8 @@ describe.each([
               componentType: "series",
               componentSubType: "line",
               componentIndex: event.seriesIndex,
+              seriesIndex: event.seriesIndex,
+              seriesId: selectedSeries.id as string | undefined,
               name: "",
               dataIndex: event.dataIndex,
               data: point,
@@ -83,7 +127,7 @@ describe.each([
       if (selectedMinute === undefined || tooltipText === undefined) {
         throw new Error("Expected an axis selection and a tooltip request");
       }
-      const yAxis = element.props.option.yAxis;
+      const yAxis = option.yAxis;
       if (
         !yAxis ||
         Array.isArray(yAxis) ||
@@ -130,11 +174,7 @@ describe.each([
     const price = prices[expectedMinute];
     expect(quote.minute).toBe(expectedMinute);
     expect(quote.tooltip).toContain(expectedTime);
-    expect(quote.tooltip).toContain(
-      Chart === MarketIndexIntradayLineChart
-        ? `指數 ${price.toLocaleString()}`
-        : `價格 $${price.toFixed(2)}`,
-    );
+    expect(quote.tooltip).toContain(expectedPrice(price));
     expect(quote.tooltip).toContain("較昨收");
   }
 
@@ -173,6 +213,6 @@ describe.each([
   });
 
   test("does not render a chart without quotes", () => {
-    expect(new Chart({ data: buildData({}), prevClosePrice: 100 }).render()).toBeNull();
+    expect(makeOption({ data: buildData({}), prevClosePrice: 100 })).toBeNull();
   });
 });

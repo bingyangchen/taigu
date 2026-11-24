@@ -3,9 +3,7 @@ import ReactECharts from "echarts-for-react";
 import React from "react";
 
 import Util from "../../utils/util";
-import { GREEN, RED } from "../MarketIndexLineChart/marketIndexChartData";
-
-const HISTORICAL_PRICE_FLAT_COLOR = "#888888";
+import { getPeriodTrendColor, makePeriodTrendAreaGradient } from "../periodTrend";
 
 interface Props {
   dates: string[];
@@ -35,28 +33,13 @@ class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
     );
   }
 
-  private get periodTrendColor(): string {
-    const values = this.props.values;
-    if (values.length < 2) return HISTORICAL_PRICE_FLAT_COLOR;
-    const firstPrice = values[0];
-    const lastPrice = values[values.length - 1];
-    if (firstPrice > lastPrice) return GREEN;
-    if (firstPrice < lastPrice) return RED;
-    return HISTORICAL_PRICE_FLAT_COLOR;
-  }
-
-  private get periodTrendAreaGradient(): { start: string; end: string } {
-    const color = this.periodTrendColor;
-    if (color === GREEN) return { start: GREEN, end: "#1aa26000" };
-    if (color === RED) return { start: RED, end: "#d4493f00" };
-    return { start: "#888888", end: "#88888800" };
-  }
-
   private get chartOption(): EChartsOption {
     const dates = this.props.isWaiting ? this.state.fakeDates : this.props.dates;
     const values = this.props.isWaiting ? this.state.fakeValues : this.props.values;
-    const lineColor = this.props.isWaiting ? "#ccc" : this.periodTrendColor;
-    const areaGradient = this.periodTrendAreaGradient;
+    const lineColor = this.props.isWaiting
+      ? "#ccc"
+      : getPeriodTrendColor(this.props.values);
+    const areaGradient = makePeriodTrendAreaGradient(this.props.values);
 
     if (dates.length === 0 || values.length === 0) {
       return {};

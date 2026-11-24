@@ -45,7 +45,7 @@ export default class Nav {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,
       "\\$&",
-    )}market-index/(tse|otc)[/]?$`;
+    )}market-index[/]?$`;
     const escapedRegex = new RegExp(pathRegexString, "gs");
     return escapedRegex.test(window.location.pathname);
   }

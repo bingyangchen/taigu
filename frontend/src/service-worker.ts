@@ -3,7 +3,7 @@
 
 // Workbox Docs: https://developers.google.com/web/tools/workbox/modules
 
-import { clientsClaim } from "workbox-core";
+import { clientsClaim, type WorkboxPlugin } from "workbox-core";
 import { ExpirationPlugin } from "workbox-expiration";
 import {
   cleanupOutdatedCaches,
@@ -13,7 +13,12 @@ import {
 import { registerRoute } from "workbox-routing";
 import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
-import { API_CACHE_NAME, API_CACHE_PATHS, LEGACY_API_CACHE_NAMES } from "./utils/cache";
+import {
+  API_CACHE_FALLBACK_HEADER,
+  API_CACHE_NAME,
+  API_CACHE_PATHS,
+  LEGACY_API_CACHE_NAMES,
+} from "./utils/cache";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -93,31 +98,57 @@ self.addEventListener("message", (event) => {
     );
   }
 });
+const apiCacheIsolation: WorkboxPlugin = {
+  handlerWillStart: async ({ state }) => {
+    if (state) state.accountCacheVersion = accountCacheVersion;
+  },
+  cacheWillUpdate: async ({ response, state }) => {
+    return response.status < 400 && state?.accountCacheVersion === accountCacheVersion
+      ? response
+      : null;
+  },
+  cacheDidUpdate: async ({ cacheName, request, state }) => {
+    if (state?.accountCacheVersion !== accountCacheVersion) {
+      const cache = await caches.open(cacheName);
+      await cache.delete(request);
+    }
+  },
+};
+
+const marketIndexApiPaths = new Set([
+  "market/market-index",
+  "market/market-index-historical-prices",
+]);
+
+// The index UI distinguishes a failed refresh from a pending network response.
 registerRoute(
-  ({ request, url }) =>
-    request.method === "GET" && API_CACHE_PATHS.has(getApiPath(url)),
+  ({ url }) => marketIndexApiPaths.has(getApiPath(url)),
   new NetworkFirst({
     cacheName: API_CACHE_NAME,
-    networkTimeoutSeconds: 3,
     plugins: [
+      apiCacheIsolation,
       {
-        handlerWillStart: async ({ state }) => {
-          if (state) state.accountCacheVersion = accountCacheVersion;
-        },
-        cacheWillUpdate: async ({ response, state }) => {
-          return response.status < 400 &&
-            state?.accountCacheVersion === accountCacheVersion
-            ? response
-            : null;
-        },
-        cacheDidUpdate: async ({ cacheName, request, state }) => {
-          if (state?.accountCacheVersion !== accountCacheVersion) {
-            const cache = await caches.open(cacheName);
-            await cache.delete(request);
-          }
+        cachedResponseWillBeUsed: async ({ cachedResponse }) => {
+          if (!cachedResponse) return cachedResponse;
+          const headers = new Headers(cachedResponse.headers);
+          headers.set(API_CACHE_FALLBACK_HEADER, "1");
+          return new Response(cachedResponse.body, {
+            status: cachedResponse.status,
+            statusText: cachedResponse.statusText,
+            headers,
+          });
         },
       },
     ],
+  }),
+);
+
+registerRoute(
+  ({ url }) => API_CACHE_PATHS.has(getApiPath(url)),
+  new NetworkFirst({
+    cacheName: API_CACHE_NAME,
+    networkTimeoutSeconds: 3,
+    plugins: [apiCacheIsolation],
   }),
 );
 

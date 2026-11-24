@@ -115,12 +115,12 @@ class Main extends React.Component<Props, State> {
     try {
       const account = await this.props.dispatch(fetchAccountInfo()).unwrap();
       if (account) {
+        void this.props.dispatch(fetchRealtimeMarketIndex());
         const independentPromises = Promise.allSettled([
           this.props.dispatch(openSession()).unwrap(),
           this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
           this.props.dispatch(fetchAllFavorites()).unwrap(),
           this.props.dispatch(fetchAllTradePlans()).unwrap(),
-          this.props.dispatch(fetchRealtimeMarketIndex()).unwrap(),
           this.props.dispatch(fetchAllDiscounts()).unwrap(),
         ]);
 
@@ -270,15 +270,14 @@ class Main extends React.Component<Props, State> {
   }
 
   public render(): React.ReactNode {
+    const isMarketIndexPage = Nav.isAtMarketIndexDetailsPage;
     return (
       <main
         className={`${styles.main} ${
           this.shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
         } ${this.isMobileEditorRoute ? styles.mobile_editor_shell : ""} ${
-          Nav.isAtDetailsPage || Nav.isAtMarketIndexDetailsPage
-            ? styles.mobile_detail_shell
-            : ""
-        }`}
+          Nav.isAtDetailsPage || isMarketIndexPage ? styles.mobile_detail_shell : ""
+        } ${isMarketIndexPage ? styles.market_index_shell : ""}`}
         ref={this.mainRef}
       >
         <PageMeta title="Taigu | 台股記帳" noindex />
@@ -287,19 +286,25 @@ class Main extends React.Component<Props, State> {
         {this.state.isLoading && <LoadingScreen />}
         {this.shouldShowHeader && <HeaderForMain />}
         <div className={styles.body}>
-          {!Util.isMobile && (
-            <MainSideBar
-              avatarUrl={this.props.avatar_url ? this.props.avatar_url : imgPersonFill}
-              username={this.props.username}
-              subpages={Util.isMobile ? this.subpages : this.subpages.slice(0, 4)}
-            />
+          {(!Util.isMobile || isMarketIndexPage) && (
+            <div className={styles.sidebar}>
+              <MainSideBar
+                avatarUrl={
+                  this.props.avatar_url ? this.props.avatar_url : imgPersonFill
+                }
+                username={this.props.username}
+                subpages={this.subpages.slice(0, 4)}
+              />
+            </div>
           )}
           <div className={styles.content} ref={this.contentRef} tabIndex={-1}>
             <Outlet />
           </div>
         </div>
-        {Util.isMobile && !this.isMobileEditorRoute && (
-          <Footer subpages={this.subpages} />
+        {(Util.isMobile || isMarketIndexPage) && !this.isMobileEditorRoute && (
+          <div className={styles.footer}>
+            <Footer subpages={this.subpages} />
+          </div>
         )}
       </main>
     );

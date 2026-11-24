@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 @require_login
 @rate_limit(rate=2)
 def market_index(request: HttpRequest) -> JsonResponse:
-    result: dict = {"date": None}
+    result: dict = {"date": None, "dates": {}}
     for market_id in (TradeType.TSE, TradeType.OTC):
         if (cache_result := TimeSeriesStockInfoCacheManager.get(market_id)) is not None:
             data: dict = cache_result.model_dump()["data"]
@@ -47,8 +47,10 @@ def market_index(request: HttpRequest) -> JsonResponse:
         result[market_id] = {k: v["price"] for k, v in data.items()}
         result[market_id]["yesterday_price"] = 0
         result[market_id]["last_fluct_price"] = 0
+        result["dates"][market_id] = None
         if last := (next(iter(data.values())) if data else None):
             result["date"] = last["date"]
+            result["dates"][market_id] = last["date"]
             result[market_id]["yesterday_price"] = last["price"] - last["fluct_price"]
             result[market_id]["last_fluct_price"] = last["fluct_price"]
     return JsonResponse(result)
@@ -75,7 +77,7 @@ def current_stock_info(request: HttpRequest) -> JsonResponse:
 
 @require_GET
 @require_login
-@rate_limit(rate=2)
+@rate_limit(rate=2, capacity=4)
 def market_index_historical_prices(request: HttpRequest) -> JsonResponse:
     market = request.GET.get("market")
     if not market:

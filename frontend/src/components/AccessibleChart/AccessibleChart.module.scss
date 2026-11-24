@@ -1,0 +1,9 @@
+.chart {
+  block-size: 100%;
+  min-inline-size: 0;
+
+  // Vertical swipes scroll the page; horizontal drags reach the tooltip.
+  canvas {
+    touch-action: pan-y;
+  }
+}
