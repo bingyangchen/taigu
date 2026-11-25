@@ -115,7 +115,11 @@ export const fetchSingleStockInfo = createAsyncThunk(
       `market/current-stock-info?sids=${sid}`,
       "get",
     );
-    return response[sid];
+    const stockInfo: StockInfo | undefined = response[sid];
+
+    // The endpoint leaves out a stock that has no price yet.
+    if (!stockInfo) throw new Error(`No current stock info for ${sid}`);
+    return stockInfo;
   },
 );
 

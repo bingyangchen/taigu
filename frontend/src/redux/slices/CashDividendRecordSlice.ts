@@ -10,12 +10,14 @@ import Api from "../../utils/api";
 interface CashDividendRecordState {
   cashDividendRecords: CashDividendRecord[];
   sidTotalCashDividendMap: { [sid: string]: number };
+  hasLoaded: boolean;
   isWaiting: boolean;
 }
 
 const initialState: CashDividendRecordState = {
   cashDividendRecords: [],
   sidTotalCashDividendMap: {},
+  hasLoaded: false,
   isWaiting: false,
 };
 
@@ -82,6 +84,7 @@ export const cashDividendRecordSlice = createSlice({
         state.sidTotalCashDividendMap = getSidTotalCashDividendMap(
           state.cashDividendRecords,
         );
+        state.hasLoaded = true;
         state.isWaiting = false;
       })
       .addCase(fetchAllCashDividendRecords.rejected, (state) => {

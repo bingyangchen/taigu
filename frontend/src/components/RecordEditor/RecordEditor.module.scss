@@ -1,0 +1,618 @@
+@use "../../design_system" as _;
+
+$narrow: _.$width-960;
+
+@mixin narrow {
+  @media (max-width: $narrow) {
+    @content;
+  }
+
+  .narrow_page & {
+    @content;
+  }
+}
+
+.modal_title {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+// The narrow edit page fills the screen, so that the summary and the primary
+// button stay at its bottom while the steps scroll.
+.narrow_page {
+  height: 100dvh;
+  min-height: 0;
+}
+
+.keyboard_viewport {
+  position: fixed;
+  right: 0;
+  left: 0;
+  z-index: 5;
+}
+
+.page_body {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+
+  @media (max-width: $narrow) {
+    flex-direction: column;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .narrow_page & {
+    flex-direction: column;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+.steps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 25px 24px;
+  overflow: auto;
+
+  @media (max-width: $narrow) {
+    flex: none;
+    overflow: visible;
+  }
+
+  .narrow_page & {
+    flex: none;
+    gap: 10px;
+    padding: 12px 12px 24px;
+    overflow: visible;
+    background-color: _.$page-bg;
+  }
+}
+
+.step {
+  &:not(.collapsible) + &:not(.collapsible) {
+    border-top: 1px solid _.$black-transparent-3;
+  }
+
+  &.collapsible {
+    border: 1px solid _.$light-gray;
+    border-radius: 10px;
+    background-color: _.$white;
+
+    &[data-state="open"] {
+      border-color: transparent;
+      outline: 2px solid _.$blue;
+    }
+
+    &[data-state="todo"] {
+      border-style: dashed;
+      background-color: transparent;
+    }
+  }
+}
+
+.step_head {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 18px 0 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+
+  .collapsible & {
+    padding: 12px 12px 0;
+  }
+
+  .collapsible:not([data-state="open"]) & {
+    min-height: 56px;
+    padding-bottom: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: _.$black-transparent-4;
+      }
+    }
+  }
+}
+
+.step_mark {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background-color: _.$blue;
+  color: _.$white;
+  font-size: 0.75 * _.$base-font-size;
+  font-variant-numeric: tabular-nums;
+
+  .collapsible[data-state="done"] & {
+    background-color: _.$blue-transparent-3;
+    color: _.$blue;
+  }
+
+  .collapsible[data-state="todo"] & {
+    background-color: _.$black-transparent-3;
+    color: _.$gray;
+  }
+}
+
+.step_title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+
+  & > small {
+    color: _.$deep-gray;
+    font-size: 0.9 * _.$base-font-size;
+    font-weight: bold;
+  }
+
+  .collapsible:not([data-state="open"]) & > small {
+    color: _.$gray;
+    font-size: 0.8 * _.$base-font-size;
+    font-weight: normal;
+  }
+}
+
+.step_summary {
+  color: _.$deep-gray;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+
+  [data-state="todo"] & {
+    color: _.$gray;
+  }
+}
+
+.step_flag {
+  margin-top: 2px;
+  padding: 0 !important;
+  background: none !important;
+  font-size: 0.75 * _.$base-font-size;
+}
+
+.step_edit {
+  display: grid;
+  min-height: 44px;
+  padding: 0 6px;
+  place-items: center;
+  color: _.$blue;
+  font-size: 0.85 * _.$base-font-size;
+  font-weight: bold;
+}
+
+.step_body {
+  display: grid;
+  gap: 16px;
+  padding: 12px 0 20px 34px;
+
+  @media (max-width: $narrow) {
+    padding-left: 0;
+  }
+
+  .collapsible & {
+    padding: 12px;
+  }
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field_accessory {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.field_hint {
+  margin: 0;
+  padding: 0 10px;
+  color: _.$gray;
+  font-size: 0.8 * _.$base-font-size;
+  line-height: 1.5;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 0 10px;
+  font-size: 0.8 * _.$base-font-size;
+  line-height: 1.5;
+
+  & > svg {
+    flex: none;
+    margin-top: 3px;
+  }
+}
+
+.notice_error {
+  color: _.$red;
+}
+
+.notice_warning {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background-color: _.$yellow-transparent;
+  color: _.$deep-gray;
+
+  & > svg {
+    fill: _.$yellow;
+  }
+}
+
+// Overrides `DestructiveActionSection`, whose own spacing assumes a plain form.
+.steps .delete_section {
+  margin: 8px 0 0 34px;
+  padding-top: 20px;
+  border-top: 1px solid _.$black-transparent-3;
+
+  button {
+    min-height: 44px;
+  }
+
+  @media (max-width: $narrow) {
+    margin-left: 0;
+  }
+
+  .narrow_page & {
+    margin: 0;
+    padding: 12px;
+    border: 1px solid _.$light-gray;
+    border-radius: 10px;
+    background-color: _.$white;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+.summary {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 300px;
+  min-height: 0;
+  padding: 0 25px 25px;
+  overflow-y: auto;
+  border-left: 1px solid _.$black-transparent-3;
+  font-variant-numeric: tabular-nums;
+
+  @media (max-width: $narrow) {
+    position: sticky;
+    bottom: 0;
+    width: auto;
+    margin-top: auto;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid _.$black-transparent-3;
+    border-left: none;
+    background-color: _.$white;
+  }
+
+  .narrow_page & {
+    position: sticky;
+    bottom: 0;
+    width: auto;
+    margin-top: auto;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid _.$black-transparent-3;
+    border-left: none;
+    background-color: _.$white;
+  }
+
+  &.keyboard_open {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding-block: 8px;
+
+    .summary_total {
+      flex: 1;
+      margin: 0;
+      padding: 0;
+      border: none;
+
+      & > strong:not(.placeholder) {
+        font-size: 1.1 * _.$base-font-size;
+      }
+    }
+
+    .primary_button {
+      width: auto;
+      margin: 0;
+    }
+  }
+}
+
+.summary_heading {
+  margin: 0 0 10px;
+  color: _.$gray;
+  font-size: 0.8 * _.$base-font-size;
+}
+
+.summary_lines {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 0.9 * _.$base-font-size;
+
+  & > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  dt {
+    color: _.$gray;
+  }
+
+  dd {
+    margin: 0;
+    color: _.$deep-gray;
+  }
+
+  @include narrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    margin: 0 0 4px;
+    font-size: 0.8 * _.$base-font-size;
+  }
+}
+
+.summary_total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  & > span {
+    color: _.$gray;
+    font-size: 0.8 * _.$base-font-size;
+  }
+
+  & > strong {
+    color: _.$deep-gray;
+    font-size: 1.8 * _.$base-font-size;
+    line-height: 1.2;
+
+    & > small {
+      margin-left: 3px;
+      color: _.$gray;
+      font-size: 0.8 * _.$base-font-size;
+      font-weight: normal;
+    }
+
+    &.placeholder {
+      color: _.$gray;
+      font-size: 0.85 * _.$base-font-size;
+      font-weight: normal;
+    }
+  }
+
+  @include narrow {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+
+    & > strong:not(.placeholder) {
+      font-size: 1.5 * _.$base-font-size;
+    }
+  }
+}
+
+.summary_placeholder {
+  margin: 0;
+  color: _.$gray;
+  font-size: 0.85 * _.$base-font-size;
+}
+
+.summary_holding {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 0.9 * _.$base-font-size;
+
+  @include narrow {
+    margin-top: 4px;
+  }
+}
+
+.muted {
+  color: _.$gray;
+}
+
+.summary_alert {
+  margin-top: 12px;
+}
+
+.summary_missing {
+  margin: auto 0 0;
+  padding-top: 12px;
+  color: _.$gray;
+  font-size: 0.8 * _.$base-font-size;
+
+  @include narrow {
+    margin-top: 6px;
+    padding-top: 0;
+  }
+}
+
+.primary_button {
+  width: 100% !important;
+  margin-top: 12px;
+
+  .summary > & {
+    margin-top: auto;
+  }
+
+  .summary_missing + & {
+    margin-top: 12px;
+  }
+
+  @include narrow {
+    .summary > & {
+      margin-top: 10px;
+    }
+  }
+}
+
+.saved {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 25px 25px;
+  overflow: auto;
+  text-align: center;
+
+  & h2 {
+    margin: 14px 0 0;
+    color: _.$deep-gray;
+    font-size: 1.2 * _.$base-font-size;
+  }
+}
+
+.saved_mark {
+  animation: saved-mark-in 480ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 50%;
+  background-color: _.$blue-transparent-3;
+  color: _.$blue;
+}
+
+.saved h2,
+.saved_subtitle,
+.saved_card {
+  animation: saved-content-in 360ms 120ms ease-out both;
+}
+
+@keyframes saved-mark-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes saved-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .saved_mark,
+  .saved h2,
+  .saved_subtitle,
+  .saved_card {
+    animation: none;
+  }
+}
+
+.saved_subtitle {
+  margin: 6px 0 0;
+  color: _.$gray;
+  font-variant-numeric: tabular-nums;
+}
+
+.saved_card {
+  width: 100%;
+  max-width: 420px;
+  margin: 20px 0 0;
+  padding: 0 14px;
+  border: 1px solid _.$light-gray;
+  border-radius: 10px;
+  text-align: left;
+
+  & > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    font-variant-numeric: tabular-nums;
+
+    & + div {
+      border-top: 1px solid _.$black-transparent-3;
+    }
+  }
+
+  dt {
+    color: _.$gray;
+  }
+
+  dd {
+    margin: 0;
+    color: _.$deep-gray;
+    text-align: right;
+  }
+}
+
+.saved_actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+  margin-top: auto;
+  padding-top: 24px;
+
+  & > * {
+    width: 100% !important;
+  }
+}
+
+.saved_note {
+  margin: 10px 0 0;
+  color: _.$gray;
+  font-size: 0.8 * _.$base-font-size;
+}

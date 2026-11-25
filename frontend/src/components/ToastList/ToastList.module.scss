@@ -8,6 +8,9 @@
   max-width: 100%;
   z-index: 6;
   user-select: none;
+
+  // An open dialog turns off pointer events on the body; toasts stay closable.
+  pointer-events: auto;
   & > .toast_outer {
     padding: 16px;
     animation: leftflyinout 5s ease forwards;

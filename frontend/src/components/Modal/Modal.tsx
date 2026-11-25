@@ -21,18 +21,43 @@ interface Props extends IRouter {
   silentBackground?: boolean;
   noX?: boolean;
   noFooter?: boolean;
-  layout?: "compact" | "auto" | "fullScreen";
+  layout?: "compact" | "auto" | "fullScreen" | "editor";
   transparent?: boolean;
   manageHistory?: boolean;
   manageBodyScroll?: boolean;
   visualLayer?: "base" | "nested";
+
+  /** Replaces the default Escape handling, which runs the discard button. */
+  onEscapeKeyDown?: (_event: KeyboardEvent) => void;
+
+  staysOpenOnQuotaExceeded?: boolean;
+
+  /**
+   * Runs instead of the discard button when the app closes the modal, such as when
+   * the user leaves for the plan page. Pass it when the discard button asks for
+   * confirmation.
+   */
+  onCloseByApp?: () => void | Promise<void>;
 }
 
 interface State {}
 
+const layoutToClassName: Record<NonNullable<Props["layout"]>, string> = {
+  compact: styles.compact,
+  auto: styles.auto,
+  fullScreen: styles.full_screen,
+  editor: styles.editor,
+};
+
 class Modal extends React.Component<Props, State> {
   public state: State;
   private isClosingFromGlobalEvent: boolean;
+  private isUnmounted: boolean = false;
+
+  // The location this modal's history entry was pushed on top of. Back from the
+  // entry lands on it again, even when another modal pushed its own entry above.
+  private keyBeforeHistoryEntry: string | null = null;
+  private historyEntryKey: string | null = null;
   public constructor(props: Props) {
     super(props);
     this.state = {};
@@ -44,10 +69,7 @@ class Modal extends React.Component<Props, State> {
       this.handleGlobalCloseActiveModalEvent,
     );
     setTimeout(() => {
-      if (this.shouldManageHistory) {
-        const { location, navigate } = this.props.router;
-        navigate({ search: location.search, hash: "##" });
-      }
+      if (this.shouldManageHistory && !this.isUnmounted) this.pushHistoryEntry();
       if (this.shouldManageBodyScroll) {
         document.body.style.overscrollBehaviorY = "contain";
       }
@@ -55,15 +77,31 @@ class Modal extends React.Component<Props, State> {
   }
   public componentDidUpdate(prevProps: Readonly<Props>): void {
     if (!this.shouldManageHistory) return;
-    if (this.isClosingFromGlobalEvent) return;
+    const { location } = this.props.router;
+    if (location.key === prevProps.router.location.key) return;
     if (
-      prevProps.router.location.hash === "##" &&
-      this.props.router.location.hash === ""
+      this.historyEntryKey === null &&
+      this.keyBeforeHistoryEntry !== null &&
+      location.key !== this.keyBeforeHistoryEntry &&
+      location.hash === "##"
     ) {
-      this.handleClickDiscard({} as React.MouseEvent<Element>);
+      this.historyEntryKey = location.key;
+      return;
+    }
+    if (this.isClosingFromGlobalEvent) return;
+    const hasLeftHistoryEntry =
+      (this.historyEntryKey !== null && location.key === this.keyBeforeHistoryEntry) ||
+      (prevProps.router.location.hash === "##" && location.hash === "");
+    if (hasLeftHistoryEntry) {
+      this.historyEntryKey = null;
+      this.keyBeforeHistoryEntry = null;
+      this.handleClickDiscard({} as React.MouseEvent<Element>)
+        .catch(() => {})
+        .finally(() => setTimeout(this.restoreHistoryEntryIfStillOpen));
     }
   }
   public componentWillUnmount(): void {
+    this.isUnmounted = true;
     window.removeEventListener(
       closeActiveModalEventName,
       this.handleGlobalCloseActiveModalEvent,
@@ -74,7 +112,7 @@ class Modal extends React.Component<Props, State> {
     if (
       this.shouldManageHistory &&
       !this.isClosingFromGlobalEvent &&
-      this.props.router.location.hash === "##"
+      this.isOnHistoryEntry
     ) {
       this.props.router.navigate(-1);
     }
@@ -90,16 +128,14 @@ class Modal extends React.Component<Props, State> {
           />
           <Dialog.Content
             className={`${styles.main} ${
-              this.props.layout === "auto"
-                ? styles.auto
-                : this.props.layout === "fullScreen"
-                  ? styles.full_screen
-                  : styles.compact
+              layoutToClassName[this.props.layout ?? "compact"]
             } ${this.props.transparent ? styles.transparent : ""} ${
               this.props.visualLayer === "nested" ? styles.nested : ""
             }`}
             onEscapeKeyDown={this.handleEscapeKeyDown}
             onInteractOutside={this.handleInteractOutside}
+            // Radix warns about a dialog without a description unless this is given.
+            {...(!this.props.description && { "aria-describedby": undefined })}
           >
             <div className={styles.header}>
               {this.props.title && (
@@ -161,6 +197,31 @@ class Modal extends React.Component<Props, State> {
       </Dialog.Root>
     );
   }
+  private get hasHistoryEntry(): boolean {
+    return this.keyBeforeHistoryEntry !== null;
+  }
+  private get isOnHistoryEntry(): boolean {
+    return (
+      this.historyEntryKey !== null &&
+      this.props.router.location.key === this.historyEntryKey
+    );
+  }
+  private pushHistoryEntry(): void {
+    const { location, navigate } = this.props.router;
+    this.keyBeforeHistoryEntry = location.key;
+    this.historyEntryKey = null;
+    navigate({ search: location.search, hash: "##" });
+  }
+  /**
+   * The browser's Back button pops this modal's history entry. When the discard
+   * handler keeps the modal open, such as an editor asking 「捨棄變更？」, the entry
+   * is pushed again so that the next Back still reaches the modal first.
+   */
+  private restoreHistoryEntryIfStillOpen = (): void => {
+    if (this.isUnmounted || this.hasHistoryEntry) return;
+    this.pushHistoryEntry();
+  };
+
   private handleOpenChange = (open: boolean): void => {
     if (!open) {
       this.handleClickDiscard({} as React.MouseEvent<Element>).catch(() => {});
@@ -184,28 +245,38 @@ class Modal extends React.Component<Props, State> {
   };
   private handleEscapeKeyDown = (e: KeyboardEvent): void => {
     e.preventDefault();
+    if (this.props.onEscapeKeyDown) {
+      this.props.onEscapeKeyDown(e);
+      return;
+    }
     this.handleClickDiscard({} as React.MouseEvent<Element>).catch(() => {});
   };
   private handleInteractOutside = (e: Event): void => {
-    if (this.props.silentBackground) {
+    const isOnToast = e.target instanceof Element && e.target.closest("#toast-root");
+    if (this.props.silentBackground || isOnToast) {
       e.preventDefault();
     }
   };
   private handleGlobalCloseActiveModalEvent = (event: Event): void => {
-    const closeEvent = event as CloseActiveModalEvent;
-    if (closeEvent.detail.handled) return;
-    closeEvent.detail.handled = true;
+    const { detail } = event as CloseActiveModalEvent;
+    if (detail.reason === "quotaExceeded") {
+      if (detail.handled || this.props.staysOpenOnQuotaExceeded) return;
+      detail.handled = true;
+    }
+    detail.pendingCloseCount += 1;
+    if (detail.reason === "navigation" && this.hasHistoryEntry) {
+      detail.historyEntryCount += 1;
+    }
     this.isClosingFromGlobalEvent = true;
-    if (
-      closeEvent.detail.popHistory &&
-      this.shouldManageHistory &&
-      window.location.hash === "##"
-    ) {
+    if (detail.reason === "quotaExceeded" && this.isOnHistoryEntry) {
       this.props.router.navigate(-1);
     }
-    this.handleClickDiscard({} as React.MouseEvent<Element>)
+    const close = this.props.onCloseByApp
+      ? async () => await this.props.onCloseByApp?.()
+      : () => this.handleClickDiscard({} as React.MouseEvent<Element>);
+    close()
       .catch(() => {})
-      .finally(() => closeEvent.detail.done());
+      .finally(() => detail.done());
   };
 }
 

@@ -23,6 +23,7 @@ import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
 import { adminPagePath } from "../../router";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
+import { useMediaQuery } from "../../utils/mediaQuery";
 import NotFound from "../NotFound/NotFound";
 import { isNotFound, LostAccessContext } from "./access";
 import styles from "./Admin.module.scss";
@@ -260,16 +261,4 @@ function isNavCollapsedInStorage(): boolean {
   } catch {
     return false;
   }
-}
-
-function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const mediaQueryList = window.matchMedia(query);
-    const handleChange = (): void => setMatches(mediaQueryList.matches);
-    handleChange();
-    mediaQueryList.addEventListener("change", handleChange);
-    return () => mediaQueryList.removeEventListener("change", handleChange);
-  }, [query]);
-  return matches;
 }

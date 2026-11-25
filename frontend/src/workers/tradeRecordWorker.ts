@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-import { StockWarehouse, TradeRecord, TradeRecordState } from "../types";
+import { ComputedTradeRecordState, StockWarehouse, TradeRecord } from "../types";
 import { getDateStringList } from "../utils/date";
 
 self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
@@ -16,7 +16,7 @@ self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {
   const tradeVolumeChartData = chartData.map((row) => [row[0], row[2]]);
   const averageCashInvested = getAverageCashInvested(cashInvestedChartData);
 
-  const result: Omit<TradeRecordState, "isWaiting"> = {
+  const result: ComputedTradeRecordState = {
     tradeRecords,
     sidTradeRecordsMap,
     stockWarehouse,

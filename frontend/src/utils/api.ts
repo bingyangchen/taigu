@@ -206,7 +206,7 @@ export default class Api {
         !(error instanceof SessionChangedError)
       ) {
         if (Api.isQuotaExceededError(error)) {
-          await requestCloseActiveModal();
+          await requestCloseActiveModal("quotaExceeded");
           store.dispatch(
             openPlanUpsell({ resource: error.resource, message: error.message }),
           );

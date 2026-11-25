@@ -1,8 +1,9 @@
 import React from "react";
 
-import { Button, Modal, RoundButton } from "../../components";
+import { Button, RoundButton } from "../../components";
 import * as Icons from "../../icons";
 import type { Props as ButtonProps } from "../Button/Button";
+import DiscardChangesModal from "../DiscardChangesModal/DiscardChangesModal";
 import styles from "./FormPageShell.module.scss";
 
 interface Props {
@@ -11,6 +12,10 @@ interface Props {
   submitButtonProps?: ButtonProps;
   discardButtonProps?: ButtonProps;
   isDirty?: boolean;
+  titleRef?: React.Ref<HTMLHeadingElement>;
+  className?: string;
+  bodyClassName?: string;
+  style?: React.CSSProperties;
 }
 
 interface State {
@@ -23,7 +28,10 @@ export default class FormPageShell extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <>
-        <section className={styles.main}>
+        <section
+          className={`${styles.main} ${this.props.className ?? ""}`}
+          style={this.props.style}
+        >
           <header className={styles.header}>
             <div className={styles.header_action}>
               {this.props.discardButtonProps && (
@@ -36,7 +44,12 @@ export default class FormPageShell extends React.Component<Props, State> {
                 </RoundButton>
               )}
             </div>
-            <h1>{this.props.title}</h1>
+            <h1
+              ref={this.props.titleRef}
+              tabIndex={this.props.titleRef ? -1 : undefined}
+            >
+              {this.props.title}
+            </h1>
             <div className={styles.header_action}>
               {this.props.submitButtonProps && (
                 <Button
@@ -51,28 +64,17 @@ export default class FormPageShell extends React.Component<Props, State> {
               )}
             </div>
           </header>
-          <div className={styles.body} data-page-scroll="always">
+          <div
+            className={`${styles.body} ${this.props.bodyClassName ?? ""}`}
+            data-page-scroll="always"
+          >
             {this.props.children}
           </div>
         </section>
         {this.state.isConfirmingDiscard && (
-          <Modal
-            title="捨棄變更？"
-            description="離開後，尚未送出的內容不會被儲存。"
-            discardButtonProps={{
-              children: "繼續編輯",
-              className: "transparent l",
-              onClick: this.hideDiscardConfirmation,
-            }}
-            submitButtonProps={{
-              children: "捨棄變更",
-              className: "dangerous l",
-              onClick: this.handleConfirmDiscard,
-            }}
-            noX
-            visualLayer="nested"
-            manageBodyScroll={false}
-            manageHistory={false}
+          <DiscardChangesModal
+            onKeepEditing={this.hideDiscardConfirmation}
+            onDiscard={this.handleConfirmDiscard}
           />
         )}
       </>

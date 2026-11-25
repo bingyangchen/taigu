@@ -11,7 +11,7 @@ import {
 import * as Icons from "../../icons";
 import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
-import { getHideModalCallback } from "../../utils/modal";
+import { getHideModalCallback, goBackInHistory } from "../../utils/modal";
 import Util from "../../utils/util";
 import styles from "./SpeedDial.module.scss";
 
@@ -234,8 +234,7 @@ class SpeedDial extends React.Component<Props, State> {
       });
       return;
     }
-    this.hide();
-    this.setState({ activeModalName: "search" });
+    void this.openModalAfterHiding("search");
   };
   private openEditorRouteOrModal = (
     mobilePath: string,
@@ -245,8 +244,19 @@ class SpeedDial extends React.Component<Props, State> {
       this.props.router.navigate(mobilePath, { replace: this.isActive });
       return;
     }
-    this.hide();
-    this.setState({ activeModalName: modalName });
+    void this.openModalAfterHiding(modalName);
+  };
+  private openModalAfterHiding = async (
+    activeModalName: NonNullable<State["activeModalName"]>,
+  ): Promise<void> => {
+    // The modal pushes its own history entry, which must come after the menu's entry
+    // is gone; pushing it while that Back is still pending lets the Back close it.
+    if (this.isActive && this.props.router.location.state?.speedDialOpen === true) {
+      await goBackInHistory(1);
+    } else {
+      this.hide();
+    }
+    this.setState({ activeModalName });
   };
   private get defaultSidSearch(): string {
     return this.props.defaultSid

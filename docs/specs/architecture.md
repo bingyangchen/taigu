@@ -287,6 +287,17 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 > 設計理由：以前淨手續費直接存在 Redux，每次新增、修改、刪除交易紀錄或手續費折讓時再修補這個值，結果算出來的值會跟紀錄對不上。改成讀取時才算之後，儀表板與手續費頁顯示的數字一定跟紀錄一致。
 
+### 交易紀錄、現金股利紀錄與買賣計畫的編輯器
+
+交易紀錄、現金股利紀錄與買賣計畫的編輯器（`frontend/src/components/TradeRecordEditor/`、`CashDividendRecordEditor/`、`TradePlanEditor/`）共用 `frontend/src/components/RecordEditor/` 的段落、日期欄位、金額摘要與完成畫面，手續費折讓的編輯器仍直接用 `FormPageShell`。三種編輯器的「股票」欄位都是 `StockPicker`，MKT-R20 的處理寫在 `StockPicker` 裡面。
+
+- REC-R22 到 REC-R24 用到的庫存股數、「持有中」與「最近記過」列出的股票，以及累計現金股利，前端都從 Redux 裡已經載入的交易紀錄與現金股利紀錄算出，不另外向後端要。REC-R23 的「前端還沒載入完使用者的紀錄」，指的是 slice 的 `hasLoaded` 還是 false 的時候。
+- REC-R25 的昨收價是 `current-stock-info` 回應的 `close` 減去 `fluct_price`；使用者選好股票時，前端向後端要這檔股票的價格。
+- 成交股數上次用的單位存在 localStorage 的 `record_editor_quantity_unit`，不過這個單位是這個瀏覽器的設定、不是帳號資料，所以登出時不清除。
+- 後端回額度不足時，前端先關掉最先開啟、而且沒有設定 `staysOpenOnQuotaExceeded` 的視窗，再顯示 `PlanUpsellModal`（見 BILL-R9）；交易紀錄、現金股利紀錄與買賣計畫的編輯器視窗都設定了 `staysOpenOnQuotaExceeded`（REC-R7、PLAN-R5）。使用者在 `PlanUpsellModal` 點「查看 Standard 方案」時，前端關掉所有視窗再換頁，編輯器這時不顯示「捨棄變更？」。
+- 窄版的編輯頁用 `visualViewport` 判斷鍵盤有沒有彈出：使用者沒有放大頁面、`visualViewport` 的高度又比 `innerHeight` 少 150px 以上時，前端當作鍵盤彈出，前端把編輯頁固定在 `visualViewport` 的範圍內，讓主要按鈕留在鍵盤上方。iOS Safari、iOS 的 PWA 與 Android Chrome 上的實際行為還沒有實測，要測的項目記在 roadmap 的「介面回饋與導覽修正」。
+- 日期欄位是 `type="date"` 的 input，前端在 `change` 事件的值是空字串時，把欄位恢復成原本的日期。2026-11 在 macOS 的 Chrome 158 實測，焦點在日期欄位時按 Backspace，Chrome 會清空年、月、日其中一格，並觸發值是空字串的 `change` 事件，恢復之後欄位仍是原本的日期；iOS Safari 與 Android Chrome 的日期選擇器的「清除」還沒有實測，要測的項目記在 roadmap 的「介面回饋與導覽修正」。
+
 ## 付款與額度
 
 - 綠界（ECPay）用 server 對 server 的通知，把第一次付款的結果送到 `ReturnURL`，把之後每期扣款的結果送到 `PeriodReturnURL`，後端回 `1|OK` 表示收到。後端對 `ReturnURL` 回 `0|ERROR` 時，綠界會在 5 到 15 分鐘後再送一次，當天共送 4 次（[綠界文件 2878](https://developers.ecpay.com.tw/2878/)）；`PeriodReturnURL` 每期只送一次通知（[綠界文件 5631](https://developers.ecpay.com.tw/5631/)），文件沒有寫到重送。
@@ -405,7 +416,7 @@ sequenceDiagram
 
 | 能力 | 網址 | 前端頁面 | 後端 app | Spec |
 | --- | --- | --- | --- | --- |
-| 交易紀錄與現金股利 | `/`、`/records`、`/records/trade/new`、`/records/trade/:recordId/edit`、`/records/cash-dividend/new`、`/records/cash-dividend/:recordId/edit`、`/settings/data-controls` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/Records/Records.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx`、`frontend/src/pages/Settings/DataControls/DataControls.tsx` | `api-server/main/trade_record/`、`api-server/main/cash_dividend/` | [records.md](records.md) |
+| 交易紀錄與現金股利 | `/`、`/records`、`/records/trade/new`、`/records/trade/:recordId/edit`、`/records/cash-dividend/new`、`/records/cash-dividend/:recordId/edit`、`/settings/data-controls` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/Records/Records.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx`、`frontend/src/pages/Settings/DataControls/DataControls.tsx`，編輯器在 `frontend/src/components/TradeRecordEditor/`、`frontend/src/components/CashDividendRecordEditor/` 與共用的 `frontend/src/components/RecordEditor/` | `api-server/main/trade_record/`、`api-server/main/cash_dividend/` | [records.md](records.md) |
 | 持股 | `/`、`/market`、`/market/holding/:sid` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx`，計算在 `frontend/src/workers/tradeRecordWorker.ts` 與 `frontend/src/utils/market.ts` | 無，由前端依交易紀錄計算；Free 方案的持股檔數由 `api-server/main/billing/services/entitlements.py` 計算 | [holdings.md](holdings.md) |
 | 投資績效 | `/`、`/earning-analysis`、`/market`、`/market/:sid` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/EarningAnalysis/EarningAnalysis.tsx`、`frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx`，計算在 `frontend/src/workers/tradeRecordWorker.ts` 與 `frontend/src/utils/util.ts` | 無，在前端計算 | [performance.md](performance.md) |
 | 手續費 | `/`、`/handling-fee`、`/handling-fee/discounts/new`、`/handling-fee/discounts/:discountId/edit` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/HandlingFee/HandlingFee.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx` | `api-server/main/handling_fee/` | [handling-fees.md](handling-fees.md) |

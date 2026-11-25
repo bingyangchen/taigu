@@ -1,5 +1,9 @@
 import type { StockWarehouse } from "./stock";
 
+export type TradeSide = "buy" | "sell";
+
+export type QuantityUnit = "lot" | "share";
+
 export type TradeRecordState = {
   tradeRecords: TradeRecord[];
   sidTradeRecordsMap: { [sid: string]: TradeRecord[] };
@@ -12,8 +16,14 @@ export type TradeRecordState = {
   cashInvestedChartData: (string | number)[][];
   tradeVolumeChartData: (string | number)[][];
   averageCashInvested: number;
+  hasLoaded: boolean;
   isWaiting: boolean;
 };
+
+export type ComputedTradeRecordState = Omit<
+  TradeRecordState,
+  "isWaiting" | "hasLoaded"
+>;
 
 export type CashDividendRecord = {
   id: number;
@@ -27,7 +37,7 @@ export type TradePlan = {
   id: string;
   sid: string;
   company_name: string;
-  plan_type: "buy" | "sell";
+  plan_type: TradeSide;
   target_price: number;
   target_quantity: number;
 };

@@ -20,6 +20,7 @@ import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { CashDividendRecord, TradeRecord } from "../../../types";
 import Env from "../../../utils/env";
+import { getTradeSide, tradeSideToLabel } from "../../../utils/recordEditor";
 import Util from "../../../utils/util";
 import { getViewHistory } from "../viewHistory";
 import styles from "./Records.module.scss";
@@ -129,17 +130,11 @@ class Records extends React.Component<Props, State> {
                         <span
                           className={`${styles.record_type} ${
                             Util.isTradeRecord(record)
-                              ? record.deal_quantity > 0
-                                ? styles.buy
-                                : styles.sell
+                              ? styles[getTradeSide(record)]
                               : styles.dividend
                           }`}
                         >
-                          {Util.isTradeRecord(record)
-                            ? record.deal_quantity > 0
-                              ? "買入"
-                              : "賣出"
-                            : "股利"}
+                          {this.getRecordTypeLabel(record)}
                         </span>
                         {Util.isTradeRecord(record) && (
                           <span className={styles.quantity}>
@@ -148,7 +143,7 @@ class Records extends React.Component<Props, State> {
                         )}
                         <span className={styles.price_group}>
                           <span className={styles.price_label}>
-                            {Util.isTradeRecord(record) ? "成交價" : "現金股利"}
+                            {Util.isTradeRecord(record) ? "成交價" : "入帳金額"}
                           </span>
                           <span className={styles.price}>
                             <DollarSign />
@@ -191,7 +186,7 @@ class Records extends React.Component<Props, State> {
 
   private getRecordTypeLabel(record: TradeRecord | CashDividendRecord): string {
     if (!Util.isTradeRecord(record)) return "股利";
-    return record.deal_quantity > 0 ? "買入" : "賣出";
+    return tradeSideToLabel[getTradeSide(record)];
   }
 
   private get hasMoreToShow(): boolean {
@@ -262,8 +257,8 @@ class Records extends React.Component<Props, State> {
                     },
                     {
                       label: "類型",
-                      value: record.deal_quantity > 0 ? "買入" : "賣出",
-                      tone: record.deal_quantity > 0 ? "buy" : "sell",
+                      value: this.getRecordTypeLabel(record),
+                      tone: getTradeSide(record),
                     },
                     {
                       label: "股數",
@@ -272,7 +267,7 @@ class Records extends React.Component<Props, State> {
                   ]
                 : [
                     {
-                      label: "現金股利",
+                      label: "入帳金額",
                       value: (
                         <>
                           <DollarSign />

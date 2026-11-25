@@ -1,15 +1,33 @@
-import React, { ChangeEvent, KeyboardEvent, MouseEvent } from "react";
+import React, { ChangeEvent, KeyboardEvent } from "react";
 
-import type { SelectedStock, StockInfo } from "../../types";
+import * as Icons from "../../icons";
+import type {
+  SelectedStock,
+  StockInfo,
+  StockSuggestions,
+  SuggestedStock,
+} from "../../types";
 import Api from "../../utils/api";
+import { formatNumber } from "../../utils/recordEditor";
 import Util from "../../utils/util";
-import Modal from "../Modal/Modal";
 import styles from "./StockPicker.module.scss";
+
+export const PENDING_KEYWORD_MESSAGE = "請從搜尋結果選擇一檔股票";
 
 interface Props {
   selectedStock: SelectedStock | null;
-  autoFocus?: boolean;
   onChange: (_stock: SelectedStock | null) => void;
+
+  /** Called only when the user picks a stock, after `onChange`. */
+  onSelect?: (_stock: SelectedStock) => void;
+
+  /** Reports the search text that is left without a stock chosen for it (MKT-R20). */
+  onPendingKeywordChange?: (_keyword: string) => void;
+
+  /** Listed below the empty search box (REC-R22). */
+  suggestions?: StockSuggestions | null;
+  sidHeldSharesMap?: { [sid: string]: number };
+  errorMessage?: string | null;
 }
 
 interface State {
@@ -19,6 +37,8 @@ interface State {
   highlightedIndex: number;
   isFocused: boolean;
   isOpen: boolean;
+  isChanging: boolean;
+  isListDismissed: boolean;
   isSearching: boolean;
   searchError: boolean;
   showSelectionPrompt: boolean;
@@ -29,9 +49,12 @@ let stockPickerId = 0;
 export default class StockPicker extends React.Component<Props, State> {
   public state: State;
   private inputRef: React.RefObject<HTMLInputElement>;
+  private changeButtonRef: React.RefObject<HTMLButtonElement>;
   private readonly inputId: string;
   private readonly listboxId: string;
+  private readonly messageId: string;
   private blurTimer: ReturnType<typeof setTimeout> | undefined;
+  private reportedPendingKeyword: string = "";
 
   public constructor(props: Props) {
     super(props);
@@ -42,19 +65,22 @@ export default class StockPicker extends React.Component<Props, State> {
       highlightedIndex: -1,
       isFocused: false,
       isOpen: false,
+      isChanging: false,
+      isListDismissed: false,
       isSearching: false,
       searchError: false,
       showSelectionPrompt: false,
     };
     this.inputRef = React.createRef();
+    this.changeButtonRef = React.createRef();
     stockPickerId += 1;
     this.inputId = `stock-picker-input-${stockPickerId}`;
     this.listboxId = `stock-picker-listbox-${stockPickerId}`;
+    this.messageId = `stock-picker-message-${stockPickerId}`;
   }
 
   public componentDidMount(): void {
     this.loadSelectedStockName();
-    if (this.props.autoFocus && !this.props.selectedStock) this.focusInput();
   }
 
   public componentDidUpdate(previousProps: Readonly<Props>): void {
@@ -64,87 +90,50 @@ export default class StockPicker extends React.Component<Props, State> {
     ) {
       this.loadSelectedStockName();
     }
+    if (this.pendingKeyword !== this.reportedPendingKeyword) {
+      this.reportedPendingKeyword = this.pendingKeyword;
+      this.props.onPendingKeywordChange?.(this.pendingKeyword);
+    }
   }
 
   public componentWillUnmount(): void {
     if (this.blurTimer) clearTimeout(this.blurTimer);
   }
 
-  public render(): React.ReactNode {
-    if (Util.isMobile) return this.renderMobilePicker();
-
-    return (
-      <div className={styles.main}>
-        {this.renderStockField()}
-        {this.state.isOpen && (
-          <div className={styles.desktop_search_panel}>{this.renderSearchPanel()}</div>
-        )}
-        {this.renderSelectionPrompt()}
-      </div>
-    );
+  public focus(): void {
+    if (this.isShowingSelectedStock) {
+      this.changeButtonRef.current?.focus();
+      return;
+    }
+    this.setState({ isFocused: true, isOpen: true }, () => {
+      this.inputRef.current?.focus();
+    });
   }
 
-  private renderMobilePicker(): React.ReactNode {
+  public render(): React.ReactNode {
+    const message = this.message;
     return (
       <div className={styles.main}>
         <fieldset
-          className={`${styles.field} ${this.state.isFocused ? styles.focused : ""}`}
+          className={`${styles.field} ${this.state.isFocused ? styles.focused : ""} ${
+            message ? styles.invalid : ""
+          }`}
         >
           <legend className={this.state.isFocused ? styles.focused : ""}>股票</legend>
-          {this.props.selectedStock
+          {this.isShowingSelectedStock
             ? this.renderSelectedStock()
-            : this.renderMobileTrigger()}
+            : this.renderSearchInput()}
         </fieldset>
-        {this.renderSelectionPrompt()}
-        {this.state.isOpen && (
-          <Modal
-            title="選擇股票"
-            description="搜尋證券代號或名稱後選擇股票。"
-            discardButtonProps={{
-              children: "返回",
-              className: "transparent l",
-              onClick: this.handleCloseMobileSearch,
-            }}
-            layout="fullScreen"
-            noFooter
-            visualLayer="nested"
-            manageHistory={false}
-          >
-            <div className={styles.mobile_search}>
-              {this.renderMobileSearchInput()}
-              {this.renderSearchPanel()}
-            </div>
-          </Modal>
+        {message && (
+          <div className={styles.selection_prompt} id={this.messageId}>
+            <Icons.IconExclamation sideLength="14" />
+            <span>{message}</span>
+          </div>
+        )}
+        {this.isListVisible && (
+          <div className={styles.search_panel}>{this.renderSearchPanel()}</div>
         )}
       </div>
-    );
-  }
-
-  private renderStockField(): React.ReactNode {
-    return (
-      <fieldset
-        className={`${styles.field} ${this.state.isFocused ? styles.focused : ""}`}
-      >
-        <legend className={this.state.isFocused ? styles.focused : ""}>股票</legend>
-        {this.props.selectedStock && !this.state.isOpen
-          ? this.renderSelectedStock()
-          : this.renderSearchInput()}
-      </fieldset>
-    );
-  }
-
-  private renderMobileTrigger(): React.ReactNode {
-    return (
-      <button
-        type="button"
-        className={styles.empty_stock}
-        aria-label="選擇股票"
-        onClick={this.handleOpenMobileSearch}
-        onFocus={() => this.setState({ isFocused: true })}
-        onBlur={() => this.setState({ isFocused: false })}
-      >
-        選擇股票
-      </button>
     );
   }
 
@@ -154,6 +143,7 @@ export default class StockPicker extends React.Component<Props, State> {
     return (
       <button
         type="button"
+        ref={this.changeButtonRef}
         className={styles.selected_stock}
         aria-label={`已選股票：${name ?? sid}，證券代號 ${sid}。更換股票`}
         onClick={this.handleChangeStock}
@@ -175,10 +165,12 @@ export default class StockPicker extends React.Component<Props, State> {
         id={this.inputId}
         ref={this.inputRef}
         aria-autocomplete="list"
-        aria-controls={this.listboxId}
-        aria-expanded={this.state.isOpen}
+        aria-controls={this.isListVisible ? this.listboxId : undefined}
+        aria-expanded={this.isListVisible}
         aria-label="股票"
         aria-activedescendant={this.activeOptionId}
+        aria-describedby={this.message ? this.messageId : undefined}
+        aria-invalid={this.message ? true : undefined}
         role="combobox"
         type="search"
         inputMode="search"
@@ -193,17 +185,11 @@ export default class StockPicker extends React.Component<Props, State> {
     );
   }
 
-  private renderMobileSearchInput(): React.ReactNode {
-    return (
-      <label className={styles.mobile_search_input}>
-        <span className={styles.mobile_search_label}>股票</span>
-        {this.renderSearchInput()}
-      </label>
-    );
-  }
-
   private renderSearchPanel(): React.ReactNode {
     const keyword = this.state.completedSearchKeyword?.trim() ?? "";
+    if (this.state.searchKeyword.trim() === "") {
+      return this.renderOptions(this.suggestedOptions, this.props.suggestions?.title);
+    }
     if (this.state.isSearching) {
       return <div className={styles.feedback}>搜尋股票中...</div>;
     }
@@ -215,30 +201,7 @@ export default class StockPicker extends React.Component<Props, State> {
       );
     }
     if (this.state.searchResults.length > 0) {
-      return (
-        <div className={styles.results} id={this.listboxId} role="listbox">
-          {this.state.searchResults.map((stock, index) => {
-            return (
-              <button
-                type="button"
-                id={this.getOptionId(index)}
-                key={stock.sid}
-                className={`${styles.result} ${
-                  this.state.highlightedIndex === index ? styles.highlighted : ""
-                }`}
-                role="option"
-                aria-selected={this.state.highlightedIndex === index}
-                onMouseDown={(event) => event.preventDefault()}
-                onMouseEnter={() => this.setState({ highlightedIndex: index })}
-                onClick={() => this.selectStock(stock)}
-              >
-                <span className={styles.result_name}>{stock.name}</span>
-                <span className={styles.result_sid}>{stock.sid}</span>
-              </button>
-            );
-          })}
-        </div>
-      );
+      return this.renderOptions(this.resultOptions);
     }
     if (keyword) {
       return (
@@ -251,9 +214,90 @@ export default class StockPicker extends React.Component<Props, State> {
     return null;
   }
 
-  private renderSelectionPrompt(): React.ReactNode {
-    if (!this.state.showSelectionPrompt || this.props.selectedStock) return null;
-    return <div className={styles.selection_prompt}>請從搜尋結果選擇一檔股票</div>;
+  private renderOptions(options: SuggestedStock[], title?: string): React.ReactNode {
+    const titleId = `${this.listboxId}-title`;
+    return (
+      <>
+        {title && (
+          <div className={styles.group_title} id={titleId}>
+            {title}
+          </div>
+        )}
+        <div
+          className={styles.results}
+          id={this.listboxId}
+          role="listbox"
+          aria-labelledby={title ? titleId : undefined}
+          aria-label={title ? undefined : "搜尋結果"}
+        >
+          {options.map((option, index) => {
+            return (
+              <button
+                type="button"
+                id={this.getOptionId(index)}
+                key={option.sid}
+                className={`${styles.result} ${
+                  this.state.highlightedIndex === index ? styles.highlighted : ""
+                }`}
+                role="option"
+                aria-selected={this.state.highlightedIndex === index}
+                tabIndex={-1}
+                onMouseDown={(event) => event.preventDefault()}
+                onMouseEnter={() => this.setState({ highlightedIndex: index })}
+                onClick={() => this.selectStock(option)}
+              >
+                <span className={styles.result_name}>{option.name}</span>
+                <span className={styles.result_sid}>
+                  {option.sid}
+                  {option.heldShares !== null &&
+                    `・持有 ${formatNumber(option.heldShares)} 股`}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </>
+    );
+  }
+
+  private get message(): string | null {
+    if (this.state.showSelectionPrompt && this.pendingKeyword) {
+      return PENDING_KEYWORD_MESSAGE;
+    }
+    return this.props.errorMessage ?? null;
+  }
+
+  private get pendingKeyword(): string {
+    if (this.props.selectedStock && !this.state.isChanging) return "";
+    return this.state.searchKeyword.trim();
+  }
+
+  private get isShowingSelectedStock(): boolean {
+    return Boolean(this.props.selectedStock) && !this.state.isChanging;
+  }
+
+  private get suggestedOptions(): SuggestedStock[] {
+    return this.props.suggestions?.stocks ?? [];
+  }
+
+  private get resultOptions(): SuggestedStock[] {
+    return this.state.searchResults.map((stock) => ({
+      sid: stock.sid,
+      name: stock.name,
+      heldShares: this.props.sidHeldSharesMap?.[stock.sid] ?? null,
+    }));
+  }
+
+  private get visibleOptions(): SuggestedStock[] {
+    if (this.state.searchKeyword.trim() === "") return this.suggestedOptions;
+    if (this.state.isSearching || this.state.searchError) return [];
+    return this.resultOptions;
+  }
+
+  private get isListVisible(): boolean {
+    if (!this.state.isOpen || this.state.isListDismissed) return false;
+    if (this.state.searchKeyword.trim() === "") return this.suggestedOptions.length > 0;
+    return true;
   }
 
   private get activeOptionId(): string | undefined {
@@ -263,12 +307,6 @@ export default class StockPicker extends React.Component<Props, State> {
 
   private getOptionId(index: number): string {
     return `${this.listboxId}-option-${index}`;
-  }
-
-  private focusInput(): void {
-    this.setState({ isFocused: true, isOpen: true }, () => {
-      this.inputRef.current?.focus();
-    });
   }
 
   private loadSelectedStockName = async (): Promise<void> => {
@@ -338,11 +376,12 @@ export default class StockPicker extends React.Component<Props, State> {
         searchResults: [],
         completedSearchKeyword: null,
         highlightedIndex: -1,
-        isOpen: true,
+        isChanging: true,
+        isListDismissed: false,
         searchError: false,
         showSelectionPrompt: false,
       },
-      () => this.focusInput(),
+      () => this.focus(),
     );
   };
 
@@ -350,7 +389,12 @@ export default class StockPicker extends React.Component<Props, State> {
     const searchKeyword = event.target.value;
     this.setState({
       searchKeyword,
+
+      // The results on screen belong to the previous keyword until the new
+      // search finishes, so they are hidden and cannot be picked meanwhile.
+      isSearching: searchKeyword.trim() !== "",
       isOpen: true,
+      isListDismissed: false,
       highlightedIndex: -1,
       searchError: false,
       showSelectionPrompt: false,
@@ -360,16 +404,21 @@ export default class StockPicker extends React.Component<Props, State> {
 
   private handleFocusInput = (): void => {
     if (this.blurTimer) clearTimeout(this.blurTimer);
-    this.setState({ isFocused: true, isOpen: true });
+    this.setState({ isFocused: true, isOpen: true, isListDismissed: false });
   };
 
   private handleBlurInput = (): void => {
     this.setState({ isFocused: false });
     this.blurTimer = setTimeout(() => {
-      this.setState((state) => ({
-        isOpen: false,
-        showSelectionPrompt: state.searchKeyword.trim().length > 0,
-      }));
+      this.setState((state) => {
+        const hasKeyword = state.searchKeyword.trim().length > 0;
+        return {
+          isOpen: false,
+          highlightedIndex: -1,
+          isChanging: state.isChanging && hasKeyword,
+          showSelectionPrompt: hasKeyword,
+        };
+      });
     }, 100);
   };
 
@@ -380,41 +429,29 @@ export default class StockPicker extends React.Component<Props, State> {
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       this.moveHighlight(-1);
-    } else if (event.key === "Enter" && this.state.highlightedIndex >= 0) {
+    } else if (event.key === "Enter") {
+      // Enter only picks a stock; it never submits the editor (REC-R1, PLAN-R6).
       event.preventDefault();
-      this.selectStock(this.state.searchResults[this.state.highlightedIndex]);
-    } else if (event.key === "Escape") {
-      this.setState({ isOpen: false });
-      this.inputRef.current?.blur();
+      const highlighted = this.visibleOptions[this.state.highlightedIndex];
+      if (highlighted && this.isListVisible) this.selectStock(highlighted);
+    } else if (event.key === "Escape" && this.isListVisible) {
+      this.setState({ isListDismissed: true, highlightedIndex: -1 });
     }
   };
 
   private moveHighlight(offset: number): void {
-    if (this.state.searchResults.length === 0) return;
+    const optionCount = this.visibleOptions.length;
+    if (optionCount === 0) return;
     this.setState((state) => {
-      const nextIndex =
-        (state.highlightedIndex + offset + state.searchResults.length) %
-        state.searchResults.length;
-      return { highlightedIndex: nextIndex };
+      const currentIndex =
+        state.highlightedIndex < 0 && offset < 0 ? 0 : state.highlightedIndex;
+      const nextIndex = (currentIndex + offset + optionCount) % optionCount;
+      return { highlightedIndex: nextIndex, isListDismissed: false, isOpen: true };
     });
   }
 
-  private selectStock(stock: StockInfo): void {
-    this.props.onChange({ sid: stock.sid, name: stock.name });
-    this.setState({
-      searchKeyword: "",
-      searchResults: [],
-      completedSearchKeyword: null,
-      highlightedIndex: -1,
-      isFocused: false,
-      isOpen: false,
-      isSearching: false,
-      searchError: false,
-      showSelectionPrompt: false,
-    });
-  }
-
-  private handleOpenMobileSearch = (): void => {
+  private selectStock(option: SuggestedStock): void {
+    const stock = { sid: option.sid, name: option.name };
     this.setState(
       {
         searchKeyword: "",
@@ -422,20 +459,15 @@ export default class StockPicker extends React.Component<Props, State> {
         completedSearchKeyword: null,
         highlightedIndex: -1,
         isFocused: false,
-        isOpen: true,
+        isOpen: false,
+        isChanging: false,
+        isListDismissed: false,
         isSearching: false,
         searchError: false,
         showSelectionPrompt: false,
       },
-      () => this.focusInput(),
+      () => this.props.onSelect?.(stock),
     );
-  };
-
-  private handleCloseMobileSearch = (_event: MouseEvent): void => {
-    this.setState((state) => ({
-      isFocused: false,
-      isOpen: false,
-      showSelectionPrompt: state.searchKeyword.trim().length > 0,
-    }));
-  };
+    this.props.onChange(stock);
+  }
 }

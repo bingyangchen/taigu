@@ -11,6 +11,9 @@
   border: 1px solid _.$light-gray;
   padding: 0;
   transition-duration: 150ms;
+  &.invalid {
+    border-color: _.$red;
+  }
   &.focused {
     border-color: transparent !important;
     outline: 2px solid _.$blue;
@@ -48,6 +51,11 @@
     background-color: _.$white;
     color: _.$gray;
     transition-duration: 150ms;
+  }
+  & > .suffix {
+    flex: none;
+    padding: 0 10px 0 4px;
+    color: _.$gray;
   }
   & > input {
     width: 100%;
