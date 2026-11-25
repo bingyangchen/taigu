@@ -111,8 +111,6 @@ class Login extends React.Component<Props, State> {
       this.setState({ isRequestingAuthorizationUrl: false });
       throw error;
     }
-
-    // The button keeps waiting until the browser leaves for Google.
     window.location = response.authorization_url;
   };
   private handlePageShow = (event: PageTransitionEvent): void => {

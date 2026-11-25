@@ -172,8 +172,6 @@ class AccountBinding extends React.Component<Props, State> {
       this.setState({ isRequestingAuthorizationUrl: false });
       throw error;
     }
-
-    // The row keeps waiting until the browser leaves for Google.
     window.location = response.authorization_url;
   };
   private handlePageShow = (event: PageTransitionEvent): void => {
