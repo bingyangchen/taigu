@@ -88,7 +88,7 @@ class AccountBinding extends React.Component<Props, State> {
                 onClick={this.handleClickGoogleLogin}
               >
                 <img className={styles.google_logo} src={googleLogo} alt="" />
-                {!this.props.isWaiting && "綁定 Google 帳號"}
+                綁定 Google 帳號
               </div>
             </BottomSheet>
           ) : (
@@ -104,12 +104,11 @@ class AccountBinding extends React.Component<Props, State> {
               <div className={styles.model_body}>
                 <Button
                   className="white border l"
-                  disabled={this.props.isWaiting}
                   waiting={this.props.isWaiting}
                   onClick={this.handleClickGoogleLogin}
                 >
                   <img className={styles.google_logo} src={googleLogo} alt="" />
-                  {!this.props.isWaiting && "綁定 Google 帳號"}
+                  綁定 Google 帳號
                 </Button>
               </div>
             </Modal>

@@ -37,7 +37,6 @@ class DeleteAccount extends React.Component<Props, State> {
         primaryFooterButton={
           <Button
             className="dangerous_fill l"
-            disabled={this.props.isWaiting}
             waiting={this.props.isWaiting}
             onClick={this.handleClickCheckDelete}
           >

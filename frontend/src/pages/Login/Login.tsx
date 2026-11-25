@@ -85,12 +85,11 @@ class Login extends React.Component<Props, State> {
           <FullLogo size="l" />
           <Button
             className="white border l"
-            disabled={this.props.isWaiting}
             waiting={this.props.isWaiting}
             onClick={this.handleClickGoogleLogin}
           >
             <img className={styles.google_icon} src={google} alt="google login" />
-            {!this.props.isWaiting && "使用 Google 帳戶繼續"}
+            使用 Google 帳戶繼續
           </Button>
         </div>
       </div>

@@ -63,12 +63,15 @@ export default class Button extends React.Component<Props> {
     }
 
     return (
+      // A waiting button stays focusable: a native disabled button would drop focus
+      // to <body> while the request is in flight. handleClick blocks the click instead.
       <button
         {...buttonProps}
         aria-busy={waiting || undefined}
+        aria-disabled={(waiting && !disabled) || undefined}
         className={classNames}
         data-waiting={waiting ? "" : undefined}
-        disabled={isDisabled}
+        disabled={disabled}
         onClick={handleClick}
       >
         <span className="button__content">{children}</span>

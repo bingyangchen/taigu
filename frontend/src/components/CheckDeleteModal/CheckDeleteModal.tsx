@@ -39,7 +39,6 @@ class CheckDeleteModal extends React.Component<Props, State> {
         submitButtonProps={{
           children: this.props.submitLabel ?? "刪除",
           className: "dangerous l",
-          disabled: this.props.isWaiting,
           waiting: this.props.isWaiting,
           onClick: this.handleClickCheckDelete,
         }}

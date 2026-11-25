@@ -52,7 +52,8 @@
     }
   }
   &:disabled,
-  &[data-disabled] {
+  &[data-disabled],
+  &.waiting {
     cursor: not-allowed !important;
     color: _.$light-gray !important;
     background-color: _.$noisy-white !important;
@@ -67,7 +68,8 @@
   &.transparent {
     background-color: transparent;
     color: _.$deep-gray;
-    &:disabled {
+    &:disabled,
+    &.waiting {
       color: _.$light-gray !important;
       background-color: transparent !important;
     }

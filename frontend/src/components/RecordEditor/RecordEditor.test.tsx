@@ -529,8 +529,11 @@ describe("trade record fields", () => {
     userEvent.type(field("成交股數"), "1");
     userEvent.type(field("成交單價"), "600");
     submit("新增買進紀錄");
-    expect(screen.getByRole("button", { name: "儲存中" })).toBeInTheDocument();
-    submit("儲存中");
+    expect(screen.getByRole("button", { name: "新增買進紀錄" })).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
+    submit("新增買進紀錄");
     await act(async () => finishSave({}));
     await screen.findByText("已新增買進紀錄");
     expect(mockSaveTradeRecord).toHaveBeenCalledTimes(1);
