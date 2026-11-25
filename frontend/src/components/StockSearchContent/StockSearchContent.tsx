@@ -32,7 +32,7 @@ class StockSearchLRUCache {
     try {
       const cached = localStorage.getItem(this.CACHE_KEY);
       return cached ? JSON.parse(cached) : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }

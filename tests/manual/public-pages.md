@@ -93,12 +93,15 @@
 
 ## PUB-R7.1 不執行 JavaScript 抓取服務條款
 
-前端沒有自動化 test，而且本機的 dev server 對每個網址都回傳同一份 HTML，只有部署後的網站會讓公開頁面直接回傳整頁內容，所以這項檢查對 prod 執行，要等 `main` 部署之後再執行。
+前端沒有自動化 test，而且本機的 dev server 對每個網址都回傳同一份 HTML，所以這項檢查先在本機 build，再用 `vite preview` 提供 build 出來的檔案。`vite preview` 跟 Cloudflare Pages 一樣，用 `terms-of-service.html` 回應 `/terms-of-service`。
 
-1. 執行 `curl -s https://taigu.tw/terms-of-service | grep -oE '本網站可能因系統維護、升級或其他原因而暫時中斷服務|服務中斷或終止' | sort -u`。
-2. 執行 `curl -s https://taigu.tw/terms-of-service | grep -oE '<title>[^<]*</title>|<link rel="canonical"[^>]*>|<meta name="robots"[^>]*>|<meta property="og:(title|url)"[^>]*>'`。
+1. 執行 `docker compose -f compose.dev.yaml run -d --rm --no-deps --name taigu-preview -p 3001:3000 frontend sh -c "npm run build && npm run preview"`。
+2. 等 `docker logs taigu-preview` 印出 `http://localhost:3000/`。
+3. 執行 `curl -s http://localhost:3001/terms-of-service | grep -oE '本網站可能因系統維護、升級或其他原因而暫時中斷服務|服務中斷或終止' | sort -u`。
+4. 執行 `curl -s http://localhost:3001/terms-of-service | grep -oE '<title>[^<]*</title>|<link rel="canonical"[^>]*>|<meta name="robots"[^>]*>|<meta property="og:(title|url)"[^>]*>'`。
+5. 執行 `docker stop taigu-preview`。
 
-預期：步驟 1 印出「服務中斷或終止」與「本網站可能因系統維護、升級或其他原因而暫時中斷服務」兩行；步驟 2 印出 `<title>服務條款 | Taigu</title>`、`href` 是 `https://taigu.tw/terms-of-service` 的 canonical、`content` 是「服務條款 | Taigu」的 `og:title` 與 `content` 是 `https://taigu.tw/terms-of-service` 的 `og:url`，沒有 `robots` 那一行。
+預期：步驟 3 印出「服務中斷或終止」與「本網站可能因系統維護、升級或其他原因而暫時中斷服務」兩行；步驟 4 印出 `<title>服務條款 | Taigu</title>`、`href` 是 `https://taigu.tw/terms-of-service` 的 canonical、`content` 是「服務條款 | Taigu」的 `og:title` 與 `content` 是 `https://taigu.tw/terms-of-service` 的 `og:url`，沒有 `robots` 那一行。
 
 ## PUB-R7.2 不執行 JavaScript 抓取首頁
 

@@ -9,9 +9,9 @@ import {
   TradeRecordEditor,
 } from "../../components";
 import * as Icons from "../../icons";
-import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
 import { getHideModalCallback, goBackInHistory } from "../../utils/modal";
+import { IRouter, withRouter } from "../../utils/router";
 import Util from "../../utils/util";
 import styles from "./SpeedDial.module.scss";
 

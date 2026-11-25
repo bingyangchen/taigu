@@ -2,36 +2,15 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React, { useState } from "react";
 import { MemoryRouter, type NavigateFunction, useNavigate } from "react-router-dom";
+import { expect, test, vi } from "vitest";
 
 import { requestCloseActiveModal } from "../../utils/modal";
 import Modal from "./Modal";
 
-// Jest 27 cannot resolve the package exports of react-router-dom 7.
-jest.mock("react-router-dom", () => {
-  Object.assign(globalThis, { TextEncoder: jest.requireActual("util").TextEncoder });
-  return jest.requireActual("react-router");
-});
+const user = userEvent.setup();
 
-// The components barrel and the app router load the store, whose worker URL Jest
-// cannot parse.
-jest.mock("../../router", () => {
-  const { useLocation, useNavigate, useNavigationType } =
-    jest.requireActual("react-router");
-  return {
-    withRouter:
-      (Component: React.ComponentType<{ router: object }>) => (props: object) => (
-        <Component
-          {...props}
-          router={{
-            location: useLocation(),
-            navigationType: useNavigationType(),
-            navigate: useNavigate(),
-          }}
-        />
-      ),
-  };
-});
-jest.mock("../../components", () => ({
+// The components barrel loads the store, which this test does not need.
+vi.mock("../../components", () => ({
   Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button {...props} />
   ),
@@ -85,7 +64,7 @@ async function openStackedModals(): Promise<void> {
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve));
   });
-  userEvent.click(screen.getByRole("button", { name: "開啟上層視窗" }));
+  await user.click(screen.getByRole("button", { name: "開啟上層視窗" }));
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve));
   });

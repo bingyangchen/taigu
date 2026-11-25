@@ -11,9 +11,9 @@ import {
 } from "../../../components";
 import * as Icons from "../../../icons";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, navigateBack, withRouter } from "../../../router";
 import Api from "../../../utils/api";
 import Env from "../../../utils/env";
+import { IRouter, navigateBack, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./EarningAnalysis.module.scss";
 
@@ -130,7 +130,7 @@ class EarningAnalysis extends React.Component<Props, State> {
         "get",
       );
       this.setState({ companyNamesMap: response });
-    } catch (error) {
+    } catch {
       // Silently fail - fallback to sid
     }
   };

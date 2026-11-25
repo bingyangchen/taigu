@@ -4,8 +4,8 @@ import { connect } from "react-redux";
 import { RoundButton } from "../../components";
 import * as Icons from "../../icons";
 import type { RootState } from "../../redux/store";
-import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
+import { IRouter, withRouter } from "../../utils/router";
 import styles from "./HeaderForSettings.module.scss";
 
 function mapStateToProps(rootState: RootState) {

@@ -230,7 +230,7 @@ export default function TradePlanEditor({
     try {
       if (plan) await dispatch(updatePlan({ id: plan.id, ...requestBody })).unwrap();
       else await dispatch(createPlan(requestBody)).unwrap();
-    } catch (error) {
+    } catch {
       // The API layer reports a failed request with a toast or the quota upsell.
       return;
     } finally {

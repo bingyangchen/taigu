@@ -1,3 +1,5 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
 import {
   isMainNavCollapsedInStorage,
   saveMainNavCollapsed,
@@ -29,7 +31,7 @@ describe("main sidebar state", () => {
   });
 
   test("[NAV-R1.8] tolerates unavailable storage", () => {
-    jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("storage unavailable");
     });
 

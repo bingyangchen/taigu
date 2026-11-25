@@ -48,8 +48,8 @@ let stockPickerId = 0;
 
 export default class StockPicker extends React.Component<Props, State> {
   public state: State;
-  private inputRef: React.RefObject<HTMLInputElement>;
-  private changeButtonRef: React.RefObject<HTMLButtonElement>;
+  private inputRef: React.RefObject<HTMLInputElement | null>;
+  private changeButtonRef: React.RefObject<HTMLButtonElement | null>;
   private readonly inputId: string;
   private readonly listboxId: string;
   private readonly messageId: string;
@@ -326,7 +326,7 @@ export default class StockPicker extends React.Component<Props, State> {
           name: companyNameMap[selectedStock.sid],
         });
       }
-    } catch (error) {
+    } catch {
       return;
     }
   };
@@ -355,7 +355,7 @@ export default class StockPicker extends React.Component<Props, State> {
         highlightedIndex: response.data.length > 0 ? 0 : -1,
         isSearching: false,
       });
-    } catch (error) {
+    } catch {
       if (this.state.searchKeyword !== searchKeyword) return;
       this.setState({
         searchResults: [],

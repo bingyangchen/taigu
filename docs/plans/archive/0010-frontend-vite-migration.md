@@ -1,7 +1,7 @@
 ---
 id: "0010"
 title: frontend-vite-migration
-status: approved
+status: done
 specs: []
 depends_on: []
 ---

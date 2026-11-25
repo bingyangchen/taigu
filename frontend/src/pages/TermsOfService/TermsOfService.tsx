@@ -1,10 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-import { FullLogo, PageMeta, RoundButton } from "../../components";
+// Not through ../../components, which loads the store: src/prerender.tsx renders
+// this page in Node.
+import FullLogo from "../../components/FullLogo/FullLogo";
+import PageMeta from "../../components/PageMeta/PageMeta";
+import RoundButton from "../../components/RoundButton/RoundButton";
 import * as Icons from "../../icons";
-import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
+import { IRouter, withRouter } from "../../utils/router";
 import Util from "../../utils/util";
 import styles from "./TermsOfService.module.scss";
 

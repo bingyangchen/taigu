@@ -267,9 +267,7 @@ export function findOversoldSell({
     shares: signedShares,
   };
   const savedTrades =
-    editedRecord && editedRecord.sid === sid
-      ? [...otherTrades, toTrade(editedRecord)]
-      : otherTrades;
+    editedRecord?.sid === sid ? [...otherTrades, toTrade(editedRecord)] : otherTrades;
   const tradesWithThis = [...otherTrades, thisTrade];
   const runningWithThis = makeIdToRunningShares(tradesWithThis);
   const runningSaved = makeIdToRunningShares(savedTrades);

@@ -50,7 +50,8 @@ class ViewHistory {
     this.historyKeyToView.delete(historyKey);
     this.historyKeyToView.set(historyKey, { ...previous, ...view });
     if (this.historyKeyToView.size > maxSavedViews) {
-      this.historyKeyToView.delete(this.historyKeyToView.keys().next().value);
+      const [oldestKey] = this.historyKeyToView.keys();
+      this.historyKeyToView.delete(oldestKey);
     }
     const tabPath = getMainTabPath(location);
     if (tabPath)

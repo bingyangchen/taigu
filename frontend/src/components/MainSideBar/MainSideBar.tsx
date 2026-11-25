@@ -13,11 +13,11 @@ import {
 } from "../../components";
 import * as Icons from "../../icons";
 import { AppDispatch, RootState } from "../../redux/store";
-import { settingsPagePath } from "../../router";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
 import { mainTabNavigationState } from "../../utils/mainNavigation";
 import { getHideModalCallback } from "../../utils/modal";
+import { settingsPagePath } from "../../utils/router";
 import styles from "./MainSideBar.module.scss";
 import {
   isMainNavCollapsedInStorage,

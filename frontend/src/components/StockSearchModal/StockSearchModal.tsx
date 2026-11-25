@@ -1,7 +1,7 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 
-import { IRouter, withRouter } from "../../router";
 import Env from "../../utils/env";
+import { IRouter, withRouter } from "../../utils/router";
 import Modal from "../Modal/Modal";
 import StockSearchContent from "../StockSearchContent/StockSearchContent";
 

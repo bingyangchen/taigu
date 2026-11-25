@@ -5,8 +5,8 @@ import { Button, Form, LabeledInput } from "../../../components";
 import { deleteAccount } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, settingsPagePath, withRouter } from "../../../router";
 import Env from "../../../utils/env";
+import { IRouter, settingsPagePath, withRouter } from "../../../utils/router";
 import styles from "./DeleteAccount.module.scss";
 
 function mapStateToProps(rootState: RootState) {

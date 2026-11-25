@@ -32,7 +32,7 @@ printf "\n"
 
 printf "${BLUE}Running frontend tests...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm --no-deps \
-  -e CI=true frontend npm test -- --runInBand
+  frontend npm test -- --run
 printf "\n"
 
 printf "${BLUE}Running Pytest...${RESET}\n"

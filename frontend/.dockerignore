@@ -3,8 +3,11 @@
 !package-lock.json
 !src/
 !public/
+!scripts/
+!index.html
+!vite.config.ts
 !tsconfig.json
-!.eslintrc.js
+!eslint.config.js
 !.prettierrc
 !.prettierignore
 

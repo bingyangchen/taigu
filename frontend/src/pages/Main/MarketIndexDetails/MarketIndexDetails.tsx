@@ -16,7 +16,6 @@ import {
   fetchRealtimeMarketIndex,
   type MarketIndexQueryStatus,
 } from "../../../redux/slices/StockInfoSlice";
-import { type IRouter, navigateBack, withRouter } from "../../../router";
 import type { MarketId } from "../../../types";
 import Env from "../../../utils/env";
 import {
@@ -30,6 +29,7 @@ import {
   MARKET_IDS,
   type MarketIndexQuote,
 } from "../../../utils/marketIndex";
+import { type IRouter, navigateBack, withRouter } from "../../../utils/router";
 import styles from "./MarketIndexDetails.module.scss";
 
 type ChartMode = "intraday" | "historical";

@@ -1,6 +1,6 @@
 import { openPlanUpsell } from "../redux/slices/PlanUpsellSlice";
 import { pushToast } from "../redux/slices/ToastSlice";
-import { store } from "../redux/store";
+import type { AppDispatch } from "../redux/store";
 import LocalDatabase from "../storage/localDatabase";
 import type { PlanQuotaResource } from "../types";
 import {
@@ -56,9 +56,21 @@ export class ApiError extends Error {
 }
 
 export default class Api {
+  // The store imports the slices, which import this module, so the store's dispatch
+  // is handed over at startup instead of imported.
+  private static storeDispatch: AppDispatch | null = null;
   private static safeMethods = ["get", "head", "options"];
   private static refreshRequest: Promise<boolean> | null = null;
   private static cleanupRequest: Promise<void> | null = null;
+
+  public static connectStore(dispatch: AppDispatch): void {
+    Api.storeDispatch = dispatch;
+  }
+
+  private static get dispatch(): AppDispatch {
+    if (!Api.storeDispatch) throw new Error("Api.connectStore() has not been called");
+    return Api.storeDispatch;
+  }
 
   public static async clearCache(): Promise<void> {
     if ("caches" in window) {
@@ -93,7 +105,7 @@ export default class Api {
 
   public static clearAccountMemory(preserveReturnUrl = false): void {
     LocalDatabase.invalidateAccount();
-    store.dispatch({ type: ACCOUNT_DATA_CLEARED });
+    Api.dispatch({ type: ACCOUNT_DATA_CLEARED });
     if (!preserveReturnUrl) clearReturnUrl();
   }
 
@@ -207,11 +219,11 @@ export default class Api {
       ) {
         if (Api.isQuotaExceededError(error)) {
           await requestCloseActiveModal("quotaExceeded");
-          store.dispatch(
+          Api.dispatch(
             openPlanUpsell({ resource: error.resource, message: error.message }),
           );
         } else {
-          store.dispatch(
+          Api.dispatch(
             pushToast({
               type: "error",
               text:

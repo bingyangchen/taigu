@@ -1,9 +1,4 @@
-/// <reference types="react-scripts" />
-
-declare module "*.mp4" {
-  const src: string;
-  export default src;
-}
+/// <reference types="vite/client" />
 
 declare module "echarts-stat" {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -25,11 +25,11 @@ import {
 import { fetchAllTradePlans } from "../../redux/slices/TradePlanSlice";
 import { fetchAllTradeRecords } from "../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
-import { IRouter, withRouter } from "../../router";
 import type { StockWarehouse, Subpage } from "../../types";
 import Env from "../../utils/env";
 import { isSameUrlHistoryTraversal } from "../../utils/mainNavigation";
 import Nav from "../../utils/nav";
+import { IRouter, withRouter } from "../../utils/router";
 import Util from "../../utils/util";
 import styles from "./Main.module.scss";
 import {
@@ -76,8 +76,8 @@ const scrollRestorationTimeoutMs = 5000;
 class Main extends React.Component<Props, State> {
   public state: State;
   private readonly viewHistory = getViewHistory();
-  private mainRef: React.RefObject<HTMLElement>;
-  private contentRef: React.RefObject<HTMLDivElement>;
+  private mainRef: React.RefObject<HTMLElement | null>;
+  private contentRef: React.RefObject<HTMLDivElement | null>;
   private subpages: Subpage[];
   private fetchStockInfoTimer: ReturnType<typeof setTimeout> | null;
   private scrollAnimationFrameId: number | null = null;

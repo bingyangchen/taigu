@@ -15,10 +15,10 @@ import {
 import { updateHeaderTitle } from "../../../redux/slices/MainPageSlice";
 import { deletePlan } from "../../../redux/slices/TradePlanSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
 import type { TradePlan } from "../../../types";
 import Env from "../../../utils/env";
 import { tradeSideToLabel } from "../../../utils/recordEditor";
+import { IRouter, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
 import { getViewHistory } from "../viewHistory";
 import styles from "./Plans.module.scss";

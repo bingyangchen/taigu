@@ -566,11 +566,10 @@
 4. 在 Chrome DevTools 的「Network request blocking」面板加入 `*stock-memo/1102*`。
 5. 勾選「Enable network request blocking」。
 6. 點選儲存按鈕。
-7. 如果開發環境的 dev server 在畫面上蓋了一層「Uncaught runtime errors」的錯誤說明，點選它右上角的 ✕ 關閉（這層錯誤說明只在開發環境出現，不是要檢查的畫面）。
-8. 確認畫面的內容。
-9. 取消勾選「Enable network request blocking」。
+7. 確認畫面的內容。
+8. 取消勾選「Enable network request blocking」。
 
-預期：步驟 8 的畫面跳出過錯誤提示，編輯器保持開啟，文字框仍是「等法說會」。
+預期：步驟 7 的畫面跳出過錯誤提示，編輯器保持開啟，文字框仍是「等法說會」。
 
 ## STOCK-R16.1 換到下一檔
 

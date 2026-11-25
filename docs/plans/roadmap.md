@@ -20,7 +20,7 @@ flowchart TD
   copy_fixes("介面文案與數字格式修正<br/>未規劃"):::unplanned
   dependency_vulnerability_fixes("依賴套件漏洞修正<br/>未規劃"):::unplanned
   backend_uv_migration("後端套件管理改用 uv<br/>未規劃"):::unplanned
-  frontend_vite_migration("前端改用 Vite 與 React 19<br/>已核准"):::approved
+  frontend_vite_migration("前端改用 Vite 與 React 19<br/>已完成"):::done
   backend_profiling("後端效能分析工具<br/>未規劃"):::unplanned
   worktree_pre_push("在 git worktree 跑 pre-push 測試<br/>未規劃"):::unplanned
   security_classification("證券分類與證交稅判定<br/>未規劃"):::unplanned
@@ -125,10 +125,6 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 ### 後端套件管理改用 uv
 
 後端的 Docker build 目前先用 Poetry 匯出套件清單，再交給 pip 安裝。改用 uv 與 `uv.lock` 管理開發及正式環境的依賴，同步更新本機開發文件。完成後，兩種 image 都能依 lockfile 安裝套件，後端與 scheduler 能正常啟動，CI 的後端測試也能通過。
-
-### 前端改用 Vite 與 React 19
-
-前端目前用已停止積極維護的 Create React App 啟動開發環境、build 與執行測試。[改用 Vite、Vitest 與 React 19](0010-frontend-vite-migration.md) 之後，本機 Docker 開發與 Cloudflare Pages 部署都能正常運作，既有前端測試在 CI 通過，公開頁面改用 Vite 的 SSR 做 prerender，已安裝的 PWA 也能正常更新與離線開啟。
 
 ### 後端效能分析工具
 
