@@ -21,6 +21,11 @@ interface Props {
   disabled?: boolean;
   onChange?: React.Dispatch<string>;
   autoFocus?: boolean;
+  inputRef?: React.RefObject<HTMLInputElement>;
+  suffix?: React.ReactNode;
+  invalid?: boolean;
+  describedBy?: string;
+  max?: string;
 }
 
 interface State {
@@ -37,7 +42,7 @@ export default class LabeledInput extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = { isInputFocused: false, type: props.type ?? "text" };
-    this.inputRef = React.createRef();
+    this.inputRef = props.inputRef ?? React.createRef();
     labeledInputId += 1;
     this.inputId = `labeled-input-${labeledInputId}`;
   }
@@ -50,7 +55,9 @@ export default class LabeledInput extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <fieldset
-        className={`${styles.main} ${this.state.isInputFocused ? styles.focused : ""}`}
+        className={`${styles.main} ${this.state.isInputFocused ? styles.focused : ""} ${
+          this.props.invalid ? styles.invalid : ""
+        }`}
         disabled={this.props.disabled ?? false}
       >
         <legend className={this.state.isInputFocused ? styles.focused : ""}>
@@ -66,9 +73,15 @@ export default class LabeledInput extends React.Component<Props, State> {
           value={this.props.value}
           onChange={this.handleInputChange}
           autoComplete={this.props.autocomplete ?? "off"}
+          aria-invalid={this.props.invalid ? true : undefined}
+          aria-describedby={this.props.describedBy}
+          max={this.props.max}
           onFocus={this.handleFocusInput}
           onBlur={this.handleUnfocusInput}
         />
+        {this.props.suffix && (
+          <span className={styles.suffix}>{this.props.suffix}</span>
+        )}
         {this.props.type === "password" && (
           <RoundButton
             onClick={this.handlePasswordPeekability}

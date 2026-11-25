@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { closePlanUpsell } from "../../redux/slices/PlanUpsellSlice";
 import type { PlanQuotaResource } from "../../types";
 import Env from "../../utils/env";
-import { requestCloseActiveModal } from "../../utils/modal";
+import { goBackInHistory, requestCloseActiveModal } from "../../utils/modal";
 import Modal from "../Modal/Modal";
 import styles from "./PlanUpsellModal.module.scss";
 
@@ -37,8 +37,11 @@ export default function PlanUpsellModal(): React.ReactElement | null {
   }
 
   async function handleViewPlan(): Promise<void> {
-    await requestCloseActiveModal({ popHistory: false });
-    navigate(`${Env.frontendRootPath}settings/current-plan`, { replace: true });
+    // Walks back past the entries of the closed windows first, so Back on the plan
+    // page returns to the page the user was on, not to a window that is gone.
+    const historyEntryCount = await requestCloseActiveModal("navigation");
+    await goBackInHistory(historyEntryCount);
+    navigate(`${Env.frontendRootPath}settings/current-plan`);
   }
 
   return (

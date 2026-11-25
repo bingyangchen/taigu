@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import LocalDatabase from "../../storage/localDatabase";
 import type {
+  ComputedTradeRecordState,
   CreateTradeRecordRequestBody,
   TradeRecord,
   TradeRecordState,
@@ -23,12 +24,13 @@ const initialState: TradeRecordState = {
   cashInvestedChartData: [],
   tradeVolumeChartData: [],
   averageCashInvested: 0,
+  hasLoaded: false,
   isWaiting: false,
 };
 
 export const fetchAllTradeRecords = createAsyncThunk(
   "tradeRecord/fetchAllTradeRecords",
-  async (accountId: string): Promise<Omit<TradeRecordState, "isWaiting">> => {
+  async (accountId: string): Promise<ComputedTradeRecordState> => {
     await LocalDatabase.prepareForAccount(accountId);
     const cachedTradeRecords = await LocalDatabase.getTradeRecords();
     const lastRevision = await LocalDatabase.getTradeRecordsLastRevision();
@@ -50,7 +52,7 @@ export const createRecord = createAsyncThunk(
   async (
     requestBody: CreateTradeRecordRequestBody,
     thunkAPI,
-  ): Promise<Omit<TradeRecordState, "isWaiting">> => {
+  ): Promise<ComputedTradeRecordState> => {
     const response = await Api.sendRequest(
       "trade-records",
       "post",
@@ -68,7 +70,7 @@ export const updateRecord = createAsyncThunk(
   async (
     requestBody: UpdateTradeRecordRequestBody,
     thunkAPI,
-  ): Promise<Omit<TradeRecordState, "isWaiting">> => {
+  ): Promise<ComputedTradeRecordState> => {
     const response = await Api.sendRequest(
       `trade-records/${requestBody.id}`,
       "post",
@@ -87,10 +89,7 @@ export const updateRecord = createAsyncThunk(
 
 export const deleteRecord = createAsyncThunk(
   "tradeRecord/deleteRecord",
-  async (
-    id: string | number,
-    thunkAPI,
-  ): Promise<Omit<TradeRecordState, "isWaiting">> => {
+  async (id: string | number, thunkAPI): Promise<ComputedTradeRecordState> => {
     await Api.sendRequest(`trade-records/${id}`, "delete");
     // if (navigator.vibrate) navigator.vibrate(20);
     await LocalDatabase.deleteTradeRecord(id);
@@ -130,6 +129,7 @@ export const tradeRecordSlice = createSlice({
         state.cashInvestedChartData = action.payload.cashInvestedChartData;
         state.tradeVolumeChartData = action.payload.tradeVolumeChartData;
         state.averageCashInvested = action.payload.averageCashInvested;
+        state.hasLoaded = true;
         state.isWaiting = false;
       })
       .addCase(fetchAllTradeRecords.rejected, (state) => {
@@ -203,7 +203,7 @@ export const tradeRecordSlice = createSlice({
 
 const computeNewState = async (
   tradeRecords: TradeRecord[],
-): Promise<Omit<TradeRecordState, "isWaiting">> => {
+): Promise<ComputedTradeRecordState> => {
   const worker = new Worker(
     new URL("../../workers/tradeRecordWorker.ts", import.meta.url),
   );

@@ -18,6 +18,7 @@ import type { AppDispatch, RootState } from "../../../redux/store";
 import { IRouter, withRouter } from "../../../router";
 import type { TradePlan } from "../../../types";
 import Env from "../../../utils/env";
+import { tradeSideToLabel } from "../../../utils/recordEditor";
 import Util from "../../../utils/util";
 import { getViewHistory } from "../viewHistory";
 import styles from "./Plans.module.scss";
@@ -121,7 +122,7 @@ class Plans extends React.Component<Props, State> {
                             plan.plan_type === "buy" ? styles.buy : styles.sell
                           }`}
                         >
-                          {plan.plan_type === "buy" ? "買入" : "賣出"}
+                          {tradeSideToLabel[plan.plan_type]}
                         </span>
                         <span className={styles.quantity}>
                           {plan.target_quantity.toLocaleString()} 股
@@ -227,7 +228,7 @@ class Plans extends React.Component<Props, State> {
               },
               {
                 label: "類型",
-                value: plan.plan_type === "buy" ? "買入" : "賣出",
+                value: tradeSideToLabel[plan.plan_type],
                 tone: plan.plan_type === "buy" ? "buy" : "sell",
               },
               { label: "股數", value: `${plan.target_quantity.toLocaleString()} 股` },

@@ -1,5 +1,9 @@
 export type StockWarehouse = { [sid: string]: number[] };
 
+export type SuggestedStock = { sid: string; name: string; heldShares: number | null };
+
+export type StockSuggestions = { title: string; stocks: SuggestedStock[] };
+
 export type MaterialFact = { date_time: string; title: string; description: string };
 
 export type CompanyInfo = {

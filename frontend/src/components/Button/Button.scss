@@ -135,6 +135,7 @@
     font-weight: bold;
   }
   &.round {
-    border-radius: 1000px;
+    // Set through the variable so the hover overlay (::before) gets the same corners.
+    --border-radius: 1000px;
   }
 }

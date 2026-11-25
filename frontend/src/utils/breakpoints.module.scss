@@ -1,0 +1,5 @@
+@use "../design_system" as _;
+
+:export {
+  width960: _.$width-960;
+}
