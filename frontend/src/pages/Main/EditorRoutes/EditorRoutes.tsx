@@ -9,8 +9,8 @@ import {
   TradeRecordEditor,
 } from "../../../components";
 import { useAppSelector } from "../../../redux/hooks";
-import { navigateBack } from "../../../router";
 import Env from "../../../utils/env";
+import { navigateBack } from "../../../utils/router";
 
 function useCloseEditor(fallbackPath: string): MouseEventHandler {
   const navigate = useNavigate();

@@ -5,9 +5,9 @@ import { Outlet } from "react-router-dom";
 import { HeaderForSettings, PageMeta, ToastList } from "../../components";
 import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
 import type { AppDispatch } from "../../redux/store";
-import { IRouter, settingsPagePath, withRouter } from "../../router";
 import Env from "../../utils/env";
 import { getMainTabPath, isSameUrlHistoryTraversal } from "../../utils/mainNavigation";
+import { IRouter, settingsPagePath, withRouter } from "../../utils/router";
 import Util from "../../utils/util";
 import {
   captureViewPosition,

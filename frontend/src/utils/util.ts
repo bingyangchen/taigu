@@ -67,7 +67,7 @@ export default class Util {
         return null;
       }
       return urlObj.href;
-    } catch (error) {
+    } catch {
       return null;
     }
   }

@@ -1,10 +1,10 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-import { IRouter, withRouter } from "../../router";
 import type { Subpage } from "../../types";
 import Env from "../../utils/env";
 import { getMainTabPath, mainTabNavigationState } from "../../utils/mainNavigation";
+import { IRouter, withRouter } from "../../utils/router";
 import styles from "./Footer.module.scss";
 
 interface Props extends IRouter {

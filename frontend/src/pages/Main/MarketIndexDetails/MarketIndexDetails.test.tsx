@@ -10,6 +10,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { matchRoutes, MemoryRouter, Route, Routes } from "react-router-dom";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import MarketIndexSummary from "../../../components/MarketIndexSummary/MarketIndexSummary";
 import mainPage from "../../../redux/slices/MainPageSlice";
@@ -23,12 +24,9 @@ import type { MarketId, MarketIndex } from "../../../types";
 import Api from "../../../utils/api";
 import MarketIndexDetails from "./MarketIndexDetails";
 
-jest.mock("react-router-dom", () => {
-  Object.assign(globalThis, { TextEncoder: jest.requireActual("util").TextEncoder });
-  return jest.requireActual("react-router");
-});
-jest.mock("../../../utils/api", () => ({
-  __esModule: true,
+const user = userEvent.setup();
+
+vi.mock("../../../utils/api", () => ({
   ApiError: class extends Error {
     public readonly status: number;
 
@@ -37,23 +35,21 @@ jest.mock("../../../utils/api", () => ({
       this.status = status;
     }
   },
-  default: { sendRequest: jest.fn() },
+  default: { sendRequest: vi.fn() },
 }));
-jest.mock("../../../redux/slices/TradeRecordSlice", () => ({
-  __esModule: true,
-  default: () => ({}),
-}));
-jest.mock("../Details/Details", () => () => null);
-jest.mock("../../../storage/localDatabase");
-jest.mock("../../../components/MarketIndexLineChart/MarketIndexLineChart", () => ({
-  __esModule: true,
+vi.mock("../../../redux/slices/TradeRecordSlice", () => ({ default: () => ({}) }));
+vi.mock("../Details/Details", () => ({ default: () => null }));
+vi.mock("../../../storage/localDatabase");
+vi.mock("../../../components/MarketIndexLineChart/MarketIndexLineChart", () => ({
   default: ({ data }: { data: [number, number][] }) => (
     <span data-testid="sparkline">{JSON.stringify(data)}</span>
   ),
 }));
-jest.mock("../../../components", () => ({
-  SegmentedControl: jest.requireActual(
-    "../../../components/SegmentedControl/SegmentedControl",
+vi.mock("../../../components", async () => ({
+  SegmentedControl: (
+    await vi.importActual<
+      typeof import("../../../components/SegmentedControl/SegmentedControl")
+    >("../../../components/SegmentedControl/SegmentedControl")
   ).default,
   RoundButton: ({ onClick }: { onClick: () => void }) => (
     <button onClick={onClick}>回儀表板</button>
@@ -93,12 +89,10 @@ const quotes: MarketIndex = {
 
 type History = { data: { date: string; price: number }[] };
 
-const sendRequest = jest.mocked(Api.sendRequest);
-const readHistoryCache = jest.mocked(LocalDatabase.getMarketIndexHistoricalPrices);
-const nextHistoryDate = jest.mocked(
-  LocalDatabase.getNextMarketIndexHistoricalSinceDate,
-);
-const writeHistoryCache = jest.mocked(LocalDatabase.putMarketIndexHistoricalPrices);
+const sendRequest = vi.mocked(Api.sendRequest);
+const readHistoryCache = vi.mocked(LocalDatabase.getMarketIndexHistoricalPrices);
+const nextHistoryDate = vi.mocked(LocalDatabase.getNextMarketIndexHistoricalSinceDate);
+const writeHistoryCache = vi.mocked(LocalDatabase.putMarketIndexHistoricalPrices);
 
 function mockQuotes(
   intraday: MarketIndex | Error = quotes,
@@ -146,8 +140,8 @@ async function showPage({
   return testStore;
 }
 
-function selectHistory() {
-  userEvent.click(screen.getByRole("tab", { name: "歷史" }));
+async function selectHistory() {
+  await user.click(screen.getByRole("tab", { name: "歷史" }));
 }
 
 function getHistoryPoints(market: "加權指數" | "櫃買指數"): [string, number][] {
@@ -157,7 +151,7 @@ function getHistoryPoints(market: "加權指數" | "櫃買指數"): [string, num
 }
 
 beforeEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
   readHistoryCache.mockResolvedValue({});
   nextHistoryDate.mockReturnValue(null);
   writeHistoryCache.mockResolvedValue(undefined);
@@ -257,9 +251,9 @@ test("[MKT-R13.2] all card content belongs to one keyboard-operable link", async
   for (const text of ["大盤指數", "加權指數", "櫃買指數"]) {
     expect(link).toContainElement(screen.getByText(text));
   }
-  userEvent.tab();
+  await user.tab();
   expect(link).toHaveFocus();
-  await act(async () => userEvent.keyboard("{Enter}"));
+  await user.keyboard("{Enter}");
   expect(
     await screen.findByRole("heading", { level: 1, name: "大盤指數" }),
   ).toBeVisible();
@@ -293,7 +287,7 @@ test("[MKT-R14.2] opens both charts on a direct visit and returns to the dashboa
 
   expect(screen.getByLabelText("加權指數今日走勢（點）")).toBeVisible();
   expect(screen.getByLabelText("櫃買指數今日走勢（點）")).toBeVisible();
-  userEvent.click(screen.getByRole("button", { name: "回儀表板" }));
+  await user.click(screen.getByRole("button", { name: "回儀表板" }));
   expect(screen.getByRole("link", { name: /大盤指數/ })).toBeVisible();
 });
 
@@ -313,7 +307,7 @@ test("[MKT-R14.5] a slow OTC query does not hold back the TSE chart", async () =
     getHistory: (market) =>
       market === "otc" ? pending : { data: [{ date: yesterday, price: 23000 }] },
   });
-  selectHistory();
+  await selectHistory();
   expect(await screen.findByLabelText("加權指數歷史走勢（點）")).toBeVisible();
   expect(screen.getByText("正在載入歷史走勢")).toBeVisible();
   expect(screen.queryByLabelText("櫃買指數歷史走勢（點）")).not.toBeInTheDocument();
@@ -323,7 +317,7 @@ test("[MKT-R14.5] a slow OTC query does not hold back the TSE chart", async () =
 
 test("[MKT-R14.6] preserves the quote when the historical chart has no dated points", async () => {
   await showPage({ intraday: { ...quotes, dates: { tse: today, otc: null } } });
-  selectHistory();
+  await selectHistory();
   const otc = within(screen.getByRole("region", { name: "櫃買指數" }));
   expect(await otc.findByText("目前沒有歷史走勢")).toBeVisible();
   expect(otc.getByText("252.5")).toBeVisible();
@@ -339,7 +333,7 @@ test("[MKT-R14.7] retries only the failed market without replacing the other cha
       return { data: [{ date: yesterday, price: market === "tse" ? 23000 : 250 }] };
     },
   });
-  selectHistory();
+  await selectHistory();
   const retry = await screen.findByRole("button", { name: "重試" });
   const tseChart = await screen.findByLabelText("加權指數歷史走勢（點）");
   fireEvent.click(retry);
@@ -361,7 +355,7 @@ test("[MKT-R14.8] keeps cached historical points when the update fails", async (
       return { data: [] };
     },
   });
-  selectHistory();
+  await selectHistory();
   expect(await screen.findByText("更新失敗，顯示上次取得的走勢")).toBeVisible();
   expect(getHistoryPoints("櫃買指數")).toEqual([
     [yesterday, 251],
@@ -411,7 +405,7 @@ test("uses a newer fallback point per index during repeated slow responses", asy
 });
 
 test("renders the network history when IndexedDB cannot read or write", async () => {
-  const warning = jest.spyOn(console, "warn").mockImplementation(() => {});
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
   try {
     readHistoryCache.mockRejectedValue(new Error("read unavailable"));
     writeHistoryCache.mockRejectedValue(new Error("write unavailable"));
@@ -420,7 +414,7 @@ test("renders the network history when IndexedDB cannot read or write", async ()
         data: [{ date: yesterday, price: market === "tse" ? 23000 : 251 }],
       }),
     });
-    selectHistory();
+    await selectHistory();
     expect(getHistoryPoints("加權指數")).toContainEqual([yesterday, 23000]);
     expect(getHistoryPoints("櫃買指數")).toContainEqual([yesterday, 251]);
   } finally {
@@ -429,7 +423,7 @@ test("renders the network history when IndexedDB cannot read or write", async ()
 });
 
 test("preserves newer history when a later cache read succeeds", async () => {
-  const warning = jest.spyOn(console, "warn").mockImplementation(() => {});
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
   try {
     const earlier = "2026-11-20";
     readHistoryCache.mockImplementation(async (market) =>
@@ -439,7 +433,7 @@ test("preserves newer history when a later cache read succeeds", async () => {
     const store = await showPage({
       getHistory: () => ({ data: [{ date: yesterday, price: 23000 }] }),
     });
-    selectHistory();
+    await selectHistory();
     expect(getHistoryPoints("加權指數")).toContainEqual([yesterday, 23000]);
 
     sendRequest.mockRejectedValueOnce(new Error("offline"));
@@ -466,7 +460,7 @@ test("[MKT-R14.9] presents different dates and places the OTC quote on its own d
   await act(async () => {
     fireEvent.click(screen.getByRole("link", { name: /大盤指數/ }));
   });
-  selectHistory();
+  await selectHistory();
   expect(screen.getByText("行情日期 2026/11/24")).toBeVisible();
   expect(screen.getByText("行情日期 2026/11/23")).toBeVisible();
   await screen.findByLabelText("櫃買指數歷史走勢（點）");
@@ -525,7 +519,7 @@ test("[MKT-R14.12] ignores the legacy shared date for both quotes", async () => 
   await act(async () => {
     fireEvent.click(screen.getByRole("link", { name: /大盤指數/ }));
   });
-  selectHistory();
+  await selectHistory();
   await screen.findByLabelText("櫃買指數歷史走勢（點）");
   expect(screen.getAllByText("行情日期不明")).toHaveLength(2);
   expect(screen.getByText("23,100.5")).toBeVisible();
@@ -548,7 +542,7 @@ test("[MKT-R15.1] uses one history range and replaces a same-date close", async 
           : [{ date: today, price: 250 }, ...rows],
     }),
   });
-  selectHistory();
+  await selectHistory();
   await screen.findByLabelText("櫃買指數歷史走勢（點）");
   expect(screen.getByRole("tab", { name: /^1M/ })).toHaveAttribute(
     "aria-selected",
@@ -558,12 +552,12 @@ test("[MKT-R15.1] uses one history range and replaces a same-date close", async 
   expect(getHistoryPoints("加權指數").at(-1)).toEqual([today, 23100.5]);
   expect(getHistoryPoints("櫃買指數")).toHaveLength(30);
   expect(getHistoryPoints("櫃買指數").at(-1)).toEqual([today, 252.5]);
-  userEvent.click(screen.getByRole("tab", { name: /^ALL/ }));
+  await user.click(screen.getByRole("tab", { name: /^ALL/ }));
   expect(getHistoryPoints("加權指數")).toHaveLength(37);
   expect(getHistoryPoints("加權指數")[0]).toEqual([firstDate, 15000]);
   expect(getHistoryPoints("櫃買指數")).toHaveLength(50);
-  userEvent.click(screen.getByRole("tab", { name: "今日" }));
-  selectHistory();
+  await user.click(screen.getByRole("tab", { name: "今日" }));
+  await selectHistory();
   expect(screen.getByRole("tab", { name: /^ALL/ })).toHaveAttribute(
     "aria-selected",
     "true",
@@ -577,7 +571,7 @@ test("[MKT-R15.1] uses one history range and replaces a same-date close", async 
 
 test("[MKT-R15.2] plots a lone dated intraday point after history loads", async () => {
   await showPage();
-  selectHistory();
+  await selectHistory();
   await screen.findByLabelText("加權指數歷史走勢（點）");
   expect(getHistoryPoints("加權指數")).toEqual([[today, 23100.5]]);
 });

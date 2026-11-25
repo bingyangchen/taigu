@@ -13,7 +13,7 @@ interface State {}
 
 export default class AutoResizeTextarea extends React.Component<Props, State> {
   public state: State;
-  private textareaRef: React.RefObject<HTMLTextAreaElement>;
+  private textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   public constructor(props: Props) {
     super(props);
     this.state = {};

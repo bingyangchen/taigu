@@ -1,14 +1,9 @@
 import React from "react";
-import type { Location, NavigateFunction, Params } from "react-router-dom";
 import {
   createBrowserRouter,
   createRoutesFromElements,
   Route,
   useLocation,
-  useNavigate,
-  useNavigationType,
-  useParams,
-  useSearchParams,
 } from "react-router-dom";
 
 import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
@@ -45,11 +40,8 @@ import UserInfo from "./pages/Settings/UserInfo/UserInfo";
 import TermsOfService from "./pages/TermsOfService/TermsOfService";
 import Welcome from "./pages/Welcome/Welcome";
 import Env from "./utils/env";
+import { adminPagePath, settingsPagePath } from "./utils/router";
 
-export const settingsPagePath = "settings";
-export const adminPagePath = "admin";
-
-// Loaded on demand, so pages other than the admin console never load its code.
 const Admin = React.lazy(() => import("./pages/Admin/Admin"));
 
 // UI state resets on load, so remove its history marker before the router reads it.
@@ -136,52 +128,3 @@ const myRouter = createBrowserRouter(
 );
 
 export default myRouter;
-
-export interface IRouter {
-  router: {
-    location: Location;
-    navigationType: ReturnType<typeof useNavigationType>;
-    navigate: NavigateFunction;
-    params: Params;
-    search_params: URLSearchParams;
-    set_search_params: ReturnType<typeof useSearchParams>[1];
-  };
-}
-
-export function navigateBack(
-  { location, navigate }: Pick<IRouter["router"], "location" | "navigate">,
-  fallbackPath: string,
-): void {
-  const index = window.history.state?.idx;
-  // Replacing a deep link creates a key but keeps the router at its initial index.
-  if (location.key === "default" || !Number.isInteger(index) || index <= 0) {
-    navigate(fallbackPath, { replace: true });
-    return;
-  }
-  navigate(-1);
-}
-
-export function withRouter<T extends IRouter>(Component: React.ComponentType<T>) {
-  const WrappedComponent = (props: Omit<T, keyof IRouter>) => {
-    const location = useLocation();
-    const navigationType = useNavigationType();
-    const navigate = useNavigate();
-    const params = useParams();
-    const [search_params, set_search_params] = useSearchParams();
-    return (
-      <Component
-        {...(props as T)}
-        router={{
-          location,
-          navigationType,
-          navigate,
-          params,
-          search_params,
-          set_search_params,
-        }}
-      />
-    );
-  };
-  WrappedComponent.displayName = `withRouter(${Component.displayName ?? Component.name ?? "Component"})`;
-  return WrappedComponent;
-}

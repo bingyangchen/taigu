@@ -15,10 +15,15 @@ import * as Icons from "../../../icons";
 import { logout } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { adminPagePath, IRouter, settingsPagePath, withRouter } from "../../../router";
 import Env from "../../../utils/env";
 import { getHideModalCallback } from "../../../utils/modal";
 import Nav from "../../../utils/nav";
+import {
+  adminPagePath,
+  IRouter,
+  settingsPagePath,
+  withRouter,
+} from "../../../utils/router";
 import Util from "../../../utils/util";
 import { IssueReportEditor } from "../IssueReport/IssueReport";
 import styles from "./Overview.module.scss";

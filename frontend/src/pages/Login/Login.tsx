@@ -6,11 +6,11 @@ import { Button, FullLogo, PageMeta, ToastList } from "../../components";
 import { loginWithGoogle } from "../../redux/slices/AccountSlice";
 import { pushToast } from "../../redux/slices/ToastSlice";
 import { AppDispatch, RootState } from "../../redux/store";
-import { IRouter, withRouter } from "../../router";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
 import Nav from "../../utils/nav";
 import { clearReturnUrl, consumeReturnUrl } from "../../utils/returnUrl";
+import { IRouter, withRouter } from "../../utils/router";
 import styles from "./Login.module.scss";
 
 const LOGIN_FAILED_MESSAGE = "登入失敗，請重新登入。";
@@ -35,11 +35,10 @@ class Login extends React.Component<Props, State> {
     this.state = { coverImage: undefined };
   }
   public async componentDidMount(): Promise<void> {
-    // Randomly select and import a cover image
+    // Vite resolves the template only when its placeholder is a plain variable.
+    const coverNumber = Math.floor(Math.random() * 5) + 1;
     this.setState({
-      coverImage: (
-        await import(`../../assets/cover0${Math.floor(Math.random() * 5) + 1}.webp`)
-      ).default,
+      coverImage: (await import(`../../assets/cover0${coverNumber}.webp`)).default,
     });
 
     if (await Api.sendRequest("account/me", "get")) {
@@ -60,7 +59,7 @@ class Login extends React.Component<Props, State> {
         Nav.clearSearchParams();
 
         this.props.router.navigate(consumeReturnUrl(), { replace: true });
-      } catch (error) {
+      } catch {
         Nav.clearSearchParams();
       }
     } else if (this.props.router.search_params.get("error")) {

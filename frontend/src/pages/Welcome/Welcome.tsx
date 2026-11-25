@@ -10,7 +10,10 @@ import demo04 from "../../assets/demo04.webp";
 import demo05 from "../../assets/demo05.webp";
 import demo06 from "../../assets/demo06.webp";
 import realtimeInfo from "../../assets/realtime_info.webp";
-import { FullLogo, PageMeta } from "../../components";
+// Not through ../../components, which loads the store: src/prerender.tsx renders
+// this page in Node.
+import FullLogo from "../../components/FullLogo/FullLogo";
+import PageMeta from "../../components/PageMeta/PageMeta";
 import * as Icons from "../../icons";
 import Env from "../../utils/env";
 import Util from "../../utils/util";

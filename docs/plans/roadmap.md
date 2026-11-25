@@ -20,7 +20,7 @@ flowchart TD
   copy_fixes("介面文案與數字格式修正<br/>未規劃"):::unplanned
   dependency_vulnerability_fixes("依賴套件漏洞修正<br/>未規劃"):::unplanned
   backend_uv_migration("後端套件管理改用 uv<br/>未規劃"):::unplanned
-  frontend_vite_migration("前端改用 Vite 與 React 19<br/>已核准"):::approved
+  frontend_vite_migration("前端改用 Vite 與 React 19<br/>已完成"):::done
   backend_profiling("後端效能分析工具<br/>未規劃"):::unplanned
   worktree_pre_push("在 git worktree 跑 pre-push 測試<br/>未規劃"):::unplanned
   security_classification("證券分類與證交稅判定<br/>未規劃"):::unplanned
@@ -126,10 +126,6 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 
 後端的 Docker build 目前先用 Poetry 匯出套件清單，再交給 pip 安裝。改用 uv 與 `uv.lock` 管理開發及正式環境的依賴，同步更新本機開發文件。完成後，兩種 image 都能依 lockfile 安裝套件，後端與 scheduler 能正常啟動，CI 的後端測試也能通過。
 
-### 前端改用 Vite 與 React 19
-
-前端目前用已停止積極維護的 Create React App 啟動開發環境、build 與執行測試。[改用 Vite、Vitest 與 React 19](0010-frontend-vite-migration.md) 之後，本機 Docker 開發與 Cloudflare Pages 部署都能正常運作，既有前端測試在 CI 通過，公開頁面改用 Vite 的 SSR 做 prerender，已安裝的 PWA 也能正常更新與離線開啟。
-
 ### 後端效能分析工具
 
 讓開發者在本機 Docker 環境按需執行 profiling，找出 API request 與 cron job 耗時最多的呼叫路徑。先各選一個 API endpoint 與 cron job，確認可以重複收集並解讀結果，並記下操作方式。
@@ -194,6 +190,7 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - Taigu 開著的時候方案改變（例如試用期結束），持股價格與大盤指數要等下一次開啟 Taigu 或從設定頁回來，市場頁與個股詳情頁的價格要等換到其他頁面再回來，才改用新方案的更新間隔。目標是方案改變之後就用新的間隔。
 - product.md 與歡迎頁寫 Standard 方案的行情每 30 秒更新一次，但後端的 cron job 每分鐘才向證交所抓一次行情，30 秒只是前端重新讀取的間隔。目標是實際的更新頻率與說法一致，做法（加快抓取或改寫說法）在 plan 裡決定。
 - 搜尋股票的結果沒有排序，符合的股票超過 30 檔時，股票代號完全相同的那一檔可能不在結果裡，例如搜尋「50」不一定找得到 0050。目標是股票代號完全相同的排在最前面。
+- 離線開啟儀表板時，大盤指數的卡片一直顯示「讀取行情中」，沒有照 MKT-R13.7 顯示 cache 裡的行情與「更新失敗，顯示上次行情」。原因是 `Main.tsx` 要等 `account/me` 回應之後才查詢大盤指數，而 service worker 沒有 cache `account/me`，所以離線時前端不會送出大盤指數的 request，service worker 的 cache fallback 也就不會執行。2026-11 以停掉本機的 reverse proxy 模擬離線，改用 Vite 前後的 build 結果相同。目標是離線時照 MKT-R13.7 顯示上次的行情。寫 plan 時要決定前端不等帳號資料就查詢大盤指數，還是讓 service worker cache `account/me`，並說明選的做法怎麼維持帳號資料隔離。
 
 ### 訂閱流程少見情況的修正
 

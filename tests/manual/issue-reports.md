@@ -128,7 +128,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 前端沒有自動化 test。
 
-錯誤提示出現 5 秒後就會自動消失，所以步驟 7 到步驟 9 要連續、盡快做完。本機的開發環境在送出失敗時，還會蓋上一層全螢幕的錯誤畫面「Uncaught runtime errors」，因為送出失敗的 exception 會往上拋；這個錯誤畫面只在開發環境出現，不是這個情境要檢查的結果。
+錯誤提示出現 5 秒後就會自動消失，所以步驟 7 與步驟 8 要連續、盡快做完。
 
 1. 執行查看問題回報的指令，記下 `count:` 的數字。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/settings`。
@@ -137,12 +137,11 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 5. 開啟 Chrome DevTools 的 Network 分頁。
 6. 把 throttling 設成「Offline」。
 7. 點選送出按鈕。
-8. 如果畫面出現全螢幕的錯誤畫面「Uncaught runtime errors」，點選這個錯誤畫面右上角的 × 關閉它。
-9. 在步驟 7 之後 5 秒內，確認畫面左下角的錯誤提示、視窗與文字框的狀態。
-10. 把 throttling 改回「No throttling」。
-11. 執行查看問題回報的指令。
+8. 在步驟 7 之後 5 秒內，確認畫面左下角的錯誤提示、視窗與文字框的狀態。
+9. 把 throttling 改回「No throttling」。
+10. 執行查看問題回報的指令。
 
-預期：步驟 9 的畫面出現錯誤提示，視窗沒有關閉，文字框的內容仍是「測試網路中斷」，送出按鈕可以再點選；步驟 11 的 `count:` 與步驟 1 的數字相同。
+預期：步驟 8 的畫面出現錯誤提示，視窗沒有關閉，文字框的內容仍是「測試網路中斷」，送出按鈕可以再點選；步驟 10 的 `count:` 與步驟 1 的數字相同。
 
 ## ISSUE-R5.1 文字框只有空白與換行時返回
 

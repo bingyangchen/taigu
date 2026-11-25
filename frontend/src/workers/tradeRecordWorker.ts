@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-globals */
-
 import { ComputedTradeRecordState, StockWarehouse, TradeRecord } from "../types";
 import { getDateStringList } from "../utils/date";
 

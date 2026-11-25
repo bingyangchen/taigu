@@ -44,12 +44,12 @@ import {
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { store } from "../../../redux/store";
-import { IRouter, navigateBack, withRouter } from "../../../router";
 import type { MarketTab, MaterialFact } from "../../../types";
 import { formatDateWithWeekday } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { calculateMarketValue, getVisibleMarketSids } from "../../../utils/market";
 import { getHideModalCallback } from "../../../utils/modal";
+import { IRouter, navigateBack, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./Details.module.scss";
 
@@ -176,7 +176,7 @@ interface State {
 
 class Details extends React.Component<Props, State> {
   public state: State;
-  private mainRef: React.RefObject<HTMLDivElement>;
+  private mainRef: React.RefObject<HTMLDivElement | null>;
   private fetchStockInfoTimer: ReturnType<typeof setInterval> | null = null;
   private readonly SCROLLING_THRESHOLD: number = 10;
   private readonly SWITCHING_THRESHOLD: number = 85;
@@ -955,6 +955,8 @@ class Details extends React.Component<Props, State> {
   private async calcInventoryHistogramChartData(sid = this.sid): Promise<number[]> {
     const worker = new Worker(
       new URL("../../../workers/histogramChartWorker.ts", import.meta.url),
+      // The dev server serves the worker unbundled, so it must run as a module to import.
+      { type: "module" },
     );
     // Read from store, not props.tradeRecords: loadStockDetail awaits this
     // worker, and the user may navigate to another stock before it finishes.

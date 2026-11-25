@@ -10,7 +10,7 @@ import type {
   UpdateTradeRecordRequestBody,
 } from "../../types";
 import Api from "../../utils/api";
-import { RootState } from "../store";
+import type { RootState } from "../store";
 
 const initialState: TradeRecordState = {
   tradeRecords: [],
@@ -206,6 +206,8 @@ const computeNewState = async (
 ): Promise<ComputedTradeRecordState> => {
   const worker = new Worker(
     new URL("../../workers/tradeRecordWorker.ts", import.meta.url),
+    // The dev server serves the worker unbundled, so it must run as a module to import.
+    { type: "module" },
   );
   worker.postMessage(tradeRecords);
   return await new Promise((resolve) => {

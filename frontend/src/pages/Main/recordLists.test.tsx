@@ -4,30 +4,25 @@ import userEvent from "@testing-library/user-event";
 import React from "react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
+import { beforeAll, beforeEach, expect, type Mock, test, vi } from "vitest";
 
 import type { CashDividendRecord, TradePlan, TradeRecord } from "../../types";
 import Api from "../../utils/api";
 import Plans from "./Plans/Plans";
 import Records from "./Records/Records";
 
-jest.mock("react-router-dom", () => {
-  Object.assign(globalThis, { TextEncoder: jest.requireActual("util").TextEncoder });
-  return jest.requireActual("react-router");
-});
-jest.mock("../../utils/api", () => ({
-  __esModule: true,
-  default: { sendRequest: jest.fn() },
-}));
-jest.mock("../../storage/localDatabase");
-jest.mock("./Details/Details", () => () => null);
-jest.mock("../../redux/slices/TradeRecordSlice", () => ({
-  __esModule: true,
-  createRecord: jest.fn(),
-  updateRecord: jest.fn(),
-  deleteRecord: jest.fn(),
+const user = userEvent.setup();
+
+vi.mock("../../utils/api", () => ({ default: { sendRequest: vi.fn() } }));
+vi.mock("../../storage/localDatabase");
+vi.mock("./Details/Details", () => ({ default: () => null }));
+vi.mock("../../redux/slices/TradeRecordSlice", () => ({
+  createRecord: vi.fn(),
+  updateRecord: vi.fn(),
+  deleteRecord: vi.fn(),
 }));
 
-const sendRequest = Api.sendRequest as jest.Mock;
+const sendRequest = Api.sendRequest as Mock;
 
 function makeStore({
   tradeRecords = [],
@@ -142,7 +137,7 @@ test("[REC-R15.1] lists records newest first with their labels", () => {
   ]);
 });
 
-test("[PLAN-R4.1] filters buy plans by 買", () => {
+test("[PLAN-R4.1] filters buy plans by 買", async () => {
   const store = makeStore({
     tradePlans: [
       {
@@ -164,7 +159,7 @@ test("[PLAN-R4.1] filters buy plans by 買", () => {
     ],
   });
   const { container } = renderWithStore(<Plans />, store);
-  userEvent.type(screen.getByRole("textbox"), "買");
+  await user.type(screen.getByRole("textbox"), "買");
   const rows = container.querySelectorAll("[data-scroll-anchor]");
   expect(rows).toHaveLength(1);
   expect(rows[0]).toHaveTextContent("買進");

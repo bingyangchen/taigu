@@ -15,11 +15,11 @@ import {
 import { changeDashboardDaysToShow } from "../../../redux/slices/MainPageSlice";
 import { selectNetHandlingFee } from "../../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
 import { dateStringToDate } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { getSidMarketValueMap, getTotalMarketValue } from "../../../utils/market";
 import { getHideModalCallback } from "../../../utils/modal";
+import { IRouter, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./Dashboard.module.scss";
 

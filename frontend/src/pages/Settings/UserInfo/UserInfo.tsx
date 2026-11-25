@@ -15,8 +15,8 @@ import { updateAccountInfo } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, settingsPagePath, withRouter } from "../../../router";
 import Env from "../../../utils/env";
+import { IRouter, settingsPagePath, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./UserInfo.module.scss";
 

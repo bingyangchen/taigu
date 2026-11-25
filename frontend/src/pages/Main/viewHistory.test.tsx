@@ -1,4 +1,5 @@
 import type { Location, NavigationType } from "react-router-dom";
+import { afterEach, expect, test, vi } from "vitest";
 
 import { mainTabNavigationState } from "../../utils/mainNavigation";
 import { acceptCurrentSession, SESSION_VERSION_KEY } from "../../utils/session";
@@ -101,9 +102,9 @@ test("remembers a focused visible row relative to the scroll container", () => {
   visibleRow.dataset.scrollAnchor = "holding/2330";
   focusedRow.dataset.scrollAnchor = "holding/2454";
   Object.defineProperty(content, "clientHeight", { value: 800 });
-  jest.spyOn(content, "getBoundingClientRect").mockReturnValue(makeRect(80, 800));
-  jest.spyOn(visibleRow, "getBoundingClientRect").mockReturnValue(makeRect(65, 60));
-  jest.spyOn(focusedRow, "getBoundingClientRect").mockReturnValue(makeRect(125, 60));
+  vi.spyOn(content, "getBoundingClientRect").mockReturnValue(makeRect(80, 800));
+  vi.spyOn(visibleRow, "getBoundingClientRect").mockReturnValue(makeRect(65, 60));
+  vi.spyOn(focusedRow, "getBoundingClientRect").mockReturnValue(makeRect(125, 60));
   content.append(visibleRow, focusedRow);
   document.body.append(content);
   content.scrollTop = 940;
@@ -119,7 +120,7 @@ test("remembers a focused visible row relative to the scroll container", () => {
 test("reports a clamped position until the saved offset can be reached", () => {
   const content = document.createElement("div");
   let maxScrollTop = 80;
-  content.scrollTo = jest.fn(({ top }: { top?: number }) => {
+  content.scrollTo = vi.fn(({ top }: { top?: number }) => {
     content.scrollTop = Math.min(top ?? 0, maxScrollTop);
   });
 

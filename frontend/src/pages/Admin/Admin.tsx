@@ -20,10 +20,10 @@ import {
 import * as Icons from "../../icons";
 import { useAppDispatch } from "../../redux/hooks";
 import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
-import { adminPagePath } from "../../router";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
 import { useMediaQuery } from "../../utils/mediaQuery";
+import { adminPagePath } from "../../utils/router";
 import NotFound from "../NotFound/NotFound";
 import { isNotFound, LostAccessContext } from "./access";
 import styles from "./Admin.module.scss";

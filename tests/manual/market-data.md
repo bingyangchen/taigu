@@ -782,7 +782,7 @@ MKT-R22.1 檢查 [大盤指數](https://local.taigu.tw/market-index) 上的兩�
 
 這些檢查會改動大盤指數，開始前先完成共用準備的備份，結束後照共用準備第 12 步還原。
 
-選點的回歸測試使用實際 ECharts，可執行 `docker compose -f compose.dev.yaml exec frontend npm test -- --watchAll=false --runInBand intradayTooltip.test.tsx`。
+選點的回歸測試使用實際 ECharts，可執行 `docker compose -f compose.dev.yaml exec frontend npm test -- --run intradayTooltip.test.tsx`。
 
 下面指令準備昨收價 100、11:30 的 99 與 11:35 的 103 兩筆行情。各節需要不同資料時，照該節說明替換指令裡的 `points` 再執行。`points` 的每一組值是從 09:00 起算的分鐘數與價格。
 

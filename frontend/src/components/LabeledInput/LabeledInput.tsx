@@ -21,7 +21,7 @@ interface Props {
   disabled?: boolean;
   onChange?: React.Dispatch<string>;
   autoFocus?: boolean;
-  inputRef?: React.RefObject<HTMLInputElement>;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
   suffix?: React.ReactNode;
   invalid?: boolean;
   describedBy?: string;
@@ -37,7 +37,7 @@ let labeledInputId = 0;
 
 export default class LabeledInput extends React.Component<Props, State> {
   public state: State;
-  private inputRef: React.RefObject<HTMLInputElement>;
+  private inputRef: React.RefObject<HTMLInputElement | null>;
   private readonly inputId: string;
   public constructor(props: Props) {
     super(props);

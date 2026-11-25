@@ -11,7 +11,6 @@ import {
 } from "../../../redux/slices/MainPageSlice";
 import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
 import type { MarketSortKey, MarketTab, StockInfo } from "../../../types";
 import Env from "../../../utils/env";
 import {
@@ -20,6 +19,7 @@ import {
   getStockXirr,
   getVisibleMarketSids,
 } from "../../../utils/market";
+import { IRouter, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./Market.module.scss";
 

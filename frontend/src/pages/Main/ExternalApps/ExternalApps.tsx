@@ -3,7 +3,7 @@ import React from "react";
 import simulator_icon from "../../../assets/simulator_icon.png";
 import simulator_pro_icon from "../../../assets/simulator_pro_icon.png";
 import * as Icons from "../../../icons";
-import { IRouter, withRouter } from "../../../router";
+import { IRouter, withRouter } from "../../../utils/router";
 import styles from "./ExternalApps.module.scss";
 
 interface Props extends IRouter {}

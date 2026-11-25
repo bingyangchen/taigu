@@ -16,7 +16,7 @@ function parse(text) {
   return parseTestReferences({ path: "frontend/src/demo.test.tsx", text }, ts);
 }
 
-test("reads literal IDs on actual Jest tests, including multiple IDs", () => {
+test("reads literal IDs on actual Vitest tests, including multiple IDs", () => {
   const report = parse(`test("[DEMO-R1.1, DEMO-R1.2] saves", () => {});`);
   assert.deepEqual(report.problems, []);
   assert.deepEqual(
@@ -102,7 +102,7 @@ xdescribe("suite", () => { test("[DEMO-R1.1] saves", () => {}); }); // codespell
   assert.equal(focused.problems.length, 2);
 });
 
-test("scans Jest test locations including hidden files, while ignoring other source", () => {
+test("scans Vitest test locations including hidden files, while ignoring other source", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "taigu-scenario-parser-"));
   try {
     fs.writeFileSync(path.join(root, "package.json"), "{}");

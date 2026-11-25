@@ -32,7 +32,7 @@ let labeledInputV2Id = 0;
 
 export default class LabeledInputV2 extends React.Component<Props, State> {
   public state: State;
-  private inputRef: React.RefObject<HTMLInputElement>;
+  private inputRef: React.RefObject<HTMLInputElement | null>;
   private readonly inputId: string;
   public constructor(props: Props) {
     super(props);
