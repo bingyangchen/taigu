@@ -17,10 +17,10 @@ import { deleteRecord as deleteCashDividendRecord } from "../../../redux/slices/
 import { updateHeaderTitle } from "../../../redux/slices/MainPageSlice";
 import { deleteRecord as deleteTradeRecord } from "../../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
 import type { CashDividendRecord, TradeRecord } from "../../../types";
 import Env from "../../../utils/env";
 import { getTradeSide, tradeSideToLabel } from "../../../utils/recordEditor";
+import { IRouter, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
 import { getViewHistory } from "../viewHistory";
 import styles from "./Records.module.scss";

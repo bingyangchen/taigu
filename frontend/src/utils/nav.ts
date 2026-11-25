@@ -2,21 +2,6 @@ import Env from "./env";
 import { rememberReturnUrl } from "./returnUrl";
 
 export default class Nav {
-  public static isLocalhost = Boolean(
-    (window.location.hostname === "localhost" ||
-      window.location.hostname === "local.taigu.tw" ||
-      window.location.hostname.endsWith(".localhost") ||
-      // [::1] is the IPv6 localhost address.
-      window.location.hostname === "[::1]" ||
-      // 127.0.0.0/8 are considered localhost for IPv4.
-      window.location.hostname.match(
-        /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/,
-      )) ??
-      // 192.168.0.0/16 are considered localhost for IPv4.
-      window.location.hostname.match(
-        /^192\.168(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){2}$/,
-      ),
-  );
   public static get isAt404Page(): boolean {
     const pathRegexString = `^${Env.frontendRootPath.replace(
       /[.*+?^${}()|[\]\\]/g,

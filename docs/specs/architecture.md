@@ -50,11 +50,43 @@ flowchart LR
 
 因為前端在 Cloudflare Pages build 完就自動上線，後端（`api-server` 與 scheduler 的 container）則要等開發者執行 `make deploy` 才上線，所以前端與後端的新版本不會同時上線，修改 API 或資料庫時，要讓 prod 上的前端在後端部署前後都能正常運作。`make deploy` 先執行 migration 再重啟 container，所以從 migration 完成到 container 重啟之前，舊版的後端會用新的資料庫結構執行，資料庫的修改也要讓舊版的後端正常運作。
 
+### 前端的 Build
+
+前端用 Vite 啟動 dev server 與 build，用 Vitest 執行 unit test。`npm run build` 先用 `tsc` 檢查型別再執行 `vite build`，因為 Vite build 時不檢查型別。Build 出來的檔案放在 `frontend/build/`，這是 Cloudflare Pages 上設定的輸出目錄。
+
+前端的 Node 版本寫在 `frontend/.node-version`，CI 也讀這個檔案，`frontend/Dockerfile` 用的也是同一個版本。
+
+前端用 Vite 預設的 build target，也就是 Chrome 111、Edge 111、Firefox 114、Safari 16.4 與 iOS 16.4 以上的瀏覽器，所以只能升到 iOS 15 的 iPhone（例如 iPhone 6s、iPhone 7）可能無法使用 Taigu。
+
+> 設計理由：不加上 `@vitejs/plugin-legacy` 支援更舊的瀏覽器，因為它會另外產生附 polyfill 的 bundle，service worker 也要多 precache 這一份。完整討論見 [0010](../plans/archive/0010-frontend-vite-migration.md)。
+
+### Service Worker 的更新
+
+`vite-plugin-pwa` 把 `frontend/src/service-worker.ts` 另外 build 成 `/service-worker.js`，並把 `frontend/build/` 裡的 `index.html` 與 `assets/` 底下的檔案寫進 service worker 的 precache 清單。瀏覽器只會用註冊時的網址與 scope 更新已經安裝的 service worker，所以 service worker 的網址要維持 `/service-worker.js`，scope 要維持 `/`。
+
+2026-11 在 macOS 的 Chrome 158 實測時，先讓本機的 reverse proxy 提供用 Create React App build 的舊版，等瀏覽器裝上舊的 service worker，再換成用 Vite build 的版本，結果如下：
+
+- 再開啟 `/market` 時，瀏覽器裝好新的 service worker，舊版的前端接著把畫面換到首頁並重新載入，之後瀏覽器載入的是 Vite build 的 JavaScript，precache 裡只剩新版的檔案。
+- 新的 service worker 接手之後，停掉 reverse proxy（沒有用 DevTools 的 Offline）讓每個 request 都失敗，再開啟 Taigu，前端從 precache 載入並顯示儀表板。
+- 再換回 Create React App build 的版本時，瀏覽器用同樣的流程換回舊的 service worker，所以在 Cloudflare Pages 把部署退回上一版時，已經更新的 Chrome 預期也會換回去。
+
 ### 公開頁面的 Prerender
 
-Cloudflare Pages 用 `npm run build` build 前端（這是 Cloudflare Pages 上的設定），build 完成後，`postbuild` 把 `/welcome`、`/privacy-policy`、`/terms-of-service` 三個頁面 render 好的 DOM 存成 HTML 檔，Cloudflare Pages 直接用這些檔案回應這三個網址，其他網址都回 `index.html`（使用者看到的結果見 PUB-R7）。這三個網址在 `frontend/scripts/prerender.mjs` 與 `frontend/src/service-worker.ts` 各列了一次，`service-worker.ts` 用這份清單讓 service worker 不用 app shell 回應這三個網址，所以兩份清單要一致。
+Cloudflare Pages 用 `npm run build` build 前端（這是 Cloudflare Pages 上的設定）。Build 完成後，`postbuild` 執行 `frontend/scripts/prerender.mjs`，用 Vite 的 SSR build 把 `frontend/src/prerender.tsx` build 成在 Node 執行的程式，再用 `renderToString` 產生 `/welcome`、`/privacy-policy`、`/terms-of-service` 三個頁面的內容與 head tag，寫進 `index.html` 的副本，存成 `welcome.html` 這類 HTML 檔。Cloudflare Pages 直接用這些檔案回應這三個網址，其他網址都回 `index.html`（使用者看到的結果見 PUB-R7）。
 
-> 設計理由：Prerender 擷取的是實際 build 出來的頁面，而不是用 `renderToString`，因為 Create React App 產生的 CSS module class name 與檔名帶有 hash，不 eject 的話，另外的 bundler 產生不出一樣的結果。
+這三個網址列在 `frontend/src/publicPages.ts`，prerender 依這份清單產生 HTML，`service-worker.ts` 也依這份清單讓 service worker 不用 app shell 回應這三個網址。
+
+> 設計理由：Prerender 用 Vite 的 SSR build 產生 HTML，不用 headless Chrome 擷取 build 出來的頁面。以前用 headless Chrome，是因為 Create React App 的 CSS module class name 與檔名帶有 hash，不 eject 就無法用另一個 bundler 產生一樣的結果；改用 Vite 之後，SSR build 與 client build 用同一份 Vite 設定，產生的 class name 與 asset 的網址都相同，而且 build 時不用安裝 Chrome。完整討論見 [0010](../plans/archive/0010-frontend-vite-migration.md)。
+
+這三個頁面在 Node 裡 render，所以頁面與它們 import 的模組在載入與 render 時，都不能讀取 `window`、`localStorage`、IndexedDB 這類只有瀏覽器才有的 API，讀取時 `npm run build` 會失敗。
+
+這三個頁面直接 import 用到的 component，不經過 `frontend/src/components/index.ts`，因為那個檔案會載入 Redux store，而 store 與它 import 的模組載入時會讀取 `localStorage`。
+
+#### 前端接手 Prerender 的 HTML
+
+前端用 `createRoot` render，JavaScript 載入之後重新 render 整頁，取代 prerender 產生的 DOM。
+
+> 設計理由：不用 `hydrateRoot` 沿用 prerender 的 DOM，因為 hydrate 時，prerender 產生的 HTML 與前端在瀏覽器裡第一次 render 的結果要完全相同，而頁面裡有會隨時間改變的內容，例如頁尾用 `new Date().getFullYear()` 算出的年份，跨年之後，build 時算出的年份就與前端算出的不同。代價是前端重新 render 時，歡迎頁的 demo 影片會從頭播放，已經播過的進場動畫也會再播一次。完整討論見 [0010](../plans/archive/0010-frontend-vite-migration.md)。
 
 ## 登入
 
@@ -287,6 +319,20 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 > 設計理由：以前淨手續費直接存在 Redux，每次新增、修改、刪除交易紀錄或手續費折讓時再修補這個值，結果算出來的值會跟紀錄對不上。改成讀取時才算之後，儀表板與手續費頁顯示的數字一定跟紀錄一致。
 
+### 頁面的 Head
+
+每個頁面用 `PageMeta`（`frontend/src/components/PageMeta/PageMeta.tsx`）render React 19 原生的 `<title>`、`<meta>`、`<link>`，React 把這些 tag 放進 head，換到其他頁面時移除舊頁面的 tag。Prerender 也用這些頁面產生 HTML 裡的 head tag，所以頁面的 metadata 只寫在頁面裡。
+
+> 設計理由：Metadata 不抽成頁面與 prerender 共用的常數，因為以後新增公開頁面時，要記得同時把 metadata 登記到 prerender。也不用 `react-helmet-async`，因為要改寫全部用到 `PageMeta` 的頁面，以後升級 React 時也要等這個套件支援新版。完整討論見 [0010](../plans/archive/0010-frontend-vite-migration.md)。
+
+#### 前端啟動時移除預設的 Head Tag
+
+`index.html` 的 head 裡寫著歡迎頁版本的頁面標題、頁面說明、canonical 與分享預覽的 tag（PUB-R7）。前端在第一次 render 之前，移除 head 裡 `PageMeta` 會 render 的每一種 tag（`PageMeta.tsx` 的 `PAGE_META_TAGS`），所以每個頁面都要用 `PageMeta` 寫出頁面標題。Prerender 產生的 HTML 也一樣，前端先移除這幾種 tag，再由 React 插入頁面用 `PageMeta` 寫的 tag。
+
+2026-11 在 macOS 的 Chrome 158 以 React 19.3 實測，head 裡沒有 `<title>` 時，React 把 `<title>`、`<meta>`、`<link>` 加在 head 的最後面。不過 head 裡已經有 `<title>` 時，React 把自己的 `<title>` 插在既有的 `<title>` 前面，`document.title` 是 React 的版本，而 `<meta>` 與 canonical 仍然加在 head 的最後面，不會取代既有的同名 tag，所以 head 裡會有兩個 canonical。
+
+> 設計理由：`index.html` 要保留預設的 tag，因為不執行 JavaScript 的 client 抓取非公開頁面的網址時，要讀到歡迎頁的版本（PUB-R7）；前端要在第一次 render 之前移除這些 tag，因為 React 不會取代既有的同名 tag。不在預設的 tag 加上標記、等 React 插入同名的 tag 之後再移除，因為第一次 render 之前移除就能讓 head 裡只有一組 tag，不用另外判斷 React 插入了哪些 tag。完整討論見 [0010](../plans/archive/0010-frontend-vite-migration.md)。
+
 ### 交易紀錄、現金股利紀錄與買賣計畫的編輯器
 
 交易紀錄、現金股利紀錄與買賣計畫的編輯器（`frontend/src/components/TradeRecordEditor/`、`CashDividendRecordEditor/`、`TradePlanEditor/`）共用 `frontend/src/components/RecordEditor/` 的段落、日期欄位、金額摘要與完成畫面，手續費折讓的編輯器仍直接用 `FormPageShell`。三種編輯器的「股票」欄位都是 `StockPicker`，MKT-R20 的處理寫在 `StockPicker` 裡面。
@@ -430,7 +476,7 @@ sequenceDiagram
 | 問題回報 | `/settings`、`/settings/issue-report` | `frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/IssueReport/IssueReport.tsx` | `api-server/main/issue_report/` | [issue-reports.md](issue-reports.md) |
 | 使用統計 | 要登入才能使用的頁面（見 ACCT-R3），後台 `/admin` 底下的頁面除外 | `frontend/src/pages/Main/Main.tsx`、`frontend/src/pages/Settings/Settings.tsx`，判斷平台的是 `frontend/src/utils/util.ts` 的 `Util.isPWA` | `api-server/main/usage/`，記下使用紀錄的 `open-session` endpoint 在 `api-server/main/account/` | [usage-stats.md](usage-stats.md) |
 | 後台 | `/admin`、`/admin/usage`、`/admin/subscriptions`、`/admin/issue-reports`、`/settings` | `frontend/src/pages/Admin/`、`frontend/src/pages/Settings/Overview/Overview.tsx` | `api-server/main/admin_console/`，設定 superuser 的 management command 在 `api-server/main/account/` | [admin.md](admin.md) |
-| 公開頁面 | `/welcome`、`/privacy-policy`、`/terms-of-service`，以及其他找不到的網址 | `frontend/src/pages/Welcome/Welcome.tsx`、`frontend/src/pages/PrivacyPolicy/PrivacyPolicy.tsx`、`frontend/src/pages/TermsOfService/TermsOfService.tsx`、`frontend/src/pages/NotFound/NotFound.tsx`、`frontend/src/components/PageMeta/PageMeta.tsx`、`frontend/public/index.html`、`frontend/public/robots.txt`、`frontend/public/sitemap.xml`、`frontend/scripts/prerender.mjs` | 無 | [public-pages.md](public-pages.md) |
+| 公開頁面 | `/welcome`、`/privacy-policy`、`/terms-of-service`，以及其他找不到的網址 | `frontend/src/pages/Welcome/Welcome.tsx`、`frontend/src/pages/PrivacyPolicy/PrivacyPolicy.tsx`、`frontend/src/pages/TermsOfService/TermsOfService.tsx`、`frontend/src/pages/NotFound/NotFound.tsx`、`frontend/src/components/PageMeta/PageMeta.tsx`、`frontend/index.html`、`frontend/public/robots.txt`、`frontend/public/sitemap.xml`，prerender 在 `frontend/scripts/prerender.mjs`、`frontend/src/prerender.tsx` 與 `frontend/src/publicPages.ts` | 無 | [public-pages.md](public-pages.md) |
 
 ## Data Model
 

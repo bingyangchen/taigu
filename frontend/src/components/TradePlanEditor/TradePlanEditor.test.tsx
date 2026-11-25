@@ -11,29 +11,26 @@ import userEvent from "@testing-library/user-event";
 import React from "react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
+import { afterEach, beforeEach, expect, type Mock, test, vi } from "vitest";
 
 import type { TradePlan } from "../../types";
 import Api from "../../utils/api";
 import TradePlanEditor from "./TradePlanEditor";
 
-jest.mock("react-router-dom", () => {
-  Object.assign(globalThis, { TextEncoder: jest.requireActual("util").TextEncoder });
-  return jest.requireActual("react-router");
-});
-jest.mock("../../utils/api", () => ({
-  __esModule: true,
-  default: { sendRequest: jest.fn() },
-}));
-jest.mock("../../storage/localDatabase");
-jest.mock("../../pages/Main/Details/Details", () => () => null);
-jest.mock("../../redux/slices/TradeRecordSlice", () => ({ __esModule: true }));
+// No delay between actions, so fake timers do not stall user-event.
+const user = userEvent.setup({ delay: null });
 
-const mockSavePlan = jest.fn();
+vi.mock("../../utils/api", () => ({ default: { sendRequest: vi.fn() } }));
+vi.mock("../../storage/localDatabase");
+vi.mock("../../pages/Main/Details/Details", () => ({ default: () => null }));
+vi.mock("../../redux/slices/TradeRecordSlice", () => ({}));
 
-jest.mock("../../redux/slices/TradePlanSlice", () => {
-  const { createAsyncThunk } = jest.requireActual("@reduxjs/toolkit");
+const mockSavePlan = vi.fn();
+
+vi.mock("../../redux/slices/TradePlanSlice", async () => {
+  const { createAsyncThunk } =
+    await vi.importActual<typeof import("@reduxjs/toolkit")>("@reduxjs/toolkit");
   return {
-    __esModule: true,
     createPlan: createAsyncThunk("tradePlan/createPlan", (body: object) =>
       mockSavePlan("create", body),
     ),
@@ -46,7 +43,7 @@ jest.mock("../../redux/slices/TradePlanSlice", () => {
   };
 });
 
-const sendRequest = Api.sendRequest as jest.Mock;
+const sendRequest = Api.sendRequest as Mock;
 
 const STOCK_NAMES: { [sid: string]: string } = { "2330": "台積電", "2317": "鴻海" };
 
@@ -62,8 +59,8 @@ const plan2330: TradePlan = {
 function renderPlanEditor({
   plan,
   isNarrow = false,
-  hideModal = jest.fn(),
-}: { plan?: TradePlan; isNarrow?: boolean; hideModal?: jest.Mock } = {}) {
+  hideModal = vi.fn(),
+}: { plan?: TradePlan; isNarrow?: boolean; hideModal?: Mock } = {}) {
   window.matchMedia = ((query: string) => ({
     matches: isNarrow && query.includes("max-width"),
     media: query,
@@ -98,8 +95,8 @@ const summary = (): HTMLElement =>
 const summaryOf = (title: string): string =>
   within(step(title)).getByRole("button", { expanded: false }).textContent ?? "";
 
-function setUnit(unit: "張" | "股"): void {
-  userEvent.click(
+async function setUnit(unit: "張" | "股"): Promise<void> {
+  await user.click(
     within(screen.getByRole("tablist", { name: "股數單位" })).getByRole("tab", {
       name: unit,
     }),
@@ -107,11 +104,11 @@ function setUnit(unit: "張" | "股"): void {
 }
 
 async function selectStock(sid: string): Promise<void> {
-  userEvent.type(screen.getByRole("combobox"), sid);
+  await user.type(screen.getByRole("combobox"), sid);
   act(() => {
-    jest.advanceTimersByTime(300);
+    vi.advanceTimersByTime(300);
   });
-  userEvent.click(await screen.findByRole("option", { name: new RegExp(sid) }));
+  await user.click(await screen.findByRole("option", { name: new RegExp(sid) }));
 }
 
 function summaryRow(label: string): string {
@@ -122,7 +119,7 @@ function summaryRow(label: string): string {
 }
 
 beforeEach(() => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
   window.localStorage.clear();
   mockSavePlan.mockReset().mockResolvedValue({});
   sendRequest.mockReset().mockImplementation(async (endpoint: string) => {
@@ -139,16 +136,16 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.useRealTimers();
+  vi.useRealTimers();
 });
 
 test("[PLAN-R5.6] shows the saved plan", async () => {
   renderPlanEditor();
   await selectStock("2330");
-  setUnit("張");
-  userEvent.type(field("目標股數"), "1.5");
-  userEvent.type(field("目標價格"), "500");
-  userEvent.click(screen.getByRole("button", { name: "新增買進計畫" }));
+  await setUnit("張");
+  await user.type(field("目標股數"), "1.5");
+  await user.type(field("目標價格"), "500");
+  await user.click(screen.getByRole("button", { name: "新增買進計畫" }));
   await screen.findByRole("heading", { name: /已新增/ });
   expect(screen.getByText("已新增買進計畫")).toBeInTheDocument();
   expect(screen.getByText("2330 台積電")).toBeInTheDocument();
@@ -160,24 +157,24 @@ test("[PLAN-R5.6] shows the saved plan", async () => {
 test("writes a lot quantity typed with a trailing decimal point without the point", async () => {
   renderPlanEditor();
   await selectStock("2330");
-  setUnit("張");
-  userEvent.type(field("目標股數"), "3.");
-  userEvent.type(field("目標價格"), "500");
-  userEvent.click(screen.getByRole("button", { name: "新增買進計畫" }));
+  await setUnit("張");
+  await user.type(field("目標股數"), "3.");
+  await user.type(field("目標價格"), "500");
+  await user.click(screen.getByRole("button", { name: "新增買進計畫" }));
   await screen.findByRole("heading", { name: /已新增/ });
   expect(screen.getByText("3 張（3,000 股） × 500 元")).toBeInTheDocument();
 });
 
 test("[PLAN-R5.7] keeps the side and unit for another plan", async () => {
   renderPlanEditor();
-  userEvent.click(screen.getByRole("tab", { name: "賣出" }));
+  await user.click(screen.getByRole("tab", { name: "賣出" }));
   await selectStock("2330");
-  setUnit("股");
-  userEvent.type(field("目標股數"), "1000");
-  userEvent.type(field("目標價格"), "650");
-  userEvent.click(screen.getByRole("button", { name: "新增賣出計畫" }));
+  await setUnit("股");
+  await user.type(field("目標股數"), "1000");
+  await user.type(field("目標價格"), "650");
+  await user.click(screen.getByRole("button", { name: "新增賣出計畫" }));
   await screen.findByText("已新增賣出計畫");
-  userEvent.click(screen.getByRole("button", { name: "再記一筆" }));
+  await user.click(screen.getByRole("button", { name: "再記一筆" }));
   expect(screen.getByRole("heading", { name: "新增買賣計畫" })).toBeInTheDocument();
   expect(screen.getByRole("combobox")).toHaveValue("");
   expect(field("目標股數")).toHaveValue("");
@@ -186,23 +183,23 @@ test("[PLAN-R5.7] keeps the side and unit for another plan", async () => {
   expect(screen.getByRole("tab", { name: "股", selected: true })).toBeInTheDocument();
 });
 
-test("[PLAN-R6.1] points at the missing stock", () => {
+test("[PLAN-R6.1] points at the missing stock", async () => {
   renderPlanEditor();
-  setUnit("股");
-  userEvent.type(field("目標股數"), "1000");
-  userEvent.type(field("目標價格"), "500");
-  userEvent.click(screen.getByRole("button", { name: "新增買進計畫" }));
+  await setUnit("股");
+  await user.type(field("目標股數"), "1000");
+  await user.type(field("目標價格"), "500");
+  await user.click(screen.getByRole("button", { name: "新增買進計畫" }));
   expect(screen.getByText("請選擇股票")).toBeInTheDocument();
   expect(mockSavePlan).not.toHaveBeenCalled();
 });
 
-test("[PLAN-R6.2] does not save search text that was not chosen", () => {
+test("[PLAN-R6.2] does not save search text that was not chosen", async () => {
   renderPlanEditor({ plan: plan2330 });
-  userEvent.click(screen.getByRole("button", { name: /已選股票：台積電/ }));
-  userEvent.type(screen.getByRole("combobox"), "2317");
-  userEvent.click(screen.getByRole("button", { name: "儲存變更" }));
+  await user.click(screen.getByRole("button", { name: /已選股票：台積電/ }));
+  await user.type(screen.getByRole("combobox"), "2317");
+  await user.click(screen.getByRole("button", { name: "儲存變更" }));
   act(() => {
-    jest.advanceTimersByTime(150);
+    vi.advanceTimersByTime(150);
   });
   expect(screen.getByText("請從搜尋結果選擇一檔股票")).toBeInTheDocument();
   expect(mockSavePlan).not.toHaveBeenCalled();
@@ -218,10 +215,10 @@ test("lists what is missing when the editor opens", () => {
 test("[PLAN-R6.3] saves lots as shares", async () => {
   renderPlanEditor();
   await selectStock("2330");
-  setUnit("張");
-  userEvent.type(field("目標股數"), "1.5");
-  userEvent.type(field("目標價格"), "500");
-  userEvent.click(screen.getByRole("button", { name: "新增買進計畫" }));
+  await setUnit("張");
+  await user.type(field("目標股數"), "1.5");
+  await user.type(field("目標價格"), "500");
+  await user.click(screen.getByRole("button", { name: "新增買進計畫" }));
   await waitFor(() => expect(mockSavePlan).toHaveBeenCalled());
   expect(mockSavePlan).toHaveBeenCalledWith("create", {
     sid: "2330",
@@ -234,45 +231,45 @@ test("[PLAN-R6.3] saves lots as shares", async () => {
 test("[PLAN-R6.4] points at the missing target price on the narrow page", async () => {
   renderPlanEditor({ isNarrow: true });
   await selectStock("2330");
-  setUnit("張");
-  userEvent.type(field("目標股數"), "1");
-  userEvent.click(screen.getByRole("button", { name: "新增買進計畫" }));
+  await setUnit("張");
+  await user.type(field("目標股數"), "1");
+  await user.click(screen.getByRole("button", { name: "新增買進計畫" }));
   expect(within(step("目標股數與價格")).getByText("請填寫目標價格")).toBeVisible();
   expect(field("目標價格")).toHaveFocus();
   expect(mockSavePlan).not.toHaveBeenCalled();
 });
 
-test("[PLAN-R7.1] estimates the buy fee", () => {
+test("[PLAN-R7.1] estimates the buy fee", async () => {
   renderPlanEditor();
-  setUnit("股");
-  userEvent.type(field("目標股數"), "1000");
-  userEvent.type(field("目標價格"), "100");
+  await setUnit("股");
+  await user.type(field("目標股數"), "1000");
+  await user.type(field("目標價格"), "100");
   expect(summaryRow("成交金額")).toBe("成交金額100,000元");
   expect(summaryRow("預估手續費")).toBe("預估手續費142元");
 });
 
-test("[PLAN-R7.2] estimates the sell fee", () => {
+test("[PLAN-R7.2] estimates the sell fee", async () => {
   renderPlanEditor();
-  setUnit("股");
-  userEvent.type(field("目標股數"), "1000");
-  userEvent.type(field("目標價格"), "100");
-  userEvent.click(screen.getByRole("tab", { name: "賣出" }));
+  await setUnit("股");
+  await user.type(field("目標股數"), "1000");
+  await user.type(field("目標價格"), "100");
+  await user.click(screen.getByRole("tab", { name: "賣出" }));
   expect(summaryRow("成交金額")).toBe("成交金額100,000元");
   expect(summaryRow("預估手續費")).toBe("預估手續費442元");
 });
 
-test("[PLAN-R7.3] estimates at least 1 for the fee", () => {
+test("[PLAN-R7.3] estimates at least 1 for the fee", async () => {
   renderPlanEditor();
-  setUnit("股");
-  userEvent.type(field("目標股數"), "10");
-  userEvent.type(field("目標價格"), "10");
+  await setUnit("股");
+  await user.type(field("目標股數"), "10");
+  await user.type(field("目標價格"), "10");
   expect(summaryRow("成交金額")).toBe("成交金額100元");
   expect(summaryRow("預估手續費")).toBe("預估手續費1元");
 });
 
-test("[PLAN-R11.3] asks before closing a changed window", () => {
+test("[PLAN-R11.3] asks before closing a changed window", async () => {
   const { hideModal } = renderPlanEditor();
-  userEvent.type(field("目標價格"), "500");
+  await user.type(field("目標價格"), "500");
   fireEvent.keyDown(field("目標價格"), { key: "Escape" });
   expect(screen.getByText("捨棄變更？")).toBeInTheDocument();
   expect(hideModal).not.toHaveBeenCalled();

@@ -230,7 +230,7 @@ export default function CashDividendRecordEditor({
       } else {
         await dispatch(createRecord(requestBody)).unwrap();
       }
-    } catch (error) {
+    } catch {
       // The API layer reports a failed request with a toast or the quota upsell.
       return;
     } finally {

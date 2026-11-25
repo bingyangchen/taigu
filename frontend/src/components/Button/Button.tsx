@@ -93,7 +93,7 @@ export default class Button extends React.Component<Props> {
         if (result && typeof result === "object" && "catch" in result) {
           (result as Promise<unknown>).catch(() => {});
         }
-      } catch (error) {
+      } catch {
         return;
       }
     }

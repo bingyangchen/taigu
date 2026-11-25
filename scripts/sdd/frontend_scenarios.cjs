@@ -74,7 +74,7 @@ function parseTestReferences(source, ts) {
     ) {
       problem(
         node,
-        "Focused Jest tests or suites (.only) can omit scenario coverage",
+        "Focused Vitest tests or suites (.only) can omit scenario coverage",
       );
     }
     ts.forEachChild(node, checkFocusedTests);
@@ -125,7 +125,7 @@ function parseTestReferences(source, ts) {
           } else if (!literal) {
             problem(
               title,
-              "Use a literal Jest title such as '[DEMO-R1.1] verifies the result'",
+              "Use a literal Vitest title such as '[DEMO-R1.1] verifies the result'",
             );
           } else {
             const marker = /^\[([^\]]+)\]\s+\S/.exec(title.text);
@@ -135,7 +135,7 @@ function parseTestReferences(source, ts) {
             if (!ids.length || ids.some((id) => !SCENARIO_ID.test(id))) {
               problem(
                 title,
-                "Start the Jest title with '[DEMO-R1.1]' or '[DEMO-R1.1, DEMO-R1.2]', followed by its name",
+                "Start the Vitest title with '[DEMO-R1.1]' or '[DEMO-R1.1, DEMO-R1.2]', followed by its name",
               );
             } else if (
               !node.arguments[1] ||

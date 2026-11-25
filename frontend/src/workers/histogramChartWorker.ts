@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-globals */
-
 import type { TradeRecord } from "../types";
 
 self.onmessage = (e: MessageEvent<TradeRecord[]>): void => {

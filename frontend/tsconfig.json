@@ -15,17 +15,11 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "paths": {
-      // react-router-dom@7's type entry re-exports from the "react-router/dom" subpath.
-      "react-router/dom": [
-        "./node_modules/react-router/dist/production/dom-export.d.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   },
   "include": [
     "src"

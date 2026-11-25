@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
+import { expect, test, vi } from "vitest";
 
 import AccessibleChart from "./AccessibleChart";
 
-jest.mock("echarts-for-react", () => ({ __esModule: true, default: () => <canvas /> }));
+vi.mock("echarts-for-react", () => ({ default: () => <canvas /> }));
 
 test("names the chart with its unit and keeps it out of the tab order", () => {
   render(<AccessibleChart label="加權指數今日走勢（點）" option={{}} />);

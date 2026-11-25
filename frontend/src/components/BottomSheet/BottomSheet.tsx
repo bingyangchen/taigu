@@ -2,7 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import React, { MouseEvent, MouseEventHandler } from "react";
 
-import { IRouter, withRouter } from "../../router";
+import { IRouter, withRouter } from "../../utils/router";
 import styles from "./BottomSheet.module.scss";
 
 interface Props extends IRouter {
@@ -24,7 +24,7 @@ class BottomSheet extends React.Component<Props, State> {
   private maximizeThreshold: number = 100;
   private minimizeThreshold: number = 100;
   private transitionDuration: number = 150;
-  private mainRef: React.RefObject<HTMLDivElement>;
+  private mainRef: React.RefObject<HTMLDivElement | null>;
   private isClosing: boolean = false;
   public constructor(props: Props) {
     super(props);

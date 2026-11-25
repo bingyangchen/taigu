@@ -1,8 +1,9 @@
-/** @jest-environment node */
+/** @vitest-environment node */
 
 import type { EChartsOption } from "echarts";
 import * as echarts from "echarts";
 import React from "react";
+import { describe, expect, test } from "vitest";
 
 import { makeMarketIndexIntradayChartOption } from "./MarketIndexIntradayLineChart/MarketIndexIntradayLineChart";
 import StockIntradayLineChart from "./StockIntradayLineChart/StockIntradayLineChart";

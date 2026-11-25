@@ -100,7 +100,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22.14.0"
+          node-version-file: frontend/.node-version
       - name: Install only dev dependencies
         run: |
           cd frontend
@@ -124,8 +124,8 @@ jobs:
         uses: actions/checkout@v6
       - name: Build Docker image for testing
         run: docker build --target final -t taigu-frontend-tests frontend
-      - name: Run Jest
-        run: docker run --rm -e CI=true taigu-frontend-tests npm test -- --runInBand
+      - name: Run Vitest
+        run: docker run --rm taigu-frontend-tests npm test -- --run
 
   backend-unit-tests:
     name: Backend unit tests

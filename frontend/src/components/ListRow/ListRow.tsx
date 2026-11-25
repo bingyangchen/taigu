@@ -1,7 +1,6 @@
 import React, { MouseEventHandler, ReactNode, TouchEvent } from "react";
 
 import { BottomSheet, ListRowActionBar } from "../../components";
-import { IRouter, withRouter } from "../../router";
 import {
   CashDividendRecord,
   HandlingFeeDiscount,
@@ -9,6 +8,7 @@ import {
   TradeRecord,
 } from "../../types";
 import { getHideModalCallback } from "../../utils/modal";
+import { IRouter, withRouter } from "../../utils/router";
 import Util from "../../utils/util";
 import styles from "./ListRow.module.scss";
 
@@ -29,7 +29,7 @@ interface State {
 class ListRow extends React.Component<Props, State> {
   public state: State;
   private timer?: ReturnType<typeof setTimeout>;
-  private rippleRef: React.RefObject<HTMLDivElement>;
+  private rippleRef: React.RefObject<HTMLDivElement | null>;
   public constructor(props: Props) {
     super(props);
     this.state = {

@@ -4,11 +4,11 @@ import React from "react";
 
 import { Button, RoundButton } from "../../components";
 import * as Icons from "../../icons";
-import { IRouter, withRouter } from "../../router";
 import {
   type CloseActiveModalEvent,
   closeActiveModalEventName,
 } from "../../utils/modal";
+import { IRouter, withRouter } from "../../utils/router";
 import { Props as ButtonProps } from "../Button/Button";
 import styles from "./Modal.module.scss";
 

@@ -4,12 +4,14 @@ import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 
+import { removeStaticPageMeta } from "./components/PageMeta/PageMeta";
 import { store } from "./redux/store";
-import reportWebVitals from "./reportWebVitals";
 import myRouter from "./router";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import Api from "./utils/api";
 import { SESSION_VERSION_KEY } from "./utils/session";
+
+Api.connectStore(store.dispatch);
 
 window.addEventListener("storage", (event) => {
   if (event.key === SESSION_VERSION_KEY) {
@@ -17,6 +19,8 @@ window.addEventListener("storage", (event) => {
     window.location.replace("/login");
   }
 });
+
+removeStaticPageMeta();
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
@@ -35,10 +39,4 @@ if ("virtualKeyboard" in navigator) {
   navigator.virtualKeyboard.overlaysContent = true;
 }
 
-// Ref: https://cra.link/PWA
 serviceWorkerRegistration.register();
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

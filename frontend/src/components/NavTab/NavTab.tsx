@@ -1,10 +1,10 @@
 import React, { MouseEventHandler } from "react";
 import { NavLink } from "react-router-dom";
 
-import { IRouter, withRouter } from "../../router";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
 import { getMainTabPath, mainTabNavigationState } from "../../utils/mainNavigation";
+import { IRouter, withRouter } from "../../utils/router";
 import Tooltip from "../Tooltip/Tooltip";
 import styles from "./NavTab.module.scss";
 

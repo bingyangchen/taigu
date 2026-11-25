@@ -4,9 +4,9 @@ import { connect } from "react-redux";
 import { BeautifulBlock, BeautifulRow } from "../../../components";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import type { AppDispatch } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
 import type { TradeRecordSyncResponse } from "../../../types";
 import Api from "../../../utils/api";
+import { IRouter, withRouter } from "../../../utils/router";
 import styles from "./DataControls.module.scss";
 
 function mapStateToProps() {

@@ -15,7 +15,7 @@ interface State {
 
 export default class BeautifulRow extends React.Component<Props, State> {
   public state: State;
-  private rippleRef: React.RefObject<HTMLDivElement>;
+  private rippleRef: React.RefObject<HTMLDivElement | null>;
   public constructor(props: Props) {
     super(props);
     this.state = { isRippling: false };

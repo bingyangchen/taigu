@@ -229,7 +229,7 @@ class HandlingFeeDiscountEditor extends React.Component<Props, State> {
       }
       this.props.hideModal(e);
       this.props.onSave?.();
-    } catch (reason) {
+    } catch {
       this.props.hideModal(e);
     }
   };

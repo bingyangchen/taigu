@@ -15,7 +15,7 @@ interface State {}
 
 export default class SearchKeywordInput extends React.Component<Props, State> {
   public state: State;
-  private inputRef: React.RefObject<HTMLInputElement>;
+  private inputRef: React.RefObject<HTMLInputElement | null>;
   public constructor(props: Props) {
     super(props);
     this.state = {};

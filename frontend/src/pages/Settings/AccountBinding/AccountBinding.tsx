@@ -18,10 +18,10 @@ import { changeAccountBinding } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { IRouter, withRouter } from "../../../router";
 import Api from "../../../utils/api";
 import { getHideModalCallback } from "../../../utils/modal";
 import Nav from "../../../utils/nav";
+import { IRouter, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./AccountBinding.module.scss";
 

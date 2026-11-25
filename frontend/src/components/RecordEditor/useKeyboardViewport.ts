@@ -29,7 +29,7 @@ export function useKeyboardViewport(isEnabled: boolean): KeyboardViewport | null
       // changed so the editor does not re-render.
       setViewport((current) => {
         if (!isKeyboardOpen) return null;
-        if (current && current.height === height && current.offsetTop === offsetTop) {
+        if (current?.height === height && current.offsetTop === offsetTop) {
           return current;
         }
         return { height, offsetTop };

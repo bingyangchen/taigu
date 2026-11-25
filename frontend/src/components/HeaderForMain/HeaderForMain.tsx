@@ -3,8 +3,8 @@ import { connect } from "react-redux";
 
 import { FullLogo } from "../../components";
 import type { RootState } from "../../redux/store";
-import { IRouter, withRouter } from "../../router";
 import Nav from "../../utils/nav";
+import { IRouter, withRouter } from "../../utils/router";
 import styles from "./HeaderForMain.module.scss";
 
 function mapStateToProps(rootState: RootState) {
