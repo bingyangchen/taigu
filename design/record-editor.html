@@ -1,0 +1,982 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>紀錄編輯器｜Taigu 設計稿</title>
+  <style>
+    :root {
+      --page: #f6f9fc;
+      --white: #fff;
+      --ink: #444;
+      --muted: #58616a;
+      --line: #ddd;
+      --soft: #e8ecf1;
+      --focus: #2760b6;
+      --focus-hover: #1f4f96;
+      --ring: #2760b626;
+      --selected: #e8f0ff;
+      --hover: #eef4fd;
+      --danger: #af352e;
+      --danger-bg: #fbeceb;
+      --warn-ink: #7a4d00;
+      --warn-bg: #fff5dc;
+      --warn-icon: #b87500;
+      --sidebar: 230px;
+      --demo: 44px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+        "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background: var(--page);
+      -webkit-text-size-adjust: 100%;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body, h1, h2, p, dl, dd, ul { margin: 0; }
+    ul { padding: 0; list-style: none; }
+    body { min-block-size: 100dvh; background: var(--page); }
+    button, input, select { color: inherit; font: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+    ::selection { background: #d1eeff; }
+    input { caret-color: var(--focus); }
+    .icon { width: 16px; height: 16px; fill: currentColor; flex: none; }
+    .num { font-variant-numeric: tabular-nums; }
+
+    /* Draft-only preview bar */
+    .demo-bar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 10px; height: var(--demo); padding: 0 12px; background: #2b3138; color: #e9edf2; font-size: .75rem; }
+    .demo-bar select { min-height: 32px; max-width: 240px; border: 0; border-radius: 6px; padding: 0 6px; background: #3b434c; color: #fff; }
+    body.clean { --demo: 0px; }
+    body.clean .demo-bar { display: none; }
+    .backdrop-app, .scrim { display: none; }
+
+    /* Editor shell (narrow: full-screen page) */
+    .editor { display: flex; flex-direction: column; height: calc(100dvh - var(--demo)); background: var(--page); }
+    .editor-header { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; min-height: 56px; padding: 0 6px; background: var(--white); border-bottom: 1px solid var(--soft); flex: none; }
+    .editor-header h1 { text-align: center; font-size: 1.0625rem; font-weight: 650; letter-spacing: .02em; }
+    .icon-btn { position: relative; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; }
+    .icon-btn:hover { background: var(--hover); }
+    .icon-btn[data-tip]:hover::after, .icon-btn[data-tip]:focus-visible::after { content: attr(data-tip); position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); z-index: 5; padding: 4px 8px; border-radius: 6px; background: var(--ink); color: var(--white); font-size: .75rem; white-space: nowrap; pointer-events: none; }
+    .close-btn { display: none; }
+    .editor-body { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
+    .steps { display: flex; flex-direction: column; gap: 8px; padding: 14px 12px 24px; }
+
+    /* Steps */
+    .step { border: 1px solid var(--soft); border-radius: 14px; background: var(--white); transition: border-color .2s, box-shadow .2s; }
+    .step[data-state="open"] { border-color: var(--focus); box-shadow: 0 0 0 3px #2760b61f; }
+    .step[data-state="todo"] { background: transparent; border-style: dashed; border-color: #c9d2dc; }
+    .step-head { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 8px 8px 8px 14px; border: 0; border-radius: 14px; background: transparent; text-align: left; }
+    .step[data-state="open"] .step-head { cursor: default; min-height: 52px; padding-bottom: 0; }
+    .step[data-state="done"] .step-head:hover, .step[data-state="todo"] .step-head:hover { background: var(--hover); }
+    .mark { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-size: .8125rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .step[data-state="open"] .mark { background: var(--focus); color: var(--white); }
+    .step[data-state="done"] .mark { background: var(--selected); color: var(--focus); }
+    .step[data-state="todo"] .mark { background: #dfe5ec; color: var(--muted); }
+    .mark .icon { width: 13px; height: 13px; }
+    .step-title { display: grid; gap: 2px; min-width: 0; }
+    .step-title small { font-size: .75rem; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
+    .step[data-state="open"] .step-title small { font-size: .9375rem; color: var(--ink); letter-spacing: .02em; }
+    .step-sum { font-size: .9375rem; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .step-sum .sub { margin-left: 6px; font-weight: 400; font-size: .8125rem; color: var(--muted); }
+    .step[data-state="todo"] .step-sum { font-weight: 500; color: var(--muted); }
+    .step[data-state="open"] .step-sum { display: none; }
+    .step-flag { display: flex; gap: 5px; align-items: flex-start; margin-top: 2px; font-size: .75rem; font-weight: 500; color: var(--warn-ink); }
+    .step-flag .icon { width: 12px; height: 12px; margin-top: 2px; fill: var(--warn-icon); }
+    .step-flag.error { color: var(--danger); }
+    .step-flag.error .icon { fill: currentColor; }
+    .step-edit { min-height: 44px; padding: 0 10px; display: grid; place-items: center; color: var(--focus); font-size: .875rem; font-weight: 600; }
+    .step[data-state="open"] .step-edit { visibility: hidden; }
+    .step-body { display: grid; gap: 18px; padding: 16px 14px; }
+    .step:not([data-state="open"]) .step-body { display: none; }
+
+    /* Direction */
+    .side-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 12px; background: var(--page); border: 1px solid var(--soft); }
+    .side-switch button { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 1rem; font-weight: 600; letter-spacing: .08em; transition: background-color .18s cubic-bezier(.16,1,.3,1), color .18s; }
+    .side-switch button:hover { color: var(--ink); }
+    .side-switch button[aria-pressed="true"] { background: var(--white); color: var(--focus); box-shadow: 0 1px 2px #0000001a, 0 2px 8px #2760b614; }
+    .side-switch .icon { width: 14px; height: 14px; display: none; }
+    .side-switch button[aria-pressed="true"] .icon { display: block; }
+
+    /* Fields */
+    .field { display: grid; gap: 8px; min-width: 0; }
+    .flabel { font-size: .8125rem; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
+    .label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .input-wrap { display: flex; align-items: center; min-height: 52px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); transition: border-color .15s, box-shadow .15s; }
+    .input-wrap:focus-within { border-color: var(--focus); box-shadow: 0 0 0 3px var(--ring); }
+    .input-wrap input { flex: 1; min-width: 0; height: 50px; padding: 0 14px; border: 0; background: transparent; font-size: 1.125rem; font-weight: 600; font-variant-numeric: tabular-nums; outline: none; }
+    .input-wrap .unit { padding: 0 14px 0 4px; color: var(--muted); font-size: .9375rem; }
+    .field.invalid .input-wrap, .field.invalid .stock-search, .input-wrap.bad { border-color: var(--danger); }
+    .field-msg { display: flex; align-items: flex-start; gap: 6px; font-size: .8125rem; line-height: 1.5; color: var(--muted); }
+    .field-msg:empty { display: none; }
+    .field-msg .icon { width: 14px; height: 14px; margin-top: 2px; }
+    .field-msg.error { color: var(--danger); }
+    .field-msg.warn { padding: 8px 10px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-ink); }
+    .field-msg.warn .icon { fill: var(--warn-icon); }
+    .unit-switch { display: flex; padding: 2px; border-radius: 8px; background: var(--page); border: 1px solid var(--soft); }
+    .unit-switch button { position: relative; min-width: 44px; min-height: 32px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: .8125rem; font-weight: 600; }
+    .unit-switch button::before { content: ""; position: absolute; inset: -6px 0; }
+    .unit-switch button[aria-pressed="true"] { background: var(--white); color: var(--focus); box-shadow: 0 1px 2px #0000001a; }
+    #fee-hint { display: block; }
+    .tag { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 11px; font-size: .75rem; font-weight: 600; }
+    .tag.manual { background: var(--selected); color: var(--focus); }
+    .inline-link { display: block; margin-top: 2px; margin-left: -4px; min-height: 44px; padding: 0 4px; border: 0; background: transparent; color: var(--focus); font-weight: 600; font-size: .8125rem; }
+
+    /* Stock picker */
+    .stock-search { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); transition: border-color .15s, box-shadow .15s; }
+    .stock-search:focus-within { border-color: var(--focus); box-shadow: 0 0 0 3px var(--ring); }
+    .stock-search .icon { color: var(--muted); }
+    .stock-search input { flex: 1; min-width: 0; height: 50px; border: 0; background: transparent; font-size: 1rem; outline: none; }
+    .stock-search input::placeholder { color: #6b747d; }
+    .stock-options { margin: -6px -14px -16px; border-top: 1px solid var(--soft); }
+    .stock-options .group { padding: 10px 14px 4px; font-size: .75rem; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
+    .stock-options [role="option"] { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; min-height: 52px; padding: 6px 14px; cursor: pointer; }
+    .stock-options [role="option"]:hover, .stock-options [role="option"][aria-selected="true"] { background: var(--hover); }
+    .stock-options [role="option"] + [role="option"] { border-top: 1px solid var(--soft); }
+    .stock-options [role="option"]:last-child { border-radius: 0 0 13px 13px; }
+    .opt-name { font-weight: 650; font-variant-numeric: tabular-nums; }
+    .opt-name small { margin-left: 6px; font-weight: 400; color: var(--muted); font-size: .8125rem; }
+    .opt-meta { font-size: .8125rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .stock-options .empty { padding: 14px; color: var(--muted); font-size: .875rem; }
+    .stock-chosen { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px; padding: 10px 6px 10px 14px; border: 1px solid var(--line); border-radius: 10px; }
+    .stock-chosen strong { font-size: 1.0625rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .stock-chosen strong span { margin-left: 8px; }
+    .stock-chosen .meta { grid-column: 1; font-size: .8125rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .stock-chosen .link-btn { grid-row: 1 / span 2; grid-column: 2; }
+    .link-btn { min-height: 44px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--focus); font-weight: 600; font-size: .875rem; }
+    .link-btn:hover { background: var(--hover); }
+
+    /* Date */
+    .date-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .chip, .date-picker { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: 22px; background: var(--white); font-size: .9375rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .chip:hover, .date-picker:hover { border-color: #b9c6d6; color: var(--ink); }
+    .chip[aria-pressed="true"], .date-picker[data-active="true"] { border-color: var(--focus); background: var(--selected); color: var(--focus); }
+    .date-picker { cursor: pointer; }
+    .date-picker:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+    .date-picker input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+    .date-picker .icon { width: 11px; height: 11px; transform: rotate(90deg); }
+
+    .danger-zone { display: grid; gap: 4px; margin-top: 10px; padding: 16px 2px 0; border-top: 1px solid var(--soft); }
+    .danger-btn { display: inline-flex; align-items: center; gap: 8px; justify-self: start; min-height: 44px; padding: 0 12px; margin-left: -10px; border: 0; border-radius: 8px; background: transparent; color: var(--danger); font-weight: 600; }
+    .danger-btn:hover { background: var(--danger-bg); }
+    .danger-zone p { font-size: .8125rem; color: var(--muted); }
+
+    /* Receipt (narrow: sticky bottom) */
+    .receipt { position: sticky; bottom: 0; margin-top: auto; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); background: var(--white); border-top: 1px solid var(--soft); box-shadow: 0 -6px 18px #1e2a3812; }
+    .receipt-heading { margin-bottom: 4px; font-size: .8125rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .receipt-heading:empty { display: none; }
+    .receipt.compact .receipt-heading { display: none; }
+    .receipt-alert { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 12px; padding: 10px 12px; border-radius: 8px; font-size: .8125rem; line-height: 1.5; }
+    .receipt-alert .icon { width: 15px; height: 15px; margin-top: 2px; }
+    .receipt-alert.error { background: var(--danger-bg); color: var(--danger); }
+    .receipt-alert.warn { background: var(--warn-bg); color: var(--warn-ink); }
+    .receipt-alert.warn .icon { fill: var(--warn-icon); }
+    .receipt-lines { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: .8125rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .receipt-lines > div { display: flex; gap: 4px; }
+    .receipt-total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 2px; }
+    .receipt-total span { font-size: .875rem; font-weight: 600; color: var(--muted); }
+    .receipt-total strong { font-size: 1.75rem; font-weight: 720; letter-spacing: -.01em; font-variant-numeric: tabular-nums; line-height: 1.15; }
+    .receipt-total strong.placeholder { font-size: .8125rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+    .receipt-total small { margin-left: 3px; font-size: .875rem; font-weight: 600; color: var(--muted); }
+    .receipt-holding { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; font-size: .875rem; font-variant-numeric: tabular-nums; }
+    .receipt-holding .k, .receipt-holding .arrow { color: var(--muted); }
+    .receipt-holding strong { font-weight: 650; }
+    .receipt-missing { margin-top: 8px; font-size: .8125rem; color: var(--muted); }
+    .primary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; margin-top: 12px; border: 0; border-radius: 12px; background: var(--focus); color: var(--white); font-size: 1rem; font-weight: 650; letter-spacing: .06em; transition: background-color .15s; }
+    .primary:hover { background: var(--focus-hover); }
+    .primary[aria-disabled="true"] { background: #e3e8ee; color: var(--muted); }
+    .primary[aria-busy="true"] { background: var(--focus-hover); cursor: progress; }
+    @media (width < 960px) { .primary, .secondary { font-size: .875rem; } }
+    .secondary { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; border: 1px solid var(--line); border-radius: 12px; background: var(--white); font-size: 1rem; font-weight: 650; letter-spacing: .06em; }
+    .secondary:hover { border-color: #b9c6d6; background: var(--hover); }
+    .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #ffffff66; border-top-color: var(--white); animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Keyboard preview (narrow only) */
+    .receipt.compact { display: flex; align-items: center; gap: 12px; padding-block: 8px; }
+    .receipt.compact .receipt-lines, .receipt.compact .receipt-holding, .receipt.compact .receipt-missing, .receipt.compact .receipt-alert.warn { display: none; }
+    .receipt.compact .receipt-total { flex: 1; flex-direction: column; align-items: flex-start; gap: 0; }
+    .receipt.compact .receipt-total span { font-size: .75rem; }
+    .receipt.compact .receipt-total strong { font-size: 1.125rem; }
+    .receipt.compact .primary { width: auto; min-height: 44px; margin: 0; padding: 0 16px; font-size: .9375rem; }
+    .fake-keyboard { flex: none; display: grid; place-items: center; height: 280px; background: #d1d5db; color: #4b5563; font-size: .8125rem; letter-spacing: .1em; }
+
+    /* Done */
+    .done { flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; padding: 40px 20px calc(20px + env(safe-area-inset-bottom)); background: var(--white); text-align: center; }
+    .done-mark { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--selected); color: var(--focus); animation: pop .5s cubic-bezier(.16,1,.3,1) both; }
+    .done-mark .icon { width: 30px; height: 30px; }
+    @keyframes pop { from { transform: scale(.6); opacity: 0; } }
+    .done h2 { margin-top: 16px; font-size: 1.375rem; font-weight: 700; }
+    .done-sub { margin-top: 6px; color: var(--muted); font-size: .9375rem; }
+    .done-card { width: 100%; max-width: 420px; margin-top: 24px; padding: 4px 16px; border: 1px solid var(--soft); border-radius: 12px; text-align: left; }
+    .done-card > div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; font-variant-numeric: tabular-nums; }
+    .done-card > div + div { border-top: 1px solid var(--soft); }
+    .done-card dt { color: var(--muted); font-size: .875rem; }
+    .done-card dd { font-weight: 650; text-align: right; }
+    .done-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 420px; margin-top: auto; padding-top: 28px; }
+    .done-actions .primary { margin: 0; }
+    .done-note { margin-top: 10px; font-size: .8125rem; color: var(--muted); }
+    .not-found { flex: 1; display: grid; place-content: center; gap: 6px; padding: 24px; background: var(--white); text-align: center; color: var(--muted); }
+    .not-found strong { color: var(--ink); font-size: 1.0625rem; }
+
+    /* Modals */
+    .modal-layer { position: fixed; inset: 0; z-index: 40; display: grid; place-items: end center; background: #1e2a3866; animation: fade .2s ease-out both; }
+    @keyframes fade { from { opacity: 0; } }
+    .modal { width: 100%; max-width: 480px; padding: 24px 20px calc(16px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; background: var(--white); box-shadow: 0 -8px 30px #0000002a; animation: rise .3s cubic-bezier(.16,1,.3,1) both; }
+    @keyframes rise { from { transform: translateY(24px); opacity: 0; } }
+    .modal h2 { font-size: 1.1875rem; font-weight: 700; }
+    .modal p { margin-top: 8px; color: var(--muted); font-size: .9375rem; line-height: 1.6; }
+    .modal ul { margin-top: 12px; display: grid; gap: 8px; font-size: .9375rem; }
+    .modal li { display: flex; gap: 8px; align-items: center; }
+    .modal li .icon { color: var(--focus); width: 14px; height: 14px; }
+    .modal-box { margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: var(--page); font-size: .875rem; line-height: 1.6; }
+    .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+    .modal-actions .primary { margin: 0; }
+    .modal-actions .danger { background: var(--danger); }
+    .modal-actions .danger:hover { background: #8f2a24; }
+
+    @media (width < 960px) {
+      body.modal-narrow { background: #1e2a3859; }
+      body.modal-narrow .editor { position: fixed; z-index: 11; top: calc(var(--demo) + 16px); bottom: 16px; left: 16px; right: 16px; height: auto; border-radius: 18px; overflow: hidden; box-shadow: 0 24px 60px #1e2a3833; }
+      body.modal-narrow .back-btn { display: none; }
+      body.modal-narrow .close-btn { display: grid; }
+      body.modal-narrow .editor-header { grid-template-columns: 1fr 52px; padding-left: 18px; }
+      body.modal-narrow .editor-header h1 { text-align: left; }
+      body.modal-narrow .step, body.modal-narrow .step[data-state] { border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+      body.modal-narrow .step + .step { border-top: 1px solid var(--soft); }
+      body.modal-narrow .step .step-body { display: grid !important; padding: 12px 0 18px 38px; }
+      body.modal-narrow .step .step-head { pointer-events: none; min-height: 0; padding: 16px 0 0; }
+      body.modal-narrow .step .step-sum, body.modal-narrow .step .step-flag, body.modal-narrow .step .step-edit { display: none !important; }
+      body.modal-narrow .step .step-title small { font-size: .9375rem; color: var(--ink); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
+    /* ---------- Wide layout: dialog over the app ---------- */
+    @media (width >= 960px) {
+      body { overflow: hidden; }
+      .backdrop-app { display: grid; grid-template-columns: var(--sidebar) 1fr; height: calc(100dvh - var(--demo)); }
+      .backdrop-app .sidebar { background: var(--white); border-right: 1px solid var(--line); padding: 20px 12px; display: grid; align-content: start; gap: 4px; }
+      .backdrop-app .sidebar .add { margin-bottom: 14px; min-height: 44px; border-radius: 10px; background: var(--focus); color: var(--white); display: grid; place-items: center; font-weight: 650; }
+      .backdrop-app .sidebar span { display: flex; align-items: center; min-height: 48px; padding: 0 16px; border-radius: 10px; font-size: .875rem; color: var(--muted); }
+      .backdrop-app .sidebar span.current { background: #edf3fe; color: var(--focus); }
+      .backdrop-app main { padding: 32px; background: linear-gradient(#d1eeff, #feedff); }
+      .backdrop-app h2 { font-size: 1.625rem; }
+      .backdrop-app .stat { margin-top: 20px; padding: 22px; border-radius: 16px; background: #ffffffb3; max-width: 520px; }
+      .backdrop-app .stat p { color: var(--muted); font-size: .875rem; }
+      .backdrop-app .stat strong { display: block; margin-top: 6px; font-size: 2rem; font-variant-numeric: tabular-nums; }
+      .scrim { display: block; position: fixed; inset: var(--demo) 0 0 0; z-index: 10; background: #1e2a3859; }
+      .editor { position: fixed; z-index: 11; top: calc(var(--demo) + (100dvh - var(--demo)) / 2); left: 50%; transform: translate(-50%, -50%); width: min(880px, calc(100vw - 64px)); height: min(720px, calc(100dvh - var(--demo) - 64px)); border-radius: 18px; box-shadow: 0 24px 60px #1e2a3833, 0 2px 8px #1e2a381a; overflow: hidden; }
+      .editor-header { grid-template-columns: 1fr 52px; padding: 0 10px 0 28px; min-height: 64px; }
+      .editor-header h1 { text-align: left; font-size: 1.1875rem; }
+      .back-btn { display: none; }
+      .close-btn { display: grid; }
+      .editor-body { flex-direction: row; overflow: hidden; }
+      .steps { flex: 1; overflow: auto; padding: 22px 24px 28px; gap: 10px; }
+      .receipt { position: static; width: 320px; flex: none; display: flex; flex-direction: column; margin: 0; padding: 24px; background: var(--white); border-top: 0; border-left: 1px solid var(--soft); box-shadow: none; }
+      .receipt-heading { margin-bottom: 14px; }
+      .receipt-lines { order: 1; display: grid; gap: 10px; margin: 0 0 14px; font-size: .9375rem; color: var(--ink); }
+      .receipt-lines > div { justify-content: space-between; }
+      .receipt-lines dt { color: var(--muted); }
+      .receipt-total { order: 2; flex-direction: column; align-items: flex-start; gap: 4px; padding-top: 14px; border-top: 1px dashed #c9d2dc; }
+      .receipt-total strong { font-size: 2rem; }
+      .receipt-lines[hidden] + .receipt-total { padding-top: 0; border-top: 0; }
+      .steps { gap: 0; padding-top: 6px; }
+      .step, .step[data-state="open"], .step[data-state="todo"] { border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+      .step + .step { border-top: 1px solid var(--soft); }
+      .step .step-body { display: grid !important; padding: 12px 0 22px 38px; }
+      .step .step-head { cursor: default; min-height: 0; padding: 20px 0 0; pointer-events: none; }
+      .step .step-head:hover { background: transparent !important; }
+      .step .step-sum, .step .step-flag, .step .step-edit { display: none !important; }
+      .step .step-title small { font-size: .9375rem; color: var(--ink); letter-spacing: .02em; }
+      .stock-options { margin: -6px 0 0; border: 1px solid var(--soft); border-radius: 10px; }
+      .stock-options [role="option"]:last-child { border-radius: 0 0 9px 9px; }
+      .danger-zone { margin-left: 38px; }
+      .receipt-holding { order: 3; margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--page); }
+      .receipt-alert { order: 4; margin: 14px 0 0; }
+      .receipt-missing { order: 5; margin-top: auto; padding-top: 14px; }
+      .receipt .primary { order: 6; }
+      .receipt-missing[hidden] ~ .primary { margin-top: auto; }
+      .receipt.compact { display: flex; flex-direction: column; align-items: stretch; }
+      .fake-keyboard { display: none !important; }
+      .done { padding: 40px 32px 28px; }
+      .modal-layer { place-items: center; }
+      .modal { border-radius: 18px; padding-bottom: 20px; }
+      body.as-page .scrim { display: none; }
+      body.as-page .backdrop-app main > * { display: none; }
+      body.as-page .editor { left: calc(var(--sidebar) + (100vw - var(--sidebar)) / 2); width: min(880px, calc(100vw - var(--sidebar) - 64px)); box-shadow: 0 1px 3px #1e2a3814; border: 1px solid var(--soft); }
+      body.as-page .back-btn { display: grid; }
+      body.as-page .close-btn { display: none; }
+      body.as-page .editor-header { grid-template-columns: 52px 1fr; padding-left: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M16.752,23.994,6.879,14.121a3,3,0,0,1,0-4.242L16.746.012,18.16,1.426,8.293,11.293a1,1,0,0,0,0,1.414l9.873,9.873Z"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M7.412,24,6,22.588l9.881-9.881a1,1,0,0,0,0-1.414L6.017,1.431,7.431.017l9.862,9.862a3,3,0,0,1,0,4.242Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M23.707.293h0a1,1,0,0,0-1.414,0L12,10.586,1.707.293a1,1,0,0,0-1.414,0h0a1,1,0,0,0,0,1.414L10.586,12,.293,22.293a1,1,0,0,0,0,1.414h0a1,1,0,0,0,1.414,0L12,13.414,22.293,23.707a1,1,0,0,0,1.414,0h0a1,1,0,0,0,0-1.414L13.414,12,23.707,1.707A1,1,0,0,0,23.707.293Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M24,24H12C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12v12ZM12,2C6.486,2,2,6.486,2,12s4.486,10,10,10h10V12c0-5.514-4.486-10-10-10Zm1,3h-2V15h2V5Zm0,12h-2v2h2v-2Z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M21,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H3A1,1,0,0,0,3,6H4V19a5.006,5.006,0,0,0,5,5h6a5.006,5.006,0,0,0,5-5V6h1a1,1,0,0,0,0-2ZM11,2h2a3.006,3.006,0,0,1,2.829,2H8.171A3.006,3.006,0,0,1,11,2Zm7,17a3,3,0,0,1-3,3H9a3,3,0,0,1-3-3V6H18Z"/><path d="M10,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,10,18Z"/><path d="M14,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,14,18Z"/></symbol>
+  </svg>
+
+  <div class="demo-bar">
+    <span>設計稿預覽</span>
+    <select id="demo-state" aria-label="預覽狀態">
+      <option value="blank">新增交易紀錄：空白</option>
+      <option value="picked">選好股票，正在填股數與單價</option>
+      <option value="buy">填寫完成（買進）</option>
+      <option value="sell-pick">選股票（賣出，先列持股）</option>
+      <option value="oversell">賣出超過持有股數</option>
+      <option value="limit">單價超出漲跌停</option>
+      <option value="weekend">交易日期是週末</option>
+      <option value="future">交易日期晚於今天</option>
+      <option value="fee-manual">手續費已手動修改</option>
+      <option value="incomplete">沒填完就送出</option>
+      <option value="keyboard">輸入中（鍵盤開啟）</option>
+      <option value="saving">送出中</option>
+      <option value="error">儲存失敗</option>
+      <option value="quota">額度用完</option>
+      <option value="done">完成</option>
+      <option value="edit">編輯交易紀錄</option>
+      <option value="missing">找不到要編輯的紀錄</option>
+      <option value="div-blank">新增現金股利：空白</option>
+      <option value="div-filled">新增現金股利：填寫完成</option>
+      <option value="div-done">新增現金股利：完成</option>
+      <option value="page">寬版：直接開啟網址的編輯頁</option>
+      <option value="narrow-modal">桌面瀏覽器：寬度小於 960px 的視窗</option>
+      <option value="sid">從個股詳情頁開啟（預先選好股票）</option>
+      <option value="no-suggest">還沒有任何紀錄（沒有建議清單）</option>
+      <option value="loading">紀錄還在載入</option>
+      <option value="div-edit">編輯現金股利</option>
+    </select>
+  </div>
+
+  <div class="backdrop-app" aria-hidden="true" inert>
+    <nav class="sidebar">
+      <div class="add">新增</div>
+      <span class="current">儀表板</span><span>市場</span><span>歷史紀錄</span><span>買賣計畫</span><span>收益分析</span><span>手續費</span>
+    </nav>
+    <main><h2>儀表板</h2><div class="stat"><p>持股市值</p><strong>5,312,480</strong></div></main>
+  </div>
+  <div class="scrim" id="scrim"></div>
+
+  <section class="editor" id="editor" aria-labelledby="editor-title">
+    <header class="editor-header">
+      <button type="button" class="icon-btn back-btn" id="back" aria-label="返回" data-tip="返回"><svg class="icon"><use href="#i-chevron-left"/></svg></button>
+      <h1 id="editor-title" tabindex="-1">新增交易紀錄</h1>
+      <button type="button" class="icon-btn close-btn" id="close" aria-label="關閉" data-tip="關閉"><svg class="icon"><use href="#i-x"/></svg></button>
+    </header>
+
+    <div class="editor-body" id="form-view">
+      <form class="steps" id="form" novalidate>
+
+        <section class="step" id="s-pick">
+          <button type="button" class="step-head" aria-controls="b-pick">
+            <span class="mark"></span>
+            <span class="step-title"><small id="t-pick">買賣與股票</small><span class="step-sum" id="m-pick"></span><span class="step-flag" id="g-pick" hidden></span></span>
+            <span class="step-edit" aria-hidden="true">修改</span>
+          </button>
+          <div class="step-body" id="b-pick">
+            <div class="side-switch" id="side-switch" role="group" aria-label="買賣別">
+              <button type="button" data-side="buy" aria-pressed="true"><svg class="icon"><use href="#i-check"/></svg>買進</button>
+              <button type="button" data-side="sell" aria-pressed="false"><svg class="icon"><use href="#i-check"/></svg>賣出</button>
+            </div>
+            <div class="field" id="f-stock">
+              <label class="flabel" for="stock-input" id="stock-label">股票</label>
+              <div class="stock-chosen" id="stock-chosen" hidden>
+                <strong id="stock-name"></strong>
+                <button type="button" class="link-btn" id="stock-change">更換</button>
+              </div>
+              <div class="stock-search" id="stock-search">
+                <svg class="icon"><use href="#i-search"/></svg>
+                <input id="stock-input" type="search" role="combobox" aria-expanded="true" aria-controls="stock-options" aria-autocomplete="list" autocomplete="off" placeholder="輸入股票代號或名稱">
+              </div>
+              <p class="field-msg error" id="stock-error" hidden><svg class="icon"><use href="#i-alert"/></svg>請選擇股票</p>
+            </div>
+            <ul class="stock-options" id="stock-options" role="listbox" aria-labelledby="stock-label"></ul>
+          </div>
+        </section>
+
+        <section class="step" id="s-date">
+          <button type="button" class="step-head" aria-controls="b-date">
+            <span class="mark"></span>
+            <span class="step-title"><small id="t-date">交易日期</small><span class="step-sum" id="m-date"></span><span class="step-flag" id="g-date" hidden></span></span>
+            <span class="step-edit" aria-hidden="true">修改</span>
+          </button>
+          <div class="step-body" id="b-date">
+            <div class="date-row" role="group" aria-labelledby="t-date">
+              <button type="button" class="chip" data-day="0" aria-pressed="true">今天</button>
+              <button type="button" class="chip" data-day="prev" aria-pressed="false" id="chip-prev">昨天</button>
+              <label class="date-picker" id="date-picker"><span id="date-text"></span><svg class="icon"><use href="#i-chevron-right"/></svg><input type="date" id="date" aria-label="選擇日期"></label>
+            </div>
+            <p class="field-msg" id="date-msg"></p>
+          </div>
+        </section>
+
+        <section class="step" id="s-qty">
+          <button type="button" class="step-head" aria-controls="b-qty">
+            <span class="mark"></span>
+            <span class="step-title"><small>股數與單價</small><span class="step-sum" id="m-qty"></span><span class="step-flag" id="g-qty" hidden></span></span>
+            <span class="step-edit" aria-hidden="true">修改</span>
+          </button>
+          <div class="step-body" id="b-qty">
+            <div class="field" id="f-qty">
+              <div class="label-row">
+                <label class="flabel" for="qty">成交股數</label>
+                <div class="unit-switch" id="unit-switch" role="group" aria-label="股數單位">
+                  <button type="button" data-unit="lot" aria-pressed="true">張</button>
+                  <button type="button" data-unit="share" aria-pressed="false">股</button>
+                </div>
+              </div>
+              <div class="input-wrap"><input id="qty" inputmode="numeric" autocomplete="off" aria-describedby="qty-hint"><span class="unit" id="qty-unit">張</span></div>
+              <p class="field-msg" id="qty-hint"></p>
+            </div>
+            <div class="field" id="f-price">
+              <label class="flabel" for="price">成交單價</label>
+              <div class="input-wrap"><input id="price" inputmode="decimal" autocomplete="off" aria-describedby="price-msg"><span class="unit">元</span></div>
+              <p class="field-msg" id="price-msg"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="step" id="s-fee">
+          <button type="button" class="step-head" aria-controls="b-fee">
+            <span class="mark"></span>
+            <span class="step-title"><small>手續費用</small><span class="step-sum" id="m-fee"></span><span class="step-flag" id="g-fee" hidden></span></span>
+            <span class="step-edit" aria-hidden="true">修改</span>
+          </button>
+          <div class="step-body" id="b-fee">
+            <div class="field">
+              <div class="label-row"><label class="flabel" for="fee">手續費用</label><span class="tag manual" id="fee-manual-tag" hidden>已手動修改</span></div>
+              <div class="input-wrap"><input id="fee" inputmode="numeric" autocomplete="off" aria-describedby="fee-hint"><span class="unit">元</span></div>
+              <p class="field-msg" id="fee-hint"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="step" id="s-amount" hidden>
+          <button type="button" class="step-head" aria-controls="b-amount">
+            <span class="mark"></span>
+            <span class="step-title"><small>入帳金額</small><span class="step-sum" id="m-amount"></span><span class="step-flag" id="g-amount" hidden></span></span>
+            <span class="step-edit" aria-hidden="true">修改</span>
+          </button>
+          <div class="step-body" id="b-amount">
+            <div class="field" id="f-dividend">
+              <label class="flabel" for="dividend">入帳金額</label>
+              <div class="input-wrap"><input id="dividend" inputmode="numeric" autocomplete="off" aria-describedby="dividend-hint"><span class="unit">元</span></div>
+              <p class="field-msg" id="dividend-hint"></p>
+            </div>
+          </div>
+        </section>
+
+        <div class="danger-zone" id="danger" hidden>
+          <button type="button" class="danger-btn" id="delete"><svg class="icon"><use href="#i-trash"/></svg><span id="delete-label">刪除交易紀錄</span></button>
+          <p id="danger-desc">刪除後無法復原，投資績效、持股與手續費統計會同步更新。</p>
+        </div>
+      </form>
+
+      <aside class="receipt" id="receipt" aria-label="這筆紀錄的金額">
+        <p class="receipt-heading" id="receipt-heading"></p>
+        <dl class="receipt-lines num" id="receipt-lines">
+          <div><dt>成交金額</dt><dd><span id="r-gross"></span> 元</dd></div>
+          <div><dt>手續費用</dt><dd><span id="r-fee"></span> 元</dd></div>
+        </dl>
+        <div class="receipt-total"><span id="r-total-label">應付金額</span><strong id="r-total"></strong></div>
+        <div class="receipt-holding" id="r-holding" hidden></div>
+        <div class="receipt-alert" id="r-alert" role="alert" hidden></div>
+        <p class="receipt-missing" id="r-missing"></p>
+        <button class="primary" id="submit" type="submit" form="form">新增買進紀錄</button>
+      </aside>
+    </div>
+
+    <div class="done" id="done-view" hidden>
+      <div class="done-mark"><svg class="icon"><use href="#i-check"/></svg></div>
+      <h2 id="done-title"></h2>
+      <p class="done-sub num" id="done-sub"></p>
+      <dl class="done-card" id="done-card"></dl>
+      <div class="done-actions" id="done-actions">
+        <button type="button" class="secondary" id="again">再記一筆</button>
+        <button type="button" class="primary" id="finish">完成</button>
+      </div>
+      <p class="done-note num" id="done-note"></p>
+    </div>
+
+    <div class="not-found" id="missing-view" hidden>
+      <strong>找不到這筆資料</strong>
+      <p>可能已經被刪除或尚未載入完成。</p>
+    </div>
+
+    <div class="fake-keyboard" id="kbd" aria-hidden="true" hidden>系統鍵盤（示意）</div>
+  </section>
+
+  <div class="modal-layer" id="modal-layer" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" id="modal"></div>
+  </div>
+
+  <script>
+    const STOCKS = [
+      { sid: "2330", name: "台積電", price: 1045, prev: 1030, hold: 2000, div: 9000 },
+      { sid: "00878", name: "國泰永續高股息", price: 22.35, prev: 22.4, hold: 5000, div: 2280 },
+      { sid: "2317", name: "鴻海", price: 218.5, prev: 216, hold: 1500, div: 7920 },
+      { sid: "2412", name: "中華電", price: 132, prev: 131.5, hold: 1000, div: 4985 },
+      { sid: "0050", name: "元大台灣50", price: 196.4, prev: 195, hold: 0, div: 0 },
+      { sid: "00679B", name: "元大美債20年", price: 27.12, prev: 27.05, hold: 0, div: 0 },
+      { sid: "2454", name: "聯發科", price: 1385, prev: 1400, hold: 0, div: 0 },
+      { sid: "2603", name: "長榮", price: 192.5, prev: 190, hold: 0, div: 0 },
+    ];
+    const RECENT = ["2330", "0050", "00878", "2317", "2454"];
+    const TRADES = [
+      { id: 1, sid: "00878", date: "2025-01-10", qty: 5000 },
+      { id: 2, sid: "2412", date: "2025-06-01", qty: 1000 },
+      { id: 3, sid: "2317", date: "2024-04-01", qty: 1700 },
+      { id: 4, sid: "2317", date: "2024-05-02", qty: -200 },
+      { id: 5, sid: "2330", date: "2026-11-20", qty: 2000 },
+    ];
+    const DIVIDENDS = { "2330": 9000, "00878": 2280, "2317": 7920, "2412": 4985 };
+    const QUOTE_TIME = "11/24 13:30";
+    const TODAY = new Date(2026, 10, 24);
+    const WEEK = "日一二三四五六";
+    const BUY_RATE = 0.001425, SELL_RATE = 0.004425;
+
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n, d = 0) => n.toLocaleString("en-US", { maximumFractionDigits: d });
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const shortDate = (v) => { const d = new Date(v + "T00:00"); const y = d.getFullYear() !== TODAY.getFullYear() ? `${d.getFullYear()}/` : ""; return `${y}${d.getMonth() + 1}/${d.getDate()}（${WEEK[d.getDay()]}）`; };
+    const dayDiff = (v) => Math.round((TODAY - new Date(v + "T00:00")) / 86400000);
+    const relDate = (v) => { const n = dayDiff(v); return (n === 0 ? "今天 " : n === 1 ? "昨天 " : "") + shortDate(v); };
+    const prevWeekday = () => { const d = new Date(TODAY); do { d.setDate(d.getDate() - 1); } while ([0, 6].includes(d.getDay())); return iso(d); };
+    const findStock = (sid) => STOCKS.find((x) => x.sid === sid) ?? null;
+    const ICON = (id) => `<svg class="icon"><use href="#${id}"/></svg>`;
+
+    const blank = () => ({
+      kind: "trade", mode: "new", side: "buy", stock: null, unit: "lot", qty: "", price: "",
+      date: iso(TODAY), fee: null, feeManual: false, dividend: "", open: "pick",
+      phase: "form", showErrors: false, keyboard: false, query: "", editId: null, divOriginal: 0, changing: false, leftText: false,
+    });
+    let s = blank();
+    const snap = (x) => JSON.stringify({ ...x, open: null, phase: "form", showErrors: false, keyboard: false, query: "", changing: false, leftText: false });
+    let initial = snap(s);
+
+    const shares = () => { const q = parseFloat(s.qty.replace(/,/g, "")); if (!q) return 0; return s.unit === "lot" ? Math.round(q * 1000) : q; };
+    const price = () => parseFloat(s.price.replace(/,/g, "")) || 0;
+    const gross = () => price() * shares();
+    const autoFee = () => (s.price !== "" && shares() ? (price() === 0 ? 0 : Math.max(1, Math.floor(gross() * (s.side === "buy" ? BUY_RATE : SELL_RATE)))) : null);
+    const fee = () => (s.feeManual ? s.fee : autoFee());
+    const holdNow = () => TRADES.filter((t) => t.sid === s.stock?.sid).reduce((a, t) => a + t.qty, 0);
+    const holdBase = () => TRADES.filter((t) => t.sid === s.stock?.sid && t.id !== s.editId).reduce((a, t) => a + t.qty, 0);
+    const holdAsOf = () => TRADES.filter((t) => t.sid === s.stock?.sid && t.id !== s.editId && t.date <= s.date).reduce((a, t) => a + t.qty, 0);
+    const divNow = () => DIVIDENDS[s.stock?.sid] ?? 0;
+    const isFuture = () => s.date > iso(TODAY);
+    const amount = () => parseInt(s.dividend.replace(/,/g, ""), 10);
+    const order = () => (s.kind === "trade" ? ["pick", "date", "qty", "fee"] : ["pick", "date", "amount"]);
+    const valid = {
+      pick: () => !!s.stock,
+      date: () => !!s.date && !isFuture(),
+      qty: () => shares() > 0 && s.price !== "",
+      fee: () => fee() != null,
+      amount: () => s.dividend !== "",
+    };
+    const firstInvalid = () => order().find((k) => !valid[k]());
+    const dirty = () => snap(s) !== initial;
+
+    function oversell() {
+      if (loadingRecords) return null;
+      if (s.kind !== "trade" || !s.stock || !shares()) return null;
+      const orig = TRADES.find((t) => t.id === s.editId);
+      const from = orig && orig.date < s.date ? orig.date : s.date;
+      const others = TRADES.filter((t) => t.sid === s.stock.sid && t.id !== s.editId);
+      const mine = { id: s.editId ?? 1e9, date: s.date, qty: s.side === "buy" ? shares() : -shares() };
+      const order = (arr) => arr.slice().sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+      const runs = (arr) => { const m = new Map(); let r = 0; for (const t of order(arr)) { r += t.qty; m.set(t.id, r); } return m; };
+      const saved = orig ? others.concat([orig]) : others;
+      const withMe = runs(others.concat([mine])), withoutMe = runs(saved);
+      for (const t of order(others.concat([mine]))) {
+        if (t.date < from || t.qty >= 0 || t === mine && false) continue;
+        const a = withMe.get(t.id), b = withoutMe.has(t.id) ? withoutMe.get(t.id) : (t === mine && !orig ? Infinity : 0);
+        if (a < 0 && a < b) return { date: t.date, short: -a };
+      }
+      return null;
+    }
+    const oversellText = () => { const o = oversell(); return `存下這筆之後，${shortDate(o.date)} 的賣出會比當時的庫存多 ${fmt(o.short)} 股。如果有更早的買進還沒記，可以先補記。`; };
+    function limitWarn() {
+      if (s.kind !== "trade" || !s.stock || !price() || !(s.stock.price > 0) || !(s.stock.prev > 0) || dayDiff(s.date) !== 0) return null;
+      const lo = Math.round(s.stock.prev * 0.9 * 100) / 100, hi = Math.round(s.stock.prev * 1.1 * 100) / 100;
+      return price() < lo || price() > hi ? { lo, hi } : null;
+    }
+    const isWeekend = () => [0, 6].includes(new Date(s.date + "T00:00").getDay());
+
+    let holdMode = false;
+    let noSuggest = false;
+    let loadingRecords = false;
+    let firstHit = null;
+    function renderOptions() {
+      const q = s.query.trim();
+      let html;
+      holdMode = !q && (s.kind === "dividend" || s.side === "sell");
+      if (!q) {
+        const fromHoldings = s.kind === "dividend" || s.side === "sell";
+        const list = noSuggest ? [] : fromHoldings ? STOCKS.filter((x) => x.hold > 0).sort((a, b) => a.sid.localeCompare(b.sid)) : RECENT.map(findStock);
+        if (!list.length) { $("stock-options").innerHTML = ""; return; }
+        html = `<li class="group" role="presentation">${fromHoldings ? "持有中" : "最近記過"}</li>` + list.map(opt).join("");
+      } else {
+        const hits = STOCKS.filter((x) => x.sid.startsWith(q.toUpperCase()) || x.name.includes(q));
+        firstHit = hits[0];
+        html = hits.length ? hits.map(opt).join("") : `<li class="empty" role="presentation">找不到「${q}」，請確認股票代號或名稱</li>`;
+      }
+      $("stock-options").innerHTML = html;
+      function opt(x) {
+        const meta = x.hold > 0 ? `持有 ${fmt(x.hold)} 股` : "";
+        return `<li role="option" id="opt-${x.sid}" data-sid="${x.sid}" aria-selected="${q && x === firstHit ? "true" : "false"}"><span class="opt-name">${x.sid}<small>${x.name}</small></span><span class="opt-meta">${meta}</span></li>`;
+      }
+    }
+
+    function setStep(key, summary, flag) {
+      const el = $(`s-${key}`);
+      const idx = order().indexOf(key);
+      el.hidden = idx < 0;
+      if (idx < 0) return;
+      const state = s.open === key ? "open" : valid[key]() ? "done" : "todo";
+      el.dataset.state = state;
+      el.querySelector(".mark").innerHTML = state === "done" ? ICON("i-check") : idx + 1;
+      el.querySelector(".step-head").setAttribute("aria-expanded", String(state === "open"));
+      $(`m-${key}`).innerHTML = summary;
+      const g = $(`g-${key}`);
+      if (g) {
+        g.hidden = !flag || state === "open";
+        if (flag) { g.className = `step-flag ${flag.type ?? ""}`; g.innerHTML = ICON("i-alert") + `<span>${flag.text}</span>`; }
+      }
+    }
+
+    function render() {
+      const trade = s.kind === "trade";
+      const editing = s.mode === "edit";
+      const noun = trade ? "交易紀錄" : "現金股利";
+      const sideText = s.side === "buy" ? "買進" : "賣出";
+      $("editor-title").textContent = `${editing || s.phase === "missing" ? "編輯" : "新增"}${noun}`;
+      $("form-view").hidden = s.phase === "done" || s.phase === "missing";
+      $("done-view").hidden = s.phase !== "done";
+      $("missing-view").hidden = s.phase !== "missing";
+      $("kbd").hidden = !s.keyboard;
+
+      // Step: direction and stock
+      $("t-pick").textContent = trade ? "買賣與股票" : "股票";
+      $("side-switch").hidden = !trade;
+      document.querySelectorAll("[data-side]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.side === s.side)));
+      setStep("pick",
+        s.stock ? `${trade ? sideText + "・" : ""}${s.stock.sid} ${s.stock.name}` : "還沒填",
+        s.query.trim() && (!s.stock || s.changing) && (s.showErrors || s.leftText) ? { type: "error", text: "請從搜尋結果選擇一檔股票" } : s.showErrors && !s.stock ? { type: "error", text: "請選擇股票" } : null);
+      const searching = !s.stock || (s.changing && (s.open === "pick" || isModal() || document.body.classList.contains("as-page")));
+      $("stock-chosen").hidden = searching;
+      $("stock-search").hidden = !searching;
+      $("stock-options").hidden = !searching;
+      if (s.stock) {
+        $("stock-name").innerHTML = `${s.stock.sid}<span>${s.stock.name}</span>`;
+      }
+      if (searching) renderOptions();
+      $("f-stock").classList.toggle("invalid", s.showErrors && !s.stock);
+      $("stock-error").hidden = !((s.showErrors || s.leftText) && (!s.stock || (s.changing && s.query.trim())) && (s.showErrors || s.query.trim()));
+      $("stock-error").lastChild.textContent = s.query.trim() ? "請從搜尋結果選擇一檔股票" : "請選擇股票";
+
+      // Step: date
+      $("t-date").textContent = trade ? "交易日期" : "入帳日期";
+      const dd = dayDiff(s.date);
+      const pw = prevWeekday();
+      $("chip-prev").textContent = dayDiff(pw) === 1 ? "昨天" : shortDate(pw);
+      document.querySelectorAll("[data-day]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.day === "prev" ? s.date === pw : Number(b.dataset.day) === dd)));
+      $("date-picker").dataset.active = String(dd !== 0 && s.date !== pw);
+      $("date-text").textContent = dd !== 0 && s.date !== pw ? shortDate(s.date) : "其他日期";
+      $("date").value = s.date;
+      const dm = $("date-msg");
+      if (isFuture()) { dm.className = "field-msg error"; dm.innerHTML = ICON("i-alert") + `${trade ? "交易" : "入帳"}日期不能晚於今天`; }
+      else if (isWeekend()) {
+        const wk = new Date(s.date + "T00:00").getDay();
+        dm.className = "field-msg warn";
+        dm.innerHTML = ICON("i-alert") + `<span>${shortDate(s.date)} 是週${WEEK[wk]}，台股沒有開盤，請確認${trade ? "交易" : "入帳"}日期。</span>`;
+      } else { dm.className = "field-msg"; dm.textContent = dd <= 1 ? shortDate(s.date) : ""; }
+      setStep("date", relDate(s.date), isFuture() ? { type: "error", text: `${trade ? "交易" : "入帳"}日期不能晚於今天` } : isWeekend() ? { text: "這天台股沒有開盤" } : null);
+
+      // Step: quantity and price
+      document.querySelectorAll("[data-unit]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.unit === s.unit)));
+      $("qty-unit").textContent = s.unit === "lot" ? "張" : "股";
+      if ($("qty").value !== s.qty) $("qty").value = s.qty;
+      if ($("price").value !== s.price) $("price").value = s.price;
+      const qh = $("qty-hint");
+      if (s.showErrors && !shares()) { qh.className = "field-msg error"; qh.innerHTML = ICON("i-alert") + (s.qty === "" ? "請填寫成交股數" : "成交股數要大於 0"); }
+      else { qh.className = "field-msg"; qh.textContent = s.unit === "lot" ? (shares() ? `共 ${fmt(shares())} 股` : "1 張是 1,000 股，可以填小數，例如 1.5 張") : "零股可以直接用股數填寫"; }
+      $("f-qty").classList.toggle("invalid", s.showErrors && !shares());
+      if (oversell() && !(s.showErrors && !shares())) { qh.className = "field-msg warn"; qh.innerHTML = ICON("i-alert") + `<span>${oversellText()}</span>`; }
+      const lw = limitWarn();
+      const pm = $("price-msg");
+      if (lw) { pm.className = "field-msg warn"; pm.innerHTML = ICON("i-alert") + `<span>${s.stock.sid} 今天的成交價應在 ${fmt(lw.lo, 2)} 到 ${fmt(lw.hi, 2)} 元之間，請確認單價有沒有打錯。</span>`; }
+      else if (s.showErrors && s.price === "") { pm.className = "field-msg error"; pm.innerHTML = ICON("i-alert") + "請填寫成交單價"; }
+      else { pm.className = "field-msg"; pm.textContent = ""; }
+      $("f-price").classList.toggle("invalid", s.showErrors && s.price === "");
+      const qtyText = s.unit === "lot" ? `${s.qty} 張` : `${fmt(shares())} 股`;
+      setStep("qty",
+        valid.qty() ? `${qtyText} × ${fmt(price(), 4)} 元` : shares() || price() ? "還沒填完" : "還沒填",
+        lw ? { text: "單價超出今天的漲跌停範圍" } : s.showErrors && !valid.qty() ? { type: "error", text: s.qty !== "" && !shares() ? (s.price !== "" ? "成交股數要大於 0" : "成交股數要大於 0，請填寫成交單價") : "請填寫成交股數與單價" } : null);
+
+      // Step: fee
+      const f = fee();
+      if (document.activeElement !== $("fee")) $("fee").value = f == null ? "" : fmt(f);
+      $("fee-hint").innerHTML = s.showErrors && s.feeManual && f == null ? ICON("i-alert") + "請填寫手續費用"
+        : s.feeManual
+        ? `你改過這個金額，之後改股數或單價時不會覆蓋。試算是 ${autoFee() == null ? "—" : fmt(autoFee()) + " 元"}。<button type="button" class="inline-link" id="fee-reset">改回試算</button>`
+        : f == null ? "填好股數與單價後自動試算"
+        : s.side === "buy" ? "依成交金額 × 0.1425% 試算，可以改成券商通知上的金額"
+        : "依成交金額 × 0.4425% 試算，包含手續費與 0.3% 證交稅；要改的話，請填券商通知上手續費加交易稅的合計";
+      $("fee-manual-tag").hidden = !s.feeManual;
+      $("b-fee").querySelector(".input-wrap").classList.toggle("bad", s.showErrors && s.feeManual && f == null);
+      $("fee-hint").className = s.showErrors && s.feeManual && f == null ? "field-msg error" : "field-msg";
+      setStep("fee", s.feeManual && f == null ? '還沒填<span class="sub">已手動修改</span>' : f == null ? "填好股數與單價後自動試算" : `${fmt(f)} 元${s.feeManual ? '<span class="sub">已手動修改</span>' : editing ? "" : '<span class="sub">試算</span>'}`, s.showErrors && s.feeManual && f == null ? { type: "error", text: "請填寫手續費用" } : null);
+
+      // Step: dividend amount
+      if ($("dividend").value !== s.dividend) $("dividend").value = s.dividend;
+      const dEmpty = s.showErrors && s.dividend === "";
+      $("f-dividend").classList.toggle("invalid", dEmpty);
+      $("dividend-hint").className = dEmpty ? "field-msg error" : "field-msg";
+      $("dividend-hint").innerHTML = dEmpty ? ICON("i-alert") + "請填寫入帳金額" : "照存摺或券商通知上實際入帳的金額填寫";
+      setStep("amount", s.dividend !== "" ? `${s.dividend} 元` : "還沒填", dEmpty ? { type: "error", text: "請填寫入帳金額" } : null);
+
+      $("danger").hidden = !editing;
+      $("delete-label").textContent = trade ? "刪除交易紀錄" : "刪除現金股利";
+      $("danger-desc").textContent = trade ? "刪除後無法復原，投資績效、持股與手續費統計會同步更新。" : "刪除後無法復原，這筆現金股利不會再計入收益分析。";
+
+      // Receipt
+      $("receipt").classList.toggle("compact", s.keyboard);
+      $("receipt-heading").textContent = `${shortDate(s.date)}${trade ? "・" + sideText : ""}${s.stock ? "・" + s.stock.sid + " " + s.stock.name : ""}`;
+      $("receipt-lines").hidden = !trade || !valid.qty();
+      $("r-gross").textContent = valid.qty() ? fmt(Math.round(gross())) : "";
+      $("r-fee").textContent = f == null ? "" : fmt(f);
+      let total = null;
+      if (trade && valid.qty() && f != null) total = s.side === "buy" ? Math.round(gross()) + f : Math.round(gross()) - f;
+      if (!trade && s.dividend !== "") total = amount();
+      $("r-total-label").textContent = trade ? (s.side === "buy" ? "應付金額" : "應收金額") : "入帳金額";
+      $("r-total").innerHTML = total == null ? (trade ? (valid.qty() ? "填好手續費用後計算" : "填好股數與單價後計算") : "填好入帳金額後顯示") : `${fmt(total)}<small>元</small>`;
+      $("r-total").className = total == null ? "placeholder" : "";
+      const h = $("r-holding");
+      h.hidden = !s.stock || loadingRecords;
+      if (s.stock && trade) {
+        const after = shares() ? holdBase() + (s.side === "buy" ? shares() : -shares()) : null;
+        const show = (n) => (n < 0 ? "不足 " + fmt(-n) : fmt(n));
+        h.innerHTML = `<span class="k">庫存</span><strong>${show(holdNow())}</strong>${after == null ? "<span>股</span>" : `<span class="arrow">→</span><strong>${show(after)}</strong><span>股</span>`}`;
+      } else if (s.stock) {
+        h.innerHTML = `<span class="k">${s.stock.sid} 累計現金股利</span><strong>${fmt(divNow())}</strong>${s.dividend !== "" ? `<span class="arrow">→</span><strong>${fmt(divNow() - s.divOriginal + amount())}</strong>` : ""}<span>元</span>`;
+      }
+      const a = $("r-alert");
+      a.hidden = true;
+      if (s.phase === "error") {
+        a.hidden = false; a.className = "receipt-alert error";
+        a.innerHTML = ICON("i-alert") + `<span>沒有連上網路，這筆紀錄還沒儲存。填好的內容都還在，連上網路後再送出一次。</span>`;
+      } else if (oversell()) {
+        a.hidden = false; a.className = "receipt-alert warn";
+        a.innerHTML = ICON("i-alert") + `<span>${oversellText()}</span>`;
+      }
+      const names = { pick: "股票", date: "日期", qty: "股數與單價", fee: "手續費用", amount: "入帳金額" };
+      const empty = { pick: () => !s.stock, qty: () => s.qty === "" || s.price === "", fee: () => valid.qty() && fee() == null, amount: () => s.dividend === "", date: () => false };
+      const miss = order().filter((k) => empty[k]());
+      $("r-missing").hidden = !miss.length || s.keyboard;
+      $("r-missing").textContent = miss.length ? `還沒填：${miss.map((k) => names[k]).join("、")}` : "";
+      const btn = $("submit");
+      if (s.phase === "saving") { btn.setAttribute("aria-busy", "true"); btn.innerHTML = `<span class="spinner" aria-hidden="true"></span>儲存中`; }
+      else { btn.removeAttribute("aria-busy"); btn.textContent = editing ? "儲存變更" : trade ? `新增${sideText}紀錄` : "新增現金股利"; }
+
+      if (s.phase === "done") renderDone();
+    }
+
+    function renderDone() {
+      const trade = s.kind === "trade";
+      const editing = s.mode === "edit";
+      $("done-title").textContent = editing ? "已儲存變更" : trade ? `已新增${s.side === "buy" ? "買進" : "賣出"}紀錄` : "已新增現金股利";
+      $("done-sub").textContent = `${s.stock.sid} ${s.stock.name}・${shortDate(s.date)}`;
+      const rows = [];
+      if (trade) {
+        const qtyText = s.unit === "lot" ? `${s.qty} 張（${fmt(shares())} 股）` : `${fmt(shares())} 股`;
+        rows.push(["成交", `${qtyText} × ${fmt(price(), 4)} 元`]);
+        rows.push([s.side === "buy" ? "應付金額" : "應收金額", `${fmt(s.side === "buy" ? Math.round(gross()) + fee() : Math.round(gross()) - fee())} 元`]);
+        { const after = holdBase() + (s.side === "buy" ? shares() : -shares()); const show = (n) => (n < 0 ? "不足 " + fmt(-n) : fmt(n)); rows.push(["庫存", `${show(holdNow())} → ${show(after)} 股`]); }
+      } else {
+        rows.push(["入帳金額", `${fmt(amount())} 元`]);
+        rows.push(["累計現金股利", `${fmt(divNow())} → ${fmt(divNow() + amount())} 元`]);
+      }
+      $("done-card").innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+      $("again").hidden = editing;
+      $("done-actions").style.gridTemplateColumns = editing ? "1fr" : "";
+      $("done-note").textContent = editing ? "" : `再記一筆會沿用${trade ? "交易" : "入帳"}日期 ${shortDate(s.date)}。`;
+    }
+
+    // Modals
+    let lastFocus = null;
+    function openModal(kind) {
+      lastFocus = document.activeElement;
+      const m = $("modal");
+      const trade = s.kind === "trade";
+      if (kind === "quota") {
+        m.innerHTML = `<h2 id="modal-title">這個月的新增額度已用完</h2>
+          <div class="modal-box"><b>目前限制</b><br>Free 方案每月最多只能新增 20 筆交易紀錄與現金股利。</div>
+          <p>升級 Standard 後，你將可獲得：</p>
+          <ul><li>${ICON("i-check")}交易紀錄與現金股利不限筆數</li><li>${ICON("i-check")}買賣計畫、持股與關注清單不限量</li><li>${ICON("i-check")}行情約每 30 秒更新</li></ul>
+          <div class="modal-actions"><button class="secondary" data-close>稍後再說</button><button class="primary" data-plan>查看 Standard 方案</button></div>`;
+      } else if (kind === "discard") {
+        m.innerHTML = `<h2 id="modal-title">捨棄變更？</h2><p>離開後，尚未送出的內容不會被儲存。</p>
+          <div class="modal-actions"><button class="secondary" data-close>繼續編輯</button><button class="primary danger" data-leave>捨棄變更</button></div>`;
+      } else if (kind === "delete") {
+        m.innerHTML = `<h2 id="modal-title">${trade ? "刪除交易紀錄？" : "刪除現金股利？"}</h2><p>${trade ? "刪除後，這筆紀錄會從投資績效、持股與手續費統計中移除。" : "刪除後，這筆現金股利不會再計入收益分析。"}</p>
+          <div class="modal-box num">${s.stock.sid} ${s.stock.name}・${shortDate(s.date)}${trade ? `・${s.side === "buy" ? "買進" : "賣出"} ${fmt(shares())} 股` : `・入帳金額 ${s.dividend} 元`}</div>
+          <div class="modal-actions"><button class="secondary" data-close>取消</button><button class="primary danger" data-close>${trade ? "刪除交易紀錄" : "刪除現金股利"}</button></div>`;
+      }
+      $("modal-layer").hidden = false;
+      m.querySelector("button")?.focus();
+    }
+    function closeModal() { $("modal-layer").hidden = true; (lastFocus && document.contains(lastFocus) ? lastFocus : $("submit")).focus(); }
+    $("modal-layer").addEventListener("click", (e) => {
+      if (e.target === $("modal-layer") || e.target.closest("[data-close]")) closeModal();
+      if (e.target.closest("[data-leave]") || e.target.closest("[data-plan]")) { $("modal-layer").hidden = true; applyPreset("blank"); }
+    });
+
+    // Step navigation: one step open at a time
+    const FOCUS = {
+      pick: () => $("stock-input"),
+      date: () => document.querySelector('[data-day][aria-pressed="true"]') ?? $("date"),
+      qty: () => $("qty"),
+      fee: () => $("fee"),
+      amount: () => $("dividend"),
+    };
+    function openStep(key, focus = true) { if (key !== "pick" && !s.query.trim()) s.changing = false; s.open = key; render(); if (focus && key) FOCUS[key]()?.focus(); }
+    function advance() { const next = firstInvalid(); openStep(next ?? null, !!next); if (!next) $("submit").focus(); }
+    document.querySelectorAll(".step-head").forEach((h) => h.addEventListener("click", () => {
+      const key = h.closest(".step").id.slice(2);
+      if (s.open !== key) openStep(key);
+    }));
+
+    // Events
+    $("side-switch").addEventListener("click", (e) => { const b = e.target.closest("[data-side]"); if (b) { s.side = b.dataset.side; render(); } });
+    $("unit-switch").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-unit]"); if (!b || b.dataset.unit === s.unit) return;
+      const sh = shares();
+      s.unit = b.dataset.unit;
+      if (sh) s.qty = s.unit === "lot" ? fmt(sh / 1000, 3) : fmt(sh);
+      render();
+    });
+    const lotOnly = (v) => { const n = v.replace(/[^\d.]/g, ""); const [i, ...rest] = n.split("."); const dec = rest.length ? "." + rest.join("").slice(0, 3) : ""; return (i ? fmt(parseInt(i, 10)) : rest.length ? "0" : "") + dec; };
+    const intOnly = (v) => { const n = v.replace(/[^\d]/g, ""); return n ? fmt(parseInt(n, 10)) : ""; };
+    const decOnly = (v) => { const n = v.replace(/[^\d.]/g, ""); const [i, ...rest] = n.split("."); const dec = rest.length ? "." + rest.join("").slice(0, 4) : ""; return (i ? fmt(parseInt(i, 10)) : rest.length ? "0" : "") + dec; };
+    $("qty").addEventListener("input", (e) => { s.qty = s.unit === "lot" ? lotOnly(e.target.value) : intOnly(e.target.value.replace(/\..*$/, "")); e.target.value = s.qty; render(); });
+    $("price").addEventListener("input", (e) => { const v = e.target.value.replace(/[^\d.]/g, ""); const [i, ...r] = v.split("."); s.price = i + (r.length ? "." + r.join("").slice(0, 4) : ""); e.target.value = s.price; render(); });
+    $("price").addEventListener("blur", () => { s.price = decOnly(s.price); $("price").value = s.price; render(); });
+    $("dividend").addEventListener("input", (e) => { s.dividend = intOnly(e.target.value); e.target.value = s.dividend; render(); });
+    $("fee").addEventListener("input", (e) => { const v = intOnly(e.target.value); e.target.value = v; s.fee = v ? parseInt(v.replace(/,/g, ""), 10) : null; s.feeManual = true; render(); });
+    $("b-fee").addEventListener("click", (e) => { if (e.target.id === "fee-reset") { s.feeManual = false; s.fee = null; $("fee").blur(); render(); } });
+
+    let listClosed = false;
+    const isModal = () => !document.body.classList.contains("as-page") && (matchMedia("(width >= 960px)").matches || document.body.classList.contains("modal-narrow"));
+    $("stock-input").addEventListener("blur", () => setTimeout(() => {
+      if (document.activeElement === $("stock-input")) return;
+      if (s.changing && !s.query.trim()) { s.changing = false; render(); }
+      else if (s.query.trim() && (!s.stock || s.changing)) { s.leftText = true; render(); }
+    }, 150));
+    $("stock-input").addEventListener("focus", () => { if (listClosed) { listClosed = false; $("stock-options").hidden = false; renderOptions(); } });
+    $("stock-input").addEventListener("input", (e) => { s.query = e.target.value; s.leftText = false; listClosed = false; $("stock-options").hidden = false; renderOptions(); });
+    $("stock-options").addEventListener("click", (e) => {
+      const o = e.target.closest("[role=option]"); if (!o) return;
+      s.stock = findStock(o.dataset.sid); s.changing = false; s.query = ""; $("stock-input").value = "";
+      advance();
+    });
+    $("stock-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") e.preventDefault();
+      const opts = [...$("stock-options").querySelectorAll("[role=option]")];
+      if (!opts.length) return;
+      let i = opts.findIndex((o) => o.getAttribute("aria-selected") === "true");
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        i = e.key === "ArrowDown" ? (i + 1) % opts.length : (i - 1 + opts.length) % opts.length;
+        opts.forEach((o, j) => o.setAttribute("aria-selected", String(j === i)));
+        $("stock-input").setAttribute("aria-activedescendant", opts[i].id);
+      } else if (e.key === "Enter") { e.preventDefault(); const pick = opts[i] ?? (s.query.trim() ? opts[0] : null); pick?.click(); }
+    });
+    $("stock-change").addEventListener("click", () => { s.changing = true; render(); $("stock-input").focus(); });
+
+    $("b-date").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-day]"); if (!b) return;
+      if (b.dataset.day === "prev") s.date = prevWeekday(); else s.date = iso(TODAY);
+      advance();
+    });
+    $("date").addEventListener("change", (e) => { if (e.target.value) { s.date = e.target.value; render(); } });
+
+    $("form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (s.phase === "saving") return;
+      if (s.changing && s.query.trim()) { s.showErrors = true; openStep("pick"); $("stock-error").hidden = false; $("stock-error").lastChild.textContent = "請從搜尋結果選擇一檔股票"; return; }
+      const bad = firstInvalid();
+      if (bad) { s.showErrors = true; openStep(bad, false); const target = bad === "qty" ? (s.qty === "" || !shares() ? $("qty") : $("price")) : bad === "fee" ? $("fee") : bad === "date" ? $("date") : FOCUS[bad](); target?.focus(); return; }
+      s.phase = "saving"; s.open = null; render();
+      setTimeout(() => { if (s.mode === "edit") { applyPreset("blank"); return; } s.phase = "done"; s.keyboard = false; render(); $("finish").focus(); }, 900);
+    });
+    $("finish").addEventListener("click", () => applyPreset("blank"));
+    $("again").addEventListener("click", () => {
+      const keep = { kind: s.kind, side: s.side, unit: s.unit, date: s.date };
+      s = { ...blank(), ...keep }; initial = snap(s); render(); if (isModal() || document.body.classList.contains("as-page")) $("stock-input").focus(); else $("editor-title").focus();
+    });
+    $("delete").addEventListener("click", () => openModal("delete"));
+    const leave = () => { if (s.phase !== "done" && dirty()) openModal("discard"); else applyPreset("blank"); };
+    $("back").addEventListener("click", leave);
+    $("close").addEventListener("click", leave);
+    $("scrim").addEventListener("click", leave);
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (!$("modal-layer").hidden) closeModal();
+      else if (document.activeElement === $("stock-input") && (!s.stock || s.changing) && !listClosed && $("stock-options").querySelector("[role=option]")) { listClosed = true; $("stock-options").hidden = true; }
+      else if (isModal()) leave();
+    });
+
+    // Preview presets
+    function applyPreset(name) {
+      document.body.classList.remove("as-page", "modal-narrow");
+      noSuggest = false; loadingRecords = false;
+      s = blank();
+      const st = findStock;
+      const filled = (extra = {}) => Object.assign(s, { stock: st("2330"), qty: "3", price: "1,040", open: null }, extra);
+      switch (name) {
+        case "picked": Object.assign(s, { stock: st("2330"), qty: "3", open: "qty" }); break;
+        case "buy": filled(); break;
+        case "sell-pick": s.side = "sell"; break;
+        case "oversell": filled({ side: "sell", price: "1,050" }); break;
+        case "future": { const d = new Date(TODAY); d.setDate(d.getDate() + 1); filled({ date: iso(d), open: "date" }); break; }
+        case "limit": filled({ qty: "1", price: "10,400", open: "qty" }); break;
+        case "weekend": { const d = new Date(TODAY); d.setDate(d.getDate() - 2); filled({ date: iso(d) }); break; }
+        case "fee-manual": filled({ fee: 1334, feeManual: true, open: "fee" }); break;
+        case "incomplete": Object.assign(s, { stock: st("00878"), showErrors: true, open: "qty" }); break;
+        case "keyboard": Object.assign(s, { stock: st("2330"), qty: "3", price: "104", open: "qty", keyboard: true }); break;
+        case "saving": filled({ phase: "saving" }); break;
+        case "error": filled({ phase: "error" }); break;
+        case "quota": filled(); break;
+        case "done": filled({ phase: "done" }); break;
+        case "edit": Object.assign(s, { mode: "edit", side: "sell", stock: st("2317"), unit: "share", qty: "200", price: "150", date: "2024-05-02", editId: 4, open: null }); break;
+        case "missing": Object.assign(s, { mode: "edit", phase: "missing" }); break;
+        case "div-blank": s.kind = "dividend"; break;
+        case "div-filled": Object.assign(s, { kind: "dividend", stock: st("2330"), dividend: "4,450", open: null }); break;
+        case "page": filled(); document.body.classList.add("as-page"); break;
+        case "narrow-modal": document.body.classList.add("modal-narrow"); break;
+        case "sid": Object.assign(s, { stock: st("2330"), open: "qty" }); break;
+        case "no-suggest": noSuggest = true; break;
+        case "loading": loadingRecords = true; filled(); break;
+        case "div-edit": Object.assign(s, { kind: "dividend", mode: "edit", stock: st("2330"), dividend: "1,500", date: "2026-07-15", divOriginal: 1500, open: null }); break;
+        case "div-done": Object.assign(s, { kind: "dividend", stock: st("2330"), dividend: "4,450", phase: "done" }); break;
+      }
+      initial = ["edit", "div-edit"].includes(name) ? snap(s) : name === "sid" ? snap({ ...blank(), stock: st("2330") }) : snap({ ...blank(), kind: s.kind, mode: s.mode, side: s.side });
+      $("modal-layer").hidden = true;
+      $("demo-state").value = name;
+      render();
+      if (name === "quota") openModal("quota");
+      else if (s.mode === "new" && s.phase === "form" && !s.stock && isModal()) $("stock-input").focus();
+    }
+    $("demo-state").addEventListener("change", (e) => applyPreset(e.target.value));
+    const params = new URLSearchParams(location.search);
+    if (params.has("clean")) document.body.classList.add("clean");
+    applyPreset(params.get("state") ?? "blank");
+  </script>
+</body>
+</html>
