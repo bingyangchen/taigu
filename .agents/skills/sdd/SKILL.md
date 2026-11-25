@@ -236,11 +236,13 @@ For an implementation, the sub-agent also:
 
 - Checks that the code carries out every scenario of the specs that this branch changes, as written. User-visible behavior that no scenario describes is a finding too when "Spec Conventions" lets a spec hold it: either the code or the spec is wrong. Check the other details of a screen against its draft.
 - Checks that every screen listed in the plan's "設計稿" matches its draft in layout, states, and copy.
+- Checks that every screen built from a draft uses the shared components in `frontend/src/components/` and the tokens in `frontend/src/_design_system.scss`, and reports each class, color, or size value copied from a draft's own CSS into `frontend/`. A look that the plan approves as a decision belongs in a token or a variant of a shared component, not in a value local to one screen.
 - Lists every difference between the branch and the approved plan, in specs and in code.
 
 For a change, the sub-agent also:
 
 - Checks that the code follows the agreed "做法" and solves the "問題".
+- If the "做法" names a draft, runs the check on shared components and tokens from the implementation list above against it.
 - Checks that every behavior the specs describe stays as it was. In a capability that has no spec yet, every behavior other than what the agreed "問題" describes stays as it was.
 - Lists every scenario in `tests/manual/` whose behavior the change could affect.
 
