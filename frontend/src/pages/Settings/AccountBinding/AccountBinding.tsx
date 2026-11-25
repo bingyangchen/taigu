@@ -85,8 +85,7 @@ class AccountBinding extends React.Component<Props, State> {
   }
 
   public render(): React.ReactNode {
-    // The binding flow starts from the 「更換綁定的帳號」 row, and the modal closes before
-    // the authorization URL request, so the row shows the waiting state.
+    // The binding flow starts from the 「更換綁定的帳號」 row, so the row shows the waiting state.
     const isWaiting = this.props.isWaiting || this.state.isRequestingAuthorizationUrl;
     return (
       <>
