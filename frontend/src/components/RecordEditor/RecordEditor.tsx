@@ -428,9 +428,9 @@ export function RecordSummary({
         type="submit"
         form={formId}
         className={`primary_fill l ${styles.primary_button}`}
-        aria-disabled={isSubmitting || undefined}
+        waiting={isSubmitting}
       >
-        {isSubmitting ? "儲存中" : submitLabel}
+        {submitLabel}
       </Button>
     </aside>
   );

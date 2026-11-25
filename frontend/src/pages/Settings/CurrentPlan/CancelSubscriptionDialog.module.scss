@@ -163,7 +163,7 @@
   border-color: _.$red-transparent-2 !important;
 
   @media (hover: hover) {
-    &:hover:not(:disabled):not(.waiting) {
+    &:hover:not(:disabled):not(:global(.waiting)) {
       background: _.$red-transparent-4 !important;
     }
   }

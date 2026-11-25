@@ -1,3 +1,4 @@
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import React from "react";
 import { connect } from "react-redux";
 
@@ -9,6 +10,7 @@ import {
   Button,
   FullLogo,
   LabeledInputV2,
+  LoadingIcon,
   Modal,
 } from "../../../components";
 import * as Icons from "../../../icons";
@@ -36,16 +38,21 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {
   activeModalName: "changeBinding" | null;
+  isRequestingAuthorizationUrl: boolean;
 }
 
 class AccountBinding extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = { activeModalName: null };
+    this.state = { activeModalName: null, isRequestingAuthorizationUrl: false };
   }
 
+  public componentWillUnmount(): void {
+    window.removeEventListener("pageshow", this.handlePageShow);
+  }
   public async componentDidMount(): Promise<void> {
+    window.addEventListener("pageshow", this.handlePageShow);
     this.props.dispatch(updateHeaderTitle("帳號綁定"));
     if (this.props.router.search_params.get("code")) {
       try {
@@ -78,6 +85,8 @@ class AccountBinding extends React.Component<Props, State> {
   }
 
   public render(): React.ReactNode {
+    // The binding flow starts from the 「更換綁定的帳號」 row, so the row shows the waiting state.
+    const isWaiting = this.props.isWaiting || this.state.isRequestingAuthorizationUrl;
     return (
       <>
         {this.state.activeModalName === "changeBinding" &&
@@ -88,7 +97,7 @@ class AccountBinding extends React.Component<Props, State> {
                 onClick={this.handleClickGoogleLogin}
               >
                 <img className={styles.google_logo} src={googleLogo} alt="" />
-                {!this.props.isWaiting && "綁定 Google 帳號"}
+                綁定 Google 帳號
               </div>
             </BottomSheet>
           ) : (
@@ -104,12 +113,11 @@ class AccountBinding extends React.Component<Props, State> {
               <div className={styles.model_body}>
                 <Button
                   className="white border l"
-                  disabled={this.props.isWaiting}
                   waiting={this.props.isWaiting}
                   onClick={this.handleClickGoogleLogin}
                 >
                   <img className={styles.google_logo} src={googleLogo} alt="" />
-                  {!this.props.isWaiting && "綁定 Google 帳號"}
+                  綁定 Google 帳號
                 </Button>
               </div>
             </Modal>
@@ -128,10 +136,17 @@ class AccountBinding extends React.Component<Props, State> {
               disabled
             />
             <BeautifulRow
-              onClick={this.props.isWaiting ? undefined : this.handleClickChangeBinding}
+              onClick={isWaiting ? undefined : this.handleClickChangeBinding}
             >
               <div className={styles.beautiful_row_content}>
-                {this.props.isWaiting ? "處理中..." : "更換綁定的帳號"}
+                {isWaiting ? (
+                  <>
+                    <LoadingIcon />
+                    <VisuallyHidden.Root>更換綁定的帳號</VisuallyHidden.Root>
+                  </>
+                ) : (
+                  "更換綁定的帳號"
+                )}
               </div>
             </BeautifulRow>
           </BeautifulBlock>
@@ -146,12 +161,23 @@ class AccountBinding extends React.Component<Props, State> {
     this.setState({ activeModalName: null });
   };
   private handleClickGoogleLogin = async () => {
-    this.setState({ activeModalName: null });
-    const response = await Api.sendRequest(
-      `account/authorization-url?redirect_uri=${window.location.origin}/settings/account-binding`,
-      "get",
-    );
+    this.setState({ activeModalName: null, isRequestingAuthorizationUrl: true });
+    let response;
+    try {
+      response = await Api.sendRequest(
+        `account/authorization-url?redirect_uri=${window.location.origin}/settings/account-binding`,
+        "get",
+      );
+    } catch (error) {
+      this.setState({ isRequestingAuthorizationUrl: false });
+      throw error;
+    }
     window.location = response.authorization_url;
+  };
+  private handlePageShow = (event: PageTransitionEvent): void => {
+    // Going back from Google may restore this page as it was left, with the row
+    // still waiting.
+    if (event.persisted) this.setState({ isRequestingAuthorizationUrl: false });
   };
 }
 

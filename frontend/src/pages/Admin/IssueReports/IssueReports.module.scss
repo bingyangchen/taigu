@@ -111,9 +111,8 @@ $hairline: 1px solid _.$black-transparent-2;
     outline: 2px solid _.$blue;
     outline-offset: 2px;
   }
-  &:disabled {
-    cursor: default;
-    opacity: 0.4;
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
   }
 }
 
@@ -130,7 +129,7 @@ $hairline: 1px solid _.$black-transparent-2;
     background-color 0.15s ease-out,
     border-color 0.15s ease-out;
   @media (hover: hover) {
-    .check:hover:not(:disabled) & {
+    .check:hover & {
       border-color: _.$blue;
       color: _.$blue;
     }
