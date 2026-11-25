@@ -22,6 +22,7 @@ flowchart TD
   backend_uv_migration("後端套件管理改用 uv<br/>未規劃"):::unplanned
   frontend_vite_migration("前端改用 Vite<br/>未規劃"):::unplanned
   backend_profiling("後端效能分析工具<br/>未規劃"):::unplanned
+  worktree_pre_push("在 git worktree 跑 pre-push 測試<br/>未規劃"):::unplanned
   security_classification("證券分類與證交稅判定<br/>未規劃"):::unplanned
   trade_fee_fixes("手續費與證交稅修正<br/>未規劃"):::unplanned
   pull_to_refresh("下拉更新資料<br/>未規劃"):::unplanned
@@ -132,6 +133,14 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 ### 後端效能分析工具
 
 讓開發者在本機 Docker 環境按需執行 profiling，找出 API request 與 cron job 耗時最多的呼叫路徑。先各選一個 API endpoint 與 cron job，確認可以重複收集並解讀結果，並記下操作方式。
+
+### 在 Git Worktree 跑 `pre-push` 測試
+
+讓開發者在 git worktree 裡 push 時，pre-push hook 也會跑完測試，不必加 `--no-verify` 跳過。
+
+- `scripts/dev/git-hooks/pre-push` 用 `.git` 是不是目錄來確認自己在 repo 的根目錄執行，不過 git worktree 的 `.git` 是一個檔案，所以在 worktree 裡 push 時，hook 會印出「Wrong directory」並擋下 push。目標是 hook 在 repo 的根目錄與 worktree 的根目錄都會執行 `scripts/dev/test.sh`。
+- `scripts/dev/test.sh` 從 `.env` 讀取 `ENV` 與 `DOCKER_USERNAME`，而 `.env` 不在版本控制裡，所以新建的 worktree 沒有這個檔案，`check_env dev` 會擋下測試。目標是開發者不必先手動複製 `.env`，在 worktree 裡也能跑測試。
+- `compose.dev.yaml` 沒有設定 project name，所以 Docker Compose 用目錄名稱當 project name，在 worktree 裡跑 `scripts/dev/test.sh` 時會另外啟動一組 db 與 redis。這兩個 service 會綁定主機的 5433 與 6380 port，所以主 checkout 的開發環境執行中時，port 已經被占用，worktree 裡的測試可能起不來，這一點還沒實測。目標是主 checkout 的開發環境執行中時，worktree 裡也能跑測試，而且好幾個 worktree 可以同時跑測試。
 
 ### 投資數字的計算修正
 
