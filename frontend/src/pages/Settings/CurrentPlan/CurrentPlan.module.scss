@@ -276,7 +276,7 @@
   border-color: _.$red-transparent-2 !important;
 
   @media (hover: hover) {
-    &:hover:not(:disabled):not(.waiting) {
+    &:hover:not(:disabled):not(:global(.waiting)) {
       background: _.$red-transparent-4 !important;
     }
   }
@@ -492,7 +492,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not(:disabled):not(.waiting) {
+    &:hover:not(:disabled):not(:global(.waiting)) {
       border-color: _.$blue !important;
       box-shadow: 0 12px 26px _.$blue-transparent-3;
       transform: translateY(-1px);

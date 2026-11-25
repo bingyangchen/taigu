@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 
-import { Button, SegmentedControl, Tooltip } from "../../../components";
+import { Button, LoadingIcon, SegmentedControl, Tooltip } from "../../../components";
 import * as Icons from "../../../icons";
 import { useAppDispatch } from "../../../redux/hooks";
 import { pushToast } from "../../../redux/slices/ToastSlice";
@@ -51,7 +51,7 @@ export default function IssueReports({
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set());
 
-  // Read by clicks that land before the disabled button re-renders.
+  // Read by clicks that land before the pending button re-renders.
   const pendingIdsRef = useRef<Set<number>>(new Set());
   const latestRequestId = useRef(0);
 
@@ -281,12 +281,16 @@ function ReportItem({
           className={`${styles.check} ${report.is_handled ? styles.checked : ""}`}
           aria-label={handleLabel}
           aria-busy={isPending || undefined}
-          disabled={isPending}
-          onClick={onToggleHandled}
+          aria-disabled={isPending || undefined}
+          onClick={isPending ? undefined : onToggleHandled}
         >
-          <span className={styles.check_circle}>
-            <Icons.IconCheck sideLength="12" />
-          </span>
+          {isPending ? (
+            <LoadingIcon />
+          ) : (
+            <span className={styles.check_circle}>
+              <Icons.IconCheck sideLength="12" />
+            </span>
+          )}
         </button>
       </Tooltip>
     </li>

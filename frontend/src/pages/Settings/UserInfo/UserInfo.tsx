@@ -132,6 +132,7 @@ class UserInfo extends React.Component<Props, State> {
             primaryFooterButton={
               <Button
                 className="primary_fill l"
+                disabled={this.props.isWaiting}
                 waiting={this.props.isWaiting}
                 onClick={this.handleClickSave}
               >

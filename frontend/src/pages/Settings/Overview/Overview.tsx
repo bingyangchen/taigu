@@ -219,6 +219,7 @@ class Overview extends React.Component<Props, State> {
           submitButtonProps={{
             children: "登出",
             className: "primary l",
+            disabled: this.props.isWaiting,
             waiting: this.props.isWaiting,
             onClick: this.handleClickCheckLogout,
           }}

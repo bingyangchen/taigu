@@ -22,6 +22,7 @@ export { default as LabeledInput } from "./LabeledInput/LabeledInput";
 export { default as LabeledInputV2 } from "./LabeledInputV2/LabeledInputV2";
 export { default as ListRow } from "./ListRow/ListRow";
 export { default as ListRowActionBar } from "./ListRowActionBar/ListRowActionBar";
+export { default as LoadingIcon } from "./LoadingIcon/LoadingIcon";
 export { default as LoadingScreen } from "./LoadingScreen/LoadingScreen";
 export { default as MainSideBar } from "./MainSideBar/MainSideBar";
 export { default as MarketIndexHistoricalLineChart } from "./MarketIndexHistoricalLineChart/MarketIndexHistoricalLineChart";

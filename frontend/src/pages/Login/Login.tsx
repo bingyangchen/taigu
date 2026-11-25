@@ -26,15 +26,20 @@ interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
 
 interface State {
   coverImage: string | undefined;
+  isRequestingAuthorizationUrl: boolean;
 }
 
 class Login extends React.Component<Props, State> {
   public state: State;
   public constructor(props: Props) {
     super(props);
-    this.state = { coverImage: undefined };
+    this.state = { coverImage: undefined, isRequestingAuthorizationUrl: false };
+  }
+  public componentWillUnmount(): void {
+    window.removeEventListener("pageshow", this.handlePageShow);
   }
   public async componentDidMount(): Promise<void> {
+    window.addEventListener("pageshow", this.handlePageShow);
     // Randomly select and import a cover image
     this.setState({
       coverImage: (
@@ -85,7 +90,7 @@ class Login extends React.Component<Props, State> {
           <FullLogo size="l" />
           <Button
             className="white border l"
-            waiting={this.props.isWaiting}
+            waiting={this.props.isWaiting || this.state.isRequestingAuthorizationUrl}
             onClick={this.handleClickGoogleLogin}
           >
             <img className={styles.google_icon} src={google} alt="google login" />
@@ -96,11 +101,25 @@ class Login extends React.Component<Props, State> {
     );
   }
   private handleClickGoogleLogin = async () => {
-    const response = await Api.sendRequest(
-      `account/authorization-url?redirect_uri=${window.location.origin}/login`,
-      "get",
-    );
+    this.setState({ isRequestingAuthorizationUrl: true });
+    let response;
+    try {
+      response = await Api.sendRequest(
+        `account/authorization-url?redirect_uri=${window.location.origin}/login`,
+        "get",
+      );
+    } catch (error) {
+      this.setState({ isRequestingAuthorizationUrl: false });
+      throw error;
+    }
+
+    // The button keeps waiting until the browser leaves for Google.
     window.location = response.authorization_url;
+  };
+  private handlePageShow = (event: PageTransitionEvent): void => {
+    // Going back from Google may restore this page as it was left, with the button
+    // still waiting.
+    if (event.persisted) this.setState({ isRequestingAuthorizationUrl: false });
   };
 }
 

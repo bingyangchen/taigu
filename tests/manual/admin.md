@@ -570,7 +570,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 4. 點 `u6@taigu-check.test` 那則問題回報的勾選按鈕，在畫面出現提示之前再點一次。
 5. 把 throttling 改回「No throttling」。
 
-預期：步驟 4 第一次點之後按鈕變淡、不能點，第二次點沒有作用；之後畫面出現一次提示「已標記為已處理。」，`u6` 那則問題回報的勾選按鈕是打勾的實心圓圈。
+預期：步驟 4 第一次點之後按鈕換成 loading 圖示、不能點，第二次點沒有作用；之後畫面出現一次提示「已標記為已處理。」，`u6` 那則問題回報的勾選按鈕是打勾的實心圓圈。
 
 ## ADMIN-R13.7 標記最後一則未處理的回報
 
