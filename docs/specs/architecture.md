@@ -54,7 +54,7 @@ flowchart LR
 
 前端用 Vite 啟動 dev server 與 build，用 Vitest 執行 unit test。`npm run build` 先用 `tsc` 檢查型別再執行 `vite build`，因為 Vite build 時不檢查型別。Build 出來的檔案放在 `frontend/build/`，這是 Cloudflare Pages 上設定的輸出目錄。
 
-前端的 Node 版本寫在 `frontend/.node-version`，CI 也讀這個檔案，`frontend/Dockerfile` 用的也是同一個版本。
+前端的 Node 版本寫在 `frontend/.node-version`，CI 也讀這個檔案，`frontend/Dockerfile` 用的也是同一個版本。Cloudflare Pages 也讀這個檔案：2026-11 部署時，Pages 專案沒有設定環境變數 `NODE_VERSION`，build log 顯示安裝的是 22.14.0，不是 Cloudflare 預設的 22.23.4。`NODE_VERSION` 與 `.node-version` 同時存在時哪一個優先還沒有實測，所以 Pages 專案不設定 `NODE_VERSION`。
 
 前端用 Vite 預設的 build target，也就是 Chrome 111、Edge 111、Firefox 114、Safari 16.4 與 iOS 16.4 以上的瀏覽器，所以只能升到 iOS 15 的 iPhone（例如 iPhone 6s、iPhone 7）可能無法使用 Taigu。
 
