@@ -210,7 +210,13 @@ class Modal extends React.Component<Props, State> {
     const { location, navigate } = this.props.router;
     this.keyBeforeHistoryEntry = location.key;
     this.historyEntryKey = null;
-    navigate({ search: location.search, hash: "##" });
+    // Main and Settings go back again when two adjacent entries share a URL and
+    // state, which would pop a modal opened on top of another. A state object of
+    // its own keeps this entry apart from the one below it.
+    navigate(
+      { search: location.search, hash: "##" },
+      { state: { modalHistoryEntry: true } },
+    );
   }
   /**
    * The browser's Back button pops this modal's history entry. When the discard
