@@ -138,7 +138,8 @@ export default class Api {
 
   /**
    * Silent failures suppress toasts and upsells, but confirmed login expiry still
-   * clears account data and redirects. A disabled 404 redirect throws instead.
+   * clears account data and redirects. A disabled 404 redirect throws instead. A
+   * disabled login redirect resolves `undefined` once account data is cleared.
    */
   public static async sendRequest(
     endpoint: string,
@@ -147,10 +148,12 @@ export default class Api {
     {
       silentOnFailure = false,
       redirectOnNotFound = true,
+      redirectOnUnauthorized = true,
       onCacheFallback,
     }: {
       silentOnFailure?: boolean;
       redirectOnNotFound?: boolean;
+      redirectOnUnauthorized?: boolean;
       onCacheFallback?: () => void;
     } = {},
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -198,7 +201,11 @@ export default class Api {
         }
       }
       assertCurrentSession(sessionVersion);
-      const result = await Api.handleResponse(response, redirectOnNotFound);
+      const result = await Api.handleResponse(
+        response,
+        redirectOnNotFound,
+        redirectOnUnauthorized,
+      );
       if (result !== undefined) assertCurrentSession(sessionVersion);
       if (response.headers.has(API_CACHE_FALLBACK_HEADER)) onCacheFallback?.();
       if (sessionEndpoint === "account/me" && result?.id) {
@@ -352,6 +359,7 @@ export default class Api {
   private static async handleResponse(
     response: Response,
     redirectOnNotFound: boolean,
+    redirectOnUnauthorized: boolean,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     if (response.status === 404 && redirectOnNotFound) Nav.goTo404Page();
@@ -364,6 +372,10 @@ export default class Api {
         ) {
           await Api.clearAccountData();
         }
+        return undefined;
+      }
+      if (!redirectOnUnauthorized) {
+        await Api.clearAccountData();
         return undefined;
       }
       const from = window.location.pathname + window.location.search;

@@ -59,6 +59,7 @@ const scrollKeys = new Set([
 const scrollRestorationTimeoutMs = 5000;
 
 function Main() {
+  const accountId = useAppSelector((rootState) => rootState.account.id);
   const username = useAppSelector((rootState) => rootState.account.username);
   const avatarUrl = useAppSelector((rootState) => rootState.account.avatar_url);
   const subscription = useAppSelector((rootState) => rootState.account.subscription);
@@ -282,6 +283,7 @@ function Main() {
 
   // Listeners, observers, timers and async continuations act on the latest render.
   const latestRenderRef = useLatestRef({
+    accountId,
     location,
     navigationType,
     isLoading,
@@ -344,8 +346,14 @@ function Main() {
 
     const loadAccountData = async (): Promise<void> => {
       try {
-        const account = await dispatch(fetchAccountInfo()).unwrap();
-        if (account) {
+        // The login check before this page usually leaves the account in the store,
+        // so the records load without waiting for it; reading it again in the
+        // background keeps it current, as when the user comes from the settings.
+        const { accountId: storedAccountId } = latestRenderRef.current;
+        if (storedAccountId) void dispatch(fetchAccountInfo());
+        const currentAccountId =
+          storedAccountId || (await dispatch(fetchAccountInfo()).unwrap())?.id;
+        if (currentAccountId) {
           void dispatch(fetchRealtimeMarketIndex());
           const independentPromises = Promise.allSettled([
             dispatch(openSession()).unwrap(),
@@ -355,7 +363,7 @@ function Main() {
             dispatch(fetchAllDiscounts()).unwrap(),
           ]);
 
-          const res = await dispatch(fetchAllTradeRecords(account.id)).unwrap();
+          const res = await dispatch(fetchAllTradeRecords(currentAccountId)).unwrap();
 
           await Promise.allSettled([
             latestRenderRef.current.fetchHoldingStockInfo(res.stockWarehouse),

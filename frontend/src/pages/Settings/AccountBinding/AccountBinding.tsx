@@ -18,7 +18,6 @@ import { changeAccountBinding } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import { COLORS } from "../../../styles/tokens";
-import Api from "../../../utils/api";
 import Nav from "../../../utils/nav";
 import { settingsPagePath } from "../../../utils/router";
 import {
@@ -63,10 +62,6 @@ function AccountBinding() {
           Nav.clearSearchParams();
         }
       } else if (searchParamsRef.current.get("error")) {
-        // When logged out, this request's 401 already sends the user to the welcome
-        // page and saves this URL for after login, so return without clearing the
-        // URL; the error is handled when the user comes back logged in (ACCT-R12).
-        if (!(await Api.sendRequest("account/me", "get"))) return;
         const isCanceled = searchParamsRef.current.get("error") === "access_denied";
         Nav.clearSearchParams();
         if (!isCanceled) {

@@ -40,6 +40,7 @@ import UserInfo from "./pages/Settings/UserInfo/UserInfo";
 import TermsOfService from "./pages/TermsOfService/TermsOfService";
 import Welcome from "./pages/Welcome/Welcome";
 import Env from "./utils/env";
+import { requireLogin } from "./utils/loginCheck";
 import { adminPagePath, settingsPagePath } from "./utils/router";
 
 const Admin = React.lazy(() => import("./pages/Admin/Admin"));
@@ -68,60 +69,68 @@ const myRouter = createBrowserRouter(
     <Route path={Env.frontendRootPath}>
       <Route path="welcome" element={<Welcome />} />
       <Route path="login" element={<Login />} />
-      <Route path={settingsPagePath} element={<Settings />}>
-        <Route path="" element={<Overview />}></Route>
-        <Route path="user-info" element={<UserInfo />}></Route>
-        <Route path="account-binding" element={<AccountBinding />}></Route>
-        <Route path="current-plan" element={<CurrentPlan />}></Route>
-        <Route path="data-controls" element={<DataControls />}></Route>
-        <Route path="issue-report" element={<IssueReport />}></Route>
-      </Route>
-      <Route path="" element={<Main />}>
-        <Route path="" element={<Dashboard />}></Route>
-        <Route path="market-index" element={<MarketIndexDetails />} />
-        <Route path="records" element={<SearchScopedRoute page={Records} />}></Route>
-        <Route path="records/trade/new" element={<TradeRecordCreateRoute />}></Route>
+      <Route
+        loader={requireLogin}
+        // Pages inside keep the account fresh themselves, so moving between them
+        // does not wait for another check.
+        shouldRevalidate={() => false}
+        HydrateFallback={LoadingScreen}
+      >
+        <Route path={settingsPagePath} element={<Settings />}>
+          <Route path="" element={<Overview />}></Route>
+          <Route path="user-info" element={<UserInfo />}></Route>
+          <Route path="account-binding" element={<AccountBinding />}></Route>
+          <Route path="current-plan" element={<CurrentPlan />}></Route>
+          <Route path="data-controls" element={<DataControls />}></Route>
+          <Route path="issue-report" element={<IssueReport />}></Route>
+        </Route>
+        <Route path="" element={<Main />}>
+          <Route path="" element={<Dashboard />}></Route>
+          <Route path="market-index" element={<MarketIndexDetails />} />
+          <Route path="records" element={<SearchScopedRoute page={Records} />}></Route>
+          <Route path="records/trade/new" element={<TradeRecordCreateRoute />}></Route>
+          <Route
+            path="records/trade/:recordId/edit"
+            element={<TradeRecordEditRoute />}
+          ></Route>
+          <Route
+            path="records/cash-dividend/new"
+            element={<CashDividendRecordCreateRoute />}
+          ></Route>
+          <Route
+            path="records/cash-dividend/:recordId/edit"
+            element={<CashDividendRecordEditRoute />}
+          ></Route>
+          <Route path="market" element={<Market />}></Route>
+          <Route path="search" element={<Search />}></Route>
+          <Route path="market/:sid" element={<Details />} />
+          <Route path="market/holding/:sid" element={<Details />} />
+          <Route path="market/favorites/:sid" element={<Details />} />
+          <Route path="plans" element={<SearchScopedRoute page={Plans} />}></Route>
+          <Route path="plans/new" element={<TradePlanCreateRoute />}></Route>
+          <Route path="plans/:planId/edit" element={<TradePlanEditRoute />}></Route>
+          <Route path="earning-analysis" element={<EarningAnalysis />}></Route>
+          <Route path="handling-fee" element={<HandlingFee />}></Route>
+          <Route
+            path="handling-fee/discounts/new"
+            element={<HandlingFeeDiscountCreateRoute />}
+          ></Route>
+          <Route
+            path="handling-fee/discounts/:discountId/edit"
+            element={<HandlingFeeDiscountEditRoute />}
+          ></Route>
+        </Route>
         <Route
-          path="records/trade/:recordId/edit"
-          element={<TradeRecordEditRoute />}
-        ></Route>
-        <Route
-          path="records/cash-dividend/new"
-          element={<CashDividendRecordCreateRoute />}
-        ></Route>
-        <Route
-          path="records/cash-dividend/:recordId/edit"
-          element={<CashDividendRecordEditRoute />}
-        ></Route>
-        <Route path="market" element={<Market />}></Route>
-        <Route path="search" element={<Search />}></Route>
-        <Route path="market/:sid" element={<Details />} />
-        <Route path="market/holding/:sid" element={<Details />} />
-        <Route path="market/favorites/:sid" element={<Details />} />
-        <Route path="plans" element={<SearchScopedRoute page={Plans} />}></Route>
-        <Route path="plans/new" element={<TradePlanCreateRoute />}></Route>
-        <Route path="plans/:planId/edit" element={<TradePlanEditRoute />}></Route>
-        <Route path="earning-analysis" element={<EarningAnalysis />}></Route>
-        <Route path="handling-fee" element={<HandlingFee />}></Route>
-        <Route
-          path="handling-fee/discounts/new"
-          element={<HandlingFeeDiscountCreateRoute />}
-        ></Route>
-        <Route
-          path="handling-fee/discounts/:discountId/edit"
-          element={<HandlingFeeDiscountEditRoute />}
-        ></Route>
+          path={`${adminPagePath}/*`}
+          element={
+            <React.Suspense fallback={<LoadingScreen />}>
+              <Admin />
+            </React.Suspense>
+          }
+        />
       </Route>
       <Route path="privacy-policy" element={<PrivacyPolicy />}></Route>
       <Route path="terms-of-service" element={<TermsOfService />}></Route>
-      <Route
-        path={`${adminPagePath}/*`}
-        element={
-          <React.Suspense fallback={<LoadingScreen />}>
-            <Admin />
-          </React.Suspense>
-        }
-      />
       <Route path="*" element={<NotFound />} />
     </Route>,
   ),

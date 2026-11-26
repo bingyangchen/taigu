@@ -159,6 +159,39 @@ flowchart TD
 
 前端把登入後要返回的網址與儲存當下的時間存進原分頁的 sessionStorage。前端依 ACCT-R3 判定能否使用，先移除紀錄再換頁。前端載入時會清除舊版存在 localStorage、沒有期限的返回網址，不把舊紀錄轉成新的有效紀錄。
 
+### 開啟要登入才能使用的頁面時確認登入狀態
+
+ACCT-R3 裡要登入才能使用的頁面，都放在同一個 layout route 底下，前端用這個 route 的 loader（`frontend/src/utils/loginCheck.ts` 的 `requireLogin`）讀取帳號資料，確認登入狀態，等 loader 結束之後才畫出底下的頁面。等待期間的畫面依以下規則決定：
+
+- 整頁載入時，例如開啟 Taigu 或重新整理頁面，畫面顯示 `LoadingScreen`。之後換成頁面自己顯示的 `LoadingScreen` 時，例如儀表板讀取交易紀錄時，前端讓 `LoadingScreen` 的動畫從原本的進度接著播放。
+- 從登入頁、歡迎頁這類不需要登入的頁面換過來時，畫面停在原本的頁面。
+
+前端依讀取帳號資料的結果處理：
+
+- 讀到帳號資料時，畫出頁面。
+- 後端回 401 時，前端依 ACCT-R5 把畫面換到歡迎頁，並且取代瀏覽紀錄裡原本開啟的網址，所以使用者按上一頁時不會再開啟那個頁面。
+- 其他失敗時，前端照常畫出頁面，並在頁面掛載時再讀取一次帳號資料（見 ACCT-R5）。
+
+> 設計理由：以前前端在每個頁面畫出來之後，才在各個頁面裡讀取帳號資料，所以未登入的使用者在換到歡迎頁之前，會先短暫看到沒有內容的頁面；改成由 layout route 的 loader 統一確認之後，新增的頁面只要放在這個 route 底下，就不會再出現這種情況。
+
+#### 換頁時不再確認登入狀態
+
+使用者在要登入才能使用的頁面之間切換時，前端不會再執行 layout route 的 loader。
+
+> 設計理由：使用者已經在要登入才能使用的頁面裡時，頁面送出的 request 收到 401，前端就會依 ACCT-R5 處理登入失效，所以換頁時再執行 loader 只會讓每次換頁多等一次 request。
+
+#### 頁面使用 Loader 讀到的帳號資料
+
+儀表板或後台掛載時，store 裡已經有帳號資料的話，前端直接使用這份資料，例如儀表板用它讀取交易紀錄，後台用它判斷使用者是不是 superuser。接著前端在背景重新讀取一次帳號資料，不過在後台，只有使用者是 superuser 時才重新讀取。
+
+> 設計理由：前端沒有在 loader 剛讀過帳號資料時讓頁面跳過重新讀取，因為前端得另外記錄帳號資料是不是剛由 loader 讀到的，而背景多讀的這一次不會讓使用者多等。
+
+#### 換到歡迎頁時不重新載入整頁
+
+前端在 loader 確認未登入時，用 React Router 換到歡迎頁，不重新載入整頁。不過前端在頁面畫出來之後才確認登入已失效時（ACCT-R5），會重新載入整頁，換到歡迎頁。
+
+> 設計理由：前端在 loader 確認未登入時不必重新載入整頁，因為這時頁面還沒讀取任何帳號資料，而且前端清除帳號資料時，Redux store 也會回到初始狀態。
+
 ### 跨分頁清除帳號資料
 
 主動登出與登入失效時的清除規則見 ACCT-R17。登入時，前端也會清除殘留的舊帳號資料，並保留原分頁有效的返回紀錄。這些操作共用以下跨分頁清除機制。
@@ -530,7 +563,7 @@ sequenceDiagram
 | 自選股 | `/market`、`/market/favorites/:sid` | `frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx` | `api-server/main/favorite/` | [favorites.md](favorites.md) |
 | 買賣計畫 | `/plans`、`/plans/new`、`/plans/:planId/edit`、`/market` | `frontend/src/pages/Main/Plans/Plans.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx`、`frontend/src/components/TradePlanEditor/TradePlanEditor.tsx`、`frontend/src/pages/Main/Market/Market.tsx` | `api-server/main/trade_plan/` | [trade-plans.md](trade-plans.md) |
 | 桌面前台側邊欄 | 前台寬版頁面 | `frontend/src/pages/Main/Main.tsx`、`frontend/src/components/MainSideBar/MainSideBar.tsx`，收合狀態存在瀏覽器的 `localStorage` | 無 | [desktop-sidebar.md](desktop-sidebar.md) |
-| 帳號 | `/login`、`/settings`、`/settings/user-info`、`/settings/account-binding` | `frontend/src/pages/Login/Login.tsx`、`frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/UserInfo/UserInfo.tsx`、`frontend/src/pages/Settings/AccountBinding/AccountBinding.tsx` | `api-server/main/account/` | [account.md](account.md) |
+| 帳號 | `/login`、`/settings`、`/settings/user-info`、`/settings/account-binding` | `frontend/src/pages/Login/Login.tsx`、`frontend/src/utils/loginCheck.ts`、`frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/UserInfo/UserInfo.tsx`、`frontend/src/pages/Settings/AccountBinding/AccountBinding.tsx` | `api-server/main/account/` | [account.md](account.md) |
 | 方案與付款 | `/settings/current-plan` | `frontend/src/pages/Settings/CurrentPlan/CurrentPlan.tsx`、`frontend/src/components/PlanUpsellModal/PlanUpsellModal.tsx` | `api-server/main/billing/` | [billing.md](billing.md) |
 | 問題回報 | `/settings`、`/settings/issue-report` | `frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/IssueReport/IssueReport.tsx` | `api-server/main/issue_report/` | [issue-reports.md](issue-reports.md) |
 | 使用統計 | 要登入才能使用的頁面（見 ACCT-R3），後台 `/admin` 底下的頁面除外 | `frontend/src/pages/Main/Main.tsx`、`frontend/src/pages/Settings/Settings.tsx`，判斷平台的是 `frontend/src/utils/util.ts` 的 `Util.isPWA` | `api-server/main/usage/`，記下使用紀錄的 `open-session` endpoint 在 `api-server/main/account/` | [usage-stats.md](usage-stats.md) |
