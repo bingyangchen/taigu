@@ -37,10 +37,9 @@ export default function SpeedDial({ defaultSid }: Props) {
     navigate,
   });
 
-  // Closing the menu takes focus out of the options. Whether focus was in them has
-  // to be read before the update reaches the DOM, as getSnapshotBeforeUpdate did, and
-  // no hook runs at that point, so the render reads it while the DOM still shows the
-  // open menu.
+  // Closing the menu takes focus out of the options, and no hook runs between the
+  // render and that DOM update, so the render reads whether focus was in them while
+  // the DOM still shows the open menu.
   const focusWasInOptions =
     lastCommitRef.current.hash === OPEN_HASH &&
     !isActive &&
