@@ -162,12 +162,6 @@
   letter-spacing: inherit;
   text-align: left;
 
-  @media (hover: hover) {
-    &:hover {
-      background-color: var(--color-bg-hover);
-    }
-  }
-
   &.highlighted {
     background-color: var(--color-bg-hover);
   }

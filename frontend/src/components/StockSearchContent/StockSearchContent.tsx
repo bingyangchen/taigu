@@ -1,9 +1,18 @@
-import { MouseEvent, MouseEventHandler, useEffect, useRef, useState } from "react";
+import {
+  KeyboardEvent,
+  MouseEventHandler,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 
 import * as Icons from "../../icons";
 import type { StockInfo } from "../../types";
 import Api from "../../utils/api";
+import { getNextHighlightedIndex, isImeComposing } from "../../utils/keyboard";
 import { assertCurrentSession, getDocumentSessionVersion } from "../../utils/session";
+import { useScrollIntoViewAfterCommit } from "../../utils/useScrollIntoViewAfterCommit";
 import Util from "../../utils/util";
 import DollarSign from "../DollarSign/DollarSign";
 import RoundButton from "../RoundButton/RoundButton";
@@ -41,7 +50,7 @@ class StockSearchLRUCache {
 interface Props {
   variant: "dialog" | "page";
   onClose?: MouseEventHandler;
-  onSelectStock: (sid: string, e: MouseEvent) => void;
+  onSelectStock: (sid: string) => void;
 }
 
 export default function StockSearchContent({ variant, onClose, onSelectStock }: Props) {
@@ -50,6 +59,10 @@ export default function StockSearchContent({ variant, onClose, onSelectStock }: 
   const [completedSearchKeyword, setCompletedSearchKeyword] = useState<string | null>(
     null,
   );
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const listboxId = useId();
+  const getOptionId = (index: number): string => `${listboxId}-option-${index}`;
+  const scrollIntoViewAfterCommit = useScrollIntoViewAfterCommit();
 
   // The search responses arrive after later keystrokes, so they compare their keyword
   // with the latest one rather than with the keyword of the render that sent them.
@@ -59,6 +72,16 @@ export default function StockSearchContent({ variant, onClose, onSelectStock }: 
     const showResults = (results: StockInfo[], keyword: string): void => {
       setSearchResults(results);
       setCompletedSearchKeyword(keyword);
+
+      // The dialog highlights the first stock so that Enter opens it at once. The page
+      // waits for an arrow key, because a highlighted row on a touch screen looks like
+      // a tap that got stuck.
+      if (variant === "dialog" && results.length > 0) {
+        setHighlightedIndex(0);
+        scrollIntoViewAfterCommit(getOptionId(0));
+      } else {
+        setHighlightedIndex(-1);
+      }
     };
     const loadCachedItems = async (requestedKeyword = ""): Promise<void> => {
       const cachedSids = stockSearchCache.getAll();
@@ -97,9 +120,34 @@ export default function StockSearchContent({ variant, onClose, onSelectStock }: 
     stockSearch.loadCachedItems();
   }, [stockSearch]);
 
-  const handleClickResult = (e: MouseEvent, sid: string): void => {
+  const selectStock = (sid: string): void => {
     stockSearchCache.add(sid);
-    onSelectStock(sid, e);
+    onSelectStock(sid);
+  };
+
+  const hasResults = searchResults.length > 0;
+
+  // The results stay on screen until the search for a new keyword finishes, but they
+  // belong to the previous keyword, so they cannot be highlighted meanwhile.
+  const areResultsCurrent = completedSearchKeyword === searchKeyword;
+  const activeOptionId =
+    highlightedIndex < 0 ? undefined : getOptionId(highlightedIndex);
+
+  const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (isImeComposing(event) || !hasResults || !areResultsCurrent) return;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const nextIndex = getNextHighlightedIndex(
+        highlightedIndex,
+        event.key === "ArrowDown" ? 1 : -1,
+        searchResults.length,
+      );
+      setHighlightedIndex(nextIndex);
+      scrollIntoViewAfterCommit(getOptionId(nextIndex));
+    } else if (event.key === "Enter" && highlightedIndex >= 0) {
+      event.preventDefault();
+      selectStock(searchResults[highlightedIndex].sid);
+    }
   };
 
   const searchInput = (
@@ -108,58 +156,79 @@ export default function StockSearchContent({ variant, onClose, onSelectStock }: 
       keyword={searchKeyword}
       autoFocus
       size="l"
+      role="combobox"
+      aria-autocomplete="list"
+      aria-controls={hasResults ? listboxId : undefined}
+      aria-expanded={hasResults}
+      aria-activedescendant={activeOptionId}
+      onKeyDown={handleSearchKeyDown}
       onChange={(keyword) => {
         searchKeywordRef.current = keyword;
         setSearchKeyword(keyword);
+        setHighlightedIndex(-1);
         stockSearch.debouncedSearch(keyword);
       }}
     />
   );
 
-  const results =
-    searchResults.length === 0 ? null : (
-      <div className={styles.result}>
-        {searchResults.map((stockInfo, idx) => {
-          return (
-            <div
-              className={getRowClassName(stockInfo.fluct_price)}
-              key={idx}
-              onClick={(e) => handleClickResult(e, stockInfo.sid)}
-            >
-              <div className={styles.company}>
-                <div className={styles.name}>{stockInfo.name}</div>
-                <div className={styles.sid}>{stockInfo.sid}</div>
-              </div>
+  const results = !hasResults ? null : (
+    <div className={styles.result} id={listboxId} role="listbox" aria-label="搜尋結果">
+      {searchResults.map((stockInfo, index) => {
+        return (
+          <div
+            id={getOptionId(index)}
+            className={getRowClassName(
+              stockInfo.fluct_price,
+              index === highlightedIndex,
+            )}
+            key={stockInfo.sid}
+            role="option"
+            aria-selected={index === highlightedIndex}
+            tabIndex={-1}
+            onMouseDown={(event) => event.preventDefault()}
+            // Not mouseenter: it also fires when an arrow key scrolls a row under a
+            // still pointer, which would take the highlight away.
+            onMouseMove={() => {
+              if (areResultsCurrent && highlightedIndex !== index) {
+                setHighlightedIndex(index);
+              }
+            }}
+            onClick={() => selectStock(stockInfo.sid)}
+          >
+            <div className={styles.company}>
+              <div className={styles.name}>{stockInfo.name}</div>
+              <div className={styles.sid}>{stockInfo.sid}</div>
+            </div>
+            <div className={styles.price}>
               <div className={styles.price}>
-                <div className={styles.price}>
-                  <DollarSign />
-                  {stockInfo.close}
-                </div>
-                <div className={styles.price_fluct}>
-                  {`${
-                    stockInfo.fluct_price > 0
-                      ? "▲"
-                      : stockInfo.fluct_price < 0
-                        ? "▼"
-                        : "-"
-                  }
-                  ${stockInfo.fluct_price !== 0 ? Math.abs(stockInfo.fluct_price) : ""}
-                  ${
-                    stockInfo.fluct_price !== 0
-                      ? "(" +
-                        (
-                          Math.abs(stockInfo.fluct_price / stockInfo.close) * 100
-                        ).toFixed(1) +
-                        "%)"
-                      : ""
-                  }`}
-                </div>
+                <DollarSign />
+                {stockInfo.close}
+              </div>
+              <div className={styles.price_fluct}>
+                {`${
+                  stockInfo.fluct_price > 0
+                    ? "▲"
+                    : stockInfo.fluct_price < 0
+                      ? "▼"
+                      : "-"
+                }
+                ${stockInfo.fluct_price !== 0 ? Math.abs(stockInfo.fluct_price) : ""}
+                ${
+                  stockInfo.fluct_price !== 0
+                    ? "(" +
+                      (Math.abs(stockInfo.fluct_price / stockInfo.close) * 100).toFixed(
+                        1,
+                      ) +
+                      "%)"
+                    : ""
+                }`}
               </div>
             </div>
-          );
-        })}
-      </div>
-    );
+          </div>
+        );
+      })}
+    </div>
+  );
 
   if (variant === "page") {
     const hasCompletedKeyword =
@@ -175,7 +244,7 @@ export default function StockSearchContent({ variant, onClose, onSelectStock }: 
         {results ?? (
           <div className={styles.empty_state}>
             <div className={styles.empty_state_icon}>
-              <Icons.IconMagnifier sideLength="24" />
+              <Icons.IconMagnifier sideLength="32" />
             </div>
             <div className={styles.empty_state_text}>
               <div className={styles.empty_state_title}>
@@ -201,10 +270,8 @@ export default function StockSearchContent({ variant, onClose, onSelectStock }: 
   );
 }
 
-function getRowClassName(fluctPrice: number): string {
-  return (
-    styles.row +
-    " " +
-    (fluctPrice > 0 ? styles.red : fluctPrice < 0 ? styles.green : styles.gray)
-  );
+function getRowClassName(fluctPrice: number, isHighlighted: boolean): string {
+  const priceClassName =
+    fluctPrice > 0 ? styles.red : fluctPrice < 0 ? styles.green : styles.gray;
+  return `${styles.row} ${priceClassName} ${isHighlighted ? styles.highlighted : ""}`;
 }

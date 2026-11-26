@@ -13,3 +13,7 @@ Object.assign(globalThis, {
     advanceTimersByTime: (milliseconds: number) => vi.advanceTimersByTime(milliseconds),
   },
 });
+
+// jsdom does not implement scrolling, and the search lists scroll the highlighted
+// option into view. Test files that run in the node environment have no DOM.
+if (typeof Element !== "undefined") Element.prototype.scrollIntoView = vi.fn();

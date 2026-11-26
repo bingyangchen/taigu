@@ -1,5 +1,7 @@
 @use "styles" as ds;
 
+$page-header-height: calc(56px + env(safe-area-inset-top));
+
 .dialog {
   display: flex;
   flex-direction: column;
@@ -26,17 +28,23 @@
   min-height: 100%;
   background-color: var(--color-bg-subtle);
   user-select: none;
-  overflow: hidden;
+
+  // Not hidden: an overflow: hidden ancestor would become the scroll container the
+  // sticky header sticks to, and this page never scrolls by itself.
+  overflow: clip;
 
   @include ds.down(md) {
     background-color: var(--color-bg-page);
   }
 
   & > .page_header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
     display: flex;
     align-items: center;
     gap: var(--space-025);
-    min-height: calc(56px + env(safe-area-inset-top));
+    min-height: $page-header-height;
     padding: env(safe-area-inset-top) var(--space-100) 0;
     border-bottom: 1px solid var(--color-border-default);
     background-color: var(--color-bg-subtle);
@@ -54,9 +62,13 @@
 
   & > .result {
     flex: 1;
-    min-height: 0;
-    overflow: auto;
     padding: var(--space-050) 0 calc(var(--space-300) + env(safe-area-inset-bottom));
+
+    // The page scrolls under the sticky header, so a row scrolled into view by an
+    // arrow key stops below the header instead of behind it.
+    & > .row {
+      scroll-margin-top: $page-header-height;
+    }
   }
 }
 
@@ -72,10 +84,8 @@
     padding: var(--space-150) var(--space-200);
     border-radius: 0;
 
-    @media (hover: hover) {
-      &:hover {
-        background-color: var(--color-bg-hover);
-      }
+    &.highlighted {
+      background-color: var(--color-bg-hover);
     }
 
     & > .company {
@@ -143,15 +153,7 @@
 
   & > .empty_state_icon {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 56px;
-    height: 56px;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-2xl);
-    background-color: var(--color-bg-surface);
     color: var(--color-text-tertiary);
-    box-shadow: var(--shadow-md);
   }
 
   & > .empty_state_text {

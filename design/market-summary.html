@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>市場頁的摘要區｜Taigu 設計稿</title>
+    <link rel="stylesheet" href="shared/components.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        background: linear-gradient(
+          180deg,
+          var(--color-bg-shell-top) 0%,
+          var(--color-bg-shell-bottom) 100%
+        );
+        color: var(--color-text-primary);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .shell {
+        display: flex;
+        min-height: 100dvh;
+      }
+
+      /* Stand-in for MainSideBar; only its width matters to this draft. */
+      .sidebar {
+        flex: 0 0 var(--layout-sidebar-width);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-050);
+        padding: var(--space-200) var(--space-100);
+        border-right: 1px solid var(--color-border-subtle);
+        background: var(--color-bg-surface);
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-sm);
+      }
+
+      .sidebar span {
+        padding: var(--space-150);
+        border-radius: var(--radius-lg);
+      }
+
+      .sidebar span[aria-current] {
+        background: var(--color-bg-accent-subtle);
+        color: var(--color-text-accent-strong);
+      }
+
+      .content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .main {
+        width: min(100%, 1120px);
+        margin: 0 auto;
+        padding: var(--space-400) var(--space-400) var(--space-600);
+        letter-spacing: 0;
+      }
+
+      /* Summary: title and subtitle on the left, three market signals on the right. */
+      .summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-300);
+      }
+
+      .summary_copy {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-075);
+        min-width: 0;
+      }
+
+      .summary_copy h1 {
+        margin: 0;
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-tight);
+      }
+
+      .summary_copy p {
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-sm);
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(86px, max-content));
+        gap: var(--space-250);
+      }
+
+      .metric {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-050);
+      }
+
+      .metric span {
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-xs);
+      }
+
+      .metric strong {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-snug);
+      }
+
+      .metric .up {
+        color: var(--color-price-up);
+      }
+
+      .metric .down {
+        color: var(--color-price-down);
+      }
+
+      /* Current: a frosted card with a large shadow and blur. */
+      [data-variant="current"] .summary {
+        min-height: 128px;
+        padding: var(--space-300) var(--space-400);
+        border-radius: var(--radius-2xl);
+        background: var(--color-bg-frosted);
+        box-shadow: var(--shadow-lg);
+        backdrop-filter: blur(16px);
+      }
+
+      /*
+       * Proposal A: no card. The title and the signals sit on the page like a page
+       * header, so the frosted stock cards are the only raised surfaces and the
+       * quiet controls read as the header's tools.
+       */
+      [data-variant="a"] .summary {
+        padding: var(--space-100) 0 var(--space-050);
+      }
+
+      /*
+       * Optical alignment: the rounded segmented control and cards below start
+       * their visible edge a few pixels in, so text flush with their box edge looks
+       * like it sticks out.
+       */
+      [data-variant="a"] .summary_copy {
+        padding-left: var(--space-100);
+      }
+
+      /*
+       * The three signals share one group on the segmented control's track colour,
+       * so they read as the same quiet layer as the controls below.
+       */
+      [data-variant="a"] .metrics {
+        gap: 0;
+        padding: var(--space-150) 0;
+        border-radius: var(--radius-xl);
+        background: var(--color-bg-muted);
+      }
+
+      [data-variant="a"] .metric {
+        padding: 0 var(--space-250);
+      }
+
+      /*
+       * Proposal B: keep a card, but flat: the stock cards' background and border
+       * with no shadow or blur, so it no longer floats above everything below it.
+       */
+      [data-variant="b"] .summary {
+        padding: var(--space-250) var(--space-300);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: var(--radius-xl);
+        background: var(--color-bg-frosted);
+      }
+
+      .control_bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-200);
+        min-height: 56px;
+        margin-top: var(--space-200);
+      }
+
+      [data-variant="a"] .control_bar {
+        margin-top: var(--space-250);
+      }
+
+      .search_sort_row {
+        display: flex;
+        gap: var(--space-150);
+      }
+
+      .quiet {
+        display: flex;
+        align-items: center;
+        gap: var(--space-100);
+        height: 52px;
+        padding: 0 var(--space-150);
+        border: 1px solid transparent;
+        border-radius: var(--radius-pill);
+        background: var(--color-bg-muted);
+        color: var(--color-text-tertiary);
+        font-size: var(--font-size-md);
+      }
+
+      .quiet.search {
+        width: 280px;
+      }
+
+      .quiet.sort {
+        width: 132px;
+        padding-left: var(--space-200);
+        color: var(--color-text-primary);
+        font-size: var(--font-size-sm);
+      }
+
+      .quiet svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: var(--space-200);
+        margin-top: var(--space-200);
+      }
+
+      .stock_card {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-200);
+        min-height: 142px;
+        padding: var(--space-200);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: var(--radius-xl);
+        background: var(--color-bg-frosted);
+        box-shadow: var(--shadow-md);
+      }
+
+      .stock_head {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .stock_head b {
+        display: block;
+        font-size: var(--font-size-md);
+      }
+
+      .stock_head small {
+        color: var(--color-text-tertiary);
+        font-size: var(--font-size-xs);
+      }
+
+      .stock_price {
+        text-align: right;
+      }
+
+      .stock_price b {
+        font-size: var(--font-size-xl);
+      }
+
+      .stock_price small {
+        display: block;
+        font-size: var(--font-size-xs);
+      }
+
+      .stock_tiles {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-100);
+      }
+
+      .stock_tiles span {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-025);
+        padding: var(--space-100);
+        border-radius: var(--radius-md);
+        background: var(--color-bg-muted);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-bold);
+      }
+
+      .stock_tiles small {
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-2xs);
+        font-weight: normal;
+      }
+
+      @media (max-width: 779px) {
+        .sidebar {
+          display: none;
+        }
+
+        .main {
+          padding: var(--space-200);
+        }
+
+        .summary {
+          flex-direction: column;
+          align-items: stretch;
+          gap: var(--space-250);
+        }
+
+        [data-variant="current"] .summary {
+          min-height: auto;
+          padding: var(--space-250);
+        }
+
+        [data-variant="a"] .summary {
+          align-items: stretch;
+          padding: 0;
+        }
+
+        .metrics {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .control_bar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: var(--space-150);
+        }
+
+        .search_sort_row .quiet {
+          height: 44px;
+          border-color: var(--color-border-subtle);
+          background: var(--color-bg-frosted);
+        }
+
+        .quiet.search {
+          flex: 1;
+          width: auto;
+        }
+
+        /* The narrow sort menu shows only its arrow, as on main. */
+        .quiet.sort {
+          width: 92px;
+          color: transparent;
+        }
+      }
+
+      .demo {
+        position: fixed;
+        right: var(--space-200);
+        bottom: var(--space-200);
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-050);
+        padding: var(--space-150);
+        border: 1px solid var(--color-border-default);
+        border-radius: var(--radius-lg);
+        background: var(--color-bg-surface);
+        box-shadow: var(--shadow-md);
+        font-size: var(--font-size-xs);
+      }
+
+      .demo[hidden] {
+        display: none;
+      }
+
+      .demo label {
+        padding: var(--space-050) var(--space-100);
+        border: 1px solid var(--color-border-default);
+        border-radius: var(--radius-pill);
+        cursor: pointer;
+      }
+
+      .demo input {
+        position: absolute;
+        opacity: 0;
+      }
+
+      .demo label:has(input:checked) {
+        border-color: var(--color-bg-accent);
+        background: var(--color-bg-accent-subtle);
+        color: var(--color-text-accent-strong);
+      }
+
+      .demo label:has(input:focus-visible) {
+        outline: 2px solid var(--color-bg-accent);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body data-variant="a">
+    <div class="shell">
+      <nav class="sidebar" aria-label="主選單">
+        <span>儀表板</span>
+        <span aria-current="page">市場</span>
+        <span>歷史紀錄</span>
+        <span>買賣計畫</span>
+        <span>新增</span>
+        <span>搜尋</span>
+      </nav>
+      <div class="content">
+        <main class="main">
+          <section class="summary">
+            <div class="summary_copy">
+              <h1>持股追蹤</h1>
+              <p>追蹤你的持股現況、報酬率與最新價格。</p>
+            </div>
+            <div class="metrics">
+              <div class="metric"><span>持股檔數</span><strong>17</strong></div>
+              <div class="metric"><span>今日上漲</span><strong class="up">14</strong></div>
+              <div class="metric"><span>今日下跌</span><strong class="down">3</strong></div>
+            </div>
+          </section>
+
+          <section class="control_bar" aria-label="市場控制列">
+            <div class="SegmentedControl_main SegmentedControl_subtle">
+              <div
+                class="SegmentedControl_list"
+                style="--option-count: 2; --option-width: 80px; --active-index: 0"
+              >
+                <div class="SegmentedControl_sliding_background"></div>
+                <button class="SegmentedControl_trigger SegmentedControl_active" type="button">持股</button>
+                <button class="SegmentedControl_trigger" type="button">關注</button>
+              </div>
+            </div>
+            <div class="search_sort_row">
+              <span class="quiet search">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"
+                  />
+                </svg>
+                搜尋持股代號或名稱
+              </span>
+              <span class="quiet sort">持倉高到低</span>
+            </div>
+          </section>
+
+          <section class="cards" id="cards"></section>
+        </main>
+      </div>
+    </div>
+
+    <form class="demo" aria-label="設計稿切換">
+      <label><input type="radio" name="variant" value="current" />現況</label>
+      <label><input type="radio" name="variant" value="a" checked />A 拿掉卡片（推薦）</label>
+      <label><input type="radio" name="variant" value="b" />B 平面卡片</label>
+    </form>
+
+    <script>
+      const stocks = [
+        ["聯發科", "2454", "3,705", "▲ 60.00 1.65%", "up", "435 股", "$1677.80", "+27.30%"],
+        ["大立光", "3008", "4,425", "▲ 400.00 9.94%", "up", "211 股", "$1211.55", "+13.96%"],
+        ["聯電", "2303", "88.8", "▲ 1.40 1.60%", "up", "3,443 股", "$384.22", "-99.00%"],
+        ["台積電", "2330", "2,145", "▼ 5.00 0.23%", "down", "126 股", "$1160.49", "+7.80%"],
+        ["台達電", "2308", "1,120", "▲ 65.00 6.16%", "up", "180 股", "$243.07", "+18.56%"],
+        ["日月光投控", "3711", "511", "▲ 23.00 4.71%", "up", "259 股", "$251.20", "+26.03%"],
+      ];
+      document.getElementById("cards").innerHTML = stocks
+        .map(
+          ([name, sid, price, change, tone, shares, cost, ret]) => `
+        <article class="stock_card">
+          <div class="stock_head">
+            <div><b>${name}</b><small>${sid}</small></div>
+            <div class="stock_price" style="color: var(--color-price-${tone})"><b>${price}</b><small>${change}</small></div>
+          </div>
+          <div class="stock_tiles">
+            <span><small>庫存</small>${shares}</span>
+            <span><small>平均成本</small>${cost}</span>
+            <span><small>報酬率</small>${ret}</span>
+          </div>
+        </article>`,
+        )
+        .join("");
+
+      const params = new URLSearchParams(location.search);
+      if (params.has("variant")) {
+        document.body.dataset.variant = params.get("variant");
+        const input = document.querySelector(`.demo input[value="${params.get("variant")}"]`);
+        if (input) input.checked = true;
+      }
+      if (params.has("nodemo")) document.querySelector(".demo").hidden = true;
+      document.querySelector(".demo").addEventListener("change", (event) => {
+        document.body.dataset.variant = event.target.value;
+      });
+    </script>
+  </body>
+</html>

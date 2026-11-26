@@ -472,6 +472,49 @@ describe("trade record fields", () => {
     expect(mockSaveTradeRecord).not.toHaveBeenCalled();
   });
 
+  test("leaves the Enter that confirms an IME composition to the input method", async () => {
+    // Zhuyin users press Enter to confirm the characters they typed; picking a stock
+    // then would fill the field before they finish the keyword.
+    renderTradeEditor();
+    await user.type(stockInput(), "2330");
+    advance(300);
+    await screen.findByRole("option", { name: /2330/ });
+    fireEvent.keyDown(stockInput(), { key: "Enter", isComposing: true });
+    fireEvent.keyDown(stockInput(), { key: "Enter", keyCode: 229 });
+    expect(stockInput()).toHaveValue("2330");
+  });
+
+  test("moves the highlight to the result under a moving pointer only", async () => {
+    // Scrolling the list with an arrow key slides results under a still pointer,
+    // which fires mouseenter; following it would move the highlight away from the
+    // keyboard.
+    renderTradeEditor();
+    await user.type(stockInput(), "2");
+    advance(300);
+    const tsmc = await screen.findByRole("option", { name: /台積電/ });
+    const foxconn = screen.getByRole("option", { name: /鴻海/ });
+    fireEvent.keyDown(stockInput(), { key: "ArrowDown" });
+    const highlightedId = stockInput().getAttribute("aria-activedescendant");
+    fireEvent.mouseEnter(highlightedId === tsmc.id ? foxconn : tsmc);
+    expect(stockInput()).toHaveAttribute("aria-activedescendant", highlightedId);
+    fireEvent.mouseMove(foxconn);
+    expect(stockInput()).toHaveAttribute("aria-activedescendant", foxconn.id);
+  });
+
+  test("scrolls the highlighted result into view when an arrow key reopens the list", async () => {
+    const scrollIntoView = Element.prototype.scrollIntoView as Mock;
+    renderTradeEditor();
+    await user.type(stockInput(), "2");
+    advance(300);
+    await screen.findByRole("option", { name: /台積電/ });
+    fireEvent.keyDown(stockInput(), { key: "Escape" });
+    expect(screen.queryByRole("option")).not.toBeInTheDocument();
+    scrollIntoView.mockClear();
+    fireEvent.keyDown(stockInput(), { key: "ArrowUp" });
+    const options = screen.getAllByRole("option");
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(options.at(-1));
+  });
+
   test("[REC-R1.18] does not save while the search text is not chosen", async () => {
     renderTradeEditor();
     await user.type(stockInput(), "2330");

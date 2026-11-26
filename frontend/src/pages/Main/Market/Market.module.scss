@@ -25,26 +25,19 @@ $three-signal-min-width: 360px;
   }
 }
 
+// A page header rather than a card, so the stock cards are the only raised surfaces.
 .summary_panel {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 128px;
   gap: var(--space-300);
-  padding: var(--space-300) var(--space-400);
-  border-radius: var(--radius-2xl);
-  background: var(--color-bg-frosted);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: var(--space-100) 0 var(--space-050);
 
   @include ds.down(md) {
-    min-height: auto;
     align-items: stretch;
     flex-direction: column;
     gap: var(--space-250);
-    padding: var(--space-250);
-    border-radius: var(--radius-2xl);
+    padding: 0;
   }
 }
 
@@ -53,6 +46,10 @@ $three-signal-min-width: 360px;
   flex-direction: column;
   gap: var(--space-075);
   min-width: 0;
+
+  // Optical alignment: the rounded controls and cards below look inset from their
+  // box edge, so text flush with that edge would look like it sticks out.
+  padding-left: var(--space-100);
 
   h1 {
     margin: 0;
@@ -72,14 +69,16 @@ $three-signal-min-width: 360px;
   }
 }
 
+// On the segmented control's track colour, the same quiet layer as the controls.
 .metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(86px, max-content));
-  gap: var(--space-250);
+  padding: var(--space-150) 0;
+  border-radius: var(--radius-xl);
+  background-color: var(--color-bg-muted);
 
   @include ds.down(md) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-200);
   }
 }
 
@@ -88,6 +87,7 @@ $three-signal-min-width: 360px;
   flex-direction: column;
   gap: var(--space-050);
   min-width: 0;
+  padding: 0 var(--space-250);
   // Set here rather than on the strong, so a tone class on the strong overrides it.
   color: var(--color-text-primary);
 
@@ -114,14 +114,13 @@ $three-signal-min-width: 360px;
   justify-content: space-between;
   gap: var(--space-200);
   min-height: 56px;
-  margin-top: var(--space-200);
+  margin-top: var(--space-250);
 
   @include ds.down(md) {
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-150);
     min-height: auto;
-    margin-top: var(--space-200);
   }
 }
 
@@ -150,42 +149,31 @@ $three-signal-min-width: 360px;
 .search_box {
   display: flex;
   align-items: center;
-  gap: var(--space-100);
-  flex: 0 0 280px;
-  height: 40px;
   min-width: 0;
-  padding: 0 var(--space-075) 0 var(--space-150);
-  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-pill);
-  background: var(--color-bg-frosted);
-  color: var(--color-text-secondary);
-  transition:
-    border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard);
 
-  &:focus-within {
-    @include ds.focus-ring;
-  }
+  @include ds.up(md) {
+    flex: 0 0 280px;
+    height: 52px;
+    @include ds.quiet-field;
 
-  input {
-    width: 100%;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: var(--color-text-primary);
-    font: inherit;
-    font-size: var(--font-size-body);
-    letter-spacing: 0;
+    &:has(input:not(:placeholder-shown)) {
+      background-color: var(--color-bg-frosted);
+    }
   }
 
   @include ds.down(md) {
     flex: 1 1 auto;
     height: 44px;
+    border: 1px solid var(--color-border-subtle);
+    background: var(--color-bg-frosted);
+
+    &:focus-within {
+      @include ds.focus-ring;
+    }
   }
 }
 
-.clear_search_button,
 .update_failure button {
   display: inline-flex;
   align-items: center;
@@ -211,30 +199,16 @@ $three-signal-min-width: 360px;
   }
 }
 
-.result_count {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  line-height: var(--line-height-snug);
-  white-space: nowrap;
-
-  @include ds.down(md) {
-    display: none;
-  }
-}
-
 .sort_menu {
   position: relative;
   flex: 0 0 132px;
-  height: 40px;
 
   select {
     width: 100%;
     height: 100%;
     padding: 0 var(--space-400) 0 var(--space-200);
-    border: 1px solid var(--color-border-subtle);
     border-radius: var(--radius-pill);
     appearance: none;
-    background: var(--color-bg-frosted);
     color: var(--color-text-primary);
     cursor: pointer;
     font: inherit;
@@ -243,8 +217,12 @@ $three-signal-min-width: 360px;
     outline: 0;
   }
 
-  select:focus-visible {
-    @include ds.focus-ring;
+  @include ds.up(md) {
+    height: 52px;
+
+    select {
+      @include ds.quiet-field;
+    }
   }
 
   &::after {
@@ -265,7 +243,13 @@ $three-signal-min-width: 360px;
     height: 44px;
 
     select {
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-bg-frosted);
       color: transparent;
+    }
+
+    select:focus-visible {
+      @include ds.focus-ring;
     }
   }
 }
@@ -575,6 +559,8 @@ $three-signal-min-width: 360px;
   color: var(--color-text-primary);
 }
 
+// No card, like the search page's empty state: only the primary button has
+// colour, so the next step is what the eye lands on.
 .empty_state {
   grid-column: 1 / -1;
   justify-self: center;
@@ -583,14 +569,13 @@ $three-signal-min-width: 360px;
   flex-direction: column;
   gap: var(--space-150);
   width: min(100%, 420px);
-  max-width: 420px;
-  margin-top: var(--space-400);
-  padding: var(--space-400) var(--space-300);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-2xl);
-  background: var(--color-bg-frosted);
-  box-shadow: var(--shadow-md);
+  padding: var(--space-1000) var(--space-300) var(--space-600);
   text-align: center;
+
+  > svg {
+    margin-bottom: var(--space-100);
+    color: var(--color-text-tertiary);
+  }
 
   h2 {
     margin: 0;
@@ -624,7 +609,7 @@ $three-signal-min-width: 360px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 var(--space-250);
   border-radius: var(--radius-pill);
   cursor: pointer;

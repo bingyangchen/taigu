@@ -41,6 +41,7 @@
     --color-bg-shell-bottom: #feedff;
     --color-border-default: #dde4ee;
     --color-border-subtle: #f1f4f8;
+    --color-border-medium: #c3ccd8;
     --color-border-strong: #6a788c;
     --color-border-accent: #4c8bf5;
     --color-border-danger: #d4493f;
@@ -794,11 +795,6 @@ body {
   font: inherit;
   letter-spacing: inherit;
   text-align: left;
-}
-@media (hover: hover) {
-  .StockPicker_result:hover {
-    background-color: var(--color-bg-hover);
-  }
 }
 .StockPicker_result.StockPicker_highlighted {
   background-color: var(--color-bg-hover);

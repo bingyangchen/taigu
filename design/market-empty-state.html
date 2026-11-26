@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>市場頁的空狀態｜Taigu 設計稿</title>
+    <link rel="stylesheet" href="shared/components.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        background: linear-gradient(
+          180deg,
+          var(--color-bg-shell-top) 0%,
+          var(--color-bg-shell-bottom) 100%
+        );
+        color: var(--color-text-primary);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .shell {
+        display: flex;
+        min-height: 100dvh;
+      }
+
+      /* Stand-in for MainSideBar; only its width matters to this draft. */
+      .sidebar {
+        flex: 0 0 var(--layout-sidebar-width);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-050);
+        padding: var(--space-200) var(--space-100);
+        border-right: 1px solid var(--color-border-subtle);
+        background: var(--color-bg-surface);
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-sm);
+      }
+
+      .sidebar span {
+        padding: var(--space-150);
+        border-radius: var(--radius-lg);
+      }
+
+      .sidebar span[aria-current] {
+        background: var(--color-bg-accent-subtle);
+        color: var(--color-text-accent-strong);
+      }
+
+      .content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .main {
+        width: min(100%, 1120px);
+        margin: 0 auto;
+        padding: var(--space-400) var(--space-400) var(--space-600);
+        letter-spacing: 0;
+      }
+
+      /* Summary: title and subtitle on the left, three market signals on the right. */
+      .summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-300);
+      }
+
+      .summary_copy {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-075);
+        min-width: 0;
+      }
+
+      .summary_copy h1 {
+        margin: 0;
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-tight);
+      }
+
+      .summary_copy p {
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-sm);
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(86px, max-content));
+        gap: var(--space-250);
+      }
+
+      .metric {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-050);
+      }
+
+      .metric span {
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-xs);
+      }
+
+      .metric strong {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-snug);
+      }
+
+      /* With no stocks every count is zero, which takes the neutral colour. */
+      .metric .up,
+      .metric .down {
+        color: var(--color-text-primary);
+      }
+
+      /*
+       * Proposal A: no card. The title and the signals sit on the page like a page
+       * header, so the frosted stock cards are the only raised surfaces and the
+       * quiet controls read as the header's tools.
+       */
+      .summary {
+        padding: var(--space-100) 0 var(--space-050);
+      }
+
+      /*
+       * Optical alignment: the rounded segmented control and cards below start
+       * their visible edge a few pixels in, so text flush with their box edge looks
+       * like it sticks out.
+       */
+      .summary_copy {
+        padding-left: var(--space-100);
+      }
+
+      /*
+       * The three signals share one group on the segmented control's track colour,
+       * so they read as the same quiet layer as the controls below.
+       */
+      .metrics {
+        gap: 0;
+        padding: var(--space-150) 0;
+        border-radius: var(--radius-xl);
+        background: var(--color-bg-muted);
+      }
+
+      .metric {
+        padding: 0 var(--space-250);
+      }
+
+      /* Empty states: shared content, two looks. */
+      .empty_state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-150);
+        text-align: center;
+      }
+
+      .empty_state h2 {
+        margin: 0;
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-snug);
+      }
+
+      .empty_state p {
+        max-width: 340px;
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-normal);
+      }
+
+      .empty_state .actions {
+        display: flex;
+        gap: var(--space-100);
+        margin-top: var(--space-050);
+      }
+
+      .empty_state svg {
+        fill: currentColor;
+      }
+
+      .action {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0 var(--space-250);
+        border: 0;
+        border-radius: var(--radius-pill);
+        font: inherit;
+        font-size: var(--font-size-sm);
+        cursor: pointer;
+      }
+
+      .action.primary {
+        background: var(--color-bg-accent);
+        color: var(--color-text-inverse);
+      }
+
+      .action.secondary {
+        background: transparent;
+        color: var(--color-text-secondary);
+      }
+
+      .action.secondary:hover {
+        background: var(--color-bg-hover);
+        color: var(--color-text-primary);
+      }
+
+      /* Current: a frosted card with a shadow and a 40px accent icon. */
+      [data-variant="current"] .empty_state {
+        width: min(100%, 420px);
+        margin: var(--space-400) auto 0;
+        padding: var(--space-400) var(--space-300);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: var(--radius-2xl);
+        background: var(--color-bg-frosted);
+        box-shadow: var(--shadow-md);
+      }
+
+      [data-variant="current"] .empty_state svg {
+        width: 40px;
+        height: 40px;
+        color: var(--color-text-accent);
+      }
+
+      /*
+       * Proposal A: no card, like the search page's empty state. The icon is a
+       * quiet 32px glyph in the tertiary text colour, so the primary button is the
+       * one thing in colour and the next step is what the eye lands on.
+       */
+      [data-variant="a"] .empty_state {
+        gap: var(--space-150);
+        padding: var(--space-1000) var(--space-300) var(--space-600);
+      }
+
+      [data-variant="a"] .empty_state svg {
+        width: 32px;
+        height: 32px;
+        margin-bottom: var(--space-100);
+        color: var(--color-text-tertiary);
+      }
+
+      .control_bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-200);
+        min-height: 56px;
+        margin-top: var(--space-200);
+      }
+
+      .control_bar {
+        margin-top: var(--space-250);
+      }
+
+      .search_sort_row {
+        display: flex;
+        gap: var(--space-150);
+      }
+
+      .quiet {
+        display: flex;
+        align-items: center;
+        gap: var(--space-100);
+        height: 52px;
+        padding: 0 var(--space-150);
+        border: 1px solid transparent;
+        border-radius: var(--radius-pill);
+        background: var(--color-bg-muted);
+        color: var(--color-text-tertiary);
+        font-size: var(--font-size-md);
+      }
+
+      .quiet.search {
+        width: 280px;
+      }
+
+      .quiet.sort {
+        width: 132px;
+        padding-left: var(--space-200);
+        color: var(--color-text-primary);
+        font-size: var(--font-size-sm);
+      }
+
+      .quiet svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: var(--space-200);
+        margin-top: var(--space-200);
+      }
+
+      .stock_card {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-200);
+        min-height: 142px;
+        padding: var(--space-200);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: var(--radius-xl);
+        background: var(--color-bg-frosted);
+        box-shadow: var(--shadow-md);
+      }
+
+      .stock_head {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .stock_head b {
+        display: block;
+        font-size: var(--font-size-md);
+      }
+
+      .stock_head small {
+        color: var(--color-text-tertiary);
+        font-size: var(--font-size-xs);
+      }
+
+      .stock_price {
+        text-align: right;
+      }
+
+      .stock_price b {
+        font-size: var(--font-size-xl);
+      }
+
+      .stock_price small {
+        display: block;
+        font-size: var(--font-size-xs);
+      }
+
+      .stock_tiles {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-100);
+      }
+
+      .stock_tiles span {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-025);
+        padding: var(--space-100);
+        border-radius: var(--radius-md);
+        background: var(--color-bg-muted);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-bold);
+      }
+
+      .stock_tiles small {
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-2xs);
+        font-weight: normal;
+      }
+
+      @media (max-width: 779px) {
+        .sidebar {
+          display: none;
+        }
+
+        .main {
+          padding: var(--space-200);
+        }
+
+        .summary {
+          flex-direction: column;
+          align-items: stretch;
+          gap: var(--space-250);
+        }
+
+        .summary {
+          align-items: stretch;
+          padding: 0;
+        }
+
+        .metrics {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .control_bar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: var(--space-150);
+        }
+
+        .search_sort_row .quiet {
+          height: 44px;
+          border-color: var(--color-border-subtle);
+          background: var(--color-bg-frosted);
+        }
+
+        .quiet.search {
+          flex: 1;
+          width: auto;
+        }
+
+        /* The narrow sort menu shows only its arrow, as on main. */
+        .quiet.sort {
+          width: 92px;
+          color: transparent;
+        }
+      }
+
+      .demo {
+        position: fixed;
+        right: var(--space-200);
+        bottom: var(--space-200);
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-050);
+        padding: var(--space-150);
+        border: 1px solid var(--color-border-default);
+        border-radius: var(--radius-lg);
+        background: var(--color-bg-surface);
+        box-shadow: var(--shadow-md);
+        font-size: var(--font-size-xs);
+      }
+
+      .demo[hidden] {
+        display: none;
+      }
+
+      .demo label {
+        padding: var(--space-050) var(--space-100);
+        border: 1px solid var(--color-border-default);
+        border-radius: var(--radius-pill);
+        cursor: pointer;
+      }
+
+      .demo input {
+        position: absolute;
+        opacity: 0;
+      }
+
+      .demo label:has(input:checked) {
+        border-color: var(--color-bg-accent);
+        background: var(--color-bg-accent-subtle);
+        color: var(--color-text-accent-strong);
+      }
+
+      .demo label:has(input:focus-visible) {
+        outline: 2px solid var(--color-bg-accent);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body data-variant="a" data-state="holding">
+    <div class="shell">
+      <nav class="sidebar" aria-label="主選單">
+        <span>儀表板</span>
+        <span aria-current="page">市場</span>
+        <span>歷史紀錄</span>
+        <span>買賣計畫</span>
+        <span>新增</span>
+        <span>搜尋</span>
+      </nav>
+      <div class="content">
+        <main class="main">
+          <section class="summary">
+            <div class="summary_copy">
+              <h1>持股追蹤</h1>
+              <p>追蹤你的持股現況、報酬率與最新價格。</p>
+            </div>
+            <div class="metrics">
+              <div class="metric"><span>持股檔數</span><strong>0</strong></div>
+              <div class="metric"><span>今日上漲</span><strong class="up">0</strong></div>
+              <div class="metric"><span>今日下跌</span><strong class="down">0</strong></div>
+            </div>
+          </section>
+
+          <section class="control_bar" aria-label="市場控制列">
+            <div class="SegmentedControl_main SegmentedControl_subtle">
+              <div
+                class="SegmentedControl_list"
+                style="--option-count: 2; --option-width: 80px; --active-index: 0"
+              >
+                <div class="SegmentedControl_sliding_background"></div>
+                <button class="SegmentedControl_trigger SegmentedControl_active" type="button">持股</button>
+                <button class="SegmentedControl_trigger" type="button">關注</button>
+              </div>
+            </div>
+            <div class="search_sort_row">
+              <span class="quiet search">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"
+                  />
+                </svg>
+                搜尋持股代號或名稱
+              </span>
+              <span class="quiet sort">持倉高到低</span>
+            </div>
+          </section>
+
+          <section id="empty"></section>
+        </main>
+      </div>
+    </div>
+
+    <form class="demo" aria-label="設計稿切換">
+      <label><input type="radio" name="variant" value="current" />現況</label>
+      <label><input type="radio" name="variant" value="a" checked />A 拿掉卡片（推薦）</label>
+      <span style="width: 100%"></span>
+      <label><input type="radio" name="state" value="holding" checked />沒有持股</label>
+      <label><input type="radio" name="state" value="favorites" />沒有關注</label>
+      <label><input type="radio" name="state" value="none" />找不到符合</label>
+    </form>
+
+    <script>
+      const icons = {
+        briefcase: "M19,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H5A5.006,5.006,0,0,0,0,9V19a5.006,5.006,0,0,0,5,5H19a5.006,5.006,0,0,0,5-5V9A5.006,5.006,0,0,0,19,4ZM11,2h2a3,3,0,0,1,2.816,2H8.184A3,3,0,0,1,11,2ZM5,6H19a3,3,0,0,1,3,3v3H2V9A3,3,0,0,1,5,6ZM19,22H5a3,3,0,0,1-3-3V14h9v1a1,1,0,0,0,2,0V14h9v5A3,3,0,0,1,19,22Z",
+        heart: "M17.5.917a6.4,6.4,0,0,0-5.5,3.3A6.4,6.4,0,0,0,6.5.917,6.8,6.8,0,0,0,0,7.967c0,6.775,10.956,14.6,11.422,14.932l.578.409.578-.409C13.044,22.569,24,14.742,24,7.967A6.8,6.8,0,0,0,17.5.917ZM12,20.846c-3.253-2.43-10-8.4-10-12.879a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,11,7.967h2a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,22,7.967C22,12.448,15.253,18.416,12,20.846Z",
+        magnifier: "M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z",
+      };
+      const states = {
+        holding: ["briefcase", "還沒有持股", "新增第一筆交易紀錄後，這裡會自動整理你的庫存、成本與報酬率。", "新增交易紀錄", "查看交易紀錄"],
+        favorites: ["heart", "還沒有最愛股票", "到股票詳情頁點選愛心，就能把常看的股票集中在這裡追蹤。", "搜尋股票", "查看持股"],
+        none: ["magnifier", "找不到符合的股票", "請確認代號或名稱是否正確，或清除搜尋條件。", "清除搜尋", null],
+      };
+      function render() {
+        const [icon, title, text, primary, secondary] = states[document.body.dataset.state];
+        document.getElementById("empty").innerHTML = `
+          <div class="empty_state">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${icons[icon]}" /></svg>
+            <h2>${title}</h2>
+            <p>${text}</p>
+            <div class="actions">
+              <button class="action primary" type="button">${primary}</button>
+              ${secondary ? `<button class="action secondary" type="button">${secondary}</button>` : ""}
+            </div>
+          </div>`;
+      }
+      const params = new URLSearchParams(location.search);
+      for (const key of ["variant", "state"]) {
+        if (params.has(key)) {
+          document.body.dataset[key] = params.get(key);
+          const input = document.querySelector(`.demo input[name="${key}"][value="${params.get(key)}"]`);
+          if (input) input.checked = true;
+        }
+      }
+      if (params.has("nodemo")) document.querySelector(".demo").hidden = true;
+      document.querySelector(".demo").addEventListener("change", (event) => {
+        document.body.dataset[event.target.name] = event.target.value;
+        render();
+      });
+      render();
+    </script>
+  </body>
+</html>

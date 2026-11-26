@@ -2,13 +2,10 @@ import React, { memo, useLayoutEffect, useRef, useState } from "react";
 
 import { useAppSelector } from "../../redux/hooks";
 import Util from "../../utils/util";
+import styles from "./ScrollAwareFloatingControls.module.scss";
 
 interface Props {
   children: React.ReactNode;
-  activeClassName: string;
-  className: string;
-  hiddenClassName: string;
-  noTransitionClassName: string;
 }
 
 interface ControlsState {
@@ -24,13 +21,7 @@ interface ScrollTracking {
   downwardDistance: number;
 }
 
-function ScrollAwareFloatingControls({
-  children,
-  activeClassName,
-  className,
-  hiddenClassName,
-  noTransitionClassName,
-}: Props) {
+function ScrollAwareFloatingControls({ children }: Props) {
   const scrollTop = useAppSelector((state) => state.mainPage.scrollTop);
   const [state, setState] = useState<ControlsState>({
     isActivated: false,
@@ -98,9 +89,9 @@ function ScrollAwareFloatingControls({
   return (
     <div
       ref={controlsRef}
-      className={`${className} ${isActivated ? activeClassName : ""} ${
-        isActivated && !state.isVisible ? hiddenClassName : ""
-      } ${isActivated && !state.shouldAnimate ? noTransitionClassName : ""}`}
+      className={`${styles.main} ${isActivated ? styles.active : ""} ${
+        isActivated && !state.isVisible ? styles.hidden : ""
+      } ${isActivated && !state.shouldAnimate ? styles.no_transition : ""}`}
     >
       {children}
     </div>

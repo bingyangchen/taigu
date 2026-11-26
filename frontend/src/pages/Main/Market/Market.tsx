@@ -1,7 +1,12 @@
 import React, { memo, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { SegmentedControl, Skeleton, SpeedDial } from "../../../components";
+import {
+  SearchKeywordInput,
+  SegmentedControl,
+  Skeleton,
+  SpeedDial,
+} from "../../../components";
 import * as Icons from "../../../icons";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -11,7 +16,6 @@ import {
   updateHeaderTitle,
 } from "../../../redux/slices/MainPageSlice";
 import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
-import { COLORS } from "../../../styles/tokens";
 import type { MarketSortKey, MarketTab, StockInfo } from "../../../types";
 import Env from "../../../utils/env";
 import {
@@ -296,7 +300,7 @@ function Market() {
     const EmptyIcon = isHolding ? Icons.IconBriefcase : Icons.IconHeart;
     return (
       <div className={styles.empty_state}>
-        <EmptyIcon sideLength="40" color={COLORS.textAccent} />
+        <EmptyIcon sideLength="32" />
         <h2>{isHolding ? "還沒有持股" : "還沒有最愛股票"}</h2>
         <p>
           {isHolding
@@ -334,7 +338,7 @@ function Market() {
   const renderNoSearchResults = (): React.ReactNode => {
     return (
       <div className={styles.empty_state}>
-        <Icons.IconMagnifier sideLength="40" color={COLORS.textAccent} />
+        <Icons.IconMagnifier sideLength="32" />
         <h2>找不到符合的股票</h2>
         <p>請確認代號或名稱是否正確，或清除搜尋條件。</p>
         <button className={styles.primary_action} type="button" onClick={clearSearch}>
@@ -357,16 +361,6 @@ function Market() {
         <Skeleton width="36%" height={14} />
       </div>
     ));
-  };
-
-  const renderResultCount = (
-    totalCount: number,
-    visibleCount: number,
-  ): React.ReactNode => {
-    if (!marketSearchText || visibleCount === totalCount) {
-      return null;
-    }
-    return <span className={styles.result_count}>{visibleCount} 筆結果</span>;
   };
 
   const renderUpdateFailure = (): React.ReactNode => {
@@ -422,10 +416,6 @@ function Market() {
     if (nextTab === "favorites") {
       fetchFavoriteStockInfo();
     }
-  };
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    dispatch(changeMarketSearchText(event.target.value));
   };
 
   const clearSearch = (): void => {
@@ -622,28 +612,16 @@ function Market() {
           />
         </div>
         <div className={styles.search_sort_row}>
-          <label className={styles.search_box}>
-            <Icons.IconMagnifier sideLength="16" />
-            <input
+          <div className={styles.search_box}>
+            <SearchKeywordInput
               aria-label="搜尋股票"
               placeholder={
                 activeTab === "holding" ? "搜尋持股代號或名稱" : "搜尋最愛代號或名稱"
               }
-              value={marketSearchText}
-              onChange={handleSearchChange}
+              keyword={marketSearchText}
+              onChange={(keyword) => dispatch(changeMarketSearchText(keyword))}
             />
-            {marketSearchText && (
-              <button
-                aria-label="清除搜尋"
-                className={styles.clear_search_button}
-                type="button"
-                onClick={clearSearch}
-              >
-                <Icons.IconXLarge sideLength="12" />
-              </button>
-            )}
-          </label>
-          {renderResultCount(allSids.length, visibleSids.length)}
+          </div>
           {renderUpdateFailure()}
           <div className={styles.sort_menu}>
             <select
