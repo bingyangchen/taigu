@@ -1,4 +1,4 @@
-import React, { ChangeEventHandler } from "react";
+import { ChangeEventHandler, useLayoutEffect, useRef } from "react";
 
 import styles from "./AutoResizeTextarea.module.scss";
 
@@ -9,45 +9,38 @@ interface Props {
   onChange?: ChangeEventHandler;
 }
 
-interface State {}
+export default function AutoResizeTextarea({
+  value,
+  placeholder,
+  autoFocus,
+  onChange,
+}: Props) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-export default class AutoResizeTextarea extends React.Component<Props, State> {
-  public state: State;
-  private textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {};
-    this.textareaRef = React.createRef();
-  }
-  private resizeTextarea(): void {
-    const textarea = this.textareaRef.current;
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
     if (!textarea) return;
 
     textarea.style.height = "32px";
     textarea.style.height = `${textarea.scrollHeight}px`;
-  }
-  public componentDidMount(): void {
-    this.resizeTextarea();
-    if (this.props.autoFocus) {
-      const input = this.textareaRef.current;
-      if (!input) return;
+  });
 
-      input.setSelectionRange(input.value.length, input.value.length);
-      input.focus();
-    }
-  }
-  public componentDidUpdate(): void {
-    this.resizeTextarea();
-  }
-  public render(): React.ReactNode {
-    return (
-      <textarea
-        className={styles.main}
-        value={this.props.value}
-        onChange={this.props.onChange ?? (() => {})}
-        placeholder={this.props.placeholder}
-        ref={this.textareaRef}
-      />
-    );
-  }
+  useLayoutEffect(() => {
+    if (!autoFocus) return;
+    const input = textareaRef.current;
+    if (!input) return;
+
+    input.setSelectionRange(input.value.length, input.value.length);
+    input.focus();
+  }, [autoFocus]);
+
+  return (
+    <textarea
+      className={styles.main}
+      value={value}
+      onChange={onChange ?? (() => {})}
+      placeholder={placeholder}
+      ref={textareaRef}
+    />
+  );
 }

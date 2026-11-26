@@ -1,4 +1,4 @@
-import React, { MouseEvent, MouseEventHandler } from "react";
+import { MouseEvent, MouseEventHandler } from "react";
 
 import { RoundButton } from "../../components";
 import * as Icons from "../../icons";
@@ -10,47 +10,42 @@ interface Props {
   onClickDelete?: MouseEventHandler;
 }
 
-interface State {}
+export default function ListRowActionBar({
+  forMobile,
+  onClickEdit,
+  onClickDelete,
+}: Props) {
+  const handleClickEdit = (e: MouseEvent): void => {
+    e.stopPropagation();
+    onClickEdit?.(e);
+  };
+  const handleClickDelete = (e: MouseEvent): void => {
+    e.stopPropagation();
+    onClickDelete?.(e);
+  };
 
-export default class ListRowActionBar extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {};
-  }
-  public componentDidMount(): void {}
-  public render(): React.ReactNode {
-    return this.props.forMobile ? (
-      <>
-        <div className={styles.tab_for_mobile} onClick={this.handleClickEdit}>
-          <Icons.IconPencilSquare sideLength="18" />
-          編輯
-        </div>
-        <div
-          className={styles.tab_for_mobile + " " + styles.dangerous}
-          onClick={this.handleClickDelete}
-        >
-          <Icons.IconTrash sideLength="18" />
-          刪除
-        </div>
-      </>
-    ) : (
-      <span className={styles.main}>
-        <RoundButton size="l" hint_text="編輯" onClick={this.handleClickEdit}>
-          <Icons.IconPencilSquare sideLength="16" />
-        </RoundButton>
-        <RoundButton size="l" hint_text="刪除" onClick={this.handleClickDelete}>
-          <Icons.IconTrash sideLength="16" />
-        </RoundButton>
-      </span>
-    );
-  }
-  private handleClickEdit = (e: MouseEvent): void => {
-    e.stopPropagation();
-    this.props.onClickEdit?.(e);
-  };
-  private handleClickDelete = (e: MouseEvent): void => {
-    e.stopPropagation();
-    this.props.onClickDelete?.(e);
-  };
+  return forMobile ? (
+    <>
+      <div className={styles.tab_for_mobile} onClick={handleClickEdit}>
+        <Icons.IconPencilSquare sideLength="18" />
+        編輯
+      </div>
+      <div
+        className={styles.tab_for_mobile + " " + styles.dangerous}
+        onClick={handleClickDelete}
+      >
+        <Icons.IconTrash sideLength="18" />
+        刪除
+      </div>
+    </>
+  ) : (
+    <span className={styles.main}>
+      <RoundButton size="l" hint_text="編輯" onClick={handleClickEdit}>
+        <Icons.IconPencilSquare sideLength="16" />
+      </RoundButton>
+      <RoundButton size="l" hint_text="刪除" onClick={handleClickDelete}>
+        <Icons.IconTrash sideLength="16" />
+      </RoundButton>
+    </span>
+  );
 }

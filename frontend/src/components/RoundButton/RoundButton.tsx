@@ -14,36 +14,36 @@ interface Props {
   "aria-label"?: string;
 }
 
-interface State {}
+export default function RoundButton({
+  children,
+  onClick,
+  className,
+  size,
+  frosted,
+  disabled,
+  hint_text,
+  "aria-label": ariaLabel,
+}: Props) {
+  const button = (
+    <button
+      type="button"
+      aria-label={ariaLabel ?? hint_text}
+      className={[
+        styles.main,
+        size === "l" && styles.l,
+        frosted && styles.frosted,
+        disabled && styles.disabled,
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      onClick={disabled ? () => {} : (onClick ?? (() => {}))}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  );
 
-export default class RoundButton extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {};
-  }
-  public render(): React.ReactNode {
-    const button = (
-      <button
-        type="button"
-        aria-label={this.props["aria-label"] ?? this.props.hint_text}
-        className={[
-          styles.main,
-          this.props.size === "l" && styles.l,
-          this.props.frosted && styles.frosted,
-          this.props.disabled && styles.disabled,
-          this.props.className,
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        onClick={this.props.disabled ? () => {} : (this.props.onClick ?? (() => {}))}
-        disabled={this.props.disabled}
-      >
-        {this.props.children}
-      </button>
-    );
-
-    if (!this.props.hint_text) return button;
-    return <Tooltip content={this.props.hint_text}>{button}</Tooltip>;
-  }
+  if (!hint_text) return button;
+  return <Tooltip content={hint_text}>{button}</Tooltip>;
 }
