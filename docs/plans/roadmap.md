@@ -17,6 +17,7 @@ flowchart TD
   market_data_fixes("行情與重大消息修正<br/>未規劃"):::unplanned
   data_fixes("資料驗證與資料處理修正<br/>未規劃"):::unplanned
   ui_feedback_fixes("介面回饋與導覽修正<br/>未規劃"):::unplanned
+  session_refresh_fixes("登入狀態維持的修正<br/>未規劃"):::unplanned
   copy_fixes("介面文案與數字格式修正<br/>未規劃"):::unplanned
   dependency_vulnerability_fixes("依賴套件漏洞修正<br/>未規劃"):::unplanned
   backend_uv_migration("後端套件管理改用 uv<br/>未規劃"):::unplanned
@@ -302,6 +303,13 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - 手續費折讓的編輯器儲存失敗時會直接關閉，輸入的內容跟著消失，其他編輯器則維持開啟。目標是失敗時也保留輸入的內容。
 - 使用者刪除個股筆記的全部文字並儲存時，直接出現「備註已更新」（STOCK-R14.3），沒有照 ui-guidelines.md 的「操作確認」先顯示確認視窗。目標是把已儲存、非空白的筆記改成空白並送出時，先請使用者確認。
 
+### 登入狀態維持的修正
+
+讓使用者在 ACCT-R5 的登入期限內，不會因為前端更新 access token 的時機而被登出。
+
+- 前端更新 access token 的途中，如果頁面重新載入，例如使用者剛好按了重新整理，瀏覽器會中斷更新 access token 的 request（`account/refresh-token`）；如果後端已經處理完這個 request、換掉了 refresh token，瀏覽器就收不到新的 refresh token，頁面重新載入之後，前端用舊的 refresh token 更新 access token，後端就依 ACCT-R6 結束這次登入。目標是頁面在更新 access token 的途中重新載入時，使用者仍維持登入，做法（例如後端在短時間內接受剛被換掉的 refresh token，或前端避免還沒完成的 `account/refresh-token` request 被中斷）在 plan 裡決定。
+
+  2026-11 把設定頁這些頁面改寫成 function component 時，在本機的 Chrome 開啟設定頁重現了這個情況：reverse proxy 的 log 裡，第一個 `account/refresh-token` request 的狀態是 499，接著 `/settings` 重新載入，下一個 `account/refresh-token` request 回 401。造成這次重新載入的原因還沒查到。
 
 ### 介面文案與數字格式修正
 
