@@ -1,18 +1,5 @@
-import React from "react";
-
 import styles from "./DollarSign.module.scss";
 
-interface Props {}
-
-interface State {}
-
-export default class DollarSign extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {};
-  }
-  public render(): React.ReactNode {
-    return <span className={styles.main} />;
-  }
+export default function DollarSign() {
+  return <span className={styles.main} />;
 }

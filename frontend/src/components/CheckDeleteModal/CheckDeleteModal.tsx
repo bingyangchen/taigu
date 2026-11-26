@@ -1,4 +1,4 @@
-import React, { MouseEvent, MouseEventHandler, ReactNode } from "react";
+import { MouseEvent, MouseEventHandler, ReactNode } from "react";
 
 import { Modal } from "../../components";
 import styles from "./CheckDeleteModal.module.scss";
@@ -14,46 +14,43 @@ interface Props {
   nested?: boolean;
 }
 
-interface State {}
-
-class CheckDeleteModal extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {};
-  }
-
-  public render(): React.ReactNode {
-    return (
-      <Modal
-        title={this.props.title ?? "刪除"}
-        description={this.props.description}
-        manageHistory={!this.props.nested}
-        manageBodyScroll={!this.props.nested}
-        visualLayer={this.props.nested ? "nested" : "base"}
-        discardButtonProps={{
-          children: "取消",
-          variant: "transparent",
-          onClick: this.props.hideModal,
-        }}
-        submitButtonProps={{
-          children: this.props.submitLabel ?? "刪除",
-          variant: "dangerous",
-          disabled: this.props.isWaiting,
-          waiting: this.props.isWaiting,
-          onClick: this.handleClickCheckDelete,
-        }}
-        noX
-      >
-        <div className={styles.inner}>{this.props.children}</div>
-      </Modal>
-    );
-  }
-
-  private handleClickCheckDelete = async (e: MouseEvent): Promise<void> => {
-    await this.props.onDelete();
-    this.props.hideModal(e);
+export default function CheckDeleteModal({
+  hideModal,
+  onDelete,
+  isWaiting,
+  children,
+  title,
+  description,
+  submitLabel,
+  nested,
+}: Props) {
+  const handleClickCheckDelete = async (e: MouseEvent): Promise<void> => {
+    await onDelete();
+    hideModal(e);
   };
-}
 
-export default CheckDeleteModal;
+  return (
+    <Modal
+      title={title ?? "刪除"}
+      description={description}
+      manageHistory={!nested}
+      manageBodyScroll={!nested}
+      visualLayer={nested ? "nested" : "base"}
+      discardButtonProps={{
+        children: "取消",
+        variant: "transparent",
+        onClick: hideModal,
+      }}
+      submitButtonProps={{
+        children: submitLabel ?? "刪除",
+        variant: "dangerous",
+        disabled: isWaiting,
+        waiting: isWaiting,
+        onClick: handleClickCheckDelete,
+      }}
+      noX
+    >
+      <div className={styles.inner}>{children}</div>
+    </Modal>
+  );
+}

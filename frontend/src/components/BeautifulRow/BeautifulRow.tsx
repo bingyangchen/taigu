@@ -1,4 +1,4 @@
-import React, { MouseEvent, MouseEventHandler } from "react";
+import React, { MouseEvent, MouseEventHandler, useState } from "react";
 
 import * as Icons from "../../icons";
 import styles from "./BeautifulRow.module.scss";
@@ -9,73 +9,63 @@ interface Props {
   onClick?: MouseEventHandler;
 }
 
-interface State {
-  isRippling: boolean;
+interface Ripple {
+  diameter: number;
+  left: number;
+  top: number;
 }
 
-export default class BeautifulRow extends React.Component<Props, State> {
-  public state: State;
-  private rippleRef: React.RefObject<HTMLDivElement | null>;
-  public constructor(props: Props) {
-    super(props);
-    this.state = { isRippling: false };
-    this.rippleRef = React.createRef();
-  }
-  public render(): React.ReactNode {
-    return (
-      <div className={this.mainClassName}>
-        <div className={styles.mask} onClick={this.handleClick}>
-          {this.state.isRippling && (
-            <div className={styles.ripple} ref={this.rippleRef} />
-          )}
-        </div>
-        {this.props.label && <div className={styles.label}>{this.props.label}</div>}
-        <div className={styles.value}>
-          {typeof this.props.children === "string"
-            ? this.string2jsx(this.props.children)
-            : this.props.children}
-        </div>
-        {this.props.onClick && (
-          <div className={styles.tail_mark}>
-            <Icons.IconChevronRight sideLength="13" />
-          </div>
+export default function BeautifulRow({ label, children, onClick }: Props) {
+  const [ripple, setRipple] = useState<Ripple | null>(null);
+
+  const handleClick = (e: MouseEvent): void => {
+    if (!onClick) return;
+    const mask = e.currentTarget as HTMLElement;
+    const diameter = Math.max(mask.clientWidth, mask.clientHeight);
+    const maskRect = mask.getBoundingClientRect();
+    setRipple({
+      diameter,
+      left: e.clientX - maskRect.left - diameter / 2,
+      top: e.clientY - maskRect.top - diameter / 2,
+    });
+    setTimeout(() => {
+      setRipple(null);
+      onClick(e);
+    }, 250);
+  };
+
+  return (
+    <div className={`${styles.main} ${onClick ? styles.reactive : ""}`}>
+      <div className={styles.mask} onClick={handleClick}>
+        {ripple && (
+          <div
+            className={styles.ripple}
+            style={{
+              width: `${ripple.diameter}px`,
+              height: `${ripple.diameter}px`,
+              left: `${ripple.left}px`,
+              top: `${ripple.top}px`,
+            }}
+          />
         )}
       </div>
-    );
-  }
-  private get mainClassName(): string {
-    return `${styles.main} ${this.props.onClick ? styles.reactive : ""}`;
-  }
-  private handleClick = (e: MouseEvent): void => {
-    if (this.props.onClick) {
-      const mask = e.currentTarget as HTMLElement;
-      const diameter = Math.max(mask.clientWidth, mask.clientHeight);
-      this.setState({ isRippling: true }, () => {
-        if (this.rippleRef.current) {
-          this.rippleRef.current.style.width = `${diameter}px`;
-          this.rippleRef.current.style.height = `${diameter}px`;
-          this.rippleRef.current.style.left = `${
-            e.clientX - mask.getBoundingClientRect().left - diameter / 2
-          }px`;
-          this.rippleRef.current.style.top = `${
-            e.clientY - mask.getBoundingClientRect().top - diameter / 2
-          }px`;
-        }
-      });
-      setTimeout(() => {
-        this.setState({ isRippling: false });
-        this.props.onClick?.(e);
-      }, 250);
-    }
-  };
-  private string2jsx(s: string): React.ReactNode {
-    const stringList: string[] = s.split("\n");
-    return stringList.map((each, idx) => {
-      return (
-        <React.Fragment key={idx}>
-          <div className={styles.s}>{each || " "}</div>
-        </React.Fragment>
-      );
-    });
-  }
+      {label && <div className={styles.label}>{label}</div>}
+      <div className={styles.value}>
+        {typeof children === "string" ? renderLines(children) : children}
+      </div>
+      {onClick && (
+        <div className={styles.tail_mark}>
+          <Icons.IconChevronRight sideLength="13" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function renderLines(text: string): React.ReactNode {
+  return text.split("\n").map((line, index) => (
+    <div key={index} className={styles.s}>
+      {line || " "}
+    </div>
+  ));
 }

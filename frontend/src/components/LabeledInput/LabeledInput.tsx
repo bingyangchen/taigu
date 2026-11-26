@@ -1,12 +1,14 @@
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, useId, useLayoutEffect, useState } from "react";
 
 import { RoundButton } from "../../components";
 import * as Icons from "../../icons";
 import styles from "./LabeledInput.module.scss";
 
+type InputType = "number" | "text" | "password" | "email" | "date" | "hidden";
+
 interface Props {
   title: string;
-  type?: "number" | "text" | "password" | "email" | "date" | "hidden";
+  type?: InputType;
   inputMode?:
     | "none"
     | "text"
@@ -28,97 +30,83 @@ interface Props {
   max?: string;
 }
 
-interface State {
-  isInputFocused: boolean;
-  type: "number" | "text" | "password" | "email" | "date" | "hidden";
-}
+export default function LabeledInput({
+  title,
+  type,
+  inputMode,
+  autocomplete,
+  value,
+  disabled,
+  onChange,
+  autoFocus,
+  inputRef,
+  suffix,
+  invalid,
+  describedBy,
+  max,
+}: Props) {
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [shownType, setShownType] = useState<InputType>(type ?? "text");
+  const [resolvedInputRef] = useState(
+    () => inputRef ?? React.createRef<HTMLInputElement>(),
+  );
+  const inputId = useId();
 
-let labeledInputId = 0;
-
-export default class LabeledInput extends React.Component<Props, State> {
-  public state: State;
-  private inputRef: React.RefObject<HTMLInputElement | null>;
-  private readonly inputId: string;
-  public constructor(props: Props) {
-    super(props);
-    this.state = { isInputFocused: false, type: props.type ?? "text" };
-    this.inputRef = props.inputRef ?? React.createRef();
-    labeledInputId += 1;
-    this.inputId = `labeled-input-${labeledInputId}`;
-  }
-  public componentDidMount(): void {
-    this.autoFocusIfNeeded();
-  }
-  public componentDidUpdate(previousProps: Readonly<Props>): void {
-    if (!previousProps.autoFocus && this.props.autoFocus) this.autoFocusIfNeeded();
-  }
-  public render(): React.ReactNode {
-    return (
-      <fieldset
-        className={`${styles.main} ${this.state.isInputFocused ? styles.focused : ""} ${
-          this.props.invalid ? styles.invalid : ""
-        }`}
-        disabled={this.props.disabled ?? false}
-      >
-        <legend className={this.state.isInputFocused ? styles.focused : ""}>
-          {this.props.title}
-        </legend>
-        <input
-          id={this.inputId}
-          ref={this.inputRef}
-          aria-label={this.props.title}
-          type={this.state.type}
-          inputMode={this.props.inputMode}
-          disabled={this.props.disabled ?? false}
-          value={this.props.value}
-          onChange={this.handleInputChange}
-          autoComplete={this.props.autocomplete ?? "off"}
-          aria-invalid={this.props.invalid ? true : undefined}
-          aria-describedby={this.props.describedBy}
-          max={this.props.max}
-          onFocus={this.handleFocusInput}
-          onBlur={this.handleUnfocusInput}
-        />
-        {this.props.suffix && (
-          <span className={styles.suffix}>{this.props.suffix}</span>
-        )}
-        {this.props.type === "password" && (
-          <RoundButton
-            onClick={this.handlePasswordPeekability}
-            hint_text={this.state.type === "password" ? "顯示密碼" : "隱藏密碼"}
-          >
-            {this.state.type === "password" ? (
-              <Icons.IconEyeSlash sideLength="20" />
-            ) : (
-              <Icons.IconEye sideLength="20" />
-            )}
-          </RoundButton>
-        )}
-      </fieldset>
-    );
-  }
-  private autoFocusIfNeeded(): void {
-    if (!this.props.autoFocus) return;
-    this.setState({ isInputFocused: true });
-    const input = this.inputRef.current;
+  useLayoutEffect(() => {
+    if (!autoFocus) return;
+    setIsInputFocused(true);
+    const input = resolvedInputRef.current;
     if (!input) return;
-    if (["text", "password", "email"].includes(this.state.type)) {
+    if (["text", "password", "email"].includes(input.type)) {
       input.setSelectionRange(input.value.length, input.value.length);
     }
     input.focus();
-  }
-  private handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    this.props.onChange?.(e.target.value);
+  }, [autoFocus, resolvedInputRef]);
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    onChange?.(e.target.value);
   };
-  private handleFocusInput = () => {
-    this.setState({ isInputFocused: true });
+  const handlePasswordPeekability = () => {
+    setShownType((current) => (current === "password" ? "text" : "password"));
   };
-  private handleUnfocusInput = () => {
-    this.setState({ isInputFocused: false });
-  };
-  private handlePasswordPeekability = () => {
-    this.setState((state) => {
-      return { type: state.type === "password" ? "text" : "password" };
-    });
-  };
+
+  return (
+    <fieldset
+      className={`${styles.main} ${isInputFocused ? styles.focused : ""} ${
+        invalid ? styles.invalid : ""
+      }`}
+      disabled={disabled ?? false}
+    >
+      <legend className={isInputFocused ? styles.focused : ""}>{title}</legend>
+      <input
+        id={inputId}
+        ref={resolvedInputRef}
+        aria-label={title}
+        type={shownType}
+        inputMode={inputMode}
+        disabled={disabled ?? false}
+        value={value}
+        onChange={handleInputChange}
+        autoComplete={autocomplete ?? "off"}
+        aria-invalid={invalid ? true : undefined}
+        aria-describedby={describedBy}
+        max={max}
+        onFocus={() => setIsInputFocused(true)}
+        onBlur={() => setIsInputFocused(false)}
+      />
+      {suffix && <span className={styles.suffix}>{suffix}</span>}
+      {type === "password" && (
+        <RoundButton
+          onClick={handlePasswordPeekability}
+          hint_text={shownType === "password" ? "顯示密碼" : "隱藏密碼"}
+        >
+          {shownType === "password" ? (
+            <Icons.IconEyeSlash sideLength="20" />
+          ) : (
+            <Icons.IconEye sideLength="20" />
+          )}
+        </RoundButton>
+      )}
+    </fieldset>
+  );
 }
