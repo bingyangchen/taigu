@@ -25,26 +25,19 @@ $three-signal-min-width: 360px;
   }
 }
 
+// A page header rather than a card, so the stock cards are the only raised surfaces.
 .summary_panel {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 128px;
   gap: var(--space-300);
-  padding: var(--space-300) var(--space-400);
-  border-radius: var(--radius-2xl);
-  background: var(--color-bg-frosted);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: var(--space-100) 0 var(--space-050);
 
   @include ds.down(md) {
-    min-height: auto;
     align-items: stretch;
     flex-direction: column;
     gap: var(--space-250);
-    padding: var(--space-250);
-    border-radius: var(--radius-2xl);
+    padding: 0;
   }
 }
 
@@ -53,6 +46,10 @@ $three-signal-min-width: 360px;
   flex-direction: column;
   gap: var(--space-075);
   min-width: 0;
+
+  // Optical alignment: the rounded controls and cards below look inset from their
+  // box edge, so text flush with that edge would look like it sticks out.
+  padding-left: var(--space-100);
 
   h1 {
     margin: 0;
@@ -72,14 +69,16 @@ $three-signal-min-width: 360px;
   }
 }
 
+// On the segmented control's track colour, the same quiet layer as the controls.
 .metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(86px, max-content));
-  gap: var(--space-250);
+  padding: var(--space-150) 0;
+  border-radius: var(--radius-xl);
+  background-color: var(--color-bg-muted);
 
   @include ds.down(md) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-200);
   }
 }
 
@@ -88,6 +87,7 @@ $three-signal-min-width: 360px;
   flex-direction: column;
   gap: var(--space-050);
   min-width: 0;
+  padding: 0 var(--space-250);
   // Set here rather than on the strong, so a tone class on the strong overrides it.
   color: var(--color-text-primary);
 
@@ -114,14 +114,13 @@ $three-signal-min-width: 360px;
   justify-content: space-between;
   gap: var(--space-200);
   min-height: 56px;
-  margin-top: var(--space-200);
+  margin-top: var(--space-250);
 
   @include ds.down(md) {
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-150);
     min-height: auto;
-    margin-top: var(--space-200);
   }
 }
 
