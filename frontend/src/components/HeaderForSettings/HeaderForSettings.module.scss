@@ -1,14 +1,11 @@
-@use "../../design_system" as _;
-
 .main {
-  @include _.page-header-title-size;
-
   position: sticky;
   top: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: _.$header-height;
-  padding: 0 12px 0 8px;
-  z-index: 2;
+  gap: var(--space-150);
+  height: var(--layout-header-height);
+  padding: 0 var(--space-150) 0 var(--space-100);
+  z-index: var(--z-header);
+  font-size: var(--font-size-page-title);
 }

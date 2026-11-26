@@ -31,7 +31,7 @@ import {
 } from "../components";
 import shared from "../components.module.scss";
 import { formatCount, formatDate, formatShortDate } from "../format";
-import tokens from "../tokens.module.scss";
+import layout from "../layout.module.scss";
 import useAdminData, { type AdminDataState } from "../useAdminData";
 
 const RANGE_OPTIONS = [
@@ -138,15 +138,15 @@ function ActivityLegend(): React.ReactElement {
   return (
     <span className={shared.legend}>
       <span>
-        <i style={{ background: CHART_COLORS.blue }} />
+        <i style={{ background: CHART_COLORS.accent }} />
         DAU
       </span>
       <span>
-        <i style={{ background: CHART_COLORS.deepGray }} />
+        <i style={{ background: CHART_COLORS.strongSeries }} />
         WAU
       </span>
       <span>
-        <i style={{ background: CHART_COLORS.gray }} />
+        <i style={{ background: CHART_COLORS.mutedSeries }} />
         MAU
       </span>
       <span>
@@ -166,7 +166,7 @@ function DailyChart({
   makeOption: (days: DailyUsage[]) => EChartsOption;
   small?: boolean;
 }): React.ReactElement {
-  const height = small ? tokens.adminSmallChartHeight : tokens.adminChartHeight;
+  const height = small ? layout.smallChartHeight : layout.chartHeight;
   if (daily.status === "failed") return <LoadFailure onRetry={daily.reload} />;
   if (daily.status === "loading") {
     return <Skeleton width="100%" height={height} borderRadius={4} />;
@@ -253,7 +253,7 @@ function makeActivityChartOption(days: DailyUsage[]): EChartsOption {
         const index = (params as DataIndexParam[])[0].dataIndex;
         const day = days[index];
         const incomplete = day.is_incomplete
-          ? `<br/><span style="color:${CHART_COLORS.gray}">30 天的區間早於使用紀錄開始</span>`
+          ? `<br/><span style="color:${CHART_COLORS.secondaryText}">30 天的區間早於使用紀錄開始</span>`
           : "";
         return (
           `${makeDayTitle(days, index)}${incomplete}<br/>` +
@@ -266,9 +266,9 @@ function makeActivityChartOption(days: DailyUsage[]): EChartsOption {
     xAxis: { type: "category", data: labels, boundaryGap: false, ...categoryAxisStyle },
     yAxis: makeValueAxis("人", { minInterval: 1 }),
     series: [
-      ...makeSeries("MAU", "mau", CHART_COLORS.gray, { markArea }),
-      ...makeSeries("WAU", "wau", CHART_COLORS.deepGray),
-      ...makeSeries("DAU", "dau", CHART_COLORS.blue),
+      ...makeSeries("MAU", "mau", CHART_COLORS.mutedSeries, { markArea }),
+      ...makeSeries("WAU", "wau", CHART_COLORS.strongSeries),
+      ...makeSeries("DAU", "dau", CHART_COLORS.accent),
     ],
   };
 }
@@ -302,7 +302,7 @@ function makeSignupChartOption(days: DailyUsage[]): EChartsOption {
         data: days.map((day, i) => ({
           value: day.signups,
           itemStyle: {
-            color: i === last ? CHART_COLORS.blueLight : CHART_COLORS.blueMedium,
+            color: i === last ? CHART_COLORS.accentFaint : CHART_COLORS.accentSoft,
           },
         })),
       },

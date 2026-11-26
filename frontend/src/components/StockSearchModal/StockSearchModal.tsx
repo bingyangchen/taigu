@@ -15,7 +15,7 @@ class StockSearchModal extends React.Component<Props> {
       <Modal
         discardButtonProps={{
           children: "",
-          className: "transparent xs",
+          variant: "transparent",
           onClick: this.props.hideModal,
         }}
         layout="fullScreen"

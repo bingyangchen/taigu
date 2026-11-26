@@ -1,0 +1,121 @@
+@use "sass:map";
+@use "../tokens/typography";
+@use "../tokens/breakpoints";
+
+body {
+  margin: 0;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  font-family: typography.$font-family-base;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+// Browsers give form controls their own font and letter spacing.
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+// The default `bolder` turns into 900 inside 600 or 700 text.
+strong,
+b {
+  font-weight: var(--font-weight-bold);
+}
+
+// Shared components read the usage font sizes, and the admin console has no narrow
+// type, so its pages keep the wide values at every width. The class is on <body>
+// so toasts, which render outside the admin tree, get it too.
+body.admin-page {
+  @each $name, $value in typography.$font-size-usage-narrow {
+    --font-size-#{$name}: #{map.get(typography.$font-size-usage, $name)};
+  }
+}
+
+code {
+  font-family: typography.$font-family-mono;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+// Every placeholder has a label, an icon, or a title that tells what the field is for,
+// so it is hint text. Firefox would otherwise also fade it with opacity.
+::placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 1;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+@include breakpoints.down(md) {
+  html,
+  body.main-page-document-scroll,
+  body.settings-page-document-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  body.main-page-document-scroll {
+    min-height: 100dvh;
+    height: auto;
+    overflow: auto;
+  }
+
+  body.main-page-gradient-scroll {
+    background-color: var(--color-bg-shell-top);
+  }
+
+  body.main-page-white-shell-scroll {
+    background-color: var(--color-bg-page);
+  }
+
+  body.main-page-document-scroll #root {
+    min-height: 100dvh;
+    height: auto;
+  }
+
+  body.settings-page-document-scroll {
+    min-height: 100dvh;
+    height: auto;
+    overflow: auto;
+    background-color: var(--color-bg-subtle);
+  }
+
+  body.settings-page-document-scroll #root {
+    min-height: 100dvh;
+    height: auto;
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  html::-webkit-scrollbar,
+  body.main-page-document-scroll::-webkit-scrollbar,
+  body.settings-page-document-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}

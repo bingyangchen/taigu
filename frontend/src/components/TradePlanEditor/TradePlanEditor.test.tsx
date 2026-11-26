@@ -15,6 +15,7 @@ import { afterEach, beforeEach, expect, type Mock, test, vi } from "vitest";
 
 import type { TradePlan } from "../../types";
 import Api from "../../utils/api";
+import { NARROW_LAYOUT_QUERY } from "../../utils/mediaQuery";
 import TradePlanEditor from "./TradePlanEditor";
 
 // No delay between actions, so fake timers do not stall user-event.
@@ -62,7 +63,7 @@ function renderPlanEditor({
   hideModal = vi.fn(),
 }: { plan?: TradePlan; isNarrow?: boolean; hideModal?: Mock } = {}) {
   window.matchMedia = ((query: string) => ({
-    matches: isNarrow && query.includes("max-width"),
+    matches: isNarrow && query === NARROW_LAYOUT_QUERY,
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},

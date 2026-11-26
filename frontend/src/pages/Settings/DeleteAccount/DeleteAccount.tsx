@@ -36,7 +36,8 @@ class DeleteAccount extends React.Component<Props, State> {
       <Form
         primaryFooterButton={
           <Button
-            className="dangerous_fill l"
+            variant="dangerous_fill"
+            size="action"
             disabled={this.props.isWaiting}
             waiting={this.props.isWaiting}
             onClick={this.handleClickCheckDelete}
@@ -46,7 +47,8 @@ class DeleteAccount extends React.Component<Props, State> {
         }
         secondaryFooterButton={
           <Button
-            className="light l"
+            variant="light"
+            size="action"
             onClick={() =>
               this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
                 replace: true,

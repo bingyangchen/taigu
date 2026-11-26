@@ -1,9 +1,9 @@
-@use "../../../design_system" as _;
+@use "styles" as ds;
 
-$detail-inline-padding: 24px;
+$chart-skeleton-duration: 1.2s;
+
+// The stock switch buttons are 44px touch targets.
 $stock-switch-button-size: 44px;
-$stock-switch-edge-gap: 4px;
-$text-muted: #6f7c8d;
 
 .main {
   --detail-max-width: 760px;
@@ -17,14 +17,14 @@ $text-muted: #6f7c8d;
     "inventory"
     "actions"
     "company";
-  gap: 20px;
+  gap: var(--space-250);
   box-sizing: border-box;
   width: 100%;
   max-width: var(--detail-max-width);
   min-height: 100%;
-  padding: 28px $detail-inline-padding 92px;
+  padding: var(--space-400) var(--space-300) var(--layout-speed-dial-clearance);
   margin: 0 auto;
-  color: _.$deep-gray;
+  color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
 
@@ -34,10 +34,10 @@ $text-muted: #6f7c8d;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: _.$page-bg;
+    background: var(--color-bg-page);
   }
 
-  @media (min-width: (_.$width-1280 + 1px)) {
+  @include ds.up(2xl) {
     --detail-max-width: 1180px;
     grid-template-columns: minmax(0, 68fr) minmax(300px, 32fr);
     grid-template-areas:
@@ -46,30 +46,34 @@ $text-muted: #6f7c8d;
       "hero actions"
       "inventory inventory"
       "company company";
-    gap: 24px;
-    padding-top: 32px;
+    gap: var(--space-300);
+    padding-top: var(--space-400);
   }
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     display: flex;
     flex-direction: column;
     gap: 5dvh;
     max-width: none;
-    padding: 0 0 calc(_.$footer-height + env(safe-area-inset-bottom) + 92px);
-    background: _.$page-bg;
+    padding: 0 0
+      calc(
+        var(--layout-footer-height) + env(safe-area-inset-bottom) +
+          var(--layout-speed-dial-clearance)
+      );
+    background: var(--color-bg-page);
   }
 }
 
 .block {
   position: relative;
   box-sizing: border-box;
-  border: 1px solid _.$black-transparent-3;
-  border-radius: 16px;
-  background: _.$white-transparent;
-  box-shadow: 0 10px 24px _.$blue-transparent-4;
-  animation: section-enter 180ms ease-out both;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-frosted);
+  box-shadow: var(--shadow-md);
+  animation: section-enter var(--duration-base) var(--ease-out) both;
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     width: 100%;
     border: none;
     border-radius: 0;
@@ -94,64 +98,65 @@ $text-muted: #6f7c8d;
 .hero_block {
   grid-area: hero;
   min-height: 490px;
-  padding: 22px 28px 26px;
+  padding: var(--space-300) var(--space-400) var(--space-300);
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     min-height: min(
       77dvh,
-      calc(100dvh - _.$footer-height - env(safe-area-inset-bottom) - 40px)
+      calc(100dvh - var(--layout-footer-height) - env(safe-area-inset-bottom) - 40px)
     );
-    padding: calc(env(safe-area-inset-top) + 68px) 0 6px;
+    padding: calc(env(safe-area-inset-top) + var(--space-800)) 0 var(--space-075);
   }
 }
 
 .summary_block {
   grid-area: summary;
-  padding: 22px 22px 18px;
-  animation-delay: 60ms;
+  padding: var(--space-300) var(--space-300) var(--space-250);
+  // Starts just before the sections below, which wait var(--duration-fast).
+  animation-delay: calc(var(--duration-fast) / 2);
 
-  @media (max-width: _.$width-780) {
-    padding: 0 14px;
+  @include ds.down(md) {
+    padding: 0 var(--space-200);
   }
 }
 
 .inventory_block {
   grid-area: inventory;
   height: 340px;
-  padding: 22px 26px 24px;
-  animation-delay: 100ms;
+  padding: var(--space-300) var(--space-300) var(--space-300);
+  animation-delay: var(--duration-fast);
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     height: auto;
-    padding: 0 14px;
+    padding: 0 var(--space-200);
   }
 }
 
 .action_block {
   grid-area: actions;
   align-self: start;
-  padding: 22px;
-  animation-delay: 100ms;
+  padding: var(--space-300);
+  animation-delay: var(--duration-fast);
 
-  @media (max-width: _.$width-780) {
-    padding: 0 14px;
+  @include ds.down(md) {
+    padding: 0 var(--space-200);
   }
 }
 
 .company_block {
   grid-area: company;
-  padding: 24px 26px;
-  animation-delay: 100ms;
+  padding: var(--space-300) var(--space-300);
+  animation-delay: var(--duration-fast);
 
-  @media (max-width: _.$width-780) {
-    padding: 0 14px;
+  @include ds.down(md) {
+    padding: 0 var(--space-200);
   }
 }
 
 .hero_toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-150);
   min-height: 36px;
 }
 
@@ -169,31 +174,36 @@ $text-muted: #6f7c8d;
   height: 36px;
   min-width: 36px;
   border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-  color: _.$gray;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition:
-    background-color 140ms ease,
-    color 140ms ease,
-    transform 140ms ease;
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 
   @media (hover: hover) {
     &:hover {
-      background: #e9f1fb;
-      color: _.$deep-gray;
+      background: var(--color-bg-hover);
+      color: var(--color-text-primary);
     }
   }
 
   &.active {
-    color: _.$red;
-    animation: favorite-pop 140ms ease;
+    color: var(--color-text-danger);
+    animation: favorite-pop var(--duration-fast) var(--ease-standard);
   }
 
   &:focus-visible {
-    outline: 2px solid _.$blue;
-    outline-offset: 2px;
+    @include ds.focus-ring;
   }
+}
+
+// RoundButton already gives the toolbar button these, along with its press and
+// disabled states, which a rule here would override.
+.icon_button,
+.mobile_favorite_button {
+  background: transparent;
+  color: var(--color-text-secondary);
 }
 
 @keyframes favorite-pop {
@@ -211,10 +221,10 @@ $text-muted: #6f7c8d;
 .stock_info {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
+  gap: var(--space-150);
+  margin-top: var(--space-100);
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     align-items: center;
     text-align: center;
     margin-top: 0;
@@ -224,29 +234,25 @@ $text-muted: #6f7c8d;
 .stock_heading {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--space-075);
 }
 
 .company_name {
   margin: 0;
-  font-size: 24px;
-  line-height: 1.25;
-  font-weight: 600;
-  color: #202833;
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   letter-spacing: 0;
-
-  @media (max-width: _.$width-780) {
-    font-size: 18px;
-  }
 }
 
 .sid {
   width: fit-content;
-  color: $text-muted;
-  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
   letter-spacing: 0;
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     width: auto;
   }
 }
@@ -254,67 +260,60 @@ $text-muted: #6f7c8d;
 .price {
   display: flex;
   align-items: baseline;
-  gap: 3px;
-  min-height: 62px;
-  margin-top: 12px;
-  color: #1f2933;
-  font-size: 50px;
-  line-height: 1;
-  font-weight: 700;
+  gap: var(--space-050);
+  // One line of the price, so the block keeps its height while the price loads.
+  min-height: calc(var(--font-size-display-number-lg) * var(--line-height-tight));
+  margin-top: var(--space-150);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-display-number-lg);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0;
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     justify-content: center;
-    min-height: 48px;
-    margin-top: 10px;
-    font-size: 37px;
   }
 }
 
 .price_skeleton {
   width: 180px;
-  height: 62px;
-  margin-top: 12px;
-  border-radius: 14px;
-
-  @media (max-width: _.$width-780) {
-    height: 48px;
-    margin-top: 10px;
-  }
+  height: calc(var(--font-size-display-number-lg) * var(--line-height-tight));
+  margin-top: var(--space-150);
+  border-radius: var(--radius-xl);
 }
 
 .price_meta {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: $text-muted;
-  font-size: 14px;
+  gap: var(--space-150);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     justify-content: center;
     flex-wrap: wrap;
-    margin-top: 2px;
+    margin-top: var(--space-025);
   }
 }
 
 .price_fluctuation {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 
   &.red {
-    color: _.$red;
+    color: var(--color-price-up);
   }
 
   &.green {
-    color: _.$green;
+    color: var(--color-price-down);
   }
 
   &.gray {
-    color: $text-muted;
+    color: var(--color-text-secondary);
   }
 }
 
 .trade_quantity {
-  color: $text-muted;
+  color: var(--color-text-secondary);
 }
 
 .chart_controls {
@@ -322,25 +321,21 @@ $text-muted: #6f7c8d;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-top: 16px;
-  margin-bottom: 8px;
+  margin-top: var(--space-200);
+  margin-bottom: var(--space-100);
 
-  @media (max-width: _.$width-780) {
-    padding: 0 18px;
+  @include ds.down(md) {
+    padding: 0 var(--space-250);
   }
 }
 
 .chart_status_label {
   flex: 1;
   min-width: 0;
-  padding-right: 12px;
-  color: $text-muted;
-  font-size: 12px;
-  line-height: 1.4;
-
-  @media (min-width: (_.$width-780 + 1px)) {
-    font-size: 13px;
-  }
+  padding-right: var(--space-150);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
 }
 
 .historical_price_chart_container {
@@ -349,7 +344,7 @@ $text-muted: #6f7c8d;
   margin-top: 0;
   overflow: hidden;
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     width: 100%;
     height: clamp(238px, 31dvh, 280px);
     margin-top: 0;
@@ -358,7 +353,7 @@ $text-muted: #6f7c8d;
 
 .chart_panel {
   height: 100%;
-  animation: chart-cross-fade 200ms ease-out both;
+  animation: chart-cross-fade var(--duration-base) var(--ease-out) both;
 }
 
 @keyframes chart-cross-fade {
@@ -374,7 +369,7 @@ $text-muted: #6f7c8d;
 
 .chart_overlay {
   inset: 10px 8px 24px 0;
-  animation: chart-skeleton-fade 1.2s infinite ease-in-out;
+  animation: chart-skeleton-fade $chart-skeleton-duration infinite var(--ease-in-out);
 }
 
 @keyframes chart-skeleton-fade {
@@ -389,7 +384,7 @@ $text-muted: #6f7c8d;
 
 .historical_price_chart_overlay {
   inset: 10px 8px 24px 0;
-  animation: skeleton-fade 160ms ease-out both;
+  animation: skeleton-fade var(--duration-fast) var(--ease-out) both;
 }
 
 @keyframes skeleton-fade {
@@ -407,15 +402,15 @@ $text-muted: #6f7c8d;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #444;
-  font-size: 15px;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 
   span {
-    margin-top: 6px;
-    color: $text-muted;
-    font-size: 13px;
-    font-weight: 400;
+    margin-top: var(--space-075);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-regular);
   }
 }
 
@@ -423,19 +418,18 @@ $text-muted: #6f7c8d;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: var(--space-200);
+  margin-bottom: var(--space-200);
 }
 
 .section_title {
-  color: #27313d;
-  font-size: 16px;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0;
 
-  @media (max-width: _.$width-780) {
-    font-size: 16px;
-    padding: 0 2px;
+  @include ds.down(md) {
+    padding: 0 var(--space-025);
   }
 }
 
@@ -449,83 +443,78 @@ $text-muted: #6f7c8d;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   min-height: 56px;
-  gap: 18px;
-  border-bottom: 1px solid #e6edf5;
+  gap: var(--space-250);
+  border-bottom: 1px solid var(--color-border-default);
 
   &:last-child {
     border-bottom: none;
   }
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
     min-height: 80px;
-    gap: 8px;
-    padding: 0 14px;
-    border: 1px solid #e4ebf4;
-    border-radius: 12px;
-    background: _.$white-transparent;
+    gap: var(--space-100);
+    padding: 0 var(--space-200);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-frosted);
   }
 }
 
 .upper {
-  color: $text-muted;
-  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
   letter-spacing: 0;
-
-  @media (max-width: _.$width-780) {
-    font-size: 12px;
-  }
 }
 
 .lower {
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
-  gap: 2px;
-  color: #202833;
-  font-size: 18px;
-  line-height: 1.1;
-  font-weight: 600;
+  gap: var(--space-025);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 
   &.red {
-    color: _.$red;
+    color: var(--color-price-up);
   }
 
   &.green {
-    color: _.$green;
+    color: var(--color-price-down);
   }
 
   &.gray {
-    color: _.$gray;
+    color: var(--color-text-secondary);
   }
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     justify-content: flex-start;
-    font-size: 19px;
   }
 }
 
 .summary_block .section_title,
 .action_block .section_title {
-  margin-bottom: 14px;
+  margin-bottom: var(--space-200);
 }
 
-@media (max-width: _.$width-780) {
+@include ds.down(md) {
   .summary_block .investment_info {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: var(--space-150);
   }
 }
 
 .inventory_histogram_container {
   height: 270px;
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     height: 260px;
   }
 }
@@ -533,9 +522,9 @@ $text-muted: #6f7c8d;
 .action_list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-150);
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -546,40 +535,39 @@ $text-muted: #6f7c8d;
   grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
   min-height: 48px;
-  gap: 10px;
+  gap: var(--space-150);
   box-sizing: border-box;
-  padding: 0 14px;
-  border: 1px solid #e1e9f3;
-  border-radius: 12px;
-  background: #f8fbff99;
-  color: _.$deep-gray;
+  padding: 0 var(--space-200);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
   text-decoration: none;
-  font-size: 14px;
-  transition: background-color 140ms ease;
+  font-size: var(--font-size-sm);
+  transition: background-color var(--duration-fast) var(--ease-standard);
 
   em {
-    color: $text-muted;
-    font-size: 12px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
     font-style: normal;
     white-space: nowrap;
   }
 
   @media (hover: hover) {
     &:hover {
-      background: _.$blue-transparent-3;
+      background: var(--color-bg-accent-subtle);
     }
   }
 
   &:focus-visible {
-    outline: 2px solid _.$blue;
-    outline-offset: 2px;
+    @include ds.focus-ring;
   }
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     display: flex;
     justify-content: center;
     min-height: 52px;
-    padding: 0 10px;
+    padding: 0 var(--space-150);
 
     em {
       display: none;
@@ -588,9 +576,9 @@ $text-muted: #6f7c8d;
 }
 
 .company_summary {
-  color: #435064;
-  font-size: 14px;
-  line-height: 1.75;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
 }
 
 .text_button {
@@ -598,94 +586,92 @@ $text-muted: #6f7c8d;
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  padding: 0 10px;
+  padding: 0 var(--space-150);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: transparent;
-  color: _.$blue;
+  color: var(--color-text-accent);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   cursor: pointer;
 
   @media (hover: hover) {
     &:hover {
-      background: _.$blue-transparent-3;
+      background: var(--color-bg-accent-subtle);
+      color: var(--color-text-accent-strong);
     }
   }
 
   &:focus-visible {
-    outline: 2px solid _.$blue;
-    outline-offset: 2px;
+    @include ds.focus-ring;
   }
 }
 
 .material_fact_preview_list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-top: 18px;
+  gap: var(--space-025);
+  margin-top: var(--space-250);
 }
 
 .material_fact_preview {
   display: grid;
   grid-template-columns: 86px minmax(0, 1fr) 16px;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-150);
   width: 100%;
   min-height: 54px;
-  padding: 0 4px;
+  padding: 0 var(--space-050);
   border: none;
-  border-top: 1px solid #e7edf5;
+  border-top: 1px solid var(--color-border-default);
   background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 140ms ease;
+  transition: background-color var(--duration-fast) var(--ease-standard);
 
   @media (hover: hover) {
     &:hover {
-      background: _.$blue-transparent-3;
+      background: var(--color-bg-accent-subtle);
     }
   }
 
   &:focus-visible {
-    outline: 2px solid _.$blue;
-    outline-offset: 2px;
-    background: _.$blue-transparent-3;
+    @include ds.focus-ring;
+    background: var(--color-bg-accent-subtle);
   }
 
   span {
-    color: $text-muted;
-    font-size: 13px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-data);
   }
 
   strong {
     overflow: hidden;
-    color: #27313d;
-    font-size: 14px;
-    font-weight: 500;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-data);
+    font-weight: var(--font-weight-medium);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     grid-template-columns: minmax(0, 1fr) 18px;
     grid-template-rows: auto auto;
     min-height: 62px;
-    gap: 3px 10px;
-    padding: 8px 2px;
+    gap: var(--space-050) var(--space-150);
+    padding: var(--space-100) var(--space-025);
 
     span {
       grid-column: 1;
       grid-row: 1;
-      font-size: 12px;
     }
 
     strong {
       grid-column: 1;
       grid-row: 2;
       display: -webkit-box;
-      line-height: 1.35;
+      line-height: var(--line-height-snug);
       white-space: normal;
       line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -701,9 +687,9 @@ $text-muted: #6f7c8d;
 }
 
 .empty_company_message {
-  padding-top: 10px;
-  color: $text-muted;
-  font-size: 14px;
+  padding-top: var(--space-150);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .inline_notice {
@@ -711,25 +697,25 @@ $text-muted: #6f7c8d;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
-  border: 1px solid #f0d9a8;
-  border-radius: 12px;
-  background: #fff7e5;
-  color: #765b1d;
-  font-size: 13px;
+  gap: var(--space-150);
+  padding: var(--space-150) var(--space-200);
+  border: 1px solid var(--color-border-warning);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-warning-subtle);
+  color: var(--color-text-warning);
+  font-size: var(--font-size-sm);
 
   button {
     border: none;
     background: transparent;
-    color: _.$blue;
+    color: var(--color-text-accent);
     font: inherit;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     cursor: pointer;
   }
 
-  @media (max-width: _.$width-780) {
-    margin: 68px 14px 0;
+  @include ds.down(md) {
+    margin: var(--space-800) var(--space-200) 0;
   }
 }
 
@@ -737,22 +723,13 @@ $text-muted: #6f7c8d;
   position: fixed;
   top: calc(env(safe-area-inset-top) + 12px);
   left: 12px;
-  z-index: 5;
-  transition: all 180ms ease;
+  z-index: var(--z-header-raised);
+  transition: all var(--duration-base) var(--ease-standard);
 
   & > * {
     min-width: 44px;
     width: 44px;
     height: 44px;
-  }
-
-  &.scrolled > * {
-    border-radius: 50%;
-    background-color: _.$white-transparent;
-    border: 1px solid _.$black-transparent-3;
-    box-shadow: 0 8px 20px #26394d18;
-    backdrop-filter: blur(10px) saturate(140%);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
   }
 }
 
@@ -760,19 +737,19 @@ $text-muted: #6f7c8d;
   position: fixed;
   top: calc(env(safe-area-inset-top) + 12px);
   right: 14px;
-  z-index: 5;
+  z-index: var(--z-header-raised);
   min-width: 44px;
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-  color: _.$gray;
+  border-radius: var(--radius-circle);
+  color: var(--color-text-secondary);
 
   &.scrolled {
-    background-color: _.$white-transparent;
-    border-color: _.$black-transparent-3;
-    box-shadow: 0 8px 20px #26394d18;
-    backdrop-filter: blur(10px) saturate(140%);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    background-color: var(--color-bg-frosted);
+    border-color: var(--color-border-subtle);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(10px) saturate(150%);
   }
 }
 
@@ -780,23 +757,23 @@ $text-muted: #6f7c8d;
   position: fixed;
   top: calc(env(safe-area-inset-top) + 12px);
   left: 50%;
-  z-index: 4;
+  z-index: var(--z-header);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-100);
   height: 44px;
-  padding: 0 14px;
-  border: 1px solid _.$black-transparent-3;
-  border-radius: 999px;
-  background: _.$white-transparent;
-  box-shadow: 0 8px 20px #26394d14;
-  color: _.$deep-gray;
+  padding: 0 var(--space-200);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-frosted);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text-primary);
   opacity: 0;
   pointer-events: none;
   transform: translateX(-50%) scale(0.96);
   transition:
-    opacity 180ms ease,
-    transform 180ms ease;
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
   backdrop-filter: blur(10px) saturate(140%);
   -webkit-backdrop-filter: blur(10px) saturate(140%);
 
@@ -807,38 +784,37 @@ $text-muted: #6f7c8d;
   }
 
   .company_name {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
     white-space: nowrap;
   }
 
   .sid {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 }
 
 .mobile_text_actions {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-top: 16px;
+  gap: var(--space-150);
+  margin-top: var(--space-200);
 
   button {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    gap: 6px;
-    padding: 0 15px;
-    border: 1px solid #e4ebf3;
-    border-radius: 999px;
-    background: #f8fbff;
-    color: #556274;
+    gap: var(--space-075);
+    padding: 0 var(--space-200);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-page);
+    color: var(--color-text-secondary);
     font: inherit;
-    font-size: 13px;
+    font-size: var(--font-size-sm);
 
     &:focus-visible {
-      outline: 2px solid _.$blue;
-      outline-offset: 2px;
+      @include ds.focus-ring;
     }
   }
 }
@@ -846,7 +822,7 @@ $text-muted: #6f7c8d;
 .stock_switch_control {
   position: fixed;
   top: 50dvh;
-  margin-inline: $stock-switch-edge-gap - $detail-inline-padding;
+  margin-inline: calc(var(--space-050) - var(--space-300));
   z-index: 2;
   transform: translateY(-50%);
 
@@ -856,27 +832,26 @@ $text-muted: #6f7c8d;
     width: $stock-switch-button-size;
     height: $stock-switch-button-size;
     padding: 0;
-    border: 1px solid _.$light-gray;
-    border-radius: 50%;
-    background: _.$white;
-    color: _.$deep-gray;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-circle);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
     cursor: pointer;
 
     &[aria-disabled="true"] {
-      color: _.$gray;
-      background: _.$noisy-white;
+      color: var(--color-text-secondary);
+      background: var(--color-bg-subtle);
       cursor: default;
     }
 
     @media (hover: hover) {
       &:hover:not([aria-disabled="true"]) {
-        background: _.$page-bg;
+        background: var(--color-bg-page);
       }
     }
 
     &:focus-visible {
-      outline: 2px solid _.$blue;
-      outline-offset: 2px;
+      @include ds.focus-ring;
     }
   }
 
@@ -892,20 +867,19 @@ $text-muted: #6f7c8d;
     justify-self: end;
   }
 
-  @container main-content (width > 0px) {
+  @container main-content (width > 0) {
     margin-inline: calc(
       -1 *
         clamp(
-          #{$detail-inline-padding - $stock-switch-edge-gap},
-          #{$detail-inline-padding - $stock-switch-edge-gap} +
-            (100cqw - var(--detail-max-width)) / 2,
-          #{$stock-switch-button-size + $stock-switch-edge-gap}
+          var(--space-300) - var(--space-050),
+          var(--space-300) - var(--space-050) + (100cqw - var(--detail-max-width)) / 2,
+          #{$stock-switch-button-size} + var(--space-050)
         )
     );
   }
 
-  @media (max-width: _.$width-780) {
-    margin-inline: $stock-switch-edge-gap;
+  @include ds.down(md) {
+    margin-inline: var(--space-050);
 
     &.left {
       align-self: flex-start;
@@ -920,21 +894,21 @@ $text-muted: #6f7c8d;
 .switch_hint_icon_for_mobile {
   position: fixed;
   top: 50%;
-  z-index: 4;
+  z-index: var(--z-header);
   width: 44px;
   height: 88px;
   opacity: 0;
   transform: translateY(-50%);
   transition:
-    opacity 180ms ease,
-    transform 180ms ease;
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
 
   &::before {
     content: "";
     position: absolute;
     inset: 0;
-    border-radius: 999px;
-    background: _.$blue-transparent-3;
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-accent-subtle);
     filter: blur(1px);
   }
 
@@ -944,8 +918,8 @@ $text-muted: #6f7c8d;
     top: 50%;
     width: 13px;
     height: 13px;
-    border-top: 2px solid _.$blue;
-    border-right: 2px solid _.$blue;
+    border-top: 2px solid var(--color-border-accent);
+    border-right: 2px solid var(--color-border-accent);
   }
 
   &.left {
@@ -982,26 +956,26 @@ $text-muted: #6f7c8d;
 .company_info_outer {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-100);
   min-width: min(660px, 76vw);
-  padding: 2px 4px;
+  padding: var(--space-025) var(--space-050);
 
   &.mobile {
     min-width: 0;
-    padding: 0 15px 18px;
+    padding: 0 var(--space-200) var(--space-250);
   }
 
   & > .title {
-    margin-top: 8px;
-    color: #27313d;
-    font-weight: 600;
+    margin-top: var(--space-100);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-semibold);
     letter-spacing: 0;
   }
 
   & > .content {
-    color: $text-muted;
-    font-size: 14px;
-    line-height: 1.7;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
     text-align: justify;
   }
 }
@@ -1009,33 +983,33 @@ $text-muted: #6f7c8d;
 .material_fact_list {
   display: flex;
   flex-direction: column;
-  margin-top: 4px;
+  margin-top: var(--space-050);
 }
 
 .brief_material_fact {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 36px;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-150);
   min-height: 56px;
-  border-top: 1px solid #e7edf5;
+  border-top: 1px solid var(--color-border-default);
 
   & > .left {
     min-width: 0;
 
     & > .title {
       overflow: hidden;
-      color: #27313d;
-      font-size: 14px;
+      color: var(--color-text-primary);
+      font-size: var(--font-size-sm);
       text-overflow: ellipsis;
       white-space: nowrap;
       letter-spacing: 0;
     }
 
     & > .date {
-      margin-top: 4px;
-      color: $text-muted;
-      font-size: 12px;
+      margin-top: var(--space-050);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-xs);
     }
   }
 }
@@ -1043,23 +1017,23 @@ $text-muted: #6f7c8d;
 .material_fact_outer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-150);
   min-width: min(660px, 76vw);
-  color: #27313d;
+  color: var(--color-text-primary);
 
   &.mobile {
     min-width: 0;
-    padding: 0 15px 18px;
+    padding: 0 var(--space-200) var(--space-250);
   }
 
   & > .title {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
     letter-spacing: 0;
   }
 
   & > .date_time {
-    color: $text-muted;
-    font-size: 13px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
   }
 }

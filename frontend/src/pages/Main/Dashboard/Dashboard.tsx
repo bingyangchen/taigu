@@ -173,7 +173,7 @@ class Dashboard extends React.Component<Props, State> {
                       value={String(this.props.dashboardDaysToShow)}
                       onChange={this.handleTimeSpanSegmentChange}
                     />
-                    {/* <RoundButton className="p-12" hint_text="查看詳情">
+                    {/* <RoundButton size="l" hint_text="查看詳情">
                       <Icons.IconFullScreen sideLength="14" />
                     </RoundButton> */}
                   </div>

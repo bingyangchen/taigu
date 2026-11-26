@@ -18,6 +18,7 @@ import {
 import type { AppDispatch, RootState } from "../../redux/store";
 import type { HandlingFeeDiscount } from "../../types";
 import Util from "../../utils/util";
+import type { Props as ButtonProps } from "../Button/Button";
 import styles from "./HandlingFeeDiscountEditor.module.scss";
 
 function mapStateToProps(rootState: RootState) {
@@ -60,14 +61,14 @@ class HandlingFeeDiscountEditor extends React.Component<Props, State> {
   public componentDidMount(): void {}
   public render(): React.ReactNode {
     const title = `${this.props.record ? "編輯" : "新增"}折讓紀錄`;
-    const discardButtonProps = {
+    const discardButtonProps: ButtonProps = {
       children: "捨棄",
-      className: "transparent l",
+      variant: "transparent",
       onClick: this.props.hideModal,
     };
-    const submitButtonProps = {
+    const submitButtonProps: ButtonProps = {
       children: "送出",
-      className: "primary_fill l",
+      variant: "primary_fill",
       disabled: !this.canSubmit,
       waiting: this.props.isWaiting,
       onClick: this.handleClickSubmit,

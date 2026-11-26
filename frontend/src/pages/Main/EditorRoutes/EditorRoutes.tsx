@@ -31,7 +31,7 @@ function MissingEditorTarget({
       title={title}
       discardButtonProps={{
         children: "返回",
-        className: "transparent l",
+        variant: "transparent",
         onClick: closeEditor,
       }}
     >

@@ -1,4 +1,4 @@
-@use "../../design_system" as _;
+$logo-breathe-duration: 2s;
 
 .main {
   position: fixed;
@@ -6,24 +6,24 @@
   left: 0;
   height: 100dvh;
   width: 100vw;
-  background-color: _.$white;
+  background-color: var(--color-bg-surface);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 2dvh;
-  z-index: 8;
+  z-index: var(--z-loading-screen);
 
   & > .logo_wrapper {
-    animation: logo-breathe-in 2s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: logo-breathe-in $logo-breathe-duration var(--ease-out) both;
   }
 
   & > .loading_spinner {
     width: 20px;
     aspect-ratio: 1;
     opacity: 0;
-    animation: spinner-fade-in 400ms ease forwards;
-    animation-delay: 2s;
+    animation: spinner-fade-in var(--duration-slow) var(--ease-standard) forwards;
+    animation-delay: $logo-breathe-duration;
   }
 }
 
@@ -50,7 +50,7 @@
   }
 
   to {
-    opacity: 60%;
+    opacity: 0.6;
   }
 }
 
@@ -64,7 +64,7 @@
 
     & > .loading_spinner {
       animation: none;
-      opacity: 60%;
+      opacity: 0.6;
     }
   }
 }

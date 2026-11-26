@@ -27,11 +27,7 @@ class HeaderForSettings extends React.Component<Props, State> {
   public render(): React.ReactNode {
     return (
       <header className={styles.main}>
-        <RoundButton
-          className="p-12"
-          hint_text="上一頁"
-          onClick={this.goToParentDirectory}
-        >
+        <RoundButton size="l" hint_text="上一頁" onClick={this.goToParentDirectory}>
           <Icons.IconChevronLeft sideLength="16" />
         </RoundButton>
         {this.props.headerTitle}

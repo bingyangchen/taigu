@@ -1,29 +1,28 @@
-@use "../../../design_system" as _;
-
-$hairline: 1px solid _.$black-transparent-2;
+@use "styles" as ds;
+@use "../layout" as admin;
 
 .reports {
   margin: 0;
   padding: 0;
-  border-top: $hairline;
+  border-top: 1px solid var(--color-border-default);
   list-style: none;
 }
 
 .report {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 44px;
-  column-gap: 16px;
-  padding: 16px 0;
-  border-bottom: $hairline;
+  column-gap: var(--space-200);
+  padding: var(--space-200) 0;
+  border-bottom: 1px solid var(--color-border-default);
   &.handled .email,
   &.handled .body {
-    color: _.$gray;
+    color: var(--color-text-secondary);
   }
 }
 
 .email {
-  font-size: 0.875 * _.$base-font-size;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   overflow-wrap: anywhere;
 }
 
@@ -31,17 +30,17 @@ $hairline: 1px solid _.$black-transparent-2;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 8px;
-  font-size: 0.75 * _.$base-font-size;
-  color: _.$gray;
+  gap: 0 var(--space-100);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .body {
-  max-width: _.$admin-text-max-width;
-  margin: 12px 0 0;
-  font-size: 0.875 * _.$base-font-size;
-  line-height: 1.7;
+  max-width: admin.$text-max-width;
+  margin: var(--space-150) 0 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   user-select: text;
@@ -54,13 +53,13 @@ $hairline: 1px solid _.$black-transparent-2;
 }
 
 .user_agent {
-  max-width: _.$admin-text-max-width;
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 6px;
+  max-width: admin.$text-max-width;
+  margin-top: var(--space-150);
+  padding: var(--space-100) var(--space-150);
+  border-radius: var(--radius-sm);
   display: block;
-  background-color: _.$noisy-white;
-  font-size: 0.75 * _.$base-font-size;
+  background-color: var(--color-bg-subtle);
+  font-size: var(--font-size-xs);
   letter-spacing: 0;
   overflow-wrap: anywhere;
   user-select: text;
@@ -70,25 +69,24 @@ $hairline: 1px solid _.$black-transparent-2;
   display: inline-flex;
   align-items: center;
   min-height: 32px;
-  margin-top: 4px;
+  margin-top: var(--space-050);
   padding: 0;
   border: none;
   background: none;
   font: inherit;
-  font-size: 0.75 * _.$base-font-size;
+  font-size: var(--font-size-xs);
   letter-spacing: inherit;
-  color: _.$blue;
+  color: var(--color-text-accent);
   cursor: pointer;
   &:focus-visible {
-    outline: 2px solid _.$blue;
-    outline-offset: 2px;
+    @include ds.focus-ring;
   }
   @media (hover: hover) {
     &:hover {
       text-decoration: underline;
     }
   }
-  @media (pointer: coarse), (max-width: _.$width-780) {
+  @media (pointer: coarse), (width < #{ds.breakpoint(md)}) {
     min-width: 44px;
     min-height: 44px;
     margin-top: 0;
@@ -101,15 +99,14 @@ $hairline: 1px solid _.$black-transparent-2;
   justify-content: center;
   width: 44px;
   height: 44px;
-  margin-top: -10px;
-  padding-top: 10px;
+  margin-top: calc(-1 * var(--space-150));
+  padding-top: var(--space-150);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: none;
   cursor: pointer;
   &:focus-visible {
-    outline: 2px solid _.$blue;
-    outline-offset: 2px;
+    @include ds.focus-ring;
   }
   &[aria-disabled="true"] {
     cursor: not-allowed;
@@ -122,25 +119,25 @@ $hairline: 1px solid _.$black-transparent-2;
   justify-content: center;
   width: 20px;
   height: 20px;
-  border: 1.5px solid _.$gray;
-  border-radius: 50%;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-circle);
   color: transparent;
   transition:
-    background-color 0.15s ease-out,
-    border-color 0.15s ease-out;
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
   @media (hover: hover) {
     .check:hover & {
-      border-color: _.$blue;
-      color: _.$blue;
+      border-color: var(--color-border-accent);
+      color: var(--color-text-accent);
     }
   }
   .checked & {
-    border-color: _.$blue;
-    background-color: _.$blue;
-    color: _.$white;
+    border-color: var(--color-border-accent);
+    background-color: var(--color-bg-accent);
+    color: var(--color-text-inverse);
   }
 }
 
 .more {
-  margin-top: 24px;
+  margin-top: var(--space-300);
 }

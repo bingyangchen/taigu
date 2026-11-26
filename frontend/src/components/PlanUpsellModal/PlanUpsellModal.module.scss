@@ -1,11 +1,11 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .title {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  color: _.$deep-gray;
-  font-weight: 700;
+  gap: var(--space-100);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-bold);
 }
 
 .content {
@@ -16,25 +16,25 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 18px;
-  border: 1px solid _.$light-gray;
-  border-radius: 12px;
-  padding: 12px 14px;
-  background: _.$noisy-white;
+  gap: var(--space-200);
+  margin-bottom: var(--space-250);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-150) var(--space-200);
+  background: var(--color-bg-subtle);
 
   span {
     flex: 0 0 auto;
-    color: _.$gray;
-    font-size: 0.82rem;
-    line-height: 1.5;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
     letter-spacing: 0;
   }
 
   strong {
-    color: _.$deep-gray;
-    font-size: 0.9rem;
-    line-height: 1.5;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
     text-align: right;
     letter-spacing: 0;
   }
@@ -43,54 +43,54 @@
 .hero {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-150);
 
   p {
     margin: 0;
-    color: _.$gray;
-    font-size: 0.94rem;
-    line-height: 1.7;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-relaxed);
     letter-spacing: 0;
   }
 }
 
 .benefits {
   display: grid;
-  gap: 9px;
-  margin-top: 16px;
+  gap: var(--space-100);
+  margin-top: var(--space-200);
 }
 
 .benefit {
   display: flex;
   align-items: center;
-  gap: 9px;
-  color: _.$deep-gray;
-  font-size: 0.92rem;
-  line-height: 1.45;
+  gap: var(--space-100);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
   letter-spacing: 0;
 
   svg {
     flex: 0 0 auto;
-    color: _.$green;
+    color: var(--color-text-success);
   }
 }
 
 .footerNote {
-  margin: 16px 0 0;
-  color: _.$gray;
-  font-size: 0.82rem;
-  line-height: 1.6;
+  margin: var(--space-200) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
   letter-spacing: 0;
 }
 
-@media (max-width: _.$width-512) {
+@include ds.down(sm) {
   .content {
     width: min(100%, calc(85vw - 54px));
   }
 
   .limitNote {
     flex-direction: column;
-    gap: 4px;
+    gap: var(--space-050);
 
     strong {
       text-align: left;

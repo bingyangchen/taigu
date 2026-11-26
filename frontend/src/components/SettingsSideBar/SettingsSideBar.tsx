@@ -32,7 +32,7 @@ class SettingsSideBar extends React.Component<Props, State> {
       <div className={styles.main}>
         <div className={styles.header}>
           <RoundButton
-            className="p-12"
+            size="l"
             hint_text="回首頁"
             onClick={() =>
               this.props.router.navigate(`${Env.frontendRootPath}`, { replace: true })

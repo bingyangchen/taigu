@@ -1,0 +1,11 @@
+@use "sass:meta";
+
+// Lowest first. Styles outside any layer beat both layers, whatever their specificity
+// or load order, so a page or component can restyle a primitive without !important.
+// Every file with a primitive repeats this statement.
+@layer base, primitives;
+
+@layer base {
+  @include meta.load-css("root");
+  @include meta.load-css("global");
+}

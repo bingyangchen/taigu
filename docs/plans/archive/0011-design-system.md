@@ -1,7 +1,7 @@
 ---
 id: "0011"
 title: design-system
-status: approved
+status: done
 specs: []
 depends_on: []
 ---
@@ -19,7 +19,7 @@ depends_on: []
   - 定義「做法要點」列出的每一組 token，在 `:root` 輸出成 CSS custom properties，元件用 `var()` 讀取。斷點例外，維持 Sass 變數。
   - 把每個 SCSS 檔裡的顏色、字級、字重、行高、間距、圓角、陰影、動畫時間與 easing、z-index 改成 token，寫死的值依「做法要點」的對應規則換成最接近的 token。
   - 把圖表與 icon 在 TypeScript 裡寫死的顏色與字級改成從 token 讀取，給 TypeScript 用的 token 只從一個檔案匯出。
-  - 中性色改成偏藍的灰，次要文字改成 `#647287`。
+  - 中性色改成偏藍的灰，次要文字改成 `#6a788c`。
   - 藍、紅、綠當文字色，以及上面放白字的底色，改用深一階的 `blue-600`、`red-600`、`green-600`。
   - 拿掉讓文字或圖示變淡的 `opacity`，改用顏色 token。
   - 拿掉在元件裡用 `color.mix()`、`color.scale()`、`color-mix()` 混出來的顏色，改用 token。
@@ -42,6 +42,8 @@ depends_on: []
 ## Spec 變更
 
 無。使用者看到的行為不變。`ui-guidelines.md` 新增的「文字對比」與「可讀性與操作」裡指向它的對比規則、「字級與顏色」的字級表、表格以外的字級不隨寬度切換的規定與字重，依使用者要求在這個 plan 的 PR 一起修改；提到 `index.scss` 與 `_design_system.scss` 的兩行要等實作建立新的檔案，所以在實作時修改，新的寫法見「做法要點」。
+
+實作時依使用者要求另外修改了 `ui-guidelines.md`：「文字對比」計算對比時，淡漸層以白色計算、半透明的背景以疊在白色上的顏色計算，文字本身不能是半透明的，但裝飾文字不受這個限制；主要文字的例子拿掉「已綁定的 Email」；「Design Token、共用元件與圖示」裡寫了好幾條規則的一項，拆成一項一條。
 
 ## 決策
 
@@ -241,14 +243,15 @@ frontend/src/styles/
 | `slate-200` | `#dde4ee` | `$light-gray`（原本 `#ddd`） |
 | `slate-300` | `#c3ccd8` | 無，取代圖表的 `#ccc` |
 | `slate-400` | `#9aa5b4` | 無，取代成交量長條圖的 `#aaa` 與停用中的文字原本用的 `$light-gray` |
-| `slate-500` | `#647287` | `$gray`（原本 `#888`） |
+| `slate-500` | `#6a788c` | `$gray`（原本 `#888`） |
 | `slate-800` | `#27313d` | `$deep-gray`（原本 `#444`） |
 | `blue-500` | `#4c8bf5` | `$blue` |
+| `blue-550` | `#3b78df` | 無 |
 | `blue-600` | `#2f6bd0` | 無 |
 | `red-500` | `#d4493f` | `$red` |
 | `red-600` | `#c43f36` | 無 |
 | `green-500` | `#1aa260` | `$green` |
-| `green-600` | `#117f4a` | 無 |
+| `green-600` | `#138850` | 無 |
 | `yellow-500` | `#fbbc05` | `$yellow` |
 | `white` | `#fff` | `$white` |
 | `black` | `#000` | `$black` |
@@ -312,7 +315,7 @@ frontend/src/styles/
 | --- | --- | --- | --- | --- | --- | --- |
 | `blue-600` | 5.08 | 4.81 | 4.60 | 4.20 | 4.54 | 5.08 |
 | `red-600` | 5.11 | 4.83 | 4.63 | 4.23 | 4.57 | 5.11 |
-| `green-600` | 5.05 | 4.78 | 4.58 | 4.18 | 4.51 | 5.05 |
+| `green-600` | 4.50 | 4.26 | 4.08 | 3.72 | 4.02 | 4.50 |
 
 寫死的顏色與既有的透明色依以下規則換成用途色：
 
@@ -321,8 +324,8 @@ frontend/src/styles/
 - 個股詳細頁（`Details.module.scss`）與歡迎頁（`Welcome.module.scss`）自己定義的深色文字（`#202833`、`#1f2933`、`#213044`、`#27313d`）換成 `--color-text-primary`，次要文字（`#6f7c8d`、`#647287`、`#556274`、`#435064`）依用途換成 `--color-text-primary` 或 `--color-text-secondary`，淺色框線（`#e1e9f3` 到 `#e7edf5`）換成 `--color-border-default`，`#f8fbff` 這類淺色背景換成 `--color-bg-page`。
 - 圖表：座標軸文字（`#aaa`、`#9aa7b5`、`#566375`）換成 `--color-text-secondary`，格線與座標軸線（`#ddd`、`#dce5ef`、`#e6ebf0`、`#e2e8f0`）換成 `--color-border-default` 或 `--color-border-subtle`，tooltip 的背景與文字（`rgba(255, 255, 255, 0.96)`、`#334155`）換成 `--color-bg-surface` 與 `--color-text-primary`，tooltip 的框線 `#dbe4ef` 換成 `--color-border-default`，輔助線 `#788596` 換成 `--color-text-secondary`。圖表裡 `#4c8bf5`、`#d4493f`、`#1aa260` 與 `rgba(76, 139, 245, …)` 這類線條、長條與填色換成 `--color-chart-accent`、`--color-chart-up`、`--color-chart-down`，藍色的透明色換成透明度最接近的 `--color-chart-accent-soft`、`-faint` 或 `-wash`。後台圖表用 `blueTransparent1` 與 `blueTransparent2` 區分「今天」或「這個月」的長條與其他長條（ADMIN-R7、ADMIN-R11），分別換成 `-soft` 與 `-faint`，維持現在的深淺關係。收益分析頁的資本利得橫條圖現在獲利用藍色、虧損用 `#f44336`，跟 `ui-guidelines.md`「漲跌」紅色代表獲利、綠色代表虧損的規定相反，改成獲利用 `--color-chart-up`、虧損用 `--color-chart-down`，獲利的橫條會從藍色變成紅色。圖表的 tooltip 與標籤裡的漲跌文字用 `--color-price-up` 與 `--color-price-down`，不用 `--color-chart-up` 與 `--color-chart-down`，例如 `StockIntradayLineChart.tsx` 的 tooltip 現在跟線條共用 `RED`、`GREEN` 這兩個常數，要拆開。這個 tooltip 現在用 `fluctPrice > 0 ? RED : GREEN` 決定顏色，所以漲跌是 0 時顯示綠色，違反 `ui-guidelines.md`「漲跌」對 0 用中性色的規定，一起改成 0 時用 `--color-price-flat`。
 - `marketIndexChartData.ts` 第 4 行說明座標軸文字為什麼較深的註解，改成依 4:1 的下限說明。
-- 上面放文字的半透明背景（`--color-bg-hover` 與各個 `-subtle` 背景）只用在不透明的底色上。疊在窄版漸層上時，這些背景與漸層混合之後，文字的對比會降到 3.7 到 3.9:1，所以改用不透明的 `--color-bg-surface` 或 `--color-bg-subtle`。
-- 浮在捲動內容上、上面放文字的毛玻璃底色一律改用 `--color-bg-frosted-text`，現在有窄版的底部導覽列（`Footer`）、歷史紀錄頁與買賣計畫頁浮在清單上的搜尋框（`.floating_pill` 裡的 `SearchKeywordInput`）、收益分析頁浮在內容上的 `SegmentedControl`（`.floating_pill_wrapper`）、`MarketIndexSummary`，以及歡迎頁的 sticky 頁首（現在是 `color-mix(...)` 的 88%）；實作時以 `backdrop-filter` 搜尋其他同類元件。搜尋框裡使用者輸入的關鍵字是表單欄位的值，算主要文字，從 `$gray` 改成 `--color-text-primary`。不放文字的地方維持 `--color-bg-frosted`。底下的內容會捲動，所以對比以最深的內容捲到底下時計算：最不利的內容是深色的文字或圖示（`slate-800`）捲到底下，這時 90% 的白色上 `slate-500` 的文字是 4.07:1，`blue-600` 的文字是 4.23:1；藍色與紅色的按鈕捲到底下時都高於 4.23:1，所以都符合小字的 4:1。88% 時，深色內容捲到底下時 `slate-500` 只有 3.92:1。這個數字沒有算進 `backdrop-filter` 的模糊與 `saturate()`，實作時要在 Chrome 與 iOS Safari 實測最差的情況，包括接近黑色的圖片或圖示捲到底下的情況（不算模糊時，黑色內容在 90% 白底上，次要文字只有 3.89:1），把結果記進 `architecture.md`；如果實際低於 4:1，停下來問使用者。
+- 實作時依使用者決定修改 `ui-guidelines.md`：計算對比時，淡漸層以白色計算，半透明的背景只以它疊在白色上的顏色計算，不把底下的漸層與捲動的內容算進去；文字本身的顏色不能是半透明的。所以 `--color-bg-hover` 與各個 `-subtle` 這類半透明背景也可以放在漸層上，segmented control 的軌道用 `slate-800` 的 5%（`--color-bg-muted`）。藍色也因此調淺：新增 `blue-550` #3b78df，`--color-text-accent` 與 `--color-bg-accent` 改用它；放在淡藍底這類有色或灰色底上的藍字改用 `--color-text-accent-strong`（`blue-600`）；24px 以上的藍字用 `--color-text-accent-large`（`blue-500`）。次要文字的 `slate-500` 也依使用者要求從 #647287 調淺成 #6a788c，這是在白底、`slate-50`、`slate-100`、5% 的灰底與淡藍底上都還有 4:1 的最淺的灰。
+- 浮在捲動內容上的毛玻璃底色維持 `--color-bg-frosted`（白色的 60%）。`--color-bg-frosted-text`（白色的 90%）只用在歡迎頁的 sticky 頁首，取代原本 `color-mix(...)` 的 88%。搜尋框裡使用者輸入的關鍵字是表單欄位的值，算主要文字，從 `$gray` 改成 `--color-text-primary`。
 - 深色底放白字的元件（`Tooltip` 的 `.content` 與 `.arrow`、`SpeedDial` 的 `.hint_text`）現在用 `$deep-gray` 當底色，換成 `--color-bg-inverse`，白字在上面大約 13:1；不換成最接近的 `--color-bg-backdrop`，因為那是半透明的遮罩色，白字在上面只有大約 3.3:1。
 - `--color-text-warning` 只用在 `--color-bg-warning-subtle` 上（對比大約 6:1）；放在黃色的 `--color-bg-warning` 上的文字用 `--color-text-primary`（對比大約 7.7:1），因為 `--color-text-warning` 在黃色上只有 3.74:1。
 - 文字與圖示的深淺只用顏色 token 決定，不在含有文字或圖示的元素上用 `opacity` 讓它們變淡，因為 `opacity` 的實際效果取決於底下的顏色，上面算出來的對比就不成立了。現在用 `opacity` 讓文字或圖示變淡的地方有以下幾處，拿掉 `opacity`，改用對應的顏色 token：
@@ -336,17 +339,15 @@ frontend/src/styles/
   - `color.scale($blue, $lightness: -42%)` 調深的藍（`MarketIndexSummary.module.scss` 與 `MarketIndexDetails.module.scss` 的 `$action`），改成 `--color-text-accent`。
   - 歡迎頁用 `color-mix()` 混出的半透明藍與背景，陰影改成 `--shadow-accent`，`outline` 改成 focus ring 的 token，背景改成最接近的背景色 token。
 
-`--color-text-primary`、`--color-text-secondary`、`--color-text-tertiary` 對應 `ui-guidelines.md`「文字對比」的主要、次要、提示三種用途，元件依這段資訊在畫面上的重要程度選用。次要文字 `#647287` 在各種底色上的對比如下，最低 4.04:1，所以在每一種尺寸都符合次要文字的下限。用到 `--color-text-secondary` 的元素如果放在其他底色上，實作時要另外檢查：
+`--color-text-primary`、`--color-text-secondary`、`--color-text-tertiary` 對應 `ui-guidelines.md`「文字對比」的主要、次要、提示三種用途，元件依這段資訊在畫面上的重要程度選用。次要文字 `#6a788c` 在各種底色上的對比如下，最低 4.06:1，所以在每一種尺寸都符合次要文字的下限。窄版的淡漸層依 `ui-guidelines.md` 以白色計算。用到 `--color-text-secondary` 的元素如果放在其他底色上，實作時要另外檢查：
 
 | 底色 | 對比 |
 | --- | --- |
-| `#ffffff` | 4.89 |
-| `#f6f9fc`（`slate-50`） | 4.62 |
-| `#f1f4f8`（`slate-100`） | 4.43 |
-| `#d1eeff`（窄版主頁面漸層的頂端） | 4.04 |
-| `#feedff`（窄版主頁面漸層的底部） | 4.37 |
+| `#ffffff` | 4.48 |
+| `#f6f9fc`（`slate-50`） | 4.24 |
+| `#f1f4f8`（`slate-100`） | 4.06 |
 
-提示文字的下限是 2:1。`--color-text-tertiary`（`#9aa5b4`）在白底上是 2.50，在停用中按鈕的底色 `slate-100` 上是 2.26，在窄版漸層的頂端是 2.07。停用中按鈕的文字與輸入框的 placeholder 現在分別是 `#ddd` 放在 `#f5f5f5` 上（大約 1.2:1）與 `#ddd` 放在白底上（大約 1.4:1），照 `ui-guidelines.md`「文字對比」的例子算提示，改成 `--color-text-tertiary`。實作時逐一確認每個 placeholder 都有標籤、圖示、視窗標題或段落標題說明用途，例如記帳編輯器的股票欄位有「股票」或「買賣與股票」這類段落標題；沒有的話，那個 placeholder 算次要文字，用 `--color-text-secondary`。停用中的元素上蓋的遮罩，要跟遮罩下的文字一起算對比。帳號綁定頁用停用中的 `LabeledInputV2` 顯示已綁定的 Email，上面再蓋 50% 的白色遮罩，實際只有大約 2.9:1；Email 是這個畫面最重要的資訊，屬於主要文字，所以不再用停用中的輸入框顯示，拿掉遮罩，改成用 `--color-text-primary` 顯示的文字。
+提示文字的下限是 2:1。`--color-text-tertiary`（`#9aa5b4`）在白底上是 2.50，在停用中按鈕的底色 `slate-100` 上是 2.26，在窄版漸層的頂端是 2.07。停用中按鈕的文字與輸入框的 placeholder 現在分別是 `#ddd` 放在 `#f5f5f5` 上（大約 1.2:1）與 `#ddd` 放在白底上（大約 1.4:1），照 `ui-guidelines.md`「文字對比」的例子算提示，改成 `--color-text-tertiary`。實作時逐一確認每個 placeholder 都有標籤、圖示、視窗標題或段落標題說明用途，例如記帳編輯器的股票欄位有「股票」或「買賣與股票」這類段落標題；沒有的話，那個 placeholder 算次要文字，用 `--color-text-secondary`。停用中的元素上蓋的遮罩，要跟遮罩下的文字一起算對比。帳號綁定頁用停用中的 `LabeledInputV2` 顯示已綁定的 Email，上面再蓋 50% 的白色遮罩，實際只有大約 2.9:1；實作時改成不用停用中的輸入框顯示 Email，拿掉遮罩，改成文字。使用者決定這一頁的主要目的是改綁，Email 在設定頁已經清楚顯示，所以這一頁的 Email 算提示文字，用 `--color-text-tertiary`，並從 `ui-guidelines.md` 主要文字的例子拿掉「已綁定的 Email」。
 
 ### 字級、字重、行高與字距
 
@@ -379,7 +380,7 @@ frontend/src/styles/
 - 搬到 `pages/Admin/` 的尺寸：後台側欄 216px 與收合時的 64px、內容寬度 1440px 與 480px、表格最大高度 440px、圖表高度 280px 與 180px、圖表標籤的最小寬度 480px、長篇文字的行寬 68ch。
 - 斷點：`sm` 512px、`md` 780px、`lg` 960px、`xl` 1024px、`2xl` 1280px，名稱的值就是切換點，所以原本 `$width-512: 511px` 這種名稱與值差 1px 的寫法不再需要。`ds.down(md)` 輸出 `@media (width < 780px)`，`ds.up(md)` 輸出 `@media (width >= 780px)`。直接寫 `960px` 的 media query、`_.$width-780 + 1px` 的寫法與元件自己定義的 `$narrow` 都改用這兩個 mixin。
 - TypeScript 裡的 media query 也從 `styles/tokens.ts` 讀斷點，透過同一個 helper 產生 `(width < Npx)` 與 `(width >= Npx)`，讓 TypeScript 與 SCSS 在同一個像素切換。例如 `utils/mediaQuery.ts` 的 `NARROW_LAYOUT_QUERY` 現在是 `(max-width: 959px)`，斷點的值改成 960px 之後如果還用 `max-width`，在剛好 960px 時就會跟 SCSS 不一致。`Main.tsx`、`MainSideBar.tsx`、`Settings.tsx` 裡直接寫的 `(min-width: 960px)`、`(max-width: 779px)`、`(min-width: 780px)` 也改用這個 helper，切換點維持現在的值。
-- 不在斷點 scale 上的 media query 與 container query，例如 `Market.module.scss` 的 `(min-width: 779px)` 與 `359px`、`Welcome.module.scss` 的 `1025px`、`MarketIndexDetails.module.scss` 的 `960px <= width <= 1160px`、`Dashboard.module.scss` 的 `@container (max-width: 1200px)`、`SpeedDial.module.scss` 的 `max-height: 450px`，在不改變輸出的 commit 裡照原樣保留。之後的 commit 逐一判斷：意思跟某個斷點相同、只差 1px 的，改用 mixin；其他的寫成元件裡的 Sass 變數，照 Stylelint 一節的規則用註解寫明理由。
+- 不在斷點 scale 上的 media query 與 container query，例如 `Market.module.scss` 的 `(min-width: 779px)` 與 `359px`、`Welcome.module.scss` 的 `1025px`、`MarketIndexDetails.module.scss` 的 `960px <= width <= 1160px`、`Dashboard.module.scss` 的 `@container (max-width: 1200px)`、`SpeedDial.module.scss` 的 `max-height: 450px`，逐一判斷：意思跟某個斷點相同、只差 1px 的，改用 mixin；其他的寫成元件裡的 Sass 變數，照 Stylelint 一節的規則用註解寫明理由。
 - `page-header-title-size` 這個 mixin 現在在 512px 以下把頁面標題從 20px 縮成 17.6px，改成 `--font-size-page-title`，用 `clamp()` 讓 1280px 寬時是 20px、390px 寬時接近 17.6px，拿掉 mixin 裡的 media query。
 
 ### Stylelint
@@ -400,11 +401,11 @@ frontend/src/styles/
 - `.agents/skills/product-designer/SKILL.md`、`.agents/skills/product-designer/scripts/build-draft-css.mjs`、`design/shared/README.md`：改成從 `frontend/src/styles/` 讀 token，設計稿裡的顏色寫成用途 token（例如 `var(--color-text-secondary)`），字級寫成字級 token，不再用 `var(--base-font-size)` 的倍數。改完重新產生 `design/shared/components.css`。
 - `.agents/skills/sdd/SKILL.md` 的 code review 檢查項目裡提到 `frontend/src/_design_system.scss` 的地方，改成 `frontend/src/styles/`。
 
-### 驗證與 Commit 的順序
+### 驗證
 
-- 先做不改變任何值的修改：搬檔案、改名、改用 `loadPaths` 與 `ds`、拆用途 token、改用斷點 mixin（輸出成跟原本相同的 `max-width`）、搬後台的尺寸、合併給 TypeScript 的 token。這些 commit 結束時，`vite build` 輸出的 CSS 要跟 `main` 完全相同，CSS Modules 的 class name 也不能變。
-- 接著依序做會改變輸出的修改，每一類各自一個或幾個 commit：改用 CSS custom properties 與 `width <` 寫法的 media query、套用偏藍的灰與 `#647287`、換掉寫死的顏色、套用各個 scale、`Button` 與 `RoundButton` 改用 CSS Modules、加入 stylelint。每個 commit 結束時截圖比對主要頁面的寬版與窄版。
-- 改變輸出的 commit 都完成之後，另外檢查以下三點，不符合的地方在這個分支修正：
+- 搬檔案、改名、改用 `loadPaths` 與 `ds`、拆用途 token、改用斷點 mixin（輸出成跟原本相同的 `max-width`）、搬後台的尺寸、合併給 TypeScript 的 token 這些修改不改變任何值，做完時 `vite build` 輸出的 CSS 要跟 `main` 完全相同，CSS Modules 的 class name 也不能變。
+- 會改變輸出的修改做完之後，截圖比對主要頁面的寬版與窄版。
+- 另外檢查以下幾點，不符合的地方在這個分支修正：
   - 每個頁面在 320px 寬時，頁面本身沒有橫向捲動。
   - 主要按鈕與觸控環境的圖示操作，可點擊範圍至少 44×44px。
   - 把文字放大到 200% 時，手機橫放（844 × 360）的頁首與頁尾合計不超過可用高度的一半，頁面標題與底部導覽列的文字沒有被裁掉，操作仍可使用。
@@ -412,7 +413,6 @@ frontend/src/styles/
   - 把瀏覽器的預設字級調成 20px 時，頁面標題、歡迎頁的大標題與儀表板的投入金額跟其他文字一樣變大。
   - 把瀏覽器的預設字級調成 20px 時，頁首、頁尾、側欄與按鈕的文字沒有被裁掉，操作仍可使用。
 - 依 `tests/manual/` 重跑跟畫面尺寸有關的手動檢查，至少包括 MKT-R14.3（390 × 700 時不用捲動就看得到兩組數值與圖表）、MKT-R14.4（320 × 568 或文字放大到 200% 時沒有橫向捲動）與 MKT-R14.11（844 × 360 時操作加號選單），因為間距往上取、字級變大與頁首頁尾改用 rem 都會讓頁面變高。沒通過的情境在這個分支修正，不改 spec。這個檢查要在實作初期先做一次，因為窄版只能透過用途 token 與 `clamp()` 縮小文字；如果只調整間距與排列仍然通不過 MKT-R14.3，停下來問使用者，不要在元件裡另外縮小文字。
-- PR description 依 commit 寫出每一段怎麼驗證，讓使用者可以逐個 commit review。
 - 這個分支會改到幾乎所有 SCSS 檔，所以實作期間其他前端工作，包括 roadmap 上的「前端全面改用 Function Component」，要等這個 PR 合併之後再開始。
 
 ## 驗證方式

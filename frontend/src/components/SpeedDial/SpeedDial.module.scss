@@ -1,4 +1,8 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
+
+// Up to this viewport height, such as a phone held sideways, the open menu turns into
+// a scrolling list so every action stays reachable.
+$short-viewport-max-height: 450px;
 
 .trigger {
   display: grid;
@@ -14,24 +18,24 @@
 }
 
 .main {
+  // --layout-speed-dial-clearance in styles/tokens/_layout.scss is computed from this
+  // 60px size.
   $side-length: 60px;
   position: fixed;
-  bottom: calc(_.$footer-height + env(safe-area-inset-bottom) + 16px);
+  bottom: calc(var(--layout-footer-height) + env(safe-area-inset-bottom) + 16px);
   right: 24px;
-  border: 0.1px solid _.$light-gray;
-  border-radius: 100px;
+  border: 0.1px solid var(--color-border-default);
+  border-radius: var(--radius-pill);
   height: $side-length;
   width: $side-length;
-  background-color: _.$white;
-  box-shadow:
-    0 4px 12px _.$black-transparent-2,
-    0 2px 6px _.$black-transparent-3;
-  z-index: 7;
-  transition-duration: 200ms;
+  background-color: var(--color-bg-surface);
+  box-shadow: var(--shadow-sm);
+  z-index: var(--z-speed-dial);
+  transition-duration: var(--duration-base);
   display: flex;
   justify-content: center;
   align-items: center;
-  @media (max-width: _.$width-512) {
+  @include ds.down(sm) {
     $side-length: 54px;
     right: 18px;
     height: $side-length;
@@ -39,10 +43,10 @@
   }
   &.active {
     & > .button_container {
-      gap: 15px;
+      gap: var(--space-200);
       height: max-content;
       width: max-content;
-      padding-bottom: $side-length + 15px;
+      padding-bottom: calc($side-length + var(--space-200));
       opacity: 1;
       & > .button {
         height: 0.95 * $side-length;
@@ -57,15 +61,13 @@
       width: 100vw;
       height: 100dvh;
       display: block;
-      background-color: _.$black-transparent-1;
-      z-index: 6;
+      background-color: var(--color-bg-backdrop);
+      z-index: var(--z-backdrop);
     }
   }
   @media (hover: hover) {
     &:hover {
-      box-shadow:
-        0 6px 16px _.$black-transparent-3,
-        0 3px 8px _.$black-transparent-2;
+      box-shadow: var(--shadow-md);
       &:not(.active) {
         cursor: pointer;
       }
@@ -80,8 +82,8 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    transition-duration: 200ms;
-    z-index: 7;
+    transition-duration: var(--duration-base);
+    z-index: var(--z-speed-dial);
     opacity: 0;
     pointer-events: none;
     transform: translate(-50%, 0);
@@ -92,11 +94,11 @@
       display: none;
       justify-content: center;
       align-items: center;
-      border-radius: 100px;
-      border: 0.1px solid _.$light-gray;
-      background-color: _.$noisy-white;
-      color: _.$deep-gray;
-      box-shadow: 0 0 20px -10px _.$black;
+      border-radius: var(--radius-pill);
+      border: 0.1px solid var(--color-border-default);
+      background-color: var(--color-bg-subtle);
+      color: var(--color-text-primary);
+      box-shadow: var(--shadow-sm);
       overflow: hidden;
       cursor: pointer;
       padding: 0;
@@ -108,20 +110,20 @@
         transform: translate(-110%, -50%);
         opacity: 0;
         width: max-content;
-        padding: 3px 10px;
-        background-color: _.$deep-gray;
-        color: _.$white;
+        padding: var(--space-050) var(--space-150);
+        background-color: var(--color-bg-inverse);
+        color: var(--color-text-inverse);
         letter-spacing: 1px;
-        font-size: 0.8 * _.$base-font-size;
-        border-radius: 5px;
+        font-size: var(--font-size-xs);
+        border-radius: var(--radius-sm);
       }
       @media (hover: hover) {
         &:hover {
           overflow: visible;
           & > .hint_text {
             opacity: 1;
-            transition-delay: 200ms;
-            transition-duration: 200ms;
+            transition-delay: var(--duration-base);
+            transition-duration: var(--duration-base);
           }
         }
       }
@@ -146,18 +148,20 @@
 }
 
 .background {
-  animation: 300ms fadein ease;
+  animation: var(--duration-slow) fadein var(--ease-standard);
   display: none;
 }
 
-@media (max-height: 450px) {
+@media (height <= #{$short-viewport-max-height}) {
   .main.active > .button_container {
     bottom: calc(100% + 8px);
     right: -4px;
     left: auto;
-    gap: 6px;
-    max-height: calc(100dvh - _.$footer-height - env(safe-area-inset-bottom) - 88px);
-    padding: 4px;
+    gap: var(--space-075);
+    max-height: calc(
+      100dvh - var(--layout-footer-height) - env(safe-area-inset-bottom) - 88px
+    );
+    padding: var(--space-050);
     overflow-y: auto;
     pointer-events: auto;
     transform: none;
@@ -165,11 +169,11 @@
     & > .button {
       flex: none;
       justify-content: flex-start;
-      gap: 8px;
+      gap: var(--space-100);
       min-height: 44px;
       height: auto;
       width: 100%;
-      padding: 4px 12px;
+      padding: var(--space-050) var(--space-150);
 
       & > .hint_text {
         position: static;

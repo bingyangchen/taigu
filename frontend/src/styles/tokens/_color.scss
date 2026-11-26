@@ -1,0 +1,93 @@
+@use "sass:color";
+@use "sass:math";
+@use "sass:string";
+@use "palette";
+
+// Translucent colors are computed here, because ECharts cannot read color-mix().
+$color: (
+  text-primary: palette.$slate-800,
+  text-secondary: palette.$slate-500,
+  text-tertiary: palette.$slate-400,
+  icon-muted: palette.$slate-400,
+  icon-warning: palette.$yellow-500,
+  text-inverse: palette.$white,
+  // Blue text on white and the page background. On a tinted or gray background, such
+  // as a selected item, blue text uses text-accent-strong.
+  text-accent: palette.$blue-550,
+  text-accent-strong: palette.$blue-600,
+  // Only for text of 24px and up, whose contrast minimum is 3:1.
+  text-accent-large: palette.$blue-500,
+  text-danger: palette.$red-600,
+  text-success: palette.$green-600,
+  text-warning: #765b1d,
+  bg-page: palette.$slate-50,
+  bg-surface: palette.$white,
+  bg-subtle: palette.$slate-100,
+  bg-muted: rgba(palette.$slate-800, 0.05),
+  bg-frosted: rgba(palette.$white, 0.6),
+  bg-frosted-text: rgba(palette.$white, 0.9),
+  bg-hover: rgba(palette.$slate-800, 0.05),
+  bg-backdrop: rgba(palette.$black, 0.45),
+  bg-inverse: palette.$slate-800,
+  bg-accent: palette.$blue-550,
+  bg-accent-subtle: rgba(palette.$blue-500, 0.1),
+  bg-danger: palette.$red-600,
+  bg-danger-subtle: rgba(palette.$red-500, 0.1),
+  bg-success: palette.$green-600,
+  bg-success-subtle: rgba(palette.$green-500, 0.1),
+  bg-warning: palette.$yellow-500,
+  bg-warning-subtle: #fff7e5,
+  bg-shell-top: #d1eeff,
+  bg-shell-bottom: #feedff,
+  border-default: palette.$slate-200,
+  border-subtle: palette.$slate-100,
+  border-strong: palette.$slate-500,
+  border-accent: palette.$blue-500,
+  border-danger: palette.$red-500,
+  border-danger-subtle: rgba(palette.$red-500, 0.25),
+  border-success-subtle: rgba(palette.$green-500, 0.25),
+  border-warning: #f0d9a8,
+  focus-ring: palette.$blue-600,
+  focus-ring-inverse: palette.$white,
+  price-up: palette.$red-600,
+  price-down: palette.$green-600,
+  price-flat: palette.$slate-500,
+  chart-up: palette.$red-500,
+  chart-down: palette.$green-500,
+  chart-accent: palette.$blue-500,
+  chart-accent-soft: rgba(palette.$blue-500, 0.45),
+  chart-accent-faint: rgba(palette.$blue-500, 0.25),
+  chart-accent-wash: rgba(palette.$blue-500, 0.1),
+  chart-category-1: #5470c6,
+  chart-category-2: #91cc75,
+  chart-category-3: #fac858,
+  chart-category-4: #e66,
+  chart-category-5: #73c0de,
+  chart-category-6: #3ba272,
+  chart-category-7: #fc8452,
+  chart-category-8: #9a60b4,
+  chart-category-9: #ea7ccc,
+  chart-muted: palette.$slate-400,
+  chart-incomplete-area: rgba(palette.$slate-800, 0.05),
+  chart-inactive: palette.$slate-300,
+);
+
+@function -hex-byte($value) {
+  $digits: "0123456789abcdef";
+  $value: math.round($value);
+  $high: math.floor(math.div($value, 16));
+  $low: $value - $high * 16;
+  @return string.slice($digits, $high + 1, $high + 1) +
+    string.slice($digits, $low + 1, $low + 1);
+}
+
+// Opaque colors as 6-digit hex, so TypeScript can append an alpha byte.
+@function to-hex($value) {
+  @if color.alpha($value) < 1 {
+    @return $value;
+  }
+  $red: -hex-byte(color.channel($value, "red", $space: rgb));
+  $green: -hex-byte(color.channel($value, "green", $space: rgb));
+  $blue: -hex-byte(color.channel($value, "blue", $space: rgb));
+  @return string.unquote("##{$red}#{$green}#{$blue}");
+}

@@ -1,41 +1,58 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
-.main {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 100px;
-  width: min-content;
-  height: min-content;
-  aspect-ratio: 1;
-  border: none;
-  padding: 6px;
-  margin: 0;
-  background: transparent;
-  color: _.$gray;
-  font: inherit;
-  cursor: pointer;
-  outline: none;
-  &.disabled {
-    color: _.$light-gray;
-    cursor: default;
-  }
-  &:focus-visible {
-    box-shadow:
-      0 0 0 2px _.$white,
-      0 0 0 5px _.$blue-transparent-3;
-  }
-  &:active {
-    &:not(.disabled) {
-      background-color: _.$black-transparent-3;
+// Repeats the order in styles/base/index.scss, so it holds whichever file loads first.
+@layer base, primitives;
+
+@layer primitives {
+  .main {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    width: min-content;
+    height: min-content;
+    aspect-ratio: 1;
+    border: none;
+    padding: var(--space-075);
+    margin: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font: inherit;
+    cursor: pointer;
+    outline: none;
+    &.l {
+      padding: var(--space-150);
     }
-  }
-  @media (hover: hover) {
-    &:hover {
+    &.disabled {
+      color: var(--color-text-tertiary);
+      cursor: default;
+    }
+    &:focus-visible {
+      @include ds.focus-ring;
+    }
+    &:active {
       &:not(.disabled) {
-        color: _.$deep-gray;
-        background-color: _.$black-transparent-3;
+        background-color: var(--color-bg-hover);
+      }
+    }
+    @media (hover: hover) {
+      &:hover {
+        &:not(.disabled) {
+          color: var(--color-text-primary);
+          background-color: var(--color-bg-hover);
+        }
+      }
+    }
+    // Floats over scrolling content.
+    &.frosted {
+      border: 0.5px solid var(--color-border-subtle);
+      background-color: var(--color-bg-frosted);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(10px) saturate(150%);
+      -webkit-backdrop-filter: blur(10px) saturate(150%);
+      &:active:not(.disabled) {
+        background-color: var(--color-bg-surface);
       }
     }
   }

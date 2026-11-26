@@ -1,4 +1,4 @@
-@use "../../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   position: relative;
@@ -6,8 +6,8 @@
   flex-direction: column;
   flex-grow: 1;
   height: 100dvh;
-  padding: 0 15px 10px;
-  @media (max-width: _.$width-780) {
+  padding: 0 var(--space-200) var(--space-150);
+  @include ds.down(md) {
     height: fit-content;
     padding: 0;
     background-color: transparent;
@@ -19,21 +19,19 @@
     justify-content: center;
     align-items: center;
     align-self: center;
-    margin: 15px 20px 16px;
-    padding: 7.5px 4px;
+    margin: var(--space-200) var(--space-250) var(--space-200);
+    padding: var(--space-100) var(--space-050);
     z-index: 2;
-    border-radius: 25px;
-    background-color: _.$white-transparent;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-bg-frosted);
     backdrop-filter: blur(10px) saturate(150%);
     -webkit-backdrop-filter: blur(10px) saturate(150%);
-    box-shadow:
-      0 4px 16px _.$black-transparent-2,
-      0 2px 8px _.$black-transparent-3;
-    border: 0.5px solid _.$noisy-white;
+    box-shadow: var(--shadow-md);
+    border: 0.5px solid var(--color-border-subtle);
     width: fit-content;
     transition:
-      transform 0.22s ease,
-      opacity 0.18s ease;
+      transform var(--duration-base) var(--ease-standard),
+      opacity var(--duration-base) var(--ease-standard);
     will-change: transform;
 
     &.hidden {
@@ -46,12 +44,12 @@
       transition: none;
     }
 
-    @media (max-width: _.$width-780) {
+    @include ds.down(md) {
       position: relative;
       top: 0;
       height: 44px;
       width: calc(100% - 32px);
-      margin: 12px 16px 14px;
+      margin: var(--space-150) var(--space-200) var(--space-200);
 
       &.active {
         position: sticky;
@@ -67,15 +65,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85 * _.$base-font-size;
-    background-color: _.$white-transparent;
-    border-radius: 20px;
-    box-shadow: 0 0 5px 1px _.$black-transparent-3;
-    padding: 60px 20px;
-    color: _.$gray;
+    font-size: var(--font-size-sm);
+    background-color: var(--color-bg-frosted);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-800) var(--space-250);
+    color: var(--color-text-secondary);
     text-align: center;
-    opacity: 0.7;
-    @media (max-width: _.$width-780) {
+    @include ds.down(md) {
       border-radius: 0;
       background-color: transparent;
       box-shadow: none;
@@ -84,33 +81,33 @@
   & > .record_list {
     display: flex;
     flex-direction: column;
-    font-size: 0.85 * _.$base-font-size;
-    background-color: _.$white-transparent;
-    border-radius: 20px;
-    box-shadow: 0 0 5px 1px _.$black-transparent-3;
-    padding-bottom: 50px;
+    font-size: var(--font-size-sm);
+    background-color: var(--color-bg-frosted);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-sm);
+    padding-bottom: var(--space-600);
     overflow: auto;
-    @media (max-width: _.$width-780) {
+    @include ds.down(md) {
       border-radius: 0;
       background-color: transparent;
-      padding-bottom: calc(80px + _.$footer-height);
+      padding-bottom: calc(var(--space-1000) + var(--layout-footer-height));
       box-shadow: none;
     }
     .record_row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
-      column-gap: 26px;
+      column-gap: var(--space-300);
       width: 100%;
       min-width: 0;
       box-sizing: border-box;
-      padding-right: 104px;
+      padding-right: var(--layout-row-action-bar-space);
 
-      @media (max-width: _.$width-780) {
+      @include ds.down(md) {
         display: flex;
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
+        gap: var(--space-150);
         margin-right: 0;
         padding-right: 0;
       }
@@ -118,33 +115,33 @@
     .identity {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: var(--space-075);
       min-width: 0;
     }
     .company {
       display: flex;
       align-items: baseline;
-      gap: 9px;
+      gap: var(--space-100);
       min-width: 0;
     }
     .sid {
       flex: 0 0 auto;
-      color: _.$deep-gray;
-      font-size: 0.95 * _.$base-font-size;
-      font-weight: 650;
+      color: var(--color-text-primary);
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
       letter-spacing: 0;
     }
     .company_name {
       min-width: 0;
       overflow: hidden;
-      color: _.$deep-gray;
-      font-weight: 500;
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-medium);
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .date {
-      color: _.$gray;
-      font-size: 0.75 * _.$base-font-size;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-caption);
       letter-spacing: 0;
       white-space: nowrap;
     }
@@ -153,12 +150,12 @@
       grid-template-columns: auto minmax(72px, auto) minmax(92px, auto);
       align-items: center;
       justify-content: end;
-      gap: 14px;
+      gap: var(--space-200);
 
-      @media (max-width: _.$width-780) {
+      @include ds.down(md) {
         grid-template-columns: auto 1fr auto;
         justify-content: stretch;
-        gap: 10px;
+        gap: var(--space-150);
       }
     }
     .record_type {
@@ -167,32 +164,32 @@
       justify-content: center;
       min-width: 42px;
       height: 26px;
-      padding: 0 9px;
-      border-radius: 999px;
-      font-size: 0.75 * _.$base-font-size;
-      font-weight: 700;
+      padding: 0 var(--space-100);
+      border-radius: var(--radius-pill);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
       letter-spacing: 0;
       white-space: nowrap;
       &.buy {
-        color: _.$red;
-        background-color: _.$red-transparent-3;
+        color: var(--color-text-danger);
+        background-color: var(--color-bg-danger-subtle);
       }
       &.sell {
-        color: _.$blue;
-        background-color: _.$blue-transparent-3;
+        color: var(--color-text-accent-strong);
+        background-color: var(--color-bg-accent-subtle);
       }
       &.dividend {
-        color: _.$green;
-        background-color: _.$green-transparent-3;
+        color: var(--color-text-success);
+        background-color: var(--color-bg-success-subtle);
       }
     }
     .quantity {
-      color: _.$deep-gray;
-      font-weight: 600;
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-semibold);
       text-align: right;
       white-space: nowrap;
 
-      @media (max-width: _.$width-780) {
+      @include ds.down(md) {
         text-align: left;
       }
     }
@@ -200,22 +197,22 @@
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 2px;
+      gap: var(--space-025);
       min-width: 0;
       white-space: nowrap;
     }
     .price_label {
-      color: _.$gray;
-      font-size: 0.68 * _.$base-font-size;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-caption);
       letter-spacing: 0;
     }
     .price {
       display: flex;
       align-items: baseline;
       justify-content: flex-end;
-      color: _.$deep-gray;
-      font-size: 1.02 * _.$base-font-size;
-      font-weight: 700;
+      color: var(--color-text-primary);
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
       letter-spacing: 0;
       white-space: nowrap;
     }

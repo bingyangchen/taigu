@@ -37,6 +37,7 @@ services:
       - ./frontend/index.html:/app/index.html:cached
       - ./frontend/vite.config.ts:/app/vite.config.ts:cached
       - ./frontend/eslint.config.js:/app/eslint.config.js:cached
+      - ./frontend/stylelint.config.mjs:/app/stylelint.config.mjs:cached
     command: ["npm", "run", "dev"]
     # command: ["sh", "-lc", "npm run build && npm run preview"]
     depends_on:

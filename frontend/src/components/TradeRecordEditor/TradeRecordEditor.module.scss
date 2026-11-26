@@ -1,25 +1,23 @@
-@use "../../design_system" as _;
-
 .summary_note {
-  margin-left: 6px;
-  color: _.$gray;
-  font-size: 0.8 * _.$base-font-size;
+  margin-left: var(--space-075);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
 }
 
 .manual_tag {
-  color: _.$blue;
-  font-size: 0.8 * _.$base-font-size;
+  color: var(--color-text-accent);
+  font-size: var(--font-size-xs);
 }
 
 .reset_fee_button {
   display: block;
   min-height: 44px;
-  margin-left: -6px;
-  padding: 0 6px;
+  margin-left: calc(-1 * var(--space-075));
+  padding: 0 var(--space-075);
   border: none;
   background: transparent;
-  color: _.$blue;
+  color: var(--color-text-accent);
   cursor: pointer;
   font: inherit;
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
 }

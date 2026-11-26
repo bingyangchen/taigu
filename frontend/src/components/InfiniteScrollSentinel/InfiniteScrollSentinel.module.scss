@@ -1,6 +1,6 @@
 .sentinel {
   width: 100%;
   height: 1px;
-  margin: 24px 0 48px;
+  margin: var(--space-300) 0 var(--space-600);
   pointer-events: none;
 }

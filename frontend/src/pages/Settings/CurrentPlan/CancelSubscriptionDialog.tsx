@@ -96,14 +96,18 @@ export default function CancelSubscriptionDialog({
             {errorMessage && <div className={styles.inlineError}>{errorMessage}</div>}
             <div className={styles.footerActions}>
               <Button
-                className={`primary_fill l ${styles.keepButton}`}
+                variant="primary_fill"
+                size="action"
                 disabled={isWaiting}
                 onClick={onClose}
               >
                 保留自動續訂
               </Button>
               <Button
-                className={`dangerous l border ${styles.stopButton}`}
+                variant="dangerous"
+                size="action"
+                bordered
+                className={styles.stopButton}
                 waiting={isWaiting}
                 onClick={() => {
                   void onConfirm();

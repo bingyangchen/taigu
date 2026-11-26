@@ -4,6 +4,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { AppDispatch, RootState } from "../../redux/store";
+import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import Util from "../../utils/util";
 
 function mapStateToProps(rootState: RootState) {
@@ -88,7 +89,8 @@ class TradeVolumeBarChart extends React.Component<Props, State> {
         type: "category",
         data: dates.map(dateFormatter),
         axisLabel: {
-          color: "#aaa",
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
           interval: 1,
           showMaxLabel: true,
           showMinLabel: true,
@@ -112,7 +114,8 @@ class TradeVolumeBarChart extends React.Component<Props, State> {
           position: "right",
           axisLabel: {
             show: Util.isMobile,
-            color: "#aaa",
+            color: COLORS.textSecondary,
+            fontSize: FONT_SIZES.chartTick,
             formatter: (value: number) => {
               if (value >= 1000000) return (value / 1000000).toFixed(1) + "M";
               if (value >= 1000) return (value / 1000).toFixed(1) + "K";
@@ -145,14 +148,14 @@ class TradeVolumeBarChart extends React.Component<Props, State> {
         {
           type: "line",
           data: cashInvestedValues,
-          lineStyle: { width: Util.isMobile ? 2.5 : 2, color: "#4c8bf5" },
+          lineStyle: { width: Util.isMobile ? 2.5 : 2, color: COLORS.chartAccent },
           symbol: "none",
           yAxisIndex: 1,
         },
         {
           type: "bar",
           data: volumeValues,
-          itemStyle: { color: "#aaa" },
+          itemStyle: { color: COLORS.chartMuted },
           barWidth: "60%",
           yAxisIndex: 1,
         },
@@ -170,17 +173,23 @@ class TradeVolumeBarChart extends React.Component<Props, State> {
               handleIcon:
                 "path://M30.9,53.2C16.8,53.2,5.3,41.7,5.3,27.6S16.8,2,30.9,2C45,2,56.4,13.5,56.4,27.6S45,53.2,30.9,53.2z M30.9,3.5C17.6,3.5,6.8,14.4,6.8,27.6c0,13.2,10.8,24.1,24.1,24.1C44.2,51.7,55,40.8,55,27.6C54.9,14.4,44.1,3.5,30.9,3.5z M36.9,35.8c0,0.5-0.4,0.9-0.9,0.9s-0.9-0.4-0.9-0.9V19.4c0-0.5,0.4-0.9,0.9-0.9s0.9,0.4,0.9,0.9V35.8z M25.8,35.8c0,0.5-0.4,0.9-0.9,0.9s-0.9-0.4-0.9-0.9V19.4c0-0.5,0.4-0.9,0.9-0.9s0.9,0.4,0.9,0.9V35.8z",
               handleSize: "80%",
-              handleStyle: { color: "#4c8bf5", borderColor: "#4c8bf5" },
-              textStyle: { color: "#aaa" },
+              handleStyle: {
+                color: COLORS.chartAccent,
+                borderColor: COLORS.chartAccent,
+              },
+              textStyle: {
+                color: COLORS.textSecondary,
+                fontSize: FONT_SIZES.chartTick,
+              },
               borderColor: "transparent",
-              fillerColor: "rgba(76, 139, 245, 0.1)",
+              fillerColor: COLORS.chartAccentWash,
               dataBackground: {
-                lineStyle: { color: "#4c8bf5", width: 0.5 },
+                lineStyle: { color: COLORS.chartAccent, width: 0.5 },
                 areaStyle: { color: "transparent" },
               },
               selectedDataBackground: {
-                lineStyle: { color: "#4c8bf5", width: 0.5 },
-                areaStyle: { color: "rgba(76, 139, 245, 0.1)" },
+                lineStyle: { color: COLORS.chartAccent, width: 0.5 },
+                areaStyle: { color: COLORS.chartAccentWash },
               },
             },
           ]

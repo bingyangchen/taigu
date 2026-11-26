@@ -30,6 +30,11 @@ printf "${BLUE}Running Prettier...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm frontend npm run format:check
 printf "\n"
 
+printf "${BLUE}Running Stylelint...${RESET}\n"
+docker compose -f compose.dev.yaml --progress quiet run $T --rm --no-deps \
+  frontend npm run lint:style
+printf "Passed!\n\n"
+
 printf "${BLUE}Running frontend tests...${RESET}\n"
 docker compose -f compose.dev.yaml --progress quiet run $T --rm --no-deps \
   frontend npm test -- --run

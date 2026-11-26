@@ -1,8 +1,6 @@
-@use "../../design_system" as _;
-
 .inner {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  color: _.$deep-gray;
+  gap: var(--space-150);
+  color: var(--color-text-primary);
 }

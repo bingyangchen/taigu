@@ -1,19 +1,19 @@
-@use "../../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: var(--space-250);
   width: 100%;
   height: 100dvh;
-  padding: 30px;
-  @media (max-width: _.$width-780) {
+  padding: var(--space-400);
+  @include ds.down(md) {
     padding: 0;
     height: fit-content;
   }
-  @media (max-width: _.$width-512) {
+  @include ds.down(sm) {
     gap: 6dvh;
   }
   & > .mobile_back_button_container {
@@ -22,56 +22,41 @@
     left: 0;
     display: flex;
     align-items: center;
-    height: _.$header-height;
+    height: var(--layout-header-height);
     width: fit-content;
-    padding-left: 13px;
+    padding-left: var(--space-150);
     margin-right: auto;
     z-index: 3;
-    transition: top 300ms ease;
+    transition: top var(--duration-slow) var(--ease-standard);
     &.scrolled {
       top: 10px;
       left: 10px;
       height: auto;
       padding-left: 0;
-      & > * {
-        border-radius: 50%;
-        background-color: _.$white-transparent;
-        backdrop-filter: blur(10px) saturate(150%);
-        -webkit-backdrop-filter: blur(10px) saturate(150%);
-        box-shadow:
-          0 4px 16px _.$black-transparent-2,
-          0 2px 8px _.$black-transparent-3;
-        border: 0.5px solid _.$noisy-white;
-        &:active {
-          background-color: _.$white;
-        }
-      }
     }
   }
   & > .container {
-    $padding-y: 15px;
-    $padding-x: 10px;
     position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: var(--space-250);
     width: 100%;
     max-width: 1400px;
     height: 100%;
-    @media (max-width: _.$width-780) {
+    @include ds.down(md) {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: var(--space-250);
       max-width: 100%;
       height: auto;
     }
     & > .desktop_back_button_container {
       position: absolute;
-      top: $padding-y;
-      left: $padding-x;
-      padding-left: 10px;
+      top: var(--space-200);
+      left: var(--space-150);
+      padding-left: var(--space-150);
       z-index: 1;
-      @media (max-width: _.$width-780) {
+      @include ds.down(md) {
         display: none;
       }
     }
@@ -81,12 +66,12 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: $padding-y $padding-x;
-      border-radius: 20px;
-      background-color: _.$white-transparent;
-      box-shadow: 0 0 15px -10px _.$black-transparent-1;
+      padding: var(--space-200) var(--space-150);
+      border-radius: var(--radius-2xl);
+      background-color: var(--color-bg-frosted);
+      box-shadow: var(--shadow-sm);
       height: 100%;
-      @media (max-width: _.$width-780) {
+      @include ds.down(md) {
         padding: 0;
         border-radius: 0;
         background-color: transparent;
@@ -96,25 +81,22 @@
       & > .handling_fee_section {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: var(--space-050);
         width: 100%;
         align-items: center;
-        padding: 20px 20px 0 20px;
+        padding: var(--space-250) var(--space-250) 0 var(--space-250);
         & > .title {
-          color: _.$gray;
-          font-size: _.$base-font-size;
+          color: var(--color-text-secondary);
+          font-size: var(--font-size-md);
         }
         & > .total_handling_fee {
           display: flex;
           align-items: center;
-          gap: 4px;
-          font-size: 2.3 * _.$base-font-size;
-          letter-spacing: 0.5 * _.$base-letter-spacing;
-          font-weight: 600;
-          color: _.$blue;
-          @media (max-width: _.$width-512) {
-            font-size: 2.1 * _.$base-font-size;
-          }
+          gap: var(--space-050);
+          font-size: var(--font-size-display-number);
+          letter-spacing: calc(0.5 * var(--letter-spacing-base));
+          font-weight: var(--font-weight-semibold);
+          color: var(--color-text-accent-large);
         }
       }
       & > .chart_section {
@@ -122,8 +104,8 @@
         flex-direction: column;
         align-items: center;
         width: 100%;
-        gap: 20px;
-        padding: 20px;
+        gap: var(--space-250);
+        padding: var(--space-250);
         & > .chart_container {
           aspect-ratio: calc(3 / 2);
           width: 100%;
@@ -132,24 +114,23 @@
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 10px;
-          padding: 25px 15px 0;
+          gap: var(--space-150);
+          padding: var(--space-300) var(--space-200) 0;
         }
       }
       & > .hint {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.85 * _.$base-font-size;
-        padding: 60px 20px;
-        margin: 20px;
-        color: _.$gray;
+        font-size: var(--font-size-sm);
+        padding: var(--space-800) var(--space-250);
+        margin: var(--space-250);
+        color: var(--color-text-secondary);
         text-align: center;
-        opacity: 0.7;
-        @media (max-width: _.$width-780) {
+        @include ds.down(md) {
           border-radius: 0;
           box-shadow: none;
-          margin: 20px 0;
+          margin: var(--space-250) 0;
         }
       }
     }
@@ -159,37 +140,36 @@
       flex-direction: column;
       height: 100%;
       overflow: hidden;
-      @media (max-width: _.$width-780) {
-        padding: 20px 0;
+      @include ds.down(md) {
+        padding: var(--space-250) 0;
         height: auto;
       }
       & > .section_header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        padding: 0 10px;
-        @media (max-width: _.$width-780) {
-          padding: 0 20px;
+        margin-bottom: var(--space-250);
+        padding: 0 var(--space-150);
+        @include ds.down(md) {
+          padding: 0 var(--space-250);
         }
         & > .title {
-          color: _.$gray;
-          font-size: _.$base-font-size;
+          color: var(--color-text-secondary);
+          font-size: var(--font-size-md);
         }
       }
       & > .empty_section {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.85 * _.$base-font-size;
-        background-color: _.$white-transparent;
-        border-radius: 20px;
-        box-shadow: 0 0 5px 1px _.$black-transparent-3;
-        padding: 60px 20px;
-        color: _.$gray;
+        font-size: var(--font-size-sm);
+        background-color: var(--color-bg-frosted);
+        border-radius: var(--radius-2xl);
+        box-shadow: var(--shadow-sm);
+        padding: var(--space-800) var(--space-250);
+        color: var(--color-text-secondary);
         text-align: center;
-        opacity: 0.7;
-        @media (max-width: _.$width-780) {
+        @include ds.down(md) {
           border-radius: 0;
           box-shadow: none;
         }
@@ -197,15 +177,15 @@
       & > .record_list {
         display: flex;
         flex-direction: column;
-        font-size: 0.85 * _.$base-font-size;
-        background-color: _.$white-transparent;
-        border-radius: 20px;
-        box-shadow: 0 0 5px 1px _.$black-transparent-3;
-        padding-bottom: 50px;
+        font-size: var(--font-size-sm);
+        background-color: var(--color-bg-frosted);
+        border-radius: var(--radius-2xl);
+        box-shadow: var(--shadow-sm);
+        padding-bottom: var(--space-600);
         overflow: auto;
-        @media (max-width: _.$width-780) {
+        @include ds.down(md) {
           border-radius: 0;
-          padding-bottom: calc(80px + _.$footer-height);
+          padding-bottom: calc(var(--space-1000) + var(--layout-footer-height));
           box-shadow: none;
           max-height: none;
         }
@@ -224,8 +204,8 @@
           white-space: nowrap;
         }
         .date {
-          font-size: 0.75 * _.$base-font-size;
-          color: _.$gray;
+          font-size: var(--font-size-xs);
+          color: var(--color-text-secondary);
           white-space: nowrap;
         }
       }

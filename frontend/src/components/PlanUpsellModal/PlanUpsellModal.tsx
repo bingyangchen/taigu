@@ -53,12 +53,12 @@ export default function PlanUpsellModal(): React.ReactElement | null {
       }
       layout="auto"
       discardButtonProps={{
-        className: "transparent l",
+        variant: "transparent",
         children: "稍後再說",
         onClick: handleClose,
       }}
       submitButtonProps={{
-        className: "primary_fill l",
+        variant: "primary_fill",
         children: "查看 Standard 方案",
         onClick: handleViewPlan,
       }}

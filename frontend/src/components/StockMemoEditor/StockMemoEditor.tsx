@@ -42,11 +42,16 @@ class StockMemoEditor extends React.Component<Props, State> {
             </div>
             <div className={styles.sheet_body}>{this.memoTextarea}</div>
             <div className={styles.sheet_footer}>
-              <Button className="transparent l" onClick={this.props.hideModal}>
+              <Button
+                variant="transparent"
+                size="action"
+                onClick={this.props.hideModal}
+              >
                 捨棄
               </Button>
               <Button
-                className="primary_fill l"
+                variant="primary_fill"
+                size="action"
                 disabled={!this.canSubmit}
                 waiting={this.props.isWaiting}
                 onClick={this.handleClickSubmit}
@@ -64,12 +69,12 @@ class StockMemoEditor extends React.Component<Props, State> {
         title="備註"
         discardButtonProps={{
           children: "捨棄",
-          className: "transparent l",
+          variant: "transparent",
           onClick: this.props.hideModal,
         }}
         submitButtonProps={{
           children: this.props.defaultValue ? "送出" : "新增備註",
-          className: "primary l",
+          variant: "primary",
           disabled: !this.canSubmit,
           waiting: this.props.isWaiting,
           onClick: this.handleClickSubmit,

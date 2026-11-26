@@ -7,6 +7,7 @@ import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
 import type { AppDispatch } from "../../redux/store";
 import Env from "../../utils/env";
 import { getMainTabPath, isSameUrlHistoryTraversal } from "../../utils/mainNavigation";
+import { makeWidthBelowQuery } from "../../utils/mediaQuery";
 import { IRouter, settingsPagePath, withRouter } from "../../utils/router";
 import Util from "../../utils/util";
 import {
@@ -113,7 +114,7 @@ class Settings extends React.Component<Props, State> {
   }
 
   private getOverviewScrollContainer(): Window | HTMLElement | null {
-    return Util.isMobile && window.matchMedia("(max-width: 779px)").matches
+    return Util.isMobile && window.matchMedia(makeWidthBelowQuery("md")).matches
       ? window
       : this.mainRef.current;
   }

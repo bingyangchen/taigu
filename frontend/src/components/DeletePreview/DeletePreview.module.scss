@@ -1,54 +1,54 @@
-@use "../../design_system" as _;
-
 .main {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px 16px;
-  border: 1px solid _.$noisy-white;
-  border-radius: 8px;
-  background: linear-gradient(180deg, _.$white 0%, _.$noisy-white 100%), _.$white;
+  gap: var(--space-200);
+  padding: var(--space-200) var(--space-200);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-subtle) 100%),
+    var(--color-bg-surface);
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-050);
   min-width: 0;
 }
 
 .title {
   overflow: hidden;
-  color: _.$deep-gray;
-  font-size: 0.95 * _.$base-font-size;
-  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .meta {
-  color: _.$gray;
-  font-size: 0.75 * _.$base-font-size;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
   letter-spacing: 0;
 }
 
 .details {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
-  gap: 10px;
+  gap: var(--space-150);
 }
 
 .detail {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--space-050);
 }
 
 .label {
-  color: _.$gray;
-  font-size: 0.7 * _.$base-font-size;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-2xs);
   letter-spacing: 0;
   white-space: nowrap;
 }
@@ -60,9 +60,9 @@
   max-width: 100%;
   min-height: 24px;
   overflow: hidden;
-  color: _.$deep-gray;
-  font-size: 0.85 * _.$base-font-size;
-  font-weight: 650;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -71,19 +71,19 @@
   &.sell {
     min-width: 36px;
     justify-content: center;
-    padding: 0 9px;
-    border-radius: 999px;
-    font-size: 0.75 * _.$base-font-size;
-    font-weight: 700;
+    padding: 0 var(--space-100);
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
   }
 
   &.buy {
-    color: _.$red;
-    background-color: _.$red-transparent-3;
+    color: var(--color-text-danger);
+    background-color: var(--color-bg-danger-subtle);
   }
 
   &.sell {
-    color: _.$blue;
-    background-color: _.$blue-transparent-3;
+    color: var(--color-text-accent-strong);
+    background-color: var(--color-bg-accent-subtle);
   }
 }

@@ -1,18 +1,23 @@
-@use "../../design_system" as _;
+$shimmer-duration: 1.15s;
 
 .skeleton {
   position: relative;
   display: block;
   overflow: hidden;
-  background: _.$noisy-white;
-  border-radius: 999px;
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-pill);
 
   &::after {
     position: absolute;
     inset: 0;
     content: "";
-    background: linear-gradient(90deg, transparent, _.$white-transparent, transparent);
-    animation: skeletonShimmer 1.15s ease-in-out infinite;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-bg-frosted),
+      transparent
+    );
+    animation: skeletonShimmer $shimmer-duration var(--ease-in-out) infinite;
     transform: translateX(-100%);
   }
 }
@@ -46,15 +51,20 @@
   position: absolute;
   z-index: 1;
   overflow: hidden;
-  background: _.$noisy-white;
-  border-radius: 18px;
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-2xl);
 
   &::after {
     position: absolute;
     inset: 0;
     content: "";
-    background: linear-gradient(90deg, transparent, _.$white-transparent, transparent);
-    animation: skeletonShimmer 1.15s ease-in-out infinite;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-bg-frosted),
+      transparent
+    );
+    animation: skeletonShimmer $shimmer-duration var(--ease-in-out) infinite;
     transform: translateX(-100%);
   }
 }

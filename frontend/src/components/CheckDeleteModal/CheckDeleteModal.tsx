@@ -33,12 +33,12 @@ class CheckDeleteModal extends React.Component<Props, State> {
         visualLayer={this.props.nested ? "nested" : "base"}
         discardButtonProps={{
           children: "取消",
-          className: "transparent l",
+          variant: "transparent",
           onClick: this.props.hideModal,
         }}
         submitButtonProps={{
           children: this.props.submitLabel ?? "刪除",
-          className: "dangerous l",
+          variant: "dangerous",
           disabled: this.props.isWaiting,
           waiting: this.props.isWaiting,
           onClick: this.handleClickCheckDelete,

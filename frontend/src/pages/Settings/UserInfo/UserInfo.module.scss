@@ -1,4 +1,4 @@
-@use "../../../design_system" as _;
+$shimmer-duration: 550ms;
 
 .main {
   display: flex;
@@ -9,22 +9,22 @@
     width: min(20dvh, 150px);
     aspect-ratio: 1;
     object-fit: cover;
-    border: 1px solid _.$light-gray;
-    border-radius: 100%;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-circle);
   }
   .gravatar_button {
     margin: 0 auto;
-    color: _.$blue;
+    color: var(--color-text-accent-strong);
     border: none;
-    font-size: 0.8 * _.$base-font-size;
-    letter-spacing: 0.5 * _.$base-letter-spacing;
-    border-radius: 100px;
-    padding: 5px 10px;
-    background-color: _.$blue-transparent-3;
+    font-size: var(--font-size-xs);
+    letter-spacing: calc(0.5 * var(--letter-spacing-base));
+    border-radius: var(--radius-pill);
+    padding: var(--space-075) var(--space-150);
+    background-color: var(--color-bg-accent-subtle);
     cursor: pointer;
-    transition-duration: 150ms;
+    transition-duration: var(--duration-fast);
     &:hover {
-      background-color: _.$black-transparent-3;
+      background-color: var(--color-bg-hover);
     }
   }
 }
@@ -33,35 +33,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  padding: 20px;
+  gap: var(--space-300);
+  padding: var(--space-250);
   .gravatar_preview {
     width: min(30dvh, 200px);
     aspect-ratio: 1;
     object-fit: cover;
-    border: 1px solid _.$light-gray;
-    border-radius: 100%;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-circle);
   }
   .gravatar_bottom_sheet_buttons {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-100);
     width: 100%;
   }
 }
 
 .avatarInputWrapper {
   position: relative;
-  border-bottom: 1px solid _.$noisy-white;
+  border-bottom: 1px solid var(--color-border-subtle);
   & > .blinkOverlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     pointer-events: none;
-    z-index: 10;
+    z-index: 2;
     overflow: hidden;
     &::before {
       content: "";
@@ -73,10 +70,10 @@
       background: linear-gradient(
         90deg,
         transparent,
-        _.$blue-transparent-3,
+        var(--color-bg-accent-subtle),
         transparent
       );
-      animation: shimmer 550ms ease-out;
+      animation: shimmer $shimmer-duration var(--ease-out);
     }
   }
 }

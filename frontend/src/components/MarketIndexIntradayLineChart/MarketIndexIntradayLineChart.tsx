@@ -1,6 +1,7 @@
 import type { EChartsOption } from "echarts";
 import { useMemo } from "react";
 
+import { COLORS } from "../../styles/tokens";
 import {
   formatIndexChange,
   formatIndexPoints,
@@ -66,6 +67,7 @@ export function makeMarketIndexIntradayChartOption(
       interval: 90,
       axisLabel: {
         ...MARKET_INDEX_AXIS_LABEL_STYLE,
+        alignMinLabel: "left",
         hideOverlap: true,
         formatter: formatMarketMinute,
       },
@@ -88,7 +90,7 @@ export function makeMarketIndexIntradayChartOption(
       },
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: MARKET_INDEX_SPLIT_LINE_STYLE },
+      splitLine: { showMaxLine: false, lineStyle: MARKET_INDEX_SPLIT_LINE_STYLE },
     },
     series: [
       ...segments.map((segment) => ({
@@ -128,7 +130,7 @@ export function makeMarketIndexIntradayChartOption(
       axisPointer: {
         type: "line",
         snap: true,
-        lineStyle: { color: MARKET_INDEX_GUIDE_LINE_COLOR, width: 1 },
+        lineStyle: { color: COLORS.borderDefault, width: 1 },
       },
       formatter: (params: unknown) => {
         if (!Array.isArray(params)) return "";

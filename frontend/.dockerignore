@@ -8,6 +8,7 @@
 !vite.config.ts
 !tsconfig.json
 !eslint.config.js
+!stylelint.config.mjs
 !.prettierrc
 !.prettierignore
 

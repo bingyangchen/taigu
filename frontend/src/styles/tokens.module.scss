@@ -1,0 +1,24 @@
+@use "sass:map";
+@use "sass:math";
+@use "tokens/color" as tokens;
+@use "tokens/typography";
+@use "tokens/breakpoints";
+
+// ECharts takes font sizes as px numbers.
+@function -to-px-number($rem) {
+  @return math.div($rem, 1rem) * 16;
+}
+
+// The only place that exposes design tokens to TypeScript; read them through tokens.ts.
+:export {
+  @each $name, $value in tokens.$color {
+    color-#{$name}: tokens.to-hex($value);
+  }
+  @each $name, $size in typography.$font-size {
+    font-size-#{$name}: -to-px-number($size);
+  }
+  font-size-chart-tick: -to-px-number(map.get(typography.$font-size-usage, chart-tick));
+  @each $name, $width in breakpoints.$breakpoints {
+    breakpoint-#{$name}: $width;
+  }
+}

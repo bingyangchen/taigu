@@ -24,7 +24,7 @@ flowchart TD
   backend_profiling("後端效能分析工具<br/>未規劃"):::unplanned
   worktree_pre_push("在 git worktree 跑 pre-push 測試<br/>未規劃"):::unplanned
   function_component_migration("前端全面改用 function component<br/>未規劃"):::unplanned
-  design_system("重整前端的 Design System<br/>已核准"):::approved
+  design_system("重整前端的 Design System<br/>已完成"):::done
   tablet_navigation("平板寬度的導覽<br/>未規劃"):::unplanned
   security_classification("證券分類與證交稅判定<br/>未規劃"):::unplanned
   trade_fee_fixes("手續費與證交稅修正<br/>未規劃"):::unplanned
@@ -141,10 +141,6 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - `scripts/dev/git-hooks/pre-push` 用 `.git` 是不是目錄來確認自己在 repo 的根目錄執行，不過 git worktree 的 `.git` 是一個檔案，所以在 worktree 裡 push 時，hook 會印出「Wrong directory」並擋下 push。目標是 hook 在 repo 的根目錄與 worktree 的根目錄都會執行 `scripts/dev/test.sh`。
 - `scripts/dev/test.sh` 從 `.env` 讀取 `ENV` 與 `DOCKER_USERNAME`，而 `.env` 不在版本控制裡，所以新建的 worktree 沒有這個檔案，`check_env dev` 會擋下測試。目標是開發者不必先手動複製 `.env`，在 worktree 裡也能跑測試。
 - `compose.dev.yaml` 沒有設定 project name，所以 Docker Compose 用目錄名稱當 project name，在 worktree 裡跑 `scripts/dev/test.sh` 時會另外啟動一組 db 與 redis。這兩個 service 會綁定主機的 5433 與 6380 port，所以主 checkout 的開發環境執行中時，port 已經被占用，worktree 裡的測試可能起不來，這一點還沒實測。目標是主 checkout 的開發環境執行中時，worktree 裡也能跑測試，而且好幾個 worktree 可以同時跑測試。
-
-### 重整前端的 Design System
-
-讓前端的樣式都從一套分成原始值與用途兩層的 design token 取值，中性色統一成偏藍的灰，並用 stylelint 擋下寫死的值，見 [plan 0011](0011-design-system.md)。
 
 ### 平板寬度的導覽
 
@@ -327,7 +323,7 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - 登入按鈕寫「使用 Google 帳戶繼續」，設定頁的頁面標題寫「帳戶設定」，歡迎頁的內文與按鈕（例如「先建立免費帳戶」）、隱私權政策的頁面說明也有幾處寫「帳戶」，其他地方都寫「帳號」。目標是都寫「帳號」。
 - 每檔股票的年化報酬率在市場頁叫「報酬率」，在個股詳情頁叫「年化報酬率」。目標是兩個頁面用同一個名稱。
 - 儀表板沒有交易紀錄時的說明用了行銷的語氣，可以點的「點這裡」也沒寫出動作，而且沒辦法用鍵盤操作。目標是改成寫出動作、鍵盤也能操作的按鈕，例如「新增交易紀錄」。
-- 收益分析的長條圖的金額，正數沒有 + 號，負數寫成「$-1,000」。目標是寫成「+$1,000」與「−$1,000」。長條的顏色跟 ui-guidelines.md 的「漲跌」相反的問題，由 [plan 0011](0011-design-system.md) 修正。
+- 收益分析的長條圖的金額，正數沒有 + 號，負數寫成「$-1,000」。目標是寫成「+$1,000」與「−$1,000」。
 - 數字格式不一致：搜尋結果的價格沒有千分位符號，個股詳情頁正的實現損益與年化報酬率沒有 + 號，圖表的 tooltip 用半形冒號、市值沒有四捨五入、庫存分佈的數量沒寫單位。目標是照 ui-guidelines.md 的規則顯示。
 - 手續費頁的圖表略過沒有紀錄的月份，月份標籤也沒寫年份，所以 1Y、5Y 與 ALL 可能出現兩個「3月」。目標是看得出每個長條是哪一年的哪個月。
 

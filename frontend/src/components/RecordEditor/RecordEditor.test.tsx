@@ -16,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vi
 import stockInfo from "../../redux/slices/StockInfoSlice";
 import type { CashDividendRecord, StockInfo, TradeRecord } from "../../types";
 import Api from "../../utils/api";
+import { NARROW_LAYOUT_QUERY } from "../../utils/mediaQuery";
 import CashDividendRecordEditor from "../CashDividendRecordEditor/CashDividendRecordEditor";
 import TradeRecordEditor from "../TradeRecordEditor/TradeRecordEditor";
 
@@ -156,7 +157,7 @@ function makeStore(options: RenderOptions) {
 
 function mockViewport(isNarrow: boolean): void {
   window.matchMedia = ((query: string) => ({
-    matches: isNarrow && query.includes("max-width"),
+    matches: isNarrow && query === NARROW_LAYOUT_QUERY,
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},

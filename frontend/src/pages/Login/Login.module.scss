@@ -1,17 +1,17 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   display: grid;
   grid-template-columns: 1.618fr 1fr;
   width: 100vw;
   height: 100dvh;
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     display: flex;
     justify-content: center;
   }
   & > .left {
     position: relative;
-    @media (max-width: _.$width-780) {
+    @include ds.down(md) {
       display: none;
     }
     &::before {
@@ -28,11 +28,11 @@
       position: absolute;
       bottom: 0;
       left: 0;
-      padding: 10px;
-      color: _.$white;
-      font-size: 0.8 * _.$base-font-size;
-      letter-spacing: 0.5 * _.$base-letter-spacing;
-      text-shadow: 0 0 5px _.$black-transparent-1;
+      padding: var(--space-150);
+      color: var(--color-text-inverse);
+      font-size: var(--font-size-xs);
+      letter-spacing: calc(0.5 * var(--letter-spacing-base));
+      text-shadow: 0 0 5px var(--color-bg-backdrop);
     }
     & > img {
       width: 100%;
@@ -47,11 +47,11 @@
     align-items: center;
     gap: 3dvh;
     & > .greeting {
-      font-size: 1.2 * _.$base-font-size;
+      font-size: var(--font-size-xl);
     }
     .google_icon {
       height: 24px;
-      margin-right: 5px;
+      margin-right: var(--space-075);
     }
   }
 }

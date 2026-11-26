@@ -2,6 +2,7 @@ import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 
+import { COLORS } from "../../styles/tokens";
 import { MARKET_CLOSE_MINUTE } from "../../utils/marketIndex";
 import {
   getChartPreviousClose,
@@ -84,7 +85,11 @@ class MarketIndexLineChart extends React.Component<Props, State> {
                 markLine: {
                   silent: true,
                   symbol: "none",
-                  lineStyle: { color: "#ddd", width: 1, type: "solid" as const },
+                  lineStyle: {
+                    color: COLORS.borderDefault,
+                    width: 1,
+                    type: "solid" as const,
+                  },
                   data: [{ yAxis: prevClosePrice }],
                   label: { show: false },
                 },

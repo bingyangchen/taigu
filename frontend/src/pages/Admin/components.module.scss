@@ -1,34 +1,32 @@
-@use "../../design_system" as _;
-
-$hairline: 1px solid _.$black-transparent-2;
-$hairline-soft: 1px solid _.$black-transparent-3;
+@use "styles" as ds;
+@use "layout" as admin;
 
 .page_head {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 12px 24px;
-  margin-bottom: 32px;
+  gap: var(--space-150) var(--space-300);
+  margin-bottom: var(--space-400);
   & h1 {
     margin: 0;
-    font-size: 1.25 * _.$base-font-size;
-    font-weight: 600;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
   }
   & p {
-    margin: 4px 0 0;
-    font-size: 0.875 * _.$base-font-size;
-    color: _.$gray;
+    margin: var(--space-050) 0 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
   }
-  @media (max-width: _.$width-780) {
-    margin-bottom: 24px;
+  @include ds.down(md) {
+    margin-bottom: var(--space-300);
   }
 }
 
 .section + .section {
-  margin-top: 48px;
-  @media (max-width: _.$width-780) {
-    margin-top: 32px;
+  margin-top: var(--space-600);
+  @include ds.down(md) {
+    margin-top: var(--space-400);
   }
 }
 
@@ -37,30 +35,30 @@ $hairline-soft: 1px solid _.$black-transparent-3;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 8px 24px;
-  margin-bottom: 16px;
+  gap: var(--space-100) var(--space-300);
+  margin-bottom: var(--space-200);
   & h2 {
     margin: 0;
-    font-size: _.$base-font-size;
-    font-weight: 600;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
   }
 }
 
 .caption {
-  margin-top: 4px;
-  font-size: 0.75 * _.$base-font-size;
-  color: _.$gray;
+  margin-top: var(--space-050);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .state {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 24px 0;
-  border-top: $hairline;
-  font-size: 0.875 * _.$base-font-size;
-  color: _.$gray;
+  gap: var(--space-150);
+  padding: var(--space-300) 0;
+  border-top: 1px solid var(--color-border-default);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .touch_button {
@@ -70,20 +68,20 @@ $hairline-soft: 1px solid _.$black-transparent-3;
 }
 
 .skeleton_row {
-  padding: 12px 0;
-  border-bottom: $hairline-soft;
+  padding: var(--space-150) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .muted {
-  color: _.$gray;
+  color: var(--color-text-secondary);
 }
 
 .up {
-  color: _.$red;
+  color: var(--color-price-up);
 }
 
 .down {
-  color: _.$green;
+  color: var(--color-price-down);
 }
 
 /* ---------- Metrics ---------- */
@@ -91,30 +89,30 @@ $hairline-soft: 1px solid _.$black-transparent-3;
 .metrics {
   display: grid;
   grid-template-columns: repeat(var(--columns, 4), minmax(0, 1fr));
-  gap: 24px 32px;
-  @media (max-width: _.$width-1024) {
+  gap: var(--space-300) var(--space-400);
+  @include ds.down(xl) {
     --columns: 2;
   }
 }
 
 .summary {
-  margin-bottom: 48px;
+  margin-bottom: var(--space-600);
 }
 
 .compact_metrics {
-  @media (max-width: _.$width-1024) {
+  @include ds.down(xl) {
     display: block;
-    max-width: _.$admin-narrow-content-max-width;
+    max-width: admin.$narrow-content-max-width;
     & .metric {
       flex-direction: row;
       align-items: baseline;
       justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: $hairline-soft;
+      padding: var(--space-100) 0;
+      border-bottom: 1px solid var(--color-border-subtle);
     }
     & .metric_value {
       margin-top: 0;
-      font-size: _.$base-font-size;
+      font-size: var(--font-size-md);
     }
   }
 }
@@ -122,40 +120,40 @@ $hairline-soft: 1px solid _.$black-transparent-3;
 .metric {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-050);
 }
 
 .metric_label {
-  font-size: 0.875 * _.$base-font-size;
-  color: _.$gray;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .metric_value {
-  font-size: 1.75 * _.$base-font-size;
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
   & small {
-    margin-left: 2px;
-    font-size: 0.875 * _.$base-font-size;
-    font-weight: 400;
-    letter-spacing: _.$base-letter-spacing;
+    margin-left: var(--space-025);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-regular);
+    letter-spacing: var(--letter-spacing-base);
   }
   &.pending {
     display: flex;
     align-items: center;
-    min-height: 1.75 * 1.2 * _.$base-font-size;
-    font-size: 0.875 * _.$base-font-size;
-    font-weight: 400;
-    letter-spacing: _.$base-letter-spacing;
-    color: _.$gray;
+    min-height: 1.75 * 1.2rem;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-regular);
+    letter-spacing: var(--letter-spacing-base);
+    color: var(--color-text-secondary);
   }
 }
 
 .metric_change {
   min-height: 1.2em;
-  font-size: 0.75 * _.$base-font-size;
+  font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
 }
 
@@ -164,42 +162,42 @@ $hairline-soft: 1px solid _.$black-transparent-3;
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
+  gap: var(--space-050) var(--space-200);
   & i {
     display: inline-block;
     width: 12px;
     height: 2px;
-    margin-right: 6px;
+    margin-right: var(--space-075);
     vertical-align: middle;
   }
   & i.area {
     width: 10px;
     height: 10px;
-    background-color: _.$black-transparent-3;
-    box-shadow: inset 0 0 0 1px _.$black-transparent-2;
+    background-color: var(--color-chart-incomplete-area);
+    box-shadow: inset 0 0 0 1px var(--color-border-default);
   }
 }
 
 /* ---------- Tables ---------- */
 
 .table_wrap {
-  max-height: _.$admin-table-max-height;
+  max-height: admin.$table-max-height;
   overflow: auto;
-  border-top: $hairline;
-  border-bottom: $hairline;
+  border-top: 1px solid var(--color-border-default);
+  border-bottom: 1px solid var(--color-border-default);
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875 * _.$base-font-size;
+  font-size: var(--font-size-sm);
   & th,
   & td {
-    padding: 12px 16px;
+    padding: var(--space-150) var(--space-200);
     white-space: nowrap;
     text-align: right;
-    @media (max-width: _.$width-780) {
-      padding: 12px;
+    @include ds.down(md) {
+      padding: var(--space-150);
     }
   }
   & th:first-child,
@@ -208,7 +206,7 @@ $hairline-soft: 1px solid _.$black-transparent-3;
     left: 0;
     padding-left: 0;
     text-align: left;
-    background-color: _.$white;
+    background-color: var(--color-bg-surface);
   }
   & th:last-child,
   & td:last-child {
@@ -218,17 +216,17 @@ $hairline-soft: 1px solid _.$black-transparent-3;
     position: sticky;
     top: 0;
     z-index: 1;
-    background-color: _.$white;
-    box-shadow: inset 0 -1px 0 _.$black-transparent-2;
-    font-size: 0.75 * _.$base-font-size;
-    font-weight: 500;
-    color: _.$gray;
+    background-color: var(--color-bg-surface);
+    box-shadow: inset 0 -1px 0 var(--color-border-default);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
   }
   & th:first-child {
     z-index: 2;
   }
   & td {
-    border-bottom: $hairline-soft;
+    border-bottom: 1px solid var(--color-border-subtle);
     font-variant-numeric: tabular-nums;
   }
   & tr:last-child td {
@@ -236,7 +234,7 @@ $hairline-soft: 1px solid _.$black-transparent-3;
   }
   @media (hover: hover) {
     & tbody tr:hover td {
-      background-color: _.$page-bg;
+      background-color: var(--color-bg-page);
     }
   }
 }
@@ -244,12 +242,12 @@ $hairline-soft: 1px solid _.$black-transparent-3;
 .secondary_value {
   display: inline-block;
   min-width: 3.2em;
-  margin-left: 8px;
-  color: _.$gray;
+  margin-left: var(--space-100);
+  color: var(--color-text-secondary);
 }
 
 .footnote {
-  margin: 12px 0 0;
-  font-size: 0.75 * _.$base-font-size;
-  color: _.$gray;
+  margin: var(--space-150) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }

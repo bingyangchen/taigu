@@ -1,0 +1,7 @@
+@use "layout";
+
+:export {
+  chartLabelMinWidth: layout.$chart-label-min-width;
+  chartHeight: layout.$chart-height;
+  smallChartHeight: layout.$small-chart-height;
+}

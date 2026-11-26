@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react";
 
-import breakpoints from "./breakpoints.module.scss";
+import { type Breakpoint, BREAKPOINTS } from "../styles/tokens";
 
-export const NARROW_LAYOUT_QUERY = `(max-width: ${breakpoints.width960})`;
+// The same queries as the `ds.down()` and `ds.up()` Sass mixins, so TypeScript and
+// the stylesheets switch at the same pixel.
+export function makeWidthBelowQuery(breakpoint: Breakpoint): string {
+  return `(width < ${BREAKPOINTS[breakpoint]}px)`;
+}
+
+export function makeWidthAtLeastQuery(breakpoint: Breakpoint): string {
+  return `(width >= ${BREAKPOINTS[breakpoint]}px)`;
+}
+
+export const NARROW_LAYOUT_QUERY = makeWidthBelowQuery("lg");
 
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);

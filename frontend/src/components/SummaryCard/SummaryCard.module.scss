@@ -1,27 +1,29 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
+
+$chevron-float-duration: 2s;
 
 .summary_card {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 55px;
-  padding: 15px 25px;
-  background-color: _.$white-transparent;
-  box-shadow: 0 0 15px -10px _.$black-transparent-3;
-  border-radius: 20px;
-  transition: all 150ms ease;
-  @media (max-width: _.$width-512) {
-    margin: 0 20px;
+  padding: var(--space-200) var(--space-300);
+  background-color: var(--color-bg-frosted);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-2xl);
+  transition: all var(--duration-fast) var(--ease-standard);
+  @include ds.down(sm) {
+    margin: 0 var(--space-250);
   }
   & > .title {
     min-width: max-content;
-    font-size: 0.9 * _.$base-font-size;
-    color: var(--dashboard-label-color, #{_.$gray});
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
   }
   & > .price {
     text-align: right;
-    font-size: 1.1 * _.$base-font-size;
-    font-weight: bold;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
   }
   &.clickable {
     cursor: pointer;
@@ -33,19 +35,17 @@
       transform: translateY(-50%);
       display: flex;
       align-items: center;
-      color: _.$gray;
-      opacity: 0.6;
-      transition: all 150ms ease;
-      animation: chevronFloat 2s ease-in-out infinite;
+      color: var(--color-icon-muted);
+      transition: all var(--duration-fast) var(--ease-standard);
+      animation: chevronFloat $chevron-float-duration var(--ease-in-out) infinite;
     }
     @media (hover: hover) {
       &:hover {
-        box-shadow: 0 4px 20px -8px _.$black-transparent-3;
-        background-color: _.$white;
+        box-shadow: var(--shadow-md);
+        background-color: var(--color-bg-surface);
         & > .chevron {
-          opacity: 1;
           transform: translateY(-50%) translateX(2px);
-          color: _.$blue;
+          color: var(--color-text-accent);
           animation-play-state: paused;
         }
       }

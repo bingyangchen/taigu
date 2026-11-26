@@ -151,7 +151,7 @@ class Modal extends React.Component<Props, State> {
               {!this.props.noX && (
                 <RoundButton
                   aria-label="關閉"
-                  className="p-12"
+                  size="l"
                   onClick={this.handleClickDiscard}
                 >
                   <Icons.IconXLarge sideLength="16" />
@@ -170,25 +170,17 @@ class Modal extends React.Component<Props, State> {
               <div className={styles.footer}>
                 {this.props.discardButtonProps && (
                   <Button
-                    className={this.props.discardButtonProps.className}
-                    disabled={this.props.discardButtonProps.disabled}
-                    waiting={this.props.discardButtonProps.waiting}
-                    canTriggerByEnter={this.props.discardButtonProps.canTriggerByEnter}
+                    {...this.props.discardButtonProps}
+                    size="action"
                     onClick={this.handleClickDiscard}
-                  >
-                    {this.props.discardButtonProps.children}
-                  </Button>
+                  />
                 )}
                 {this.props.submitButtonProps && (
                   <Button
-                    className={this.props.submitButtonProps.className}
-                    disabled={this.props.submitButtonProps.disabled}
-                    waiting={this.props.submitButtonProps.waiting}
-                    canTriggerByEnter={this.props.submitButtonProps.canTriggerByEnter}
+                    {...this.props.submitButtonProps}
+                    size="action"
                     onClick={this.handleClickSubmit}
-                  >
-                    {this.props.submitButtonProps.children}
-                  </Button>
+                  />
                 )}
               </div>
             )}

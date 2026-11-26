@@ -40,16 +40,20 @@ export function NoticeText({
   notice: Notice;
   id?: string;
   className?: string;
-
   isInline?: boolean;
 }): React.ReactElement {
   const Tag = isInline ? "span" : "p";
   return (
     <Tag
       id={id}
-      className={`${styles.notice} ${
-        notice.tone === "error" ? styles.notice_error : styles.notice_warning
-      } ${className}`}
+      className={[
+        styles.notice,
+        notice.tone === "error" ? styles.notice_error : styles.notice_warning,
+        isInline && styles.notice_inline,
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <Icons.IconExclamation sideLength="14" />
       <span>{notice.text}</span>
@@ -427,7 +431,9 @@ export function RecordSummary({
         id={getSubmitButtonId(formId)}
         type="submit"
         form={formId}
-        className={`primary_fill l ${styles.primary_button}`}
+        variant="primary_fill"
+        size="action"
+        className={styles.primary_button}
         waiting={isSubmitting}
       >
         {submitLabel}
@@ -505,13 +511,14 @@ export function RecordSavedView({
         ))}
       </dl>
       <div className={styles.saved_actions}>
-        <Button type="button" className="light l" onClick={onAddAnother}>
+        <Button type="button" variant="light" size="action" onClick={onAddAnother}>
           再記一筆
         </Button>
         <Button
           id={getFinishButtonId(formId)}
           type="button"
-          className="primary_fill l"
+          variant="primary_fill"
+          size="action"
           // Focus moves here, so a screen reader reads the title with the button.
           aria-describedby={titleId}
           onClick={onFinish}

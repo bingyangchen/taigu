@@ -37,7 +37,7 @@ export default class FormPageShell extends React.Component<Props, State> {
               {this.props.discardButtonProps && (
                 <RoundButton
                   aria-label="返回"
-                  className="p-12"
+                  size="l"
                   onClick={this.handleClickDiscard}
                 >
                   <Icons.IconChevronLeft sideLength="16" />
@@ -53,7 +53,9 @@ export default class FormPageShell extends React.Component<Props, State> {
             <div className={styles.header_action}>
               {this.props.submitButtonProps && (
                 <Button
-                  className={`transparent s ${styles.submit_button}`}
+                  variant="primary"
+                  size="s"
+                  className={styles.submit_button}
                   disabled={this.props.submitButtonProps.disabled}
                   waiting={this.props.submitButtonProps.waiting}
                   canTriggerByEnter={this.props.submitButtonProps.canTriggerByEnter}

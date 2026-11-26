@@ -1,4 +1,4 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   position: sticky;
@@ -6,22 +6,22 @@
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  width: _.$side-bar-width;
-  min-width: _.$side-bar-width;
-  background-color: _.$white;
+  width: var(--layout-sidebar-width);
+  min-width: var(--layout-sidebar-width);
+  background-color: var(--color-bg-surface);
   overflow-y: auto;
-  border-right: 0.5px solid _.$light-gray;
+  border-right: 0.5px solid var(--color-border-default);
   transition:
-    width 200ms ease-out,
-    min-width 200ms ease-out;
+    width var(--duration-base) var(--ease-out),
+    min-width var(--duration-base) var(--ease-out);
   .profile_row {
     display: flex;
     flex: none;
     align-items: center;
-    gap: 8px;
-    padding: 15px 10px;
-    margin-bottom: 5px;
-    border-bottom: 1px solid _.$noisy-white;
+    gap: var(--space-100);
+    padding: var(--space-200) var(--space-150);
+    margin-bottom: var(--space-075);
+    border-bottom: 1px solid var(--color-border-subtle);
   }
   .profile_link {
     flex: 1;
@@ -37,80 +37,71 @@
     height: 32px;
     flex: none;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: none;
-    color: _.$gray;
+    color: var(--color-text-secondary);
     cursor: pointer;
     &:focus-visible {
-      outline: 2px solid _.$blue;
-      outline-offset: 2px;
+      @include ds.focus-ring;
     }
     @media (hover: hover) {
       &:hover {
-        background-color: _.$black-transparent-3;
-        color: _.$deep-gray;
+        background-color: var(--color-bg-hover);
+        color: var(--color-text-primary);
       }
     }
   }
   .user_info {
     display: flex;
     align-items: flex-end;
-    gap: 10px;
+    gap: var(--space-150);
     padding: 0;
     margin: 0;
-    @media (hover: hover) {
-      &:hover {
-        .hint {
-          opacity: 1 !important;
-        }
-      }
-    }
     & > img {
       width: 40px;
       min-width: 40px;
-      border-radius: 100px;
+      border-radius: var(--radius-pill);
     }
     & > .middle {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: var(--space-075);
       flex-grow: 1;
       overflow: hidden;
       & > .username {
-        font-size: 0.9 * _.$base-font-size;
-        font-weight: bold;
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-bold);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       & > .hint {
-        font-size: 0.75 * _.$base-font-size;
-        color: _.$blue;
-        opacity: 0.9;
+        font-size: var(--font-size-xs);
+        color: var(--color-text-accent);
       }
     }
   }
   & > .subpage_list {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: 0 5px;
+    gap: var(--space-075);
+    padding: 0 var(--space-075);
     position: relative;
     & > .action_button {
       height: 65px;
-      padding-left: 20px;
-      color: _.$gray;
-      font-size: 0.9 * _.$base-font-size;
+      padding-left: var(--space-250);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
       display: flex;
       align-items: center;
-      gap: 15px;
-      border-radius: 10px;
+      gap: var(--space-200);
+      border-radius: var(--radius-lg);
       cursor: pointer;
-      transition-duration: 150ms;
+      transition-duration: var(--duration-fast);
       position: relative;
       @media (hover: hover) {
         &:hover {
-          background-color: _.$black-transparent-3;
+          background-color: var(--color-bg-hover);
         }
       }
       & > .icon_outer {
@@ -125,20 +116,20 @@
         justify-content: center;
         margin-left: auto;
         cursor: pointer;
-        transition-duration: 150ms;
-        padding: 29px 25px 29px 5px;
+        transition-duration: var(--duration-fast);
+        padding: var(--space-400) var(--space-300) var(--space-400) var(--space-075);
         &::before {
           content: "";
           width: 0;
           height: 0;
           border-left: 5px solid transparent;
           border-right: 5px solid transparent;
-          border-top: 6px solid _.$gray;
-          transition-duration: 150ms;
+          border-top: 6px solid var(--color-text-secondary);
+          transition-duration: var(--duration-fast);
         }
         @media (hover: hover) {
           &:hover::before {
-            border-top-color: _.$deep-gray;
+            border-top-color: var(--color-text-primary);
           }
         }
       }
@@ -148,31 +139,31 @@
         right: 5%;
         width: max-content;
         min-width: fit-content;
-        background-color: _.$white;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px _.$black-transparent-2;
-        padding: 5px;
-        z-index: 10;
+        background-color: var(--color-bg-surface);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: var(--space-075);
+        z-index: var(--z-popover);
         display: flex;
         flex-direction: column;
-        gap: 5px;
-        margin-top: 5px;
-        animation: fadein 150ms;
+        gap: var(--space-075);
+        margin-top: var(--space-075);
+        animation: fadein var(--duration-fast);
         & > .context_menu_item {
           display: flex;
           align-items: center;
-          padding: 10px 15px;
-          border-radius: 8px;
+          padding: var(--space-150) var(--space-200);
+          border-radius: var(--radius-md);
           cursor: pointer;
-          transition-duration: 150ms;
+          transition-duration: var(--duration-fast);
           @media (hover: hover) {
             &:hover {
-              background-color: _.$black-transparent-3;
+              background-color: var(--color-bg-hover);
             }
           }
           & > .text {
-            font-size: 0.9 * _.$base-font-size;
-            color: _.$gray;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
             white-space: nowrap;
           }
         }
@@ -189,9 +180,9 @@
     }
     & > .copyright {
       text-align: center;
-      font-size: 0.7 * _.$base-font-size;
-      color: _.$gray;
-      margin: 5px 10px 15px;
+      font-size: var(--font-size-2xs);
+      color: var(--color-text-secondary);
+      margin: var(--space-075) var(--space-150) var(--space-200);
     }
   }
 }
@@ -205,14 +196,14 @@
   }
 }
 
-@media screen and (min-width: 960px) {
+@include ds.up(lg) {
   .collapsed {
-    width: _.$main-collapsed-side-bar-width;
-    min-width: _.$main-collapsed-side-bar-width;
+    width: var(--layout-sidebar-collapsed-width);
+    min-width: var(--layout-sidebar-collapsed-width);
     & .profile_row {
       flex-direction: column;
-      gap: 4px;
-      padding: 8px 0 4px;
+      gap: var(--space-050);
+      padding: var(--space-100) 0 var(--space-050);
     }
     & .user_info {
       justify-content: center;
@@ -228,7 +219,7 @@
     }
     & .subpage_list {
       align-items: center;
-      padding: 0 8px;
+      padding: 0 var(--space-100);
     }
     & > .subpage_list > .action_button {
       width: 48px;
@@ -253,20 +244,20 @@
   }
 }
 
-@media screen and (max-width: 959px) {
+@include ds.down(lg) {
   .collapse_button {
     display: none;
   }
 }
 
-@media screen and (max-width: _.$width-780) {
+@include ds.down(md) {
   .main {
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 6;
+    z-index: var(--z-sidebar-drawer);
     width: 250px;
     transform: translateX(-100%);
-    transition-duration: 300ms;
+    transition-duration: var(--duration-slow);
   }
 }

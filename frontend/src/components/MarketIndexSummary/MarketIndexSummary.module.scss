@@ -1,31 +1,29 @@
-@use "sass:color";
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .card {
   container: market-index-summary / inline-size;
   display: block;
-  padding: 20px;
-  border-radius: 20px;
-  background-color: _.$white-transparent;
-  color: _.$deep-gray;
+  padding: var(--space-250);
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-bg-frosted);
+  color: var(--color-text-primary);
   text-decoration: none;
 
   &:focus-visible {
-    outline: 2px solid var(--focus-color, #2459a6);
-    outline-offset: 2px;
+    @include ds.focus-ring;
   }
 
   @media (hover: hover) {
     &:hover .action {
-      color: color.scale(_.$blue, $lightness: -42%);
+      color: var(--color-text-accent);
       text-decoration: underline;
       text-underline-offset: 3px;
     }
   }
 
-  @media (max-width: _.$width-512) {
-    margin-inline: 15px;
-    padding: 14px;
+  @include ds.down(sm) {
+    margin-inline: var(--space-200);
+    padding: var(--space-200);
   }
 }
 
@@ -34,36 +32,36 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 4px 8px;
-  padding-block-end: 8px;
-  border-block-end: 1px solid _.$black-transparent-2;
+  gap: var(--space-050) var(--space-100);
+  padding-block-end: var(--space-100);
+  border-block-end: 1px solid var(--color-border-default);
 }
 
 .heading {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 2px 10px;
+  gap: var(--space-025) var(--space-150);
   h2 {
     margin: 0;
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm);
   }
 }
 
 .action {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
+  gap: var(--space-050);
+  font-size: var(--font-size-xs);
   letter-spacing: normal;
 }
 
 .markets {
   display: grid;
   grid-template-columns: repeat(2, max-content minmax(0, 1fr) max-content);
-  column-gap: 8px;
+  column-gap: var(--space-100);
 
-  @media (width < 960px) {
+  @include ds.down(lg) {
     grid-template-columns: max-content minmax(0, 1fr) max-content;
   }
 }
@@ -73,27 +71,27 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-columns: subgrid;
   align-items: center;
-  column-gap: 8px;
-  padding-block-start: 12px;
+  column-gap: var(--space-100);
+  padding-block-start: var(--space-150);
 
-  @media (width >= 960px) {
+  @include ds.up(lg) {
     grid-column: span 3;
-    padding-block-start: 20px;
+    padding-block-start: var(--space-250);
 
     &:first-child {
-      padding-inline-end: 12px;
+      padding-inline-end: var(--space-150);
     }
     & + & {
-      border-inline-start: 1px solid _.$black-transparent-2;
-      padding-inline-start: 12px;
+      border-inline-start: 1px solid var(--color-border-default);
+      padding-inline-start: var(--space-150);
     }
   }
 
-  @media (width < 960px) {
+  @include ds.down(lg) {
     grid-column: 1 / -1;
 
     &:not(:last-child) {
-      padding-block-end: 12px;
+      padding-block-end: var(--space-150);
     }
 
     .date {
@@ -101,7 +99,7 @@
     }
 
     & + & {
-      border-block-start: 1px solid _.$black-transparent-2;
+      border-block-start: 1px solid var(--color-border-default);
     }
   }
 }
@@ -112,7 +110,7 @@
   block-size: 30px;
   inline-size: 100%;
 
-  @media (width >= 960px) {
+  @include ds.up(lg) {
     block-size: 40px;
   }
 }
@@ -123,13 +121,13 @@
 }
 
 @container market-index-summary (width < 16rem) {
-  @media (width < 960px) {
+  @include ds.down(lg) {
     .markets {
       grid-template-columns: minmax(0, 1fr) max-content;
     }
 
     .market {
-      row-gap: 4px;
+      row-gap: var(--space-050);
     }
 
     .chart {
@@ -144,8 +142,8 @@
 }
 
 .market_name {
-  color: var(--dashboard-label-color, #{_.$deep-gray});
-  font-size: 0.875 * _.$base-font-size;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .values {
@@ -153,29 +151,29 @@
   justify-items: end;
   text-align: end;
   font-variant-numeric: tabular-nums;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
 
   strong {
-    font-size: 1.125rem;
+    font-size: var(--font-size-lg);
   }
 
   > [aria-hidden="true"] + [aria-hidden="true"] {
-    margin-block-start: 4px;
+    margin-block-start: var(--space-050);
   }
 }
 
 .date {
   display: block;
-  color: color.mix(_.$deep-gray, _.$gray, 75%);
-  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
   letter-spacing: normal;
 }
 
 .up {
-  color: color.scale(_.$red, $lightness: -18%);
+  color: var(--color-price-up);
 }
 
 .down {
-  color: color.scale(_.$green, $lightness: -30%);
+  color: var(--color-price-down);
 }

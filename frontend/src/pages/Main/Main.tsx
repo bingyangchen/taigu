@@ -28,6 +28,7 @@ import type { AppDispatch, RootState } from "../../redux/store";
 import type { StockWarehouse, Subpage } from "../../types";
 import Env from "../../utils/env";
 import { isSameUrlHistoryTraversal } from "../../utils/mainNavigation";
+import { makeWidthAtLeastQuery, makeWidthBelowQuery } from "../../utils/mediaQuery";
 import Nav from "../../utils/nav";
 import { IRouter, withRouter } from "../../utils/router";
 import Util from "../../utils/util";
@@ -320,10 +321,11 @@ class Main extends React.Component<Props, State> {
   };
 
   private getScrollContainer(): Window | HTMLElement | null {
-    if (window.matchMedia("(min-width: 960px)").matches) return this.contentRef.current;
+    if (window.matchMedia(makeWidthAtLeastQuery("lg")).matches)
+      return this.contentRef.current;
     if (
       document.body.classList.contains("main-page-document-scroll") &&
-      window.matchMedia("(max-width: 779px)").matches
+      window.matchMedia(makeWidthBelowQuery("md")).matches
     ) {
       return window;
     }
@@ -366,7 +368,7 @@ class Main extends React.Component<Props, State> {
   }
 
   private getPageScrollContainer(content: HTMLElement): HTMLElement | null {
-    const selector = window.matchMedia("(min-width: 780px)").matches
+    const selector = window.matchMedia(makeWidthAtLeastQuery("md")).matches
       ? "[data-page-scroll]"
       : '[data-page-scroll="always"]';
     return content.querySelector<HTMLElement>(selector);

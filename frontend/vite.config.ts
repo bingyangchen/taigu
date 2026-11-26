@@ -1,5 +1,7 @@
 /// <reference types="vitest/config" />
 
+import { fileURLToPath } from "node:url";
+
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -23,6 +25,12 @@ export default defineConfig({
       },
     }),
   ],
+  css: {
+    preprocessorOptions: {
+      // Every stylesheet loads the design tokens with `@use "styles" as ds;`.
+      scss: { loadPaths: [fileURLToPath(new URL("./src", import.meta.url))] },
+    },
+  },
   // Module workers, the same as the dev server runs them.
   worker: { format: "es" },
   build: { outDir: "build", sourcemap: false },
@@ -44,6 +52,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["src/setupTests.ts"],
+    // tokens.ts reads the design tokens from this module's :export block.
+    css: { include: [/src\/styles\/tokens\.module\.scss$/] },
     // The files scripts/sdd/frontend_scenarios.cjs counts as tests, so every scenario
     // a test claims also runs.
     include: [

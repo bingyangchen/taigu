@@ -1,17 +1,22 @@
 import type { EChartsOption } from "echarts";
 
-import tokens from "./tokens.module.scss";
+import { COLORS } from "../../styles/tokens";
 
 export const CHART_COLORS = {
-  blue: tokens.blue,
-  blueLight: tokens.blueTransparent2,
-  blueMedium: tokens.blueTransparent1,
-  deepGray: tokens.deepGray,
-  gray: tokens.gray,
-  lightGray: tokens.lightGray,
-  noisyWhite: tokens.noisyWhite,
-  incompleteArea: tokens.blackTransparent3,
+  accent: COLORS.chartAccent,
+  accentSoft: COLORS.chartAccentSoft,
+  accentFaint: COLORS.chartAccentFaint,
+  strongSeries: COLORS.textPrimary,
+  mutedSeries: COLORS.textSecondary,
+  secondaryText: COLORS.textSecondary,
+  axisLine: COLORS.borderDefault,
+  splitLine: COLORS.borderSubtle,
+  incompleteArea: COLORS.chartIncompleteArea,
 };
+
+// The admin console keeps its own tick size, because ui-guidelines.md does not let
+// the front-end type sizes apply to it.
+export const CHART_TICK_FONT_SIZE = 11;
 
 // The part of an ECharts tooltip or label callback parameter that the pages read.
 export type DataIndexParam = { dataIndex: number };
@@ -19,9 +24,9 @@ export type DataIndexParam = { dataIndex: number };
 export const CHART_GRID = { left: 36, right: 8, top: 24, bottom: 24 };
 
 export const categoryAxisStyle = {
-  axisLine: { lineStyle: { color: CHART_COLORS.lightGray } },
+  axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
   axisTick: { show: false },
-  axisLabel: { color: CHART_COLORS.gray, fontSize: 11 },
+  axisLabel: { color: CHART_COLORS.secondaryText, fontSize: CHART_TICK_FONT_SIZE },
 };
 
 export function makeValueAxis(
@@ -34,12 +39,20 @@ export function makeValueAxis(
   return {
     type: "value",
     name: unit,
-    nameTextStyle: { color: CHART_COLORS.gray, fontSize: 11, align: "right" },
+    nameTextStyle: {
+      color: CHART_COLORS.secondaryText,
+      fontSize: CHART_TICK_FONT_SIZE,
+      align: "right",
+    },
     minInterval,
-    splitLine: { lineStyle: { color: CHART_COLORS.noisyWhite } },
+    splitLine: { lineStyle: { color: CHART_COLORS.splitLine } },
     axisLine: { show: false },
     axisTick: { show: false },
-    axisLabel: { color: CHART_COLORS.gray, fontSize: 11, formatter: formatLabel },
+    axisLabel: {
+      color: CHART_COLORS.secondaryText,
+      fontSize: CHART_TICK_FONT_SIZE,
+      formatter: formatLabel,
+    },
   };
 }
 

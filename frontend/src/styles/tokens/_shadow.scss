@@ -1,0 +1,21 @@
+@use "palette";
+
+$-shadow-color: #26394d;
+
+$shadow: (
+  sm: 0 2px 8px rgba($-shadow-color, 0.08),
+  md: 0 8px 20px rgba($-shadow-color, 0.09),
+  lg: 0 12px 30px rgba($-shadow-color, 0.12),
+  xl: 0 24px 70px rgba($-shadow-color, 0.11),
+  accent: 0 14px 34px rgba(palette.$blue-500, 0.32),
+);
+
+// For `filter`, which follows the shape of a transparent image.
+$drop-shadow: (
+  image: drop-shadow(0 24px 44px rgba($-shadow-color, 0.14)),
+);
+
+$focus-ring: (
+  width: 2px,
+  offset: 2px,
+);

@@ -1,4 +1,4 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   width: 100%;
@@ -6,16 +6,16 @@
   overflow: auto;
   background: linear-gradient(
     180deg,
-    _.$main-shell-gradient-top 0%,
-    _.$main-shell-gradient-bottom 100%
+    var(--color-bg-shell-top) 0%,
+    var(--color-bg-shell-bottom) 100%
   );
 
   &.white_mobile_shell {
-    @media (max-width: _.$width-780) {
-      background: _.$page-bg;
+    @include ds.down(md) {
+      background: var(--color-bg-page);
 
       & > .body {
-        background: _.$page-bg;
+        background: var(--color-bg-page);
       }
     }
   }
@@ -25,29 +25,33 @@
     display: flex;
     min-height: 100%;
     width: 100%;
-    @media (max-width: _.$width-780) {
+    @include ds.down(md) {
       min-height: calc(
-        100% - _.$header-height - _.$footer-height - env(safe-area-inset-bottom)
+        100% - var(--layout-header-height) - var(--layout-footer-height) - env(
+            safe-area-inset-bottom
+          )
       );
     }
   }
 
   &.mobile_editor_shell > .body {
-    @media (max-width: _.$width-780) {
+    @include ds.down(md) {
       min-height: 100%;
     }
   }
 
   &.mobile_detail_shell > .body {
-    background: _.$page-bg;
+    background: var(--color-bg-page);
 
-    @media (max-width: _.$width-780) {
-      min-height: calc(100dvh - _.$footer-height - env(safe-area-inset-bottom));
+    @include ds.down(md) {
+      min-height: calc(
+        100dvh - var(--layout-footer-height) - env(safe-area-inset-bottom)
+      );
     }
   }
 
   &.mobile_detail_shell {
-    background: _.$page-bg;
+    background: var(--color-bg-page);
   }
 
   .content {
@@ -59,7 +63,7 @@
     }
   }
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     :global(body.main-page-document-scroll) & {
       min-height: 100dvh;
       height: auto;
@@ -68,7 +72,7 @@
   }
 }
 
-@media screen and (min-width: 960px) {
+@include ds.up(lg) {
   .main {
     height: 100dvh;
     overflow: hidden;
@@ -87,7 +91,7 @@
 
 .user_avatar {
   width: 28px;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
 }
 
 .sidebar,
@@ -96,13 +100,13 @@
 }
 
 .market_index_shell {
-  @media (width < 960px) {
+  @include ds.down(lg) {
     .sidebar {
       display: none;
     }
   }
 
-  @media (width >= 960px) {
+  @include ds.up(lg) {
     .footer {
       display: none;
     }

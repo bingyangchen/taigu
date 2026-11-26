@@ -1,0 +1,140 @@
+@use "styles" as ds;
+
+// Repeats the order in styles/base/index.scss, so it holds whichever file loads first.
+@layer base, primitives;
+
+@layer primitives {
+  .main {
+    --border-radius: var(--radius-md);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: var(--space-075);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: var(--space-075) var(--space-150);
+    width: max-content;
+    min-width: max-content;
+    transition-duration: var(--duration-base);
+    font-size: var(--font-size-sm);
+    letter-spacing: calc(1.2 * var(--letter-spacing-base));
+    cursor: pointer;
+    outline: none;
+
+    &:focus-visible {
+      @include ds.focus-ring;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: var(--border-radius);
+      background-color: transparent;
+    }
+    @media (hover: hover) {
+      &:hover:not(:disabled, [data-disabled], [data-waiting]) {
+        &::before {
+          background-color: var(--color-bg-hover);
+          transition-duration: var(--duration-base);
+        }
+      }
+    }
+    &.transparent {
+      background-color: transparent;
+      color: var(--color-text-primary);
+    }
+    &.white {
+      background-color: var(--color-bg-surface);
+      color: var(--color-text-primary);
+    }
+    &.light {
+      background-color: var(--color-bg-hover);
+      color: var(--color-text-primary);
+    }
+    &.primary_fill {
+      background-color: var(--color-bg-accent);
+      color: var(--color-text-inverse);
+    }
+    &.primary {
+      background-color: transparent;
+      color: var(--color-text-accent);
+      // A stronger blue, because the hover overlay darkens the background behind it.
+      @media (hover: hover) {
+        &:hover:not(:disabled, [data-disabled], [data-waiting]) {
+          color: var(--color-text-accent-strong);
+        }
+      }
+    }
+    &.dangerous_fill {
+      background-color: var(--color-bg-danger);
+      color: var(--color-text-inverse);
+    }
+    &.dangerous {
+      background-color: var(--color-bg-surface);
+      color: var(--color-text-danger);
+      &.bordered {
+        border-color: var(--color-border-danger-subtle);
+      }
+      @media (hover: hover) {
+        &:hover:not(:disabled, [data-disabled], [data-waiting]) {
+          background-color: var(--color-bg-danger-subtle);
+        }
+      }
+    }
+    // After the variants, so a disabled or waiting button looks the same whatever its
+    // variant.
+    &:disabled,
+    &[data-disabled],
+    &[data-waiting] {
+      cursor: not-allowed;
+      color: var(--color-text-tertiary);
+      background-color: var(--color-bg-subtle);
+      &.transparent,
+      &.primary {
+        background-color: transparent;
+      }
+      &[data-waiting]::before {
+        background: no-repeat center/20px url("../../assets/loading.svg");
+        background-color: var(--color-bg-subtle);
+      }
+      &[data-waiting] > .content {
+        opacity: 0;
+      }
+    }
+    &.l,
+    &.action {
+      padding: var(--space-150) var(--space-250);
+    }
+    &.action {
+      font-size: var(--font-size-button);
+    }
+    &.s {
+      font-size: var(--font-size-xs);
+    }
+    &.xs {
+      --border-radius: var(--radius-sm);
+      font-size: var(--font-size-caption);
+      padding: var(--space-050) var(--space-100);
+    }
+    &.bordered {
+      border: 1px solid var(--color-border-default);
+    }
+    &.round {
+      // Set through the variable so the hover overlay (::before) gets the same corners.
+      --border-radius: var(--radius-pill);
+    }
+  }
+
+  .content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: inherit;
+  }
+}

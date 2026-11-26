@@ -22,7 +22,7 @@ import { useAppDispatch } from "../../redux/hooks";
 import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
-import { useMediaQuery } from "../../utils/mediaQuery";
+import { makeWidthBelowQuery, useMediaQuery } from "../../utils/mediaQuery";
 import { adminPagePath } from "../../utils/router";
 import NotFound from "../NotFound/NotFound";
 import { isNotFound, LostAccessContext } from "./access";
@@ -30,13 +30,13 @@ import styles from "./Admin.module.scss";
 import { LoadFailure } from "./components";
 import IssueReports from "./IssueReports/IssueReports";
 import Subscriptions from "./Subscriptions/Subscriptions";
-import tokens from "./tokens.module.scss";
 import Usage from "./Usage/Usage";
 
 type Access = "checking" | "allowed" | "denied" | "failed";
 
 const NAV_COLLAPSED_STORAGE_KEY = "admin-nav-collapsed";
-const NARROW_MEDIA_QUERY = `(max-width: ${tokens.width780})`;
+const NARROW_MEDIA_QUERY = makeWidthBelowQuery("md");
+const ADMIN_PAGE_BODY_CLASS = "admin-page";
 
 // Absolute, because relative links inside the `admin/*` splat route resolve
 // against the whole current URL, so "usage" on /admin/subscriptions would lead
@@ -157,6 +157,11 @@ function AdminShell({
   useEffect(() => {
     contentRef.current?.scrollTo(0, 0);
   }, [location.pathname]);
+
+  useEffect(() => {
+    document.body.classList.add(ADMIN_PAGE_BODY_CLASS);
+    return () => document.body.classList.remove(ADMIN_PAGE_BODY_CLASS);
+  }, []);
 
   const toggleCollapsed = (): void => {
     const nextIsCollapsed = !isCollapsed;

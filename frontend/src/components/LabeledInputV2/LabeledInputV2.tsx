@@ -18,7 +18,6 @@ interface Props {
     | "search";
   autocomplete?: string;
   value: string;
-  disabled?: boolean;
   onChange?: React.Dispatch<string>;
   autoFocus?: boolean;
 }
@@ -46,7 +45,7 @@ export default class LabeledInputV2 extends React.Component<Props, State> {
   }
   public render(): React.ReactNode {
     return (
-      <div className={`${styles.main} ${this.props.disabled ? styles.disabled : ""}`}>
+      <div className={styles.main}>
         <label className={styles.label} htmlFor={this.inputId}>
           {this.props.title}
         </label>
@@ -56,7 +55,6 @@ export default class LabeledInputV2 extends React.Component<Props, State> {
             ref={this.inputRef}
             type={this.state.type}
             inputMode={this.props.inputMode}
-            disabled={this.props.disabled ?? false}
             value={this.props.value}
             onChange={this.handleInputChange}
             autoComplete={this.props.autocomplete ?? "off"}

@@ -36,10 +36,10 @@ export default class ListRowActionBar extends React.Component<Props, State> {
       </>
     ) : (
       <span className={styles.main}>
-        <RoundButton className="p-12" hint_text="編輯" onClick={this.handleClickEdit}>
+        <RoundButton size="l" hint_text="編輯" onClick={this.handleClickEdit}>
           <Icons.IconPencilSquare sideLength="16" />
         </RoundButton>
-        <RoundButton className="p-12" hint_text="刪除" onClick={this.handleClickDelete}>
+        <RoundButton size="l" hint_text="刪除" onClick={this.handleClickDelete}>
           <Icons.IconTrash sideLength="16" />
         </RoundButton>
       </span>

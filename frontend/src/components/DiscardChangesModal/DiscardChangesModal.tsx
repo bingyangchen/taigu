@@ -17,12 +17,12 @@ export default function DiscardChangesModal({
       description="離開後，尚未送出的內容不會被儲存。"
       discardButtonProps={{
         children: "繼續編輯",
-        className: "transparent l",
+        variant: "transparent",
         onClick: onKeepEditing,
       }}
       submitButtonProps={{
         children: "捨棄變更",
-        className: "dangerous l",
+        variant: "dangerous",
         onClick: onDiscard,
       }}
       noX

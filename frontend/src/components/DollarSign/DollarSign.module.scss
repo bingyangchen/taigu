@@ -1,9 +1,7 @@
-@use "../../design_system" as _;
-
 .main {
-  font-size: 0.7 * _.$base-font-size;
-  font-weight: 300;
-  color: _.$gray;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
   font-family:
     system-ui,
     -apple-system,
@@ -18,6 +16,6 @@
     sans-serif;
   &::before {
     content: "$";
-    margin-right: 2px;
+    margin-right: var(--space-025);
   }
 }

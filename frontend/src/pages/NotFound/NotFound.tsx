@@ -29,7 +29,7 @@ export default class NotFound extends React.Component<Props, State> {
           <p className={styles.description}>
             這個網址可能已失效或不存在。請返回首頁，重新查看投資總覽與台股紀錄。
           </p>
-          <Button asChild className={`primary_fill l ${styles.homeButton}`}>
+          <Button asChild variant="primary_fill" size="l" className={styles.homeButton}>
             <Link to={Env.frontendRootPath}>返回首頁</Link>
           </Button>
         </section>

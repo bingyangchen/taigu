@@ -1,0 +1,30 @@
+@use "sass:map";
+
+// Each value is where the wider layout starts. Media queries cannot read custom
+// properties, so the breakpoints stay Sass values.
+$breakpoints: (
+  sm: 512px,
+  md: 780px,
+  lg: 960px,
+  xl: 1024px,
+  2xl: 1280px,
+);
+
+@function breakpoint($name) {
+  @if not map.has-key($breakpoints, $name) {
+    @error "Unknown breakpoint `#{$name}`.";
+  }
+  @return map.get($breakpoints, $name);
+}
+
+@mixin down($name) {
+  @media (width < #{breakpoint($name)}) {
+    @content;
+  }
+}
+
+@mixin up($name) {
+  @media (width >= #{breakpoint($name)}) {
+    @content;
+  }
+}
