@@ -1,6 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
-import React, { useLayoutEffect, useRef } from "react";
+import React, { useLayoutEffect } from "react";
 
+import { useLatestRef } from "../../utils/useLatestRef";
 import styles from "./Button.module.scss";
 
 export type ButtonVariant =
@@ -48,11 +49,7 @@ export default function Button(props: Props) {
     waiting = false,
     ...buttonProps
   } = props;
-  const latestPropsRef = useRef(props);
-
-  useLayoutEffect(() => {
-    latestPropsRef.current = props;
-  });
+  const latestPropsRef = useLatestRef(props);
 
   useLayoutEffect(() => {
     const handleHitEnter = (e: KeyboardEvent): void => {
@@ -78,7 +75,7 @@ export default function Button(props: Props) {
     };
     window.addEventListener("keydown", handleHitEnter);
     return () => window.removeEventListener("keydown", handleHitEnter);
-  }, []);
+  }, [latestPropsRef]);
 
   void canTriggerByEnter;
   const isDisabled = disabled || waiting;

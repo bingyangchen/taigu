@@ -1,78 +1,59 @@
-import React from "react";
-import { connect } from "react-redux";
+import { memo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { FullLogo, NavTab, RoundButton } from "../../components";
 import * as Icons from "../../icons";
-import { AppDispatch, RootState } from "../../redux/store";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
-import { IRouter, withRouter } from "../../utils/router";
 import styles from "./SettingsSideBar.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { isWaiting } = rootState.account;
-  return { isWaiting };
-}
-
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
+interface Props {
   subpages: Subpage[];
-  dispatch: AppDispatch;
 }
 
-interface State {}
+function SettingsSideBar({ subpages }: Props) {
+  const location = useLocation();
+  const navigate = useNavigate();
 
-class SettingsSideBar extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {};
-  }
-  public render(): React.ReactNode {
-    return (
-      <div className={styles.main}>
-        <div className={styles.header}>
-          <RoundButton
-            size="l"
-            hint_text="回首頁"
-            onClick={() =>
-              this.props.router.navigate(`${Env.frontendRootPath}`, { replace: true })
-            }
-          >
-            <Icons.IconChevronLeft sideLength="16" />
-          </RoundButton>
-          帳號與設定
-        </div>
-        <div className={styles.subpage_list}>
-          {this.props.subpages.map((subpage, idx) => {
-            return (
-              <NavTab
-                page={subpage}
-                onClick={() => {
-                  this.scrollDivIntoView(subpage.path);
-                }}
-                key={idx}
-                replace
-                isCustomActive={this.props.router.location.hash === subpage.path}
-              />
-            );
-          })}
-        </div>
-        <div className={styles.footer}>
-          <div className={styles.logo_outer}>
-            <FullLogo size="s" />
-          </div>
-          <div className={styles.copyright}>
-            © Taigu 2021-{new Date().getFullYear()}
-          </div>
-        </div>
+  return (
+    <div className={styles.main}>
+      <div className={styles.header}>
+        <RoundButton
+          size="l"
+          hint_text="回首頁"
+          onClick={() => navigate(`${Env.frontendRootPath}`, { replace: true })}
+        >
+          <Icons.IconChevronLeft sideLength="16" />
+        </RoundButton>
+        帳號與設定
       </div>
-    );
-  }
-  private scrollDivIntoView = (hash: string): void => {
-    document
-      .getElementById(hash.replaceAll("#", ""))
-      ?.scrollIntoView({ behavior: "smooth" });
-  };
+      <div className={styles.subpage_list}>
+        {subpages.map((subpage, idx) => {
+          return (
+            <NavTab
+              page={subpage}
+              onClick={() => scrollDivIntoView(subpage.path)}
+              key={idx}
+              replace
+              isCustomActive={location.hash === subpage.path}
+            />
+          );
+        })}
+      </div>
+      <div className={styles.footer}>
+        <div className={styles.logo_outer}>
+          <FullLogo size="s" />
+        </div>
+        <div className={styles.copyright}>© Taigu 2021-{new Date().getFullYear()}</div>
+      </div>
+    </div>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(SettingsSideBar));
+export default memo(SettingsSideBar);
+
+function scrollDivIntoView(hash: string): void {
+  document
+    .getElementById(hash.replaceAll("#", ""))
+    ?.scrollIntoView({ behavior: "smooth" });
+}

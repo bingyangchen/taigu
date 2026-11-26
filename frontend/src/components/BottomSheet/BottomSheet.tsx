@@ -1,172 +1,187 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import React, { MouseEvent, MouseEventHandler } from "react";
+import React, {
+  MouseEvent,
+  MouseEventHandler,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { IRouter, withRouter } from "../../utils/router";
+import { useLatestRef } from "../../utils/useLatestRef";
 import styles from "./BottomSheet.module.scss";
 
-interface Props extends IRouter {
+interface Props {
   children?: React.ReactNode;
   onClickBackground: MouseEventHandler;
   canMaximize?: boolean;
 }
 
-interface State {
+interface TouchState {
   touchStartY: number | null;
   touchEndY: number | null;
   touchDiffY: number | null;
   isMaximized: boolean;
-  initialMainHeight: number;
 }
 
-class BottomSheet extends React.Component<Props, State> {
-  public state: State;
-  private maximizeThreshold: number = 100;
-  private minimizeThreshold: number = 100;
-  private transitionDuration: number = 150;
-  private mainRef: React.RefObject<HTMLDivElement | null>;
-  private isClosing: boolean = false;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {
-      touchStartY: null,
-      touchEndY: null,
-      touchDiffY: null,
-      isMaximized: false,
-      initialMainHeight: 0,
-    };
-    this.mainRef = React.createRef();
-  }
-  public componentDidMount(): void {
+const MAXIMIZE_THRESHOLD = 100;
+const MINIMIZE_THRESHOLD = 100;
+const TRANSITION_DURATION = 150;
+
+export default function BottomSheet({
+  children,
+  onClickBackground,
+  canMaximize,
+}: Props) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [touchState, setTouchState] = useState<TouchState>({
+    touchStartY: null,
+    touchEndY: null,
+    touchDiffY: null,
+    isMaximized: false,
+  });
+  const [initialMainHeight, setInitialMainHeight] = useState(0);
+  const mainRef = useRef<HTMLDivElement>(null);
+  const isClosingRef = useRef(false);
+  const previousHashRef = useRef(location.hash);
+  const latestRenderRef = useLatestRef({ location, navigate, onClickBackground });
+
+  const handleClickBackground = useCallback(
+    (e: MouseEvent): void => {
+      if (isClosingRef.current) return;
+      isClosingRef.current = true;
+      if (latestRenderRef.current.location.hash === "#!") {
+        latestRenderRef.current.navigate(-1);
+      }
+      setTimeout(() => latestRenderRef.current.onClickBackground(e));
+    },
+    [latestRenderRef],
+  );
+
+  useLayoutEffect(() => {
     setTimeout(() => {
-      const { location, navigate } = this.props.router;
-      navigate({ search: location.search, hash: "#!" });
+      const { location: latestLocation, navigate: latestNavigate } =
+        latestRenderRef.current;
+      latestNavigate({ search: latestLocation.search, hash: "#!" });
       document.body.style.overscrollBehaviorY = "contain";
     });
-    this.setState({ initialMainHeight: this.mainRef.current?.clientHeight ?? 0 });
-  }
-  public componentDidUpdate(prevProps: Readonly<Props>): void {
-    if (
-      prevProps.router.location.hash === "#!" &&
-      this.props.router.location.hash === ""
-    ) {
-      this.handleClickBackground({} as MouseEvent);
+    setInitialMainHeight(mainRef.current?.clientHeight ?? 0);
+    return () => {
+      document.body.style.overscrollBehaviorY = "initial";
+    };
+  }, [latestRenderRef]);
+
+  useLayoutEffect(() => {
+    const previousHash = previousHashRef.current;
+    previousHashRef.current = location.hash;
+    if (previousHash === "#!" && location.hash === "") {
+      handleClickBackground({} as MouseEvent);
     }
-  }
-  public componentWillUnmount(): void {
-    document.body.style.overscrollBehaviorY = "initial";
-  }
-  public render(): React.ReactNode {
-    return (
-      <Dialog.Root open onOpenChange={this.handleOpenChange}>
-        <Dialog.Portal container={document.getElementById("modal-root") ?? undefined}>
-          <Dialog.Overlay className={styles.background} />
-          <Dialog.Content
-            ref={this.mainRef}
-            className={styles.main}
-            style={{
-              top:
-                this.isTouchingAndMoving || this.isTransitioning
-                  ? `${this.state.touchEndY}px`
-                  : undefined,
-              transitionDuration: this.isTouchingAndMoving
-                ? "0ms"
-                : `${this.transitionDuration}ms`,
-              maxHeight:
-                this.state.isMaximized ||
-                this.isTouchingAndMoving ||
-                this.isTransitioning
-                  ? "unset"
-                  : `${this.viewportHeight * 0.618}px`,
-            }}
-          >
-            <VisuallyHidden.Root asChild>
-              <Dialog.Title>操作選單</Dialog.Title>
-            </VisuallyHidden.Root>
-            <div
-              className={styles.header}
-              onTouchStart={this.handleTouchStart}
-              onTouchMove={this.handleTouchMove}
-              onTouchEnd={this.handleTouchEnd}
-            />
-            <div className={styles.body}>{this.props.children}</div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    );
-  }
-  private get isTouchingAndMoving(): boolean {
-    return this.state.touchDiffY !== null && this.state.touchEndY !== null;
-  }
-  private get isTransitioning(): boolean {
-    return this.state.touchDiffY === null && this.state.touchEndY !== null;
-  }
-  private get viewportHeight(): number {
-    return window.visualViewport?.height ?? window.innerHeight;
-  }
-  private handleOpenChange = (open: boolean): void => {
-    if (!open) {
-      this.handleClickBackground({} as MouseEvent);
-    }
-  };
-  private handleClickBackground = (e: MouseEvent): void => {
-    if (this.isClosing) return;
-    this.isClosing = true;
-    if (this.props.router.location.hash === "#!") {
-      this.props.router.navigate(-1);
-    }
-    setTimeout(() => this.props.onClickBackground(e));
-  };
-  private handleTouchStart = (e: React.TouchEvent<HTMLDivElement>): void => {
+  }, [location.hash, handleClickBackground]);
+
+  const isTouchingAndMoving =
+    touchState.touchDiffY !== null && touchState.touchEndY !== null;
+  const isTransitioning =
+    touchState.touchDiffY === null && touchState.touchEndY !== null;
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>): void => {
     const touch = e.touches[0];
-    this.setState({ touchStartY: touch.clientY });
+    setTouchState((previous) => ({ ...previous, touchStartY: touch.clientY }));
   };
-  private handleTouchMove = (e: React.TouchEvent<HTMLDivElement>): void => {
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>): void => {
     const touch = e.changedTouches[0];
-    this.setState((state) => {
-      return {
-        touchDiffY: touch.clientY - (state.touchStartY ?? 0),
-        touchEndY: touch.clientY,
-      };
-    });
+    setTouchState((previous) => ({
+      ...previous,
+      touchDiffY: touch.clientY - (previous.touchStartY ?? 0),
+      touchEndY: touch.clientY,
+    }));
   };
-  private handleTouchEnd = (): void => {
-    const touchDiffY = this.state.touchDiffY ?? 0;
-    if (!this.state.isMaximized) {
-      if (this.props.canMaximize && -touchDiffY > this.maximizeThreshold) {
-        this.setState({ touchEndY: 20, isMaximized: true });
-      } else if (touchDiffY > this.state.initialMainHeight * 0.382) {
-        this.setState({ touchEndY: this.viewportHeight }, () => {
-          setTimeout(
-            () => this.handleClickBackground({} as MouseEvent),
-            this.transitionDuration,
-          );
-        });
+  const handleTouchEnd = (): void => {
+    const touchDiffY = touchState.touchDiffY ?? 0;
+    const viewportHeight = getViewportHeight();
+    let touchEndY: number | null = touchState.touchEndY;
+    let isMaximized = touchState.isMaximized;
+    if (!touchState.isMaximized) {
+      if (canMaximize && -touchDiffY > MAXIMIZE_THRESHOLD) {
+        touchEndY = 20;
+        isMaximized = true;
+      } else if (touchDiffY > initialMainHeight * 0.382) {
+        touchEndY = viewportHeight;
+        setTimeout(() => handleClickBackground({} as MouseEvent), TRANSITION_DURATION);
       } else {
-        this.setState(
-          { touchEndY: this.viewportHeight - this.state.initialMainHeight },
-          () => {
-            setTimeout(
-              () => this.setState({ touchEndY: null }),
-              this.transitionDuration,
-            );
-          },
+        touchEndY = viewportHeight - initialMainHeight;
+        setTimeout(
+          () => setTouchState((previous) => ({ ...previous, touchEndY: null })),
+          TRANSITION_DURATION,
         );
       }
+    } else if (touchDiffY > MINIMIZE_THRESHOLD) {
+      touchEndY = viewportHeight - initialMainHeight;
+      setTimeout(
+        () =>
+          setTouchState((previous) => ({
+            ...previous,
+            touchEndY: null,
+            isMaximized: false,
+          })),
+        TRANSITION_DURATION,
+      );
     } else {
-      if (touchDiffY > this.minimizeThreshold) {
-        this.setState(
-          { touchEndY: this.viewportHeight - this.state.initialMainHeight },
-          () => {
-            setTimeout(() => {
-              this.setState({ touchEndY: null, isMaximized: false });
-            }, this.transitionDuration);
-          },
-        );
-      } else this.setState({ touchEndY: 20 });
+      touchEndY = 20;
     }
-    this.setState({ touchDiffY: null });
+    setTouchState((previous) => ({
+      ...previous,
+      touchEndY,
+      isMaximized,
+      touchDiffY: null,
+    }));
   };
+
+  return (
+    <Dialog.Root
+      open
+      onOpenChange={(open: boolean) => {
+        if (!open) handleClickBackground({} as MouseEvent);
+      }}
+    >
+      <Dialog.Portal container={document.getElementById("modal-root") ?? undefined}>
+        <Dialog.Overlay className={styles.background} />
+        <Dialog.Content
+          ref={mainRef}
+          className={styles.main}
+          style={{
+            top:
+              isTouchingAndMoving || isTransitioning
+                ? `${touchState.touchEndY}px`
+                : undefined,
+            transitionDuration: isTouchingAndMoving
+              ? "0ms"
+              : `${TRANSITION_DURATION}ms`,
+            maxHeight:
+              touchState.isMaximized || isTouchingAndMoving || isTransitioning
+                ? "unset"
+                : `${getViewportHeight() * 0.618}px`,
+          }}
+        >
+          <VisuallyHidden.Root asChild>
+            <Dialog.Title>操作選單</Dialog.Title>
+          </VisuallyHidden.Root>
+          <div
+            className={styles.header}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          />
+          <div className={styles.body}>{children}</div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
 }
 
-export default withRouter(BottomSheet);
+function getViewportHeight(): number {
+  return window.visualViewport?.height ?? window.innerHeight;
+}

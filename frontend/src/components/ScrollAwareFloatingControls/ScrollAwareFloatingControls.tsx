@@ -1,14 +1,9 @@
-import React from "react";
-import { connect } from "react-redux";
+import React, { memo, useLayoutEffect, useRef, useState } from "react";
 
-import type { RootState } from "../../redux/store";
+import { useAppSelector } from "../../redux/hooks";
 import Util from "../../utils/util";
 
-function mapStateToProps(rootState: RootState) {
-  return { scrollTop: rootState.mainPage.scrollTop };
-}
-
-interface OwnProps {
+interface Props {
   children: React.ReactNode;
   activeClassName: string;
   className: string;
@@ -16,87 +11,100 @@ interface OwnProps {
   noTransitionClassName: string;
 }
 
-interface State {
+interface ControlsState {
   isActivated: boolean;
   isVisible: boolean;
   shouldAnimate: boolean;
 }
 
-type Props = OwnProps & ReturnType<typeof mapStateToProps>;
+interface ScrollTracking {
+  activationScrollTop: number;
+  lastScrollTop: number;
+  upwardDistance: number;
+  downwardDistance: number;
+}
 
-class ScrollAwareFloatingControls extends React.Component<Props, State> {
-  public state: State = { isActivated: false, isVisible: true, shouldAnimate: true };
-  private controlsRef = React.createRef<HTMLDivElement>();
-  private activationScrollTop = 0;
-  private lastScrollTop = 0;
-  private upwardDistance = 0;
-  private downwardDistance = 0;
+function ScrollAwareFloatingControls({
+  children,
+  activeClassName,
+  className,
+  hiddenClassName,
+  noTransitionClassName,
+}: Props) {
+  const scrollTop = useAppSelector((state) => state.mainPage.scrollTop);
+  const [state, setState] = useState<ControlsState>({
+    isActivated: false,
+    isVisible: true,
+    shouldAnimate: true,
+  });
+  const controlsRef = useRef<HTMLDivElement>(null);
+  const trackingRef = useRef<ScrollTracking | null>(null);
 
-  public componentDidMount(): void {
-    this.lastScrollTop = this.props.scrollTop;
-    this.activationScrollTop = this.getActivationScrollTop();
-  }
+  useLayoutEffect(() => {
+    const tracking = trackingRef.current;
+    if (!tracking) {
+      const controlsElement = controlsRef.current;
+      trackingRef.current = {
+        activationScrollTop: controlsElement
+          ? scrollTop + controlsElement.getBoundingClientRect().bottom
+          : 0,
+        lastScrollTop: scrollTop,
+        upwardDistance: 0,
+        downwardDistance: 0,
+      };
+      return;
+    }
+    if (!Util.isMobile || tracking.lastScrollTop === scrollTop) return;
 
-  public componentDidUpdate(prevProps: Readonly<Props>): void {
-    if (!Util.isMobile || prevProps.scrollTop === this.props.scrollTop) return;
+    const delta = scrollTop - tracking.lastScrollTop;
+    tracking.lastScrollTop = scrollTop;
 
-    const delta = this.props.scrollTop - this.lastScrollTop;
-    this.lastScrollTop = this.props.scrollTop;
-
-    if (!this.state.isActivated) {
-      if (this.props.scrollTop >= this.activationScrollTop && delta > 0) {
-        this.upwardDistance = 0;
-        this.downwardDistance = 0;
-        this.setState({ isActivated: true, isVisible: false, shouldAnimate: false });
+    if (!state.isActivated) {
+      if (scrollTop >= tracking.activationScrollTop && delta > 0) {
+        tracking.upwardDistance = 0;
+        tracking.downwardDistance = 0;
+        setState({ isActivated: true, isVisible: false, shouldAnimate: false });
       }
       return;
     }
 
-    if (this.props.scrollTop < this.activationScrollTop) {
-      this.upwardDistance = 0;
-      this.downwardDistance = 0;
-      this.setState({ isActivated: false, isVisible: true, shouldAnimate: true });
+    if (scrollTop < tracking.activationScrollTop) {
+      tracking.upwardDistance = 0;
+      tracking.downwardDistance = 0;
+      setState({ isActivated: false, isVisible: true, shouldAnimate: true });
       return;
     }
 
     if (delta > 0) {
-      this.downwardDistance += delta;
-      this.upwardDistance = 0;
-      if (this.downwardDistance >= 8 && this.state.isVisible) {
-        this.setState({ isVisible: false, shouldAnimate: true });
+      tracking.downwardDistance += delta;
+      tracking.upwardDistance = 0;
+      if (tracking.downwardDistance >= 8 && state.isVisible) {
+        setState((previous) => ({
+          ...previous,
+          isVisible: false,
+          shouldAnimate: true,
+        }));
       }
     } else if (delta < 0) {
-      this.upwardDistance += Math.abs(delta);
-      this.downwardDistance = 0;
-      if (this.upwardDistance >= 12 && !this.state.isVisible) {
-        this.setState({ isVisible: true, shouldAnimate: true });
+      tracking.upwardDistance += Math.abs(delta);
+      tracking.downwardDistance = 0;
+      if (tracking.upwardDistance >= 12 && !state.isVisible) {
+        setState((previous) => ({ ...previous, isVisible: true, shouldAnimate: true }));
       }
     }
-  }
+  }, [scrollTop, state.isActivated, state.isVisible]);
 
-  public render(): React.ReactNode {
-    const isActivated = Util.isMobile && this.state.isActivated;
-    return (
-      <div
-        ref={this.controlsRef}
-        className={`${this.props.className} ${
-          isActivated ? this.props.activeClassName : ""
-        } ${isActivated && !this.state.isVisible ? this.props.hiddenClassName : ""} ${
-          isActivated && !this.state.shouldAnimate
-            ? this.props.noTransitionClassName
-            : ""
-        }`}
-      >
-        {this.props.children}
-      </div>
-    );
-  }
-
-  private getActivationScrollTop(): number {
-    const controlsElement = this.controlsRef.current;
-    if (!controlsElement) return 0;
-    return this.props.scrollTop + controlsElement.getBoundingClientRect().bottom;
-  }
+  const isActivated = Util.isMobile && state.isActivated;
+  return (
+    <div
+      ref={controlsRef}
+      className={`${className} ${isActivated ? activeClassName : ""} ${
+        isActivated && !state.isVisible ? hiddenClassName : ""
+      } ${isActivated && !state.shouldAnimate ? noTransitionClassName : ""}`}
+    >
+      {children}
+    </div>
+  );
 }
 
-export default connect(mapStateToProps)(ScrollAwareFloatingControls);
+export default memo(ScrollAwareFloatingControls);

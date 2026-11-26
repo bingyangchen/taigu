@@ -1,50 +1,34 @@
-import React from "react";
-import { connect } from "react-redux";
+import { memo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { RoundButton } from "../../components";
 import * as Icons from "../../icons";
-import type { RootState } from "../../redux/store";
+import { useAppSelector } from "../../redux/hooks";
 import Env from "../../utils/env";
-import { IRouter, withRouter } from "../../utils/router";
 import styles from "./HeaderForSettings.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { headerTitle } = rootState.settingsPage;
-  return { headerTitle };
-}
+function HeaderForSettings() {
+  const headerTitle = useAppSelector((state) => state.settingsPage.headerTitle);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {}
-
-interface State {}
-
-class HeaderForSettings extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {};
-  }
-
-  public render(): React.ReactNode {
-    return (
-      <header className={styles.main}>
-        <RoundButton size="l" hint_text="上一頁" onClick={this.goToParentDirectory}>
-          <Icons.IconChevronLeft sideLength="16" />
-        </RoundButton>
-        {this.props.headerTitle}
-      </header>
-    );
-  }
-
-  private goToParentDirectory = (): void => {
-    let currentPath = this.props.router.location.pathname;
+  const goToParentDirectory = (): void => {
+    let currentPath = location.pathname;
     if (currentPath[currentPath.length - 1] === "/") {
       currentPath = currentPath.slice(0, -1);
     }
     const parentDirectory = currentPath.substring(0, currentPath.lastIndexOf("/"));
-    this.props.router.navigate(parentDirectory || Env.frontendRootPath, {
-      replace: true,
-    });
+    navigate(parentDirectory || Env.frontendRootPath, { replace: true });
   };
+
+  return (
+    <header className={styles.main}>
+      <RoundButton size="l" hint_text="上一頁" onClick={goToParentDirectory}>
+        <Icons.IconChevronLeft sideLength="16" />
+      </RoundButton>
+      {headerTitle}
+    </header>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(HeaderForSettings));
+export default memo(HeaderForSettings);

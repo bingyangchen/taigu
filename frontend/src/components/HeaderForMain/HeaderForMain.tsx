@@ -1,46 +1,32 @@
-import React from "react";
-import { connect } from "react-redux";
+import { memo } from "react";
+import { useLocation } from "react-router-dom";
 
 import { FullLogo } from "../../components";
-import type { RootState } from "../../redux/store";
+import { useAppSelector } from "../../redux/hooks";
 import Nav from "../../utils/nav";
-import { IRouter, withRouter } from "../../utils/router";
 import styles from "./HeaderForMain.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { headerTitle } = rootState.mainPage;
-  return { headerTitle };
+function HeaderForMain() {
+  const headerTitle = useAppSelector((state) => state.mainPage.headerTitle);
+
+  // Nav reads window.location, so subscribing to the location re-renders the header
+  // after each navigation.
+  useLocation();
+
+  const logoTranslateX =
+    Nav.isAtDetailsPage || Nav.isAtHandlingFeePage || Nav.isAtEarningAnalysisPage
+      ? 40
+      : 0;
+
+  return (
+    <header className={styles.main}>
+      {headerTitle ? (
+        <div className={styles.title}>{headerTitle}</div>
+      ) : (
+        <FullLogo size="s" translateX={logoTranslateX} />
+      )}
+    </header>
+  );
 }
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {}
-
-interface State {}
-
-class HeaderForMain extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {};
-  }
-
-  public render(): React.ReactNode {
-    return (
-      <header className={styles.main}>
-        {this.props.headerTitle ? (
-          <div className={styles.title}>{this.props.headerTitle}</div>
-        ) : (
-          <FullLogo size="s" translateX={this.logoTranslateX} />
-        )}
-      </header>
-    );
-  }
-
-  private get logoTranslateX(): number {
-    if (Nav.isAtDetailsPage || Nav.isAtHandlingFeePage || Nav.isAtEarningAnalysisPage) {
-      return 40;
-    }
-    return 0;
-  }
-}
-
-export default connect(mapStateToProps)(withRouter(HeaderForMain));
+export default memo(HeaderForMain);

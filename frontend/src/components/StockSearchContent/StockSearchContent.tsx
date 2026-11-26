@@ -1,4 +1,4 @@
-import React, { MouseEvent, MouseEventHandler } from "react";
+import { MouseEvent, MouseEventHandler, useEffect, useRef, useState } from "react";
 
 import * as Icons from "../../icons";
 import type { StockInfo } from "../../types";
@@ -44,77 +44,87 @@ interface Props {
   onSelectStock: (sid: string, e: MouseEvent) => void;
 }
 
-interface State {
-  searchKeyword: string;
-  searchResults: StockInfo[];
-  completedSearchKeyword: string | null;
-}
+export default function StockSearchContent({ variant, onClose, onSelectStock }: Props) {
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchResults, setSearchResults] = useState<StockInfo[]>([]);
+  const [completedSearchKeyword, setCompletedSearchKeyword] = useState<string | null>(
+    null,
+  );
 
-export default class StockSearchContent extends React.Component<Props, State> {
-  public state: State;
-  private stockSearchCache: StockSearchLRUCache;
-
-  public constructor(props: Props) {
-    super(props);
-    this.state = { searchKeyword: "", searchResults: [], completedSearchKeyword: null };
-    this.stockSearchCache = new StockSearchLRUCache();
-  }
-
-  public componentDidMount(): void {
-    this.loadCachedItems();
-  }
-
-  public render(): React.ReactNode {
-    if (this.props.variant === "page") {
-      return (
-        <section className={styles.page}>
-          <header className={styles.page_header}>
-            <RoundButton aria-label="返回" size="l" onClick={this.props.onClose}>
-              <Icons.IconChevronLeft sideLength="18" />
-            </RoundButton>
-            <div className={styles.page_search_input_outer}>
-              {this.renderSearchInput()}
-            </div>
-          </header>
-          {this.renderPageBody()}
-        </section>
+  // The search responses arrive after later keystrokes, so they compare their keyword
+  // with the latest one rather than with the keyword of the render that sent them.
+  const searchKeywordRef = useRef("");
+  const [stockSearchCache] = useState(() => new StockSearchLRUCache());
+  const [stockSearch] = useState(() => {
+    const showResults = (results: StockInfo[], keyword: string): void => {
+      setSearchResults(results);
+      setCompletedSearchKeyword(keyword);
+    };
+    const loadCachedItems = async (requestedKeyword = ""): Promise<void> => {
+      const cachedSids = stockSearchCache.getAll();
+      if (cachedSids.length === 0) {
+        if (searchKeywordRef.current !== requestedKeyword) return;
+        showResults([], requestedKeyword);
+        return;
+      }
+      const stockInfoMap = await Api.sendRequest(
+        `market/current-stock-info?sids=${cachedSids.join(",")}`,
+        "get",
       );
-    }
+      if (searchKeywordRef.current !== requestedKeyword) return;
 
-    return (
-      <div className={styles.dialog}>
-        <div className={styles.search_input_outer}>{this.renderSearchInput()}</div>
-        {this.renderResults()}
-      </div>
-    );
-  }
+      const stockInfoList: StockInfo[] = [];
+      for (const sid of cachedSids) {
+        const stockInfo = stockInfoMap[sid];
+        if (stockInfo) stockInfoList.push(stockInfo);
+      }
+      showResults(stockInfoList, requestedKeyword);
+    };
+    const search = async (value: string): Promise<void> => {
+      if (searchKeywordRef.current !== value) return;
 
-  private renderSearchInput(): React.ReactNode {
-    return (
-      <SearchKeywordInput
-        placeholder="輸入證券代號或名稱"
-        keyword={this.state.searchKeyword}
-        autoFocus
-        size="l"
-        onChange={(searchKeyword) => {
-          this.setState({ searchKeyword: searchKeyword });
-          this.debouncedSearch(searchKeyword);
-        }}
-      />
-    );
-  }
+      if (value.trim() === "") loadCachedItems(value);
+      else {
+        const response = await Api.sendRequest(`market/search?keyword=${value}`, "get");
+        if (searchKeywordRef.current !== value) return;
+        showResults(response.data, value);
+      }
+    };
+    return { loadCachedItems, debouncedSearch: Util.debounce(search, 300) };
+  });
 
-  private renderResults(): React.ReactNode {
-    if (this.state.searchResults.length === 0) return null;
+  useEffect(() => {
+    stockSearch.loadCachedItems();
+  }, [stockSearch]);
 
-    return (
+  const handleClickResult = (e: MouseEvent, sid: string): void => {
+    stockSearchCache.add(sid);
+    onSelectStock(sid, e);
+  };
+
+  const searchInput = (
+    <SearchKeywordInput
+      placeholder="輸入證券代號或名稱"
+      keyword={searchKeyword}
+      autoFocus
+      size="l"
+      onChange={(keyword) => {
+        searchKeywordRef.current = keyword;
+        setSearchKeyword(keyword);
+        stockSearch.debouncedSearch(keyword);
+      }}
+    />
+  );
+
+  const results =
+    searchResults.length === 0 ? null : (
       <div className={styles.result}>
-        {this.state.searchResults.map((stockInfo, idx) => {
+        {searchResults.map((stockInfo, idx) => {
           return (
             <div
-              className={this.getRowClassName(stockInfo.fluct_price)}
+              className={getRowClassName(stockInfo.fluct_price)}
               key={idx}
-              onClick={(e) => this.handleClickResult(e, stockInfo.sid)}
+              onClick={(e) => handleClickResult(e, stockInfo.sid)}
             >
               <div className={styles.company}>
                 <div className={styles.name}>{stockInfo.name}</div>
@@ -150,84 +160,51 @@ export default class StockSearchContent extends React.Component<Props, State> {
         })}
       </div>
     );
-  }
 
-  private renderPageBody(): React.ReactNode {
-    if (this.state.searchResults.length > 0) return this.renderResults();
-    return this.renderEmptyState();
-  }
-
-  private renderEmptyState(): React.ReactNode {
+  if (variant === "page") {
     const hasCompletedKeyword =
-      this.state.completedSearchKeyword !== null &&
-      this.state.completedSearchKeyword.trim().length > 0;
-
+      completedSearchKeyword !== null && completedSearchKeyword.trim().length > 0;
     return (
-      <div className={styles.empty_state}>
-        <div className={styles.empty_state_icon}>
-          <Icons.IconMagnifier sideLength="24" />
-        </div>
-        <div className={styles.empty_state_text}>
-          <div className={styles.empty_state_title}>
-            {hasCompletedKeyword ? "找不到符合的股票" : "搜尋台股"}
+      <section className={styles.page}>
+        <header className={styles.page_header}>
+          <RoundButton aria-label="返回" size="l" onClick={onClose}>
+            <Icons.IconChevronLeft sideLength="18" />
+          </RoundButton>
+          <div className={styles.page_search_input_outer}>{searchInput}</div>
+        </header>
+        {results ?? (
+          <div className={styles.empty_state}>
+            <div className={styles.empty_state_icon}>
+              <Icons.IconMagnifier sideLength="24" />
+            </div>
+            <div className={styles.empty_state_text}>
+              <div className={styles.empty_state_title}>
+                {hasCompletedKeyword ? "找不到符合的股票" : "搜尋台股"}
+              </div>
+              <div className={styles.empty_state_description}>
+                {hasCompletedKeyword
+                  ? "請確認證券代號或名稱是否正確，或換個關鍵字再試一次。"
+                  : "輸入證券代號或名稱，快速前往個股頁查看價格、持股與相關紀錄。"}
+              </div>
+            </div>
           </div>
-          <div className={styles.empty_state_description}>
-            {hasCompletedKeyword
-              ? "請確認證券代號或名稱是否正確，或換個關鍵字再試一次。"
-              : "輸入證券代號或名稱，快速前往個股頁查看價格、持股與相關紀錄。"}
-          </div>
-        </div>
-      </div>
+        )}
+      </section>
     );
   }
 
-  private getRowClassName(fluctPrice: number): string {
-    return (
-      styles.row +
-      " " +
-      (fluctPrice > 0 ? styles.red : fluctPrice < 0 ? styles.green : styles.gray)
-    );
-  }
+  return (
+    <div className={styles.dialog}>
+      <div className={styles.search_input_outer}>{searchInput}</div>
+      {results}
+    </div>
+  );
+}
 
-  private loadCachedItems = async (requestedKeyword = ""): Promise<void> => {
-    const cachedSids = this.stockSearchCache.getAll();
-    if (cachedSids.length === 0) {
-      if (this.state.searchKeyword !== requestedKeyword) return;
-      this.setState({ searchResults: [], completedSearchKeyword: requestedKeyword });
-      return;
-    }
-    const stockInfoMap = await Api.sendRequest(
-      `market/current-stock-info?sids=${cachedSids.join(",")}`,
-      "get",
-    );
-    if (this.state.searchKeyword !== requestedKeyword) return;
-
-    const stockInfoList: StockInfo[] = [];
-    for (const sid of cachedSids) {
-      const stockInfo = stockInfoMap[sid];
-      if (stockInfo) stockInfoList.push(stockInfo);
-    }
-    this.setState({
-      searchResults: stockInfoList,
-      completedSearchKeyword: requestedKeyword,
-    });
-  };
-
-  private search = async (value: string): Promise<void> => {
-    if (this.state.searchKeyword !== value) return;
-
-    if (value.trim() === "") this.loadCachedItems(value);
-    else {
-      const response = await Api.sendRequest(`market/search?keyword=${value}`, "get");
-      if (this.state.searchKeyword !== value) return;
-      this.setState({ searchResults: response.data, completedSearchKeyword: value });
-    }
-  };
-
-  private debouncedSearch = Util.debounce(this.search, 300);
-
-  private handleClickResult = (e: MouseEvent, sid: string): void => {
-    this.stockSearchCache.add(sid);
-    this.props.onSelectStock(sid, e);
-  };
+function getRowClassName(fluctPrice: number): string {
+  return (
+    styles.row +
+    " " +
+    (fluctPrice > 0 ? styles.red : fluctPrice < 0 ? styles.green : styles.gray)
+  );
 }

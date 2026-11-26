@@ -1,6 +1,6 @@
 import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
-import React from "react";
+import { memo, useState } from "react";
 
 import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import Util from "../../utils/util";
@@ -12,170 +12,164 @@ interface Props {
   isWaiting: boolean;
 }
 
-interface State {
-  fakeDates: string[];
-  fakeValues: number[];
+interface ChartData {
+  dates: string[];
+  values: number[];
 }
 
-class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    const fakeData = this.genFakeHistoricalPriceChartData();
-    this.state = { fakeDates: fakeData.dates, fakeValues: fakeData.values };
+function HistoricalPriceLineChart(props: Props) {
+  const [fakeData] = useState(makeFakeChartData);
+  return (
+    <ReactECharts
+      option={makeHistoricalPriceChartOption(props, fakeData)}
+      style={{ height: "100%", width: "100%" }}
+      notMerge={true}
+    />
+  );
+}
+
+export default memo(HistoricalPriceLineChart);
+
+function makeHistoricalPriceChartOption(
+  props: Props,
+  fakeData: ChartData,
+): EChartsOption {
+  const dates = props.isWaiting ? fakeData.dates : props.dates;
+  const values = props.isWaiting ? fakeData.values : props.values;
+  const lineColor = props.isWaiting
+    ? COLORS.chartInactive
+    : getPeriodTrendColor(props.values);
+  const areaGradient = makePeriodTrendAreaGradient(props.values);
+
+  if (dates.length === 0 || values.length === 0) {
+    return {};
   }
-  public render(): React.ReactNode {
-    return (
-      <ReactECharts
-        option={this.chartOption}
-        style={{ height: "100%", width: "100%" }}
-        notMerge={true}
-      />
-    );
-  }
 
-  private get chartOption(): EChartsOption {
-    const dates = this.props.isWaiting ? this.state.fakeDates : this.props.dates;
-    const values = this.props.isWaiting ? this.state.fakeValues : this.props.values;
-    const lineColor = this.props.isWaiting
-      ? COLORS.chartInactive
-      : getPeriodTrendColor(this.props.values);
-    const areaGradient = makePeriodTrendAreaGradient(this.props.values);
-
-    if (dates.length === 0 || values.length === 0) {
-      return {};
-    }
-
-    return {
-      backgroundColor: "transparent",
-      grid: {
-        left: 0,
-        top: 12,
-        right: 38,
-        bottom: 24,
-        containLabel: false,
-        outerBoundsMode: "none",
+  return {
+    backgroundColor: "transparent",
+    grid: {
+      left: 0,
+      top: 12,
+      right: 38,
+      bottom: 24,
+      containLabel: false,
+      outerBoundsMode: "none",
+    },
+    xAxis: {
+      type: "category",
+      data: dates,
+      show: !props.isWaiting,
+      axisLabel: {
+        show: !props.isWaiting,
+        showMinLabel: false,
+        color: COLORS.textSecondary,
+        fontSize: FONT_SIZES.chartTick,
+        interval: (index: number) => index % 10 === 0,
+        hideOverlap: true,
       },
-      xAxis: {
-        type: "category",
-        data: dates,
-        show: !this.props.isWaiting,
-        axisLabel: {
-          show: !this.props.isWaiting,
-          showMinLabel: false,
-          color: COLORS.textSecondary,
-          fontSize: FONT_SIZES.chartTick,
-          interval: (index: number) => index % 10 === 0,
-          hideOverlap: true,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { show: false },
+    },
+    yAxis: props.isWaiting
+      ? {
+          type: "value",
+          show: false,
+          axisLabel: { show: false },
+          axisLine: { show: false },
+          axisTick: { show: false },
+          splitLine: { show: false },
+        }
+      : {
+          type: "value",
+          scale: true,
+          position: "right",
+          min: "dataMin",
+          axisLabel: {
+            color: COLORS.textSecondary,
+            fontSize: FONT_SIZES.chartTick,
+            margin: 0,
+            showMinLabel: false,
+            showMaxLabel: false,
+            formatter: (value: number) => {
+              if (value >= 1_000_000) return (value / 1_000_000).toFixed(1) + "M";
+              if (value >= 1_000) return (value / 1_000).toFixed(1) + "K";
+              return value.toString();
+            },
+          },
+          axisLine: { show: false },
+          axisTick: { show: false },
+          splitLine: { show: false },
         },
-        axisLine: { show: false },
-        axisTick: { show: false },
-        splitLine: { show: false },
-      },
-      yAxis: this.props.isWaiting
-        ? {
-            type: "value",
-            show: false,
-            axisLabel: { show: false },
-            axisLine: { show: false },
-            axisTick: { show: false },
-            splitLine: { show: false },
-          }
-        : {
-            type: "value",
-            scale: true,
-            position: "right",
-            min: "dataMin",
-            axisLabel: {
-              color: COLORS.textSecondary,
-              fontSize: FONT_SIZES.chartTick,
-              margin: 0,
-              showMinLabel: false,
-              showMaxLabel: false,
-              formatter: (value: number) => {
-                if (value >= 1_000_000) return (value / 1_000_000).toFixed(1) + "M";
-                if (value >= 1_000) return (value / 1_000).toFixed(1) + "K";
-                return value.toString();
-              },
-            },
-            axisLine: { show: false },
-            axisTick: { show: false },
-            splitLine: { show: false },
-          },
-      series: this.props.isWaiting
-        ? {
-            type: "line",
-            data: values,
-            lineStyle: { width: 2.5, color: COLORS.chartInactive },
-            symbol: "none",
-            silent: true,
-          }
-        : {
-            type: "line",
-            data: values,
-            lineStyle: { width: 2, color: lineColor, join: "round" },
-            itemStyle: { color: lineColor },
-            symbol: "circle",
-            symbolSize: Util.isMobile ? 5 : 8,
-            showSymbol: false,
-            emphasis: { itemStyle: { color: lineColor, borderColor: lineColor } },
-            areaStyle: {
-              color: {
-                type: "linear",
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
-                colorStops: [
-                  { offset: 0, color: areaGradient.start },
-                  { offset: 1, color: areaGradient.end },
-                ],
-              },
-            },
-          },
-      tooltip: {
-        show: !this.props.isWaiting,
-        trigger: "axis",
-        axisPointer: {
+    series: props.isWaiting
+      ? {
           type: "line",
-          lineStyle: { color: COLORS.borderDefault, width: 1 },
+          data: values,
+          lineStyle: { width: 2.5, color: COLORS.chartInactive },
+          symbol: "none",
+          silent: true,
+        }
+      : {
+          type: "line",
+          data: values,
+          lineStyle: { width: 2, color: lineColor, join: "round" },
+          itemStyle: { color: lineColor },
+          symbol: "circle",
+          symbolSize: Util.isMobile ? 5 : 8,
+          showSymbol: false,
+          emphasis: { itemStyle: { color: lineColor, borderColor: lineColor } },
+          areaStyle: {
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: areaGradient.start },
+                { offset: 1, color: areaGradient.end },
+              ],
+            },
+          },
         },
-        backgroundColor: COLORS.bgSurface,
-        textStyle: { color: COLORS.textPrimary, fontSize: FONT_SIZES.xs },
-        formatter: (params: unknown) => {
-          if (!Array.isArray(params) || params.length === 0) {
-            return "";
-          }
-          const param = params[0];
-          const dateStr = param.name;
-          const value = param.value;
-          const dataIndex = param.dataIndex;
-          const previousValue =
-            typeof dataIndex === "number" && dataIndex > 0
-              ? values[dataIndex - 1]
-              : null;
-          const fluctPercent =
-            previousValue && previousValue !== 0
-              ? (((value - previousValue) / previousValue) * 100).toFixed(2)
-              : "-";
-          return `${dateStr}<br/>收盤價 $${value.toLocaleString()}<br/>漲跌幅 ${fluctPercent}%`;
-        },
+    tooltip: {
+      show: !props.isWaiting,
+      trigger: "axis",
+      axisPointer: {
+        type: "line",
+        lineStyle: { color: COLORS.borderDefault, width: 1 },
       },
-      animationDuration: 300,
-      animationDurationUpdate: 160,
-    };
-  }
-
-  private genFakeHistoricalPriceChartData(): { dates: string[]; values: number[] } {
-    const dates: string[] = [];
-    const values: number[] = [];
-    for (let i = 0, p = 100; i < 60; i++) {
-      dates.push(i.toString());
-      values.push(p);
-      p += (p * (Math.random() - 0.5)) / 5;
-    }
-    return { dates, values };
-  }
+      backgroundColor: COLORS.bgSurface,
+      textStyle: { color: COLORS.textPrimary, fontSize: FONT_SIZES.xs },
+      formatter: (params: unknown) => {
+        if (!Array.isArray(params) || params.length === 0) {
+          return "";
+        }
+        const param = params[0];
+        const dateStr = param.name;
+        const value = param.value;
+        const dataIndex = param.dataIndex;
+        const previousValue =
+          typeof dataIndex === "number" && dataIndex > 0 ? values[dataIndex - 1] : null;
+        const fluctPercent =
+          previousValue && previousValue !== 0
+            ? (((value - previousValue) / previousValue) * 100).toFixed(2)
+            : "-";
+        return `${dateStr}<br/>收盤價 $${value.toLocaleString()}<br/>漲跌幅 ${fluctPercent}%`;
+      },
+    },
+    animationDuration: 300,
+    animationDurationUpdate: 160,
+  };
 }
 
-export default HistoricalPriceLineChart;
+function makeFakeChartData(): ChartData {
+  const dates: string[] = [];
+  const values: number[] = [];
+  for (let i = 0, p = 100; i < 60; i++) {
+    dates.push(i.toString());
+    values.push(p);
+    p += (p * (Math.random() - 0.5)) / 5;
+  }
+  return { dates, values };
+}
