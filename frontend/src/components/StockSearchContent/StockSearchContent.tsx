@@ -244,7 +244,7 @@ export default function StockSearchContent({ variant, onClose, onSelectStock }: 
         {results ?? (
           <div className={styles.empty_state}>
             <div className={styles.empty_state_icon}>
-              <Icons.IconMagnifier sideLength="24" />
+              <Icons.IconMagnifier sideLength="32" />
             </div>
             <div className={styles.empty_state_text}>
               <div className={styles.empty_state_title}>
