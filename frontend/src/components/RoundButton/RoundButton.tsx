@@ -6,6 +6,7 @@ import styles from "./RoundButton.module.scss";
 interface Props {
   children: React.ReactNode;
   onClick?: MouseEventHandler<HTMLButtonElement>;
+  onMouseDown?: MouseEventHandler<HTMLButtonElement>;
   className?: string;
   size?: "m" | "l";
   frosted?: boolean;
@@ -17,6 +18,7 @@ interface Props {
 export default function RoundButton({
   children,
   onClick,
+  onMouseDown,
   className,
   size,
   frosted,
@@ -38,6 +40,7 @@ export default function RoundButton({
         .filter(Boolean)
         .join(" ")}
       onClick={disabled ? () => {} : (onClick ?? (() => {}))}
+      onMouseDown={onMouseDown}
       disabled={disabled}
     >
       {children}

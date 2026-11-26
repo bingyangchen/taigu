@@ -21,6 +21,22 @@
     box-shadow: none;
     border: none;
   }
+  & > .clear_button {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+
+    // Touch screens need a 44px target; it reaches past the button without
+    // making the field taller.
+    @media (any-pointer: coarse) {
+      &::after {
+        content: "";
+        position: absolute;
+        inset: -6px;
+      }
+    }
+  }
   & > input {
     height: 100%;
     width: 100%;
