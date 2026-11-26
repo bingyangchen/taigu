@@ -1,146 +1,139 @@
-import React from "react";
-import { connect } from "react-redux";
-import { Outlet } from "react-router-dom";
+import { memo, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { Outlet, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 
 import { HeaderForSettings, PageMeta, ToastList } from "../../components";
+import { useAppDispatch } from "../../redux/hooks";
 import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
-import type { AppDispatch } from "../../redux/store";
 import Env from "../../utils/env";
 import { getMainTabPath, isSameUrlHistoryTraversal } from "../../utils/mainNavigation";
 import { makeWidthBelowQuery } from "../../utils/mediaQuery";
-import { IRouter, settingsPagePath, withRouter } from "../../utils/router";
+import { settingsPagePath } from "../../utils/router";
+import { useLatestRef } from "../../utils/useLatestRef";
 import Util from "../../utils/util";
-import {
-  captureViewPosition,
-  getViewHistory,
-  type ViewPosition,
-} from "../Main/viewHistory";
+import { captureViewPosition, getViewHistory } from "../Main/viewHistory";
 import styles from "./Settings.module.scss";
 
-interface Props extends IRouter {
-  dispatch: AppDispatch;
-}
-interface State {
-  prevLocationPathname: string | null;
-}
+function Settings() {
+  const dispatch = useAppDispatch();
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const navigate = useNavigate();
+  const mainRef = useRef<HTMLElement>(null);
+  const [viewHistory] = useState(getViewHistory);
+  const latestRenderRef = useLatestRef({ location, navigationType });
 
-class Settings extends React.Component<Props, State> {
-  public state: State;
-  private readonly mainRef = React.createRef<HTMLElement>();
-  private readonly viewHistory = getViewHistory();
-  private removePageReturnListener: (() => void) | null = null;
-  public constructor(props: Props) {
-    super(props);
-    this.state = { prevLocationPathname: null };
-  }
+  const getOverviewScrollContainer = useCallback(
+    (): Window | HTMLElement | null =>
+      Util.isMobile && window.matchMedia(makeWidthBelowQuery("md")).matches
+        ? window
+        : mainRef.current,
+    [],
+  );
+  const captureOverviewPosition = useCallback(() => {
+    const container = getOverviewScrollContainer();
+    return container ? captureViewPosition(container, null) : null;
+  }, [getOverviewScrollContainer]);
+  const restoreOverviewPosition = useCallback((): void => {
+    const { location: latestLocation, navigationType: latestNavigationType } =
+      latestRenderRef.current;
+    const isOverview = Boolean(getMainTabPath(latestLocation));
+    window.history.scrollRestoration = isOverview ? "manual" : "auto";
+    if (!isOverview) return;
 
-  public async componentDidMount(): Promise<void> {
-    document.body.classList.toggle("settings-page-document-scroll", Util.isMobile);
-    this.restoreOverviewPosition();
-    this.props.dispatch(fetchAccountInfo());
-    this.props.dispatch(openSession());
-    this.removePageReturnListener = Util.addPageReturnListener(() =>
-      this.props.dispatch(openSession()),
-    );
-  }
+    const position = viewHistory.get(latestLocation, latestNavigationType)?.position;
+    if (position || latestNavigationType !== "POP") {
+      getOverviewScrollContainer()?.scrollTo({ top: position?.top ?? 0, left: 0 });
+    }
+  }, [getOverviewScrollContainer, latestRenderRef, viewHistory]);
 
-  public getSnapshotBeforeUpdate(prevProps: Readonly<Props>): ViewPosition | null {
-    const { location } = prevProps.router;
-    return location.key !== this.props.router.location.key && getMainTabPath(location)
-      ? this.captureOverviewPosition()
+  const saveOverviewPositionOnLeave = useCallback((): void => {
+    const latestLocation = latestRenderRef.current.location;
+    if (!getMainTabPath(latestLocation)) return;
+    const position = captureOverviewPosition();
+    if (position) viewHistory.save(latestLocation, { position });
+    window.history.scrollRestoration = "auto";
+  }, [captureOverviewPosition, latestRenderRef, viewHistory]);
+
+  // Leaving the overview replaces its DOM, and no hook runs between the render and
+  // that DOM update, so the render reads the overview's scroll position while the DOM
+  // still shows it.
+  const committedLocation = latestRenderRef.current.location;
+  const overviewPositionBeforeNavigation =
+    committedLocation.key !== location.key && getMainTabPath(committedLocation)
+      ? captureOverviewPosition()
       : null;
-  }
 
-  public componentDidUpdate(
-    prevProps: Readonly<Props>,
-    _prevState: Readonly<State>,
-    position: ViewPosition | null,
-  ): void {
-    if (position) this.viewHistory.save(prevProps.router.location, { position });
-    const previousLocation = prevProps.router.location;
-    const { location, navigationType } = this.props.router;
+  useLayoutEffect(() => {
+    document.body.classList.toggle("settings-page-document-scroll", Util.isMobile);
+    restoreOverviewPosition();
+    dispatch(fetchAccountInfo());
+    dispatch(openSession());
+    const removePageReturnListener = Util.addPageReturnListener(() =>
+      dispatch(openSession()),
+    );
+    return () => {
+      saveOverviewPositionOnLeave();
+      document.body.classList.remove("settings-page-document-scroll");
+      removePageReturnListener();
+    };
+  }, [dispatch, restoreOverviewPosition, saveOverviewPositionOnLeave]);
+
+  useLayoutEffect(() => {
+    const previousLocation = committedLocation;
+    if (previousLocation.key === location.key) return;
+
+    if (overviewPositionBeforeNavigation) {
+      viewHistory.save(previousLocation, {
+        position: overviewPositionBeforeNavigation,
+      });
+    }
     const sameOverviewTraversal =
       getMainTabPath(location) &&
       isSameUrlHistoryTraversal(previousLocation, location, navigationType);
     if (previousLocation.pathname !== location.pathname) {
-      this.restoreOverviewPosition();
-      this.props.dispatch(openSession());
-    } else if (sameOverviewTraversal) this.restoreOverviewPosition();
+      restoreOverviewPosition();
+      dispatch(openSession());
+    } else if (sameOverviewTraversal) restoreOverviewPosition();
 
     // Conditionally navigate back one more time
-    if (prevProps.router.location.key !== this.props.router.location.key) {
-      if (
-        !sameOverviewTraversal &&
-        prevProps.router.location.pathname === this.props.router.location.pathname &&
-        prevProps.router.location.hash === this.props.router.location.hash &&
-        prevProps.router.location.search === this.props.router.location.search &&
-        prevProps.router.location.state === this.props.router.location.state
-      ) {
-        this.setState(
-          { prevLocationPathname: prevProps.router.location.pathname },
-          () => this.props.router.navigate(-1),
-        );
-      } else this.setState({ prevLocationPathname: null });
+    if (
+      !sameOverviewTraversal &&
+      previousLocation.pathname === location.pathname &&
+      previousLocation.hash === location.hash &&
+      previousLocation.search === location.search &&
+      previousLocation.state === location.state
+    ) {
+      navigate(-1);
     }
-  }
+  }, [
+    committedLocation,
+    dispatch,
+    location,
+    navigate,
+    navigationType,
+    overviewPositionBeforeNavigation,
+    restoreOverviewPosition,
+    viewHistory,
+  ]);
 
-  public componentWillUnmount(): void {
-    const { location } = this.props.router;
-    if (getMainTabPath(location)) {
-      const position = this.captureOverviewPosition();
-      if (position) this.viewHistory.save(location, { position });
-      window.history.scrollRestoration = "auto";
-    }
-    document.body.classList.remove("settings-page-document-scroll");
-    this.removePageReturnListener?.();
-  }
-
-  public render(): React.ReactNode {
-    return (
-      <main
-        ref={this.mainRef}
-        className={`${styles.main} ${
-          Util.isMobile && this.isSettingsEditorRoute ? styles.mobile_editor_shell : ""
-        }`}
-      >
-        <PageMeta title="帳戶設定 | Taigu" noindex />
-        <ToastList />
-        <div className={styles.body}>
-          {!this.isSettingsEditorRoute && <HeaderForSettings />}
-          <Outlet />
-        </div>
-      </main>
-    );
-  }
-
-  private getOverviewScrollContainer(): Window | HTMLElement | null {
-    return Util.isMobile && window.matchMedia(makeWidthBelowQuery("md")).matches
-      ? window
-      : this.mainRef.current;
-  }
-
-  private captureOverviewPosition(): ViewPosition | null {
-    const container = this.getOverviewScrollContainer();
-    return container ? captureViewPosition(container, null) : null;
-  }
-
-  private restoreOverviewPosition(): void {
-    const { location, navigationType } = this.props.router;
-    const isOverview = Boolean(getMainTabPath(location));
-    window.history.scrollRestoration = isOverview ? "manual" : "auto";
-    if (!isOverview) return;
-
-    const position = this.viewHistory.get(location, navigationType)?.position;
-    if (position || navigationType !== "POP") {
-      this.getOverviewScrollContainer()?.scrollTo({ top: position?.top ?? 0, left: 0 });
-    }
-  }
-
-  private get isSettingsEditorRoute(): boolean {
-    const issueReportPath =
-      `${Env.frontendRootPath}${settingsPagePath}/issue-report`.replace(/\/+/g, "/");
-    return this.props.router.location.pathname === issueReportPath;
-  }
+  const isSettingsEditorRoute =
+    location.pathname ===
+    `${Env.frontendRootPath}${settingsPagePath}/issue-report`.replace(/\/+/g, "/");
+  return (
+    <main
+      ref={mainRef}
+      className={`${styles.main} ${
+        Util.isMobile && isSettingsEditorRoute ? styles.mobile_editor_shell : ""
+      }`}
+    >
+      <PageMeta title="帳戶設定 | Taigu" noindex />
+      <ToastList />
+      <div className={styles.body}>
+        {!isSettingsEditorRoute && <HeaderForSettings />}
+        <Outlet />
+      </div>
+    </main>
+  );
 }
 
-export default connect()(withRouter(Settings));
+export default memo(Settings);

@@ -1,6 +1,5 @@
-import React from "react";
-import { connect } from "react-redux";
-import { Link } from "react-router-dom";
+import React, { memo, useLayoutEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import googleLogo from "../../../assets/google.png";
 import imgPersonFill from "../../../assets/person-fill.svg";
@@ -12,238 +11,206 @@ import {
   Tooltip,
 } from "../../../components";
 import * as Icons from "../../../icons";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { logout } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
-import type { AppDispatch, RootState } from "../../../redux/store";
 import Env from "../../../utils/env";
-import { getHideModalCallback } from "../../../utils/modal";
 import Nav from "../../../utils/nav";
-import {
-  adminPagePath,
-  IRouter,
-  settingsPagePath,
-  withRouter,
-} from "../../../utils/router";
+import { adminPagePath, settingsPagePath } from "../../../utils/router";
 import Util from "../../../utils/util";
 import { IssueReportEditor } from "../IssueReport/IssueReport";
 import styles from "./Overview.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { email, username, avatar_url, isWaiting, is_superuser, subscription } =
-    rootState.account;
-  return { email, username, avatar_url, isWaiting, is_superuser, subscription };
-}
+type ModalName = "checkLogout" | "issueReport";
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
-interface State {
-  activeModalName: "checkLogout" | "issueReport" | null;
-  showDefaultAvatar: boolean;
-}
+function Overview() {
+  const email = useAppSelector((state) => state.account.email);
+  const username = useAppSelector((state) => state.account.username);
+  const avatarUrl = useAppSelector((state) => state.account.avatar_url);
+  const isWaiting = useAppSelector((state) => state.account.isWaiting);
+  const isSuperuser = useAppSelector((state) => state.account.is_superuser);
+  const subscription = useAppSelector((state) => state.account.subscription);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const [activeModalName, setActiveModalName] = useState<ModalName | null>(null);
+  const [showDefaultAvatar, setShowDefaultAvatar] = useState(false);
 
-class Overview extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = { activeModalName: null, showDefaultAvatar: false };
-  }
-  public componentDidMount(): void {
-    this.props.dispatch(updateHeaderTitle("設定"));
-  }
-  public render(): React.ReactNode {
-    return (
-      <>
-        {this.activeModal}
-        <div className={styles.main}>
-          <BeautifulBlock id="account" title="帳號">
-            <BeautifulRow
-              onClick={() =>
-                this.props.router.navigate(
-                  `${Env.frontendRootPath}${settingsPagePath}/user-info`,
-                )
-              }
-            >
-              <div className={`${styles.row_inner} ${styles.user_info}`}>
-                <div className={styles.avatar_container}>
-                  <img
-                    className={styles.avatar}
-                    src={
-                      this.state.showDefaultAvatar
-                        ? imgPersonFill
-                        : (Util.validateAndSanitizeUrl(this.props.avatar_url ?? "") ??
-                          imgPersonFill)
-                    }
-                    alt=""
-                    onError={() => this.setState({ showDefaultAvatar: true })}
-                  />
-                </div>
-                <div className={styles.username}>{this.props.username}</div>
-              </div>
-            </BeautifulRow>
-            <BeautifulRow
-              onClick={() =>
-                this.props.router.navigate(
-                  `${Env.frontendRootPath}${settingsPagePath}/account-binding`,
-                )
-              }
-            >
-              <div className={`${styles.row_inner} ${styles.email}`}>
-                <Icons.IconEnvelope sideLength="16px" />
-                <div className={styles.email_container}>
-                  <div>Email</div>
-                  <div>{this.props.email}</div>
-                </div>
-                <img src={googleLogo} alt="" className={styles.google_logo} />
-              </div>
-            </BeautifulRow>
-            <BeautifulRow
-              onClick={() =>
-                this.props.router.navigate(
-                  `${Env.frontendRootPath}${settingsPagePath}/data-controls`,
-                )
-              }
-            >
-              <div className={`${styles.row_inner} ${styles.terms_of_service}`}>
-                <Icons.IconDatabaseManagement sideLength="16px" />
-                資料控制
-              </div>
-            </BeautifulRow>
-          </BeautifulBlock>
-          <BeautifulBlock id="billing-and-plans" title="付款與方案">
-            <BeautifulRow
-              label="目前方案"
-              onClick={() =>
-                this.props.router.navigate(
-                  `${Env.frontendRootPath}${settingsPagePath}/current-plan`,
-                )
-              }
-            >
-              {this.props.subscription.plan === "standard" ? "Standard" : "Free"}
-            </BeautifulRow>
-          </BeautifulBlock>
-          <BeautifulBlock id="about" title="關於">
-            <BeautifulRow
-              onClick={() =>
-                window.open(
-                  `${Env.frontendRootPath}privacy-policy`,
-                  Util.isMobile ? "_self" : "_blank",
-                )
-              }
-            >
-              <div className={`${styles.row_inner} ${styles.privacy_policy}`}>
-                <Icons.IconIncognito sideLength="16px" />
-                隱私權政策
-              </div>
-            </BeautifulRow>
-            <BeautifulRow
-              onClick={() =>
-                window.open(
-                  `${Env.frontendRootPath}terms-of-service`,
-                  Util.isMobile ? "_self" : "_blank",
-                )
-              }
-            >
-              <div className={`${styles.row_inner} ${styles.terms_of_service}`}>
-                <Icons.IconTermsInfo sideLength="16px" />
-                服務條款
-              </div>
-            </BeautifulRow>
-            <BeautifulRow onClick={this.handleClickIssueReport}>
-              <div className={`${styles.row_inner} ${styles.issue_report}`}>
-                <Icons.IconExclamation sideLength="16px" />
-                問題回報
-              </div>
-            </BeautifulRow>
-          </BeautifulBlock>
-          {this.props.is_superuser && (
-            <BeautifulBlock id="admin" title="管理">
-              <BeautifulRow
-                onClick={() =>
-                  this.props.router.navigate(`${Env.frontendRootPath}${adminPagePath}`)
-                }
-              >
-                <div className={styles.row_inner}>
-                  <Icons.IconChartHistogram sideLength="16px" />
-                  後台
-                </div>
-              </BeautifulRow>
-            </BeautifulBlock>
-          )}
-          <BeautifulBlock id="logout">
-            <BeautifulRow
-              onClick={() => {
-                this.setState({ activeModalName: "checkLogout" });
-              }}
-            >
-              <div className={`${styles.row_inner} ${styles.logout}`}>
-                <Icons.IconExit sideLength="16px" />
-                登出
-              </div>
-            </BeautifulRow>
-          </BeautifulBlock>
-          <div className={styles.copyright}>
-            <Tooltip content="前往 Taigu 介紹頁" side="top">
-              <Link
-                to={`${Env.frontendRootPath}welcome`}
-                className={styles.logo_link}
-                aria-label="前往 Taigu 介紹頁"
-              >
-                <FullLogo size="m" />
-              </Link>
-            </Tooltip>
-            Copyright {new Date().getFullYear()} Taigu All rights reserved.
-          </div>
-        </div>
-      </>
-    );
-  }
-  private handleClickIssueReport = (): void => {
+  useLayoutEffect(() => {
+    dispatch(updateHeaderTitle("設定"));
+  }, [dispatch]);
+
+  const hideModal = (): void => setActiveModalName(null);
+  const handleClickIssueReport = (): void => {
     if (Util.isMobile) {
-      this.props.router.navigate(
-        `${Env.frontendRootPath}${settingsPagePath}/issue-report`,
-      );
+      navigate(`${Env.frontendRootPath}${settingsPagePath}/issue-report`);
       return;
     }
-    this.setState({ activeModalName: "issueReport" });
+    setActiveModalName("issueReport");
   };
-
-  private get activeModal(): React.ReactNode {
-    if (this.state.activeModalName === "issueReport") {
-      return <IssueReportEditor hideModal={getHideModalCallback(this)} />;
-    }
-    if (this.state.activeModalName === "checkLogout") {
-      return (
-        <Modal
-          title="登出"
-          discardButtonProps={{
-            children: "取消",
-            variant: "transparent",
-            onClick: getHideModalCallback(this),
-          }}
-          submitButtonProps={{
-            children: "登出",
-            variant: "primary",
-            disabled: this.props.isWaiting,
-            waiting: this.props.isWaiting,
-            onClick: this.handleClickCheckLogout,
-          }}
-        >
-          確定要登出嗎？
-        </Modal>
-      );
-    }
-    return null;
-  }
-
-  private handleClickCheckLogout = async (): Promise<void> => {
-    await this.props.dispatch(logout()).unwrap();
+  const handleClickCheckLogout = async (): Promise<void> => {
+    await dispatch(logout()).unwrap();
     if (Nav.isAtLoginPage) return;
-    this.props.router.navigate(`${Env.frontendRootPath}login`, { replace: true });
+    navigate(`${Env.frontendRootPath}login`, { replace: true });
 
     // Push one more state because Modal will do navigate(-1) after submitting.
     window.history.pushState({}, "", `${Env.frontendRootPath}login`);
   };
+
+  let activeModal: React.ReactNode = null;
+  if (activeModalName === "issueReport") {
+    activeModal = <IssueReportEditor hideModal={hideModal} />;
+  } else if (activeModalName === "checkLogout") {
+    activeModal = (
+      <Modal
+        title="登出"
+        discardButtonProps={{
+          children: "取消",
+          variant: "transparent",
+          onClick: hideModal,
+        }}
+        submitButtonProps={{
+          children: "登出",
+          variant: "primary",
+          disabled: isWaiting,
+          waiting: isWaiting,
+          onClick: handleClickCheckLogout,
+        }}
+      >
+        確定要登出嗎？
+      </Modal>
+    );
+  }
+
+  return (
+    <>
+      {activeModal}
+      <div className={styles.main}>
+        <BeautifulBlock id="account" title="帳號">
+          <BeautifulRow
+            onClick={() =>
+              navigate(`${Env.frontendRootPath}${settingsPagePath}/user-info`)
+            }
+          >
+            <div className={`${styles.row_inner} ${styles.user_info}`}>
+              <div className={styles.avatar_container}>
+                <img
+                  className={styles.avatar}
+                  src={
+                    showDefaultAvatar
+                      ? imgPersonFill
+                      : (Util.validateAndSanitizeUrl(avatarUrl ?? "") ?? imgPersonFill)
+                  }
+                  alt=""
+                  onError={() => setShowDefaultAvatar(true)}
+                />
+              </div>
+              <div className={styles.username}>{username}</div>
+            </div>
+          </BeautifulRow>
+          <BeautifulRow
+            onClick={() =>
+              navigate(`${Env.frontendRootPath}${settingsPagePath}/account-binding`)
+            }
+          >
+            <div className={`${styles.row_inner} ${styles.email}`}>
+              <Icons.IconEnvelope sideLength="16px" />
+              <div className={styles.email_container}>
+                <div>Email</div>
+                <div>{email}</div>
+              </div>
+              <img src={googleLogo} alt="" className={styles.google_logo} />
+            </div>
+          </BeautifulRow>
+          <BeautifulRow
+            onClick={() =>
+              navigate(`${Env.frontendRootPath}${settingsPagePath}/data-controls`)
+            }
+          >
+            <div className={`${styles.row_inner} ${styles.terms_of_service}`}>
+              <Icons.IconDatabaseManagement sideLength="16px" />
+              資料控制
+            </div>
+          </BeautifulRow>
+        </BeautifulBlock>
+        <BeautifulBlock id="billing-and-plans" title="付款與方案">
+          <BeautifulRow
+            label="目前方案"
+            onClick={() =>
+              navigate(`${Env.frontendRootPath}${settingsPagePath}/current-plan`)
+            }
+          >
+            {subscription.plan === "standard" ? "Standard" : "Free"}
+          </BeautifulRow>
+        </BeautifulBlock>
+        <BeautifulBlock id="about" title="關於">
+          <BeautifulRow
+            onClick={() =>
+              window.open(
+                `${Env.frontendRootPath}privacy-policy`,
+                Util.isMobile ? "_self" : "_blank",
+              )
+            }
+          >
+            <div className={`${styles.row_inner} ${styles.privacy_policy}`}>
+              <Icons.IconIncognito sideLength="16px" />
+              隱私權政策
+            </div>
+          </BeautifulRow>
+          <BeautifulRow
+            onClick={() =>
+              window.open(
+                `${Env.frontendRootPath}terms-of-service`,
+                Util.isMobile ? "_self" : "_blank",
+              )
+            }
+          >
+            <div className={`${styles.row_inner} ${styles.terms_of_service}`}>
+              <Icons.IconTermsInfo sideLength="16px" />
+              服務條款
+            </div>
+          </BeautifulRow>
+          <BeautifulRow onClick={handleClickIssueReport}>
+            <div className={`${styles.row_inner} ${styles.issue_report}`}>
+              <Icons.IconExclamation sideLength="16px" />
+              問題回報
+            </div>
+          </BeautifulRow>
+        </BeautifulBlock>
+        {isSuperuser && (
+          <BeautifulBlock id="admin" title="管理">
+            <BeautifulRow
+              onClick={() => navigate(`${Env.frontendRootPath}${adminPagePath}`)}
+            >
+              <div className={styles.row_inner}>
+                <Icons.IconChartHistogram sideLength="16px" />
+                後台
+              </div>
+            </BeautifulRow>
+          </BeautifulBlock>
+        )}
+        <BeautifulBlock id="logout">
+          <BeautifulRow onClick={() => setActiveModalName("checkLogout")}>
+            <div className={`${styles.row_inner} ${styles.logout}`}>
+              <Icons.IconExit sideLength="16px" />
+              登出
+            </div>
+          </BeautifulRow>
+        </BeautifulBlock>
+        <div className={styles.copyright}>
+          <Tooltip content="前往 Taigu 介紹頁" side="top">
+            <Link
+              to={`${Env.frontendRootPath}welcome`}
+              className={styles.logo_link}
+              aria-label="前往 Taigu 介紹頁"
+            >
+              <FullLogo size="m" />
+            </Link>
+          </Tooltip>
+          Copyright {new Date().getFullYear()} Taigu All rights reserved.
+        </div>
+      </div>
+    </>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(Overview));
+export default memo(Overview);

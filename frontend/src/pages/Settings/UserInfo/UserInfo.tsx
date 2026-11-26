@@ -1,6 +1,6 @@
 import MD5 from "crypto-js/md5";
-import React from "react";
-import { connect } from "react-redux";
+import { memo, useEffect, useLayoutEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import imgPersonFill from "../../../assets/person-fill.svg";
 import {
@@ -11,263 +11,219 @@ import {
   LabeledInputV2,
   Modal,
 } from "../../../components";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateAccountInfo } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
-import type { AppDispatch, RootState } from "../../../redux/store";
 import Env from "../../../utils/env";
-import { IRouter, settingsPagePath, withRouter } from "../../../utils/router";
+import { settingsPagePath } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./UserInfo.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { avatar_url, username, email, isWaiting } = rootState.account;
-  return { avatar_url, username, email, isWaiting };
-}
+function UserInfo() {
+  const savedAvatarUrl = useAppSelector((state) => state.account.avatar_url);
+  const savedUsername = useAppSelector((state) => state.account.username);
+  const email = useAppSelector((state) => state.account.email);
+  const isWaiting = useAppSelector((state) => state.account.isWaiting);
+  const dispatch = useAppDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showDefaultAvatar, setShowDefaultAvatar] = useState(false);
+  const [validGravatarUrl, setValidGravatarUrl] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState(savedAvatarUrl ?? "");
+  const [username, setUsername] = useState(savedUsername);
+  const [activeModalName, setActiveModalName] = useState<"gravatar" | null>(null);
+  const [shouldBlinkAvatarInput, setShouldBlinkAvatarInput] = useState(false);
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
+  useLayoutEffect(() => {
+    dispatch(updateHeaderTitle("頭像與名字"));
+  }, [dispatch]);
 
-interface State {
-  showDefaultAvatar: boolean;
-  validGravatarUrl: string | null;
-  avatarUrl: string;
-  username: string;
-  activeModalName: "gravatar" | null;
-  shouldBlinkAvatarInput: boolean;
-}
+  // The fields start from the saved account, and follow it when the account data
+  // loads or changes while the page is open.
+  useLayoutEffect(() => {
+    setUsername(savedUsername);
+  }, [savedUsername]);
+  useLayoutEffect(() => {
+    setAvatarUrl(savedAvatarUrl ?? "");
+    setShowDefaultAvatar(false);
+  }, [savedAvatarUrl]);
 
-class UserInfo extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {
-      showDefaultAvatar: false,
-      validGravatarUrl: null,
-      avatarUrl: "",
-      username: "",
-      activeModalName: null,
-      shouldBlinkAvatarInput: false,
-    };
-  }
-
-  public async componentDidMount(): Promise<void> {
-    this.props.dispatch(updateHeaderTitle("頭像與名字"));
-    this.setState({
-      avatarUrl: this.props.avatar_url ?? "",
-      username: this.props.username,
-    });
-    this.checkIfGravatarExists();
-  }
-
-  public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
-    if (prevProps.username !== this.props.username) {
-      this.setState({ username: this.props.username });
-    }
-    if (prevProps.email !== this.props.email) {
-      this.checkIfGravatarExists();
-    }
-    if (prevProps.avatar_url !== this.props.avatar_url) {
-      this.setState({
-        avatarUrl: this.props.avatar_url ?? "",
-        showDefaultAvatar: false,
-      });
-    }
-  }
-
-  public render(): React.ReactNode {
-    return (
-      <>
-        {this.state.activeModalName === "gravatar" &&
-          (Util.isMobile ? (
-            <BottomSheet onClickBackground={this.handleClickGravatarModalBackground}>
-              <div className={styles.gravatar_modal_content}>
-                <img
-                  className={styles.gravatar_preview}
-                  src={this.state.validGravatarUrl ?? imgPersonFill}
-                  alt=""
-                />
-                <div className={styles.gravatar_bottom_sheet_buttons}>
-                  <Button
-                    variant="primary_fill"
-                    size="action"
-                    round
-                    onClick={this.handleClickGravatarApply}
-                  >
-                    套用
-                  </Button>
-                  <Button
-                    variant="transparent"
-                    size="action"
-                    round
-                    onClick={this.handleClickGravatarDiscard}
-                  >
-                    捨棄
-                  </Button>
-                </div>
-              </div>
-            </BottomSheet>
-          ) : (
-            <Modal
-              title="使用 Gravatar 頭像"
-              discardButtonProps={{
-                children: "捨棄",
-                variant: "light",
-                onClick: this.handleClickGravatarDiscard,
-              }}
-              submitButtonProps={{
-                children: "套用",
-                variant: "primary_fill",
-                onClick: this.handleClickGravatarApply,
-              }}
-            >
-              <div className={styles.gravatar_modal_content}>
-                <img
-                  className={styles.gravatar_preview}
-                  src={this.state.validGravatarUrl ?? imgPersonFill}
-                  alt=""
-                />
-              </div>
-            </Modal>
-          ))}
-        <div className={styles.main}>
-          <Form
-            primaryFooterButton={
-              <Button
-                variant="primary_fill"
-                size="action"
-                disabled={this.props.isWaiting}
-                waiting={this.props.isWaiting}
-                onClick={this.handleClickSave}
-              >
-                儲存
-              </Button>
-            }
-            secondaryFooterButton={
-              <Button
-                variant="light"
-                size="action"
-                onClick={() =>
-                  this.props.router.navigate(
-                    `${Env.frontendRootPath}${settingsPagePath}`,
-                    { replace: true },
-                  )
-                }
-              >
-                捨棄
-              </Button>
-            }
-          >
-            <img
-              className={styles.avatar_preview}
-              src={
-                this.state.showDefaultAvatar
-                  ? imgPersonFill
-                  : (Util.validateAndSanitizeUrl(this.state.avatarUrl) ?? imgPersonFill)
-              }
-              alt=""
-              onError={() => this.setState({ showDefaultAvatar: true })}
-            />
-            {this.state.validGravatarUrl && (
-              <button
-                className={styles.gravatar_button}
-                onClick={this.handleClickUseGravatar}
-              >
-                使用 Gravatar 頭像
-              </button>
-            )}
-            <BeautifulBlock>
-              <div className={styles.avatarInputWrapper}>
-                {this.state.shouldBlinkAvatarInput && (
-                  <div className={styles.blinkOverlay} />
-                )}
-                <LabeledInputV2
-                  title="頭像位置"
-                  type="text"
-                  value={this.state.avatarUrl || ""}
-                  onChange={(avatarUrl: string) => {
-                    this.setState({ avatarUrl: avatarUrl, showDefaultAvatar: false });
-                  }}
-                  autoFocus
-                />
-              </div>
-              <LabeledInputV2
-                title="名字"
-                type="text"
-                value={this.state.username}
-                onChange={(username: string) => this.setState({ username: username })}
-              />
-            </BeautifulBlock>
-          </Form>
-        </div>
-      </>
-    );
-  }
-
-  private checkIfGravatarExists = async (): Promise<void> => {
-    if (this.props.email) {
-      const emailHash = MD5(this.props.email.toLowerCase().trim()).toString();
+  useEffect(() => {
+    if (!email) return;
+    const checkIfGravatarExists = async (): Promise<void> => {
+      const emailHash = MD5(email.toLowerCase().trim()).toString();
       const url = `https://www.gravatar.com/avatar/${emailHash}?d=404&s=128`;
       const response = await fetch(url);
-      if (response.ok) this.setState({ validGravatarUrl: url });
-      else this.setState({ validGravatarUrl: null });
+      setValidGravatarUrl(response.ok ? url : null);
+    };
+    void checkIfGravatarExists();
+  }, [email]);
+
+  const handleClickGravatarApply = (): void => {
+    if (validGravatarUrl) {
+      setAvatarUrl(validGravatarUrl);
+      setActiveModalName(null);
+      setShowDefaultAvatar(false);
+      setShouldBlinkAvatarInput(true);
+      setTimeout(() => setShouldBlinkAvatarInput(false), 500);
+    }
+    if (location.hash === "#!") {
+      navigate(-1); // remove the hash for the bottom sheet
     }
   };
 
-  private handleClickUseGravatar = async (): Promise<void> => {
-    this.setState({ activeModalName: "gravatar" });
-  };
-
-  private handleClickGravatarModalBackground = (): void => {
-    this.setState({ activeModalName: null });
-  };
-
-  private handleClickGravatarDiscard = (): void => {
-    this.setState({ activeModalName: null });
-  };
-
-  private handleClickGravatarApply = (): void => {
-    if (this.state.validGravatarUrl) {
-      this.setState({
-        avatarUrl: this.state.validGravatarUrl,
-        activeModalName: null,
-        showDefaultAvatar: false,
-        shouldBlinkAvatarInput: true,
-      });
-      setTimeout(() => {
-        this.setState({ shouldBlinkAvatarInput: false });
-      }, 500);
-    }
-    if (this.props.router.location.hash === "#!") {
-      this.props.router.navigate(-1); // remove the hash for the bottom sheet
-    }
-  };
-
-  private handleClickSave = async (): Promise<void> => {
-    const username = this.state.username.trim();
-    if (Array.from(username).length < 1 || Array.from(username).length > 64) {
-      this.props.dispatch(
-        pushToast({ type: "error", text: "名字需為 1 到 64 個字。" }),
-      );
+  const handleClickSave = async (): Promise<void> => {
+    const trimmedUsername = username.trim();
+    if (
+      Array.from(trimmedUsername).length < 1 ||
+      Array.from(trimmedUsername).length > 64
+    ) {
+      dispatch(pushToast({ type: "error", text: "名字需為 1 到 64 個字。" }));
       return;
     }
-    const validatedAvatarUrl = Util.validateAndSanitizeUrl(this.state.avatarUrl);
+    const validatedAvatarUrl = Util.validateAndSanitizeUrl(avatarUrl);
 
-    if (this.state.avatarUrl && !validatedAvatarUrl) {
-      this.props.dispatch(
+    if (avatarUrl && !validatedAvatarUrl) {
+      dispatch(
         pushToast({ type: "error", text: "無效的頭像 URL，請檢查格式是否正確" }),
       );
       return;
     }
 
-    await this.props
-      .dispatch(updateAccountInfo({ avatar_url: validatedAvatarUrl ?? "", username }))
-      .unwrap();
-    this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
-      replace: true,
-    });
+    await dispatch(
+      updateAccountInfo({
+        avatar_url: validatedAvatarUrl ?? "",
+        username: trimmedUsername,
+      }),
+    ).unwrap();
+    navigate(`${Env.frontendRootPath}${settingsPagePath}`, { replace: true });
   };
+
+  return (
+    <>
+      {activeModalName === "gravatar" &&
+        (Util.isMobile ? (
+          <BottomSheet onClickBackground={() => setActiveModalName(null)}>
+            <div className={styles.gravatar_modal_content}>
+              <img
+                className={styles.gravatar_preview}
+                src={validGravatarUrl ?? imgPersonFill}
+                alt=""
+              />
+              <div className={styles.gravatar_bottom_sheet_buttons}>
+                <Button
+                  variant="primary_fill"
+                  size="action"
+                  round
+                  onClick={handleClickGravatarApply}
+                >
+                  套用
+                </Button>
+                <Button
+                  variant="transparent"
+                  size="action"
+                  round
+                  onClick={() => setActiveModalName(null)}
+                >
+                  捨棄
+                </Button>
+              </div>
+            </div>
+          </BottomSheet>
+        ) : (
+          <Modal
+            title="使用 Gravatar 頭像"
+            discardButtonProps={{
+              children: "捨棄",
+              variant: "light",
+              onClick: () => setActiveModalName(null),
+            }}
+            submitButtonProps={{
+              children: "套用",
+              variant: "primary_fill",
+              onClick: handleClickGravatarApply,
+            }}
+          >
+            <div className={styles.gravatar_modal_content}>
+              <img
+                className={styles.gravatar_preview}
+                src={validGravatarUrl ?? imgPersonFill}
+                alt=""
+              />
+            </div>
+          </Modal>
+        ))}
+      <div className={styles.main}>
+        <Form
+          primaryFooterButton={
+            <Button
+              variant="primary_fill"
+              size="action"
+              disabled={isWaiting}
+              waiting={isWaiting}
+              onClick={handleClickSave}
+            >
+              儲存
+            </Button>
+          }
+          secondaryFooterButton={
+            <Button
+              variant="light"
+              size="action"
+              onClick={() =>
+                navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
+                  replace: true,
+                })
+              }
+            >
+              捨棄
+            </Button>
+          }
+        >
+          <img
+            className={styles.avatar_preview}
+            src={
+              showDefaultAvatar
+                ? imgPersonFill
+                : (Util.validateAndSanitizeUrl(avatarUrl) ?? imgPersonFill)
+            }
+            alt=""
+            onError={() => setShowDefaultAvatar(true)}
+          />
+          {validGravatarUrl && (
+            <button
+              className={styles.gravatar_button}
+              onClick={() => setActiveModalName("gravatar")}
+            >
+              使用 Gravatar 頭像
+            </button>
+          )}
+          <BeautifulBlock>
+            <div className={styles.avatarInputWrapper}>
+              {shouldBlinkAvatarInput && <div className={styles.blinkOverlay} />}
+              <LabeledInputV2
+                title="頭像位置"
+                type="text"
+                value={avatarUrl || ""}
+                onChange={(value: string) => {
+                  setAvatarUrl(value);
+                  setShowDefaultAvatar(false);
+                }}
+                autoFocus
+              />
+            </div>
+            <LabeledInputV2
+              title="名字"
+              type="text"
+              value={username}
+              onChange={setUsername}
+            />
+          </BeautifulBlock>
+        </Form>
+      </div>
+    </>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(UserInfo));
+export default memo(UserInfo);

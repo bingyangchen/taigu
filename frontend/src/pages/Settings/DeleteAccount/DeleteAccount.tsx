@@ -1,81 +1,64 @@
-import React from "react";
-import { connect } from "react-redux";
+import { memo, useLayoutEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { Button, Form, LabeledInput } from "../../../components";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { deleteAccount } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
-import type { AppDispatch, RootState } from "../../../redux/store";
 import Env from "../../../utils/env";
-import { IRouter, settingsPagePath, withRouter } from "../../../utils/router";
+import { settingsPagePath } from "../../../utils/router";
 import styles from "./DeleteAccount.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { isWaiting } = rootState.account;
-  return { isWaiting };
-}
+function DeleteAccount() {
+  const isWaiting = useAppSelector((state) => state.account.isWaiting);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const [password, setPassword] = useState("");
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
+  useLayoutEffect(() => {
+    dispatch(updateHeaderTitle("刪除帳號"));
+  }, [dispatch]);
 
-interface State {
-  password: string;
-}
-
-class DeleteAccount extends React.Component<Props, State> {
-  public state: State;
-  public constructor(props: Props) {
-    super(props);
-    this.state = { password: "" };
-  }
-  public async componentDidMount(): Promise<void> {
-    this.props.dispatch(updateHeaderTitle("刪除帳號"));
-  }
-  public render(): React.ReactNode {
-    return (
-      <Form
-        primaryFooterButton={
-          <Button
-            variant="dangerous_fill"
-            size="action"
-            disabled={this.props.isWaiting}
-            waiting={this.props.isWaiting}
-            onClick={this.handleClickCheckDelete}
-          >
-            確認刪除
-          </Button>
-        }
-        secondaryFooterButton={
-          <Button
-            variant="light"
-            size="action"
-            onClick={() =>
-              this.props.router.navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
-                replace: true,
-              })
-            }
-          >
-            捨棄
-          </Button>
-        }
-      >
-        <div className={styles.description}>提醒您，帳號刪除後即無法復原。</div>
-        <LabeledInput
-          title="密碼"
-          type="password"
-          autocomplete="new-password"
-          value={this.state.password}
-          onChange={(password: string) => this.setState({ password: password })}
-        />
-      </Form>
-    );
-  }
-  private handleClickCheckDelete = async (): Promise<void> => {
-    await this.props
-      .dispatch(deleteAccount({ password: this.state.password }))
-      .unwrap();
-    this.props.router.navigate(`${Env.frontendRootPath}login`, { replace: true });
+  const handleClickCheckDelete = async (): Promise<void> => {
+    await dispatch(deleteAccount({ password })).unwrap();
+    navigate(`${Env.frontendRootPath}login`, { replace: true });
   };
+
+  return (
+    <Form
+      primaryFooterButton={
+        <Button
+          variant="dangerous_fill"
+          size="action"
+          disabled={isWaiting}
+          waiting={isWaiting}
+          onClick={handleClickCheckDelete}
+        >
+          確認刪除
+        </Button>
+      }
+      secondaryFooterButton={
+        <Button
+          variant="light"
+          size="action"
+          onClick={() =>
+            navigate(`${Env.frontendRootPath}${settingsPagePath}`, { replace: true })
+          }
+        >
+          捨棄
+        </Button>
+      }
+    >
+      <div className={styles.description}>提醒您，帳號刪除後即無法復原。</div>
+      <LabeledInput
+        title="密碼"
+        type="password"
+        autocomplete="new-password"
+        value={password}
+        onChange={setPassword}
+      />
+    </Form>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(DeleteAccount));
+export default memo(DeleteAccount);
