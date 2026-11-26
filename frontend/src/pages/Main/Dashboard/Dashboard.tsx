@@ -1,5 +1,5 @@
-import React from "react";
-import { connect } from "react-redux";
+import { memo, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   DollarSign,
@@ -12,337 +12,207 @@ import {
   SummaryCard,
   TradeRecordEditor,
 } from "../../../components";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { changeDashboardDaysToShow } from "../../../redux/slices/MainPageSlice";
 import { selectNetHandlingFee } from "../../../redux/slices/TradeRecordSlice";
-import type { AppDispatch, RootState } from "../../../redux/store";
 import { dateStringToDate } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { getSidMarketValueMap, getTotalMarketValue } from "../../../utils/market";
-import { getHideModalCallback } from "../../../utils/modal";
-import { IRouter, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./Dashboard.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const {
-    tradeRecords,
-    stockWarehouse,
-    totalCashInvested,
-    sidGainMap,
-    cashInvestedChartData,
-    averageCashInvested,
-  } = rootState.tradeRecord;
-  const { cashDividendRecords } = rootState.cashDividend;
-  const { sidStockInfoMap } = rootState.stockInfo;
-  const { handlingFeeDiscountRecords } = rootState.handlingFeeDiscount;
-  const { dashboardDaysToShow } = rootState.mainPage;
-  return {
-    tradeRecords,
-    cashDividendRecords,
-    handlingFeeDiscountRecords,
-    totalCashInvested,
-    netHandlingFee: selectNetHandlingFee(rootState),
-    sidGainMap,
-    cashInvestedChartData,
-    averageCashInvested,
-    sidStockInfoMap,
-    stockWarehouse,
-    dashboardDaysToShow,
-  };
-}
+function Dashboard() {
+  const tradeRecords = useAppSelector((state) => state.tradeRecord.tradeRecords);
+  const stockWarehouse = useAppSelector((state) => state.tradeRecord.stockWarehouse);
+  const totalCashInvested = useAppSelector(
+    (state) => state.tradeRecord.totalCashInvested,
+  );
+  const sidGainMap = useAppSelector((state) => state.tradeRecord.sidGainMap);
+  const cashInvestedChartData = useAppSelector(
+    (state) => state.tradeRecord.cashInvestedChartData,
+  );
+  const cashDividendRecords = useAppSelector(
+    (state) => state.cashDividend.cashDividendRecords,
+  );
+  const sidStockInfoMap = useAppSelector((state) => state.stockInfo.sidStockInfoMap);
+  const handlingFeeDiscountRecords = useAppSelector(
+    (state) => state.handlingFeeDiscount.handlingFeeDiscountRecords,
+  );
+  const dashboardDaysToShow = useAppSelector(
+    (state) => state.mainPage.dashboardDaysToShow,
+  );
+  const netHandlingFee = useAppSelector(selectNetHandlingFee);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const [activeModalName, setActiveModalName] = useState<"createTradeRecord" | null>(
+    null,
+  );
+  const [animatedTotalCashInvested, setAnimatedTotalCashInvested] = useState(0);
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
+  // The total counts up to the cash invested, one step per animation frame.
+  useEffect(() => {
+    if (animatedTotalCashInvested === totalCashInvested) return;
+    const animationFrameId = requestAnimationFrame(() =>
+      setAnimatedTotalCashInvested((current) =>
+        Math.min(
+          current + Math.max(1, (totalCashInvested - current) / 2.5),
+          totalCashInvested,
+        ),
+      ),
+    );
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [animatedTotalCashInvested, totalCashInvested]);
 
-interface State {
-  cashInvestedLineChart: React.ReactElement | null;
-  marketValuePieChart: React.ReactElement | null;
-  sidMarketValueMap: { [sid: string]: number };
-  totalMarketValue: number;
-  totalEarning: number;
-  animatedTotalCashInvested: number;
-  xirr: number;
-  activeModalName: "createTradeRecord" | null;
-}
-
-class Dashboard extends React.Component<Props, State> {
-  public state: State;
-  private animationFrameId: number | null = null;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {
-      cashInvestedLineChart: null,
-      marketValuePieChart: null,
-      sidMarketValueMap: {},
-      totalMarketValue: 0,
-      totalEarning: 0,
-      animatedTotalCashInvested: 0,
-      xirr: 0,
-      activeModalName: null,
-    };
-  }
-
-  public componentDidMount(): void {
-    this.updateCashInvestedLineChart();
-    this.updateMarketRelatedData();
-    this.updateXIRR();
-    this.updateTotalEarning();
-    this.animateTotalCashInvested();
-  }
-
-  public componentWillUnmount(): void {
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
-  }
-
-  public componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-  ): void {
-    if (
-      prevProps.totalCashInvested !== this.props.totalCashInvested ||
-      prevProps.dashboardDaysToShow !== this.props.dashboardDaysToShow
-    ) {
-      this.updateCashInvestedLineChart();
-      this.animateTotalCashInvested();
-    }
-    if (
-      prevProps.totalCashInvested !== this.props.totalCashInvested ||
-      prevProps.sidStockInfoMap !== this.props.sidStockInfoMap
-    ) {
-      this.updateMarketRelatedData();
-    }
-    if (
-      prevProps.tradeRecords !== this.props.tradeRecords ||
-      prevProps.handlingFeeDiscountRecords !== this.props.handlingFeeDiscountRecords ||
-      prevProps.cashDividendRecords !== this.props.cashDividendRecords ||
-      prevState.totalMarketValue !== this.state.totalMarketValue
-    ) {
-      this.updateXIRR();
-    }
-    if (
-      prevProps.sidGainMap !== this.props.sidGainMap ||
-      prevProps.cashDividendRecords !== this.props.cashDividendRecords
-    ) {
-      this.updateTotalEarning();
-    }
-  }
-
-  public render(): React.ReactNode {
+  // The charts are built only when their data changes, so the animation above does not
+  // make ECharts redraw them on every frame.
+  const cashInvestedLineChart = useMemo(() => {
+    const allData = cashInvestedChartData.map((row) => ({
+      date: dateStringToDate(row[0] as string),
+      value: row[1] as number,
+    }));
+    const filteredData = allData.slice(-Math.min(dashboardDaysToShow, allData.length));
     return (
-      <div className={styles.main}>
-        {Util.isMobile && <SpeedDial />}
-        <div className={styles.left}>
-          <MarketIndexSummary />
-          <div className={styles.lower}>
-            <div className={styles.cash_invested_text}>
-              <div className={styles.title}>投入金額</div>
-              <div className={styles.cash_invested}>
-                ${Math.round(this.state.animatedTotalCashInvested).toLocaleString()}
-              </div>
+      <SimpleCashInvestedLineChart
+        dates={filteredData.map((d) => d.date)}
+        values={filteredData.map((d) => d.value)}
+      />
+    );
+  }, [cashInvestedChartData, dashboardDaysToShow]);
+
+  const sidMarketValueMap = useMemo(
+    () => getSidMarketValueMap(sidStockInfoMap, stockWarehouse),
+    [sidStockInfoMap, stockWarehouse],
+  );
+  const totalMarketValue = useMemo(
+    () => getTotalMarketValue(sidStockInfoMap, stockWarehouse),
+    [sidStockInfoMap, stockWarehouse],
+  );
+  const marketValuePieChart = useMemo(
+    () => (
+      <MarketValuePieChart
+        sidMarketValueMap={sidMarketValueMap}
+        totalMarketValue={totalMarketValue}
+      />
+    ),
+    [sidMarketValueMap, totalMarketValue],
+  );
+
+  const xirr = useMemo(
+    () =>
+      Util.calculateXIRR(
+        tradeRecords,
+        handlingFeeDiscountRecords,
+        cashDividendRecords,
+        totalMarketValue,
+      ),
+    [tradeRecords, handlingFeeDiscountRecords, cashDividendRecords, totalMarketValue],
+  );
+  const totalEarning = useMemo(
+    () =>
+      Object.values(sidGainMap).reduce((sum, gain) => sum + gain, 0) +
+      cashDividendRecords.reduce((sum, record) => sum + record.cash_dividend, 0),
+    [sidGainMap, cashDividendRecords],
+  );
+
+  const handleCreateTradeRecordClick = (): void => {
+    if (Util.isMobile) {
+      navigate(`${Env.frontendRootPath}records/trade/new`);
+      return;
+    }
+    setActiveModalName("createTradeRecord");
+  };
+
+  return (
+    <div className={styles.main}>
+      {Util.isMobile && <SpeedDial />}
+      <div className={styles.left}>
+        <MarketIndexSummary />
+        <div className={styles.lower}>
+          <div className={styles.cash_invested_text}>
+            <div className={styles.title}>投入金額</div>
+            <div className={styles.cash_invested}>
+              ${Math.round(animatedTotalCashInvested).toLocaleString()}
             </div>
-            <div className={styles.body}>
-              {this.props.tradeRecords.length === 0 ? (
-                <div className={styles.empty_section}>
-                  還沒有任何交易紀錄喔！快
-                  <span
-                    className={styles.button}
-                    onClick={this.handleCreateTradeRecordClick}
-                  >
-                    點這裡
-                  </span>
-                  新增你的第一筆交易，展開投資之旅吧！
+          </div>
+          <div className={styles.body}>
+            {tradeRecords.length === 0 ? (
+              <div className={styles.empty_section}>
+                還沒有任何交易紀錄喔！快
+                <span className={styles.button} onClick={handleCreateTradeRecordClick}>
+                  點這裡
+                </span>
+                新增你的第一筆交易，展開投資之旅吧！
+              </div>
+            ) : (
+              <>
+                <div className={styles.cash_invested_chart_container}>
+                  {cashInvestedLineChart}
                 </div>
-              ) : (
-                <>
-                  <div className={styles.cash_invested_chart_container}>
-                    {this.state.cashInvestedLineChart}
-                  </div>
-                  <div className={styles.controls}>
-                    <SegmentedControl
-                      label="投入金額圖表時間區間"
-                      options={[
-                        { label: "1M", value: "30" },
-                        { label: "1Q", value: "91" },
-                        { label: "1Y", value: "365" },
-                        { label: "ALL", value: "Infinity" },
-                      ]}
-                      value={String(this.props.dashboardDaysToShow)}
-                      onChange={this.handleTimeSpanSegmentChange}
-                    />
-                    {/* <RoundButton size="l" hint_text="查看詳情">
+                <div className={styles.controls}>
+                  <SegmentedControl
+                    label="投入金額圖表時間區間"
+                    options={[
+                      { label: "1M", value: "30" },
+                      { label: "1Q", value: "91" },
+                      { label: "1Y", value: "365" },
+                      { label: "ALL", value: "Infinity" },
+                    ]}
+                    value={String(dashboardDaysToShow)}
+                    onChange={(value: string) =>
+                      dispatch(
+                        changeDashboardDaysToShow(
+                          value === "Infinity" ? Infinity : Number(value),
+                        ),
+                      )
+                    }
+                  />
+                  {/* <RoundButton size="l" hint_text="查看詳情">
                       <Icons.IconFullScreen sideLength="14" />
                     </RoundButton> */}
-                  </div>
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        <div className={styles.right}>
-          <div className={styles.upper}>
-            <div className={styles.title}>投資組合</div>
-            <div className={styles.market_value_chart_container}>
-              {this.state.marketValuePieChart}
-              <div className={styles.chart_center}>
-                <div className={styles.upper}>目前市值</div>
-                <div className={styles.lower}>
-                  <DollarSign />
-                  {Math.round(this.state.totalMarketValue).toLocaleString()}
-                </div>
+      </div>
+      <div className={styles.right}>
+        <div className={styles.upper}>
+          <div className={styles.title}>投資組合</div>
+          <div className={styles.market_value_chart_container}>
+            {marketValuePieChart}
+            <div className={styles.chart_center}>
+              <div className={styles.upper}>目前市值</div>
+              <div className={styles.lower}>
+                <DollarSign />
+                {Math.round(totalMarketValue).toLocaleString()}
               </div>
             </div>
           </div>
-          <SummaryCard title="年化報酬率">
-            {this.props.tradeRecords.length > 0
-              ? (this.state.xirr * 100).toFixed(2)
-              : 0}
-            <PercentSign />
-          </SummaryCard>
-          <SummaryCard title="實現損益" onClick={this.handleClickTotalEarning}>
-            <DollarSign />
-            {Math.round(this.state.totalEarning).toLocaleString()}
-          </SummaryCard>
-          <SummaryCard title="手續費用(-)" onClick={this.handleClickHandlingFee}>
-            <DollarSign />
-            {this.props.netHandlingFee.toLocaleString()}
-          </SummaryCard>
         </div>
-        {this.activeModal}
+        <SummaryCard title="年化報酬率">
+          {tradeRecords.length > 0 ? (xirr * 100).toFixed(2) : 0}
+          <PercentSign />
+        </SummaryCard>
+        <SummaryCard
+          title="實現損益"
+          onClick={() => navigate(`${Env.frontendRootPath}earning-analysis`)}
+        >
+          <DollarSign />
+          {Math.round(totalEarning).toLocaleString()}
+        </SummaryCard>
+        <SummaryCard
+          title="手續費用(-)"
+          onClick={() => navigate(`${Env.frontendRootPath}handling-fee`)}
+        >
+          <DollarSign />
+          {netHandlingFee.toLocaleString()}
+        </SummaryCard>
       </div>
-    );
-  }
-
-  private get activeModal(): React.ReactElement | null {
-    if (this.state.activeModalName === "createTradeRecord") {
-      return <TradeRecordEditor hideModal={getHideModalCallback(this)} />;
-    }
-    return null;
-  }
-
-  private updateTotalEarning(): void {
-    this.setState({
-      totalEarning:
-        Object.values(this.props.sidGainMap).reduce((sum, gain) => sum + gain, 0) +
-        this.props.cashDividendRecords.reduce(
-          (sum, record) => sum + record.cash_dividend,
-          0,
-        ),
-    });
-  }
-
-  private handleTimeSpanSegmentChange = (value: string): void => {
-    this.props.dispatch(
-      changeDashboardDaysToShow(value === "Infinity" ? Infinity : Number(value)),
-    );
-  };
-
-  private handleClickTotalEarning = (): void => {
-    this.props.router.navigate(`${Env.frontendRootPath}earning-analysis`);
-  };
-
-  private handleClickHandlingFee = (): void => {
-    this.props.router.navigate(`${Env.frontendRootPath}handling-fee`);
-  };
-
-  private handleCreateTradeRecordClick = (): void => {
-    if (Util.isMobile) {
-      this.props.router.navigate(`${Env.frontendRootPath}records/trade/new`);
-      return;
-    }
-    this.setState({ activeModalName: "createTradeRecord" });
-  };
-
-  private updateCashInvestedLineChart(): void {
-    this.setState((state, props) => {
-      const allData = props.cashInvestedChartData.map((row) => {
-        const dateStr = row[0] as string;
-        return { date: dateStringToDate(dateStr), value: row[1] as number };
-      });
-      const daysToShow = Math.min(props.dashboardDaysToShow, allData.length);
-      const filteredData = allData.slice(-daysToShow);
-      return {
-        cashInvestedLineChart: (
-          <SimpleCashInvestedLineChart
-            dates={filteredData.map((d) => d.date)}
-            values={filteredData.map((d) => d.value)}
-          />
-        ),
-      };
-    });
-  }
-
-  private updateMarketRelatedData(): void {
-    this.setState(
-      (state, props) => {
-        return {
-          sidMarketValueMap: getSidMarketValueMap(
-            props.sidStockInfoMap,
-            props.stockWarehouse,
-          ),
-          totalMarketValue: getTotalMarketValue(
-            props.sidStockInfoMap,
-            props.stockWarehouse,
-          ),
-        };
-      },
-      () => {
-        this.setState({
-          marketValuePieChart: (
-            <MarketValuePieChart
-              sidMarketValueMap={this.state.sidMarketValueMap}
-              totalMarketValue={this.state.totalMarketValue}
-            />
-          ),
-        });
-      },
-    );
-  }
-
-  private updateXIRR(): void {
-    this.setState((state, props) => {
-      return {
-        xirr: Util.calculateXIRR(
-          props.tradeRecords,
-          props.handlingFeeDiscountRecords,
-          props.cashDividendRecords,
-          state.totalMarketValue,
-        ),
-      };
-    });
-  }
-
-  private animateTotalCashInvested(): void {
-    if (this.state.animatedTotalCashInvested === this.props.totalCashInvested) {
-      if (this.animationFrameId !== null) {
-        cancelAnimationFrame(this.animationFrameId);
-        this.animationFrameId = null;
-      }
-      return;
-    }
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-    }
-    this.animationFrameId = requestAnimationFrame(() => {
-      this.setState((state, props) => {
-        return {
-          animatedTotalCashInvested: Math.min(
-            state.animatedTotalCashInvested +
-              Math.max(
-                1,
-                (props.totalCashInvested - state.animatedTotalCashInvested) / 2.5,
-              ),
-            props.totalCashInvested,
-          ),
-        };
-      });
-      this.animationFrameId = null;
-      this.animateTotalCashInvested();
-    });
-  }
+      {activeModalName === "createTradeRecord" && (
+        <TradeRecordEditor hideModal={() => setActiveModalName(null)} />
+      )}
+    </div>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(Dashboard));
+export default memo(Dashboard);

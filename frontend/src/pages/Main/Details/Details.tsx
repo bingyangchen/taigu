@@ -1,7 +1,6 @@
 import { createSelector } from "@reduxjs/toolkit";
-import React from "react";
-import { connect } from "react-redux";
-import { Link } from "react-router-dom";
+import React, { memo, useLayoutEffect, useRef } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import {
   BottomSheet,
@@ -25,6 +24,7 @@ import {
 } from "../../../components/StockIntradayLineChart/stockIntradayChartData";
 import Tooltip from "../../../components/Tooltip/Tooltip";
 import * as Icons from "../../../icons";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   changeStockDetailChartMode,
   type StockDetailChartMode,
@@ -42,15 +42,16 @@ import {
   fetchSingleStockIntradayPrices,
 } from "../../../redux/slices/StockInfoSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
-import type { AppDispatch, RootState } from "../../../redux/store";
+import type { RootState } from "../../../redux/store";
 import { store } from "../../../redux/store";
 import { COLORS } from "../../../styles/tokens";
 import type { MarketTab, MaterialFact } from "../../../types";
 import { formatDateWithWeekday } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { calculateMarketValue, getVisibleMarketSids } from "../../../utils/market";
-import { getHideModalCallback } from "../../../utils/modal";
-import { IRouter, navigateBack, withRouter } from "../../../utils/router";
+import { navigateBack } from "../../../utils/router";
+import { useLatestRef } from "../../../utils/useLatestRef";
+import { useMergedState } from "../../../utils/useMergedState";
 import Util from "../../../utils/util";
 import styles from "./Details.module.scss";
 
@@ -90,74 +91,25 @@ const selectNavigableSids = createSelector(
   { memoizeOptions: { maxSize: 2 } },
 );
 
-function mapStateToProps(rootState: RootState, ownProps: IRouter) {
-  const sid = ownProps.router.params.sid ?? "";
-  const [, , routeTab, routeSid] = ownProps.router.location.pathname.split("/");
-  const stockListTab =
-    routeSid && (routeTab === "holding" || routeTab === "favorites") ? routeTab : null;
-  const {
-    sidStockInfoMap,
-    sidHistoricalPricesMap,
-    sidIntradayPricesMap,
-    isWaitingHistoricalPrices,
-    isWaitingIntradayPrices,
-  } = rootState.stockInfo;
-  const {
-    sidTradeRecordsMap,
-    sidGainMap,
-    sidCashInvestedMap,
-    stockWarehouse,
-    isWaiting: isWaitingTradeRecord,
-  } = rootState.tradeRecord;
-  const { cashDividendRecords, sidTotalCashDividendMap } = rootState.cashDividend;
-  const { sidCompanyInfoMap, favorites } = rootState.memo;
-  const { tradePlans } = rootState.tradePlan;
-  const { subscription } = rootState.account;
-  const { stockDetailChartMode, marketSearchText, marketSortKey } = rootState.mainPage;
-  let previousStockSid: string | undefined;
-  let nextStockSid: string | undefined;
-  if (stockListTab) {
-    const xirrDate = marketSortKey === "xirr" ? new Date().toDateString() : undefined;
-    let sids = selectNavigableSids(rootState, stockListTab, marketSearchText, xirrDate);
-    let index = sids.indexOf(sid);
-    if (index < 0 && marketSearchText.trim()) {
-      sids = selectNavigableSids(rootState, stockListTab, "", xirrDate);
-      index = sids.indexOf(sid);
-    }
-    if (index >= 0) {
-      previousStockSid = sids[index - 1];
-      nextStockSid = sids[index + 1];
-    }
+function getAdjacentStockSid(
+  rootState: RootState,
+  stockListTab: MarketTab | null,
+  sid: string,
+  offset: -1 | 1,
+): string | undefined {
+  if (!stockListTab) return undefined;
+  const { marketSearchText, marketSortKey } = rootState.mainPage;
+  const xirrDate = marketSortKey === "xirr" ? new Date().toDateString() : undefined;
+  let sids = selectNavigableSids(rootState, stockListTab, marketSearchText, xirrDate);
+  let index = sids.indexOf(sid);
+  if (index < 0 && marketSearchText.trim()) {
+    sids = selectNavigableSids(rootState, stockListTab, "", xirrDate);
+    index = sids.indexOf(sid);
   }
-  return {
-    stockListTab,
-    previousStockSid,
-    nextStockSid,
-    stockInfo: sidStockInfoMap[sid],
-    intradayPrices: sidIntradayPricesMap[sid],
-    inventory: stockWarehouse[sid],
-    historicalPrices: sidHistoricalPricesMap[sid],
-    tradeRecords: sidTradeRecordsMap[sid],
-    cashInvested: sidCashInvestedMap[sid],
-    realizedGain: sidGainMap[sid],
-    cashDividendRecords,
-    sidTotalCashDividendMap,
-    companyInfo: sidCompanyInfoMap[sid],
-    tradePlans,
-    favorites,
-    isWaitingHistoricalPrices,
-    isWaitingIntradayPrices,
-    isWaitingTradeRecord,
-    subscription,
-    stockDetailChartMode,
-  };
+  return index >= 0 ? sids[index + offset] : undefined;
 }
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
-
-interface State {
+interface DetailsState {
   activeModalName: "companyInfo" | "updateOrCreateNote" | null;
   historicalPriceLineChart: React.ReactElement | null;
   intradayLineChart: React.ReactElement | null;
@@ -175,748 +127,130 @@ interface State {
   didStockInfoFail: boolean;
 }
 
-class Details extends React.Component<Props, State> {
-  public state: State;
-  private mainRef: React.RefObject<HTMLDivElement | null>;
-  private fetchStockInfoTimer: ReturnType<typeof setInterval> | null = null;
-  private readonly SCROLLING_THRESHOLD: number = 10;
-  private readonly SWITCHING_THRESHOLD: number = 85;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {
-      activeModalName: null,
-      historicalPriceLineChart: null,
-      intradayLineChart: null,
-      marketValue: 0,
-      xirr: 0,
-      inventoryHistogram: null,
-      touchStartX: 0,
-      touchStartY: 0,
-      touchDiffX: 0,
-      switchDirection: null,
-      isScrollingHorizontally: false,
-      isScrollingVertically: false,
-      hasVibrated: false,
-      activeMaterialFact: null,
-      didStockInfoFail: false,
-    };
-    this.mainRef = React.createRef();
-  }
+const INITIAL_STATE: DetailsState = {
+  activeModalName: null,
+  historicalPriceLineChart: null,
+  intradayLineChart: null,
+  marketValue: 0,
+  xirr: 0,
+  inventoryHistogram: null,
+  touchStartX: 0,
+  touchStartY: 0,
+  touchDiffX: 0,
+  switchDirection: null,
+  isScrollingHorizontally: false,
+  isScrollingVertically: false,
+  hasVibrated: false,
+  activeMaterialFact: null,
+  didStockInfoFail: false,
+};
 
-  public async componentDidMount(): Promise<void> {
-    if (this.props.stockListTab && this.mainRef.current) {
-      // Do not write this using React inline event handling
-      this.mainRef.current.addEventListener("touchstart", this.handleTouchStart, true);
-      this.mainRef.current.addEventListener("touchmove", this.handleTouchMove, true);
-      this.mainRef.current.addEventListener("touchend", this.handleTouchEnd, true);
-    }
-    await this.loadStockDetail(this.sid);
-  }
+const SCROLLING_THRESHOLD = 10;
+const SWITCHING_THRESHOLD = 85;
 
-  private async loadStockDetail(sid: string): Promise<void> {
-    const inventoryHistogramPrices = await this.calcInventoryHistogramChartData(sid);
-    if (sid !== this.sid) return;
-    this.setState({
-      inventoryHistogram: <InventoryHistogram prices={inventoryHistogramPrices} />,
-      activeMaterialFact: null,
-    });
-    this.props
-      .dispatch(fetchSingleStockInfo(sid))
-      .unwrap()
-      .then(() => {
-        if (sid !== this.sid) return;
-        this.setState({ didStockInfoFail: false });
-        this.updateMarketValueFromProps();
-      })
-      .catch(() => {
-        if (sid === this.sid) this.setState({ didStockInfoFail: true });
-      });
-    this.props
-      .dispatch(fetchSingleStockHistoricalPrices({ sid, frequency: "DAILY" }))
-      .unwrap()
-      .then(() => {
-        if (sid !== this.sid) return;
-        this.updateHistoricalPriceLineChart();
-      });
-    this.props
-      .dispatch(fetchSingleStockIntradayPrices(sid))
-      .unwrap()
-      .then(() => {
-        if (sid !== this.sid) return;
-        this.updateIntradayLineChart();
-      });
-    this.props.dispatch(fetchCompanyInfo(sid));
-    this.startFetchStockInfoTimer(sid);
-  }
+function Details() {
+  const params = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const sid = params.sid ?? "";
+  const [, , routeTab, routeSid] = location.pathname.split("/");
+  const stockListTab: MarketTab | null =
+    routeSid && (routeTab === "holding" || routeTab === "favorites") ? routeTab : null;
+  const previousStockSid = useAppSelector((rootState) =>
+    getAdjacentStockSid(rootState, stockListTab, sid, -1),
+  );
+  const nextStockSid = useAppSelector((rootState) =>
+    getAdjacentStockSid(rootState, stockListTab, sid, 1),
+  );
+  const stockInfo = useAppSelector(
+    (rootState) => rootState.stockInfo.sidStockInfoMap[sid],
+  );
+  const intradayPrices = useAppSelector(
+    (rootState) => rootState.stockInfo.sidIntradayPricesMap[sid],
+  );
+  const historicalPrices = useAppSelector(
+    (rootState) => rootState.stockInfo.sidHistoricalPricesMap[sid],
+  );
+  const isWaitingHistoricalPrices = useAppSelector(
+    (rootState) => rootState.stockInfo.isWaitingHistoricalPrices,
+  );
+  const isWaitingIntradayPrices = useAppSelector(
+    (rootState) => rootState.stockInfo.isWaitingIntradayPrices,
+  );
+  const inventory = useAppSelector(
+    (rootState) => rootState.tradeRecord.stockWarehouse[sid],
+  );
+  const tradeRecords = useAppSelector(
+    (rootState) => rootState.tradeRecord.sidTradeRecordsMap[sid],
+  );
+  const cashInvested = useAppSelector(
+    (rootState) => rootState.tradeRecord.sidCashInvestedMap[sid],
+  );
+  const realizedGain = useAppSelector(
+    (rootState) => rootState.tradeRecord.sidGainMap[sid],
+  );
+  const isWaitingTradeRecord = useAppSelector(
+    (rootState) => rootState.tradeRecord.isWaiting,
+  );
+  const cashDividendRecords = useAppSelector(
+    (rootState) => rootState.cashDividend.cashDividendRecords,
+  );
+  const sidTotalCashDividendMap = useAppSelector(
+    (rootState) => rootState.cashDividend.sidTotalCashDividendMap,
+  );
+  const companyInfo = useAppSelector(
+    (rootState) => rootState.memo.sidCompanyInfoMap[sid],
+  );
+  const favorites = useAppSelector((rootState) => rootState.memo.favorites);
+  const tradePlans = useAppSelector((rootState) => rootState.tradePlan.tradePlans);
+  const subscription = useAppSelector((rootState) => rootState.account.subscription);
+  const stockDetailChartMode = useAppSelector(
+    (rootState) => rootState.mainPage.stockDetailChartMode,
+  );
+  const dispatch = useAppDispatch();
+  const [state, setState, runAfterCommitCallbacks] =
+    useMergedState<DetailsState>(INITIAL_STATE);
+  const mainRef = useRef<HTMLDivElement>(null);
+  const fetchStockInfoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isUnmountedRef = useRef(false);
 
-  private startFetchStockInfoTimer(sid: string): void {
-    if (this.fetchStockInfoTimer) {
-      clearInterval(this.fetchStockInfoTimer);
-      this.fetchStockInfoTimer = null;
-    }
-    this.fetchStockInfoTimer = setInterval(() => {
-      this.props
-        .dispatch(fetchSingleStockInfo(sid))
-        .unwrap()
-        .then(() => {
-          if (sid === this.sid) this.setState({ didStockInfoFail: false });
-        })
-        .catch(() => {
-          if (sid === this.sid) this.setState({ didStockInfoFail: true });
-        });
-      this.props.dispatch(fetchSingleStockIntradayPrices(sid));
-    }, this.props.subscription.market_refresh_interval_seconds * 1000);
-  }
-
-  public async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
-    if (
-      prevProps.isWaitingTradeRecord !== this.props.isWaitingTradeRecord ||
-      prevProps.tradeRecords !== this.props.tradeRecords
-    ) {
-      this.setState({
-        inventoryHistogram: (
-          <InventoryHistogram prices={await this.calcInventoryHistogramChartData()} />
-        ),
-        xirr: this.xirr,
-      });
-    }
-    if (prevProps.router.params.sid !== this.props.router.params.sid) {
-      if (this.fetchStockInfoTimer) {
-        clearInterval(this.fetchStockInfoTimer);
-        this.fetchStockInfoTimer = null;
-      }
-      this.setState(
-        {
-          activeMaterialFact: null,
-          didStockInfoFail: false,
-          historicalPriceLineChart: null,
-          intradayLineChart: null,
-          inventoryHistogram: null,
-          marketValue: 0,
-          xirr: 0,
-        },
-        () => {
-          void this.loadStockDetail(this.sid);
-        },
-      );
-      return;
-    }
-    if (prevProps.stockDetailChartMode !== this.props.stockDetailChartMode) {
-      if (this.props.stockDetailChartMode === "intraday") {
-        this.updateIntradayLineChart();
-      } else {
-        this.updateHistoricalPriceLineChart();
-      }
-    }
-    if (
-      prevProps.inventory !== this.props.inventory ||
-      prevProps.stockInfo !== this.props.stockInfo
-    ) {
-      this.updateMarketValueFromProps();
-    }
-    if (
-      prevProps.historicalPrices !== this.props.historicalPrices ||
-      prevProps.isWaitingHistoricalPrices !== this.props.isWaitingHistoricalPrices
-    ) {
-      this.updateHistoricalPriceLineChart();
-    }
-    if (
-      prevProps.intradayPrices !== this.props.intradayPrices ||
-      prevProps.isWaitingIntradayPrices !== this.props.isWaitingIntradayPrices
-    ) {
-      this.updateIntradayLineChart();
-    }
-  }
-
-  public componentWillUnmount(): void {
-    if (this.props.stockListTab && this.mainRef.current) {
-      this.mainRef.current.removeEventListener("touchstart", this.handleTouchStart);
-      this.mainRef.current.removeEventListener("touchmove", this.handleTouchMove);
-      this.mainRef.current.removeEventListener("touchend", this.handleTouchEnd);
-    }
-    if (this.fetchStockInfoTimer) {
-      clearInterval(this.fetchStockInfoTimer);
-      this.fetchStockInfoTimer = null;
-    }
-  }
-
-  public render(): React.ReactNode {
-    const { stockInfo, stockListTab, previousStockSid, nextStockSid } = this.props;
-    return (
-      <>
-        {this.activeModal}
-        <div className={styles.main} ref={this.mainRef}>
-          {Util.isMobile && (
-            <ScrollThresholdContainer>
-              {(isScrolled) => (
-                <div className={styles.mobile_back_button_container}>
-                  <RoundButton
-                    onClick={this.returnToList}
-                    size="l"
-                    frosted={isScrolled}
-                    hint_text="回列表"
-                    aria-label="回列表"
-                  >
-                    <Icons.IconChevronLeft sideLength="16" />
-                  </RoundButton>
-                </div>
-              )}
-            </ScrollThresholdContainer>
-          )}
-          {Util.isMobile && (
-            <ScrollThresholdContainer>
-              {(isScrolled) => (
-                <button
-                  type="button"
-                  className={`${styles.mobile_favorite_button} ${
-                    isScrolled ? styles.scrolled : ""
-                  } ${this.isFavorite ? styles.active : ""}`}
-                  onClick={this.changeFavStatus}
-                  aria-label={this.isFavorite ? "取消關注" : "加入關注"}
-                >
-                  {this.isFavorite ? (
-                    <Icons.IconHeartFill sideLength="20" />
-                  ) : (
-                    <Icons.IconHeart sideLength="20" />
-                  )}
-                </button>
-              )}
-            </ScrollThresholdContainer>
-          )}
-          {Util.isMobile && stockInfo && (
-            <ScrollThresholdContainer
-              className={styles.stock_brief_info_container}
-              scrolledClassName={styles.show}
-              onClick={this.handleScrollToTop}
-              role="button"
-              tabIndex={0}
-            >
-              <div className={styles.company_name}>{stockInfo.name}</div>
-              <div className={styles.sid}>{this.sid}</div>
-            </ScrollThresholdContainer>
-          )}
-          {this.state.didStockInfoFail && (
-            <div className={styles.inline_notice}>
-              <span>資料暫時無法更新，畫面顯示的是最近一次取得的資訊。</span>
-              <button type="button" onClick={this.retryFetchStockInfo}>
-                重試
-              </button>
-            </div>
-          )}
-          <section className={`${styles.block} ${styles.hero_block}`}>
-            <div className={styles.hero_toolbar}>
-              {!Util.isMobile && (
-                <RoundButton
-                  onClick={this.returnToList}
-                  className={styles.toolbar_button}
-                  hint_text="回列表"
-                  aria-label="回列表"
-                >
-                  <Icons.IconChevronLeft sideLength="17" />
-                </RoundButton>
-              )}
-              <div className={styles.toolbar_spacer} />
-              {!Util.isMobile && (
-                <button
-                  type="button"
-                  className={`${styles.icon_button} ${
-                    this.isFavorite ? styles.active : ""
-                  }`}
-                  onClick={this.changeFavStatus}
-                  aria-label={this.isFavorite ? "取消關注" : "加入關注"}
-                >
-                  {this.isFavorite ? (
-                    <Icons.IconHeartFill sideLength="18" />
-                  ) : (
-                    <Icons.IconHeart sideLength="18" />
-                  )}
-                </button>
-              )}
-              {!Util.isMobile && (
-                <>
-                  <button
-                    type="button"
-                    className={styles.icon_button}
-                    aria-label="公司資訊"
-                    onClick={() => {
-                      this.setState({ activeModalName: "companyInfo" });
-                    }}
-                  >
-                    <Icons.IconBriefcase sideLength="18" />
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.icon_button}
-                    aria-label="編輯備註"
-                    onClick={() => {
-                      this.setState({ activeModalName: "updateOrCreateNote" });
-                    }}
-                  >
-                    <Icons.IconMemo sideLength="18" />
-                  </button>
-                </>
-              )}
-            </div>
-            <div className={styles.stock_info}>
-              <div className={styles.stock_heading}>
-                <h1 className={styles.company_name}>{stockInfo?.name || this.sid}</h1>
-                <div className={styles.sid}>{this.sid}</div>
-              </div>
-              {stockInfo ? (
-                <div className={styles.price}>
-                  <DollarSign />
-                  {stockInfo.close}
-                </div>
-              ) : (
-                <Skeleton className={styles.price_skeleton} />
-              )}
-              <div className={styles.price_meta}>
-                <span className={this.fluctPriceClass}>{this.fluctPriceString}</span>
-                <span className={styles.trade_quantity}>
-                  成交 {this.tradeVolumeText} 張
-                </span>
-              </div>
-              {Util.isMobile && (
-                <div className={styles.mobile_text_actions}>
-                  <button
-                    type="button"
-                    onClick={() => this.setState({ activeModalName: "companyInfo" })}
-                    aria-label="公司資訊"
-                  >
-                    <Icons.IconBriefcase sideLength="16" />
-                    公司資訊
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      this.setState({ activeModalName: "updateOrCreateNote" })
-                    }
-                    aria-label="編輯備註"
-                  >
-                    <Icons.IconMemo sideLength="16" />
-                    備註
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className={styles.chart_controls}>
-              <div className={styles.chart_status_label}>{this.chartStatusLabel}</div>
-              <SegmentedControl
-                label="個股圖表類型"
-                variant="subtle"
-                optionWidth={Util.isMobile ? "58px" : "63px"}
-                options={[
-                  { label: "今日", value: "intraday" },
-                  { label: "歷史", value: "historical" },
-                ]}
-                value={this.props.stockDetailChartMode}
-                onChange={this.handleChartModeChange}
-              />
-            </div>
-            <div
-              className={styles.historical_price_chart_container}
-              aria-label={
-                this.props.stockDetailChartMode === "intraday"
-                  ? "今日走勢"
-                  : "近 60 日收盤價走勢"
-              }
-            >
-              {this.showChartLoadingState && (
-                <SkeletonOverlay className={styles.chart_overlay} />
-              )}
-              <div key={this.props.stockDetailChartMode} className={styles.chart_panel}>
-                {this.props.stockDetailChartMode === "intraday" ? (
-                  this.showIntradayEmptyState ? (
-                    <div className={styles.empty_chart}>
-                      <div>盤中尚未有成交資料</div>
-                      <span>開盤後會顯示今日走勢。</span>
-                    </div>
-                  ) : (
-                    this.state.intradayLineChart
-                  )
-                ) : this.showHistoricalPriceEmptyState ? (
-                  <div className={styles.empty_chart}>
-                    <div>目前沒有歷史價格資料</div>
-                    <span>稍後更新後會顯示走勢圖。</span>
-                  </div>
-                ) : (
-                  this.state.historicalPriceLineChart
-                )}
-              </div>
-            </div>
-          </section>
-          <section className={`${styles.block} ${styles.summary_block}`}>
-            <div className={styles.section_title}>投資摘要</div>
-            <div className={styles.investment_info}>
-              {this.summaryRows.map((row) => (
-                <div className={styles.summary_row} key={row.label}>
-                  <span className={styles.upper}>{row.label}</span>
-                  <span
-                    className={`${styles.lower} ${row.tone ? styles[row.tone] : ""}`}
-                  >
-                    {row.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-          {this.hasInventory && (
-            <section className={`${styles.block} ${styles.inventory_block}`}>
-              <div className={styles.section_header}>
-                <div className={styles.section_title}>庫存分佈</div>
-              </div>
-              <div className={styles.inventory_histogram_container}>
-                {this.state.inventoryHistogram}
-              </div>
-            </section>
-          )}
-          <section className={`${styles.block} ${styles.action_block}`}>
-            <div className={styles.section_title}>紀錄與計畫</div>
-            <div className={styles.action_list}>
-              <Link
-                to={`${Env.frontendRootPath}records?sid=${this.sid}`}
-                className={styles.action_button}
-              >
-                <Icons.IconClockHistory sideLength="20" color={COLORS.textPrimary} />
-                <span>查看交易紀錄</span>
-                {this.tradeRecordCount === 0 && <em>尚無紀錄</em>}
-              </Link>
-              <Link
-                to={`${Env.frontendRootPath}plans?sid=${this.sid}`}
-                className={styles.action_button}
-              >
-                <Icons.IconThumbtack sideLength="20" color={COLORS.textPrimary} />
-                <span>查看買賣計畫</span>
-                {this.tradePlanCount > 0 && <em>{this.tradePlanCount} 個計畫</em>}
-              </Link>
-            </div>
-          </section>
-          <section className={`${styles.block} ${styles.company_block}`}>
-            <div className={styles.section_header}>
-              <div className={styles.section_title}>公司與重大消息</div>
-              <button
-                type="button"
-                className={styles.text_button}
-                onClick={() => this.setState({ activeModalName: "companyInfo" })}
-              >
-                完整資料
-              </button>
-            </div>
-            <div className={styles.company_summary}>
-              {this.companyInfo?.business || "目前沒有公司業務摘要。"}
-            </div>
-            <div className={styles.material_fact_preview_list}>
-              {this.recentMaterialFacts.length > 0 ? (
-                this.recentMaterialFacts.map((materialFact, idx) => (
-                  <button
-                    type="button"
-                    className={styles.material_fact_preview}
-                    key={`${materialFact.date_time}-${idx}`}
-                    onClick={() =>
-                      this.setState({
-                        activeModalName: "companyInfo",
-                        activeMaterialFact: materialFact,
-                      })
-                    }
-                  >
-                    <span>
-                      {new Date(Date.parse(materialFact.date_time)).toLocaleDateString(
-                        "af",
-                      )}
-                    </span>
-                    <strong>{materialFact.title}</strong>
-                    <Icons.IconChevronRight sideLength="14" />
-                  </button>
-                ))
-              ) : (
-                <div className={styles.empty_company_message}>目前沒有重大消息</div>
-              )}
-            </div>
-          </section>
-          {Util.isMobile ? (
-            <>
-              <SpeedDial defaultSid={this.sid} />
-              <div
-                className={`${styles.switch_hint_icon_for_mobile} ${styles.left} ${
-                  this.state.switchDirection === "prev" ? styles.active : ""
-                }`}
-              />
-              <div
-                className={`${styles.switch_hint_icon_for_mobile} ${styles.right} ${
-                  this.state.switchDirection === "next" ? styles.active : ""
-                }`}
-              />
-            </>
-          ) : stockListTab ? (
-            <>
-              <div className={`${styles.stock_switch_control} ${styles.left}`}>
-                <Tooltip content="上一檔">
-                  <button
-                    type="button"
-                    aria-label="上一檔"
-                    aria-disabled={!previousStockSid}
-                    tabIndex={previousStockSid ? 0 : -1}
-                    onClick={() => this.switchToStock(previousStockSid)}
-                  >
-                    <span aria-hidden="true">
-                      <Icons.IconChevronLeft sideLength="18" />
-                    </span>
-                  </button>
-                </Tooltip>
-              </div>
-              <div className={`${styles.stock_switch_control} ${styles.right}`}>
-                <Tooltip content="下一檔">
-                  <button
-                    type="button"
-                    aria-label="下一檔"
-                    aria-disabled={!nextStockSid}
-                    tabIndex={nextStockSid ? 0 : -1}
-                    onClick={() => this.switchToStock(nextStockSid)}
-                  >
-                    <span aria-hidden="true">
-                      <Icons.IconChevronRight sideLength="18" />
-                    </span>
-                  </button>
-                </Tooltip>
-              </div>
-            </>
-          ) : null}
-        </div>
-      </>
+  const calculateXirr = (): number => {
+    const latest = latestRenderRef.current;
+    return Util.calculateXIRR(
+      latest.tradeRecords ?? [],
+      [],
+      latest.cashDividendRecords.filter((record) => record.sid === latest.sid),
+      latest.state.marketValue,
     );
-  }
+  };
 
-  private get activeModal(): React.ReactElement<typeof Modal> | null {
-    if (this.state.activeModalName === "updateOrCreateNote") {
-      return (
-        <StockMemoEditor
-          sid={this.sid}
-          defaultValue={this.props.companyInfo?.note || ""}
-          hideModal={getHideModalCallback(this)}
-        />
-      );
-    } else if (this.state.activeModalName === "companyInfo") {
-      return Util.isMobile ? (
-        <BottomSheet
-          onClickBackground={() =>
-            this.setState({ activeModalName: null, activeMaterialFact: null })
-          }
-          canMaximize
-        >
-          {this.companyInfoSection}
-        </BottomSheet>
-      ) : (
-        <Modal
-          title="公司資訊"
-          discardButtonProps={{
-            children: "", // no use
-            variant: "transparent", // no use
-            onClick: () =>
-              this.setState({ activeModalName: null, activeMaterialFact: null }),
-          }}
-          layout="auto"
-          noFooter
-        >
-          {this.companyInfoSection}
-        </Modal>
-      );
-    }
-    return null;
-  }
-
-  private get sid(): string {
-    return this.props.router.params.sid ?? "";
-  }
-
-  private get fluctPriceClass(): string {
-    const fluct_price = this.props.stockInfo?.fluct_price || 0;
-    return `${styles.price_fluctuation} ${
-      fluct_price > 0 ? styles.red : fluct_price < 0 ? styles.green : styles.gray
-    }`;
-  }
-
-  private get fluctPriceString(): string {
-    const fluct_price = this.props.stockInfo?.fluct_price || 0;
-    const close = this.props.stockInfo?.close ?? 0;
-    return `${fluct_price > 0 ? "▲" : fluct_price < 0 ? "▼" : "-"}${
-      fluct_price !== 0 ? Math.abs(fluct_price) : ""
-    }${
-      fluct_price !== 0
-        ? ` (${(Math.abs(fluct_price / (close - fluct_price)) * 100).toFixed(2)}%)`
-        : ""
-    }`;
-  }
-
-  private get tradeVolumeText(): string {
-    return Math.round((this.props.stockInfo?.quantity || 0) / 1000).toLocaleString();
-  }
-
-  private get averageCostText(): React.ReactNode {
-    if (!this.hasInventory) return "-";
-    const inventoryLength = this.props.inventory?.length ?? 0;
-    if (inventoryLength === 0) return "-";
-    return (
-      <>
-        <DollarSign />
-        {((this.props.cashInvested ?? 0) / inventoryLength).toFixed(2)}
-      </>
+  const updateMarketValue = (): void => {
+    const latest = latestRenderRef.current;
+    const marketValue = calculateMarketValue(latest.stockInfo, latest.inventory || []);
+    if (marketValue === latest.state.marketValue) return;
+    setState({ marketValue }, () =>
+      setState({ xirr: latestRenderRef.current.calculateXirr() }),
     );
-  }
+  };
 
-  private get summaryRows(): {
-    label: string;
-    value: React.ReactNode;
-    tone?: "red" | "green" | "gray";
-  }[] {
-    return [
-      {
-        label: "現金投入",
-        value: (
-          <>
-            <DollarSign />
-            {Math.round(this.props.cashInvested ?? 0).toLocaleString()}
-          </>
-        ),
-      },
-      {
-        label: "證券市值",
-        value: (
-          <>
-            <DollarSign />
-            {Math.round(this.state.marketValue)?.toLocaleString()}
-          </>
-        ),
-      },
-      {
-        label: "庫存",
-        value: `${(this.props.inventory || []).length.toLocaleString()} 股`,
-      },
-      { label: "平均成本", value: this.averageCostText },
-      {
-        label: "實現損益",
-        value: (
-          <>
-            <DollarSign />
-            {Math.round(this.finalGain).toLocaleString()}
-          </>
-        ),
-        tone: this.finalGain > 0 ? "red" : this.finalGain < 0 ? "green" : "gray",
-      },
-      {
-        label: "年化報酬率",
-        value: (
-          <>
-            {(this.state.xirr * 100).toFixed(2)}
-            <PercentSign />
-          </>
-        ),
-        tone: this.state.xirr > 0 ? "red" : this.state.xirr < 0 ? "green" : "gray",
-      },
-    ];
-  }
+  const updateIntradayLineChart = (): void => {
+    setState(() => {
+      const latest = latestRenderRef.current;
+      if (latest.stockDetailChartMode !== "intraday") return null;
 
-  private get tradeRecordCount(): number {
-    return (this.props.tradeRecords ?? []).length;
-  }
-
-  private get tradePlanCount(): number {
-    return this.props.tradePlans.filter((plan) => plan.sid === this.sid).length;
-  }
-
-  private get companyInfo() {
-    return this.props.companyInfo;
-  }
-
-  private get recentMaterialFacts(): MaterialFact[] {
-    return [...(this.companyInfo?.material_facts || [])]
-      .sort((a, b) => Date.parse(b.date_time) - Date.parse(a.date_time))
-      .slice(0, 3);
-  }
-
-  private get showHistoricalPriceEmptyState(): boolean {
-    return (
-      !this.props.isWaitingHistoricalPrices &&
-      this.props.historicalPrices !== undefined &&
-      this.getHistoricalPriceChartData().dates.length === 0
-    );
-  }
-
-  private get showIntradayEmptyState(): boolean {
-    const intradayPrices = this.props.intradayPrices;
-    return (
-      !this.props.isWaitingIntradayPrices &&
-      (intradayPrices === undefined || !hasStockIntradayPlottedData(intradayPrices))
-    );
-  }
-
-  private get showChartLoadingState(): boolean {
-    if (this.props.stockDetailChartMode === "intraday") {
-      return (
-        this.props.isWaitingIntradayPrices &&
-        (this.props.intradayPrices === undefined ||
-          !hasStockIntradayPlottedData(this.props.intradayPrices))
-      );
-    }
-    return (
-      this.props.isWaitingHistoricalPrices &&
-      this.getHistoricalPriceChartData().dates.length === 0
-    );
-  }
-
-  private get chartStatusLabel(): string {
-    if (this.props.stockDetailChartMode === "historical") return "近 60 日收盤價走勢";
-    const intradayDate = this.props.intradayPrices?.date ?? null;
-    return formatDateWithWeekday(intradayDate);
-  }
-
-  private getHistoricalPriceChartData(historicalPrices = this.props.historicalPrices): {
-    dates: string[];
-    values: number[];
-  } {
-    const dates: string[] = [];
-    const values: number[] = [];
-    const data = historicalPrices?.daily;
-    if (data) {
-      const entries = Object.entries(data);
-      entries.sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]));
-      for (const [date, price] of entries) {
-        const formattedDate = date.split("-").slice(1).join("/");
-        dates.push(formattedDate);
-        values.push(price);
-      }
-    }
-    return { dates, values };
-  }
-
-  private get hasInventory(): boolean {
-    return Boolean(this.props.inventory?.length);
-  }
-
-  private updateMarketValueFromProps(): void {
-    const marketValue = calculateMarketValue(
-      this.props.stockInfo,
-      this.props.inventory || [],
-    );
-    if (marketValue === this.state.marketValue) return;
-    this.setState({ marketValue }, () => this.setState({ xirr: this.xirr }));
-  }
-
-  private updateIntradayLineChart(): void {
-    this.setState((_state, props) => {
-      if (props.stockDetailChartMode !== "intraday") {
-        return null;
-      }
-
-      const intradayPrices = props.intradayPrices;
+      const latestIntradayPrices = latest.intradayPrices;
       if (
-        !props.isWaitingIntradayPrices &&
-        (intradayPrices === undefined || !hasStockIntradayPlottedData(intradayPrices))
+        !latest.isWaitingIntradayPrices &&
+        (latestIntradayPrices === undefined ||
+          !hasStockIntradayPlottedData(latestIntradayPrices))
       ) {
         return { intradayLineChart: null };
       }
 
-      const chartData = buildStockIntradayChartData(intradayPrices ?? { date: null });
-      const prevClosePrice = intradayPrices?.yesterday_price ?? 0;
+      const chartData = buildStockIntradayChartData(
+        latestIntradayPrices ?? { date: null },
+      );
+      const prevClosePrice = latestIntradayPrices?.yesterday_price ?? 0;
       if (!chartData.some(([, price]) => price !== null)) {
         return { intradayLineChart: null };
       }
@@ -927,15 +261,14 @@ class Details extends React.Component<Props, State> {
         ),
       };
     });
-  }
+  };
 
-  private updateHistoricalPriceLineChart(): void {
-    this.setState((state, props) => {
-      const { dates, values } = this.getHistoricalPriceChartData(
-        props.historicalPrices,
-      );
+  const updateHistoricalPriceLineChart = (): void => {
+    setState(() => {
+      const latest = latestRenderRef.current;
+      const { dates, values } = getHistoricalPriceChartData(latest.historicalPrices);
 
-      if (!props.isWaitingHistoricalPrices && dates.length === 0) {
+      if (!latest.isWaitingHistoricalPrices && dates.length === 0) {
         return { historicalPriceLineChart: null };
       }
 
@@ -944,98 +277,123 @@ class Details extends React.Component<Props, State> {
           <HistoricalPriceLineChart
             dates={dates}
             values={values}
-            isWaiting={props.isWaitingHistoricalPrices}
+            isWaiting={latest.isWaitingHistoricalPrices}
           />
         ),
       };
     });
-  }
-
-  private handleChartModeChange = (value: string): void => {
-    this.props.dispatch(changeStockDetailChartMode(value as StockDetailChartMode));
   };
 
-  private async calcInventoryHistogramChartData(sid = this.sid): Promise<number[]> {
-    const worker = new Worker(
-      new URL("../../../workers/histogramChartWorker.ts", import.meta.url),
-      // The dev server serves the worker unbundled, so it must run as a module to import.
-      { type: "module" },
-    );
-    // Read from store, not props.tradeRecords: loadStockDetail awaits this
-    // worker, and the user may navigate to another stock before it finishes.
-    worker.postMessage(store.getState().tradeRecord.sidTradeRecordsMap[sid] ?? []);
-    return await new Promise<number[]>((resolve) => {
-      worker.onmessage = (event) => {
-        worker.terminate();
-        resolve(event.data);
-      };
+  const startFetchStockInfoTimer = (timerSid: string): void => {
+    if (fetchStockInfoTimerRef.current) {
+      clearInterval(fetchStockInfoTimerRef.current);
+      fetchStockInfoTimerRef.current = null;
+    }
+    fetchStockInfoTimerRef.current = setInterval(() => {
+      dispatch(fetchSingleStockInfo(timerSid))
+        .unwrap()
+        .then(() => {
+          if (timerSid === latestRenderRef.current.sid)
+            setState({ didStockInfoFail: false });
+        })
+        .catch(() => {
+          if (timerSid === latestRenderRef.current.sid)
+            setState({ didStockInfoFail: true });
+        });
+      dispatch(fetchSingleStockIntradayPrices(timerSid));
+    }, latestRenderRef.current.subscription.market_refresh_interval_seconds * 1000);
+  };
+
+  const loadStockDetail = async (loadedSid: string): Promise<void> => {
+    const inventoryHistogramPrices =
+      await calculateInventoryHistogramChartData(loadedSid);
+    const isStale = (): boolean =>
+      isUnmountedRef.current || loadedSid !== latestRenderRef.current.sid;
+    if (isStale()) return;
+    setState({
+      inventoryHistogram: <InventoryHistogram prices={inventoryHistogramPrices} />,
+      activeMaterialFact: null,
     });
-  }
-
-  private get xirr(): number {
-    return Util.calculateXIRR(
-      this.props.tradeRecords ?? [],
-      [],
-      this.props.cashDividendRecords.filter((record) => record.sid === this.sid),
-      this.state.marketValue,
-    );
-  }
-
-  private get finalGain(): number {
-    return (
-      (this.props.realizedGain ?? 0) +
-      (this.props.sidTotalCashDividendMap[this.sid] || 0)
-    );
-  }
-
-  private handleTouchStart = (e: TouchEvent): void => {
-    const touch = e.touches[0];
-    this.setState({ touchStartX: touch.clientX, touchStartY: touch.clientY });
+    dispatch(fetchSingleStockInfo(loadedSid))
+      .unwrap()
+      .then(() => {
+        if (isStale()) return;
+        setState({ didStockInfoFail: false });
+        latestRenderRef.current.updateMarketValue();
+      })
+      .catch(() => {
+        if (!isStale()) setState({ didStockInfoFail: true });
+      });
+    dispatch(fetchSingleStockHistoricalPrices({ sid: loadedSid, frequency: "DAILY" }))
+      .unwrap()
+      .then(() => {
+        if (isStale()) return;
+        latestRenderRef.current.updateHistoricalPriceLineChart();
+      });
+    dispatch(fetchSingleStockIntradayPrices(loadedSid))
+      .unwrap()
+      .then(() => {
+        if (isStale()) return;
+        latestRenderRef.current.updateIntradayLineChart();
+      });
+    dispatch(fetchCompanyInfo(loadedSid));
+    latestRenderRef.current.startFetchStockInfoTimer(loadedSid);
   };
 
-  private handleTouchMove = (e: TouchEvent): void => {
+  const handleTouchStart = (e: TouchEvent): void => {
+    const touch = e.touches[0];
+    setState({ touchStartX: touch.clientX, touchStartY: touch.clientY });
+  };
+
+  const handleTouchMove = (e: TouchEvent): void => {
     const touch = e.changedTouches[0];
-    if (!this.state.isScrollingVertically && !this.state.isScrollingHorizontally) {
-      this.setState((state) => {
-        if (Math.abs(touch.clientY - state.touchStartY) > this.SCROLLING_THRESHOLD) {
-          return { isScrollingVertically: true } as State;
+    const latestState = latestRenderRef.current.state;
+    if (!latestState.isScrollingVertically && !latestState.isScrollingHorizontally) {
+      setState((previous) => {
+        if (Math.abs(touch.clientY - previous.touchStartY) > SCROLLING_THRESHOLD) {
+          return { isScrollingVertically: true };
         } else if (
-          Math.abs(touch.clientX - state.touchStartX) > this.SCROLLING_THRESHOLD
+          Math.abs(touch.clientX - previous.touchStartX) > SCROLLING_THRESHOLD
         ) {
-          return { isScrollingHorizontally: true } as State;
+          return { isScrollingHorizontally: true };
         }
+        return null;
       });
     } else {
-      if (!this.state.isScrollingHorizontally) return;
-      this.setState((state) => {
-        return { touchDiffX: touch.clientX - state.touchStartX };
-      });
-      if (this.state.touchDiffX <= -this.SWITCHING_THRESHOLD) {
-        this.setState((state) => {
-          if (!state.hasVibrated) {
-            // if (navigator.vibrate) navigator.vibrate(20);
-            return { hasVibrated: true, switchDirection: "next" };
-          }
-          return { switchDirection: "next" } as State;
-        });
-      } else if (this.state.touchDiffX >= this.SWITCHING_THRESHOLD) {
-        this.setState((state) => {
-          if (!state.hasVibrated) {
-            // if (navigator.vibrate) navigator.vibrate(20);
-            return { hasVibrated: true, switchDirection: "prev" };
-          }
-          return { switchDirection: "prev" } as State;
-        });
-      } else this.setState({ switchDirection: null });
+      if (!latestState.isScrollingHorizontally) return;
+      setState((previous) => ({ touchDiffX: touch.clientX - previous.touchStartX }));
+      if (latestState.touchDiffX <= -SWITCHING_THRESHOLD) {
+        setState((previous) =>
+          previous.hasVibrated
+            ? { switchDirection: "next" }
+            : { hasVibrated: true, switchDirection: "next" },
+        );
+      } else if (latestState.touchDiffX >= SWITCHING_THRESHOLD) {
+        setState((previous) =>
+          previous.hasVibrated
+            ? { switchDirection: "prev" }
+            : { hasVibrated: true, switchDirection: "prev" },
+        );
+      } else setState({ switchDirection: null });
     }
   };
 
-  private handleTouchEnd = (): void => {
-    if (this.state.switchDirection === "next")
-      this.switchToStock(this.props.nextStockSid);
-    else if (this.state.switchDirection === "prev")
-      this.switchToStock(this.props.previousStockSid);
-    this.setState({
+  const switchToStock = (targetSid: string | undefined): void => {
+    if (!targetSid) return;
+    const latest = latestRenderRef.current;
+    const path = latest.location.pathname
+      .replace(/\/+$/, "")
+      .replace(/\/[^/]+$/, `/${targetSid}`);
+    latest.navigate(path, { replace: true });
+  };
+
+  const handleTouchEnd = (): void => {
+    const latest = latestRenderRef.current;
+    if (latest.state.switchDirection === "next") switchToStock(latest.nextStockSid);
+    else if (latest.state.switchDirection === "prev") {
+      switchToStock(latest.previousStockSid);
+    }
+    setState({
       touchStartX: 0,
       touchStartY: 0,
       touchDiffX: 0,
@@ -1046,12 +404,254 @@ class Details extends React.Component<Props, State> {
     });
   };
 
-  private returnToList = (): void => {
-    navigateBack(this.props.router, `${Env.frontendRootPath}market`);
-  };
+  // Timers, request callbacks and the touch listeners, which are set up once, act on
+  // the props and state of the latest render.
+  const latestRenderRef = useLatestRef({
+    sid,
+    stockListTab,
+    location,
+    navigate,
+    stockInfo,
+    inventory,
+    tradeRecords,
+    cashDividendRecords,
+    intradayPrices,
+    isWaitingIntradayPrices,
+    historicalPrices,
+    isWaitingHistoricalPrices,
+    stockDetailChartMode,
+    subscription,
+    previousStockSid,
+    nextStockSid,
+    state,
+    calculateXirr,
+    updateMarketValue,
+    updateIntradayLineChart,
+    updateHistoricalPriceLineChart,
+    startFetchStockInfoTimer,
+    loadStockDetail,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  });
 
-  private handleScrollToTop = (): void => {
-    let element: HTMLElement | null = this.mainRef.current;
+  useLayoutEffect(() => {
+    const latest = latestRenderRef.current;
+    const touchTarget = latest.stockListTab ? mainRef.current : null;
+    const handleTouchStartEvent = (e: TouchEvent): void =>
+      latestRenderRef.current.handleTouchStart(e);
+    const handleTouchMoveEvent = (e: TouchEvent): void =>
+      latestRenderRef.current.handleTouchMove(e);
+    const handleTouchEndEvent = (): void => latestRenderRef.current.handleTouchEnd();
+    // Do not write this using React inline event handling
+    touchTarget?.addEventListener("touchstart", handleTouchStartEvent, true);
+    touchTarget?.addEventListener("touchmove", handleTouchMoveEvent, true);
+    touchTarget?.addEventListener("touchend", handleTouchEndEvent, true);
+    void latest.loadStockDetail(latest.sid);
+    return () => {
+      isUnmountedRef.current = true;
+      touchTarget?.removeEventListener("touchstart", handleTouchStartEvent, true);
+      touchTarget?.removeEventListener("touchmove", handleTouchMoveEvent, true);
+      touchTarget?.removeEventListener("touchend", handleTouchEndEvent, true);
+      if (fetchStockInfoTimerRef.current) {
+        clearInterval(fetchStockInfoTimerRef.current);
+        fetchStockInfoTimerRef.current = null;
+      }
+    };
+  }, [latestRenderRef]);
+
+  const lastCommitRef = useRef({
+    sid,
+    isWaitingTradeRecord,
+    tradeRecords,
+    stockDetailChartMode,
+    inventory,
+    stockInfo,
+    historicalPrices,
+    isWaitingHistoricalPrices,
+    intradayPrices,
+    isWaitingIntradayPrices,
+  });
+  useLayoutEffect(() => {
+    const previous = lastCommitRef.current;
+    lastCommitRef.current = {
+      sid,
+      isWaitingTradeRecord,
+      tradeRecords,
+      stockDetailChartMode,
+      inventory,
+      stockInfo,
+      historicalPrices,
+      isWaitingHistoricalPrices,
+      intradayPrices,
+      isWaitingIntradayPrices,
+    };
+
+    if (
+      previous.isWaitingTradeRecord !== isWaitingTradeRecord ||
+      previous.tradeRecords !== tradeRecords
+    ) {
+      const updateInventoryHistogram = async (): Promise<void> => {
+        const prices = await calculateInventoryHistogramChartData(sid);
+        setState({
+          inventoryHistogram: <InventoryHistogram prices={prices} />,
+          xirr: latestRenderRef.current.calculateXirr(),
+        });
+      };
+      void updateInventoryHistogram();
+    }
+    if (previous.sid !== sid) {
+      if (fetchStockInfoTimerRef.current) {
+        clearInterval(fetchStockInfoTimerRef.current);
+        fetchStockInfoTimerRef.current = null;
+      }
+      setState(
+        {
+          activeMaterialFact: null,
+          didStockInfoFail: false,
+          historicalPriceLineChart: null,
+          intradayLineChart: null,
+          inventoryHistogram: null,
+          marketValue: 0,
+          xirr: 0,
+        },
+        () => {
+          const latest = latestRenderRef.current;
+          void latest.loadStockDetail(latest.sid);
+        },
+      );
+      return;
+    }
+    if (previous.stockDetailChartMode !== stockDetailChartMode) {
+      if (stockDetailChartMode === "intraday") updateIntradayLineChart();
+      else updateHistoricalPriceLineChart();
+    }
+    if (previous.inventory !== inventory || previous.stockInfo !== stockInfo) {
+      updateMarketValue();
+    }
+    if (
+      previous.historicalPrices !== historicalPrices ||
+      previous.isWaitingHistoricalPrices !== isWaitingHistoricalPrices
+    ) {
+      updateHistoricalPriceLineChart();
+    }
+    if (
+      previous.intradayPrices !== intradayPrices ||
+      previous.isWaitingIntradayPrices !== isWaitingIntradayPrices
+    ) {
+      updateIntradayLineChart();
+    }
+  });
+
+  // A class component runs its setState callbacks after componentDidUpdate, so this
+  // effect comes after the ones above.
+  useLayoutEffect(runAfterCommitCallbacks);
+
+  const hasInventory = Boolean(inventory?.length);
+  const fluctPrice = stockInfo?.fluct_price || 0;
+  const fluctPriceClass = `${styles.price_fluctuation} ${
+    fluctPrice > 0 ? styles.red : fluctPrice < 0 ? styles.green : styles.gray
+  }`;
+  const fluctPriceString = `${fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "-"}${
+    fluctPrice !== 0 ? Math.abs(fluctPrice) : ""
+  }${
+    fluctPrice !== 0
+      ? ` (${(Math.abs(fluctPrice / ((stockInfo?.close ?? 0) - fluctPrice)) * 100).toFixed(2)}%)`
+      : ""
+  }`;
+  const tradeVolumeText = Math.round(
+    (stockInfo?.quantity || 0) / 1000,
+  ).toLocaleString();
+  const inventoryLength = inventory?.length ?? 0;
+  const averageCostText: React.ReactNode =
+    !hasInventory || inventoryLength === 0 ? (
+      "-"
+    ) : (
+      <>
+        <DollarSign />
+        {((cashInvested ?? 0) / inventoryLength).toFixed(2)}
+      </>
+    );
+  const finalGain = (realizedGain ?? 0) + (sidTotalCashDividendMap[sid] || 0);
+  const summaryRows: {
+    label: string;
+    value: React.ReactNode;
+    tone?: "red" | "green" | "gray";
+  }[] = [
+    {
+      label: "現金投入",
+      value: (
+        <>
+          <DollarSign />
+          {Math.round(cashInvested ?? 0).toLocaleString()}
+        </>
+      ),
+    },
+    {
+      label: "證券市值",
+      value: (
+        <>
+          <DollarSign />
+          {Math.round(state.marketValue)?.toLocaleString()}
+        </>
+      ),
+    },
+    { label: "庫存", value: `${(inventory || []).length.toLocaleString()} 股` },
+    { label: "平均成本", value: averageCostText },
+    {
+      label: "實現損益",
+      value: (
+        <>
+          <DollarSign />
+          {Math.round(finalGain).toLocaleString()}
+        </>
+      ),
+      tone: finalGain > 0 ? "red" : finalGain < 0 ? "green" : "gray",
+    },
+    {
+      label: "年化報酬率",
+      value: (
+        <>
+          {(state.xirr * 100).toFixed(2)}
+          <PercentSign />
+        </>
+      ),
+      tone: state.xirr > 0 ? "red" : state.xirr < 0 ? "green" : "gray",
+    },
+  ];
+  const tradeRecordCount = (tradeRecords ?? []).length;
+  const tradePlanCount = tradePlans.filter((plan) => plan.sid === sid).length;
+  const recentMaterialFacts: MaterialFact[] = [...(companyInfo?.material_facts || [])]
+    .sort((a, b) => Date.parse(b.date_time) - Date.parse(a.date_time))
+    .slice(0, 3);
+  const historicalChartDateCount =
+    getHistoricalPriceChartData(historicalPrices).dates.length;
+  const showHistoricalPriceEmptyState =
+    !isWaitingHistoricalPrices &&
+    historicalPrices !== undefined &&
+    historicalChartDateCount === 0;
+  const showIntradayEmptyState =
+    !isWaitingIntradayPrices &&
+    (intradayPrices === undefined || !hasStockIntradayPlottedData(intradayPrices));
+  const showChartLoadingState =
+    stockDetailChartMode === "intraday"
+      ? isWaitingIntradayPrices &&
+        (intradayPrices === undefined || !hasStockIntradayPlottedData(intradayPrices))
+      : isWaitingHistoricalPrices && historicalChartDateCount === 0;
+  const chartStatusLabel =
+    stockDetailChartMode === "historical"
+      ? "近 60 日收盤價走勢"
+      : formatDateWithWeekday(intradayPrices?.date ?? null);
+  const isFavorite = favorites.includes(sid);
+
+  const handleChartModeChange = (value: string): void => {
+    dispatch(changeStockDetailChartMode(value as StockDetailChartMode));
+  };
+  const returnToList = (): void => {
+    navigateBack({ location, navigate }, `${Env.frontendRootPath}market`);
+  };
+  const handleScrollToTop = (): void => {
+    let element: HTMLElement | null = mainRef.current;
     while (element?.parentElement) {
       element = element.parentElement;
       if (element.scrollHeight > element.clientHeight) {
@@ -1061,60 +661,36 @@ class Details extends React.Component<Props, State> {
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  private retryFetchStockInfo = (): void => {
-    this.props
-      .dispatch(fetchSingleStockInfo(this.sid))
+  const retryFetchStockInfo = (): void => {
+    dispatch(fetchSingleStockInfo(sid))
       .unwrap()
-      .then(() => this.setState({ didStockInfoFail: false }))
-      .catch(() => this.setState({ didStockInfoFail: true }));
+      .then(() => setState({ didStockInfoFail: false }))
+      .catch(() => setState({ didStockInfoFail: true }));
   };
-
-  private switchToStock(sid: string | undefined): void {
-    if (!sid) return;
-    const path = this.props.router.location.pathname
-      .replace(/\/+$/, "")
-      .replace(/\/[^/]+$/, `/${sid}`);
-    this.props.router.navigate(path, { replace: true });
-  }
-
-  private get isFavorite(): boolean {
-    return this.props.favorites.includes(this.sid);
-  }
-
-  private changeFavStatus = (): void => {
-    if (this.isFavorite) {
-      this.props.dispatch(fakeRemoveFromFavorites(this.sid));
-      this.props
-        .dispatch(removeFromFavorites(this.sid))
+  const changeFavStatus = (): void => {
+    if (isFavorite) {
+      dispatch(fakeRemoveFromFavorites(sid));
+      dispatch(removeFromFavorites(sid))
         .unwrap()
         .catch(() => {
-          this.props.dispatch(fakeAddToFavorites(this.sid));
-          this.props.dispatch(
-            pushToast({ type: "error", text: "收藏更新失敗，請稍後再試" }),
-          );
+          dispatch(fakeAddToFavorites(sid));
+          dispatch(pushToast({ type: "error", text: "收藏更新失敗，請稍後再試" }));
         });
     } else {
-      this.props.dispatch(fakeAddToFavorites(this.sid));
-      this.props
-        .dispatch(addToFavorites(this.sid))
+      dispatch(fakeAddToFavorites(sid));
+      dispatch(addToFavorites(sid))
         .unwrap()
         .catch(() => {
-          this.props.dispatch(fakeRemoveFromFavorites(this.sid));
-          this.props.dispatch(
-            pushToast({ type: "error", text: "收藏更新失敗，請稍後再試" }),
-          );
+          dispatch(fakeRemoveFromFavorites(sid));
+          dispatch(pushToast({ type: "error", text: "收藏更新失敗，請稍後再試" }));
         });
     }
   };
 
-  private get companyInfoSection(): React.ReactNode {
-    return this.state.activeMaterialFact ? (
+  const companyInfoSection: React.ReactNode = (() => {
+    return state.activeMaterialFact ? (
       <>
-        <RoundButton
-          size="l"
-          onClick={() => this.setState({ activeMaterialFact: null })}
-        >
+        <RoundButton size="l" onClick={() => setState({ activeMaterialFact: null })}>
           <Icons.IconChevronLeft />
         </RoundButton>
         <div
@@ -1122,14 +698,14 @@ class Details extends React.Component<Props, State> {
             Util.isMobile ? styles.mobile : ""
           }`}
         >
-          <div className={styles.title}>{this.state.activeMaterialFact.title}</div>
+          <div className={styles.title}>{state.activeMaterialFact.title}</div>
           <div className={styles.date_time}>
-            {new Date(
-              Date.parse(this.state.activeMaterialFact.date_time),
-            ).toLocaleString("af")}
+            {new Date(Date.parse(state.activeMaterialFact.date_time)).toLocaleString(
+              "af",
+            )}
           </div>
           <div className={styles.description}>
-            {this.state.activeMaterialFact.description.split("\n").map((line, idx) => {
+            {state.activeMaterialFact.description.split("\n").map((line, idx) => {
               return <div key={idx}>{line}</div>;
             })}
           </div>
@@ -1140,15 +716,15 @@ class Details extends React.Component<Props, State> {
         className={`${styles.company_info_outer} ${Util.isMobile ? styles.mobile : ""}`}
       >
         <div className={styles.title}>證券代號</div>
-        <div className={styles.content}>{this.sid}</div>
+        <div className={styles.content}>{sid}</div>
         <div className={styles.title}>公司簡稱</div>
-        <div className={styles.content}>{this.props.stockInfo?.name || "-"}</div>
+        <div className={styles.content}>{stockInfo?.name || "-"}</div>
         <div className={styles.title}>主要經營業務</div>
-        <div className={styles.content}>{this.props.companyInfo?.business || "-"}</div>
+        <div className={styles.content}>{companyInfo?.business || "-"}</div>
         <div className={styles.title}>重大消息</div>
-        {(this.props.companyInfo?.material_facts.length ?? 0) > 0 ? (
+        {(companyInfo?.material_facts.length ?? 0) > 0 ? (
           <div className={styles.material_fact_list}>
-            {this.props.companyInfo?.material_facts.map((m, idx) => {
+            {companyInfo?.material_facts.map((m, idx) => {
               return (
                 <div className={styles.brief_material_fact} key={idx}>
                   <div className={styles.left}>
@@ -1160,7 +736,7 @@ class Details extends React.Component<Props, State> {
                   <div className={styles.right}>
                     <RoundButton
                       size="l"
-                      onClick={() => this.setState({ activeMaterialFact: m })}
+                      onClick={() => setState({ activeMaterialFact: m })}
                     >
                       <Icons.IconChevronRight />
                     </RoundButton>
@@ -1174,7 +750,415 @@ class Details extends React.Component<Props, State> {
         )}
       </div>
     );
-  }
+  })();
+
+  const activeModal: React.ReactNode = (() => {
+    if (state.activeModalName === "updateOrCreateNote") {
+      return (
+        <StockMemoEditor
+          sid={sid}
+          defaultValue={companyInfo?.note || ""}
+          hideModal={() => setState({ activeModalName: null })}
+        />
+      );
+    } else if (state.activeModalName === "companyInfo") {
+      return Util.isMobile ? (
+        <BottomSheet
+          onClickBackground={() =>
+            setState({ activeModalName: null, activeMaterialFact: null })
+          }
+          canMaximize
+        >
+          {companyInfoSection}
+        </BottomSheet>
+      ) : (
+        <Modal
+          title="公司資訊"
+          discardButtonProps={{
+            children: "", // no use
+            variant: "transparent", // no use
+            onClick: () =>
+              setState({ activeModalName: null, activeMaterialFact: null }),
+          }}
+          layout="auto"
+          noFooter
+        >
+          {companyInfoSection}
+        </Modal>
+      );
+    }
+    return null;
+  })();
+
+  return (
+    <>
+      {activeModal}
+      <div className={styles.main} ref={mainRef}>
+        {Util.isMobile && (
+          <ScrollThresholdContainer>
+            {(isScrolled) => (
+              <div className={styles.mobile_back_button_container}>
+                <RoundButton
+                  onClick={returnToList}
+                  size="l"
+                  frosted={isScrolled}
+                  hint_text="回列表"
+                  aria-label="回列表"
+                >
+                  <Icons.IconChevronLeft sideLength="16" />
+                </RoundButton>
+              </div>
+            )}
+          </ScrollThresholdContainer>
+        )}
+        {Util.isMobile && (
+          <ScrollThresholdContainer>
+            {(isScrolled) => (
+              <button
+                type="button"
+                className={`${styles.mobile_favorite_button} ${
+                  isScrolled ? styles.scrolled : ""
+                } ${isFavorite ? styles.active : ""}`}
+                onClick={changeFavStatus}
+                aria-label={isFavorite ? "取消關注" : "加入關注"}
+              >
+                {isFavorite ? (
+                  <Icons.IconHeartFill sideLength="20" />
+                ) : (
+                  <Icons.IconHeart sideLength="20" />
+                )}
+              </button>
+            )}
+          </ScrollThresholdContainer>
+        )}
+        {Util.isMobile && stockInfo && (
+          <ScrollThresholdContainer
+            className={styles.stock_brief_info_container}
+            scrolledClassName={styles.show}
+            onClick={handleScrollToTop}
+            role="button"
+            tabIndex={0}
+          >
+            <div className={styles.company_name}>{stockInfo.name}</div>
+            <div className={styles.sid}>{sid}</div>
+          </ScrollThresholdContainer>
+        )}
+        {state.didStockInfoFail && (
+          <div className={styles.inline_notice}>
+            <span>資料暫時無法更新，畫面顯示的是最近一次取得的資訊。</span>
+            <button type="button" onClick={retryFetchStockInfo}>
+              重試
+            </button>
+          </div>
+        )}
+        <section className={`${styles.block} ${styles.hero_block}`}>
+          <div className={styles.hero_toolbar}>
+            {!Util.isMobile && (
+              <RoundButton
+                onClick={returnToList}
+                className={styles.toolbar_button}
+                hint_text="回列表"
+                aria-label="回列表"
+              >
+                <Icons.IconChevronLeft sideLength="17" />
+              </RoundButton>
+            )}
+            <div className={styles.toolbar_spacer} />
+            {!Util.isMobile && (
+              <button
+                type="button"
+                className={`${styles.icon_button} ${isFavorite ? styles.active : ""}`}
+                onClick={changeFavStatus}
+                aria-label={isFavorite ? "取消關注" : "加入關注"}
+              >
+                {isFavorite ? (
+                  <Icons.IconHeartFill sideLength="18" />
+                ) : (
+                  <Icons.IconHeart sideLength="18" />
+                )}
+              </button>
+            )}
+            {!Util.isMobile && (
+              <>
+                <button
+                  type="button"
+                  className={styles.icon_button}
+                  aria-label="公司資訊"
+                  onClick={() => {
+                    setState({ activeModalName: "companyInfo" });
+                  }}
+                >
+                  <Icons.IconBriefcase sideLength="18" />
+                </button>
+                <button
+                  type="button"
+                  className={styles.icon_button}
+                  aria-label="編輯備註"
+                  onClick={() => {
+                    setState({ activeModalName: "updateOrCreateNote" });
+                  }}
+                >
+                  <Icons.IconMemo sideLength="18" />
+                </button>
+              </>
+            )}
+          </div>
+          <div className={styles.stock_info}>
+            <div className={styles.stock_heading}>
+              <h1 className={styles.company_name}>{stockInfo?.name || sid}</h1>
+              <div className={styles.sid}>{sid}</div>
+            </div>
+            {stockInfo ? (
+              <div className={styles.price}>
+                <DollarSign />
+                {stockInfo.close}
+              </div>
+            ) : (
+              <Skeleton className={styles.price_skeleton} />
+            )}
+            <div className={styles.price_meta}>
+              <span className={fluctPriceClass}>{fluctPriceString}</span>
+              <span className={styles.trade_quantity}>成交 {tradeVolumeText} 張</span>
+            </div>
+            {Util.isMobile && (
+              <div className={styles.mobile_text_actions}>
+                <button
+                  type="button"
+                  onClick={() => setState({ activeModalName: "companyInfo" })}
+                  aria-label="公司資訊"
+                >
+                  <Icons.IconBriefcase sideLength="16" />
+                  公司資訊
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setState({ activeModalName: "updateOrCreateNote" })}
+                  aria-label="編輯備註"
+                >
+                  <Icons.IconMemo sideLength="16" />
+                  備註
+                </button>
+              </div>
+            )}
+          </div>
+          <div className={styles.chart_controls}>
+            <div className={styles.chart_status_label}>{chartStatusLabel}</div>
+            <SegmentedControl
+              label="個股圖表類型"
+              variant="subtle"
+              optionWidth={Util.isMobile ? "58px" : "63px"}
+              options={[
+                { label: "今日", value: "intraday" },
+                { label: "歷史", value: "historical" },
+              ]}
+              value={stockDetailChartMode}
+              onChange={handleChartModeChange}
+            />
+          </div>
+          <div
+            className={styles.historical_price_chart_container}
+            aria-label={
+              stockDetailChartMode === "intraday" ? "今日走勢" : "近 60 日收盤價走勢"
+            }
+          >
+            {showChartLoadingState && (
+              <SkeletonOverlay className={styles.chart_overlay} />
+            )}
+            <div key={stockDetailChartMode} className={styles.chart_panel}>
+              {stockDetailChartMode === "intraday" ? (
+                showIntradayEmptyState ? (
+                  <div className={styles.empty_chart}>
+                    <div>盤中尚未有成交資料</div>
+                    <span>開盤後會顯示今日走勢。</span>
+                  </div>
+                ) : (
+                  state.intradayLineChart
+                )
+              ) : showHistoricalPriceEmptyState ? (
+                <div className={styles.empty_chart}>
+                  <div>目前沒有歷史價格資料</div>
+                  <span>稍後更新後會顯示走勢圖。</span>
+                </div>
+              ) : (
+                state.historicalPriceLineChart
+              )}
+            </div>
+          </div>
+        </section>
+        <section className={`${styles.block} ${styles.summary_block}`}>
+          <div className={styles.section_title}>投資摘要</div>
+          <div className={styles.investment_info}>
+            {summaryRows.map((row) => (
+              <div className={styles.summary_row} key={row.label}>
+                <span className={styles.upper}>{row.label}</span>
+                <span className={`${styles.lower} ${row.tone ? styles[row.tone] : ""}`}>
+                  {row.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+        {hasInventory && (
+          <section className={`${styles.block} ${styles.inventory_block}`}>
+            <div className={styles.section_header}>
+              <div className={styles.section_title}>庫存分佈</div>
+            </div>
+            <div className={styles.inventory_histogram_container}>
+              {state.inventoryHistogram}
+            </div>
+          </section>
+        )}
+        <section className={`${styles.block} ${styles.action_block}`}>
+          <div className={styles.section_title}>紀錄與計畫</div>
+          <div className={styles.action_list}>
+            <Link
+              to={`${Env.frontendRootPath}records?sid=${sid}`}
+              className={styles.action_button}
+            >
+              <Icons.IconClockHistory sideLength="20" color={COLORS.textPrimary} />
+              <span>查看交易紀錄</span>
+              {tradeRecordCount === 0 && <em>尚無紀錄</em>}
+            </Link>
+            <Link
+              to={`${Env.frontendRootPath}plans?sid=${sid}`}
+              className={styles.action_button}
+            >
+              <Icons.IconThumbtack sideLength="20" color={COLORS.textPrimary} />
+              <span>查看買賣計畫</span>
+              {tradePlanCount > 0 && <em>{tradePlanCount} 個計畫</em>}
+            </Link>
+          </div>
+        </section>
+        <section className={`${styles.block} ${styles.company_block}`}>
+          <div className={styles.section_header}>
+            <div className={styles.section_title}>公司與重大消息</div>
+            <button
+              type="button"
+              className={styles.text_button}
+              onClick={() => setState({ activeModalName: "companyInfo" })}
+            >
+              完整資料
+            </button>
+          </div>
+          <div className={styles.company_summary}>
+            {companyInfo?.business || "目前沒有公司業務摘要。"}
+          </div>
+          <div className={styles.material_fact_preview_list}>
+            {recentMaterialFacts.length > 0 ? (
+              recentMaterialFacts.map((materialFact, idx) => (
+                <button
+                  type="button"
+                  className={styles.material_fact_preview}
+                  key={`${materialFact.date_time}-${idx}`}
+                  onClick={() =>
+                    setState({
+                      activeModalName: "companyInfo",
+                      activeMaterialFact: materialFact,
+                    })
+                  }
+                >
+                  <span>
+                    {new Date(Date.parse(materialFact.date_time)).toLocaleDateString(
+                      "af",
+                    )}
+                  </span>
+                  <strong>{materialFact.title}</strong>
+                  <Icons.IconChevronRight sideLength="14" />
+                </button>
+              ))
+            ) : (
+              <div className={styles.empty_company_message}>目前沒有重大消息</div>
+            )}
+          </div>
+        </section>
+        {Util.isMobile ? (
+          <>
+            <SpeedDial defaultSid={sid} />
+            <div
+              className={`${styles.switch_hint_icon_for_mobile} ${styles.left} ${
+                state.switchDirection === "prev" ? styles.active : ""
+              }`}
+            />
+            <div
+              className={`${styles.switch_hint_icon_for_mobile} ${styles.right} ${
+                state.switchDirection === "next" ? styles.active : ""
+              }`}
+            />
+          </>
+        ) : stockListTab ? (
+          <>
+            <div className={`${styles.stock_switch_control} ${styles.left}`}>
+              <Tooltip content="上一檔">
+                <button
+                  type="button"
+                  aria-label="上一檔"
+                  aria-disabled={!previousStockSid}
+                  tabIndex={previousStockSid ? 0 : -1}
+                  onClick={() => switchToStock(previousStockSid)}
+                >
+                  <span aria-hidden="true">
+                    <Icons.IconChevronLeft sideLength="18" />
+                  </span>
+                </button>
+              </Tooltip>
+            </div>
+            <div className={`${styles.stock_switch_control} ${styles.right}`}>
+              <Tooltip content="下一檔">
+                <button
+                  type="button"
+                  aria-label="下一檔"
+                  aria-disabled={!nextStockSid}
+                  tabIndex={nextStockSid ? 0 : -1}
+                  onClick={() => switchToStock(nextStockSid)}
+                >
+                  <span aria-hidden="true">
+                    <Icons.IconChevronRight sideLength="18" />
+                  </span>
+                </button>
+              </Tooltip>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </>
+  );
 }
 
-export default withRouter(connect(mapStateToProps)(Details));
+export default memo(Details);
+
+function getHistoricalPriceChartData(
+  historicalPrices:
+    | RootState["stockInfo"]["sidHistoricalPricesMap"][string]
+    | undefined,
+): { dates: string[]; values: number[] } {
+  const dates: string[] = [];
+  const values: number[] = [];
+  const data = historicalPrices?.daily;
+  if (data) {
+    const entries = Object.entries(data);
+    entries.sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]));
+    for (const [date, price] of entries) {
+      const formattedDate = date.split("-").slice(1).join("/");
+      dates.push(formattedDate);
+      values.push(price);
+    }
+  }
+  return { dates, values };
+}
+
+async function calculateInventoryHistogramChartData(sid: string): Promise<number[]> {
+  const worker = new Worker(
+    new URL("../../../workers/histogramChartWorker.ts", import.meta.url),
+    // The dev server serves the worker unbundled, so it must run as a module to import.
+    { type: "module" },
+  );
+  // Read from store, not the selected trade records: loadStockDetail awaits this
+  // worker, and the user may navigate to another stock before it finishes.
+  worker.postMessage(store.getState().tradeRecord.sidTradeRecordsMap[sid] ?? []);
+  return await new Promise<number[]>((resolve) => {
+    worker.onmessage = (event) => {
+      worker.terminate();
+      resolve(event.data);
+    };
+  });
+}

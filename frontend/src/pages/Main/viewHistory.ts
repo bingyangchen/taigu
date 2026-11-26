@@ -9,7 +9,7 @@ type ScrollPosition = { top: number; anchor?: ScrollAnchor; focusedAnchorId?: st
 
 export type ViewPosition = ScrollPosition & { page?: ScrollPosition; viewKey?: string };
 
-type ListView = {
+export type ListView = {
   numberToShow: number;
   searchKeyword?: string | null;
   daysToShow?: number;

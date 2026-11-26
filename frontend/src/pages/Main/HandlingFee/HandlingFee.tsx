@@ -1,7 +1,14 @@
 import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
-import React, { MouseEventHandler } from "react";
-import { connect } from "react-redux";
+import React, {
+  memo,
+  MouseEventHandler,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   Button,
@@ -17,379 +24,85 @@ import {
   SpeedDial,
 } from "../../../components";
 import * as Icons from "../../../icons";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { deleteDiscount } from "../../../redux/slices/HandlingFeeDiscountSlice";
 import { selectNetHandlingFee } from "../../../redux/slices/TradeRecordSlice";
-import type { AppDispatch, RootState } from "../../../redux/store";
 import { COLORS, FONT_SIZES } from "../../../styles/tokens";
-import type { HandlingFeeDiscount } from "../../../types";
+import type { HandlingFeeDiscount, TradeRecord } from "../../../types";
 import Env from "../../../utils/env";
-import { getHideModalCallback } from "../../../utils/modal";
-import { IRouter, navigateBack, withRouter } from "../../../utils/router";
+import { navigateBack } from "../../../utils/router";
 import Util from "../../../utils/util";
-import { getViewHistory } from "../viewHistory";
+import { useListViewSaving, useSavedListView } from "../useListViewHistory";
 import styles from "./HandlingFee.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { tradeRecords } = rootState.tradeRecord;
-  const { handlingFeeDiscountRecords, isWaiting: isWaitingDiscount } =
-    rootState.handlingFeeDiscount;
-  return {
-    netHandlingFee: selectNetHandlingFee(rootState),
-    tradeRecords,
-    handlingFeeDiscountRecords,
-    isWaitingDiscount,
-  };
-}
+const TIME_SPAN_OPTIONS_IN_DAYS = [182, 365, 1825, Infinity];
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
+function HandlingFee() {
+  const netHandlingFee = useAppSelector(selectNetHandlingFee);
+  const tradeRecords = useAppSelector((state) => state.tradeRecord.tradeRecords);
+  const handlingFeeDiscountRecords = useAppSelector(
+    (state) => state.handlingFeeDiscount.handlingFeeDiscountRecords,
+  );
+  const isWaitingDiscount = useAppSelector(
+    (state) => state.handlingFeeDiscount.isWaiting,
+  );
+  const dispatch = useAppDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const savedListView = useSavedListView();
+  const [daysToShow, setDaysToShow] = useState(
+    savedListView?.daysToShow ?? TIME_SPAN_OPTIONS_IN_DAYS[0],
+  );
+  const [numberToShow, setNumberToShow] = useState(savedListView?.numberToShow ?? 15);
+  const [activeModalName, setActiveModalName] = useState<"discountModal" | null>(null);
+  const [animatedHandlingFee, setAnimatedHandlingFee] = useState(0);
+  useListViewSaving({ daysToShow, numberToShow });
 
-interface State {
-  animatedHandlingFee: number;
-  daysToShow: number;
-  activeModalName: "discountModal" | null;
-  numberToShow: number;
-  handlingFeeChart: React.ReactElement | null;
-}
-
-class HandlingFee extends React.Component<Props, State> {
-  public state: State;
-  private readonly viewHistory = getViewHistory();
-  private readonly TIME_SPAN_OPTIONS_IN_DAYS: number[] = [182, 365, 1825, Infinity];
-
-  public constructor(props: Props) {
-    super(props);
-    const list = this.viewHistory.get(
-      props.router.location,
-      props.router.navigationType,
-    )?.list;
-    this.state = {
-      animatedHandlingFee: 0,
-      daysToShow: list?.daysToShow ?? this.TIME_SPAN_OPTIONS_IN_DAYS[0],
-      activeModalName: null,
-      numberToShow: list?.numberToShow ?? 15,
-      handlingFeeChart: null,
-    };
-  }
-
-  public async componentDidMount(): Promise<void> {
-    this.updateHandlingFeeChart();
-    this.animateHandlingFee();
-  }
-
-  public async componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-  ): Promise<void> {
-    if (prevProps.router.location.key !== this.props.router.location.key) {
-      const { daysToShow, numberToShow } = prevState;
-      this.viewHistory.save(prevProps.router.location, {
-        list: { daysToShow, numberToShow },
-      });
-    }
-    if (prevProps.netHandlingFee !== this.props.netHandlingFee) {
-      this.animateHandlingFee();
-    }
-    if (
-      prevProps.tradeRecords !== this.props.tradeRecords ||
-      prevProps.handlingFeeDiscountRecords !== this.props.handlingFeeDiscountRecords ||
-      prevState.daysToShow !== this.state.daysToShow
-    ) {
-      this.updateHandlingFeeChart();
-    }
-  }
-
-  public componentWillUnmount(): void {
-    const { daysToShow, numberToShow } = this.state;
-    this.viewHistory.save(this.props.router.location, {
-      list: { daysToShow, numberToShow },
-    });
-  }
-
-  public render(): React.ReactNode {
-    return (
-      <>
-        {this.activeModal}
-        <div className={styles.main}>
-          {Util.isMobile && <SpeedDial />}
-          {Util.isMobile && (
-            <ScrollThresholdContainer>
-              {(isScrolled) => (
-                <div
-                  className={`${styles.mobile_back_button_container} ${
-                    isScrolled ? styles.scrolled : ""
-                  }`}
-                >
-                  <RoundButton
-                    onClick={this.returnToDashboard}
-                    size="l"
-                    frosted={isScrolled}
-                    hint_text="回儀表板"
-                  >
-                    <Icons.IconChevronLeft sideLength="16" />
-                  </RoundButton>
-                </div>
-              )}
-            </ScrollThresholdContainer>
-          )}
-          <div className={styles.container}>
-            {!Util.isMobile && (
-              <div className={styles.desktop_back_button_container}>
-                <RoundButton
-                  onClick={this.returnToDashboard}
-                  size="l"
-                  hint_text="回儀表板"
-                >
-                  <Icons.IconChevronLeft sideLength="16" />
-                </RoundButton>
-              </div>
-            )}
-            <div className={styles.left_block}>
-              <div className={styles.handling_fee_section}>
-                <div className={styles.title}>累積手續費</div>
-                <div className={styles.total_handling_fee}>
-                  <DollarSign />
-                  {Math.round(this.state.animatedHandlingFee).toLocaleString()}
-                </div>
-              </div>
-              {this.props.netHandlingFee > 0 ? (
-                <div className={styles.chart_section}>
-                  <div className={styles.chart_container}>
-                    {this.state.handlingFeeChart}
-                  </div>
-                  <div className={styles.controls}>
-                    <SegmentedControl
-                      label="手續費圖表時間區間"
-                      options={[
-                        { label: "6M", value: "182" },
-                        { label: "1Y", value: "365" },
-                        { label: "5Y", value: "1825" },
-                        { label: "ALL", value: "Infinity" },
-                      ]}
-                      value={String(this.state.daysToShow)}
-                      onChange={this.handleTimeSpanSegmentChange}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.hint}>
-                  手續費由交易紀錄產生，請先新增交易紀錄。
-                </div>
-              )}
-            </div>
-            <div className={styles.right_block}>
-              <div className={styles.section_header}>
-                <div className={styles.title}>手續費折讓</div>
-                <Button variant="light" onClick={this.handleCreateDiscount}>
-                  新增折讓紀錄
-                </Button>
-              </div>
-              {this.props.handlingFeeDiscountRecords.length === 0 ? (
-                <div className={styles.empty_section}>目前沒有手續費折讓紀錄</div>
-              ) : (
-                <div className={styles.record_list} data-page-scroll>
-                  {this.props.handlingFeeDiscountRecords
-                    .slice(0, this.state.numberToShow)
-                    .map((discount: HandlingFeeDiscount) => (
-                      <ListRow
-                        key={discount.id}
-                        target={discount}
-                        editModal={this.renderEditModal(discount)}
-                        deleteModal={this.renderDeleteModal(discount)}
-                        editPath={`${Env.frontendRootPath}handling-fee/discounts/${discount.id}/edit`}
-                      >
-                        <span className={styles.company}>
-                          {discount.memo || "手續費折讓"}
-                        </span>
-                        <span className={styles.price}>
-                          <DollarSign />
-                          {discount.amount.toLocaleString()}
-                        </span>
-                        <span className={styles.date}>{discount.date}</span>
-                      </ListRow>
-                    ))}
-                  <InfiniteScrollSentinel
-                    hasMore={this.hasMoreToShow}
-                    onLoadMore={this.handleLoadMore}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </>
+  // The total counts up to the net handling fee: one step right away whenever the fee
+  // changes, then one step every 30 ms.
+  useLayoutEffect(() => {
+    setAnimatedHandlingFee((current) => makeNextAnimatedFee(current, netHandlingFee));
+  }, [netHandlingFee]);
+  useEffect(() => {
+    if (animatedHandlingFee === netHandlingFee) return;
+    const timer = setTimeout(
+      () =>
+        setAnimatedHandlingFee((current) =>
+          makeNextAnimatedFee(current, netHandlingFee),
+        ),
+      30,
     );
-  }
+    return () => clearTimeout(timer);
+  }, [animatedHandlingFee, netHandlingFee]);
 
-  private get activeModal(): React.ReactElement<
-    typeof HandlingFeeDiscountEditor
-  > | null {
-    if (this.state.activeModalName === "discountModal") {
-      return <HandlingFeeDiscountEditor hideModal={getHideModalCallback(this)} />;
-    }
-    return null;
-  }
+  // Building the chart only when its data changes keeps ECharts from redrawing it on
+  // every step of the animation above.
+  const handlingFeeChart = useMemo(
+    () => (
+      <ReactECharts
+        option={makeHandlingFeeChartOption(
+          tradeRecords,
+          handlingFeeDiscountRecords,
+          daysToShow,
+        )}
+        style={{ height: "100%", width: "100%" }}
+      />
+    ),
+    [tradeRecords, handlingFeeDiscountRecords, daysToShow],
+  );
 
-  private animateHandlingFee(): void {
-    if (this.state.animatedHandlingFee === this.props.netHandlingFee) return;
-    this.setState(
-      (state, props) => {
-        return {
-          animatedHandlingFee: Math.min(
-            state.animatedHandlingFee +
-              Math.max(1, (props.netHandlingFee - state.animatedHandlingFee) / 2.5),
-            props.netHandlingFee,
-          ),
-        };
-      },
-      () => setTimeout(() => this.animateHandlingFee(), 30),
-    );
-  }
-
-  private get handlingFeeChartOption(): EChartsOption {
-    const monthlyData = this.getMonthlyHandlingFeeData();
-    const months = monthlyData.map((item) => item.month);
-    const values = monthlyData.map((item) => item.fee);
-    const borderRadius = Math.max(
-      1,
-      Math.min(Math.floor(2500 / this.state.daysToShow), 10),
-    );
-    return {
-      tooltip: {
-        trigger: "axis",
-        axisPointer: { type: "shadow" },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        formatter: (params: any) => {
-          const param = params[0];
-          return `${param.name}<br/>${param.seriesName}: $${param.value.toLocaleString()}`;
-        },
-      },
-      grid: { left: "3%", right: "4%", bottom: "3%", top: "10%", containLabel: true },
-      xAxis: {
-        type: "category",
-        data: months,
-        axisLabel: {
-          color: COLORS.textSecondary,
-          fontSize: FONT_SIZES.chartTick,
-          hideOverlap: true,
-          formatter: (value: string) => {
-            // value is in format "YYYY/MM", extract month directly instead of using new Date(value).getMonth() + 1
-            const month = parseInt(value.split("/")[1], 10);
-            return `${month}月`;
-          },
-        },
-        axisLine: { show: false },
-        axisTick: { show: false },
-      },
-      yAxis: {
-        type: "value",
-        axisLabel: {
-          color: COLORS.textSecondary,
-          fontSize: FONT_SIZES.chartTick,
-          formatter: (value: number) => {
-            if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-            if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-            return value.toString();
-          },
-        },
-        splitLine: { show: false },
-        axisLine: { show: false },
-        axisTick: { show: false },
-      },
-      series: [
-        {
-          name: "手續費",
-          type: "bar",
-          data: values,
-          itemStyle: { color: COLORS.chartAccent, borderRadius: borderRadius },
-        },
-      ],
-      backgroundColor: "transparent",
-    };
-  }
-
-  private updateHandlingFeeChart(): void {
-    this.setState({
-      handlingFeeChart: (
-        <ReactECharts
-          option={this.handlingFeeChartOption}
-          style={{ height: "100%", width: "100%" }}
-        />
-      ),
-    });
-  }
-
-  private getMonthlyHandlingFeeData(): { month: string; fee: number }[] {
-    const now = new Date();
-    const cutoffDate = new Date();
-    if (this.state.daysToShow !== Infinity) {
-      cutoffDate.setDate(now.getDate() - this.state.daysToShow);
-      cutoffDate.setDate(1); // Set to first day of the month
-    } else {
-      cutoffDate.setFullYear(2000, 0, 1);
-    }
-
-    const monthlyMap: { [month: string]: number } = {};
-
-    this.props.tradeRecords.forEach((record) => {
-      const recordDate = new Date(record.deal_time);
-      if (recordDate >= cutoffDate) {
-        const monthKey = `${recordDate.getFullYear()}-${String(recordDate.getMonth() + 1).padStart(2, "0")}`;
-        monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) + record.handling_fee;
-      }
-    });
-
-    this.props.handlingFeeDiscountRecords.forEach((discount) => {
-      const discountDate = new Date(discount.date);
-      if (discountDate >= cutoffDate) {
-        const monthKey = `${discountDate.getFullYear()}-${String(discountDate.getMonth() + 1).padStart(2, "0")}`;
-        monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) - discount.amount;
-      }
-    });
-
-    const result = Object.entries(monthlyMap)
-      .map(([month, fee]) => ({
-        month: `${month.split("-")[0]}/${month.split("-")[1]}`,
-        fee,
-      }))
-      .sort((a, b) => {
-        const [yearA, monthA] = a.month.split("/").map(Number);
-        const [yearB, monthB] = b.month.split("/").map(Number);
-        if (yearA !== yearB) return yearA - yearB;
-        return monthA - monthB;
-      });
-
-    return result;
-  }
-
-  private handleTimeSpanSegmentChange = (value: string): void => {
-    this.setState({ daysToShow: value === "Infinity" ? Infinity : Number(value) });
+  const returnToDashboard = (): void => {
+    navigateBack({ location, navigate }, Env.frontendRootPath);
   };
-
-  private returnToDashboard = (): void => {
-    navigateBack(this.props.router, Env.frontendRootPath);
-  };
-
-  private handleLoadMore = (): void => {
-    this.setState((state) => {
-      return { numberToShow: state.numberToShow * 2 };
-    });
-  };
-
-  private get hasMoreToShow(): boolean {
-    return this.props.handlingFeeDiscountRecords.length > this.state.numberToShow;
-  }
-
-  private handleCreateDiscount = (): void => {
+  const handleCreateDiscount = (): void => {
     if (Util.isMobile) {
-      this.props.router.navigate(`${Env.frontendRootPath}handling-fee/discounts/new`);
+      navigate(`${Env.frontendRootPath}handling-fee/discounts/new`);
       return;
     }
-    this.setState({ activeModalName: "discountModal" });
+    setActiveModalName("discountModal");
   };
 
-  private renderEditModal = (
+  const makeEditModal = (
     discount: HandlingFeeDiscount,
   ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const EditModalComponent = (hideModal: MouseEventHandler) => {
@@ -399,7 +112,7 @@ class HandlingFee extends React.Component<Props, State> {
     return EditModalComponent;
   };
 
-  private renderDeleteModal = (
+  const makeDeleteModal = (
     discount: HandlingFeeDiscount,
   ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const DeleteModalComponent = (hideModal: MouseEventHandler) => {
@@ -409,8 +122,10 @@ class HandlingFee extends React.Component<Props, State> {
           title="刪除手續費折讓？"
           description="刪除後，這筆折讓不會再計入手續費分析。"
           submitLabel="刪除折讓紀錄"
-          isWaiting={this.props.isWaitingDiscount}
-          onDelete={this.getDeleteHandler(discount)}
+          isWaiting={isWaitingDiscount}
+          onDelete={async () => {
+            await dispatch(deleteDiscount(discount.id)).unwrap();
+          }}
         >
           <DeletePreview
             title={discount.memo || "手續費折讓"}
@@ -434,11 +149,235 @@ class HandlingFee extends React.Component<Props, State> {
     return DeleteModalComponent;
   };
 
-  private getDeleteHandler = (discount: HandlingFeeDiscount): (() => Promise<void>) => {
-    return async (): Promise<void> => {
-      await this.props.dispatch(deleteDiscount(discount.id)).unwrap();
-    };
+  return (
+    <>
+      {activeModalName === "discountModal" && (
+        <HandlingFeeDiscountEditor hideModal={() => setActiveModalName(null)} />
+      )}
+      <div className={styles.main}>
+        {Util.isMobile && <SpeedDial />}
+        {Util.isMobile && (
+          <ScrollThresholdContainer>
+            {(isScrolled) => (
+              <div
+                className={`${styles.mobile_back_button_container} ${
+                  isScrolled ? styles.scrolled : ""
+                }`}
+              >
+                <RoundButton
+                  onClick={returnToDashboard}
+                  size="l"
+                  frosted={isScrolled}
+                  hint_text="回儀表板"
+                >
+                  <Icons.IconChevronLeft sideLength="16" />
+                </RoundButton>
+              </div>
+            )}
+          </ScrollThresholdContainer>
+        )}
+        <div className={styles.container}>
+          {!Util.isMobile && (
+            <div className={styles.desktop_back_button_container}>
+              <RoundButton onClick={returnToDashboard} size="l" hint_text="回儀表板">
+                <Icons.IconChevronLeft sideLength="16" />
+              </RoundButton>
+            </div>
+          )}
+          <div className={styles.left_block}>
+            <div className={styles.handling_fee_section}>
+              <div className={styles.title}>累積手續費</div>
+              <div className={styles.total_handling_fee}>
+                <DollarSign />
+                {Math.round(animatedHandlingFee).toLocaleString()}
+              </div>
+            </div>
+            {netHandlingFee > 0 ? (
+              <div className={styles.chart_section}>
+                <div className={styles.chart_container}>{handlingFeeChart}</div>
+                <div className={styles.controls}>
+                  <SegmentedControl
+                    label="手續費圖表時間區間"
+                    options={[
+                      { label: "6M", value: "182" },
+                      { label: "1Y", value: "365" },
+                      { label: "5Y", value: "1825" },
+                      { label: "ALL", value: "Infinity" },
+                    ]}
+                    value={String(daysToShow)}
+                    onChange={(value: string) =>
+                      setDaysToShow(value === "Infinity" ? Infinity : Number(value))
+                    }
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className={styles.hint}>
+                手續費由交易紀錄產生，請先新增交易紀錄。
+              </div>
+            )}
+          </div>
+          <div className={styles.right_block}>
+            <div className={styles.section_header}>
+              <div className={styles.title}>手續費折讓</div>
+              <Button variant="light" onClick={handleCreateDiscount}>
+                新增折讓紀錄
+              </Button>
+            </div>
+            {handlingFeeDiscountRecords.length === 0 ? (
+              <div className={styles.empty_section}>目前沒有手續費折讓紀錄</div>
+            ) : (
+              <div className={styles.record_list} data-page-scroll>
+                {handlingFeeDiscountRecords
+                  .slice(0, numberToShow)
+                  .map((discount: HandlingFeeDiscount) => (
+                    <ListRow
+                      key={discount.id}
+                      target={discount}
+                      editModal={makeEditModal(discount)}
+                      deleteModal={makeDeleteModal(discount)}
+                      editPath={`${Env.frontendRootPath}handling-fee/discounts/${discount.id}/edit`}
+                    >
+                      <span className={styles.company}>
+                        {discount.memo || "手續費折讓"}
+                      </span>
+                      <span className={styles.price}>
+                        <DollarSign />
+                        {discount.amount.toLocaleString()}
+                      </span>
+                      <span className={styles.date}>{discount.date}</span>
+                    </ListRow>
+                  ))}
+                <InfiniteScrollSentinel
+                  hasMore={handlingFeeDiscountRecords.length > numberToShow}
+                  onLoadMore={() => setNumberToShow((count) => count * 2)}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default memo(HandlingFee);
+
+function makeNextAnimatedFee(current: number, target: number): number {
+  if (current === target) return current;
+  return Math.min(current + Math.max(1, (target - current) / 2.5), target);
+}
+
+function makeHandlingFeeChartOption(
+  tradeRecords: TradeRecord[],
+  handlingFeeDiscountRecords: HandlingFeeDiscount[],
+  daysToShow: number,
+): EChartsOption {
+  const monthlyData = getMonthlyHandlingFeeData(
+    tradeRecords,
+    handlingFeeDiscountRecords,
+    daysToShow,
+  );
+  const months = monthlyData.map((item) => item.month);
+  const values = monthlyData.map((item) => item.fee);
+  const borderRadius = Math.max(1, Math.min(Math.floor(2500 / daysToShow), 10));
+  return {
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      formatter: (params: any) => {
+        const param = params[0];
+        return `${param.name}<br/>${param.seriesName}: $${param.value.toLocaleString()}`;
+      },
+    },
+    grid: { left: "3%", right: "4%", bottom: "3%", top: "10%", containLabel: true },
+    xAxis: {
+      type: "category",
+      data: months,
+      axisLabel: {
+        color: COLORS.textSecondary,
+        fontSize: FONT_SIZES.chartTick,
+        hideOverlap: true,
+        formatter: (value: string) => {
+          // value is in format "YYYY/MM", extract month directly instead of using new Date(value).getMonth() + 1
+          const month = parseInt(value.split("/")[1], 10);
+          return `${month}月`;
+        },
+      },
+      axisLine: { show: false },
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: "value",
+      axisLabel: {
+        color: COLORS.textSecondary,
+        fontSize: FONT_SIZES.chartTick,
+        formatter: (value: number) => {
+          if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+          if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+          return value.toString();
+        },
+      },
+      splitLine: { show: false },
+      axisLine: { show: false },
+      axisTick: { show: false },
+    },
+    series: [
+      {
+        name: "手續費",
+        type: "bar",
+        data: values,
+        itemStyle: { color: COLORS.chartAccent, borderRadius: borderRadius },
+      },
+    ],
+    backgroundColor: "transparent",
   };
 }
 
-export default connect(mapStateToProps)(withRouter(HandlingFee));
+function getMonthlyHandlingFeeData(
+  tradeRecords: TradeRecord[],
+  handlingFeeDiscountRecords: HandlingFeeDiscount[],
+  daysToShow: number,
+): { month: string; fee: number }[] {
+  const now = new Date();
+  const cutoffDate = new Date();
+  if (daysToShow !== Infinity) {
+    cutoffDate.setDate(now.getDate() - daysToShow);
+    cutoffDate.setDate(1); // Set to first day of the month
+  } else {
+    cutoffDate.setFullYear(2000, 0, 1);
+  }
+
+  const monthlyMap: { [month: string]: number } = {};
+
+  tradeRecords.forEach((record) => {
+    const recordDate = new Date(record.deal_time);
+    if (recordDate >= cutoffDate) {
+      const monthKey = `${recordDate.getFullYear()}-${String(recordDate.getMonth() + 1).padStart(2, "0")}`;
+      monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) + record.handling_fee;
+    }
+  });
+
+  handlingFeeDiscountRecords.forEach((discount) => {
+    const discountDate = new Date(discount.date);
+    if (discountDate >= cutoffDate) {
+      const monthKey = `${discountDate.getFullYear()}-${String(discountDate.getMonth() + 1).padStart(2, "0")}`;
+      monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) - discount.amount;
+    }
+  });
+
+  const result = Object.entries(monthlyMap)
+    .map(([month, fee]) => ({
+      month: `${month.split("-")[0]}/${month.split("-")[1]}`,
+      fee,
+    }))
+    .sort((a, b) => {
+      const [yearA, monthA] = a.month.split("/").map(Number);
+      const [yearB, monthB] = b.month.split("/").map(Number);
+      if (yearA !== yearB) return yearA - yearB;
+      return monthA - monthB;
+    });
+
+  return result;
+}

@@ -1,5 +1,5 @@
-import React, { MouseEventHandler } from "react";
-import { connect } from "react-redux";
+import React, { memo, MouseEventHandler, useLayoutEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import {
   CashDividendRecordEditor,
@@ -13,193 +13,69 @@ import {
   SpeedDial,
   TradeRecordEditor,
 } from "../../../components";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { deleteRecord as deleteCashDividendRecord } from "../../../redux/slices/CashDividendRecordSlice";
 import { updateHeaderTitle } from "../../../redux/slices/MainPageSlice";
 import { deleteRecord as deleteTradeRecord } from "../../../redux/slices/TradeRecordSlice";
-import type { AppDispatch, RootState } from "../../../redux/store";
 import type { CashDividendRecord, TradeRecord } from "../../../types";
 import Env from "../../../utils/env";
 import { getTradeSide, tradeSideToLabel } from "../../../utils/recordEditor";
-import { IRouter, withRouter } from "../../../utils/router";
 import Util from "../../../utils/util";
-import { getViewHistory } from "../viewHistory";
+import { useListViewSaving, useSavedListView } from "../useListViewHistory";
 import styles from "./Records.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { tradeRecords, isWaiting: isWaitingTradeRecord } = rootState.tradeRecord;
-  const { cashDividendRecords, isWaiting: isWaitingCashDividend } =
-    rootState.cashDividend;
-  return {
-    tradeRecords,
-    cashDividendRecords,
-    isWaitingTradeRecord,
-    isWaitingCashDividend,
-  };
-}
+function Records() {
+  const tradeRecords = useAppSelector((state) => state.tradeRecord.tradeRecords);
+  const isWaitingTradeRecord = useAppSelector((state) => state.tradeRecord.isWaiting);
+  const cashDividendRecords = useAppSelector(
+    (state) => state.cashDividend.cashDividendRecords,
+  );
+  const isWaitingCashDividend = useAppSelector((state) => state.cashDividend.isWaiting);
+  const dispatch = useAppDispatch();
+  const [searchParams] = useSearchParams();
+  const savedListView = useSavedListView();
+  const [searchKeyword, setSearchKeyword] = useState<string | null>(
+    savedListView?.searchKeyword === undefined
+      ? searchParams.get("sid")
+      : savedListView.searchKeyword,
+  );
+  const [numberToShow, setNumberToShow] = useState(savedListView?.numberToShow ?? 15);
+  useListViewSaving({ searchKeyword, numberToShow });
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
-
-interface State {
-  searchKeyword: string | null;
-  numberToShow: number;
-}
-
-class Records extends React.Component<Props, State> {
-  public state: State;
-  private readonly viewHistory = getViewHistory();
-  public constructor(props: Props) {
-    super(props);
-    const list = this.viewHistory.get(
-      props.router.location,
-      props.router.navigationType,
-    )?.list;
-    this.state = {
-      searchKeyword:
-        list?.searchKeyword === undefined
-          ? props.router.search_params.get("sid")
-          : list.searchKeyword,
-      numberToShow: list?.numberToShow ?? 15,
+  useLayoutEffect(() => {
+    dispatch(updateHeaderTitle(null));
+    return () => {
+      dispatch(updateHeaderTitle(null));
     };
-  }
+  }, [dispatch]);
 
-  public componentDidMount(): void {
-    this.props.dispatch(updateHeaderTitle(null));
-  }
-
-  public componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-  ): void {
-    if (prevProps.router.location.key !== this.props.router.location.key) {
-      this.viewHistory.save(prevProps.router.location, { list: prevState });
-    }
-  }
-
-  public componentWillUnmount(): void {
-    this.viewHistory.save(this.props.router.location, { list: this.state });
-    this.props.dispatch(updateHeaderTitle(null));
-  }
-
-  public render(): React.ReactNode {
-    return (
-      <div className={styles.main}>
-        <ScrollAwareFloatingControls
-          activeClassName={styles.active}
-          className={styles.floating_pill}
-          hiddenClassName={styles.hidden}
-          noTransitionClassName={styles.no_transition}
-        >
-          <SearchKeywordInput
-            placeholder="輸入證券代號或名稱"
-            keyword={this.state.searchKeyword ?? ""}
-            onChange={(searchKeyword) =>
-              this.setState({ searchKeyword: searchKeyword })
-            }
-          />
-        </ScrollAwareFloatingControls>
-        {this.filteredRecords.length === 0 ? (
-          <div className={styles.empty_section}>目前沒有紀錄</div>
-        ) : (
-          <div className={styles.record_list} data-page-scroll>
-            {this.filteredRecords
-              .slice(0, this.state.numberToShow)
-              .map((record: TradeRecord | CashDividendRecord) => {
-                return (
-                  <ListRow
-                    key={`${
-                      Util.isTradeRecord(record) ? "trade" : "cash-dividend"
-                    }-${record.id}`}
-                    target={record}
-                    editModal={this.renderEditModal(record)}
-                    deleteModal={this.renderDeleteModal(record)}
-                    editPath={this.getEditPath(record)}
-                  >
-                    <div className={styles.record_row}>
-                      <span className={styles.identity}>
-                        <span className={styles.company}>
-                          <span className={styles.sid}>{record.sid}</span>
-                          <span className={styles.company_name}>
-                            {record.company_name}
-                          </span>
-                        </span>
-                        <span className={styles.date}>{record.deal_time}</span>
-                      </span>
-                      <span className={styles.record_metrics}>
-                        <span
-                          className={`${styles.record_type} ${
-                            Util.isTradeRecord(record)
-                              ? styles[getTradeSide(record)]
-                              : styles.dividend
-                          }`}
-                        >
-                          {this.getRecordTypeLabel(record)}
-                        </span>
-                        {Util.isTradeRecord(record) && (
-                          <span className={styles.quantity}>
-                            {Math.abs(record.deal_quantity).toLocaleString()} 股
-                          </span>
-                        )}
-                        <span className={styles.price_group}>
-                          <span className={styles.price_label}>
-                            {Util.isTradeRecord(record) ? "成交價" : "入帳金額"}
-                          </span>
-                          <span className={styles.price}>
-                            <DollarSign />
-                            {Util.isTradeRecord(record)
-                              ? record.deal_price.toLocaleString()
-                              : record.cash_dividend.toLocaleString()}
-                          </span>
-                        </span>
-                      </span>
-                    </div>
-                  </ListRow>
-                );
-              })}
-            <InfiniteScrollSentinel
-              hasMore={this.hasMoreToShow}
-              onLoadMore={this.handleLoadMore}
-            />
-          </div>
-        )}
-        {Util.isMobile && <SpeedDial />}
-      </div>
-    );
-  }
-
-  private get filteredRecords(): (TradeRecord | CashDividendRecord)[] {
-    return [...this.props.tradeRecords, ...this.props.cashDividendRecords]
-      .sort((a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time))
-      .filter((record) => this.matchesSearchKeyword(record));
-  }
-
-  private matchesSearchKeyword(record: TradeRecord | CashDividendRecord): boolean {
-    return (
-      !this.state.searchKeyword ||
-      record.sid.includes(this.state.searchKeyword) ||
-      record.company_name.includes(this.state.searchKeyword) ||
-      record.deal_time.includes(this.state.searchKeyword) ||
-      this.getRecordTypeLabel(record).includes(this.state.searchKeyword)
-    );
-  }
-
-  private getRecordTypeLabel(record: TradeRecord | CashDividendRecord): string {
+  const getRecordTypeLabel = (record: TradeRecord | CashDividendRecord): string => {
     if (!Util.isTradeRecord(record)) return "股利";
     return tradeSideToLabel[getTradeSide(record)];
-  }
-
-  private get hasMoreToShow(): boolean {
-    return this.filteredRecords.length > this.state.numberToShow;
-  }
-
-  private handleLoadMore = (): void => {
-    this.setState((state) => {
-      return { numberToShow: state.numberToShow * 2 };
-    });
   };
+  const matchesSearchKeyword = (record: TradeRecord | CashDividendRecord): boolean =>
+    !searchKeyword ||
+    record.sid.includes(searchKeyword) ||
+    record.company_name.includes(searchKeyword) ||
+    record.deal_time.includes(searchKeyword) ||
+    getRecordTypeLabel(record).includes(searchKeyword);
+  const filteredRecords = [...tradeRecords, ...cashDividendRecords]
+    .sort((a, b) => Date.parse(b.deal_time) - Date.parse(a.deal_time))
+    .filter(matchesSearchKeyword);
 
-  private renderEditModal = (
+  const handleLoadMore = (): void => setNumberToShow((count) => count * 2);
+
+  const makeDeleteHandler =
+    (record: TradeRecord | CashDividendRecord): (() => Promise<void>) =>
+    async (): Promise<void> => {
+      if (Util.isTradeRecord(record)) {
+        await dispatch(deleteTradeRecord(record.id)).unwrap();
+      } else {
+        await dispatch(deleteCashDividendRecord(record.id)).unwrap();
+      }
+    };
+
+  const makeEditModal = (
     record: TradeRecord | CashDividendRecord,
   ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const EditModalComponent = (hideModal: MouseEventHandler) => {
@@ -213,13 +89,7 @@ class Records extends React.Component<Props, State> {
     return EditModalComponent;
   };
 
-  private getEditPath(record: TradeRecord | CashDividendRecord): string {
-    return Util.isTradeRecord(record)
-      ? `${Env.frontendRootPath}records/trade/${record.id}/edit`
-      : `${Env.frontendRootPath}records/cash-dividend/${record.id}/edit`;
-  }
-
-  private renderDeleteModal = (
+  const makeDeleteModal = (
     record: TradeRecord | CashDividendRecord,
   ): ((_hideModal: MouseEventHandler) => React.ReactNode) => {
     const DeleteModalComponent = (hideModal: MouseEventHandler) => {
@@ -234,11 +104,9 @@ class Records extends React.Component<Props, State> {
           }
           submitLabel={Util.isTradeRecord(record) ? "刪除交易紀錄" : "刪除現金股利"}
           isWaiting={
-            Util.isTradeRecord(record)
-              ? this.props.isWaitingTradeRecord
-              : this.props.isWaitingCashDividend
+            Util.isTradeRecord(record) ? isWaitingTradeRecord : isWaitingCashDividend
           }
-          onDelete={this.getDeleteHandler(record)}
+          onDelete={makeDeleteHandler(record)}
         >
           <DeletePreview
             title={`${record.sid} ${record.company_name}`}
@@ -257,7 +125,7 @@ class Records extends React.Component<Props, State> {
                     },
                     {
                       label: "類型",
-                      value: this.getRecordTypeLabel(record),
+                      value: getRecordTypeLabel(record),
                       tone: getTradeSide(record),
                     },
                     {
@@ -285,17 +153,93 @@ class Records extends React.Component<Props, State> {
     return DeleteModalComponent;
   };
 
-  private getDeleteHandler = (
-    record: TradeRecord | CashDividendRecord,
-  ): (() => Promise<void>) => {
-    return async (): Promise<void> => {
-      if (Util.isTradeRecord(record)) {
-        await this.props.dispatch(deleteTradeRecord(record.id)).unwrap();
-      } else {
-        await this.props.dispatch(deleteCashDividendRecord(record.id)).unwrap();
-      }
-    };
-  };
+  return (
+    <div className={styles.main}>
+      <ScrollAwareFloatingControls
+        activeClassName={styles.active}
+        className={styles.floating_pill}
+        hiddenClassName={styles.hidden}
+        noTransitionClassName={styles.no_transition}
+      >
+        <SearchKeywordInput
+          placeholder="輸入證券代號或名稱"
+          keyword={searchKeyword ?? ""}
+          onChange={setSearchKeyword}
+        />
+      </ScrollAwareFloatingControls>
+      {filteredRecords.length === 0 ? (
+        <div className={styles.empty_section}>目前沒有紀錄</div>
+      ) : (
+        <div className={styles.record_list} data-page-scroll>
+          {filteredRecords
+            .slice(0, numberToShow)
+            .map((record: TradeRecord | CashDividendRecord) => {
+              return (
+                <ListRow
+                  key={`${
+                    Util.isTradeRecord(record) ? "trade" : "cash-dividend"
+                  }-${record.id}`}
+                  target={record}
+                  editModal={makeEditModal(record)}
+                  deleteModal={makeDeleteModal(record)}
+                  editPath={getEditPath(record)}
+                >
+                  <div className={styles.record_row}>
+                    <span className={styles.identity}>
+                      <span className={styles.company}>
+                        <span className={styles.sid}>{record.sid}</span>
+                        <span className={styles.company_name}>
+                          {record.company_name}
+                        </span>
+                      </span>
+                      <span className={styles.date}>{record.deal_time}</span>
+                    </span>
+                    <span className={styles.record_metrics}>
+                      <span
+                        className={`${styles.record_type} ${
+                          Util.isTradeRecord(record)
+                            ? styles[getTradeSide(record)]
+                            : styles.dividend
+                        }`}
+                      >
+                        {getRecordTypeLabel(record)}
+                      </span>
+                      {Util.isTradeRecord(record) && (
+                        <span className={styles.quantity}>
+                          {Math.abs(record.deal_quantity).toLocaleString()} 股
+                        </span>
+                      )}
+                      <span className={styles.price_group}>
+                        <span className={styles.price_label}>
+                          {Util.isTradeRecord(record) ? "成交價" : "入帳金額"}
+                        </span>
+                        <span className={styles.price}>
+                          <DollarSign />
+                          {Util.isTradeRecord(record)
+                            ? record.deal_price.toLocaleString()
+                            : record.cash_dividend.toLocaleString()}
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                </ListRow>
+              );
+            })}
+          <InfiniteScrollSentinel
+            hasMore={filteredRecords.length > numberToShow}
+            onLoadMore={handleLoadMore}
+          />
+        </div>
+      )}
+      {Util.isMobile && <SpeedDial />}
+    </div>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(Records));
+export default memo(Records);
+
+function getEditPath(record: TradeRecord | CashDividendRecord): string {
+  return Util.isTradeRecord(record)
+    ? `${Env.frontendRootPath}records/trade/${record.id}/edit`
+    : `${Env.frontendRootPath}records/cash-dividend/${record.id}/edit`;
+}

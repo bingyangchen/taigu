@@ -1,7 +1,7 @@
 import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
-import React from "react";
-import { connect } from "react-redux";
+import { memo, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   RoundButton,
@@ -10,120 +10,35 @@ import {
   SpeedDial,
 } from "../../../components";
 import * as Icons from "../../../icons";
-import type { AppDispatch, RootState } from "../../../redux/store";
+import { useAppSelector } from "../../../redux/hooks";
 import { COLORS, FONT_SIZES } from "../../../styles/tokens";
 import Api from "../../../utils/api";
 import Env from "../../../utils/env";
-import { IRouter, navigateBack, withRouter } from "../../../utils/router";
+import { navigateBack } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./EarningAnalysis.module.scss";
 
-function mapStateToProps(rootState: RootState) {
-  const { sidGainMap } = rootState.tradeRecord;
-  const { sidTotalCashDividendMap } = rootState.cashDividend;
-  return { sidGainMap, sidTotalCashDividendMap };
+type ChartType = "gain" | "cashDividend";
+
+interface ChartItem {
+  sid: string;
+  name: string;
+  value: number;
 }
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
+function EarningAnalysis() {
+  const sidGainMap = useAppSelector((state) => state.tradeRecord.sidGainMap);
+  const sidTotalCashDividendMap = useAppSelector(
+    (state) => state.cashDividend.sidTotalCashDividendMap,
+  );
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeChartType, setActiveChartType] = useState<ChartType>("gain");
+  const [companyNamesMap, setCompanyNamesMap] = useState<{
+    [sid: string]: string | null;
+  }>({});
 
-interface State {
-  activeChartType: "gain" | "cashDividend";
-  companyNamesMap: { [sid: string]: string | null };
-}
-
-class EarningAnalysis extends React.Component<Props, State> {
-  public state: State;
-
-  public constructor(props: Props) {
-    super(props);
-    this.state = { activeChartType: "gain", companyNamesMap: {} };
-  }
-
-  public componentDidMount(): void {
-    this.fetchCompanyNames();
-  }
-
-  public componentDidUpdate(prevProps: Props): void {
-    if (
-      prevProps.sidGainMap !== this.props.sidGainMap ||
-      prevProps.sidTotalCashDividendMap !== this.props.sidTotalCashDividendMap
-    ) {
-      this.fetchCompanyNames();
-    }
-  }
-
-  public render(): React.ReactNode {
-    const chartData =
-      this.state.activeChartType === "gain"
-        ? this.gainChartData
-        : this.cashDividendChartData;
-    const chartOption =
-      this.state.activeChartType === "gain"
-        ? this.gainChartOption
-        : this.cashDividendChartOption;
-    const chartHeight =
-      chartData.length > 0 ? this.calculateChartHeight(chartData.length) : 400;
-
-    return (
-      <div className={styles.main}>
-        {Util.isMobile && <SpeedDial />}
-        <ScrollThresholdContainer>
-          {(isScrolled) => (
-            <div
-              className={`${styles.back_button_container} ${
-                isScrolled ? styles.scrolled : ""
-              }`}
-            >
-              <RoundButton
-                onClick={() => navigateBack(this.props.router, Env.frontendRootPath)}
-                size="l"
-                frosted={isScrolled}
-                hint_text="回儀表板"
-              >
-                <Icons.IconChevronLeft sideLength="16" />
-              </RoundButton>
-            </div>
-          )}
-        </ScrollThresholdContainer>
-        <div className={styles.floating_pill_wrapper}>
-          <SegmentedControl
-            label="收益分析分類"
-            optionWidth="88px"
-            options={[
-              { label: "資本利得", value: "gain" },
-              { label: "現金股利", value: "cashDividend" },
-            ]}
-            value={this.state.activeChartType}
-            variant="floating"
-            onChange={(value) =>
-              this.setState({ activeChartType: value as "gain" | "cashDividend" })
-            }
-          />
-        </div>
-        <div className={styles.chart_container} data-page-scroll>
-          {chartData.length === 0 ? (
-            <div className={styles.empty_section}>
-              {this.state.activeChartType === "gain"
-                ? "目前沒有任何損益資料"
-                : "目前沒有任何現金股利資料"}
-            </div>
-          ) : (
-            <ReactECharts
-              option={chartOption}
-              style={{ height: `${chartHeight}px`, width: "100%" }}
-              notMerge={true}
-            />
-          )}
-        </div>
-        {Util.isMobile && <div className={styles.mobile_padding} />}
-      </div>
-    );
-  }
-
-  private fetchCompanyNames = async (): Promise<void> => {
-    const { sidGainMap, sidTotalCashDividendMap } = this.props;
+  useEffect(() => {
     const gainSids = Object.keys(sidGainMap).filter((sid) => sidGainMap[sid] !== 0);
     const dividendSids = Object.keys(sidTotalCashDividendMap).filter(
       (sid) => sidTotalCashDividendMap[sid] !== 0,
@@ -131,180 +46,235 @@ class EarningAnalysis extends React.Component<Props, State> {
     const sids = [...new Set([...gainSids, ...dividendSids])];
     if (sids.length === 0) return;
 
-    try {
-      const response = await Api.sendRequest(
-        `market/company-names?sids=${sids.join(",")}`,
-        "get",
-      );
-      this.setState({ companyNamesMap: response });
-    } catch {
-      // Silently fail - fallback to sid
-    }
-  };
-
-  private get gainChartData(): { sid: string; name: string; value: number }[] {
-    return Object.entries(this.props.sidGainMap)
-      .map(([sid, gain]) => {
-        return {
-          sid,
-          name: this.state.companyNamesMap[sid] ?? sid,
-          value: Math.round(gain),
-        };
-      })
-      .filter((item) => item.value !== 0)
-      .sort((a, b) => a.value - b.value);
-  }
-
-  private get cashDividendChartData(): { sid: string; name: string; value: number }[] {
-    return Object.entries(this.props.sidTotalCashDividendMap)
-      .map(([sid, dividend]) => {
-        return { sid, name: this.state.companyNamesMap[sid] ?? sid, value: dividend };
-      })
-      .filter((item) => item.value !== 0)
-      .sort((a, b) => a.value - b.value);
-  }
-
-  private get gainChartOption(): EChartsOption {
-    if (this.gainChartData.length === 0) return {};
-
-    const categories = this.gainChartData.map((item) => item.name);
-    const values = this.gainChartData.map((item) => ({
-      value: item.value,
-      itemStyle: { color: item.value >= 0 ? COLORS.chartUp : COLORS.chartDown },
-    }));
-    const totalGain = this.gainChartData.reduce(
-      (sum, item) => sum + Math.abs(item.value),
-      0,
-    );
-
-    return {
-      backgroundColor: "transparent",
-      grid: { left: "15%", right: "5%", top: 20, bottom: 20 },
-      tooltip: {
-        trigger: "axis",
-        axisPointer: { type: "shadow" },
-        formatter: (params: unknown) => {
-          if (!Array.isArray(params) || params.length === 0) return "";
-          const param = params[0] as { name: string; value: number };
-          const dataItem = this.gainChartData.find((item) => item.name === param.name);
-          const percentage =
-            totalGain > 0 ? ((param.value / totalGain) * 100).toFixed(1) : "0.0";
-          return `${dataItem?.sid ?? param.name}<br/>${param.name}<br/>$${param.value.toLocaleString()} (${percentage}%)`;
-        },
-      },
-      xAxis: { type: "value", show: false },
-      yAxis: {
-        type: "category",
-        data: categories,
-        axisLabel: {
-          color: COLORS.textSecondary,
-          fontSize: FONT_SIZES.chartTick,
-          hideOverlap: true,
-        },
-        axisLine: { show: false },
-        axisTick: { show: false },
-        splitLine: { show: false },
-      },
-      series: [
-        {
-          name: "資本利得",
-          type: "bar",
-          data: values,
-          itemStyle: { borderRadius: 10 },
-          barWidth: 40,
-          label: {
-            show: true,
-            position: "right",
-            color: COLORS.textSecondary,
-            fontSize: FONT_SIZES.chartTick,
-            formatter: (params: unknown) => {
-              const param = params as { value: number };
-              const value = Number(param.value);
-              if (Math.abs(value) >= 1_000_000)
-                return `$${(value / 1_000_000).toFixed(1)}M`;
-              if (Math.abs(value) >= 10_000) return `$${(value / 1_000).toFixed(1)}K`;
-              return `$${value.toLocaleString()}`;
-            },
-          },
-        },
-      ],
+    const fetchCompanyNames = async (): Promise<void> => {
+      try {
+        const response = await Api.sendRequest(
+          `market/company-names?sids=${sids.join(",")}`,
+          "get",
+        );
+        setCompanyNamesMap(response);
+      } catch {
+        // Silently fail - fallback to sid
+      }
     };
-  }
+    void fetchCompanyNames();
+  }, [sidGainMap, sidTotalCashDividendMap]);
 
-  private get cashDividendChartOption(): EChartsOption {
-    if (this.cashDividendChartData.length === 0) return {};
+  const chartData =
+    activeChartType === "gain"
+      ? makeChartData(sidGainMap, companyNamesMap, Math.round)
+      : makeChartData(sidTotalCashDividendMap, companyNamesMap, (value) => value);
+  const chartOption =
+    activeChartType === "gain"
+      ? makeGainChartOption(chartData)
+      : makeCashDividendChartOption(chartData);
+  const chartHeight =
+    chartData.length > 0 ? calculateChartHeight(chartData.length) : 400;
 
-    const categories = this.cashDividendChartData.map((item) => item.name);
-    const values = this.cashDividendChartData.map((item) => item.value);
-    const totalCashDividend = this.cashDividendChartData.reduce(
-      (sum, item) => sum + Math.abs(item.value),
-      0,
-    );
-
-    return {
-      backgroundColor: "transparent",
-      grid: { left: "15%", right: "5%", top: 20, bottom: 20 },
-      tooltip: {
-        trigger: "axis",
-        axisPointer: { type: "shadow" },
-        formatter: (params: unknown) => {
-          if (!Array.isArray(params) || params.length === 0) return "";
-          const param = params[0] as { name: string; value: number };
-          const dataItem = this.cashDividendChartData.find(
-            (item) => item.name === param.name,
-          );
-          const percentage =
-            totalCashDividend > 0
-              ? ((param.value / totalCashDividend) * 100).toFixed(1)
-              : "0.0";
-          return `${dataItem?.sid ?? param.name}<br/>${param.name}<br/>$${param.value.toLocaleString()} (${percentage}%)`;
-        },
-      },
-      xAxis: { type: "value", show: false },
-      yAxis: {
-        type: "category",
-        data: categories,
-        axisLabel: {
-          color: COLORS.textSecondary,
-          fontSize: FONT_SIZES.chartTick,
-          hideOverlap: true,
-        },
-        axisLine: { show: false },
-        axisTick: { show: false },
-        splitLine: { show: false },
-      },
-      series: [
-        {
-          name: "現金股利",
-          type: "bar",
-          data: values,
-          itemStyle: { color: COLORS.chartAccent, borderRadius: 10 },
-          barWidth: 40,
-          label: {
-            show: true,
-            position: "right",
-            color: COLORS.textSecondary,
-            fontSize: FONT_SIZES.chartTick,
-            formatter: (params: unknown) => {
-              const param = params as { value: number };
-              const value = Number(param.value);
-              if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-              if (value >= 10_000) return `$${(value / 1_000).toFixed(1)}K`;
-              return `$${value.toLocaleString()}`;
-            },
-          },
-        },
-      ],
-    };
-  }
-
-  private calculateChartHeight(dataLength: number): number {
-    const barHeight = 40;
-    const spacing = 4;
-    const topPadding = 20;
-    const bottomPadding = 20;
-    return dataLength * (barHeight + spacing) + topPadding + bottomPadding;
-  }
+  return (
+    <div className={styles.main}>
+      {Util.isMobile && <SpeedDial />}
+      <ScrollThresholdContainer>
+        {(isScrolled) => (
+          <div
+            className={`${styles.back_button_container} ${
+              isScrolled ? styles.scrolled : ""
+            }`}
+          >
+            <RoundButton
+              onClick={() => navigateBack({ location, navigate }, Env.frontendRootPath)}
+              size="l"
+              frosted={isScrolled}
+              hint_text="回儀表板"
+            >
+              <Icons.IconChevronLeft sideLength="16" />
+            </RoundButton>
+          </div>
+        )}
+      </ScrollThresholdContainer>
+      <div className={styles.floating_pill_wrapper}>
+        <SegmentedControl
+          label="收益分析分類"
+          optionWidth="88px"
+          options={[
+            { label: "資本利得", value: "gain" },
+            { label: "現金股利", value: "cashDividend" },
+          ]}
+          value={activeChartType}
+          variant="floating"
+          onChange={(value) => setActiveChartType(value as ChartType)}
+        />
+      </div>
+      <div className={styles.chart_container} data-page-scroll>
+        {chartData.length === 0 ? (
+          <div className={styles.empty_section}>
+            {activeChartType === "gain"
+              ? "目前沒有任何損益資料"
+              : "目前沒有任何現金股利資料"}
+          </div>
+        ) : (
+          <ReactECharts
+            option={chartOption}
+            style={{ height: `${chartHeight}px`, width: "100%" }}
+            notMerge={true}
+          />
+        )}
+      </div>
+      {Util.isMobile && <div className={styles.mobile_padding} />}
+    </div>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(EarningAnalysis));
+export default memo(EarningAnalysis);
+
+function makeChartData(
+  sidValueMap: { [sid: string]: number },
+  companyNamesMap: { [sid: string]: string | null },
+  toChartValue: (value: number) => number,
+): ChartItem[] {
+  return Object.entries(sidValueMap)
+    .map(([sid, value]) => ({
+      sid,
+      name: companyNamesMap[sid] ?? sid,
+      value: toChartValue(value),
+    }))
+    .filter((item) => item.value !== 0)
+    .sort((a, b) => a.value - b.value);
+}
+
+function makeGainChartOption(chartData: ChartItem[]): EChartsOption {
+  if (chartData.length === 0) return {};
+
+  const categories = chartData.map((item) => item.name);
+  const values = chartData.map((item) => ({
+    value: item.value,
+    itemStyle: { color: item.value >= 0 ? COLORS.chartUp : COLORS.chartDown },
+  }));
+  const totalGain = chartData.reduce((sum, item) => sum + Math.abs(item.value), 0);
+
+  return {
+    backgroundColor: "transparent",
+    grid: { left: "15%", right: "5%", top: 20, bottom: 20 },
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      formatter: (params: unknown) => {
+        if (!Array.isArray(params) || params.length === 0) return "";
+        const param = params[0] as { name: string; value: number };
+        const dataItem = chartData.find((item) => item.name === param.name);
+        const percentage =
+          totalGain > 0 ? ((param.value / totalGain) * 100).toFixed(1) : "0.0";
+        return `${dataItem?.sid ?? param.name}<br/>${param.name}<br/>$${param.value.toLocaleString()} (${percentage}%)`;
+      },
+    },
+    xAxis: { type: "value", show: false },
+    yAxis: {
+      type: "category",
+      data: categories,
+      axisLabel: {
+        color: COLORS.textSecondary,
+        fontSize: FONT_SIZES.chartTick,
+        hideOverlap: true,
+      },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { show: false },
+    },
+    series: [
+      {
+        name: "資本利得",
+        type: "bar",
+        data: values,
+        itemStyle: { borderRadius: 10 },
+        barWidth: 40,
+        label: {
+          show: true,
+          position: "right",
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
+          formatter: (params: unknown) => {
+            const param = params as { value: number };
+            const value = Number(param.value);
+            if (Math.abs(value) >= 1_000_000)
+              return `$${(value / 1_000_000).toFixed(1)}M`;
+            if (Math.abs(value) >= 10_000) return `$${(value / 1_000).toFixed(1)}K`;
+            return `$${value.toLocaleString()}`;
+          },
+        },
+      },
+    ],
+  };
+}
+
+function makeCashDividendChartOption(chartData: ChartItem[]): EChartsOption {
+  if (chartData.length === 0) return {};
+
+  const categories = chartData.map((item) => item.name);
+  const values = chartData.map((item) => item.value);
+  const totalCashDividend = chartData.reduce(
+    (sum, item) => sum + Math.abs(item.value),
+    0,
+  );
+
+  return {
+    backgroundColor: "transparent",
+    grid: { left: "15%", right: "5%", top: 20, bottom: 20 },
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      formatter: (params: unknown) => {
+        if (!Array.isArray(params) || params.length === 0) return "";
+        const param = params[0] as { name: string; value: number };
+        const dataItem = chartData.find((item) => item.name === param.name);
+        const percentage =
+          totalCashDividend > 0
+            ? ((param.value / totalCashDividend) * 100).toFixed(1)
+            : "0.0";
+        return `${dataItem?.sid ?? param.name}<br/>${param.name}<br/>$${param.value.toLocaleString()} (${percentage}%)`;
+      },
+    },
+    xAxis: { type: "value", show: false },
+    yAxis: {
+      type: "category",
+      data: categories,
+      axisLabel: {
+        color: COLORS.textSecondary,
+        fontSize: FONT_SIZES.chartTick,
+        hideOverlap: true,
+      },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { show: false },
+    },
+    series: [
+      {
+        name: "現金股利",
+        type: "bar",
+        data: values,
+        itemStyle: { color: COLORS.chartAccent, borderRadius: 10 },
+        barWidth: 40,
+        label: {
+          show: true,
+          position: "right",
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
+          formatter: (params: unknown) => {
+            const param = params as { value: number };
+            const value = Number(param.value);
+            if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+            if (value >= 10_000) return `$${(value / 1_000).toFixed(1)}K`;
+            return `$${value.toLocaleString()}`;
+          },
+        },
+      },
+    ],
+  };
+}
+
+function calculateChartHeight(dataLength: number): number {
+  const barHeight = 40;
+  const spacing = 4;
+  const topPadding = 20;
+  const bottomPadding = 20;
+  return dataLength * (barHeight + spacing) + topPadding + bottomPadding;
+}

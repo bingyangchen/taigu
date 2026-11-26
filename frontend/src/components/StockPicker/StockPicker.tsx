@@ -20,6 +20,7 @@ import type {
 import Api from "../../utils/api";
 import { formatNumber } from "../../utils/recordEditor";
 import { useLatestRef } from "../../utils/useLatestRef";
+import { useMergedState } from "../../utils/useMergedState";
 import Util from "../../utils/util";
 import styles from "./StockPicker.module.scss";
 
@@ -74,10 +75,6 @@ const INITIAL_STATE: PickerState = {
   showSelectionPrompt: false,
 };
 
-type StateUpdate =
-  | Partial<PickerState>
-  | ((state: PickerState) => Partial<PickerState>);
-
 export default function StockPicker(props: Props) {
   const {
     ref,
@@ -88,12 +85,12 @@ export default function StockPicker(props: Props) {
     onChange,
     onPendingKeywordChange,
   } = props;
-  const [state, setFullState] = useState<PickerState>(INITIAL_STATE);
+  const [state, setState, runAfterCommitCallbacks] =
+    useMergedState<PickerState>(INITIAL_STATE);
   const inputRef = useRef<HTMLInputElement>(null);
   const changeButtonRef = useRef<HTMLButtonElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const reportedPendingKeywordRef = useRef("");
-  const afterCommitCallbacksRef = useRef<(() => void)[]>([]);
   const baseId = useId();
   const inputId = `${baseId}-input`;
   const listboxId = `${baseId}-listbox`;
@@ -102,18 +99,6 @@ export default function StockPicker(props: Props) {
   // Timers, search responses and the callbacks that run after a commit read the
   // props and state of the latest render.
   const latestRenderRef = useLatestRef({ props, state });
-
-  /** Merges `update` into the state, like a class component's `setState`. */
-  const setState = useCallback(
-    (update: StateUpdate, afterCommit?: () => void): void => {
-      setFullState((previous) => ({
-        ...previous,
-        ...(typeof update === "function" ? update(previous) : update),
-      }));
-      if (afterCommit) afterCommitCallbacksRef.current.push(afterCommit);
-    },
-    [],
-  );
 
   const focus = useCallback((): void => {
     const { props: latestProps, state: latestState } = latestRenderRef.current;
@@ -204,11 +189,7 @@ export default function StockPicker(props: Props) {
 
   // A class component runs its setState callbacks after componentDidUpdate, so this
   // effect comes after the ones above.
-  useLayoutEffect(() => {
-    const callbacks = afterCommitCallbacksRef.current;
-    afterCommitCallbacksRef.current = [];
-    callbacks.forEach((callback) => callback());
-  });
+  useLayoutEffect(runAfterCommitCallbacks);
 
   const message =
     state.showSelectionPrompt && pendingKeyword

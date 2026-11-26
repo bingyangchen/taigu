@@ -1,8 +1,9 @@
-import React from "react";
-import { connect } from "react-redux";
+import React, { memo, useLayoutEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { SegmentedControl, Skeleton, SpeedDial } from "../../../components";
 import * as Icons from "../../../icons";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   changeMarketPageSubpage,
   changeMarketSearchText,
@@ -10,7 +11,6 @@ import {
   updateHeaderTitle,
 } from "../../../redux/slices/MainPageSlice";
 import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
-import type { AppDispatch, RootState } from "../../../redux/store";
 import { COLORS } from "../../../styles/tokens";
 import type { MarketSortKey, MarketTab, StockInfo } from "../../../types";
 import Env from "../../../utils/env";
@@ -20,7 +20,7 @@ import {
   getStockXirr,
   getVisibleMarketSids,
 } from "../../../utils/market";
-import { IRouter, withRouter } from "../../../utils/router";
+import { useLatestRef } from "../../../utils/useLatestRef";
 import Util from "../../../utils/util";
 import styles from "./Market.module.scss";
 
@@ -40,251 +40,100 @@ const shortSortLabels: Record<MarketSortKey, string> = {
 
 const planDistanceThreshold = 0.05;
 
-function mapStateToProps(rootState: RootState) {
-  const {
-    isWaiting: isWaitingTradeRecords,
-    sidCashInvestedMap,
-    sidTradeRecordsMap,
-    stockWarehouse,
-  } = rootState.tradeRecord;
-  const { cashDividendRecords } = rootState.cashDividend;
-  const { favorites } = rootState.memo;
-  const { marketPageSubpageName, marketSearchText, marketSortKey } = rootState.mainPage;
-  const { sidStockInfoMap } = rootState.stockInfo;
-  const { tradePlans } = rootState.tradePlan;
-  const { subscription } = rootState.account;
-  return {
-    cashDividendRecords,
-    favorites,
-    isWaitingTradeRecords,
-    marketPageSubpageName,
-    marketSearchText,
-    marketSortKey,
-    sidCashInvestedMap,
-    sidStockInfoMap,
-    sidTradeRecordsMap,
-    stockWarehouse,
-    subscription,
-    tradePlans,
-  };
-}
+function Market() {
+  const isWaitingTradeRecords = useAppSelector((state) => state.tradeRecord.isWaiting);
+  const sidCashInvestedMap = useAppSelector(
+    (state) => state.tradeRecord.sidCashInvestedMap,
+  );
+  const sidTradeRecordsMap = useAppSelector(
+    (state) => state.tradeRecord.sidTradeRecordsMap,
+  );
+  const stockWarehouse = useAppSelector((state) => state.tradeRecord.stockWarehouse);
+  const cashDividendRecords = useAppSelector(
+    (state) => state.cashDividend.cashDividendRecords,
+  );
+  const favorites = useAppSelector((state) => state.memo.favorites);
+  const marketPageSubpageName = useAppSelector(
+    (state) => state.mainPage.marketPageSubpageName,
+  );
+  const marketSearchText = useAppSelector((state) => state.mainPage.marketSearchText);
+  const marketSortKey = useAppSelector((state) => state.mainPage.marketSortKey);
+  const sidStockInfoMap = useAppSelector((state) => state.stockInfo.sidStockInfoMap);
+  const tradePlans = useAppSelector((state) => state.tradePlan.tradePlans);
+  const subscription = useAppSelector((state) => state.account.subscription);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const [favoriteUpdateFailed, setFavoriteUpdateFailed] = useState(false);
+  const [isRefreshingFavorites, setIsRefreshingFavorites] = useState(false);
 
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
-
-interface State {
-  favoriteUpdateFailed: boolean;
-  isRefreshingFavorites: boolean;
-}
-
-class Market extends React.Component<Props, State> {
-  private fetchFavoriteStockInfoTimer: ReturnType<typeof setInterval> | null;
-
-  public state: State;
-
-  public constructor(props: Props) {
-    super(props);
-    this.state = { favoriteUpdateFailed: false, isRefreshingFavorites: false };
-    this.fetchFavoriteStockInfoTimer = null;
-  }
-
-  public componentDidMount(): void {
-    this.props.dispatch(updateHeaderTitle(null));
-    if (this.props.marketPageSubpageName === "favorites") {
-      this.fetchFavoriteStockInfo();
-    }
-    this.fetchFavoriteStockInfoTimer = setInterval(() => {
-      if (this.props.marketPageSubpageName === "favorites") {
-        this.fetchFavoriteStockInfo();
-      }
-    }, this.props.subscription.market_refresh_interval_seconds * 1000);
-  }
-
-  public componentWillUnmount(): void {
-    if (this.fetchFavoriteStockInfoTimer) {
-      clearInterval(this.fetchFavoriteStockInfoTimer);
-      this.fetchFavoriteStockInfoTimer = null;
-    }
-  }
-
-  public render(): React.ReactNode {
-    const activeTab = this.props.marketPageSubpageName;
-    const allSids = getAllMarketSids(
-      activeTab,
-      this.props.stockWarehouse,
-      this.props.favorites,
-    );
-    const visibleSids = this.getVisibleSids(activeTab);
-    const isLoading =
-      (activeTab === "holding" && this.props.isWaitingTradeRecords) ||
-      (activeTab === "favorites" &&
-        this.state.isRefreshingFavorites &&
-        allSids.length > 0 &&
-        visibleSids.every((sid) => !(sid in this.props.sidStockInfoMap)));
-
-    return (
-      <div
-        className={styles.main}
-        data-scroll-view-key={JSON.stringify([
-          activeTab,
-          this.props.marketSearchText.trim().toLowerCase(),
-        ])}
-      >
-        <section className={styles.summary_panel}>
-          <div className={styles.summary_copy}>
-            <h1>{this.getTitle(activeTab)}</h1>
-            <p>{this.getSubtitle(activeTab)}</p>
-          </div>
-          <div className={styles.metrics}>{this.renderMetrics(activeTab)}</div>
-        </section>
-
-        <section className={styles.control_bar} aria-label="市場控制列">
-          <div className={styles.segmented_wrapper}>
-            <SegmentedControl
-              label="市場資料分類"
-              optionWidth="80px"
-              options={[
-                { label: "持股", value: "holding" },
-                { label: "關注", value: "favorites" },
-              ]}
-              value={activeTab}
-              onChange={this.handleSubpageChange}
-            />
-          </div>
-          <div className={styles.search_sort_row}>
-            <label className={styles.search_box}>
-              <Icons.IconMagnifier sideLength="16" />
-              <input
-                aria-label="搜尋股票"
-                placeholder={
-                  activeTab === "holding" ? "搜尋持股代號或名稱" : "搜尋最愛代號或名稱"
-                }
-                value={this.props.marketSearchText}
-                onChange={this.handleSearchChange}
-              />
-              {this.props.marketSearchText && (
-                <button
-                  aria-label="清除搜尋"
-                  className={styles.clear_search_button}
-                  type="button"
-                  onClick={this.clearSearch}
-                >
-                  <Icons.IconXLarge sideLength="12" />
-                </button>
-              )}
-            </label>
-            {this.renderResultCount(allSids.length, visibleSids.length)}
-            {this.renderUpdateFailure()}
-            <div className={styles.sort_menu}>
-              <select
-                aria-label="排序股票"
-                value={this.props.marketSortKey}
-                onChange={this.handleSortChange}
-              >
-                {(Object.keys(sortLabels) as MarketSortKey[]).map((sortKey) => (
-                  <option key={sortKey} value={sortKey}>
-                    {sortLabels[sortKey]}
-                  </option>
-                ))}
-              </select>
-              <span className={styles.sort_label}>
-                {shortSortLabels[this.props.marketSortKey]}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section
-          className={`${styles.stock_list} ${
-            !isLoading && visibleSids.length > 0 ? styles.grouped_list : ""
-          }`}
-          aria-live="polite"
-        >
-          {isLoading
-            ? this.renderSkeletonCards(activeTab)
-            : this.renderStockList(activeTab, allSids, visibleSids)}
-        </section>
-        {Util.isMobile && <SpeedDial />}
-      </div>
-    );
-  }
-
-  private renderMetrics(activeTab: MarketTab): React.ReactNode {
-    const allSids = getAllMarketSids(
-      activeTab,
-      this.props.stockWarehouse,
-      this.props.favorites,
-    );
+  const renderMetrics = (activeTab: MarketTab): React.ReactNode => {
+    const allSids = getAllMarketSids(activeTab, stockWarehouse, favorites);
     const upCount = allSids.filter(
-      (sid) => (this.props.sidStockInfoMap[sid]?.fluct_price ?? 0) > 0,
+      (sid) => (sidStockInfoMap[sid]?.fluct_price ?? 0) > 0,
     ).length;
     const downCount = allSids.filter(
-      (sid) => (this.props.sidStockInfoMap[sid]?.fluct_price ?? 0) < 0,
+      (sid) => (sidStockInfoMap[sid]?.fluct_price ?? 0) < 0,
     ).length;
     if (activeTab === "favorites") {
       return (
         <>
-          {this.renderMetric("最愛檔數", this.props.favorites.length.toLocaleString())}
-          {this.renderMetric("今日上漲", upCount.toLocaleString(), "up")}
-          {this.renderMetric("今日下跌", downCount.toLocaleString(), "down")}
+          {renderMetric("最愛檔數", favorites.length.toLocaleString())}
+          {renderMetric("今日上漲", upCount.toLocaleString(), "up")}
+          {renderMetric("今日下跌", downCount.toLocaleString(), "down")}
         </>
       );
     }
 
     return (
       <>
-        {this.renderMetric(
-          "持股檔數",
-          Object.keys(this.props.stockWarehouse).length.toLocaleString(),
-        )}
-        {this.renderMetric("今日上漲", upCount.toLocaleString(), "up")}
-        {this.renderMetric("今日下跌", downCount.toLocaleString(), "down")}
+        {renderMetric("持股檔數", Object.keys(stockWarehouse).length.toLocaleString())}
+        {renderMetric("今日上漲", upCount.toLocaleString(), "up")}
+        {renderMetric("今日下跌", downCount.toLocaleString(), "down")}
       </>
     );
-  }
+  };
 
-  private renderMetric(
+  const renderMetric = (
     label: string,
     value: string,
     tone: "up" | "down" | "neutral" = "neutral",
-  ): React.ReactNode {
+  ): React.ReactNode => {
     return (
       <div className={styles.metric}>
         <span>{label}</span>
         <strong className={styles[tone]}>{value}</strong>
       </div>
     );
-  }
+  };
 
-  private renderStockList(
+  const renderStockList = (
     activeTab: MarketTab,
     allSids: string[],
     visibleSids: string[],
-  ): React.ReactNode {
+  ): React.ReactNode => {
     if (allSids.length === 0) {
-      return this.renderEmptyState(activeTab);
+      return renderEmptyState(activeTab);
     }
     if (visibleSids.length === 0) {
-      return this.renderNoSearchResults();
+      return renderNoSearchResults();
     }
-    return visibleSids.map((sid) => this.renderStockCard(activeTab, sid));
-  }
+    return visibleSids.map((sid) => renderStockCard(activeTab, sid));
+  };
 
-  private renderStockCard(activeTab: MarketTab, sid: string): React.ReactNode {
-    const stockInfo = this.props.sidStockInfoMap[sid];
-    const stockName = stockInfo?.name ?? this.getFallbackStockName(sid);
+  const renderStockCard = (activeTab: MarketTab, sid: string): React.ReactNode => {
+    const stockInfo = sidStockInfoMap[sid];
+    const stockName = stockInfo?.name ?? getFallbackStockName(sid);
     const fluctPrice = stockInfo?.fluct_price ?? 0;
     const close = stockInfo?.close ?? 0;
-    const changePercent = this.getChangePercent(stockInfo);
+    const changePercent = getChangePercent(stockInfo);
     const tone = fluctPrice > 0 ? "up" : fluctPrice < 0 ? "down" : "neutral";
     const accessibleLabel =
       activeTab === "holding"
-        ? this.getHoldingAccessibleLabel(sid, stockInfo)
-        : this.getFavoriteAccessibleLabel(sid, stockInfo);
+        ? getHoldingAccessibleLabel(sid, stockInfo)
+        : getFavoriteAccessibleLabel(sid, stockInfo);
 
     if (Util.isMobile) {
-      return this.renderMobileStockRow(
+      return renderMobileStockRow(
         activeTab,
         sid,
         stockInfo,
@@ -304,7 +153,7 @@ class Market extends React.Component<Props, State> {
         data-scroll-anchor={`${activeTab}/${sid}`}
         className={`${styles.stock_card} ${styles[tone]}`}
         type="button"
-        onClick={() => this.navigateToDetail(activeTab, sid)}
+        onClick={() => navigateToDetail(activeTab, sid)}
       >
         <div className={styles.card_top_row}>
           <div className={styles.company}>
@@ -313,16 +162,16 @@ class Market extends React.Component<Props, State> {
           </div>
           <div className={styles.price_block}>
             <strong>{close > 0 ? close.toLocaleString() : "--"}</strong>
-            <span>{this.formatChange(fluctPrice, changePercent)}</span>
+            <span>{formatChange(fluctPrice, changePercent)}</span>
           </div>
         </div>
-        {activeTab === "holding" && this.renderHoldingChips(sid, stockInfo)}
-        {this.renderMarketSignals(sid, stockInfo)}
+        {activeTab === "holding" && renderHoldingChips(sid, stockInfo)}
+        {renderMarketSignals(sid, stockInfo)}
       </button>
     );
-  }
+  };
 
-  private renderMobileStockRow(
+  const renderMobileStockRow = (
     activeTab: MarketTab,
     sid: string,
     stockInfo: StockInfo | undefined,
@@ -332,8 +181,8 @@ class Market extends React.Component<Props, State> {
     changePercent: number,
     tone: "up" | "down" | "neutral",
     accessibleLabel: string,
-  ): React.ReactNode {
-    const planText = this.getNearestPlanText(sid, stockInfo);
+  ): React.ReactNode => {
+    const planText = getNearestPlanText(sid, stockInfo);
     const symbol = fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "";
     const changeText =
       fluctPrice === 0 ? "-" : `${symbol} ${(changePercent * 100).toFixed(2)}%`;
@@ -342,15 +191,13 @@ class Market extends React.Component<Props, State> {
     let xirr = 0;
     let returnTone: "up" | "down" | "neutral" = "neutral";
     if (activeTab === "holding") {
-      const inventoryCosts = this.props.stockWarehouse[sid] ?? [];
+      const inventoryCosts = stockWarehouse[sid] ?? [];
       inventory = inventoryCosts.length;
-      xirr = this.getStockXirr(sid, stockInfo);
+      xirr = getHoldingXirr(sid, stockInfo);
       returnTone = xirr > 0 ? "up" : xirr < 0 ? "down" : "neutral";
     }
 
-    const volumeText = stockInfo?.quantity
-      ? this.formatVolume(stockInfo.quantity)
-      : "--";
+    const volumeText = stockInfo?.quantity ? formatVolume(stockInfo.quantity) : "--";
 
     return (
       <button
@@ -359,7 +206,7 @@ class Market extends React.Component<Props, State> {
         data-scroll-anchor={`${activeTab}/${sid}`}
         className={styles.mobile_stock_row}
         type="button"
-        onClick={() => this.navigateToDetail(activeTab, sid)}
+        onClick={() => navigateToDetail(activeTab, sid)}
       >
         {/* Line 1: Market Identifiers & Price */}
         <div className={styles.mobile_row_line1}>
@@ -382,7 +229,7 @@ class Market extends React.Component<Props, State> {
               <strong
                 className={`${styles.mobile_return_value} ${styles["text_" + returnTone]}`}
               >
-                {this.formatPercent(xirr)}
+                {formatPercent(xirr)}
               </strong>
             </div>
           ) : (
@@ -401,17 +248,16 @@ class Market extends React.Component<Props, State> {
         </div>
       </button>
     );
-  }
+  };
 
-  private renderHoldingChips(
+  const renderHoldingChips = (
     sid: string,
     stockInfo: StockInfo | undefined,
-  ): React.ReactNode {
-    const inventoryCosts = this.props.stockWarehouse[sid] ?? [];
+  ): React.ReactNode => {
+    const inventoryCosts = stockWarehouse[sid] ?? [];
     const inventory = inventoryCosts.length;
-    const averageCost =
-      inventory > 0 ? (this.props.sidCashInvestedMap[sid] ?? 0) / inventory : 0;
-    const xirr = this.getStockXirr(sid, stockInfo);
+    const averageCost = inventory > 0 ? (sidCashInvestedMap[sid] ?? 0) / inventory : 0;
+    const xirr = getHoldingXirr(sid, stockInfo);
     const returnTone = xirr > 0 ? "up" : xirr < 0 ? "down" : "neutral";
 
     return (
@@ -426,26 +272,26 @@ class Market extends React.Component<Props, State> {
         </div>
         <div>
           <span>報酬率</span>
-          <strong className={styles[returnTone]}>{this.formatPercent(xirr)}</strong>
+          <strong className={styles[returnTone]}>{formatPercent(xirr)}</strong>
         </div>
       </div>
     );
-  }
+  };
 
-  private renderMarketSignals(
+  const renderMarketSignals = (
     sid: string,
     stockInfo: StockInfo | undefined,
-  ): React.ReactNode {
-    const planText = this.getNearestPlanText(sid, stockInfo);
+  ): React.ReactNode => {
+    const planText = getNearestPlanText(sid, stockInfo);
     return (
       <div className={styles.market_signals}>
-        <span className={styles.volume_text}>{this.getVolumeText(stockInfo)}</span>
+        <span className={styles.volume_text}>{getVolumeText(stockInfo)}</span>
         {planText && <strong className={styles.plan_chip}>{planText}</strong>}
       </div>
     );
-  }
+  };
 
-  private renderEmptyState(activeTab: MarketTab): React.ReactNode {
+  const renderEmptyState = (activeTab: MarketTab): React.ReactNode => {
     const isHolding = activeTab === "holding";
     const EmptyIcon = isHolding ? Icons.IconBriefcase : Icons.IconHeart;
     return (
@@ -462,7 +308,7 @@ class Market extends React.Component<Props, State> {
             className={styles.primary_action}
             type="button"
             onClick={() =>
-              this.props.router.navigate(
+              navigate(
                 `${Env.frontendRootPath}${isHolding ? "records/trade/new" : "search"}`,
               )
             }
@@ -474,8 +320,8 @@ class Market extends React.Component<Props, State> {
             type="button"
             onClick={() =>
               isHolding
-                ? this.props.router.navigate(`${Env.frontendRootPath}records`)
-                : this.handleSubpageChange("holding")
+                ? navigate(`${Env.frontendRootPath}records`)
+                : handleSubpageChange("holding")
             }
           >
             {isHolding ? "查看交易紀錄" : "查看持股"}
@@ -483,26 +329,22 @@ class Market extends React.Component<Props, State> {
         </div>
       </div>
     );
-  }
+  };
 
-  private renderNoSearchResults(): React.ReactNode {
+  const renderNoSearchResults = (): React.ReactNode => {
     return (
       <div className={styles.empty_state}>
         <Icons.IconMagnifier sideLength="40" color={COLORS.textAccent} />
         <h2>找不到符合的股票</h2>
         <p>請確認代號或名稱是否正確，或清除搜尋條件。</p>
-        <button
-          className={styles.primary_action}
-          type="button"
-          onClick={this.clearSearch}
-        >
+        <button className={styles.primary_action} type="button" onClick={clearSearch}>
           清除搜尋
         </button>
       </div>
     );
-  }
+  };
 
-  private renderSkeletonCards(activeTab: MarketTab): React.ReactNode {
+  const renderSkeletonCards = (activeTab: MarketTab): React.ReactNode => {
     return Array.from({ length: 6 }).map((_, index) => (
       <div
         key={index}
@@ -515,20 +357,20 @@ class Market extends React.Component<Props, State> {
         <Skeleton width="36%" height={14} />
       </div>
     ));
-  }
+  };
 
-  private renderResultCount(totalCount: number, visibleCount: number): React.ReactNode {
-    if (!this.props.marketSearchText || visibleCount === totalCount) {
+  const renderResultCount = (
+    totalCount: number,
+    visibleCount: number,
+  ): React.ReactNode => {
+    if (!marketSearchText || visibleCount === totalCount) {
       return null;
     }
     return <span className={styles.result_count}>{visibleCount} 筆結果</span>;
-  }
+  };
 
-  private renderUpdateFailure(): React.ReactNode {
-    if (
-      !this.state.favoriteUpdateFailed ||
-      this.props.marketPageSubpageName !== "favorites"
-    ) {
+  const renderUpdateFailure = (): React.ReactNode => {
+    if (!favoriteUpdateFailed || marketPageSubpageName !== "favorites") {
       return null;
     }
     return (
@@ -537,82 +379,83 @@ class Market extends React.Component<Props, State> {
         <button
           aria-label="重新整理最愛股價"
           type="button"
-          onClick={this.fetchFavoriteStockInfo}
+          onClick={fetchFavoriteStockInfo}
         >
           ↻
         </button>
       </div>
     );
-  }
+  };
 
-  private getMarketSidsContext(activeTab: MarketTab) {
+  const getMarketSidsContext = (activeTab: MarketTab) => {
     return {
       tab: activeTab,
-      searchText: this.props.marketSearchText,
-      sortKey: this.props.marketSortKey,
-      stockWarehouse: this.props.stockWarehouse,
-      favorites: this.props.favorites,
-      sidStockInfoMap: this.props.sidStockInfoMap,
-      sidTradeRecordsMap: this.props.sidTradeRecordsMap,
-      cashDividendRecords: this.props.cashDividendRecords,
+      searchText: marketSearchText,
+      sortKey: marketSortKey,
+      stockWarehouse: stockWarehouse,
+      favorites: favorites,
+      sidStockInfoMap: sidStockInfoMap,
+      sidTradeRecordsMap: sidTradeRecordsMap,
+      cashDividendRecords: cashDividendRecords,
     };
-  }
+  };
 
-  private getVisibleSids(activeTab: MarketTab): string[] {
-    return getVisibleMarketSids(this.getMarketSidsContext(activeTab));
-  }
+  const getVisibleSids = (activeTab: MarketTab): string[] => {
+    return getVisibleMarketSids(getMarketSidsContext(activeTab));
+  };
 
-  private fetchFavoriteStockInfo = async (): Promise<void> => {
-    if (this.props.favorites.length === 0) return;
-    this.setState({ isRefreshingFavorites: true });
+  const fetchFavoriteStockInfo = async (): Promise<void> => {
+    if (favorites.length === 0) return;
+    setIsRefreshingFavorites(true);
     try {
-      await this.props.dispatch(fetchStockInfo(this.props.favorites)).unwrap();
-      this.setState({ favoriteUpdateFailed: false, isRefreshingFavorites: false });
+      await dispatch(fetchStockInfo(favorites)).unwrap();
+      setFavoriteUpdateFailed(false);
     } catch {
-      this.setState({ favoriteUpdateFailed: true, isRefreshingFavorites: false });
+      setFavoriteUpdateFailed(true);
     }
+    setIsRefreshingFavorites(false);
   };
 
-  private handleSubpageChange = (value: string): void => {
+  const handleSubpageChange = (value: string): void => {
     const nextTab = value === "favorites" ? "favorites" : "holding";
-    this.props.dispatch(changeMarketPageSubpage(nextTab));
+    dispatch(changeMarketPageSubpage(nextTab));
     if (nextTab === "favorites") {
-      this.fetchFavoriteStockInfo();
+      fetchFavoriteStockInfo();
     }
   };
 
-  private handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    this.props.dispatch(changeMarketSearchText(event.target.value));
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    dispatch(changeMarketSearchText(event.target.value));
   };
 
-  private clearSearch = (): void => {
-    this.props.dispatch(changeMarketSearchText(""));
+  const clearSearch = (): void => {
+    dispatch(changeMarketSearchText(""));
   };
 
-  private handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
-    this.props.dispatch(changeMarketSortKey(event.target.value as MarketSortKey));
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
+    dispatch(changeMarketSortKey(event.target.value as MarketSortKey));
   };
 
-  private getFallbackStockName(sid: string): string {
-    return getStockName(sid, this.props.sidStockInfoMap, this.props.sidTradeRecordsMap);
-  }
+  const getFallbackStockName = (sid: string): string => {
+    return getStockName(sid, sidStockInfoMap, sidTradeRecordsMap);
+  };
 
-  private getStockXirr(sid: string, stockInfo: StockInfo | undefined): number {
+  const getHoldingXirr = (sid: string, stockInfo: StockInfo | undefined): number => {
     return getStockXirr(
       sid,
       stockInfo,
-      this.props.stockWarehouse,
-      this.props.sidTradeRecordsMap,
-      this.props.cashDividendRecords,
+      stockWarehouse,
+      sidTradeRecordsMap,
+      cashDividendRecords,
     );
-  }
+  };
 
-  private getNearestPlanText(
+  const getNearestPlanText = (
     sid: string,
     stockInfo: StockInfo | undefined,
-  ): string | null {
+  ): string | null => {
     if (!stockInfo?.close) return null;
-    const plans = this.props.tradePlans.filter((plan) => plan.sid === sid);
+    const plans = tradePlans.filter((plan) => plan.sid === sid);
     if (plans.length === 0) return null;
     const nearestPlan = plans
       .map((plan) => ({
@@ -623,100 +466,215 @@ class Market extends React.Component<Props, State> {
     if (nearestPlan.distance > planDistanceThreshold) return null;
     const planType = nearestPlan.plan.plan_type === "buy" ? "買進價" : "賣出價";
     return `距${planType} ${(nearestPlan.distance * 100).toFixed(1)}%`;
-  }
+  };
 
-  private getChangePercent(stockInfo: StockInfo | undefined): number {
+  const getChangePercent = (stockInfo: StockInfo | undefined): number => {
     if (!stockInfo || stockInfo.fluct_price === 0) return 0;
     const previousClose = stockInfo.close - stockInfo.fluct_price;
     if (previousClose === 0) return 0;
     return Math.abs(stockInfo.fluct_price / previousClose);
-  }
+  };
 
-  private getSubtitle(activeTab: MarketTab): string {
+  const getSubtitle = (activeTab: MarketTab): string => {
     return activeTab === "holding"
       ? "追蹤你的持股現況、報酬率與最新價格。"
       : "觀察你關注的股票，等待適合的進場時機。";
-  }
+  };
 
-  private getTitle(activeTab: MarketTab): string {
+  const getTitle = (activeTab: MarketTab): string => {
     return activeTab === "holding" ? "持股追蹤" : "關注";
-  }
+  };
 
-  private formatChange(fluctPrice: number, percent: number): string {
+  const formatChange = (fluctPrice: number, percent: number): string => {
     if (fluctPrice === 0) return "-";
     const symbol = fluctPrice > 0 ? "▲" : "▼";
     return `${symbol} ${Math.abs(fluctPrice).toFixed(2)}  ${(percent * 100).toFixed(2)}%`;
-  }
+  };
 
-  private getAccessibleChangeText(stockInfo: StockInfo | undefined): string {
+  const getAccessibleChangeText = (stockInfo: StockInfo | undefined): string => {
     if (!stockInfo || stockInfo.fluct_price === 0) return "今日持平";
     const direction = stockInfo.fluct_price > 0 ? "上漲" : "下跌";
-    const percent = this.getChangePercent(stockInfo);
+    const percent = getChangePercent(stockInfo);
     return `${direction} ${Math.abs(stockInfo.fluct_price).toFixed(2)}，${(
       percent * 100
     ).toFixed(2)}%`;
-  }
+  };
 
-  private getHoldingAccessibleLabel(
+  const getHoldingAccessibleLabel = (
     sid: string,
     stockInfo: StockInfo | undefined,
-  ): string {
-    const inventoryCosts = this.props.stockWarehouse[sid] ?? [];
+  ): string => {
+    const inventoryCosts = stockWarehouse[sid] ?? [];
     const inventory = inventoryCosts.length;
-    const averageCost =
-      inventory > 0 ? (this.props.sidCashInvestedMap[sid] ?? 0) / inventory : 0;
-    const xirr = this.getStockXirr(sid, stockInfo);
+    const averageCost = inventory > 0 ? (sidCashInvestedMap[sid] ?? 0) / inventory : 0;
+    const xirr = getHoldingXirr(sid, stockInfo);
     const priceText = stockInfo?.close
       ? `目前價格 ${stockInfo.close.toLocaleString()}`
       : "尚未取得價格";
-    const planText = this.getNearestPlanText(sid, stockInfo);
-    return `${this.getFallbackStockName(sid)} ${sid}，${priceText}，${this.getAccessibleChangeText(
+    const planText = getNearestPlanText(sid, stockInfo);
+    return `${getFallbackStockName(sid)} ${sid}，${priceText}，${getAccessibleChangeText(
       stockInfo,
     )}，庫存 ${inventory.toLocaleString()} 股，平均成本 ${averageCost.toFixed(
       2,
-    )}，報酬率 ${this.formatPercent(xirr)}，${this.getVolumeText(
+    )}，報酬率 ${formatPercent(xirr)}，${getVolumeText(
       stockInfo,
     )}${planText ? `，${planText}` : ""}，${stockInfo ? "可查看詳情" : "尚未取得價格"}`;
-  }
+  };
 
-  private getFavoriteAccessibleLabel(
+  const getFavoriteAccessibleLabel = (
     sid: string,
     stockInfo: StockInfo | undefined,
-  ): string {
+  ): string => {
     const priceText = stockInfo?.close
       ? `目前價格 ${stockInfo.close.toLocaleString()}`
       : "尚未取得價格";
     const volumeText = stockInfo?.quantity
-      ? this.getVolumeText(stockInfo)
+      ? getVolumeText(stockInfo)
       : "尚未取得成交量";
-    const planText = this.getNearestPlanText(sid, stockInfo);
-    return `${this.getFallbackStockName(sid)} ${sid}，${priceText}，${this.getAccessibleChangeText(
+    const planText = getNearestPlanText(sid, stockInfo);
+    return `${getFallbackStockName(sid)} ${sid}，${priceText}，${getAccessibleChangeText(
       stockInfo,
     )}，${volumeText}${planText ? `，${planText}` : ""}`;
-  }
+  };
 
-  private formatPercent(value: number): string {
+  const formatPercent = (value: number): string => {
     if (!Number.isFinite(value)) return "-";
     return `${value > 0 ? "+" : ""}${(value * 100).toFixed(2)}%`;
-  }
+  };
 
-  private formatVolume(quantity: number): string {
+  const formatVolume = (quantity: number): string => {
     const lots = quantity >= 1000 ? quantity / 1000 : quantity;
     if (lots >= 10000) {
       return `${(lots / 10000).toFixed(1)} 萬張`;
     }
     return `${Math.round(lots).toLocaleString()} 張`;
-  }
+  };
 
-  private getVolumeText(stockInfo: StockInfo | undefined): string {
+  const getVolumeText = (stockInfo: StockInfo | undefined): string => {
     return stockInfo?.quantity
-      ? `成交量 ${this.formatVolume(stockInfo.quantity)}`
+      ? `成交量 ${formatVolume(stockInfo.quantity)}`
       : "成交量 --";
-  }
+  };
 
-  private navigateToDetail(activeTab: MarketTab, sid: string): void {
-    this.props.router.navigate(`${Env.frontendRootPath}market/${activeTab}/${sid}`);
-  }
+  const navigateToDetail = (activeTab: MarketTab, sid: string): void => {
+    navigate(`${Env.frontendRootPath}market/${activeTab}/${sid}`);
+  };
+
+  // The refresh timer is set up once, so it reads the tab and the favorites of the
+  // latest render, and keeps the interval of the plan the page opened with.
+  const latestRenderRef = useLatestRef({
+    marketPageSubpageName,
+    fetchFavoriteStockInfo,
+    refreshIntervalMs: subscription.market_refresh_interval_seconds * 1000,
+  });
+  useLayoutEffect(() => {
+    dispatch(updateHeaderTitle(null));
+    const { marketPageSubpageName: initialTab, refreshIntervalMs } =
+      latestRenderRef.current;
+    if (initialTab === "favorites") {
+      void latestRenderRef.current.fetchFavoriteStockInfo();
+    }
+    const timer = setInterval(() => {
+      if (latestRenderRef.current.marketPageSubpageName === "favorites") {
+        void latestRenderRef.current.fetchFavoriteStockInfo();
+      }
+    }, refreshIntervalMs);
+    return () => clearInterval(timer);
+  }, [dispatch, latestRenderRef]);
+
+  const activeTab = marketPageSubpageName;
+  const allSids = getAllMarketSids(activeTab, stockWarehouse, favorites);
+  const visibleSids = getVisibleSids(activeTab);
+  const isLoading =
+    (activeTab === "holding" && isWaitingTradeRecords) ||
+    (activeTab === "favorites" &&
+      isRefreshingFavorites &&
+      allSids.length > 0 &&
+      visibleSids.every((sid) => !(sid in sidStockInfoMap)));
+
+  return (
+    <div
+      className={styles.main}
+      data-scroll-view-key={JSON.stringify([
+        activeTab,
+        marketSearchText.trim().toLowerCase(),
+      ])}
+    >
+      <section className={styles.summary_panel}>
+        <div className={styles.summary_copy}>
+          <h1>{getTitle(activeTab)}</h1>
+          <p>{getSubtitle(activeTab)}</p>
+        </div>
+        <div className={styles.metrics}>{renderMetrics(activeTab)}</div>
+      </section>
+
+      <section className={styles.control_bar} aria-label="市場控制列">
+        <div className={styles.segmented_wrapper}>
+          <SegmentedControl
+            label="市場資料分類"
+            optionWidth="80px"
+            options={[
+              { label: "持股", value: "holding" },
+              { label: "關注", value: "favorites" },
+            ]}
+            value={activeTab}
+            onChange={handleSubpageChange}
+          />
+        </div>
+        <div className={styles.search_sort_row}>
+          <label className={styles.search_box}>
+            <Icons.IconMagnifier sideLength="16" />
+            <input
+              aria-label="搜尋股票"
+              placeholder={
+                activeTab === "holding" ? "搜尋持股代號或名稱" : "搜尋最愛代號或名稱"
+              }
+              value={marketSearchText}
+              onChange={handleSearchChange}
+            />
+            {marketSearchText && (
+              <button
+                aria-label="清除搜尋"
+                className={styles.clear_search_button}
+                type="button"
+                onClick={clearSearch}
+              >
+                <Icons.IconXLarge sideLength="12" />
+              </button>
+            )}
+          </label>
+          {renderResultCount(allSids.length, visibleSids.length)}
+          {renderUpdateFailure()}
+          <div className={styles.sort_menu}>
+            <select
+              aria-label="排序股票"
+              value={marketSortKey}
+              onChange={handleSortChange}
+            >
+              {(Object.keys(sortLabels) as MarketSortKey[]).map((sortKey) => (
+                <option key={sortKey} value={sortKey}>
+                  {sortLabels[sortKey]}
+                </option>
+              ))}
+            </select>
+            <span className={styles.sort_label}>{shortSortLabels[marketSortKey]}</span>
+          </div>
+        </div>
+      </section>
+
+      <section
+        className={`${styles.stock_list} ${
+          !isLoading && visibleSids.length > 0 ? styles.grouped_list : ""
+        }`}
+        aria-live="polite"
+      >
+        {isLoading
+          ? renderSkeletonCards(activeTab)
+          : renderStockList(activeTab, allSids, visibleSids)}
+      </section>
+      {Util.isMobile && <SpeedDial />}
+    </div>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(Market));
+export default memo(Market);
