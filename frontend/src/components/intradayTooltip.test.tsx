@@ -1,12 +1,10 @@
 /** @vitest-environment node */
 
-import type { EChartsOption } from "echarts";
 import * as echarts from "echarts";
-import React from "react";
 import { describe, expect, test } from "vitest";
 
 import { makeMarketIndexIntradayChartOption } from "./MarketIndexIntradayLineChart/MarketIndexIntradayLineChart";
-import StockIntradayLineChart from "./StockIntradayLineChart/StockIntradayLineChart";
+import { makeStockIntradayChartOption } from "./StockIntradayLineChart/StockIntradayLineChart";
 
 // ECharts aligns one-pixel strokes to half-pixel coordinates.
 const POINTER_PIXEL_TOLERANCE = 1;
@@ -54,15 +52,8 @@ describe.each([
   },
   {
     name: "stock",
-    makeOption: (props: {
-      data: [number, number | null][];
-      prevClosePrice: number;
-    }) => {
-      const element = new StockIntradayLineChart(props).render();
-      return React.isValidElement<{ option: EChartsOption }>(element)
-        ? element.props.option
-        : null;
-    },
+    makeOption: (props: { data: [number, number | null][]; prevClosePrice: number }) =>
+      makeStockIntradayChartOption(props.data, props.prevClosePrice),
     expectedPrice: (price: number) => `價格 $${price.toFixed(2)}`,
   },
 ])("$name intraday tooltip", ({ makeOption, expectedPrice }) => {

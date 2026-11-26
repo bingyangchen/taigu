@@ -1,8 +1,24 @@
 import type { Location, NavigationType } from "react-router-dom";
 
+import Env from "./env";
+
 export const mainTabNavigationState = { restoreMainTab: true } as const;
 
 const mainTabPaths = new Set(["/", "/market", "/records", "/plans", "/settings"]);
+
+const dashboardSubpagePaths = [
+  `${Env.frontendRootPath}handling-fee`,
+  `${Env.frontendRootPath}earning-analysis`,
+  `${Env.frontendRootPath}market-index`,
+];
+
+/** Whether the navigation highlights the tab of `tabPath` while `pathname` is open. */
+export function isMainTabActive(pathname: string, tabPath: string): boolean {
+  if (tabPath === Env.frontendRootPath) {
+    return pathname === tabPath || dashboardSubpagePaths.includes(pathname);
+  }
+  return pathname === tabPath || pathname.startsWith(`${tabPath}/`);
+}
 
 export function getMainTabPath(
   location: Pick<Location, "pathname" | "search" | "hash">,

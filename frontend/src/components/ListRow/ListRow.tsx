@@ -1,4 +1,5 @@
-import React, { MouseEventHandler, ReactNode, TouchEvent } from "react";
+import { MouseEventHandler, ReactNode, TouchEvent, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { BottomSheet, ListRowActionBar } from "../../components";
 import {
@@ -7,12 +8,10 @@ import {
   TradePlan,
   TradeRecord,
 } from "../../types";
-import { getHideModalCallback } from "../../utils/modal";
-import { IRouter, withRouter } from "../../utils/router";
 import Util from "../../utils/util";
 import styles from "./ListRow.module.scss";
 
-interface Props extends IRouter {
+interface Props {
   target: TradeRecord | CashDividendRecord | TradePlan | HandlingFeeDiscount;
   children: ReactNode;
   editModal: ((_hideModal: MouseEventHandler) => ReactNode) | null;
@@ -20,147 +19,123 @@ interface Props extends IRouter {
   editPath?: string;
 }
 
-interface State {
-  activatedForMobile: boolean;
-  isTouching: boolean;
-  activeModalName: "edit" | "checkDelete" | null;
+interface Ripple {
+  diameter: number;
+  left: number;
+  top: number;
 }
 
-class ListRow extends React.Component<Props, State> {
-  public state: State;
-  private timer?: ReturnType<typeof setTimeout>;
-  private rippleRef: React.RefObject<HTMLDivElement | null>;
-  public constructor(props: Props) {
-    super(props);
-    this.state = {
-      activatedForMobile: false,
-      isTouching: false,
-      activeModalName: null,
-    };
-    this.rippleRef = React.createRef();
-  }
+export default function ListRow({ children, editModal, deleteModal, editPath }: Props) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activatedForMobile, setActivatedForMobile] = useState(false);
+  const [ripple, setRipple] = useState<Ripple | null>(null);
+  const [activeModalName, setActiveModalName] = useState<"edit" | "checkDelete" | null>(
+    null,
+  );
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  public render(): React.ReactNode {
-    return (
-      <>
-        {this.activeModal}
-        <div
-          data-scroll-anchor={this.props.editPath}
-          className={`${styles.main} ${
-            this.state.activatedForMobile ? styles.active : ""
-          }`}
-        >
-          <span
-            className={styles.mask}
-            onClick={this.handleClickRow}
-            onTouchStart={this.onTouchStart}
-            onTouchEnd={this.onTouchEnd}
-            onTouchMove={this.onTouchMove}
-          >
-            {this.state.isTouching && (
-              <span className={styles.ripple} ref={this.rippleRef} />
-            )}
-          </span>
-          {this.props.children}
-          {Util.isMobile ? (
-            this.state.activatedForMobile && (
-              <BottomSheet onClickBackground={this.handleClickBottomSheetBackground}>
-                <ListRowActionBar
-                  forMobile
-                  onClickEdit={this.handleClickButtonInBottomSheet(
-                    this.handleClickEdit,
-                  )}
-                  onClickDelete={this.handleClickButtonInBottomSheet(
-                    this.handleClickDelete,
-                  )}
-                />
-              </BottomSheet>
-            )
-          ) : (
-            <span className={styles.action_bar_outer}>
-              <ListRowActionBar
-                onClickEdit={this.handleClickEdit}
-                onClickDelete={this.handleClickDelete}
-              />
-            </span>
-          )}
-        </div>
-      </>
-    );
-  }
-
-  private get activeModal(): ReactNode {
-    const hideModal = getHideModalCallback(this);
-    if (this.state.activeModalName === "edit") {
-      return this.props.editModal ? this.props.editModal(hideModal) : null;
-    } else if (this.state.activeModalName === "checkDelete") {
-      return this.props.deleteModal ? this.props.deleteModal(hideModal) : null;
-    }
-    return null;
-  }
-
-  private handleClickEdit = (): void => {
-    if (Util.isMobile && this.props.editPath) {
-      this.props.router.navigate(this.props.editPath);
+  const hideModal = (): void => setActiveModalName(null);
+  const handleClickEdit = (): void => {
+    if (Util.isMobile && editPath) {
+      navigate(editPath);
       return;
     }
-    this.setState({ activeModalName: "edit" });
+    setActiveModalName("edit");
   };
-
-  private handleClickDelete = (): void => {
-    this.setState({ activeModalName: "checkDelete" });
-  };
-
-  private handleClickRow = (): void => {
-    if (Util.isMobile) this.handleClickEdit();
-  };
-
-  private handleClickButtonInBottomSheet = (callback: Function): MouseEventHandler => {
+  const handleClickDelete = (): void => setActiveModalName("checkDelete");
+  const handleClickBottomSheetBackground = (): void => setActivatedForMobile(false);
+  const handleClickButtonInBottomSheet = (callback: () => void): MouseEventHandler => {
     return (): void => {
-      if (this.props.router.location.hash === "#!") {
-        this.props.router.navigate(-1);
+      if (location.hash === "#!") {
+        navigate(-1);
       }
       setTimeout(() => {
-        this.handleClickBottomSheetBackground();
+        handleClickBottomSheetBackground();
         callback();
       });
     };
   };
 
-  private onTouchStart = (e: TouchEvent): void => {
-    this.timer = setTimeout(() => this.setState({ activatedForMobile: true }), 500);
-    if (this.state.isTouching) {
-      this.setState({ isTouching: false });
+  const handleTouchStart = (e: TouchEvent): void => {
+    timerRef.current = setTimeout(() => setActivatedForMobile(true), 500);
+    if (ripple) {
+      setRipple(null);
       return;
     }
     const mask = e.currentTarget as HTMLElement;
     const diameter = Math.max(mask.clientWidth, mask.clientHeight);
     const touch = e.touches[0];
-    this.setState({ isTouching: true }, () => {
-      if (!this.rippleRef.current) return;
-      this.rippleRef.current.style.width =
-        this.rippleRef.current.style.height = `${diameter}px`;
-      this.rippleRef.current.style.left = `${
-        touch.clientX - mask.getBoundingClientRect().left - diameter / 2
-      }px`;
-      this.rippleRef.current.style.top = `${
-        touch.clientY - mask.getBoundingClientRect().top - diameter / 2
-      }px`;
+    const maskRect = mask.getBoundingClientRect();
+    setRipple({
+      diameter,
+      left: touch.clientX - maskRect.left - diameter / 2,
+      top: touch.clientY - maskRect.top - diameter / 2,
     });
   };
-
-  private onTouchEnd = (): void => {
-    this.setState({ isTouching: false });
-    clearTimeout(this.timer);
+  const handleTouchEnd = (): void => {
+    setRipple(null);
+    clearTimeout(timerRef.current);
+  };
+  const handleTouchMove = (): void => {
+    clearTimeout(timerRef.current);
   };
 
-  private onTouchMove = (): void => {
-    clearTimeout(this.timer);
-  };
+  let activeModal: ReactNode = null;
+  if (activeModalName === "edit") {
+    activeModal = editModal ? editModal(hideModal) : null;
+  } else if (activeModalName === "checkDelete") {
+    activeModal = deleteModal ? deleteModal(hideModal) : null;
+  }
 
-  private handleClickBottomSheetBackground = (): void => {
-    this.setState({ activatedForMobile: false });
-  };
+  return (
+    <>
+      {activeModal}
+      <div
+        data-scroll-anchor={editPath}
+        className={`${styles.main} ${activatedForMobile ? styles.active : ""}`}
+      >
+        <span
+          className={styles.mask}
+          onClick={() => {
+            if (Util.isMobile) handleClickEdit();
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchMove={handleTouchMove}
+        >
+          {ripple && (
+            <span
+              className={styles.ripple}
+              style={{
+                width: `${ripple.diameter}px`,
+                height: `${ripple.diameter}px`,
+                left: `${ripple.left}px`,
+                top: `${ripple.top}px`,
+              }}
+            />
+          )}
+        </span>
+        {children}
+        {Util.isMobile ? (
+          activatedForMobile && (
+            <BottomSheet onClickBackground={handleClickBottomSheetBackground}>
+              <ListRowActionBar
+                forMobile
+                onClickEdit={handleClickButtonInBottomSheet(handleClickEdit)}
+                onClickDelete={handleClickButtonInBottomSheet(handleClickDelete)}
+              />
+            </BottomSheet>
+          )
+        ) : (
+          <span className={styles.action_bar_outer}>
+            <ListRowActionBar
+              onClickEdit={handleClickEdit}
+              onClickDelete={handleClickDelete}
+            />
+          </span>
+        )}
+      </div>
+    </>
+  );
 }
-
-export default withRouter(ListRow);

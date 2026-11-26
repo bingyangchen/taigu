@@ -41,7 +41,10 @@ import {
 } from "../RecordEditor/RecordEditor";
 import { useEditorSteps } from "../RecordEditor/useEditorSteps";
 import { useKeyboardViewport } from "../RecordEditor/useKeyboardViewport";
-import StockPicker, { PENDING_KEYWORD_MESSAGE } from "../StockPicker/StockPicker";
+import StockPicker, {
+  PENDING_KEYWORD_MESSAGE,
+  type StockPickerHandle,
+} from "../StockPicker/StockPicker";
 
 interface Props {
   defaultSid?: string;
@@ -140,7 +143,7 @@ export default function TradePlanEditor({
   const isSubmittingRef = useRef(false);
   const hasDeletedRef = useRef(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const stockPickerRef = useRef<StockPicker>(null);
+  const stockPickerRef = useRef<StockPickerHandle>(null);
   const quantityInputRef = useRef<HTMLInputElement>(null);
   const priceInputRef = useRef<HTMLInputElement>(null);
 

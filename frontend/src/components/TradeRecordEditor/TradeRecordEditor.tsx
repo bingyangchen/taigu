@@ -72,7 +72,10 @@ import {
 } from "../RecordEditor/RecordEditor";
 import { useEditorSteps } from "../RecordEditor/useEditorSteps";
 import { useKeyboardViewport } from "../RecordEditor/useKeyboardViewport";
-import StockPicker, { PENDING_KEYWORD_MESSAGE } from "../StockPicker/StockPicker";
+import StockPicker, {
+  PENDING_KEYWORD_MESSAGE,
+  type StockPickerHandle,
+} from "../StockPicker/StockPicker";
 import styles from "./TradeRecordEditor.module.scss";
 
 interface Props {
@@ -221,7 +224,7 @@ export default function TradeRecordEditor({
   const isSubmittingRef = useRef(false);
   const hasDeletedRef = useRef(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const stockPickerRef = useRef<StockPicker>(null);
+  const stockPickerRef = useRef<StockPickerHandle>(null);
   const dateFieldRef = useRef<EditorDateFieldHandle>(null);
   const quantityInputRef = useRef<HTMLInputElement>(null);
   const priceInputRef = useRef<HTMLInputElement>(null);
