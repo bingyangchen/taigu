@@ -89,7 +89,7 @@ window.mockTaiguCsrf = (code, limit = Infinity) => {
 
 ## ACCT-R3.1 未登入時開啟要登入才能使用的頁面
 
-前端沒有自動化 test。
+前端的自動化 test 用 mock 的後端回應，需要手動確認後端實際回 401 時的結果。
 
 1. 如果已登入，登出。
 2. 開啟 `https://local.taigu.tw/settings`。

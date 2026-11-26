@@ -18,7 +18,7 @@ import {
   Tooltip,
 } from "../../components";
 import * as Icons from "../../icons";
-import { useAppDispatch } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { fetchAccountInfo } from "../../redux/slices/AccountSlice";
 import Api from "../../utils/api";
 import Env from "../../utils/env";
@@ -51,7 +51,16 @@ const NAV_ITEMS = [
 
 export default function Admin(): React.ReactElement {
   const dispatch = useAppDispatch();
-  const [access, setAccess] = useState<Access>("checking");
+  const accountId = useAppSelector((rootState) => rootState.account.id);
+  const isSuperuser = useAppSelector((rootState) => rootState.account.is_superuser);
+
+  // The login check before this page usually has the account in the store already,
+  // and the page-change check below reads it again without blocking the page.
+  const [needsAccountCheck] = useState(!accountId);
+  const [access, setAccess] = useState<Access>(() => {
+    if (needsAccountCheck) return "checking";
+    return isSuperuser ? "allowed" : "denied";
+  });
   const [unhandledCount, setUnhandledCount] = useState<number | null>(null);
   const location = useLocation();
   const checkedPathname = useRef<string | null>(null);
@@ -78,8 +87,8 @@ export default function Admin(): React.ReactElement {
   }, [dispatch]);
 
   useEffect(() => {
-    void checkAccess();
-  }, [checkAccess]);
+    if (needsAccountCheck) void checkAccess();
+  }, [checkAccess, needsAccountCheck]);
 
   useEffect(() => {
     if (access !== "allowed" || checkedPathname.current === location.pathname) return;

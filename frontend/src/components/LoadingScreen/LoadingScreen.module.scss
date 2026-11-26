@@ -16,6 +16,7 @@ $logo-breathe-duration: 2s;
 
   & > .logo_wrapper {
     animation: logo-breathe-in $logo-breathe-duration var(--ease-out) both;
+    animation-delay: calc(-1 * var(--loading-screen-elapsed, 0ms));
   }
 
   & > .loading_spinner {
@@ -23,7 +24,7 @@ $logo-breathe-duration: 2s;
     aspect-ratio: 1;
     opacity: 0;
     animation: spinner-fade-in var(--duration-slow) var(--ease-standard) forwards;
-    animation-delay: $logo-breathe-duration;
+    animation-delay: calc($logo-breathe-duration - var(--loading-screen-elapsed, 0ms));
   }
 }
 
