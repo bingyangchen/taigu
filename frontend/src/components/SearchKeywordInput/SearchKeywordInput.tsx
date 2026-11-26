@@ -1,9 +1,19 @@
-import { ChangeEvent, useLayoutEffect, useRef } from "react";
+import { ChangeEvent, InputHTMLAttributes, useLayoutEffect, useRef } from "react";
 
 import * as Icons from "../../icons";
 import styles from "./SearchKeywordInput.module.scss";
 
-interface Props {
+type InputAttributes = Pick<
+  InputHTMLAttributes<HTMLInputElement>,
+  | "role"
+  | "aria-autocomplete"
+  | "aria-controls"
+  | "aria-expanded"
+  | "aria-activedescendant"
+  | "onKeyDown"
+>;
+
+interface Props extends InputAttributes {
   placeholder: string;
   keyword: string;
   autoFocus?: boolean;
@@ -17,6 +27,7 @@ export default function SearchKeywordInput({
   autoFocus,
   size,
   onChange,
+  ...inputAttributes
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -32,6 +43,7 @@ export default function SearchKeywordInput({
     <div className={`${styles.main} ${size === "l" ? styles.l : styles.m}`}>
       <Icons.IconMagnifier sideLength={size === "l" ? "18" : "14"} />
       <input
+        {...inputAttributes}
         ref={inputRef}
         type="text"
         placeholder={placeholder}

@@ -1,4 +1,3 @@
-import { MouseEvent, MouseEventHandler } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Env from "../../utils/env";
@@ -6,14 +5,14 @@ import Modal from "../Modal/Modal";
 import StockSearchContent from "../StockSearchContent/StockSearchContent";
 
 interface Props {
-  hideModal: MouseEventHandler;
+  hideModal: () => void;
 }
 
 export default function StockSearchModal({ hideModal }: Props) {
   const navigate = useNavigate();
 
-  const handleSelectStock = (sid: string, e: MouseEvent): void => {
-    hideModal(e);
+  const handleSelectStock = (sid: string): void => {
+    hideModal();
     setTimeout(() => {
       navigate(`${Env.frontendRootPath}market/${sid}`);
     }, 50);

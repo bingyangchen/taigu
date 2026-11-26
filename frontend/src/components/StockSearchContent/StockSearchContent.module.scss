@@ -72,10 +72,8 @@
     padding: var(--space-150) var(--space-200);
     border-radius: 0;
 
-    @media (hover: hover) {
-      &:hover {
-        background-color: var(--color-bg-hover);
-      }
+    &.highlighted {
+      background-color: var(--color-bg-hover);
     }
 
     & > .company {

@@ -18,9 +18,11 @@ import type {
   SuggestedStock,
 } from "../../types";
 import Api from "../../utils/api";
+import { getNextHighlightedIndex, isImeComposing } from "../../utils/keyboard";
 import { formatNumber } from "../../utils/recordEditor";
 import { useLatestRef } from "../../utils/useLatestRef";
 import { useMergedState } from "../../utils/useMergedState";
+import { useScrollIntoViewAfterCommit } from "../../utils/useScrollIntoViewAfterCommit";
 import Util from "../../utils/util";
 import styles from "./StockPicker.module.scss";
 
@@ -214,6 +216,7 @@ export default function StockPicker(props: Props) {
   const getOptionId = (index: number): string => `${listboxId}-option-${index}`;
   const activeOptionId =
     state.highlightedIndex < 0 ? undefined : getOptionId(state.highlightedIndex);
+  const scrollIntoViewAfterCommit = useScrollIntoViewAfterCommit();
 
   const selectStock = (option: SuggestedStock): void => {
     const stock = { sid: option.sid, name: option.name };
@@ -289,18 +292,20 @@ export default function StockPicker(props: Props) {
     }, 100);
   };
 
-  const moveHighlight = (offset: number): void => {
+  const moveHighlight = (offset: 1 | -1): void => {
     const optionCount = visibleOptions.length;
     if (optionCount === 0) return;
-    setState((previous) => {
-      const currentIndex =
-        previous.highlightedIndex < 0 && offset < 0 ? 0 : previous.highlightedIndex;
-      const nextIndex = (currentIndex + offset + optionCount) % optionCount;
-      return { highlightedIndex: nextIndex, isListDismissed: false, isOpen: true };
-    });
+    const nextIndex = getNextHighlightedIndex(
+      state.highlightedIndex,
+      offset,
+      optionCount,
+    );
+    setState({ highlightedIndex: nextIndex, isListDismissed: false, isOpen: true });
+    scrollIntoViewAfterCommit(getOptionId(nextIndex));
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (isImeComposing(event)) return;
     if (event.key === "ArrowDown") {
       event.preventDefault();
       moveHighlight(1);
@@ -349,7 +354,13 @@ export default function StockPicker(props: Props) {
                 aria-selected={state.highlightedIndex === index}
                 tabIndex={-1}
                 onMouseDown={(event) => event.preventDefault()}
-                onMouseEnter={() => setState({ highlightedIndex: index })}
+                // Not mouseenter: it also fires when an arrow key scrolls an option
+                // under a still pointer, which would take the highlight away.
+                onMouseMove={() => {
+                  if (state.highlightedIndex !== index) {
+                    setState({ highlightedIndex: index });
+                  }
+                }}
                 onClick={() => selectStock(option)}
               >
                 <span className={styles.result_name}>{option.name}</span>
