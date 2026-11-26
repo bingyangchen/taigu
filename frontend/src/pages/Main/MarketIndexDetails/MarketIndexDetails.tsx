@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   MarketIndexHistoricalLineChart,
@@ -29,7 +30,7 @@ import {
   MARKET_IDS,
   type MarketIndexQuote,
 } from "../../../utils/marketIndex";
-import { type IRouter, navigateBack, withRouter } from "../../../utils/router";
+import { navigateBack } from "../../../utils/router";
 import styles from "./MarketIndexDetails.module.scss";
 
 type ChartMode = "intraday" | "historical";
@@ -196,7 +197,9 @@ function MarketChart({
   );
 }
 
-function MarketIndexDetails({ router }: IRouter) {
+export default function MarketIndexDetails() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [mode, setMode] = useState<ChartMode>("intraday");
   const days = useAppSelector(
@@ -225,10 +228,10 @@ function MarketIndexDetails({ router }: IRouter) {
   }, [dispatch]);
 
   function returnToDashboard() {
-    if (router.location.state?.fromDashboard) {
-      navigateBack(router, Env.frontendRootPath);
+    if (location.state?.fromDashboard) {
+      navigateBack({ location, navigate }, Env.frontendRootPath);
     } else {
-      router.navigate(Env.frontendRootPath, { replace: true });
+      navigate(Env.frontendRootPath, { replace: true });
     }
   }
 
@@ -303,5 +306,3 @@ function MarketIndexDetails({ router }: IRouter) {
     </div>
   );
 }
-
-export default withRouter(MarketIndexDetails);

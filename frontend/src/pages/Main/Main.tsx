@@ -1,6 +1,5 @@
-import React from "react";
-import { connect } from "react-redux";
-import { Outlet } from "react-router-dom";
+import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Outlet, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 
 import imgPersonFill from "../../assets/person-fill.svg";
 import {
@@ -13,6 +12,7 @@ import {
   ToastList,
 } from "../../components";
 import * as Icons from "../../icons";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
 import { fetchAllCashDividendRecords } from "../../redux/slices/CashDividendRecordSlice";
 import { fetchAllDiscounts } from "../../redux/slices/HandlingFeeDiscountSlice";
@@ -24,13 +24,12 @@ import {
 } from "../../redux/slices/StockInfoSlice";
 import { fetchAllTradePlans } from "../../redux/slices/TradePlanSlice";
 import { fetchAllTradeRecords } from "../../redux/slices/TradeRecordSlice";
-import type { AppDispatch, RootState } from "../../redux/store";
 import type { StockWarehouse, Subpage } from "../../types";
 import Env from "../../utils/env";
 import { isSameUrlHistoryTraversal } from "../../utils/mainNavigation";
 import { makeWidthAtLeastQuery, makeWidthBelowQuery } from "../../utils/mediaQuery";
 import Nav from "../../utils/nav";
-import { IRouter, withRouter } from "../../utils/router";
+import { useLatestRef } from "../../utils/useLatestRef";
 import Util from "../../utils/util";
 import styles from "./Main.module.scss";
 import {
@@ -41,21 +40,6 @@ import {
   restoreViewPosition,
   type ViewPosition,
 } from "./viewHistory";
-
-function mapStateToProps(rootState: RootState) {
-  const { username, avatar_url, subscription } = rootState.account;
-  const { stockWarehouse } = rootState.tradeRecord;
-  return { username, avatar_url, stockWarehouse, subscription };
-}
-
-interface Props extends IRouter, ReturnType<typeof mapStateToProps> {
-  dispatch: AppDispatch;
-}
-
-interface State {
-  isLoading: boolean;
-  prevLocationPathname: string | null;
-}
 
 interface NavigationSnapshot {
   position: ViewPosition;
@@ -74,309 +58,86 @@ const scrollKeys = new Set([
 ]);
 const scrollRestorationTimeoutMs = 5000;
 
-class Main extends React.Component<Props, State> {
-  public state: State;
-  private readonly viewHistory = getViewHistory();
-  private mainRef: React.RefObject<HTMLElement | null>;
-  private contentRef: React.RefObject<HTMLDivElement | null>;
-  private subpages: Subpage[];
-  private fetchStockInfoTimer: ReturnType<typeof setTimeout> | null;
-  private scrollAnimationFrameId: number | null = null;
-  private lastDispatchedScrollTop: number | null = null;
-  private removePageReturnListener: (() => void) | null = null;
-  private pendingPosition: ViewPosition | null = null;
-  private retryRestoringPosition: (() => void) | null = null;
-  private stopRestoringPosition: (() => void) | null = null;
-  public constructor(props: Props) {
-    super(props);
-    this.state = { isLoading: true, prevLocationPathname: null };
-    this.mainRef = React.createRef();
-    this.contentRef = React.createRef();
-    this.subpages = [];
-    this.fetchStockInfoTimer = null;
-  }
+function Main() {
+  const username = useAppSelector((rootState) => rootState.account.username);
+  const avatarUrl = useAppSelector((rootState) => rootState.account.avatar_url);
+  const subscription = useAppSelector((rootState) => rootState.account.subscription);
+  const stockWarehouse = useAppSelector(
+    (rootState) => rootState.tradeRecord.stockWarehouse,
+  );
+  const dispatch = useAppDispatch();
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [viewHistory] = useState(getViewHistory);
+  const mainRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const scrollAnimationFrameIdRef = useRef<number | null>(null);
+  const lastDispatchedScrollTopRef = useRef<number | null>(null);
+  const pendingPositionRef = useRef<ViewPosition | null>(null);
+  const retryRestoringPositionRef = useRef<(() => void) | null>(null);
+  const stopRestoringPositionRef = useRef<(() => void) | null>(null);
 
-  public async componentDidMount(): Promise<void> {
-    oncontextmenu = (e) => e.preventDefault();
-    this.syncMobileScrollMode();
-    this.mainRef.current?.addEventListener("scroll", this.handleScroll);
-    this.contentRef.current?.addEventListener("scroll", this.handleScroll);
-    window.addEventListener("scroll", this.handleScroll);
-    window.history.scrollRestoration = "manual";
-    const position = this.getSavedPosition();
-    if (position || this.props.router.navigationType !== "POP") {
-      this.restorePosition(position ?? { top: 0 });
-    } else {
-      this.publishScrollTop();
-    }
-    this.removePageReturnListener = Util.addPageReturnListener(() =>
-      this.props.dispatch(openSession()),
-    );
+  const isMobileEditorRoute = isMobileEditorPath(location.pathname);
+  const shouldUseDocumentScroll = Util.isMobile && !isMobileEditorRoute;
+  const shouldUseWhiteMobileShell =
+    isMobileEditorRoute ||
+    location.pathname === `${Env.frontendRootPath}market` ||
+    location.pathname === `${Env.frontendRootPath}records` ||
+    location.pathname === `${Env.frontendRootPath}plans` ||
+    Nav.isAtDetailsPage;
+  const shouldShowHeader =
+    Util.isMobile &&
+    !isMobileEditorRoute &&
+    !Nav.isAtDetailsPage &&
+    !Nav.isAtMarketIndexDetailsPage;
 
-    try {
-      const account = await this.props.dispatch(fetchAccountInfo()).unwrap();
-      if (account) {
-        void this.props.dispatch(fetchRealtimeMarketIndex());
-        const independentPromises = Promise.allSettled([
-          this.props.dispatch(openSession()).unwrap(),
-          this.props.dispatch(fetchAllCashDividendRecords()).unwrap(),
-          this.props.dispatch(fetchAllFavorites()).unwrap(),
-          this.props.dispatch(fetchAllTradePlans()).unwrap(),
-          this.props.dispatch(fetchAllDiscounts()).unwrap(),
-        ]);
-
-        const res = await this.props
-          .dispatch(fetchAllTradeRecords(account.id))
-          .unwrap();
-
-        await Promise.allSettled([
-          this.fetchHoldingStockInfo(res.stockWarehouse),
-          independentPromises,
-        ]);
-      }
-    } catch (error) {
-      console.error(
-        "Failed to load critical user or trade records in componentDidMount:",
-        error,
-      );
-    } finally {
-      this.setState({ isLoading: false });
-    }
-
-    this.subpages = [
-      {
-        icon: <Icons.IconHome sideLength="100%" />,
-        icon_bold: <Icons.IconHomeBold sideLength="100%" />,
-        name: "儀表板",
-        path: Env.frontendRootPath,
-      },
-      {
-        icon: <Icons.IconChartHistogram sideLength="100%" />,
-        icon_bold: <Icons.IconChartHistogramBold sideLength="100%" />,
-        name: "市場",
-        path: `${Env.frontendRootPath}market`,
-      },
-      {
-        icon: <Icons.IconClockHistory sideLength="100%" />,
-        icon_bold: <Icons.IconClockHistoryBold sideLength="100%" />,
-        name: "歷史紀錄",
-        path: `${Env.frontendRootPath}records`,
-      },
-      {
-        icon: <Icons.IconThumbtack sideLength="100%" />,
-        icon_bold: <Icons.IconThumbtackBold sideLength="100%" />,
-        name: "買賣計畫",
-        path: `${Env.frontendRootPath}plans`,
-      },
-      {
-        icon: (
-          <img
-            src={this.props.avatar_url ? this.props.avatar_url : imgPersonFill}
-            alt=""
-            className={styles.user_avatar}
-          />
-        ),
-        name: "帳號",
-        path: `${Env.frontendRootPath}settings`,
-      },
-    ];
-
-    this.fetchStockInfoTimer = setInterval(() => {
-      this.fetchHoldingStockInfo();
-      this.props.dispatch(fetchRealtimeMarketIndex());
-    }, this.marketRefreshIntervalMs);
-  }
-
-  public getSnapshotBeforeUpdate(
-    prevProps: Readonly<Props>,
-  ): NavigationSnapshot | null {
-    if (prevProps.router.location.key === this.props.router.location.key) return null;
-    const position = this.capturePosition();
-    if (!position) return null;
-    return {
-      position,
-      hadContentFocus:
-        this.contentRef.current?.contains(document.activeElement) ?? false,
-    };
-  }
-
-  public componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevState: Readonly<State>,
-    snapshot: NavigationSnapshot | null,
-  ): void {
-    if (snapshot)
-      this.viewHistory.save(prevProps.router.location, { position: snapshot.position });
-
-    const { location, navigationType } = this.props.router;
-    const previousLocation = prevProps.router.location;
-    if (prevProps.router.location.pathname !== location.pathname) {
-      this.syncMobileScrollMode();
-      this.restorePosition(
-        this.getSavedPosition() ?? { top: 0 },
-        snapshot?.hadContentFocus,
-      );
-      this.props.dispatch(fetchAccountInfo());
-      this.props.dispatch(openSession());
-    } else if (
-      previousLocation.search !== location.search ||
-      isSameUrlHistoryTraversal(previousLocation, location, navigationType)
-    ) {
-      this.restorePosition(
-        this.getSavedPosition() ?? { top: 0 },
-        snapshot?.hadContentFocus,
-      );
-    } else if (prevState.isLoading && !this.state.isLoading) {
-      this.retryRestoringPosition?.();
-    }
-
-    // Conditionally navigate back one more time
-    if (prevProps.router.location.key !== this.props.router.location.key) {
-      window.history.scrollRestoration = "manual";
-      if (
-        location.hash &&
-        prevProps.router.location.pathname === this.props.router.location.pathname &&
-        prevProps.router.location.hash === this.props.router.location.hash &&
-        prevProps.router.location.search === this.props.router.location.search &&
-        prevProps.router.location.state === this.props.router.location.state
-      ) {
-        this.setState(
-          { prevLocationPathname: prevProps.router.location.pathname },
-          () => this.props.router.navigate(-1),
-        );
-      } else this.setState({ prevLocationPathname: null });
-    }
-  }
-
-  public componentWillUnmount(): void {
-    const position = this.capturePosition();
-    if (position) this.viewHistory.save(this.props.router.location, { position });
-    this.stopRestoringPosition?.();
-    window.history.scrollRestoration = "auto";
-    this.mainRef.current?.removeEventListener("scroll", this.handleScroll);
-    this.contentRef.current?.removeEventListener("scroll", this.handleScroll);
-    window.removeEventListener("scroll", this.handleScroll);
-    this.removePageReturnListener?.();
-    document.body.classList.remove("main-page-document-scroll");
-    document.body.classList.remove("main-page-gradient-scroll");
-    document.body.classList.remove("main-page-white-shell-scroll");
-    if (this.scrollAnimationFrameId !== null) {
-      cancelAnimationFrame(this.scrollAnimationFrameId);
-      this.scrollAnimationFrameId = null;
-    }
-    if (this.fetchStockInfoTimer) {
-      clearInterval(this.fetchStockInfoTimer);
-      this.fetchStockInfoTimer = null;
-    }
-  }
-
-  public render(): React.ReactNode {
-    const isMarketIndexPage = Nav.isAtMarketIndexDetailsPage;
-    return (
-      <main
-        className={`${styles.main} ${
-          this.shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
-        } ${this.isMobileEditorRoute ? styles.mobile_editor_shell : ""} ${
-          Nav.isAtDetailsPage || isMarketIndexPage ? styles.mobile_detail_shell : ""
-        } ${isMarketIndexPage ? styles.market_index_shell : ""}`}
-        ref={this.mainRef}
-      >
-        <PageMeta title="Taigu | 台股記帳" noindex />
-        <ToastList />
-        <PlanUpsellModal />
-        {this.state.isLoading && <LoadingScreen />}
-        {this.shouldShowHeader && <HeaderForMain />}
-        <div className={styles.body}>
-          {(!Util.isMobile || isMarketIndexPage) && (
-            <div className={styles.sidebar}>
-              <MainSideBar
-                avatarUrl={
-                  this.props.avatar_url ? this.props.avatar_url : imgPersonFill
-                }
-                username={this.props.username}
-                subpages={this.subpages.slice(0, 4)}
-              />
-            </div>
-          )}
-          <div className={styles.content} ref={this.contentRef} tabIndex={-1}>
-            <Outlet />
-          </div>
-        </div>
-        {(Util.isMobile || isMarketIndexPage) && !this.isMobileEditorRoute && (
-          <div className={styles.footer}>
-            <Footer subpages={this.subpages} />
-          </div>
-        )}
-      </main>
-    );
-  }
-
-  private handleScroll = (): void => {
-    if (this.scrollAnimationFrameId !== null) return;
-
-    this.scrollAnimationFrameId = requestAnimationFrame(() => {
-      this.scrollAnimationFrameId = null;
-      this.publishScrollTop();
-    });
-  };
-
-  private getScrollContainer(): Window | HTMLElement | null {
+  const getScrollContainer = (): Window | HTMLElement | null => {
     if (window.matchMedia(makeWidthAtLeastQuery("lg")).matches)
-      return this.contentRef.current;
+      return contentRef.current;
     if (
       document.body.classList.contains("main-page-document-scroll") &&
       window.matchMedia(makeWidthBelowQuery("md")).matches
     ) {
       return window;
     }
-    return this.mainRef.current;
-  }
+    return mainRef.current;
+  };
 
-  private publishScrollTop(): void {
-    const container = this.getScrollContainer();
+  const publishScrollTop = (): void => {
+    const container = getScrollContainer();
     if (!container) return;
     const top = getScrollTop(container);
-    if (top === this.lastDispatchedScrollTop) return;
-    this.lastDispatchedScrollTop = top;
-    this.props.dispatch(updateScrollTop(top));
-  }
+    if (top === lastDispatchedScrollTopRef.current) return;
+    lastDispatchedScrollTopRef.current = top;
+    dispatch(updateScrollTop(top));
+  };
 
-  private capturePosition(): ViewPosition | null {
-    if (this.pendingPosition) return this.pendingPosition;
-    const container = this.getScrollContainer();
-    const content = this.contentRef.current;
+  const capturePosition = (): ViewPosition | null => {
+    if (pendingPositionRef.current) return pendingPositionRef.current;
+    const container = getScrollContainer();
+    const content = contentRef.current;
     if (!container || !content) return null;
-    const page = this.getPageScrollContainer(content);
+    const page = getPageScrollContainer(content);
     return {
       ...captureViewPosition(container, page ? null : content),
       page: page ? captureViewPosition(page, page) : undefined,
-      viewKey: this.getPageViewKey(content),
+      viewKey: getPageViewKey(content),
     };
-  }
+  };
 
-  private getSavedPosition(): ViewPosition | undefined {
-    const { location, navigationType } = this.props.router;
-    const position = this.viewHistory.get(location, navigationType)?.position;
-    return position?.viewKey === this.getPageViewKey(this.contentRef.current)
+  const getSavedPosition = (): ViewPosition | undefined => {
+    const latest = latestRenderRef.current;
+    const position = viewHistory.get(latest.location, latest.navigationType)?.position;
+    return position?.viewKey === getPageViewKey(contentRef.current)
       ? position
       : undefined;
-  }
+  };
 
-  private getPageViewKey(content: HTMLElement | null): string | undefined {
-    return content?.querySelector<HTMLElement>("[data-scroll-view-key]")?.dataset
-      .scrollViewKey;
-  }
-
-  private getPageScrollContainer(content: HTMLElement): HTMLElement | null {
-    const selector = window.matchMedia(makeWidthAtLeastQuery("md")).matches
-      ? "[data-page-scroll]"
-      : '[data-page-scroll="always"]';
-    return content.querySelector<HTMLElement>(selector);
-  }
-
-  private restorePosition(position: ViewPosition, moveFocus = false): void {
-    this.stopRestoringPosition?.();
-    const content = this.contentRef.current;
+  const restorePosition = (position: ViewPosition, moveFocus = false): void => {
+    stopRestoringPositionRef.current?.();
+    const content = contentRef.current;
     if (!content) return;
 
     const restoredScrollTops = new Map<Window | HTMLElement, number>();
@@ -393,16 +154,16 @@ class Main extends React.Component<Props, State> {
     const restore = () => {
       if (
         position.viewKey !== undefined &&
-        position.viewKey !== this.getPageViewKey(content)
+        position.viewKey !== getPageViewKey(content)
       ) {
         return true;
       }
-      const container = this.getScrollContainer();
-      const page = this.getPageScrollContainer(content);
+      const container = getScrollContainer();
+      const page = getPageScrollContainer(content);
       const pagePosition = position.page ?? position;
       if (
         !container ||
-        (this.state.isLoading &&
+        (latestRenderRef.current.isLoading &&
           (position.top > 0 || pagePosition.top > 0 || pagePosition.anchor))
       ) {
         return false;
@@ -422,7 +183,7 @@ class Main extends React.Component<Props, State> {
         : true;
       restoredScrollTops.set(container, getScrollTop(container));
       if (page) restoredScrollTops.set(page, getScrollTop(page));
-      this.publishScrollTop();
+      publishScrollTop();
 
       if (
         document.activeElement === document.body ||
@@ -438,17 +199,17 @@ class Main extends React.Component<Props, State> {
     };
 
     if (restore() || typeof ResizeObserver === "undefined") return;
-    this.pendingPosition = position;
+    pendingPositionRef.current = position;
 
     let timeout: number | undefined;
     const retry = () => {
       if (restore()) {
-        this.stopRestoringPosition?.();
-      } else if (!this.state.isLoading && timeout === undefined) {
+        stopRestoringPositionRef.current?.();
+      } else if (!latestRenderRef.current.isLoading && timeout === undefined) {
         timeout = window.setTimeout(cancel, scrollRestorationTimeoutMs);
       }
     };
-    this.retryRestoringPosition = retry;
+    retryRestoringPositionRef.current = retry;
 
     // A loading view can be too short to reach its saved position or lack the saved row.
     const observer = new ResizeObserver(retry);
@@ -480,79 +241,306 @@ class Main extends React.Component<Props, State> {
       for (const event of scrollIntentEvents)
         window.removeEventListener(event, cancel, true);
       window.removeEventListener("keydown", cancelOnScrollKey, true);
-      this.pendingPosition = null;
-      this.retryRestoringPosition = null;
-      this.stopRestoringPosition = null;
+      pendingPositionRef.current = null;
+      retryRestoringPositionRef.current = null;
+      stopRestoringPositionRef.current = null;
     };
-    this.stopRestoringPosition = cancel;
+    stopRestoringPositionRef.current = cancel;
     for (const event of scrollIntentEvents) {
       window.addEventListener(event, cancel, { capture: true, passive: true });
     }
     window.addEventListener("keydown", cancelOnScrollKey, true);
     retry();
-  }
+  };
 
-  private syncMobileScrollMode(): void {
+  const syncMobileScrollMode = (): void => {
+    const latest = latestRenderRef.current;
     document.body.classList.toggle(
       "main-page-document-scroll",
-      this.shouldUseDocumentScroll,
+      latest.shouldUseDocumentScroll,
     );
     document.body.classList.toggle(
       "main-page-gradient-scroll",
-      this.shouldUseDocumentScroll && !this.shouldUseWhiteMobileShell,
+      latest.shouldUseDocumentScroll && !latest.shouldUseWhiteMobileShell,
     );
     document.body.classList.toggle(
       "main-page-white-shell-scroll",
-      this.shouldUseDocumentScroll && this.shouldUseWhiteMobileShell,
+      latest.shouldUseDocumentScroll && latest.shouldUseWhiteMobileShell,
     );
-  }
-
-  private get shouldShowHeader(): boolean {
-    return (
-      Util.isMobile &&
-      !this.isMobileEditorRoute &&
-      !Nav.isAtDetailsPage &&
-      !Nav.isAtMarketIndexDetailsPage
-    );
-  }
-
-  private get shouldUseDocumentScroll(): boolean {
-    return Util.isMobile && !this.isMobileEditorRoute;
-  }
-
-  private get shouldUseWhiteMobileShell(): boolean {
-    return (
-      this.isMobileEditorRoute ||
-      this.props.router.location.pathname === `${Env.frontendRootPath}market` ||
-      this.props.router.location.pathname === `${Env.frontendRootPath}records` ||
-      this.props.router.location.pathname === `${Env.frontendRootPath}plans` ||
-      Nav.isAtDetailsPage
-    );
-  }
-
-  private get isMobileEditorRoute(): boolean {
-    return [
-      /^\/records\/(trade|cash-dividend)\/(new|\d+\/edit)$/u,
-      /^\/plans\/(new|[^/]+\/edit)$/u,
-      /^\/handling-fee\/discounts\/(new|\d+\/edit)$/u,
-      /^\/search$/u,
-    ].some((pattern) => pattern.test(this.props.router.location.pathname));
-  }
-
-  private fetchHoldingStockInfo = async (
-    warehouseFromStore?: StockWarehouse,
-  ): Promise<void> => {
-    const warehouse = warehouseFromStore ?? this.props.stockWarehouse;
-    const hodlingSids = Object.entries(warehouse)
-      .filter(([, warehouse]) => warehouse.length > 0)
-      .map(([sid]) => sid);
-    await this.props.dispatch(fetchStockInfo(hodlingSids)).unwrap();
-    this.setState({ isLoading: false });
   };
 
-  private get marketRefreshIntervalMs(): number {
-    return this.props.subscription.market_refresh_interval_seconds * 1000;
-  }
+  const fetchHoldingStockInfo = async (
+    warehouseFromStore?: StockWarehouse,
+  ): Promise<void> => {
+    const warehouse = warehouseFromStore ?? latestRenderRef.current.stockWarehouse;
+    const holdingSids = Object.entries(warehouse)
+      .filter(([, warehouse]) => warehouse.length > 0)
+      .map(([sid]) => sid);
+    await dispatch(fetchStockInfo(holdingSids)).unwrap();
+    setIsLoading(false);
+  };
+
+  // Listeners, observers, timers and async continuations act on the latest render.
+  const latestRenderRef = useLatestRef({
+    location,
+    navigationType,
+    isLoading,
+    stockWarehouse,
+    subscription,
+    shouldUseDocumentScroll,
+    shouldUseWhiteMobileShell,
+    publishScrollTop,
+    capturePosition,
+    getSavedPosition,
+    restorePosition,
+    syncMobileScrollMode,
+    fetchHoldingStockInfo,
+  });
+
+  // Leaving a page replaces its DOM, and no hook runs between the render and that DOM
+  // update, so the render reads the page's scroll position and focus while the DOM
+  // still shows it.
+  const committed = latestRenderRef.current;
+  const navigationSnapshot: NavigationSnapshot | null = (() => {
+    if (committed.location.key === location.key) return null;
+    const position = committed.capturePosition();
+    if (!position) return null;
+    return {
+      position,
+      hadContentFocus: contentRef.current?.contains(document.activeElement) ?? false,
+    };
+  })();
+
+  useLayoutEffect(() => {
+    const latest = latestRenderRef.current;
+    const mainElement = mainRef.current;
+    const contentElement = contentRef.current;
+    let isUnmounted = false;
+    let fetchStockInfoTimer: ReturnType<typeof setInterval> | null = null;
+    const handleScroll = (): void => {
+      if (scrollAnimationFrameIdRef.current !== null) return;
+
+      scrollAnimationFrameIdRef.current = requestAnimationFrame(() => {
+        scrollAnimationFrameIdRef.current = null;
+        latestRenderRef.current.publishScrollTop();
+      });
+    };
+
+    oncontextmenu = (e) => e.preventDefault();
+    latest.syncMobileScrollMode();
+    mainElement?.addEventListener("scroll", handleScroll);
+    contentElement?.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    window.history.scrollRestoration = "manual";
+    const position = latest.getSavedPosition();
+    if (position || latest.navigationType !== "POP") {
+      latest.restorePosition(position ?? { top: 0 });
+    } else {
+      latest.publishScrollTop();
+    }
+    const removePageReturnListener = Util.addPageReturnListener(() =>
+      dispatch(openSession()),
+    );
+
+    const loadAccountData = async (): Promise<void> => {
+      try {
+        const account = await dispatch(fetchAccountInfo()).unwrap();
+        if (account) {
+          void dispatch(fetchRealtimeMarketIndex());
+          const independentPromises = Promise.allSettled([
+            dispatch(openSession()).unwrap(),
+            dispatch(fetchAllCashDividendRecords()).unwrap(),
+            dispatch(fetchAllFavorites()).unwrap(),
+            dispatch(fetchAllTradePlans()).unwrap(),
+            dispatch(fetchAllDiscounts()).unwrap(),
+          ]);
+
+          const res = await dispatch(fetchAllTradeRecords(account.id)).unwrap();
+
+          await Promise.allSettled([
+            latestRenderRef.current.fetchHoldingStockInfo(res.stockWarehouse),
+            independentPromises,
+          ]);
+        }
+      } catch (error) {
+        console.error("Failed to load critical user or trade records on mount:", error);
+      } finally {
+        setIsLoading(false);
+      }
+
+      if (isUnmounted) return;
+      fetchStockInfoTimer = setInterval(() => {
+        latestRenderRef.current.fetchHoldingStockInfo();
+        dispatch(fetchRealtimeMarketIndex());
+      }, latestRenderRef.current.subscription.market_refresh_interval_seconds * 1000);
+    };
+    void loadAccountData();
+
+    const savePositionOnLeave = (): void => {
+      const leaving = latestRenderRef.current;
+      const lastPosition = leaving.capturePosition();
+      if (lastPosition) viewHistory.save(leaving.location, { position: lastPosition });
+    };
+
+    return () => {
+      isUnmounted = true;
+      savePositionOnLeave();
+      stopRestoringPositionRef.current?.();
+      window.history.scrollRestoration = "auto";
+      mainElement?.removeEventListener("scroll", handleScroll);
+      contentElement?.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", handleScroll);
+      removePageReturnListener();
+      document.body.classList.remove("main-page-document-scroll");
+      document.body.classList.remove("main-page-gradient-scroll");
+      document.body.classList.remove("main-page-white-shell-scroll");
+      if (scrollAnimationFrameIdRef.current !== null) {
+        cancelAnimationFrame(scrollAnimationFrameIdRef.current);
+        scrollAnimationFrameIdRef.current = null;
+      }
+      if (fetchStockInfoTimer) clearInterval(fetchStockInfoTimer);
+    };
+  }, [dispatch, latestRenderRef, viewHistory]);
+
+  useLayoutEffect(() => {
+    const previousLocation = committed.location;
+    if (navigationSnapshot) {
+      viewHistory.save(previousLocation, { position: navigationSnapshot.position });
+    }
+
+    if (previousLocation.pathname !== location.pathname) {
+      syncMobileScrollMode();
+      restorePosition(
+        getSavedPosition() ?? { top: 0 },
+        navigationSnapshot?.hadContentFocus,
+      );
+      dispatch(fetchAccountInfo());
+      dispatch(openSession());
+    } else if (
+      previousLocation.search !== location.search ||
+      isSameUrlHistoryTraversal(previousLocation, location, navigationType)
+    ) {
+      restorePosition(
+        getSavedPosition() ?? { top: 0 },
+        navigationSnapshot?.hadContentFocus,
+      );
+    } else if (committed.isLoading && !isLoading) {
+      retryRestoringPositionRef.current?.();
+    }
+
+    // Conditionally navigate back one more time
+    if (previousLocation.key !== location.key) {
+      window.history.scrollRestoration = "manual";
+      if (
+        location.hash &&
+        previousLocation.pathname === location.pathname &&
+        previousLocation.hash === location.hash &&
+        previousLocation.search === location.search &&
+        previousLocation.state === location.state
+      ) {
+        navigate(-1);
+      }
+    }
+  });
+
+  const subpages: Subpage[] = useMemo(
+    () => [
+      {
+        icon: <Icons.IconHome sideLength="100%" />,
+        icon_bold: <Icons.IconHomeBold sideLength="100%" />,
+        name: "儀表板",
+        path: Env.frontendRootPath,
+      },
+      {
+        icon: <Icons.IconChartHistogram sideLength="100%" />,
+        icon_bold: <Icons.IconChartHistogramBold sideLength="100%" />,
+        name: "市場",
+        path: `${Env.frontendRootPath}market`,
+      },
+      {
+        icon: <Icons.IconClockHistory sideLength="100%" />,
+        icon_bold: <Icons.IconClockHistoryBold sideLength="100%" />,
+        name: "歷史紀錄",
+        path: `${Env.frontendRootPath}records`,
+      },
+      {
+        icon: <Icons.IconThumbtack sideLength="100%" />,
+        icon_bold: <Icons.IconThumbtackBold sideLength="100%" />,
+        name: "買賣計畫",
+        path: `${Env.frontendRootPath}plans`,
+      },
+      {
+        icon: (
+          <img
+            src={avatarUrl ? avatarUrl : imgPersonFill}
+            alt=""
+            className={styles.user_avatar}
+          />
+        ),
+        name: "帳號",
+        path: `${Env.frontendRootPath}settings`,
+      },
+    ],
+    [avatarUrl],
+  );
+
+  const isMarketIndexPage = Nav.isAtMarketIndexDetailsPage;
+  return (
+    <main
+      className={`${styles.main} ${
+        shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
+      } ${isMobileEditorRoute ? styles.mobile_editor_shell : ""} ${
+        Nav.isAtDetailsPage || isMarketIndexPage ? styles.mobile_detail_shell : ""
+      } ${isMarketIndexPage ? styles.market_index_shell : ""}`}
+      ref={mainRef}
+    >
+      <PageMeta title="Taigu | 台股記帳" noindex />
+      <ToastList />
+      <PlanUpsellModal />
+      {isLoading && <LoadingScreen />}
+      {shouldShowHeader && <HeaderForMain />}
+      <div className={styles.body}>
+        {(!Util.isMobile || isMarketIndexPage) && (
+          <div className={styles.sidebar}>
+            <MainSideBar
+              avatarUrl={avatarUrl ? avatarUrl : imgPersonFill}
+              username={username}
+              subpages={subpages.slice(0, 4)}
+            />
+          </div>
+        )}
+        <div className={styles.content} ref={contentRef} tabIndex={-1}>
+          <Outlet />
+        </div>
+      </div>
+      {(Util.isMobile || isMarketIndexPage) && !isMobileEditorRoute && (
+        <div className={styles.footer}>
+          <Footer subpages={subpages} />
+        </div>
+      )}
+    </main>
+  );
 }
 
-export default connect(mapStateToProps)(withRouter(Main));
+export default memo(Main);
+
+function isMobileEditorPath(pathname: string): boolean {
+  return [
+    /^\/records\/(trade|cash-dividend)\/(new|\d+\/edit)$/u,
+    /^\/plans\/(new|[^/]+\/edit)$/u,
+    /^\/handling-fee\/discounts\/(new|\d+\/edit)$/u,
+    /^\/search$/u,
+  ].some((pattern) => pattern.test(pathname));
+}
+
+function getPageViewKey(content: HTMLElement | null): string | undefined {
+  return content?.querySelector<HTMLElement>("[data-scroll-view-key]")?.dataset
+    .scrollViewKey;
+}
+
+function getPageScrollContainer(content: HTMLElement): HTMLElement | null {
+  const selector = window.matchMedia(makeWidthAtLeastQuery("md")).matches
+    ? "[data-page-scroll]"
+    : '[data-page-scroll="always"]';
+  return content.querySelector<HTMLElement>(selector);
+}

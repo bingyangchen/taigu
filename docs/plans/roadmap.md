@@ -23,7 +23,6 @@ flowchart TD
   frontend_vite_migration("前端改用 Vite 與 React 19<br/>已完成"):::done
   backend_profiling("後端效能分析工具<br/>未規劃"):::unplanned
   worktree_pre_push("在 git worktree 跑 pre-push 測試<br/>未規劃"):::unplanned
-  function_component_migration("前端全面改用 function component<br/>未規劃"):::unplanned
   design_system("重整前端的 Design System<br/>已完成"):::done
   tablet_navigation("平板寬度的導覽<br/>未規劃"):::unplanned
   security_classification("證券分類與證交稅判定<br/>未規劃"):::unplanned
@@ -45,7 +44,6 @@ flowchart TD
   billing_fixes --> account_deletion
   billing_fixes --> billing_edge_case_fixes
   security_classification --> trade_fee_fixes
-  design_system --> function_component_migration
   classDef done fill:#4f726280,stroke:#4f726280
   classDef approved fill:#e0a33a,stroke:#e0a33a,color:#1f1a12,font-weight:bold
   classDef unplanned fill:none,stroke:#9a978f,stroke-dasharray:3 3
@@ -149,12 +147,6 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - 前端現在依 User-Agent（`Util.isMobile`）決定顯示底部導覽列還是側欄，只有大盤指數頁依 960px 切換；不是行動裝置時，側欄在 780px 以下改成抽屜，記帳編輯器則在 960px 切換窄版。所以在 780 到 959px（例如 User-Agent 不算行動裝置的 iPad）會同時出現寬版的側欄與窄版的編輯器，而 User-Agent 算行動裝置的瀏覽器在 960px 以上，除了大盤指數頁之外，仍然顯示底部導覽列。目標是導覽分成三段，小於 600px 用底部導覽列，600 到 959px 用收合的側欄，960px 起用展開的側欄，各頁判斷窄版時也用同一組切換點。這會改到 `ui-guidelines.md` 的「版面」與 `desktop-sidebar.md` 的規則。
 
 - `desktop-sidebar.md` 的 NAV-R1 只規定可用寬度小於 960px 時不顯示收合按鈕，沒有寫 780 到 959px 時側欄怎麼呈現，而 `main` 在這個範圍顯示沒有收合按鈕的側欄。目標是改導覽時，NAV-R1 一併寫出中等寬度的側欄規則。這會讓 600 到 959px 也顯示側欄，所以那個 plan 要一併重新定義 `ui-guidelines.md` 裡寬版與窄版的分界，以及字級表裡導覽文字的兩格「無」。
-
-### 前端全面改用 Function Component
-
-讓前端的 React component 都寫成 function component，畫面與行為都不變。
-
-目前 `frontend/src/` 有 102 個檔案用 class component 寫成，包括大部分的共用 component、`icons/` 裡的每個 icon 與大部分的頁面，而近期新增的記帳編輯器、大盤指數頁與後台已經用 function component 與 hooks 寫成。Class component 要靠 `utils/router.tsx` 的 `withRouter` 取得 router 的資訊，靠 react-redux 的 `connect` 取得 Redux 的 state，所以目標是每個 component 都改用 react-router 與 react-redux 的 hooks 取得這些資訊，前端不再使用 `connect`，`utils/router.tsx` 的 `withRouter` 也移除。
 
 ### 投資數字的計算修正
 
