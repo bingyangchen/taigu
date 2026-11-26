@@ -559,6 +559,8 @@ $three-signal-min-width: 360px;
   color: var(--color-text-primary);
 }
 
+// No card, like the search page's empty state: only the primary button has
+// colour, so the next step is what the eye lands on.
 .empty_state {
   grid-column: 1 / -1;
   justify-self: center;
@@ -567,14 +569,13 @@ $three-signal-min-width: 360px;
   flex-direction: column;
   gap: var(--space-150);
   width: min(100%, 420px);
-  max-width: 420px;
-  margin-top: var(--space-400);
-  padding: var(--space-400) var(--space-300);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-2xl);
-  background: var(--color-bg-frosted);
-  box-shadow: var(--shadow-md);
+  padding: var(--space-1000) var(--space-300) var(--space-600);
   text-align: center;
+
+  > svg {
+    margin-bottom: var(--space-100);
+    color: var(--color-text-tertiary);
+  }
 
   h2 {
     margin: 0;
@@ -608,7 +609,7 @@ $three-signal-min-width: 360px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 var(--space-250);
   border-radius: var(--radius-pill);
   cursor: pointer;
