@@ -46,9 +46,9 @@
     }
   }
 
-  // A quiet field on the list's left edge: the segmented control's track until it
-  // holds a keyword, which shows the list is filtered. Only focus adds the border,
-  // so focus stays visible on a field that already holds a keyword.
+  // A quiet field on the list's left edge. A keyword gives it the translucent
+  // background, which shows the list is filtered; only focus adds the border, so
+  // focus stays visible on a field that already holds a keyword.
   @include ds.up(md) {
     position: sticky;
     top: var(--space-150);
@@ -56,18 +56,9 @@
     width: 280px;
     height: 48px;
     margin: var(--space-150) 0;
-    border: 1px solid transparent;
-    background-color: var(--color-bg-muted);
-    transition:
-      background-color var(--duration-fast) var(--ease-standard),
-      border-color var(--duration-fast) var(--ease-standard);
+    @include ds.quiet-field;
 
     &:has(input:not(:placeholder-shown)) {
-      background-color: var(--color-bg-frosted);
-    }
-
-    &:focus-within {
-      border-color: var(--color-border-medium);
       background-color: var(--color-bg-frosted);
     }
   }

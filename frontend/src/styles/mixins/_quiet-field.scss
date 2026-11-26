@@ -1,0 +1,14 @@
+// A search field or select that sits on the segmented control's track colour and
+// takes the list's translucent background and a border only while focused.
+@mixin quiet-field {
+  border: 1px solid transparent;
+  background-color: var(--color-bg-muted);
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+
+  &:focus-within {
+    border-color: var(--color-border-medium);
+    background-color: var(--color-bg-frosted);
+  }
+}

@@ -1,7 +1,12 @@
 import React, { memo, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { SegmentedControl, Skeleton, SpeedDial } from "../../../components";
+import {
+  SearchKeywordInput,
+  SegmentedControl,
+  Skeleton,
+  SpeedDial,
+} from "../../../components";
 import * as Icons from "../../../icons";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -359,16 +364,6 @@ function Market() {
     ));
   };
 
-  const renderResultCount = (
-    totalCount: number,
-    visibleCount: number,
-  ): React.ReactNode => {
-    if (!marketSearchText || visibleCount === totalCount) {
-      return null;
-    }
-    return <span className={styles.result_count}>{visibleCount} 筆結果</span>;
-  };
-
   const renderUpdateFailure = (): React.ReactNode => {
     if (!favoriteUpdateFailed || marketPageSubpageName !== "favorites") {
       return null;
@@ -422,10 +417,6 @@ function Market() {
     if (nextTab === "favorites") {
       fetchFavoriteStockInfo();
     }
-  };
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    dispatch(changeMarketSearchText(event.target.value));
   };
 
   const clearSearch = (): void => {
@@ -622,28 +613,16 @@ function Market() {
           />
         </div>
         <div className={styles.search_sort_row}>
-          <label className={styles.search_box}>
-            <Icons.IconMagnifier sideLength="16" />
-            <input
+          <div className={styles.search_box}>
+            <SearchKeywordInput
               aria-label="搜尋股票"
               placeholder={
                 activeTab === "holding" ? "搜尋持股代號或名稱" : "搜尋最愛代號或名稱"
               }
-              value={marketSearchText}
-              onChange={handleSearchChange}
+              keyword={marketSearchText}
+              onChange={(keyword) => dispatch(changeMarketSearchText(keyword))}
             />
-            {marketSearchText && (
-              <button
-                aria-label="清除搜尋"
-                className={styles.clear_search_button}
-                type="button"
-                onClick={clearSearch}
-              >
-                <Icons.IconXLarge sideLength="12" />
-              </button>
-            )}
-          </label>
-          {renderResultCount(allSids.length, visibleSids.length)}
+          </div>
           {renderUpdateFailure()}
           <div className={styles.sort_menu}>
             <select

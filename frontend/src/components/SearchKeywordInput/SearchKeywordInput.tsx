@@ -7,6 +7,7 @@ import styles from "./SearchKeywordInput.module.scss";
 type InputAttributes = Pick<
   InputHTMLAttributes<HTMLInputElement>,
   | "role"
+  | "aria-label"
   | "aria-autocomplete"
   | "aria-controls"
   | "aria-expanded"
