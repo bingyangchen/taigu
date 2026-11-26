@@ -24,6 +24,8 @@ flowchart TD
   backend_profiling("後端效能分析工具<br/>未規劃"):::unplanned
   worktree_pre_push("在 git worktree 跑 pre-push 測試<br/>未規劃"):::unplanned
   function_component_migration("前端全面改用 function component<br/>未規劃"):::unplanned
+  design_system("重整前端的 Design System<br/>已核准"):::approved
+  tablet_navigation("平板寬度的導覽<br/>未規劃"):::unplanned
   security_classification("證券分類與證交稅判定<br/>未規劃"):::unplanned
   trade_fee_fixes("手續費與證交稅修正<br/>未規劃"):::unplanned
   pull_to_refresh("下拉更新資料<br/>未規劃"):::unplanned
@@ -43,6 +45,7 @@ flowchart TD
   billing_fixes --> account_deletion
   billing_fixes --> billing_edge_case_fixes
   security_classification --> trade_fee_fixes
+  design_system --> function_component_migration
   classDef done fill:#4f726280,stroke:#4f726280
   classDef approved fill:#e0a33a,stroke:#e0a33a,color:#1f1a12,font-weight:bold
   classDef unplanned fill:none,stroke:#9a978f,stroke-dasharray:3 3
@@ -138,6 +141,18 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - `scripts/dev/git-hooks/pre-push` 用 `.git` 是不是目錄來確認自己在 repo 的根目錄執行，不過 git worktree 的 `.git` 是一個檔案，所以在 worktree 裡 push 時，hook 會印出「Wrong directory」並擋下 push。目標是 hook 在 repo 的根目錄與 worktree 的根目錄都會執行 `scripts/dev/test.sh`。
 - `scripts/dev/test.sh` 從 `.env` 讀取 `ENV` 與 `DOCKER_USERNAME`，而 `.env` 不在版本控制裡，所以新建的 worktree 沒有這個檔案，`check_env dev` 會擋下測試。目標是開發者不必先手動複製 `.env`，在 worktree 裡也能跑測試。
 - `compose.dev.yaml` 沒有設定 project name，所以 Docker Compose 用目錄名稱當 project name，在 worktree 裡跑 `scripts/dev/test.sh` 時會另外啟動一組 db 與 redis。這兩個 service 會綁定主機的 5433 與 6380 port，所以主 checkout 的開發環境執行中時，port 已經被占用，worktree 裡的測試可能起不來，這一點還沒實測。目標是主 checkout 的開發環境執行中時，worktree 裡也能跑測試，而且好幾個 worktree 可以同時跑測試。
+
+### 重整前端的 Design System
+
+讓前端的樣式都從一套分成原始值與用途兩層的 design token 取值，中性色統一成偏藍的灰，並用 stylelint 擋下寫死的值，見 [plan 0011](0011-design-system.md)。
+
+### 平板寬度的導覽
+
+讓平板這類中等寬度的畫面用收合的側欄導覽，跟 Material Design 3 與 Apple HIG 的建議一致。
+
+- 前端現在依 User-Agent（`Util.isMobile`）決定顯示底部導覽列還是側欄，只有大盤指數頁依 960px 切換；不是行動裝置時，側欄在 780px 以下改成抽屜，記帳編輯器則在 960px 切換窄版。所以在 780 到 959px（例如 User-Agent 不算行動裝置的 iPad）會同時出現寬版的側欄與窄版的編輯器，而 User-Agent 算行動裝置的瀏覽器在 960px 以上，除了大盤指數頁之外，仍然顯示底部導覽列。目標是導覽分成三段，小於 600px 用底部導覽列，600 到 959px 用收合的側欄，960px 起用展開的側欄，各頁判斷窄版時也用同一組切換點。這會改到 `ui-guidelines.md` 的「版面」與 `desktop-sidebar.md` 的規則。
+
+- `desktop-sidebar.md` 的 NAV-R1 只規定可用寬度小於 960px 時不顯示收合按鈕，沒有寫 780 到 959px 時側欄怎麼呈現，而 `main` 在這個範圍顯示沒有收合按鈕的側欄。目標是改導覽時，NAV-R1 一併寫出中等寬度的側欄規則。這會讓 600 到 959px 也顯示側欄，所以那個 plan 要一併重新定義 `ui-guidelines.md` 裡寬版與窄版的分界，以及字級表裡導覽文字的兩格「無」。
 
 ### 前端全面改用 Function Component
 
@@ -288,6 +303,8 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - 編輯交易紀錄、現金股利紀錄或買賣計畫儲存成功，以及從歷史紀錄頁刪除紀錄成功之後，都不顯示成功的 toast，不符合 ui-guidelines.md 成功後顯示 toast 的預設。目標是決定這些操作要不要顯示 toast，不顯示的話在 spec 記下理由。
 - 前端在窄版的編輯頁、鍵盤彈出時把編輯頁固定在 `visualViewport` 的範圍內，並在日期欄位被清空時恢復原本的日期，這兩項行為都還沒在 iOS Safari、iOS 的 PWA 與 Android Chrome 上實測。目標是在這三個平台上，鍵盤彈出時主要按鈕與金額摘要留在鍵盤上方，日期欄位不會被清空，並把實測的行為記進 architecture.md。
 - 手續費折讓的編輯器儲存失敗時會直接關閉，輸入的內容跟著消失，其他編輯器則維持開啟。目標是失敗時也保留輸入的內容。
+- 使用者刪除個股筆記的全部文字並儲存時，直接出現「備註已更新」（STOCK-R14.3），沒有照 ui-guidelines.md 的「操作確認」先顯示確認視窗。目標是把已儲存、非空白的筆記改成空白並送出時，先請使用者確認。
+
 
 ### 介面文案與數字格式修正
 
@@ -310,7 +327,7 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - 登入按鈕寫「使用 Google 帳戶繼續」，設定頁的頁面標題寫「帳戶設定」，歡迎頁的內文與按鈕（例如「先建立免費帳戶」）、隱私權政策的頁面說明也有幾處寫「帳戶」，其他地方都寫「帳號」。目標是都寫「帳號」。
 - 每檔股票的年化報酬率在市場頁叫「報酬率」，在個股詳情頁叫「年化報酬率」。目標是兩個頁面用同一個名稱。
 - 儀表板沒有交易紀錄時的說明用了行銷的語氣，可以點的「點這裡」也沒寫出動作，而且沒辦法用鍵盤操作。目標是改成寫出動作、鍵盤也能操作的按鈕，例如「新增交易紀錄」。
-- 收益分析的長條圖用藍色表示獲利、紅色表示虧損，跟 ui-guidelines.md 的「漲跌」相反，正數也沒有 + 號。目標是紅色表示獲利、綠色表示虧損，正數加上 + 號。
+- 收益分析的長條圖的金額，正數沒有 + 號，負數寫成「$-1,000」。目標是寫成「+$1,000」與「−$1,000」。長條的顏色跟 ui-guidelines.md 的「漲跌」相反的問題，由 [plan 0011](0011-design-system.md) 修正。
 - 數字格式不一致：搜尋結果的價格沒有千分位符號，個股詳情頁正的實現損益與年化報酬率沒有 + 號，圖表的 tooltip 用半形冒號、市值沒有四捨五入、庫存分佈的數量沒寫單位。目標是照 ui-guidelines.md 的規則顯示。
 - 手續費頁的圖表略過沒有紀錄的月份，月份標籤也沒寫年份，所以 1Y、5Y 與 ALL 可能出現兩個「3月」。目標是看得出每個長條是哪一年的哪個月。
 
