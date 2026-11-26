@@ -1,30 +1,29 @@
-@use "../../design_system" as _;
-
 .main {
   position: sticky;
   top: 0;
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  width: _.$side-bar-width;
-  min-width: _.$side-bar-width;
-  background-color: _.$white;
+  width: var(--layout-sidebar-width);
+  min-width: var(--layout-sidebar-width);
+  background-color: var(--color-bg-surface);
   overflow-y: auto;
-  border-right: 0.5px solid _.$light-gray;
+  border-right: 0.5px solid var(--color-border-default);
   & > .header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 65px;
-    padding: 0 5px;
-    margin: 0 10px 5px;
-    border-bottom: 1px solid _.$noisy-white;
+    gap: var(--space-150);
+    // Lines up with the settings page header beside it.
+    height: var(--layout-header-height);
+    padding: 0 var(--space-075);
+    margin: 0 var(--space-150) var(--space-075);
+    border-bottom: 1px solid var(--color-border-subtle);
   }
   & > .subpage_list {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: 0 5px;
+    gap: var(--space-075);
+    padding: 0 var(--space-075);
   }
   & > .footer {
     position: absolute;
@@ -36,9 +35,9 @@
     }
     & > .copyright {
       text-align: center;
-      font-size: 0.7 * _.$base-font-size;
-      color: _.$gray;
-      margin: 5px 10px 15px;
+      font-size: var(--font-size-2xs);
+      color: var(--color-text-secondary);
+      margin: var(--space-075) var(--space-150) var(--space-200);
     }
   }
 }

@@ -1,4 +1,4 @@
-@use "../../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   position: relative;
@@ -7,72 +7,71 @@
   flex-grow: 1;
   min-height: 100%;
   width: 100%;
-  padding: 10px 30px;
-  @media (max-width: _.$width-780) {
-    padding: 0 20px;
+  padding: var(--space-150) var(--space-400);
+  @include ds.down(md) {
+    padding: 0 var(--space-250);
   }
   & > .title {
-    color: _.$black;
-    font-weight: normal;
-    font-size: 1.2 * _.$base-font-size;
-    @media (max-width: _.$width-780) {
-      font-size: 1.1 * _.$base-font-size;
-      margin: 10px 0;
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-regular);
+    font-size: var(--font-size-page-title);
+    @include ds.down(md) {
+      margin: var(--space-150) 0;
     }
   }
   & > .app_list {
-    padding: 10px 0;
+    padding: var(--space-150) 0;
     & > .app {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 16px 8px;
-      border-radius: 8px;
+      gap: var(--space-100);
+      padding: var(--space-200) var(--space-100);
+      border-radius: var(--radius-md);
       width: min(100%, 350px);
       max-width: 100%;
-      transition-duration: 300ms;
+      transition-duration: var(--duration-slow);
       & > .number {
-        font-size: 0.9 * _.$base-font-size;
-        padding: 10px;
+        font-size: var(--font-size-sm);
+        padding: var(--space-150);
       }
       & > .inner {
         display: flex;
-        gap: 16px;
+        gap: var(--space-200);
         & > img {
           width: 60px;
           aspect-ratio: 1;
           object-fit: contain;
-          padding: 5px;
-          border-radius: 20%;
-          border: 1px solid _.$noisy-white;
-          box-shadow: 0 1px 3px -2px _.$black;
-          background-color: _.$white;
+          padding: var(--space-075);
+          border-radius: var(--radius-lg);
+          border: 1px solid var(--color-border-subtle);
+          box-shadow: var(--shadow-sm);
+          background-color: var(--color-bg-surface);
         }
         & > .right {
           display: flex;
           flex-direction: column;
-          gap: 5px;
-          padding: 2px 0;
+          gap: var(--space-075);
+          padding: var(--space-025) 0;
           & > .app_name {
-            font-size: 0.95 * _.$base-font-size;
-            color: _.$black;
+            font-size: var(--font-size-md);
+            color: var(--color-text-primary);
           }
           & > .star {
             display: flex;
             align-items: center;
-            gap: 3px;
-            font-size: 0.8 * _.$base-font-size;
+            gap: var(--space-050);
+            font-size: var(--font-size-xs);
             letter-spacing: 0;
           }
         }
       }
       @media (hover: hover) {
         &:hover {
-          background-color: _.$black-transparent-3;
+          background-color: var(--color-bg-hover);
         }
       }
       &:active {
-        background-color: _.$black-transparent-3;
+        background-color: var(--color-bg-hover);
       }
     }
   }

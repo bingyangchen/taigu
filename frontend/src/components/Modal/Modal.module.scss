@@ -1,4 +1,4 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .background {
   position: fixed;
@@ -6,40 +6,37 @@
   left: 0;
   height: 100dvh;
   width: 100vw;
-  background-color: _.$black-transparent-1;
-  z-index: 6;
-  animation: 300ms fadein ease;
+  background-color: var(--color-bg-backdrop);
+  z-index: var(--z-backdrop);
+  animation: var(--duration-slow) fadein var(--ease-standard);
 
   &.nested_background {
-    z-index: 8;
-    animation: 180ms fadein ease;
+    z-index: var(--z-nested-backdrop);
+    animation: var(--duration-base) fadein var(--ease-standard);
   }
 }
 
 .main {
-  $modal-body-margin-x: 25px;
   position: fixed;
   top: calc(50% - env(keyboard-inset-height, 0px) / 2);
   left: 50%;
   max-height: calc(100dvh - env(keyboard-inset-height, 0px) - 100px);
   overflow: auto;
-  border-radius: 20px;
-  background-color: _.$white;
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-bg-surface);
   transform: translate(-50%, -50%);
-  z-index: 7;
+  z-index: var(--z-dialog);
   user-select: none;
-  animation: 0.3s fadescalein ease;
+  animation: var(--duration-slow) fadescalein var(--ease-standard);
   outline: none;
 
   &:focus-visible {
-    box-shadow:
-      0 0 0 2px _.$white,
-      0 0 0 5px _.$blue-transparent-3;
+    @include ds.focus-ring;
   }
 
   &.nested {
-    z-index: 9;
-    animation: 180ms nestedscalein ease;
+    z-index: var(--z-nested-dialog);
+    animation: var(--duration-base) nestedscalein var(--ease-standard);
   }
 
   &.compact {
@@ -66,7 +63,7 @@
 
     & > .header {
       * {
-        color: _.$gray;
+        color: var(--color-text-secondary);
       }
     }
 
@@ -77,7 +74,7 @@
     & > .footer {
       position: sticky;
       bottom: 0;
-      background-color: _.$white;
+      background-color: var(--color-bg-surface);
     }
 
     &.transparent {
@@ -107,7 +104,7 @@
     max-height: none;
     overflow: hidden;
 
-    @media (max-width: _.$width-960) {
+    @include ds.down(lg) {
       width: calc(100vw - 32px);
       height: calc(100dvh - 32px);
     }
@@ -132,12 +129,12 @@
     justify-content: flex-end;
     align-items: center;
     height: 60px;
-    margin: 0 $modal-body-margin-x;
-    color: _.$gray;
+    margin: 0 var(--space-300);
+    color: var(--color-text-secondary);
 
     &:empty {
       height: 0;
-      margin: 0 $modal-body-margin-x 60px;
+      margin: 0 var(--space-300) var(--space-800);
     }
 
     & > .header_title {
@@ -150,15 +147,17 @@
   & > .body {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-150);
     max-height: 512px;
-    margin: 0 $modal-body-margin-x 5px;
-    padding: 2px;
+    margin: 0 var(--space-300) var(--space-075);
+    // Leaves room for the focus ring of the buttons inside, which overflow: auto
+    // would otherwise clip.
+    padding: calc(var(--focus-ring-width) + var(--focus-ring-offset));
     overflow: auto;
 
     & > .description {
-      font-size: 0.8 * _.$base-font-size;
-      color: _.$gray;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
     }
   }
 
@@ -167,13 +166,13 @@
     justify-content: flex-end;
     align-items: flex-end;
     height: fit-content;
-    padding: 15px $modal-body-margin-x;
-    gap: 15px;
+    padding: var(--space-200) var(--space-300);
+    gap: var(--space-200);
 
     &:empty {
-      height: 0px;
+      height: 0;
       padding: 0;
-      margin-bottom: 25px;
+      margin-bottom: var(--space-300);
     }
   }
 }

@@ -1,11 +1,11 @@
-@use "../../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   display: flex;
   flex-direction: column;
   align-items: center;
   flex-grow: 1;
-  padding: 0 15px 50px;
+  padding: 0 var(--space-200) var(--space-600);
 }
 
 .quotaList,
@@ -29,16 +29,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-200);
   width: 100%;
   max-width: 720px;
-  padding: 32px 16px;
+  padding: var(--space-400) var(--space-200);
   text-align: center;
 
   & > p {
     margin: 0;
-    color: _.$deep-gray;
-    line-height: 1.6;
+    color: var(--color-text-primary);
+    line-height: var(--line-height-relaxed);
   }
 }
 
@@ -49,40 +49,40 @@
 .notice {
   box-sizing: border-box;
   max-width: 720px;
-  margin-bottom: 18px;
-  padding: 13px 16px;
-  color: _.$deep-gray;
-  line-height: 1.6;
-  background: _.$white;
-  border: 1px solid _.$light-gray;
-  border-radius: 8px;
+  margin-bottom: var(--space-250);
+  padding: var(--space-150) var(--space-200);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-relaxed);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
 }
 
 .success {
-  border-color: _.$green-transparent-2;
-  background: _.$green-transparent-3;
-  animation: noticeEnter 180ms ease;
+  border-color: var(--color-border-success-subtle);
+  background: var(--color-bg-success-subtle);
+  animation: noticeEnter var(--duration-base) var(--ease-standard);
 }
 
 .error {
-  border-color: _.$red-transparent-2;
-  background: _.$red-transparent-3;
+  border-color: var(--color-border-danger-subtle);
+  background: var(--color-bg-danger-subtle);
 }
 
 .info {
-  border-color: _.$blue-transparent-2;
-  background: _.$blue-transparent-3;
+  border-color: var(--color-border-default);
+  background: var(--color-bg-accent-subtle);
 }
 
 .summary {
   box-sizing: border-box;
-  padding: 18px;
+  padding: var(--space-250);
 
   & > p {
-    margin: 8px 0 0;
-    color: _.$gray;
-    font-size: 0.88 * _.$base-font-size;
-    line-height: 1.6;
+    margin: var(--space-100) 0 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
   }
 }
 
@@ -91,8 +91,8 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 18px;
+  gap: var(--space-150);
+  padding: var(--space-250);
   overflow: hidden;
 }
 
@@ -100,109 +100,109 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-150);
 }
 
 .skeletonRows {
   display: grid;
   grid-template-columns: 1fr;
-  margin-top: 2px;
-  border-top: 1px solid _.$noisy-white;
+  margin-top: var(--space-025);
+  border-top: 1px solid var(--color-border-subtle);
 
   > * {
-    margin: 12px 0;
+    margin: var(--space-150) 0;
   }
 }
 
 .skeletonBenefitGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 14px;
-  padding-top: 2px;
+  gap: var(--space-150) var(--space-200);
+  padding-top: var(--space-025);
 }
 
 .skeletonPlanOptions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  padding-top: 2px;
+  gap: var(--space-150);
+  padding-top: var(--space-025);
 }
 
 .summaryHeader {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-150);
 }
 
 .planIdentity {
   display: inline-flex;
   min-width: 0;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-150);
 
   & > strong {
-    color: _.$deep-gray;
-    font-size: 1.18 * _.$base-font-size;
-    line-height: 1.35;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-snug);
   }
 }
 
 .planPrice {
-  color: _.$gray;
-  font-size: 0.88 * _.$base-font-size;
-  line-height: 1.35;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
 }
 
 .planBadge {
   display: inline-flex;
   align-items: center;
   min-height: 24px;
-  padding: 0 10px;
-  color: _.$blue;
-  font-size: 0.82 * _.$base-font-size;
-  font-weight: 700;
-  background: _.$blue-transparent-3;
-  border-radius: 999px;
+  padding: 0 var(--space-150);
+  color: var(--color-text-accent-strong);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  background: var(--color-bg-accent-subtle);
+  border-radius: var(--radius-pill);
 }
 
 .planBadgeBilling,
 .planBadgeTrial {
-  color: _.$blue;
-  background: _.$blue-transparent-3;
+  color: var(--color-text-accent-strong);
+  background: var(--color-bg-accent-subtle);
 }
 
 .planBadgeCurrent {
-  color: _.$green;
-  background: _.$green-transparent-3;
+  color: var(--color-text-success);
+  background: var(--color-bg-success-subtle);
 }
 
 .summaryGrid {
   display: grid;
   grid-template-columns: 1fr;
-  margin-top: 14px;
-  border-top: 1px solid _.$noisy-white;
+  margin-top: var(--space-200);
+  border-top: 1px solid var(--color-border-subtle);
 
   & > div {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
-    gap: 14px;
+    gap: var(--space-200);
     min-width: 0;
     align-items: baseline;
-    padding: 11px 0;
-    border-bottom: 1px solid _.$noisy-white;
+    padding: var(--space-150) 0;
+    border-bottom: 1px solid var(--color-border-subtle);
   }
 
   span {
-    color: _.$deep-gray;
-    font-size: 0.75 * _.$base-font-size;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xs);
   }
 
   strong {
-    color: _.$gray;
-    font-size: 0.9 * _.$base-font-size;
-    font-weight: 400;
-    line-height: 1.4;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-snug);
     text-align: right;
   }
 }
@@ -210,93 +210,78 @@
 .quotaInline {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 14px;
+  gap: var(--space-200);
   align-items: baseline;
-  padding: 11px 0;
-  color: _.$deep-gray;
-  border-bottom: 1px solid _.$noisy-white;
+  padding: var(--space-150) 0;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-subtle);
 
   span {
-    color: _.$deep-gray;
-    font-size: 0.75 * _.$base-font-size;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xs);
   }
 
   strong {
-    color: _.$gray;
-    font-size: 0.9 * _.$base-font-size;
-    font-weight: 400;
-    line-height: 1.5;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-normal);
     text-align: right;
   }
 }
 
 .upgradeHint,
 .paymentHint {
-  color: _.$gray;
-  line-height: 1.6;
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
 }
 
 .upgradeHint {
-  margin-top: 12px;
-  font-size: 0.88 * _.$base-font-size;
+  margin-top: var(--space-150);
+  font-size: var(--font-size-sm);
 }
 
 .subscriptionManagement {
   box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;
-  gap: 14px;
+  gap: var(--space-200);
   align-items: center;
-  padding: 16px;
-  background: _.$white;
-  border: 1px solid _.$noisy-white;
-  border-radius: 8px;
+  padding: var(--space-200);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
 
   strong {
     display: block;
-    color: _.$deep-gray;
-    font-size: 0.9 * _.$base-font-size;
-    font-weight: 600;
-    line-height: 1.45;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-normal);
   }
 
   p {
-    margin: 4px 0 0;
-    color: _.$gray;
-    font-size: 0.88 * _.$base-font-size;
-    line-height: 1.5;
+    margin: var(--space-050) 0 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
   }
 }
 
 .stopAutoRenewalButton {
   min-width: 128px;
   min-height: 40px;
-  color: _.$red !important;
-  background: transparent !important;
-  border-color: _.$red-transparent-2 !important;
-
-  @media (hover: hover) {
-    &:hover:not(:disabled):not(:global(.waiting)) {
-      background: _.$red-transparent-4 !important;
-    }
-  }
-
-  &:focus-visible {
-    box-shadow:
-      0 0 0 2px _.$white,
-      0 0 0 5px _.$blue-transparent-1;
-  }
 }
 
 .paymentHint {
-  margin: 12px 18px 0;
-  font-size: 0.88 * _.$base-font-size;
+  margin: var(--space-150) var(--space-250) 0;
+  font-size: var(--font-size-sm);
 }
 
 .quotaList {
   display: flex;
   flex-direction: column;
-  padding: 12px 18px;
+  padding: var(--space-150) var(--space-250);
 }
 
 .quotaRow {
@@ -304,9 +289,9 @@
   flex-direction: column;
   justify-content: center;
   min-height: 0;
-  padding: 13px 0;
-  color: _.$deep-gray;
-  border-bottom: 1px solid _.$noisy-white;
+  padding: var(--space-150) 0;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-subtle);
 
   &:last-child {
     border-bottom: none;
@@ -317,33 +302,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-200);
 
   & > span {
-    color: _.$deep-gray;
-    font-size: 0.75 * _.$base-font-size;
-    font-weight: 400;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-regular);
   }
 
   & > strong {
-    color: _.$gray;
-    font-size: 0.9 * _.$base-font-size;
-    font-weight: 400;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-regular);
     white-space: nowrap;
   }
 }
 
 .progressTrack {
   height: 4px;
-  margin-top: 11px;
+  margin-top: var(--space-150);
   overflow: hidden;
-  background: _.$noisy-white;
-  border-radius: 999px;
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-pill);
 }
 
 .progressBar {
   height: 100%;
-  background: _.$blue;
+  background: var(--color-bg-accent);
   border-radius: inherit;
 }
 
@@ -351,8 +336,8 @@
 .buttonGroup {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
+  gap: var(--space-150);
+  padding: var(--space-200);
 }
 
 .ecpayPayment {
@@ -362,52 +347,52 @@
 .planSummary {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 16px 18px 0;
-  color: _.$deep-gray;
+  gap: var(--space-075);
+  padding: var(--space-200) var(--space-250) 0;
+  color: var(--color-text-primary);
 
   & > strong {
-    font-size: 1.04 * _.$base-font-size;
-    font-weight: 600;
-    line-height: 1.45;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-normal);
   }
 
   & > span {
-    color: _.$gray;
-    font-size: 0.88 * _.$base-font-size;
-    line-height: 1.6;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
   }
 }
 
 .benefitSummary,
 .confirmBenefits {
   box-sizing: border-box;
-  color: _.$deep-gray;
+  color: var(--color-text-primary);
 
   & > strong {
     display: block;
-    color: _.$deep-gray;
-    font-size: 0.9 * _.$base-font-size;
-    font-weight: 700;
-    line-height: 1.45;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-normal);
   }
 
   ul {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 14px;
+    gap: var(--space-100) var(--space-200);
     padding: 0;
-    margin: 10px 0 0;
+    margin: var(--space-150) 0 0;
     list-style: none;
   }
 
   li {
     position: relative;
     min-width: 0;
-    padding-left: 14px;
-    color: _.$gray;
-    font-size: 0.88 * _.$base-font-size;
-    line-height: 1.5;
+    padding-left: var(--space-200);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
 
     &::before {
       position: absolute;
@@ -416,21 +401,21 @@
       width: 5px;
       height: 5px;
       content: "";
-      background: _.$blue;
-      border-radius: 50%;
+      background: var(--color-bg-accent);
+      border-radius: var(--radius-circle);
       transform: translateY(-50%);
     }
   }
 }
 
 .benefitSummary {
-  padding: 14px 18px 0;
+  padding: var(--space-200) var(--space-250) 0;
 }
 
 .confirmBenefits {
-  padding: 14px;
-  border: 1px solid _.$noisy-white;
-  border-radius: 8px;
+  padding: var(--space-200);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
 
   ul {
     grid-template-columns: 1fr;
@@ -441,82 +426,69 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-
-  p,
-  span {
-    margin: 0;
-    color: _.$gray;
-    font-size: 0.88 * _.$base-font-size;
-    line-height: 1.6;
-  }
+  gap: var(--space-150);
 }
 
 .summaryActions {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid _.$noisy-white;
+  margin-top: var(--space-200);
+  padding-top: var(--space-200);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .planActions {
-  padding: 14px 18px 18px;
+  padding: var(--space-200) var(--space-250) var(--space-250);
 }
 
 .planOptions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-
-  :global(.button) {
-    width: 100%;
-    min-width: 0;
-    min-height: 116px;
-    padding: 0;
-  }
-
-  :global(.button__content) {
-    align-items: stretch;
-    width: 100%;
-    min-width: 0;
-  }
+  gap: var(--space-150);
 }
 
 .planOptionButton {
-  color: _.$deep-gray !important;
-  background: _.$white !important;
-  border: 1px solid _.$light-gray !important;
-  box-shadow: 0 8px 20px _.$black-transparent-3;
-
-  &::before {
-    background: transparent !important;
-  }
+  width: 100%;
+  min-width: 0;
+  min-height: 116px;
+  padding: 0;
+  box-shadow: var(--shadow-md);
 
   @media (hover: hover) {
-    &:hover:not(:disabled):not(:global(.waiting)) {
-      border-color: _.$blue !important;
-      box-shadow: 0 12px 26px _.$blue-transparent-3;
+    &:hover:not(:disabled, [data-waiting]) {
+      border-color: var(--color-border-accent);
+      box-shadow: var(--shadow-lg);
       transform: translateY(-1px);
+
+      // The card shows hover with its border and shadow instead of Button's overlay.
+      &::before {
+        background-color: transparent;
+      }
     }
   }
+}
+
+.planOptionButtonContent {
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
 }
 
 .recommendedPlanOption {
   background: linear-gradient(
     180deg,
-    _.$white 0%,
-    _.$blue-transparent-4 100%
-  ) !important;
-  border-color: _.$blue-transparent-1 !important;
+    var(--color-bg-surface) 0%,
+    var(--color-bg-page) 100%
+  );
+  border-color: var(--color-border-accent);
 }
 
 .planOptionContent {
   display: flex;
   box-sizing: border-box;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-100);
   min-width: 0;
   width: 100%;
-  padding: 14px;
+  padding: var(--space-200);
   text-align: left;
 }
 
@@ -524,116 +496,106 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-100);
   min-width: 0;
 }
 
 .planOptionName {
-  color: _.$deep-gray !important;
-  font-size: 0.95 * _.$base-font-size !important;
-  font-weight: 700;
-  line-height: 1.35 !important;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
 }
 
 .recommendedBadge {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
-  padding: 2px 8px;
-  color: _.$blue !important;
-  font-size: 0.74 * _.$base-font-size !important;
-  font-weight: 700;
-  line-height: 1.4 !important;
-  background: _.$blue-transparent-3;
-  border-radius: 999px;
+  padding: var(--space-025) var(--space-100);
+  color: var(--color-text-accent-strong);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
+  background: var(--color-bg-accent-subtle);
+  border-radius: var(--radius-pill);
 }
 
 .planOptionPrice {
-  color: _.$deep-gray !important;
-  font-size: 1.24 * _.$base-font-size !important;
-  font-weight: 700;
-  line-height: 1.25 !important;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
 }
 
 .planOptionMeta {
-  color: _.$gray !important;
-  font-size: 0.82 * _.$base-font-size !important;
-  line-height: 1.5 !important;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
 }
 
 .stepList {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 8px 18px 0;
+  gap: var(--space-150);
+  padding: var(--space-100) var(--space-250) 0;
 }
 
 .stepRow {
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
-  gap: 10px;
+  gap: var(--space-150);
   align-items: flex-start;
 
   & > span {
     display: grid;
     width: 28px;
     height: 28px;
-    color: _.$blue;
-    font-weight: 700;
+    color: var(--color-text-accent-strong);
+    font-weight: var(--font-weight-bold);
     place-items: center;
-    background: _.$blue-transparent-3;
-    border-radius: 50%;
+    background: var(--color-bg-accent-subtle);
+    border-radius: var(--radius-circle);
   }
 
   strong {
-    color: _.$deep-gray;
+    color: var(--color-text-primary);
   }
 
   p {
-    margin: 4px 0 0;
-    color: _.$gray;
-    line-height: 1.5;
-  }
-}
-
-.hiddenSdkButton {
-  margin-top: 18px;
-  width: 100%;
-
-  &,
-  & > :global(.button__content) {
-    color: _.$white !important;
+    margin: var(--space-050) 0 0;
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-normal);
   }
 }
 
 .submitHint {
-  margin: 8px 0 0;
-  color: _.$gray;
-  font-size: 0.88 * _.$base-font-size;
-  line-height: 1.5;
+  margin: var(--space-100) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
   text-align: center;
 }
 
 .submitHintExpired {
-  color: _.$red;
+  color: var(--color-text-danger);
 }
 
 .confirmSubscription {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid _.$noisy-white;
-  border-radius: 8px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
 
   & > div {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
-    gap: 14px;
+    gap: var(--space-200);
     align-items: baseline;
-    padding: 12px 0;
-    margin: 0 14px;
-    border-bottom: 1px solid _.$noisy-white;
+    padding: var(--space-150) 0;
+    margin: 0 var(--space-200);
+    border-bottom: 1px solid var(--color-border-subtle);
 
     &:last-child {
       border-bottom: none;
@@ -641,25 +603,25 @@
   }
 
   span {
-    color: _.$deep-gray;
-    font-size: 0.75 * _.$base-font-size;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xs);
   }
 
   strong {
     min-width: 0;
-    color: _.$gray;
-    font-size: 0.9 * _.$base-font-size;
-    line-height: 1.45;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
     text-align: right;
     overflow-wrap: anywhere;
   }
 }
 
 .confirmNotice {
-  margin: 2px 0 0;
-  color: _.$gray;
-  font-size: 0.88 * _.$base-font-size;
-  line-height: 1.6;
+  margin: var(--space-025) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
 }
 
 .paymentMethodSection {
@@ -667,14 +629,14 @@
 }
 
 .paymentMethodHighlight {
-  border-radius: 20px;
-  box-shadow: 0 0 0 2px _.$blue-transparent-1;
-  transition: box-shadow 0.3s ease;
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 0 0 2px var(--color-border-accent);
+  transition: box-shadow var(--duration-slow) var(--ease-standard);
 }
 
-@media (max-width: _.$width-512) {
+@include ds.down(sm) {
   .summaryHeader {
-    gap: 10px;
+    gap: var(--space-150);
   }
 
   .summaryGrid {
@@ -682,7 +644,7 @@
 
     & > div {
       grid-template-columns: 1fr;
-      gap: 4px;
+      gap: var(--space-050);
     }
 
     strong {
@@ -699,7 +661,7 @@
   }
 
   .quotaInline {
-    gap: 4px;
+    gap: var(--space-050);
 
     strong {
       text-align: left;
@@ -708,9 +670,9 @@
 
   .subscriptionManagement {
     grid-template-columns: 1fr;
-    padding: 14px;
+    padding: var(--space-200);
 
-    :global(.button) {
+    .stopAutoRenewalButton {
       width: 100%;
       min-width: 0;
       min-height: 44px;
@@ -720,7 +682,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .success {
-    animation-duration: 100ms;
+    animation-duration: var(--duration-fast);
     animation-name: noticeFadeIn;
   }
 }

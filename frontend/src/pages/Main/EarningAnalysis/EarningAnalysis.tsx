@@ -11,6 +11,7 @@ import {
 } from "../../../components";
 import * as Icons from "../../../icons";
 import type { AppDispatch, RootState } from "../../../redux/store";
+import { COLORS, FONT_SIZES } from "../../../styles/tokens";
 import Api from "../../../utils/api";
 import Env from "../../../utils/env";
 import { IRouter, navigateBack, withRouter } from "../../../utils/router";
@@ -68,17 +69,23 @@ class EarningAnalysis extends React.Component<Props, State> {
     return (
       <div className={styles.main}>
         {Util.isMobile && <SpeedDial />}
-        <ScrollThresholdContainer
-          className={styles.back_button_container}
-          scrolledClassName={styles.scrolled}
-        >
-          <RoundButton
-            onClick={() => navigateBack(this.props.router, Env.frontendRootPath)}
-            className="p-12"
-            hint_text="回儀表板"
-          >
-            <Icons.IconChevronLeft sideLength="16" />
-          </RoundButton>
+        <ScrollThresholdContainer>
+          {(isScrolled) => (
+            <div
+              className={`${styles.back_button_container} ${
+                isScrolled ? styles.scrolled : ""
+              }`}
+            >
+              <RoundButton
+                onClick={() => navigateBack(this.props.router, Env.frontendRootPath)}
+                size="l"
+                frosted={isScrolled}
+                hint_text="回儀表板"
+              >
+                <Icons.IconChevronLeft sideLength="16" />
+              </RoundButton>
+            </div>
+          )}
         </ScrollThresholdContainer>
         <div className={styles.floating_pill_wrapper}>
           <SegmentedControl
@@ -163,7 +170,7 @@ class EarningAnalysis extends React.Component<Props, State> {
     const categories = this.gainChartData.map((item) => item.name);
     const values = this.gainChartData.map((item) => ({
       value: item.value,
-      itemStyle: { color: item.value >= 0 ? "#4c8bf5" : "#f44336" },
+      itemStyle: { color: item.value >= 0 ? COLORS.chartUp : COLORS.chartDown },
     }));
     const totalGain = this.gainChartData.reduce(
       (sum, item) => sum + Math.abs(item.value),
@@ -189,7 +196,11 @@ class EarningAnalysis extends React.Component<Props, State> {
       yAxis: {
         type: "category",
         data: categories,
-        axisLabel: { color: "#aaa", fontSize: 11, hideOverlap: true },
+        axisLabel: {
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
+          hideOverlap: true,
+        },
         axisLine: { show: false },
         axisTick: { show: false },
         splitLine: { show: false },
@@ -204,8 +215,8 @@ class EarningAnalysis extends React.Component<Props, State> {
           label: {
             show: true,
             position: "right",
-            color: "#aaa",
-            fontSize: 11,
+            color: COLORS.textSecondary,
+            fontSize: FONT_SIZES.chartTick,
             formatter: (params: unknown) => {
               const param = params as { value: number };
               const value = Number(param.value);
@@ -253,7 +264,11 @@ class EarningAnalysis extends React.Component<Props, State> {
       yAxis: {
         type: "category",
         data: categories,
-        axisLabel: { color: "#aaa", fontSize: 11, hideOverlap: true },
+        axisLabel: {
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
+          hideOverlap: true,
+        },
         axisLine: { show: false },
         axisTick: { show: false },
         splitLine: { show: false },
@@ -263,13 +278,13 @@ class EarningAnalysis extends React.Component<Props, State> {
           name: "現金股利",
           type: "bar",
           data: values,
-          itemStyle: { color: "#4c8bf5", borderRadius: 10 },
+          itemStyle: { color: COLORS.chartAccent, borderRadius: 10 },
           barWidth: 40,
           label: {
             show: true,
             position: "right",
-            color: "#aaa",
-            fontSize: 11,
+            color: COLORS.textSecondary,
+            fontSize: FONT_SIZES.chartTick,
             formatter: (params: unknown) => {
               const param = params as { value: number };
               const value = Number(param.value);

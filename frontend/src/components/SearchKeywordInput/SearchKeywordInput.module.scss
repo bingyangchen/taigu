@@ -1,21 +1,19 @@
-@use "../../design_system" as _;
-
 .main {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-100);
   background-color: transparent;
   width: 100%;
   margin: 0;
-  color: _.$gray;
+  color: var(--color-text-secondary);
   &.m {
     height: 100%;
-    padding: 0 12px;
-    border-radius: 16px;
+    padding: 0 var(--space-150);
+    border-radius: var(--radius-xl);
   }
   &.l {
     height: 55px;
-    padding: 0 15px;
+    padding: 0 var(--space-200);
     border-radius: 0;
     background-color: transparent;
     backdrop-filter: none;
@@ -34,8 +32,6 @@
     font-family: inherit;
     outline: none;
     background-color: transparent;
-    &::placeholder {
-      color: _.$light-gray;
-    }
+    color: var(--color-text-primary);
   }
 }

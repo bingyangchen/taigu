@@ -12,6 +12,7 @@ import type {
 import {
   categoryAxisStyle,
   CHART_COLORS,
+  CHART_TICK_FONT_SIZE,
   type DataIndexParam,
   makeAria,
   makeValueAxis,
@@ -27,7 +28,7 @@ import {
 } from "../components";
 import shared from "../components.module.scss";
 import { formatCount, formatMonth, formatShortDate, formatShortMonth } from "../format";
-import tokens from "../tokens.module.scss";
+import layout from "../layout.module.scss";
 import useAdminData from "../useAdminData";
 
 // Listed in this order on the page.
@@ -41,10 +42,10 @@ const STATUS_ENTRIES = Object.entries(STATUS_KEY_TO_LABEL) as [
   SubscriptionStatusKey,
   string,
 ][];
-const PAYMENT_CHART_HEIGHT = tokens.adminSmallChartHeight;
+const PAYMENT_CHART_HEIGHT = layout.smallChartHeight;
 
 // Below this width the count labels on the bars overlap each other.
-const PAYMENT_LABEL_MIN_WIDTH = parseFloat(tokens.adminChartLabelMinWidth);
+const PAYMENT_LABEL_MIN_WIDTH = parseFloat(layout.chartLabelMinWidth);
 
 export default function Subscriptions(): React.ReactElement {
   const subscriptions = useAdminData<SubscriptionsResponse>("admin/subscriptions");
@@ -231,15 +232,15 @@ function makePaymentChartOption(
         data: payments.map((payment, i) => ({
           value: payment.amount,
           itemStyle: {
-            color: i === last ? CHART_COLORS.blueLight : CHART_COLORS.blue,
+            color: i === last ? CHART_COLORS.accentFaint : CHART_COLORS.accent,
             borderRadius: [2, 2, 0, 0],
           },
         })),
         label: {
           show: showsCountLabels,
           position: "top",
-          color: CHART_COLORS.gray,
-          fontSize: 10,
+          color: CHART_COLORS.secondaryText,
+          fontSize: CHART_TICK_FONT_SIZE,
           formatter: (params: DataIndexParam) =>
             `${formatCount(payments[params.dataIndex].count)} 筆`,
         },

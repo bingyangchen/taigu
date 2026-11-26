@@ -1,15 +1,13 @@
-@use "../../design_system" as _;
-
 .main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: _.$header-height;
+  height: var(--layout-header-height);
   width: 100%;
-  padding: 0 12px;
-  z-index: 4;
+  padding: 0 var(--space-150);
+  z-index: var(--z-header);
   & > .title {
-    font-size: 1.1 * _.$base-font-size;
-    padding: 0 12px;
+    font-size: var(--font-size-page-title);
+    padding: 0 var(--space-150);
   }
 }

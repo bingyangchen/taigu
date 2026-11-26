@@ -9,7 +9,6 @@ import {
   BottomSheet,
   Button,
   FullLogo,
-  LabeledInputV2,
   LoadingIcon,
   Modal,
 } from "../../../components";
@@ -18,6 +17,7 @@ import { changeAccountBinding } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
+import { COLORS } from "../../../styles/tokens";
 import Api from "../../../utils/api";
 import { getHideModalCallback } from "../../../utils/modal";
 import Nav from "../../../utils/nav";
@@ -106,13 +106,14 @@ class AccountBinding extends React.Component<Props, State> {
               noFooter
               discardButtonProps={{
                 children: null,
-                className: "",
                 onClick: getHideModalCallback(this),
               }}
             >
               <div className={styles.model_body}>
                 <Button
-                  className="white border l"
+                  variant="white"
+                  size="l"
+                  bordered
                   waiting={this.props.isWaiting}
                   onClick={this.handleClickGoogleLogin}
                 >
@@ -125,16 +126,14 @@ class AccountBinding extends React.Component<Props, State> {
         <div className={styles.main}>
           <div className={styles.logo_container}>
             <FullLogo size="l" />
-            <Icons.IconLink sideLength="16px" color="gray" />
+            <Icons.IconLink sideLength="16px" color={COLORS.textSecondary} />
             <img className={styles.google_logo} src={googleLogo} alt="" />
           </div>
           <BeautifulBlock>
-            <LabeledInputV2
-              title="綁定的帳號"
-              type="text"
-              value={this.props.email}
-              disabled
-            />
+            <div className={styles.bound_account}>
+              <span>綁定的帳號</span>
+              <span className={styles.bound_account_email}>{this.props.email}</span>
+            </div>
             <BeautifulRow
               onClick={isWaiting ? undefined : this.handleClickChangeBinding}
             >

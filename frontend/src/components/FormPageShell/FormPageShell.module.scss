@@ -1,4 +1,4 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   display: flex;
@@ -7,10 +7,10 @@
   height: 100%;
   min-height: 100%;
   overflow: hidden;
-  background-color: _.$white;
+  background-color: var(--color-bg-surface);
   user-select: none;
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     background-color: transparent;
   }
 }
@@ -24,15 +24,15 @@
   align-items: center;
   flex: 0 0 auto;
   min-height: 60px;
-  padding: 0 13px;
-  background-color: _.$white;
-  border-bottom: 1px solid _.$black-transparent-3;
+  padding: 0 var(--space-150);
+  background-color: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
 
   & > h1 {
     margin: 0;
-    color: _.$gray;
-    font-size: _.$base-font-size;
-    font-weight: normal;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-regular);
     text-align: center;
   }
 }
@@ -51,9 +51,9 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-150);
   min-height: 0;
-  padding: 2px 25px 5px;
+  padding: var(--space-025) var(--space-300) var(--space-075);
   overflow: auto;
   overscroll-behavior: contain;
 }
@@ -61,7 +61,6 @@
 .submit_button {
   min-width: 48px;
   min-height: 44px;
-  padding: 8px 6px;
-  color: _.$blue !important;
-  font-weight: 600;
+  padding: var(--space-100) var(--space-075);
+  font-weight: var(--font-weight-semibold);
 }

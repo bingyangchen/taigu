@@ -1,4 +1,4 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   height: 100dvh;
@@ -10,51 +10,48 @@
     left: 0;
     display: flex;
     align-items: center;
-    padding: 15px 30px;
-    background-color: _.$white;
-    border-bottom: 1px solid _.$noisy-white;
-    @media (max-width: _.$width-512) {
-      padding: 15px 20px;
+    padding: var(--space-200) var(--space-400);
+    background-color: var(--color-bg-surface);
+    border-bottom: 1px solid var(--color-border-subtle);
+    @include ds.down(sm) {
+      padding: var(--space-200) var(--space-250);
     }
     & > h1 {
-      padding: 0 10px;
+      padding: 0 var(--space-150);
       margin: 0;
-      font-size: 1.3 * _.$base-font-size;
-      color: _.$gray;
-      font-weight: normal;
+      font-size: var(--font-size-xl);
+      color: var(--color-text-secondary);
+      font-weight: var(--font-weight-regular);
     }
   }
   & > .body {
     max-width: 720px;
     margin: 0 auto;
-    padding: 30px;
+    padding: var(--space-400);
     padding-bottom: 15dvh;
-    line-height: 2rem;
+    line-height: var(--line-height-relaxed);
     text-align: justify;
     & * {
-      user-select: text !important;
+      user-select: text;
     }
     & > .effective_date {
-      color: _.$gray;
-      font-size: 0.9 * _.$base-font-size;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
     }
     & > h2 {
-      margin-top: 30px;
-      font-size: 1.3 * _.$base-font-size;
+      margin-top: var(--space-400);
+      font-size: var(--font-size-xl);
       &:not(:first-of-type) {
-        margin-top: 50px;
+        margin-top: var(--space-600);
       }
     }
     & > p {
-      @media (max-width: _.$width-512) {
-        font-size: 0.9 * _.$base-font-size;
-      }
       & > ul {
         margin: 0;
-        padding: 10px 0 0 20px;
+        padding: var(--space-150) 0 0 var(--space-250);
       }
       & > a {
-        color: _.$blue;
+        color: var(--color-text-accent);
         text-decoration: underline;
       }
     }

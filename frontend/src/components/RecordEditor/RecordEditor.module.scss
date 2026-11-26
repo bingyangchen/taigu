@@ -1,9 +1,9 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
-$narrow: _.$width-960;
+$saved-mark-duration: 480ms;
 
 @mixin narrow {
-  @media (max-width: $narrow) {
+  @include ds.down(lg) {
     @content;
   }
 
@@ -34,7 +34,7 @@ $narrow: _.$width-960;
   position: fixed;
   right: 0;
   left: 0;
-  z-index: 5;
+  z-index: var(--z-header-raised);
 }
 
 .page_body {
@@ -49,7 +49,7 @@ $narrow: _.$width-960;
   min-height: 0;
   overflow: hidden;
 
-  @media (max-width: $narrow) {
+  @include ds.down(lg) {
     flex-direction: column;
     overflow: auto;
     overscroll-behavior: contain;
@@ -67,36 +67,36 @@ $narrow: _.$width-960;
   flex: 1;
   flex-direction: column;
   min-width: 0;
-  padding: 0 25px 24px;
+  padding: 0 var(--space-300) var(--space-300);
   overflow: auto;
 
-  @media (max-width: $narrow) {
+  @include ds.down(lg) {
     flex: none;
     overflow: visible;
   }
 
   .narrow_page & {
     flex: none;
-    gap: 10px;
-    padding: 12px 12px 24px;
+    gap: var(--space-150);
+    padding: var(--space-150) var(--space-150) var(--space-300);
     overflow: visible;
-    background-color: _.$page-bg;
+    background-color: var(--color-bg-page);
   }
 }
 
 .step {
   &:not(.collapsible) + &:not(.collapsible) {
-    border-top: 1px solid _.$black-transparent-3;
+    border-top: 1px solid var(--color-border-subtle);
   }
 
   &.collapsible {
-    border: 1px solid _.$light-gray;
-    border-radius: 10px;
-    background-color: _.$white;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-surface);
 
     &[data-state="open"] {
       border-color: transparent;
-      outline: 2px solid _.$blue;
+      outline: 2px solid var(--color-border-accent);
     }
 
     &[data-state="todo"] {
@@ -110,9 +110,9 @@ $narrow: _.$width-960;
   display: grid;
   grid-template-columns: 24px 1fr auto;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-150);
   width: 100%;
-  padding: 18px 0 0;
+  padding: var(--space-250) 0 0;
   border: none;
   background: transparent;
   color: inherit;
@@ -121,18 +121,18 @@ $narrow: _.$width-960;
   text-align: left;
 
   .collapsible & {
-    padding: 12px 12px 0;
+    padding: var(--space-150) var(--space-150) 0;
   }
 
   .collapsible:not([data-state="open"]) & {
     min-height: 56px;
-    padding-bottom: 12px;
-    border-radius: 10px;
+    padding-bottom: var(--space-150);
+    border-radius: var(--radius-lg);
     cursor: pointer;
 
     @media (hover: hover) {
       &:hover {
-        background-color: _.$black-transparent-4;
+        background-color: var(--color-bg-hover);
       }
     }
   }
@@ -143,82 +143,79 @@ $narrow: _.$width-960;
   width: 22px;
   height: 22px;
   place-items: center;
-  border-radius: 50%;
-  background-color: _.$blue;
-  color: _.$white;
-  font-size: 0.75 * _.$base-font-size;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-bg-accent);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
 
   .collapsible[data-state="done"] & {
-    background-color: _.$blue-transparent-3;
-    color: _.$blue;
+    background-color: var(--color-bg-accent-subtle);
+    color: var(--color-text-accent-strong);
   }
 
   .collapsible[data-state="todo"] & {
-    background-color: _.$black-transparent-3;
-    color: _.$gray;
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-secondary);
   }
 }
 
 .step_title {
   display: grid;
-  gap: 2px;
+  gap: var(--space-025);
   min-width: 0;
   margin: 0;
   font-size: inherit;
   font-weight: inherit;
 
   & > small {
-    color: _.$deep-gray;
-    font-size: 0.9 * _.$base-font-size;
-    font-weight: bold;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
   }
 
   .collapsible:not([data-state="open"]) & > small {
-    color: _.$gray;
-    font-size: 0.8 * _.$base-font-size;
-    font-weight: normal;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-regular);
   }
 }
 
 .step_summary {
-  color: _.$deep-gray;
+  color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 
   [data-state="todo"] & {
-    color: _.$gray;
+    color: var(--color-text-secondary);
   }
 }
 
 .step_flag {
-  margin-top: 2px;
-  padding: 0 !important;
-  background: none !important;
-  font-size: 0.75 * _.$base-font-size;
+  margin-top: var(--space-025);
 }
 
 .step_edit {
   display: grid;
   min-height: 44px;
-  padding: 0 6px;
+  padding: 0 var(--space-075);
   place-items: center;
-  color: _.$blue;
-  font-size: 0.85 * _.$base-font-size;
-  font-weight: bold;
+  color: var(--color-text-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .step_body {
   display: grid;
-  gap: 16px;
-  padding: 12px 0 20px 34px;
+  gap: var(--space-200);
+  padding: var(--space-150) 0 var(--space-250) var(--space-400);
 
-  @media (max-width: $narrow) {
+  @include ds.down(lg) {
     padding-left: 0;
   }
 
   .collapsible & {
-    padding: 12px;
+    padding: var(--space-150);
   }
 
   &[hidden] {
@@ -228,7 +225,7 @@ $narrow: _.$width-960;
 
 .field {
   display: grid;
-  gap: 6px;
+  gap: var(--space-075);
   min-width: 0;
 }
 
@@ -239,65 +236,71 @@ $narrow: _.$width-960;
 
 .field_hint {
   margin: 0;
-  padding: 0 10px;
-  color: _.$gray;
-  font-size: 0.8 * _.$base-font-size;
-  line-height: 1.5;
+  padding: 0 var(--space-150);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
 }
 
 .notice {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: var(--space-075);
   margin: 0;
-  padding: 0 10px;
-  font-size: 0.8 * _.$base-font-size;
-  line-height: 1.5;
+  padding: 0 var(--space-150);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
 
   & > svg {
     flex: none;
-    margin-top: 3px;
+    margin-top: var(--space-050);
   }
 }
 
 .notice_error {
-  color: _.$red;
+  color: var(--color-text-danger);
 }
 
 .notice_warning {
-  padding: 8px 10px;
-  border-radius: 10px;
-  background-color: _.$yellow-transparent;
-  color: _.$deep-gray;
+  padding: var(--space-100) var(--space-150);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg-warning-subtle);
+  color: var(--color-text-primary);
 
   & > svg {
-    fill: _.$yellow;
+    fill: var(--color-icon-warning);
   }
+}
+
+// After the tones, so an inline notice drops the warning's box.
+.notice_inline {
+  padding: 0;
+  background-color: transparent;
 }
 
 // Overrides `DestructiveActionSection`, whose own spacing assumes a plain form.
 .steps .delete_section {
-  margin: 8px 0 0 34px;
-  padding-top: 20px;
-  border-top: 1px solid _.$black-transparent-3;
+  margin: var(--space-100) 0 0 var(--space-400);
+  padding-top: var(--space-250);
+  border-top: 1px solid var(--color-border-subtle);
 
   button {
     min-height: 44px;
   }
 
-  @media (max-width: $narrow) {
+  @include ds.down(lg) {
     margin-left: 0;
   }
 
   .narrow_page & {
     margin: 0;
-    padding: 12px;
-    border: 1px solid _.$light-gray;
-    border-radius: 10px;
-    background-color: _.$white;
+    padding: var(--space-150);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-surface);
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: var(--space-150);
 
     button {
       width: 100%;
@@ -311,9 +314,9 @@ $narrow: _.$width-960;
   flex-direction: column;
   width: 300px;
   min-height: 0;
-  padding: 0 25px 25px;
+  padding: 0 var(--space-300) var(--space-300);
   overflow-y: auto;
-  border-left: 1px solid _.$black-transparent-3;
+  border-left: 1px solid var(--color-border-subtle);
   font-variant-numeric: tabular-nums;
 
   @include narrow {
@@ -324,17 +327,18 @@ $narrow: _.$width-960;
     z-index: 2;
     width: auto;
     margin-top: auto;
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    border-top: 1px solid _.$black-transparent-3;
+    padding: var(--space-150) var(--space-200)
+      calc(var(--space-150) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-border-subtle);
     border-left: none;
-    background-color: _.$white;
+    background-color: var(--color-bg-surface);
   }
 
   &.keyboard_open {
     flex-direction: row;
     align-items: center;
-    gap: 12px;
-    padding-block: 8px;
+    gap: var(--space-150);
+    padding-block: var(--space-100);
 
     .summary_total {
       flex: 1;
@@ -345,13 +349,12 @@ $narrow: _.$width-960;
       border: none;
 
       & > strong:not(.placeholder) {
-        font-size: 1.1 * _.$base-font-size;
+        font-size: var(--font-size-lg);
       }
     }
 
     .primary_button {
-      // Overrides the `width: 100% !important` below.
-      width: auto !important;
+      width: auto;
       // Keeps the button at the right edge when the summary has no total
       // to fill the row, as in the trade plan editor.
       margin: 0 0 0 auto;
@@ -360,67 +363,66 @@ $narrow: _.$width-960;
 }
 
 .summary_heading {
-  margin: 0 0 10px;
-  color: _.$gray;
-  font-size: 0.8 * _.$base-font-size;
+  margin: 0 0 var(--space-150);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
 }
 
 .summary_lines {
   display: grid;
-  gap: 8px;
-  margin: 0 0 12px;
-  font-size: 0.9 * _.$base-font-size;
+  gap: var(--space-100);
+  margin: 0 0 var(--space-150);
+  font-size: var(--font-size-sm);
 
   & > div {
     display: flex;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--space-100);
   }
 
   dt {
-    color: _.$gray;
+    color: var(--color-text-secondary);
   }
 
   dd {
     margin: 0;
-    color: _.$deep-gray;
+    color: var(--color-text-primary);
   }
 
   @include narrow {
     display: flex;
     flex-wrap: wrap;
-    gap: 2px 12px;
-    margin: 0 0 4px;
-    font-size: 0.8 * _.$base-font-size;
+    gap: var(--space-025) var(--space-150);
+    margin: 0 0 var(--space-050);
   }
 }
 
 .summary_total {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-025);
 
   & > span {
-    color: _.$gray;
-    font-size: 0.8 * _.$base-font-size;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
   }
 
   & > strong {
-    color: _.$deep-gray;
-    font-size: 1.8 * _.$base-font-size;
-    line-height: 1.2;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-3xl);
+    line-height: var(--line-height-tight);
 
     & > small {
-      margin-left: 3px;
-      color: _.$gray;
-      font-size: 0.8 * _.$base-font-size;
-      font-weight: normal;
+      margin-left: var(--space-050);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-regular);
     }
 
     &.placeholder {
-      color: _.$gray;
-      font-size: 0.85 * _.$base-font-size;
-      font-weight: normal;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-regular);
     }
   }
 
@@ -428,67 +430,63 @@ $narrow: _.$width-960;
     flex-direction: row;
     align-items: baseline;
     justify-content: space-between;
-
-    & > strong:not(.placeholder) {
-      font-size: 1.5 * _.$base-font-size;
-    }
   }
 }
 
 .summary_placeholder {
   margin: 0;
-  color: _.$gray;
-  font-size: 0.85 * _.$base-font-size;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .summary_holding {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  font-size: 0.9 * _.$base-font-size;
+  gap: var(--space-075);
+  margin-top: var(--space-150);
+  font-size: var(--font-size-sm);
 
   @include narrow {
-    margin-top: 4px;
+    margin-top: var(--space-050);
   }
 }
 
 .muted {
-  color: _.$gray;
+  color: var(--color-text-secondary);
 }
 
 .summary_alert {
-  margin-top: 12px;
+  margin-top: var(--space-150);
 }
 
 .summary_missing {
   margin: auto 0 0;
-  padding-top: 12px;
-  color: _.$gray;
-  font-size: 0.8 * _.$base-font-size;
+  padding-top: var(--space-150);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
 
   @include narrow {
-    margin-top: 6px;
+    margin-top: var(--space-075);
     padding-top: 0;
   }
 }
 
 .primary_button {
-  width: 100% !important;
-  margin-top: 12px;
+  width: 100%;
+  margin-top: var(--space-150);
 
   .summary > & {
     margin-top: auto;
   }
 
   .summary_missing + & {
-    margin-top: 12px;
+    margin-top: var(--space-150);
   }
 
   @include narrow {
     .summary > & {
-      margin-top: 10px;
+      margin-top: var(--space-150);
     }
   }
 }
@@ -498,32 +496,33 @@ $narrow: _.$width-960;
   flex: 1;
   flex-direction: column;
   align-items: center;
-  padding: 32px 25px 25px;
+  padding: var(--space-400) var(--space-300) var(--space-300);
   overflow: auto;
   text-align: center;
 
   & h2 {
-    margin: 14px 0 0;
-    color: _.$deep-gray;
-    font-size: 1.2 * _.$base-font-size;
+    margin: var(--space-200) 0 0;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xl);
   }
 }
 
 .saved_mark {
-  animation: saved-mark-in 480ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: saved-mark-in $saved-mark-duration var(--ease-out) both;
   display: grid;
   width: 56px;
   height: 56px;
   place-items: center;
-  border-radius: 50%;
-  background-color: _.$blue-transparent-3;
-  color: _.$blue;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-bg-accent-subtle);
+  color: var(--color-text-accent-strong);
 }
 
 .saved h2,
 .saved_subtitle,
 .saved_card {
-  animation: saved-content-in 360ms 120ms ease-out both;
+  animation: saved-content-in var(--duration-slow) var(--duration-fast) var(--ease-out)
+    both;
 }
 
 @keyframes saved-mark-in {
@@ -557,39 +556,39 @@ $narrow: _.$width-960;
 }
 
 .saved_subtitle {
-  margin: 6px 0 0;
-  color: _.$gray;
+  margin: var(--space-075) 0 0;
+  color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .saved_card {
   width: 100%;
   max-width: 420px;
-  margin: 20px 0 0;
-  padding: 0 14px;
-  border: 1px solid _.$light-gray;
-  border-radius: 10px;
+  margin: var(--space-250) 0 0;
+  padding: 0 var(--space-200);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
   text-align: left;
 
   & > div {
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    padding: 12px 0;
+    gap: var(--space-150);
+    padding: var(--space-150) 0;
     font-variant-numeric: tabular-nums;
 
     & + div {
-      border-top: 1px solid _.$black-transparent-3;
+      border-top: 1px solid var(--color-border-subtle);
     }
   }
 
   dt {
-    color: _.$gray;
+    color: var(--color-text-secondary);
   }
 
   dd {
     margin: 0;
-    color: _.$deep-gray;
+    color: var(--color-text-primary);
     text-align: right;
   }
 }
@@ -597,19 +596,19 @@ $narrow: _.$width-960;
 .saved_actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: var(--space-150);
   width: 100%;
   max-width: 420px;
   margin-top: auto;
-  padding-top: 24px;
+  padding-top: var(--space-300);
 
   & > * {
-    width: 100% !important;
+    width: 100%;
   }
 }
 
 .saved_note {
-  margin: 10px 0 0;
-  color: _.$gray;
-  font-size: 0.8 * _.$base-font-size;
+  margin: var(--space-150) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
 }

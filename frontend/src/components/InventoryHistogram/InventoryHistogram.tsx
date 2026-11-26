@@ -4,6 +4,8 @@ import ReactECharts from "echarts-for-react";
 import * as ecStat from "echarts-stat";
 import React from "react";
 
+import { COLORS, FONT_SIZES } from "../../styles/tokens";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 echarts.registerTransform((ecStat as any).transform.histogram);
 
@@ -41,8 +43,12 @@ export default class InventoryHistogram extends React.Component<Props, State> {
       ],
       xAxis: {
         type: "category",
-        axisLabel: { color: "#9aa7b5", hideOverlap: true },
-        axisLine: { show: true, lineStyle: { color: "#dce5ef", width: 1 } },
+        axisLabel: {
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
+          hideOverlap: true,
+        },
+        axisLine: { show: true, lineStyle: { color: COLORS.borderDefault, width: 1 } },
         axisTick: { show: false },
         splitLine: { show: false },
       },
@@ -52,7 +58,8 @@ export default class InventoryHistogram extends React.Component<Props, State> {
         axisTick: { show: false },
         splitLine: { show: false },
         axisLabel: {
-          color: "#9aa7b5",
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
           formatter: (value: number) => {
             if (value >= 1_000) return Math.round(value / 1_000) + "K";
             return value.toString();
@@ -63,21 +70,18 @@ export default class InventoryHistogram extends React.Component<Props, State> {
         {
           type: "bar",
           datasetIndex: 1,
-          itemStyle: { color: "rgba(76, 139, 245, 0.38)", borderRadius: [3, 3, 0, 0] },
+          itemStyle: { color: COLORS.chartAccentSoft, borderRadius: [3, 3, 0, 0] },
           barWidth: "100%",
         },
       ],
       tooltip: {
         show: true,
         trigger: "axis",
-        axisPointer: {
-          type: "shadow",
-          shadowStyle: { color: "rgba(76, 139, 245, 0.08)" },
-        },
-        backgroundColor: "rgba(255, 255, 255, 0.96)",
-        borderColor: "#dbe4ef",
+        axisPointer: { type: "shadow", shadowStyle: { color: COLORS.chartAccentWash } },
+        backgroundColor: COLORS.bgSurface,
+        borderColor: COLORS.borderDefault,
         borderWidth: 1,
-        textStyle: { color: "#334155", fontSize: 12 },
+        textStyle: { color: COLORS.textPrimary, fontSize: FONT_SIZES.xs },
         formatter: (params: unknown) => {
           if (!Array.isArray(params) || params.length === 0) return "";
           const param = params[0] as { value: number[] };

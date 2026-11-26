@@ -193,7 +193,10 @@ export default function IssueReports({
       {status === "loaded" && moreStatus !== "failed" && nextCursor && (
         <div className={styles.more}>
           <Button
-            className={`white border s ${shared.touch_button}`}
+            variant="white"
+            size="s"
+            bordered
+            className={shared.touch_button}
             waiting={moreStatus === "loading"}
             onClick={() => void loadMore()}
           >

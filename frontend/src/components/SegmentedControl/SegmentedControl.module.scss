@@ -1,5 +1,4 @@
-@use "sass:color";
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   display: flex;
@@ -17,37 +16,36 @@
   align-items: center;
   height: 40px;
   width: calc(var(--option-count) * var(--option-width));
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
 .subtle .list {
   // The selected option sits inside a ring of the track, so its edge stays
   // visible on a white page.
-  width: calc(var(--option-count) * var(--option-width) + 6px);
-  height: 50px;
-  padding: 3px;
-  background-color: _.$black-transparent-3;
+  // The track's padding plus a 44px option.
+  width: calc(var(--option-count) * var(--option-width) + 2 * var(--space-050));
+  height: calc(44px + 2 * var(--space-050));
+  padding: var(--space-050);
+  background-color: var(--color-bg-muted);
 }
 
 .subtle .sliding_background {
-  top: 3px;
-  left: 3px;
-  height: calc(100% - 6px);
+  top: var(--space-050);
+  left: var(--space-050);
+  height: calc(100% - 2 * var(--space-050));
 }
 
 .floating .list {
-  --option-gap: 3px;
-  gap: 3px;
+  --option-gap: var(--space-050);
+  gap: var(--option-gap);
   height: auto;
   width: fit-content;
-  padding: 4px;
-  border: 0.5px solid _.$noisy-white;
-  border-radius: 20px;
-  background-color: _.$white-transparent;
-  box-shadow:
-    0 4px 16px _.$black-transparent-2,
-    0 2px 8px _.$black-transparent-3;
+  padding: var(--space-050);
+  border: 0.5px solid var(--color-border-subtle);
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-bg-frosted);
+  box-shadow: var(--shadow-md);
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
 }
@@ -56,9 +54,9 @@
   position: absolute;
   height: 40px;
   width: var(--option-width);
-  border-radius: 100px;
-  background-color: _.$white;
-  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-bg-surface);
+  transition: transform var(--duration-base) var(--ease-out);
   z-index: 0;
   transform: translateX(
     calc(var(--active-index) * (var(--option-width) + var(--option-gap)))
@@ -66,12 +64,12 @@
 }
 
 .floating .sliding_background {
-  top: 4px;
-  left: 4px;
-  height: calc(100% - 8px);
-  background-color: _.$white;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px _.$black-transparent-2;
+  top: var(--space-050);
+  left: var(--space-050);
+  height: calc(100% - 2 * var(--space-050));
+  background-color: var(--color-bg-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
 }
 
 .trigger {
@@ -83,45 +81,45 @@
   width: max-content;
   min-width: var(--option-width);
   border: none;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   background: transparent;
-  color: color.mix(_.$deep-gray, _.$gray, 65%);
+  color: var(--color-text-secondary);
   font: inherit;
-  font-size: 0.8 * _.$base-font-size;
+  font-size: var(--font-size-xs);
   letter-spacing: inherit;
   z-index: 1;
-  transition: color 0.3s ease;
+  transition: color var(--duration-slow) var(--ease-standard);
   outline: none;
   white-space: nowrap;
 
   &[data-state="active"] {
-    color: _.$deep-gray;
+    color: var(--color-text-primary);
   }
 
   &:focus-visible {
-    box-shadow: inset var(--focus-ring);
+    @include ds.focus-ring-inset;
   }
 
   @media (hover: hover) {
     &:hover {
-      color: _.$deep-gray;
+      color: var(--color-text-primary);
     }
   }
 }
 
 .floating .trigger {
-  padding: 6px 8px;
-  border-radius: 16px;
-  font-size: 0.7 * _.$base-font-size;
+  padding: var(--space-075) var(--space-100);
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-2xs);
 
   &[data-state="active"] {
-    color: _.$deep-gray;
-    font-weight: 500;
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
   }
 
   @media (hover: hover) {
     &:hover {
-      color: _.$deep-gray;
+      color: var(--color-text-primary);
     }
   }
 }

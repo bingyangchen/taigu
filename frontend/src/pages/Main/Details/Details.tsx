@@ -44,6 +44,7 @@ import {
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { store } from "../../../redux/store";
+import { COLORS } from "../../../styles/tokens";
 import type { MarketTab, MaterialFact } from "../../../types";
 import { formatDateWithWeekday } from "../../../utils/date";
 import Env from "../../../utils/env";
@@ -346,18 +347,20 @@ class Details extends React.Component<Props, State> {
         {this.activeModal}
         <div className={styles.main} ref={this.mainRef}>
           {Util.isMobile && (
-            <ScrollThresholdContainer
-              className={styles.mobile_back_button_container}
-              scrolledClassName={styles.scrolled}
-            >
-              <RoundButton
-                onClick={this.returnToList}
-                className="p-12"
-                hint_text="回列表"
-                aria-label="回列表"
-              >
-                <Icons.IconChevronLeft sideLength="16" />
-              </RoundButton>
+            <ScrollThresholdContainer>
+              {(isScrolled) => (
+                <div className={styles.mobile_back_button_container}>
+                  <RoundButton
+                    onClick={this.returnToList}
+                    size="l"
+                    frosted={isScrolled}
+                    hint_text="回列表"
+                    aria-label="回列表"
+                  >
+                    <Icons.IconChevronLeft sideLength="16" />
+                  </RoundButton>
+                </div>
+              )}
             </ScrollThresholdContainer>
           )}
           {Util.isMobile && (
@@ -574,7 +577,7 @@ class Details extends React.Component<Props, State> {
                 to={`${Env.frontendRootPath}records?sid=${this.sid}`}
                 className={styles.action_button}
               >
-                <Icons.IconClockHistory sideLength="20" color="#444" />
+                <Icons.IconClockHistory sideLength="20" color={COLORS.textPrimary} />
                 <span>查看交易紀錄</span>
                 {this.tradeRecordCount === 0 && <em>尚無紀錄</em>}
               </Link>
@@ -582,7 +585,7 @@ class Details extends React.Component<Props, State> {
                 to={`${Env.frontendRootPath}plans?sid=${this.sid}`}
                 className={styles.action_button}
               >
-                <Icons.IconThumbtack sideLength="20" color="#444" />
+                <Icons.IconThumbtack sideLength="20" color={COLORS.textPrimary} />
                 <span>查看買賣計畫</span>
                 {this.tradePlanCount > 0 && <em>{this.tradePlanCount} 個計畫</em>}
               </Link>
@@ -707,7 +710,7 @@ class Details extends React.Component<Props, State> {
           title="公司資訊"
           discardButtonProps={{
             children: "", // no use
-            className: "transparent xs", // no use
+            variant: "transparent", // no use
             onClick: () =>
               this.setState({ activeModalName: null, activeMaterialFact: null }),
           }}
@@ -1109,7 +1112,7 @@ class Details extends React.Component<Props, State> {
     return this.state.activeMaterialFact ? (
       <>
         <RoundButton
-          className="p-12"
+          size="l"
           onClick={() => this.setState({ activeMaterialFact: null })}
         >
           <Icons.IconChevronLeft />
@@ -1156,7 +1159,7 @@ class Details extends React.Component<Props, State> {
                   </div>
                   <div className={styles.right}>
                     <RoundButton
-                      className="p-12"
+                      size="l"
                       onClick={() => this.setState({ activeMaterialFact: m })}
                     >
                       <Icons.IconChevronRight />

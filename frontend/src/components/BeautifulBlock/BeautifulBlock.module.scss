@@ -1,22 +1,20 @@
-@use "../../design_system" as _;
-
 .main {
   display: flex;
   flex-direction: column;
   width: min(100%, 720px);
   height: fit-content;
-  margin: 15px 0;
+  margin: var(--space-200) 0;
   overflow-x: hidden;
   & > .title {
-    font-size: 0.8 * _.$base-font-size;
-    font-weight: 500;
-    padding: 0 15px;
-    margin: 0 0 10px;
-    color: _.$gray;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    padding: 0 var(--space-200);
+    margin: 0 0 var(--space-150);
+    color: var(--color-text-secondary);
   }
   & > .content {
-    background-color: _.$white;
-    border-radius: 20px;
+    background-color: var(--color-bg-surface);
+    border-radius: var(--radius-2xl);
     overflow: hidden;
   }
 }

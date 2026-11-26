@@ -1,24 +1,22 @@
-@use "../../design_system" as _;
-
 .sheet_content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-150);
 }
 
 .sheet_header {
-  padding: 0 25px;
+  padding: 0 var(--space-300);
 
   & > h2 {
     margin: 0;
-    color: _.$gray;
-    font-size: _.$base-font-size;
-    font-weight: normal;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-regular);
   }
 }
 
 .sheet_body {
-  padding: 0 25px;
+  padding: 0 var(--space-300);
 }
 
 .sheet_footer {
@@ -26,7 +24,7 @@
   bottom: 0;
   display: flex;
   justify-content: flex-end;
-  gap: 15px;
-  padding: 3px 25px 15px;
-  background-color: _.$white;
+  gap: var(--space-200);
+  padding: var(--space-050) var(--space-300) var(--space-200);
+  background-color: var(--color-bg-surface);
 }

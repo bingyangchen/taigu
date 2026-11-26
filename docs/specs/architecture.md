@@ -344,6 +344,65 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 - 窄版的編輯頁用 `visualViewport` 判斷鍵盤有沒有彈出：使用者沒有放大頁面、`visualViewport` 的高度又比 `innerHeight` 少 150px 以上時，前端當作鍵盤彈出，前端把編輯頁固定在 `visualViewport` 的範圍內，讓主要按鈕留在鍵盤上方。iOS Safari、iOS 的 PWA 與 Android Chrome 上的實際行為還沒有實測，要測的項目記在 roadmap 的「介面回饋與導覽修正」。
 - 日期欄位是 `type="date"` 的 input，前端在 `change` 事件的值是空字串時，把欄位恢復成原本的日期。2026-11 在 macOS 的 Chrome 158 實測，焦點在日期欄位時按 Backspace，Chrome 會清空年、月、日其中一格，並觸發值是空字串的 `change` 事件，恢復之後欄位仍是原本的日期；iOS Safari 與 Android Chrome 的日期選擇器的「清除」還沒有實測，要測的項目記在 roadmap 的「介面回饋與導覽修正」。
 
+### Design Token
+
+前端的樣式從 `frontend/src/styles/` 取值。Token 分成原始色與用途 token 兩層，`tokens/_palette.scss` 的原始色只給 `tokens/` 用，元件只用用途 token。每一類 token 都以 Sass map 定義，`base/_root.scss` 把它們在 `:root` 輸出成 CSS custom properties，元件寫 `var(--color-text-secondary)` 讀取。
+
+`tokens.module.scss` 用 `:export` 把同一份 map 交給 TypeScript，ECharts 的選項與 SVG 圖示的顏色都從 `styles/tokens.ts` 讀取。`styles/tokens.ts` 匯出的不透明顏色是 6 位數的 hex，字級是 px 的數字。
+
+每個 SCSS 檔用 `@use "styles" as ds;` 載入 `styles/`，`ds` 只提供 CSS custom properties 做不到的部分：斷點的 `ds.down()`、`ds.up()`、`ds.breakpoint()` 與 focus ring 的 mixin。TypeScript 的 media query 由 `utils/mediaQuery.ts` 從同一組斷點產生，所以跟 SCSS 在同一個像素切換。
+
+> 設計理由：Token 以 Sass map 定義，從同一份 map 輸出 CSS custom properties 與給 TypeScript 的值，透明色在 Sass 裡算成固定的值。不直接手寫 CSS custom properties、用 `color-mix()` 組出透明色，因為 TypeScript 用 `getComputedStyle` 讀到的是還沒算出結果的 `color-mix(...)` 字串，ECharts 無法使用，而且公開頁面的 prerender 在 Node 裡執行，沒有 `getComputedStyle`。不用 Style Dictionary 從 DTCG 格式的 JSON 產生 token，因為那要多一個 build 步驟與 dependency，而 `main` 上只有網頁一個平台。斷點只留在 Sass，因為 media query 裡不能用 `var()`。完整討論見 [0011](../plans/archive/0011-design-system.md)。
+
+> 設計理由：元件不透過 Sass function（例如 `ds.color(text-secondary)`）取值，因為 devtools 裡看到的 SCSS 寫法會跟輸出的 CSS 不同，設計稿也不能照抄元件的寫法。完整討論見 [0011](../plans/archive/0011-design-system.md)。
+
+Vitest 預設不處理 CSS，`tokens.module.scss` 匯出的值會是空的，所以 `vite.config.ts` 讓 Vitest 處理這一個檔案，test 讀到的 token 跟畫面上的值相同。
+
+後台沒有窄版的字級，所以 `Admin` 開啟時替 `body` 加上 `admin-page` class，`base/_global.scss` 在這個 class 底下把隨寬度切換的用途字級固定成寬版的值；class 加在 `body` 上，是因為 toast 用 portal render 在後台的元素樹之外。
+
+#### CSS 的分層
+
+`styles/base/index.scss` 用 cascade layer 宣告兩層，先宣告的層優先順序較低：
+
+- `base`：`:root` 的 token 與全域的元素樣式。
+- `primitives`：`Button` 與 `RoundButton`。這兩個共用元件會被其他元件與頁面組合使用，呼叫端常要調整它們的尺寸或外觀。之後的共用元件也有這種用法時，同樣放進這一層，並在檔案開頭重複 `@layer base, primitives;`，讓不論哪個檔案先載入，兩層的順序都不變。
+
+其他元件與頁面的樣式不放進任何一層，所以不論 selector 的 specificity 或 CSS 載入的順序，都會蓋過這兩層。頁面要調整 `primitives` 裡元件的尺寸或外觀時，傳 `className` 寫自己的樣式即可，不需要 `!important`。不過顏色優先用元件提供的 variant 調整，例如 `Button` 的 `dangerous`，讓同一種用途的按鈕在每個畫面長得一樣。呼叫端自己寫的顏色與底色也會蓋過元件在 hover、停用與等待中的樣式，所以這類規則要用 `:not(:disabled, [data-disabled], [data-waiting])` 這類 selector 限定在一般狀態。
+
+> 設計理由：用 cascade layer 而不靠提高 specificity 或 `!important`，因為 CSS Modules 的檔案在 build 之後的載入順序不固定，同樣 specificity 的兩條規則誰贏會隨頁面改變；`!important` 則會讓元件為了不被蓋過也加上 `!important`，互相疊加。`primitives` 放在 `base` 之上，是因為全域的 `button { font: inherit; }` 這類元素樣式不能蓋過元件。
+
+#### Stylelint 擋下的寫法
+
+`make test` 與 CI 執行 stylelint，在 `frontend/src/styles/` 以外擋下以下寫法：
+
+- 顏色相關的屬性沒有用顏色 token，包括寫死的顏色、Sass 變數，以及 `rgba()`、`color-mix()`、`color.mix()` 這類算出顏色的函式。
+
+  需要新的顏色時，在 `tokens/_color.scss` 新增一個用途 token。不過寫死的顏色與這些函式在 `styles/base/` 也會被擋下，只有 `styles/tokens/` 可以寫。
+
+- `z-index` 用了大於 3 的數字。
+
+  0 到 3 只用在元件內部排列子元素，會蓋在其他頁面內容上的元素用 `--z-*` token。
+
+- `transition` 與 `animation` 用了 480ms 以下寫死的時間。
+
+  480ms 以上的動畫寫成元件裡的 Sass 變數。
+
+- 字級、字重、行高與圓角沒有用 token。
+
+- `margin`、`padding` 與 `gap` 用了 0 與 1px 以外寫死的長度，`margin` 與 `padding` 另外可以用 -1px。
+
+  以 `%` 與 viewport 單位（`vw`、`dvh` 這類）寫的值不受限制，因為這些值隨畫面大小變化，本來就不屬於固定的 scale。
+
+- `var()` 指到沒有定義的 custom property。
+
+- 用了 `!important`。這一條在 `frontend/src/styles/` 裡也擋下。
+
+Stylelint 不檢查 `calc()`、`clamp()` 這類函式裡的值，所以函式裡寫死的長度由 code review 檢查。
+
+字級、字重、行高、圓角與間距可以用元件自己定義的 Sass 變數，並在變數宣告的上一行用註解寫明為什麼不用 scale 上的值；code review 時檢查這個理由。
+
+> 設計理由：用 stylelint 擋下，不靠 code review，因為計劃 0011 重整之前統計到的 62 個寫死的顏色與二十幾種字級，都是在 code review 時沒有被擋下來的。完整討論見 [0011](../plans/archive/0011-design-system.md)。
+
 ## 付款與額度
 
 - 綠界（ECPay）用 server 對 server 的通知，把第一次付款的結果送到 `ReturnURL`，把之後每期扣款的結果送到 `PeriodReturnURL`，後端回 `1|OK` 表示收到。後端對 `ReturnURL` 回 `0|ERROR` 時，綠界會在 5 到 15 分鐘後再送一次，當天共送 4 次（[綠界文件 2878](https://developers.ecpay.com.tw/2878/)）；`PeriodReturnURL` 每期只送一次通知（[綠界文件 5631](https://developers.ecpay.com.tw/5631/)），文件沒有寫到重送。

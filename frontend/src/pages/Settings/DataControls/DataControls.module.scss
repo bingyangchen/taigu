@@ -1,14 +1,12 @@
-@use "../../../design_system" as _;
-
 .main {
   display: flex;
   flex-direction: column;
   width: min(100%, 720px);
-  padding: 0 20px;
+  padding: 0 var(--space-250);
   .blue {
-    color: _.$blue;
+    color: var(--color-text-accent);
   }
   .red {
-    color: _.$red;
+    color: var(--color-text-danger);
   }
 }

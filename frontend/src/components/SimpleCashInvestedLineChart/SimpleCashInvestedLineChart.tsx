@@ -5,6 +5,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { AppDispatch, RootState } from "../../redux/store";
+import { COLORS, FONT_SIZES, TRANSPARENT_ALPHA } from "../../styles/tokens";
 import Util from "../../utils/util";
 
 function mapStateToProps(rootState: RootState) {
@@ -110,7 +111,8 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
         data: dates.map((d) => this.formatDate(d)),
         boundaryGap: false,
         axisLabel: {
-          color: "#aaa",
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
           showMinLabel: false,
           showMaxLabel: true,
           hideOverlap: true,
@@ -129,7 +131,8 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
         scale: true,
         position: "right",
         axisLabel: {
-          color: "#aaa",
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
           margin: 3,
           showMinLabel: false,
           formatter: (value: number) => {
@@ -151,7 +154,7 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
           symbolSize: Util.isMobile ? 5 : 8,
           showSymbol: false,
           sampling: "lttb",
-          lineStyle: { color: "#4c8bf5", width: 3, join: "round" },
+          lineStyle: { color: COLORS.chartAccent, width: 3, join: "round" },
           areaStyle: {
             color: {
               type: "linear",
@@ -160,8 +163,8 @@ class SimpleCashInvestedLineChart extends React.Component<Props, State> {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: "rgba(76, 139, 245, 1)" },
-                { offset: 1, color: "rgba(76, 139, 245, 0)" },
+                { offset: 0, color: COLORS.chartAccent },
+                { offset: 1, color: `${COLORS.chartAccent}${TRANSPARENT_ALPHA}` },
               ],
             },
           },

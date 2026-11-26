@@ -1,22 +1,20 @@
-@use "../../design_system" as _;
-
 .main {
   position: relative;
   display: flex;
   justify-content: space-between;
   width: 100%;
-  line-height: 1.2 * _.$base-font-size;
-  padding: 20px;
-  gap: 20px;
-  transition-duration: 150ms;
+  line-height: var(--line-height-tight);
+  padding: var(--space-250);
+  gap: var(--space-250);
+  transition-duration: var(--duration-fast);
   &:not(:last-child) {
-    border-bottom: 1px solid _.$noisy-white;
+    border-bottom: 1px solid var(--color-border-subtle);
   }
   @media (hover: hover) {
     &.reactive:hover {
-      background-color: _.$black-transparent-4;
+      background-color: var(--color-bg-hover);
       & > .tail_mark {
-        color: _.$gray;
+        color: var(--color-text-secondary);
       }
     }
   }
@@ -29,10 +27,10 @@
     overflow: hidden;
     & > .ripple {
       position: absolute;
-      border-radius: 50%;
+      border-radius: var(--radius-circle);
       transform: scale(0);
-      animation: ripple 250ms linear;
-      background-color: _.$black-transparent-4;
+      animation: ripple var(--duration-base) linear;
+      background-color: var(--color-bg-hover);
     }
   }
   & > .label {
@@ -40,18 +38,18 @@
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    font-size: 0.75 * _.$base-font-size;
+    font-size: var(--font-size-xs);
     white-space: nowrap;
   }
   & > .value {
     flex-grow: 1;
     word-break: break-all;
-    font-size: 0.9 * _.$base-font-size;
-    color: _.$gray;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
     overflow: hidden;
     & > .string {
-      min-height: _.$base-font-size;
-      word-wrap: break-word;
+      min-height: 1rem;
+      overflow-wrap: break-word;
     }
   }
   & > .tail_mark {

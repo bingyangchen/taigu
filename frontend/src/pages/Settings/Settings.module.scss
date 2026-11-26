@@ -1,4 +1,4 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   display: flex;
@@ -6,20 +6,20 @@
   align-items: center;
   width: 100%;
   height: 100%;
-  background-color: _.$noisy-white;
+  background-color: var(--color-bg-subtle);
   overflow: auto;
   & > .body {
     width: min(100%, 720px);
   }
 
-  @media (max-width: _.$width-780) {
+  @include ds.down(md) {
     min-height: 100dvh;
     height: auto;
     overflow: visible;
   }
 
   &.mobile_editor_shell {
-    @media (max-width: _.$width-780) {
+    @include ds.down(md) {
       height: 100dvh;
       min-height: 100dvh;
       overflow: hidden;

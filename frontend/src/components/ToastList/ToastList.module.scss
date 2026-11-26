@@ -1,4 +1,7 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
+
+$toast-lifetime: 5s;
+$countdown-duration: 4.8s;
 
 .main {
   position: fixed;
@@ -6,37 +9,40 @@
   left: 0;
   height: max-content;
   max-width: 100%;
-  z-index: 6;
+  z-index: var(--z-toast);
   user-select: none;
 
   // An open dialog turns off pointer events on the body; toasts stay closable.
   pointer-events: auto;
   & > .toast_outer {
-    padding: 16px;
-    animation: leftflyinout 5s ease forwards;
+    padding: var(--space-200);
+    animation: leftflyinout $toast-lifetime var(--ease-standard) forwards;
     width: 420px;
     & > .toast {
       position: relative;
-      border-radius: 8px;
-      padding: 16px 24px 16px 16px;
-      font-weight: bold;
-      letter-spacing: 0.5 * _.$base-letter-spacing;
-      color: _.$noisy-white;
-      font-size: 0.85 * _.$base-font-size;
+      border-radius: var(--radius-md);
+      padding: var(--space-200) var(--space-300) var(--space-200) var(--space-200);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: calc(0.5 * var(--letter-spacing-base));
+      color: var(--color-text-inverse);
+      font-size: var(--font-size-sm);
       &.success {
-        background-color: _.$green;
+        background-color: var(--color-bg-success);
       }
       &.error {
-        background-color: _.$red;
+        background-color: var(--color-bg-danger);
       }
       &.warning {
-        background-color: _.$yellow;
-        color: _.$deep-gray;
+        background-color: var(--color-bg-warning);
+        color: var(--color-text-primary);
         & > .close_button {
-          color: _.$deep-gray;
+          color: var(--color-text-primary);
+          &:focus-visible {
+            @include ds.focus-ring;
+          }
         }
         &::after {
-          background-color: _.$black-transparent-2;
+          background-color: var(--color-bg-hover);
         }
       }
       &::after {
@@ -46,16 +52,20 @@
         left: 0;
         height: 3px;
         width: 100%;
-        background-color: _.$white-transparent;
-        animation: countdown 4.8s linear forwards;
+        background-color: var(--color-bg-frosted);
+        animation: countdown $countdown-duration linear forwards;
         transform-origin: left;
       }
       & > .close_button {
-        color: _.$white;
+        color: var(--color-text-inverse);
+        // The ring would vanish on the toast's blue, red, or green background.
+        &:focus-visible {
+          @include ds.focus-ring($color: var(--color-focus-ring-inverse));
+        }
         position: absolute;
         right: 4px;
         top: 4px;
-        @media screen and (max-width: _.$width-512) {
+        @include ds.down(sm) {
           transform: scale(1.5);
           transform-origin: top right;
         }
@@ -64,18 +74,18 @@
     &:not(:last-child) {
       padding-bottom: 0;
     }
-    @media screen and (max-width: _.$width-512) {
+    @include ds.down(sm) {
       width: 100vw;
     }
   }
-  @media screen and (max-width: _.$width-512) {
+  @include ds.down(sm) {
     width: 100vw;
     top: 0;
   }
 }
 
 @keyframes leftflyinout {
-  from {
+  0% {
     transform: translateX(-110%);
   }
   6% {
@@ -84,7 +94,7 @@
   94% {
     transform: translateX(0);
   }
-  to {
+  100% {
     transform: translateX(-110%);
   }
 }

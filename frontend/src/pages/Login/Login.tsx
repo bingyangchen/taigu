@@ -88,7 +88,9 @@ class Login extends React.Component<Props, State> {
           <div className={styles.greeting}>歡迎使用</div>
           <FullLogo size="l" />
           <Button
-            className="white border l"
+            variant="white"
+            size="l"
+            bordered
             waiting={this.props.isWaiting || this.state.isRequestingAuthorizationUrl}
             onClick={this.handleClickGoogleLogin}
           >

@@ -90,13 +90,17 @@ class UserInfo extends React.Component<Props, State> {
                 />
                 <div className={styles.gravatar_bottom_sheet_buttons}>
                   <Button
-                    className="primary_fill l round"
+                    variant="primary_fill"
+                    size="action"
+                    round
                     onClick={this.handleClickGravatarApply}
                   >
                     套用
                   </Button>
                   <Button
-                    className="transparent l round"
+                    variant="transparent"
+                    size="action"
+                    round
                     onClick={this.handleClickGravatarDiscard}
                   >
                     捨棄
@@ -109,12 +113,12 @@ class UserInfo extends React.Component<Props, State> {
               title="使用 Gravatar 頭像"
               discardButtonProps={{
                 children: "捨棄",
-                className: "light l",
+                variant: "light",
                 onClick: this.handleClickGravatarDiscard,
               }}
               submitButtonProps={{
                 children: "套用",
-                className: "primary_fill l",
+                variant: "primary_fill",
                 onClick: this.handleClickGravatarApply,
               }}
             >
@@ -131,7 +135,8 @@ class UserInfo extends React.Component<Props, State> {
           <Form
             primaryFooterButton={
               <Button
-                className="primary_fill l"
+                variant="primary_fill"
+                size="action"
                 disabled={this.props.isWaiting}
                 waiting={this.props.isWaiting}
                 onClick={this.handleClickSave}
@@ -141,7 +146,8 @@ class UserInfo extends React.Component<Props, State> {
             }
             secondaryFooterButton={
               <Button
-                className="light l"
+                variant="light"
+                size="action"
                 onClick={() =>
                   this.props.router.navigate(
                     `${Env.frontendRootPath}${settingsPagePath}`,

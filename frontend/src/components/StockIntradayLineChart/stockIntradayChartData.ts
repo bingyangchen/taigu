@@ -1,7 +1,5 @@
+import { COLORS } from "../../styles/tokens";
 import type { StockIntradayPrices } from "../../types";
-
-export const RED = "#d4493f";
-export const GREEN = "#1aa260";
 
 const METADATA_KEYS = new Set(["date", "yesterday_price", "last_fluct_price"]);
 
@@ -62,7 +60,11 @@ export function splitStockIntradayDataIntoColoredSegments(
     const point = data[i];
     const value = point[1];
     const pointColor: string =
-      value === null ? (currentColor ?? GREEN) : value > prevClosePrice ? RED : GREEN;
+      value === null
+        ? (currentColor ?? COLORS.chartDown)
+        : value > prevClosePrice
+          ? COLORS.chartUp
+          : COLORS.chartDown;
 
     if (
       currentColor !== null &&

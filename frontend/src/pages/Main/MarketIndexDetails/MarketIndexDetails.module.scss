@@ -1,29 +1,27 @@
-@use "sass:color";
-@use "../../../design_system" as _;
+@use "styles" as ds;
 
-$muted: color.mix(_.$deep-gray, _.$gray, 68%);
-$action: color.scale(_.$blue, $lightness: -42%);
-$divider: _.$black-transparent-2;
-$speed-dial-space: 86px;
+// Up to this width, the wide layout beside the sidebar has no room for the quote's
+// values in one row.
+$quote-grid-max-width: 1160px;
 
 .main {
   box-sizing: border-box;
   max-inline-size: 1320px;
   min-inline-size: 0;
   margin-inline: auto;
-  padding: 30px;
-  color: _.$deep-gray;
+  padding: var(--space-400);
+  color: var(--color-text-primary);
 }
 
 .heading {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-block-size: _.$header-height;
-  margin-block-end: 12px;
+  gap: var(--space-150);
+  min-block-size: var(--layout-header-height);
+  margin-block-end: var(--space-150);
 
   h1 {
-    @include _.page-header-title-size;
+    font-size: var(--font-size-page-title);
 
     margin: 0;
     font-weight: inherit;
@@ -36,7 +34,7 @@ $speed-dial-space: 86px;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 2px 16px;
+  gap: var(--space-025) var(--space-200);
 }
 
 .heading .back {
@@ -46,9 +44,9 @@ $speed-dial-space: 86px;
 }
 
 .surface {
-  border: 1px solid $divider;
-  border-radius: 16px;
-  background: _.$white;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
 }
 
 .toolbar {
@@ -57,14 +55,14 @@ $speed-dial-space: 86px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 12px;
-  padding: 14px 20px;
-  border-block-end: 1px solid $divider;
+  gap: var(--space-075) var(--space-150);
+  padding: var(--space-200) var(--space-250);
+  border-block-end: 1px solid var(--color-border-default);
 }
 
 .shared_date {
-  color: $muted;
-  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
   font-variant-numeric: tabular-nums;
 }
 
@@ -75,16 +73,16 @@ $speed-dial-space: 86px;
 
 .market {
   min-inline-size: 0;
-  padding: 20px;
+  padding: var(--space-250);
 
   & + & {
-    border-inline-start: 1px solid $divider;
+    border-inline-start: 1px solid var(--color-border-default);
   }
 
   h2 {
     margin: 0;
-    font-size: 1rem;
-    line-height: 1.35;
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-snug);
   }
 }
 
@@ -93,27 +91,27 @@ $speed-dial-space: 86px;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
-  gap: 2px 10px;
-  margin-block: 6px;
+  gap: var(--space-025) var(--space-150);
+  margin-block: var(--space-075);
   font-variant-numeric: tabular-nums;
 
   strong {
-    font-size: clamp(1.625rem, 1.15rem + 1.4vw, 2.25rem);
-    line-height: 1.1;
+    font-size: var(--font-size-display-number);
+    line-height: var(--line-height-tight);
     letter-spacing: -0.025em;
   }
 
   span {
-    font-weight: 650;
+    font-weight: var(--font-weight-bold);
   }
 }
 
 .up {
-  color: color.scale(_.$red, $lightness: -18%);
+  color: var(--color-price-up);
 }
 
 .down {
-  color: color.scale(_.$green, $lightness: -30%);
+  color: var(--color-price-down);
 }
 
 .chart_caption {
@@ -121,29 +119,29 @@ $speed-dial-space: 86px;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
-  gap: 2px 8px;
+  gap: var(--space-025) var(--space-100);
   min-block-size: 1rem;
-  color: $muted;
-  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
 }
 
 .previous_close {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--space-075);
   margin-inline-start: auto;
 
   &::before {
     content: "";
     inline-size: 13px;
-    border-block-start: 1px dashed $muted;
+    border-block-start: 1px dashed var(--color-text-secondary);
   }
 }
 
 .plot {
   block-size: clamp(180px, calc(100dvh - 350px), 340px);
-  border-radius: 4px;
-  background: _.$white;
+  border-radius: var(--radius-xs);
+  background: var(--color-bg-surface);
 }
 
 .chart_status {
@@ -151,45 +149,46 @@ $speed-dial-space: 86px;
   place-content: center;
   justify-items: center;
   block-size: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  background: _.$page-bg;
-  color: $muted;
+  padding: var(--space-100);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-page);
+  color: var(--color-text-secondary);
   text-align: center;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 
   [role="status"] {
     display: grid;
     justify-items: center;
-    gap: 5px;
+    gap: var(--space-075);
   }
 }
 
 .retry {
   min-inline-size: 44px;
   min-block-size: 44px;
-  padding-inline: 12px;
+  padding-inline: var(--space-150);
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
-  color: $action;
+  color: var(--color-text-accent);
   font: inherit;
-  font-weight: 650;
+  font-weight: var(--font-weight-bold);
   cursor: pointer;
 
   &:hover:not([aria-disabled="true"]) {
-    background: _.$blue-transparent-3;
+    background: var(--color-bg-accent-subtle);
+    color: var(--color-text-accent-strong);
   }
 }
 
 .update_error,
 .shared_error {
-  color: $muted;
-  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .update_error {
-  margin: 4px 0 0;
+  margin: var(--space-050) 0 0;
 }
 
 .shared_error {
@@ -197,29 +196,32 @@ $speed-dial-space: 86px;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding-inline: 8px;
+  gap: var(--space-100);
+  padding-inline: var(--space-100);
 }
 
 .speed_dial {
   display: none;
 }
 
-@media (960px <= width <= 1160px) {
+@media (#{ds.breakpoint(lg)} <= width <= #{$quote-grid-max-width}) {
   .quote {
     display: grid;
   }
 }
 
-@media (width < 960px) {
+@include ds.down(lg) {
   .main {
-    padding: 0 16px
-      calc(_.$footer-height + $speed-dial-space + env(safe-area-inset-bottom));
+    padding: 0 var(--space-200)
+      calc(
+        var(--layout-footer-height) + var(--layout-speed-dial-clearance) +
+          env(safe-area-inset-bottom)
+      );
   }
 
   .heading {
-    margin-block-end: 4px;
-    margin-inline-start: -8px;
+    margin-block-end: var(--space-050);
+    margin-inline-start: calc(-1 * var(--space-100));
   }
 
   .surface {
@@ -230,12 +232,9 @@ $speed-dial-space: 86px;
   .toolbar {
     --mode-option-width: max(58px, 2.5rem);
     --range-option-width: max(54px, 2.125rem);
-    gap: 4px 8px;
-    padding: 0 0 6px;
-  }
-
-  .shared_date {
-    font-size: 0.6875rem;
+    gap: var(--space-050) var(--space-100);
+    padding: 0 0 var(--space-150);
+    border-block-end: 0;
   }
 
   .markets {
@@ -243,25 +242,23 @@ $speed-dial-space: 86px;
   }
 
   .market {
-    padding: 8px 0 12px;
+    padding: var(--space-100) 0 var(--space-150);
 
     & + & {
       border-inline-start: 0;
-      border-block-start: 1px solid $divider;
-      padding-block-start: 14px;
+      border-block-start: 1px solid var(--color-border-default);
+      padding-block-start: var(--space-200);
     }
   }
 
   .quote {
-    margin-block: 2px;
-    font-size: 0.875rem;
+    margin-block: var(--space-025);
   }
 
-  .chart_caption {
-    font-size: 0.6875rem;
-  }
-
+  // Runs to the screen edges like the stock page's chart, past the page padding.
   .plot {
+    margin-inline: calc(-1 * var(--space-200));
+    background: transparent;
     block-size: clamp(
       110px,
       calc((100dvh - 465px - env(safe-area-inset-bottom)) / 2),

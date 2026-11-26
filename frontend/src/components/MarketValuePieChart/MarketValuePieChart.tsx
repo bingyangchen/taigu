@@ -2,6 +2,8 @@ import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 
+import { COLORS } from "../../styles/tokens";
+
 interface Props {
   sidMarketValueMap: { [sid: string]: number };
   totalMarketValue: number;
@@ -61,11 +63,7 @@ class MarketValuePieChart extends React.Component<Props, State> {
           data: data,
         },
       ],
-      // prettier-ignore
-      color: [
-        "#5470c6", "#91cc75", "#fac858", "#ee6666", "#73c0de", "#3ba272", "#fc8452",
-        "#9a60b4", "#ea7ccc",
-      ],
+      color: COLORS.chartCategories,
     };
   }
 }

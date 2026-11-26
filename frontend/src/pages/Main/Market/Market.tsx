@@ -11,6 +11,7 @@ import {
 } from "../../../redux/slices/MainPageSlice";
 import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
+import { COLORS } from "../../../styles/tokens";
 import type { MarketSortKey, MarketTab, StockInfo } from "../../../types";
 import Env from "../../../utils/env";
 import {
@@ -449,7 +450,7 @@ class Market extends React.Component<Props, State> {
     const EmptyIcon = isHolding ? Icons.IconBriefcase : Icons.IconHeart;
     return (
       <div className={styles.empty_state}>
-        <EmptyIcon sideLength="40" color="#4c8bf5" />
+        <EmptyIcon sideLength="40" color={COLORS.textAccent} />
         <h2>{isHolding ? "還沒有持股" : "還沒有最愛股票"}</h2>
         <p>
           {isHolding
@@ -487,7 +488,7 @@ class Market extends React.Component<Props, State> {
   private renderNoSearchResults(): React.ReactNode {
     return (
       <div className={styles.empty_state}>
-        <Icons.IconMagnifier sideLength="40" color="#4c8bf5" />
+        <Icons.IconMagnifier sideLength="40" color={COLORS.textAccent} />
         <h2>找不到符合的股票</h2>
         <p>請確認代號或名稱是否正確，或清除搜尋條件。</p>
         <button

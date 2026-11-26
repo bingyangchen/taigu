@@ -2,13 +2,12 @@ import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 
+import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import { formatMarketMinute } from "../../utils/marketIndex";
 import { makeIntradayTooltipSeries } from "../intradayTooltip";
 import {
   getStockIntradayMaxPrice,
   getStockIntradayMinPrice,
-  GREEN,
-  RED,
   splitStockIntradayDataIntoColoredSegments,
 } from "./stockIntradayChartData";
 
@@ -62,8 +61,8 @@ class StockIntradayLineChart extends React.Component<Props> {
         max: 270,
         interval: 60,
         axisLabel: {
-          color: "#aaa",
-          fontSize: 11,
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
           formatter: (minute: number) =>
             MAJOR_MINUTES.includes(minute) ? formatMarketMinute(minute) : "",
         },
@@ -78,7 +77,8 @@ class StockIntradayLineChart extends React.Component<Props> {
         min: minPrice * 0.999,
         max: maxPrice * 1.001,
         axisLabel: {
-          color: "#aaa",
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
           margin: 0,
           showMinLabel: false,
           showMaxLabel: false,
@@ -108,7 +108,7 @@ class StockIntradayLineChart extends React.Component<Props> {
           markLine: {
             silent: true,
             symbol: "none",
-            lineStyle: { color: "#e2e8f0", width: 1, type: "solid" },
+            lineStyle: { color: COLORS.borderDefault, width: 1, type: "solid" },
             data: [{ yAxis: prevClosePrice }],
             label: { show: false },
           },
@@ -119,10 +119,10 @@ class StockIntradayLineChart extends React.Component<Props> {
         axisPointer: {
           type: "line",
           snap: true,
-          lineStyle: { color: "#ddd", width: 1 },
+          lineStyle: { color: COLORS.borderDefault, width: 1 },
         },
-        backgroundColor: "#ffffff",
-        textStyle: { color: "#334155", fontSize: 12 },
+        backgroundColor: COLORS.bgSurface,
+        textStyle: { color: COLORS.textPrimary, fontSize: FONT_SIZES.xs },
         formatter: (params: unknown) => {
           if (!Array.isArray(params) || params.length === 0) return "";
           const param = params.find(
@@ -138,10 +138,15 @@ class StockIntradayLineChart extends React.Component<Props> {
             prevClosePrice !== 0
               ? ((fluctPrice / prevClosePrice) * 100).toFixed(2)
               : "0.00";
-          const fluctColor = fluctPrice > 0 ? RED : GREEN;
+          const fluctColor =
+            fluctPrice > 0
+              ? COLORS.priceUp
+              : fluctPrice < 0
+                ? COLORS.priceDown
+                : COLORS.priceFlat;
           const fluctSign = fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "";
           return [
-            `<span style="font-weight:600;color:#1f2933;">${formatMarketMinute(minuteAfterOpen)}</span>`,
+            `<span style="font-weight:600;color:${COLORS.textPrimary};">${formatMarketMinute(minuteAfterOpen)}</span>`,
             `價格 $${price.toFixed(2)}`,
             `<span style="color:${fluctColor};">較昨收 ${fluctSign}${Math.abs(fluctPrice).toFixed(2)} (${fluctPercent}%)</span>`,
           ].join("<br/>");

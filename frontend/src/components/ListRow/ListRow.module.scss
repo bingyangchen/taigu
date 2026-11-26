@@ -1,27 +1,27 @@
-@use "../../design_system" as _;
+$ripple-duration: 500ms;
 
 .main {
   position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
+  gap: var(--space-150);
+  padding: var(--space-200) var(--space-250);
   &:first-child {
-    padding-top: 20px;
+    padding-top: var(--space-250);
   }
   &:not(:first-child) {
-    border-top: 1px solid _.$noisy-white;
+    border-top: 1px solid var(--color-border-subtle);
   }
   & > *:nth-last-child(2) {
-    margin-right: 70px;
+    margin-right: var(--space-800);
   }
   &.active {
-    background-color: _.$blue-transparent-3;
+    background-color: var(--color-bg-accent-subtle);
   }
   @media (hover: hover) {
     &:hover {
-      box-shadow: 0 2px 5px 0 _.$light-gray;
+      box-shadow: var(--shadow-sm);
       & > .action_bar_outer {
         display: flex;
       }
@@ -35,7 +35,7 @@
     top: 50%;
     right: 0;
     display: none;
-    margin-right: 10px;
+    margin-right: var(--space-150);
     transform: translateY(-50%);
     z-index: 1;
   }
@@ -48,10 +48,10 @@
     overflow: hidden;
     & > .ripple {
       position: absolute;
-      border-radius: 50%;
+      border-radius: var(--radius-circle);
       transform: scale(0);
-      animation: ripple 500ms linear;
-      background-color: _.$black-transparent-3;
+      animation: ripple $ripple-duration linear;
+      background-color: var(--color-bg-hover);
     }
   }
 }

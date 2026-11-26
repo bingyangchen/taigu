@@ -1,0 +1,19 @@
+@use "sass:map";
+@use "spacing";
+
+$-speed-dial-size: 60px;
+
+// The header and footer heights are rem, so they grow with the user's font size and
+// their text is not cut off. Each stays within a quarter of the viewport height, so
+// both together leave half of a phone held sideways to the content.
+$layout: (
+  header-height: min(4.0625rem, 25dvh),
+  footer-height: min(4.0625rem, 25dvh),
+  sidebar-width: 230px,
+  sidebar-collapsed-width: 64px,
+  // Room under a page's last item for the speed dial button, which floats 16px above
+  // the bottom navigation bar, plus 16px.
+  speed-dial-clearance: $-speed-dial-size + 2 * map.get(spacing.$space, "200"),
+  // Room on the right of a list row for the edit and delete buttons that show on hover.
+  row-action-bar-space: 104px,
+);

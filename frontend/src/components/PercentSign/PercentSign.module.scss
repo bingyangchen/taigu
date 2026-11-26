@@ -1,11 +1,9 @@
-@use "../../design_system" as _;
-
 .main {
-  font-size: 0.7 * _.$base-font-size;
-  font-weight: 300;
-  color: _.$gray;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
   &::before {
     content: "%";
-    margin-left: 2px;
+    margin-left: var(--space-025);
   }
 }

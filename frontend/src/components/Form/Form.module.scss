@@ -1,27 +1,25 @@
-@use "../../design_system" as _;
-
 .main {
   width: 100%;
   height: calc(100% - env(keyboard-inset-height));
-  border-radius: 15px;
-  padding: 10px 15px;
+  border-radius: var(--radius-xl);
+  padding: var(--space-150) var(--space-200);
   & > .header {
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 10px 0;
+    padding: var(--space-150) 0;
     & > h1 {
-      font-size: 1.25 * _.$base-font-size;
-      font-weight: normal;
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-regular);
       margin: 0;
-      padding: 0 8px;
+      padding: 0 var(--space-100);
     }
   }
   & > .body {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 10px 8px;
+    gap: var(--space-250);
+    padding: var(--space-150) var(--space-100);
   }
   & > .footer {
     position: sticky;
@@ -29,8 +27,8 @@
     display: flex;
     justify-content: flex-end;
     align-items: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-    padding: 10px 8px;
+    gap: var(--space-150);
+    margin-top: var(--space-250);
+    padding: var(--space-150) var(--space-100);
   }
 }

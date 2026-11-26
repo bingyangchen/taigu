@@ -1,0 +1,16 @@
+// Elements that cover other page content. Equal values keep their current order,
+// which the DOM order decides: a toast opened after a modal covers its backdrop.
+$z-index: (
+  footer: 2,
+  header: 4,
+  header-raised: 5,
+  backdrop: 6,
+  sidebar-drawer: 6,
+  toast: 6,
+  dialog: 7,
+  speed-dial: 7,
+  loading-screen: 8,
+  nested-backdrop: 8,
+  nested-dialog: 9,
+  popover: 10,
+);

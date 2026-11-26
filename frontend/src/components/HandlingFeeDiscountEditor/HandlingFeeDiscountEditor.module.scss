@@ -1,8 +1,6 @@
-@use "../../design_system" as _;
-
 .modal_inner {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  gap: var(--space-250);
+  padding: var(--space-250);
 }

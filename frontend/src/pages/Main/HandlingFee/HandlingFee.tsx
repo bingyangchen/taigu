@@ -20,6 +20,7 @@ import * as Icons from "../../../icons";
 import { deleteDiscount } from "../../../redux/slices/HandlingFeeDiscountSlice";
 import { selectNetHandlingFee } from "../../../redux/slices/TradeRecordSlice";
 import type { AppDispatch, RootState } from "../../../redux/store";
+import { COLORS, FONT_SIZES } from "../../../styles/tokens";
 import type { HandlingFeeDiscount } from "../../../types";
 import Env from "../../../utils/env";
 import { getHideModalCallback } from "../../../utils/modal";
@@ -113,17 +114,23 @@ class HandlingFee extends React.Component<Props, State> {
         <div className={styles.main}>
           {Util.isMobile && <SpeedDial />}
           {Util.isMobile && (
-            <ScrollThresholdContainer
-              className={styles.mobile_back_button_container}
-              scrolledClassName={styles.scrolled}
-            >
-              <RoundButton
-                onClick={this.returnToDashboard}
-                className="p-12"
-                hint_text="回儀表板"
-              >
-                <Icons.IconChevronLeft sideLength="16" />
-              </RoundButton>
+            <ScrollThresholdContainer>
+              {(isScrolled) => (
+                <div
+                  className={`${styles.mobile_back_button_container} ${
+                    isScrolled ? styles.scrolled : ""
+                  }`}
+                >
+                  <RoundButton
+                    onClick={this.returnToDashboard}
+                    size="l"
+                    frosted={isScrolled}
+                    hint_text="回儀表板"
+                  >
+                    <Icons.IconChevronLeft sideLength="16" />
+                  </RoundButton>
+                </div>
+              )}
             </ScrollThresholdContainer>
           )}
           <div className={styles.container}>
@@ -131,7 +138,7 @@ class HandlingFee extends React.Component<Props, State> {
               <div className={styles.desktop_back_button_container}>
                 <RoundButton
                   onClick={this.returnToDashboard}
-                  className="p-12"
+                  size="l"
                   hint_text="回儀表板"
                 >
                   <Icons.IconChevronLeft sideLength="16" />
@@ -174,7 +181,7 @@ class HandlingFee extends React.Component<Props, State> {
             <div className={styles.right_block}>
               <div className={styles.section_header}>
                 <div className={styles.title}>手續費折讓</div>
-                <Button className="light" onClick={this.handleCreateDiscount}>
+                <Button variant="light" onClick={this.handleCreateDiscount}>
                   新增折讓紀錄
                 </Button>
               </div>
@@ -263,8 +270,8 @@ class HandlingFee extends React.Component<Props, State> {
         type: "category",
         data: months,
         axisLabel: {
-          color: "#aaa",
-          fontSize: 11,
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
           hideOverlap: true,
           formatter: (value: string) => {
             // value is in format "YYYY/MM", extract month directly instead of using new Date(value).getMonth() + 1
@@ -278,8 +285,8 @@ class HandlingFee extends React.Component<Props, State> {
       yAxis: {
         type: "value",
         axisLabel: {
-          color: "#aaa",
-          fontSize: 11,
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
           formatter: (value: number) => {
             if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
             if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
@@ -295,7 +302,7 @@ class HandlingFee extends React.Component<Props, State> {
           name: "手續費",
           type: "bar",
           data: values,
-          itemStyle: { color: "#4c8bf5", borderRadius: borderRadius },
+          itemStyle: { color: COLORS.chartAccent, borderRadius: borderRadius },
         },
       ],
       backgroundColor: "transparent",

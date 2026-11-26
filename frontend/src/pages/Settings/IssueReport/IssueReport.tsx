@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { AutoResizeTextarea, FormPageShell, Modal } from "../../../components";
+import type { Props as ButtonProps } from "../../../components/Button/Button";
 import { useAppDispatch } from "../../../redux/hooks";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import Api from "../../../utils/api";
@@ -30,14 +31,14 @@ export function IssueReportEditor({
   const canSubmit =
     !isWaiting && trimmedBody.length > 0 && trimmedBody.length <= BODY_MAX_LENGTH;
 
-  const discardButtonProps = {
+  const discardButtonProps: ButtonProps = {
     children: "取消",
-    className: "transparent l",
+    variant: "transparent",
     onClick: hideModal,
   };
-  const submitButtonProps = {
+  const submitButtonProps: ButtonProps = {
     children: "送出",
-    className: "primary_fill l",
+    variant: "primary_fill",
     disabled: !canSubmit,
     waiting: isWaiting,
     onClick: handleClickSubmit,

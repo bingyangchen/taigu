@@ -1,4 +1,4 @@
-@use "../../design_system" as _;
+@use "styles" as ds;
 
 .dialog {
   display: flex;
@@ -8,13 +8,13 @@
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  border-radius: 20px;
-  background-color: _.$noisy-white;
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-bg-subtle);
   overflow: hidden;
 
   & > .search_input_outer {
     &:not(:last-child) {
-      border-bottom: 1px solid _.$black-transparent-3;
+      border-bottom: 1px solid var(--color-border-default);
     }
   }
 }
@@ -24,25 +24,25 @@
   flex-direction: column;
   width: 100%;
   min-height: 100%;
-  background-color: _.$noisy-white;
+  background-color: var(--color-bg-subtle);
   user-select: none;
   overflow: hidden;
 
-  @media (max-width: _.$width-780) {
-    background-color: _.$page-bg;
+  @include ds.down(md) {
+    background-color: var(--color-bg-page);
   }
 
   & > .page_header {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: var(--space-025);
     min-height: calc(56px + env(safe-area-inset-top));
-    padding: env(safe-area-inset-top) 8px 0;
-    border-bottom: 1px solid _.$black-transparent-3;
-    background-color: _.$noisy-white;
+    padding: env(safe-area-inset-top) var(--space-100) 0;
+    border-bottom: 1px solid var(--color-border-default);
+    background-color: var(--color-bg-subtle);
 
-    @media (max-width: _.$width-780) {
-      background-color: _.$page-bg;
+    @include ds.down(md) {
+      background-color: var(--color-bg-page);
     }
     flex-shrink: 0;
 
@@ -56,41 +56,41 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding: 4px 0 calc(24px + env(safe-area-inset-bottom));
+    padding: var(--space-050) 0 calc(var(--space-300) + env(safe-area-inset-bottom));
   }
 }
 
 .result {
   height: 100%;
-  padding: 4px 0;
+  padding: var(--space-050) 0;
   overflow: auto;
 
   & > .row {
     display: flex;
     justify-content: space-between;
-    gap: 10px;
-    padding: 10px 17px;
+    gap: var(--space-150);
+    padding: var(--space-150) var(--space-200);
     border-radius: 0;
 
     @media (hover: hover) {
       &:hover {
-        background-color: _.$black-transparent-3;
+        background-color: var(--color-bg-hover);
       }
     }
 
     & > .company {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: var(--space-050);
       min-width: 0;
 
       & > .sid {
-        font-size: 0.7 * _.$base-font-size;
-        color: _.$gray;
+        font-size: var(--font-size-caption);
+        color: var(--color-text-secondary);
       }
 
       & > .name {
-        font-size: 0.9 * _.$base-font-size;
+        font-size: var(--font-size-data);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -100,29 +100,29 @@
     & > .price {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: var(--space-050);
       min-width: max-content;
 
       & > .price {
         text-align: right;
-        font-weight: bold;
+        font-weight: var(--font-weight-bold);
       }
 
       & > .price_fluct {
         text-align: right;
-        font-size: 0.7 * _.$base-font-size;
+        font-size: var(--font-size-2xs);
       }
     }
 
     &.red {
       .price {
-        color: _.$red;
+        color: var(--color-price-up);
       }
     }
 
     &.green {
       .price {
-        color: _.$green;
+        color: var(--color-price-down);
       }
     }
   }
@@ -135,9 +135,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  padding: 32px 32px calc(88px + env(safe-area-inset-bottom));
-  color: _.$gray;
+  gap: var(--space-250);
+  padding: var(--space-400) var(--space-400)
+    calc(var(--space-1000) + var(--space-100) + env(safe-area-inset-bottom));
+  color: var(--color-text-secondary);
   text-align: center;
 
   & > .empty_state_icon {
@@ -146,29 +147,29 @@
     justify-content: center;
     width: 56px;
     height: 56px;
-    border: 1px solid _.$black-transparent-3;
-    border-radius: 18px;
-    background-color: _.$white;
-    color: _.$light-gray;
-    box-shadow: 0 8px 24px _.$black-transparent-3;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-2xl);
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-tertiary);
+    box-shadow: var(--shadow-md);
   }
 
   & > .empty_state_text {
     display: flex;
     max-width: 280px;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-100);
 
     & > .empty_state_title {
-      color: _.$deep-gray;
-      font-size: 1.05 * _.$base-font-size;
-      font-weight: bold;
+      color: var(--color-text-primary);
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
     }
 
     & > .empty_state_description {
-      color: _.$gray;
-      font-size: 0.85 * _.$base-font-size;
-      line-height: 1.65;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-relaxed);
     }
   }
 }

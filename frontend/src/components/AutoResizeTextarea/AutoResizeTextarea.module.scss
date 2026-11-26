@@ -1,13 +1,11 @@
-@use "../../design_system" as _;
-
 .main {
   flex-grow: 1;
   width: 100%;
-  padding: 16px;
-  border-radius: 15px;
+  padding: var(--space-200);
+  border-radius: var(--radius-xl);
   border: none;
   resize: none;
-  background-color: _.$noisy-white;
+  background-color: var(--color-bg-subtle);
   outline: none;
   font-family: inherit;
   letter-spacing: inherit;

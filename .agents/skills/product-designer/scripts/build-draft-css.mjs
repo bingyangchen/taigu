@@ -16,10 +16,9 @@ const sass = require("sass");
 const SRC_DIR = "/app/src";
 const OUT_FILE = "/design/shared/components.css";
 
-// The components a draft may render. A component's `<Name>.scss` holds global
-// classes and keeps its class names; its `<Name>.module.scss` is a CSS module,
-// whose classes become `<Name>_<class>`, the frontend's dev class name without
-// the hash. Add a component here when a draft needs it, along with every
+// The components a draft may render. A component's `<Name>.module.scss` is a CSS
+// module, whose classes become `<Name>_<class>`, the frontend's dev class name
+// without the hash. Add a component here when a draft needs it, along with every
 // shared component it renders.
 const COMPONENTS = [
   "Button",
@@ -32,17 +31,7 @@ const COMPONENTS = [
   "DestructiveActionSection",
 ];
 
-const TOKENS_SCSS = `
-@use "sass:meta";
-@use "design_system" as ds;
-:root {
-  @each $name, $value in meta.module-variables(ds) {
-    --#{$name}: #{meta.inspect($value)};
-  }
-}
-`;
-
-// index.scss keeps the page from scrolling because the app scrolls inside its
+// The base styles keep the page from scrolling because the app scrolls inside its
 // own layout; a draft is a plain document, so it lets the page scroll again.
 const DRAFT_PAGE_OVERRIDE = `
 body {
@@ -114,32 +103,22 @@ function inlineAssets(css) {
 
 const sections = [
   [
-    "Tokens from frontend/src/_design_system.scss",
-    sass.compileString(TOKENS_SCSS, { style: "expanded", loadPaths: [SRC_DIR] }).css,
-  ],
-  [
-    "Base styles from frontend/src/index.scss",
-    compileFile(path.join(SRC_DIR, "index.scss")),
+    "Design tokens and base styles from frontend/src/styles/base/",
+    compileFile(path.join(SRC_DIR, "styles", "base", "index.scss")),
   ],
   ["Draft-only page override", DRAFT_PAGE_OVERRIDE.trim()],
 ];
 
 for (const name of COMPONENTS) {
   const dir = path.join(SRC_DIR, "components", name);
-  const globalFile = path.join(dir, `${name}.scss`);
   const moduleFile = path.join(dir, `${name}.module.scss`);
-  if (!existsSync(globalFile) && !existsSync(moduleFile)) {
+  if (!existsSync(moduleFile)) {
     throw new Error(`No styles found for component ${name}`);
   }
-  if (existsSync(globalFile)) {
-    sections.push([`${name}/${name}.scss`, compileFile(globalFile)]);
-  }
-  if (existsSync(moduleFile)) {
-    sections.push([
-      `${name}/${name}.module.scss (classes prefixed with ${name}_)`,
-      scopeModule(stripComments(compileFile(moduleFile)), name),
-    ]);
-  }
+  sections.push([
+    `${name}/${name}.module.scss (classes prefixed with ${name}_)`,
+    scopeModule(stripComments(compileFile(moduleFile)), name),
+  ]);
 }
 
 const header = `/*

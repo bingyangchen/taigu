@@ -1,30 +1,46 @@
-@use "../../../design_system" as _;
-
 .main {
-  padding: 0 20px;
+  padding: 0 var(--space-250);
   & > .logo_container {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 50px 0;
+    margin: var(--space-600) 0;
     & > .google_logo {
       width: 60px;
       height: 60px;
-      padding: 10px;
-      margin-left: 16px;
+      padding: var(--space-150);
+      margin-left: var(--space-200);
     }
   }
+  .bound_account {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-200);
+    height: 3.8rem;
+    padding: 0 var(--space-250);
+    background-color: var(--color-bg-surface);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+  .bound_account_email {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text-tertiary);
+    user-select: text;
+  }
   .beautiful_row_content {
-    color: _.$blue;
-    font-size: 1 * _.$base-font-size;
+    color: var(--color-text-accent);
+    font-size: var(--font-size-md);
   }
 }
 
 .bottom_sheet_row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px 20px;
+  gap: var(--space-150);
+  padding: var(--space-200) var(--space-250) var(--space-250);
   .google_logo {
     height: 24px;
   }
@@ -34,10 +50,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--space-200);
+  margin-bottom: var(--space-250);
   .google_logo {
     height: 24px;
-    margin-right: 5px;
+    margin-right: var(--space-075);
   }
 }

@@ -16,6 +16,7 @@ import { AppDispatch, RootState } from "../../redux/store";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
 import { mainTabNavigationState } from "../../utils/mainNavigation";
+import { makeWidthAtLeastQuery } from "../../utils/mediaQuery";
 import { getHideModalCallback } from "../../utils/modal";
 import { settingsPagePath } from "../../utils/router";
 import styles from "./MainSideBar.module.scss";
@@ -37,7 +38,7 @@ interface Props extends ReturnType<typeof mapStateToProps> {
   dispatch: AppDispatch;
 }
 
-const WIDE_MEDIA_QUERY = "(min-width: 960px)";
+const WIDE_MEDIA_QUERY = makeWidthAtLeastQuery("lg");
 
 interface State {
   isCollapsed: boolean;

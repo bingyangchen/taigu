@@ -69,11 +69,7 @@ export default class StockSearchContent extends React.Component<Props, State> {
       return (
         <section className={styles.page}>
           <header className={styles.page_header}>
-            <RoundButton
-              aria-label="返回"
-              className="p-12"
-              onClick={this.props.onClose}
-            >
+            <RoundButton aria-label="返回" size="l" onClick={this.props.onClose}>
               <Icons.IconChevronLeft sideLength="18" />
             </RoundButton>
             <div className={styles.page_search_input_outer}>

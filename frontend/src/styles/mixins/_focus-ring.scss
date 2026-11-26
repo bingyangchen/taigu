@@ -1,0 +1,12 @@
+// An outline rather than a box-shadow, because Windows high contrast mode removes
+// box-shadows but keeps outlines.
+@mixin focus-ring($offset: var(--focus-ring-offset), $color: var(--color-focus-ring)) {
+  outline: var(--focus-ring-width) solid $color;
+  outline-offset: $offset;
+}
+
+// For an element in a container that clips its overflow. Only for light
+// backgrounds: an inset ring on a blue, red, or green button has no contrast.
+@mixin focus-ring-inset {
+  @include focus-ring($offset: calc(-1 * var(--focus-ring-width)));
+}

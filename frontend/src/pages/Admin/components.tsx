@@ -61,7 +61,13 @@ export function LoadFailure({ onRetry }: { onRetry: () => void }): React.ReactEl
   return (
     <div className={styles.state} role="alert">
       無法載入資料。
-      <Button className={`white border s ${styles.touch_button}`} onClick={onRetry}>
+      <Button
+        variant="white"
+        size="s"
+        bordered
+        className={styles.touch_button}
+        onClick={onRetry}
+      >
         重新載入
       </Button>
     </div>

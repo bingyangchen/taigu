@@ -1,6 +1,7 @@
 import type { EChartsOption } from "echarts";
 import { useMemo } from "react";
 
+import { COLORS } from "../../styles/tokens";
 import { formatIndexPoints } from "../../utils/marketIndex";
 import Util from "../../utils/util";
 import AccessibleChart from "../AccessibleChart/AccessibleChart";
@@ -8,7 +9,6 @@ import {
   getMarketIndexAxisPadding,
   MARKET_INDEX_AXIS_LABEL_STYLE,
   MARKET_INDEX_GRID,
-  MARKET_INDEX_GUIDE_LINE_COLOR,
   MARKET_INDEX_SPLIT_LINE_STYLE,
   MARKET_INDEX_TOOLTIP_STYLE,
 } from "../MarketIndexLineChart/marketIndexChartData";
@@ -41,6 +41,7 @@ function makeMarketIndexHistoricalChartOption(
         ...MARKET_INDEX_AXIS_LABEL_STYLE,
         showMinLabel: true,
         showMaxLabel: true,
+        alignMinLabel: "left",
 
         // About five date labels across the axis.
         interval: Math.max(0, Math.round((dates.length - 1) / 4) - 1),
@@ -68,7 +69,7 @@ function makeMarketIndexHistoricalChartOption(
       },
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: MARKET_INDEX_SPLIT_LINE_STYLE },
+      splitLine: { showMaxLine: false, lineStyle: MARKET_INDEX_SPLIT_LINE_STYLE },
     },
     series: {
       type: "line",
@@ -98,7 +99,7 @@ function makeMarketIndexHistoricalChartOption(
       trigger: "axis",
       axisPointer: {
         type: "line",
-        lineStyle: { color: MARKET_INDEX_GUIDE_LINE_COLOR, width: 1 },
+        lineStyle: { color: COLORS.borderDefault, width: 1 },
       },
       formatter: (params: unknown) => {
         if (!Array.isArray(params) || params.length === 0) return "";

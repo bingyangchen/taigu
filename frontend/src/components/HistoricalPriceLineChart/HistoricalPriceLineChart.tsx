@@ -2,6 +2,7 @@ import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import React from "react";
 
+import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import Util from "../../utils/util";
 import { getPeriodTrendColor, makePeriodTrendAreaGradient } from "../periodTrend";
 
@@ -37,7 +38,7 @@ class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
     const dates = this.props.isWaiting ? this.state.fakeDates : this.props.dates;
     const values = this.props.isWaiting ? this.state.fakeValues : this.props.values;
     const lineColor = this.props.isWaiting
-      ? "#ccc"
+      ? COLORS.chartInactive
       : getPeriodTrendColor(this.props.values);
     const areaGradient = makePeriodTrendAreaGradient(this.props.values);
 
@@ -62,7 +63,8 @@ class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
         axisLabel: {
           show: !this.props.isWaiting,
           showMinLabel: false,
-          color: "#aaa",
+          color: COLORS.textSecondary,
+          fontSize: FONT_SIZES.chartTick,
           interval: (index: number) => index % 10 === 0,
           hideOverlap: true,
         },
@@ -85,7 +87,8 @@ class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
             position: "right",
             min: "dataMin",
             axisLabel: {
-              color: "#aaa",
+              color: COLORS.textSecondary,
+              fontSize: FONT_SIZES.chartTick,
               margin: 0,
               showMinLabel: false,
               showMaxLabel: false,
@@ -103,7 +106,7 @@ class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
         ? {
             type: "line",
             data: values,
-            lineStyle: { width: 2.5, color: "#ccc" },
+            lineStyle: { width: 2.5, color: COLORS.chartInactive },
             symbol: "none",
             silent: true,
           }
@@ -133,9 +136,12 @@ class HistoricalPriceLineChart extends React.PureComponent<Props, State> {
       tooltip: {
         show: !this.props.isWaiting,
         trigger: "axis",
-        axisPointer: { type: "line", lineStyle: { color: "#ddd", width: 1 } },
-        backgroundColor: "#ffffff",
-        textStyle: { color: "#334155", fontSize: 12 },
+        axisPointer: {
+          type: "line",
+          lineStyle: { color: COLORS.borderDefault, width: 1 },
+        },
+        backgroundColor: COLORS.bgSurface,
+        textStyle: { color: COLORS.textPrimary, fontSize: FONT_SIZES.xs },
         formatter: (params: unknown) => {
           if (!Array.isArray(params) || params.length === 0) {
             return "";

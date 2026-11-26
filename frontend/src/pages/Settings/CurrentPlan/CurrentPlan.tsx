@@ -134,7 +134,10 @@ export default function CurrentPlan(): React.ReactElement {
         <div className={styles.loadFailure} role="alert">
           <p>暫時無法取得方案資料，請稍後再試。</p>
           <Button
-            className={`white border l ${styles.reloadButton}`}
+            variant="white"
+            size="l"
+            bordered
+            className={styles.reloadButton}
             onClick={() => void loadBilling()}
           >
             重新載入
@@ -319,7 +322,7 @@ export default function CurrentPlan(): React.ReactElement {
           layout="compact"
           visualLayer="nested"
           discardButtonProps={{
-            className: "secondary l",
+            variant: "light",
             children: "取消",
             onClick: () => {
               setPendingCheckout(null);
@@ -327,7 +330,7 @@ export default function CurrentPlan(): React.ReactElement {
             },
           }}
           submitButtonProps={{
-            className: "primary_fill l",
+            variant: "primary_fill",
             children: "前往綠界付款",
             waiting: isWaiting,
             onClick: () => handleStartSubscription(pendingCheckout.interval),
@@ -506,7 +509,10 @@ function SubscriptionManagementPanel({
         </p>
       </div>
       <Button
-        className={`dangerous l border ${styles.stopAutoRenewalButton}`}
+        variant="dangerous"
+        size="l"
+        bordered
+        className={styles.stopAutoRenewalButton}
         onClick={onStopAutoRenewal}
       >
         停止自動續訂
@@ -564,7 +570,10 @@ function PlanActionGroup({
     <div className={`${styles.planActionGroup} ${styles.planActions}`}>
       <div className={styles.planOptions}>
         <Button
-          className={`transparent l ${styles.planOptionButton}`}
+          variant="white"
+          bordered
+          className={styles.planOptionButton}
+          contentClassName={styles.planOptionButtonContent}
           waiting={isWaiting}
           onClick={() => onSelect("month")}
         >
@@ -577,7 +586,10 @@ function PlanActionGroup({
           </span>
         </Button>
         <Button
-          className={`transparent l ${styles.planOptionButton} ${styles.recommendedPlanOption}`}
+          variant="white"
+          bordered
+          className={`${styles.planOptionButton} ${styles.recommendedPlanOption}`}
+          contentClassName={styles.planOptionButtonContent}
           waiting={isWaiting}
           onClick={() => onSelect("year")}
         >

@@ -1,23 +1,21 @@
-@use "../../design_system" as _;
-
 .tab {
   height: 65px;
-  padding: 0 20px;
-  color: _.$gray;
-  font-size: 0.9 * _.$base-font-size;
+  padding: 0 var(--space-250);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-nav-sidebar);
   display: flex;
   align-items: center;
-  gap: 15px;
-  border-radius: 10px;
+  gap: var(--space-200);
+  border-radius: var(--radius-lg);
   cursor: default;
-  transition-duration: 150ms;
+  transition-duration: var(--duration-fast);
   &.active {
-    color: _.$blue;
-    background-color: _.$blue-transparent-3;
+    color: var(--color-text-accent-strong);
+    background-color: var(--color-bg-accent-subtle);
   }
   @media (hover: hover) {
     &:not(.active):hover {
-      background-color: _.$black-transparent-3;
+      background-color: var(--color-bg-hover);
     }
   }
   &.icon_only {

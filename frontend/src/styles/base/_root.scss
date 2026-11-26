@@ -1,0 +1,40 @@
+@use "../tokens/breakpoints";
+@use "../tokens/color";
+@use "../tokens/layout";
+@use "../tokens/motion";
+@use "../tokens/radius";
+@use "../tokens/shadow";
+@use "../tokens/spacing";
+@use "../tokens/typography";
+@use "../tokens/z-index";
+
+@mixin -properties($prefix, $map) {
+  @each $name, $value in $map {
+    --#{$prefix}-#{$name}: #{$value};
+  }
+}
+
+// The narrow values are set here rather than by changing the html font size, which
+// would override the font size the user sets in the browser.
+:root {
+  @include -properties(color, color.$color);
+  @include -properties(font-size, typography.$font-size);
+  @include -properties(font-size, typography.$font-size-usage);
+  @include -properties(font-size, typography.$font-size-fluid);
+  @include -properties(font-weight, typography.$font-weight);
+  @include -properties(line-height, typography.$line-height);
+  --letter-spacing-base: #{typography.$letter-spacing-base};
+  @include -properties(space, spacing.$space);
+  @include -properties(radius, radius.$radius);
+  @include -properties(shadow, shadow.$shadow);
+  @include -properties(drop-shadow, shadow.$drop-shadow);
+  @include -properties(focus-ring, shadow.$focus-ring);
+  @include -properties(duration, motion.$duration);
+  @include -properties(ease, motion.$ease);
+  @include -properties(z, z-index.$z-index);
+  @include -properties(layout, layout.$layout);
+
+  @include breakpoints.down(lg) {
+    @include -properties(font-size, typography.$font-size-usage-narrow);
+  }
+}

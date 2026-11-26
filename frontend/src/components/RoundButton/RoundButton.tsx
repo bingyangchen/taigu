@@ -1,5 +1,3 @@
-import "./RoundButton.scss";
-
 import React, { MouseEventHandler } from "react";
 
 import Tooltip from "../Tooltip/Tooltip";
@@ -9,6 +7,8 @@ interface Props {
   children: React.ReactNode;
   onClick?: MouseEventHandler<HTMLButtonElement>;
   className?: string;
+  size?: "m" | "l";
+  frosted?: boolean;
   disabled?: boolean;
   hint_text?: string;
   "aria-label"?: string;
@@ -27,11 +27,15 @@ export default class RoundButton extends React.Component<Props, State> {
       <button
         type="button"
         aria-label={this.props["aria-label"] ?? this.props.hint_text}
-        className={
-          styles.main +
-          (this.props.disabled ? " " + styles.disabled : "") +
-          (this.props.className ? " round_button " + this.props.className : "")
-        }
+        className={[
+          styles.main,
+          this.props.size === "l" && styles.l,
+          this.props.frosted && styles.frosted,
+          this.props.disabled && styles.disabled,
+          this.props.className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
         onClick={this.props.disabled ? () => {} : (this.props.onClick ?? (() => {}))}
         disabled={this.props.disabled}
       >

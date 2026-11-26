@@ -1,5 +1,3 @@
-@use "../../design_system" as _;
-
 .main {
   position: fixed;
   bottom: 0;
@@ -8,32 +6,33 @@
   align-items: center;
   justify-content: space-around;
   box-sizing: border-box;
-  height: calc(_.$footer-height + env(safe-area-inset-bottom));
+  height: calc(var(--layout-footer-height) + env(safe-area-inset-bottom));
   width: 100%;
-  padding: 7px 5px calc(8px + env(safe-area-inset-bottom)) 5px;
-  background-color: _.$white-transparent;
+  padding: var(--space-100) var(--space-075)
+    calc(var(--space-100) + env(safe-area-inset-bottom)) var(--space-075);
+  background-color: var(--color-bg-frosted);
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
-  border-radius: 25px 25px 0 0;
-  box-shadow: 0 0px 8px 3px _.$black-transparent-3;
-  z-index: 2;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  box-shadow: var(--shadow-sm);
+  z-index: var(--z-footer);
   & > .icon_outer {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    width: 100%;
+    gap: var(--space-050);
+    flex: 1 1 0;
+    min-width: 0;
     height: 100%;
-    color: _.$black;
-    font-size: 0.68 * _.$base-font-size;
-    line-height: 1;
-    white-space: nowrap;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-nav-bar);
+    line-height: var(--line-height-tight);
     &:not(.active) {
-      color: _.$gray;
+      color: var(--color-text-secondary);
     }
     &.active {
-      color: _.$blue;
+      color: var(--color-text-accent);
     }
     & > .icon_inner {
       display: flex;
@@ -43,10 +42,11 @@
       height: 24px;
       padding: 1px;
     }
+    // Enlarged text wraps within its column instead of running into the next one.
     & > .label {
       max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      text-align: center;
+      overflow-wrap: anywhere;
     }
   }
 }

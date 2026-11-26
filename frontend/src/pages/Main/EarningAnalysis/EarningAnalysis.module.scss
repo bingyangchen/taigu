@@ -1,4 +1,4 @@
-@use "../../../design_system" as _;
+@use "styles" as ds;
 
 .main {
   position: relative;
@@ -12,28 +12,18 @@
     display: flex;
     align-self: flex-start;
     align-items: center;
-    height: _.$header-height;
+    height: var(--layout-header-height);
     width: fit-content;
-    padding-left: 13px;
+    padding-left: var(--space-150);
     margin-right: auto;
     z-index: 3;
-    transition: top 300ms ease;
-    @media (max-width: _.$width-780) {
+    transition: top var(--duration-slow) var(--ease-standard);
+    @include ds.down(md) {
       left: 0;
     }
     &.scrolled {
       top: 13px;
       height: auto;
-      & > * {
-        border-radius: 50%;
-        background-color: _.$white-transparent;
-        backdrop-filter: blur(10px) saturate(150%);
-        -webkit-backdrop-filter: blur(10px) saturate(150%);
-        box-shadow:
-          0 4px 16px _.$black-transparent-2,
-          0 2px 8px _.$black-transparent-3;
-        border: 0.5px solid _.$noisy-white;
-      }
     }
   }
   & > .floating_pill_wrapper {
@@ -41,11 +31,11 @@
     top: 10px;
     display: flex;
     justify-content: center;
-    padding: 5px 16px 20px;
+    padding: var(--space-075) var(--space-200) var(--space-250);
     z-index: 2;
     background-color: transparent;
-    @media (max-width: _.$width-512) {
-      padding-top: 5px;
+    @include ds.down(sm) {
+      padding-top: var(--space-075);
     }
   }
   & > .chart_container {
@@ -54,28 +44,26 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 20px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    @media (max-width: _.$width-780) {
-      padding: 10px;
+    padding: var(--space-250);
+    overflow: hidden auto;
+    @include ds.down(md) {
+      padding: var(--space-150);
     }
     & > .empty_section {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 60px 20px;
+      padding: var(--space-800) var(--space-250);
       text-align: center;
-      color: _.$gray;
-      line-height: 1.6;
-      font-size: 0.9 * _.$base-font-size;
-      @media (max-width: _.$width-780) {
-        padding: 40px 20px;
-        font-size: 0.85 * _.$base-font-size;
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-relaxed);
+      font-size: var(--font-size-sm);
+      @include ds.down(md) {
+        padding: var(--space-500) var(--space-250);
       }
     }
   }
   & > .mobile_padding {
-    height: calc(_.$footer-height + 60px);
+    height: calc(var(--layout-footer-height) + 60px);
   }
 }

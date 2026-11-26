@@ -34,7 +34,7 @@ class PrivacyPolicy extends React.Component<Props, State> {
         <div className={styles.header}>
           {Util.isMobile && (
             <RoundButton
-              className="p-12"
+              size="l"
               hint_text="上一頁"
               onClick={() => this.props.router.navigate(-1)}
             >

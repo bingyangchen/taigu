@@ -22,7 +22,7 @@ export default function DestructiveActionSection({
         <div className={styles.title}>其他操作</div>
         <div className={styles.description}>{description}</div>
       </div>
-      <Button type="button" className="dangerous l border" onClick={onClick}>
+      <Button type="button" variant="dangerous" size="l" bordered onClick={onClick}>
         {buttonLabel}
       </Button>
     </section>

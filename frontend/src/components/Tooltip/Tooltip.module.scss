@@ -1,19 +1,17 @@
-@use "../../design_system" as _;
-
 .content {
   max-width: min(260px, calc(100vw - 32px));
-  border-radius: 6px;
-  padding: 4px 9px 5px;
-  background-color: _.$deep-gray;
-  color: _.$white;
-  font-size: 0.8 * _.$base-font-size;
-  line-height: 1.4;
-  z-index: 10;
-  animation: fadein 160ms ease;
+  border-radius: var(--radius-sm);
+  padding: var(--space-050) var(--space-100) var(--space-075);
+  background-color: var(--color-bg-inverse);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-snug);
+  z-index: var(--z-popover);
+  animation: fadein var(--duration-fast) var(--ease-standard);
 }
 
 .arrow {
-  fill: _.$deep-gray;
+  fill: var(--color-bg-inverse);
 }
 
 @keyframes fadein {
