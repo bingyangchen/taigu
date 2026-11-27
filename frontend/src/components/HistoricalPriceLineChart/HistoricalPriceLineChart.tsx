@@ -5,6 +5,11 @@ import { memo, useState } from "react";
 import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import Util from "../../utils/util";
 import { getPeriodTrendColor, makePeriodTrendAreaGradient } from "../periodTrend";
+import {
+  makeStockChangeTooltipLine,
+  makeStockPriceTooltipLine,
+  makeStockTooltipTitle,
+} from "../stockPriceFormat";
 
 interface Props {
   dates: string[];
@@ -30,7 +35,7 @@ function HistoricalPriceLineChart(props: Props) {
 
 export default memo(HistoricalPriceLineChart);
 
-function makeHistoricalPriceChartOption(
+export function makeHistoricalPriceChartOption(
   props: Props,
   fakeData: ChartData,
 ): EChartsOption {
@@ -145,17 +150,16 @@ function makeHistoricalPriceChartOption(
         if (!Array.isArray(params) || params.length === 0) {
           return "";
         }
-        const param = params[0];
-        const dateStr = param.name;
-        const value = param.value;
-        const dataIndex = param.dataIndex;
-        const previousValue =
-          typeof dataIndex === "number" && dataIndex > 0 ? values[dataIndex - 1] : null;
-        const fluctPercent =
-          previousValue && previousValue !== 0
-            ? (((value - previousValue) / previousValue) * 100).toFixed(2)
-            : "-";
-        return `${dateStr}<br/>收盤價 $${value.toLocaleString()}<br/>漲跌幅 ${fluctPercent}%`;
+        const [{ name, value, dataIndex }] = params;
+
+        // The chart plots every retained close (STOCK-R5), so the point before this
+        // one on the chart is also the close before it in the data.
+        const previousValue = dataIndex > 0 ? values[dataIndex - 1] : null;
+        return [
+          makeStockTooltipTitle(name),
+          makeStockPriceTooltipLine(value),
+          makeStockChangeTooltipLine("漲跌", value, previousValue),
+        ].join("<br/>");
       },
     },
     animationDuration: 300,

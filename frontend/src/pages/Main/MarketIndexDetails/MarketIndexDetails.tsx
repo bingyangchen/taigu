@@ -9,9 +9,9 @@ import {
   Skeleton,
   SpeedDial,
 } from "../../../components";
+import type { SegmentedControlOption } from "../../../components/SegmentedControl/SegmentedControl";
 import { IconChevronLeft } from "../../../icons";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { changeMarketIndexHistoricalDaysToShow } from "../../../redux/slices/MainPageSlice";
 import {
   fetchMarketIndexHistoricalPrices,
   fetchRealtimeMarketIndex,
@@ -33,19 +33,25 @@ import {
 import { navigateBack } from "../../../utils/router";
 import styles from "./MarketIndexDetails.module.scss";
 
-type ChartMode = "intraday" | "historical";
+interface ChartRange extends SegmentedControlOption {
+  // How many of the latest points the historical charts show; null shows the
+  // intraday charts.
+  historyLimit: number | null;
+}
 
-const CHART_MODES = [
-  { label: "今日", value: "intraday" },
-  { label: "歷史", value: "historical" },
+const CHART_RANGES: ChartRange[] = [
+  { label: "今日", value: "intraday", historyLimit: null },
+  { label: "1M", value: "1M", ariaLabel: "1M，最近 30 筆", historyLimit: 30 },
+  { label: "1Q", value: "1Q", ariaLabel: "1Q，最近 91 筆", historyLimit: 91 },
+  { label: "1Y", value: "1Y", ariaLabel: "1Y，最近 365 筆", historyLimit: 365 },
+  { label: "ALL", value: "ALL", ariaLabel: "ALL，全部", historyLimit: Infinity },
 ];
 
-const HISTORICAL_RANGES = [
-  { label: "1M", value: "30", ariaLabel: "1M，最近 30 筆" },
-  { label: "1Q", value: "91", ariaLabel: "1Q，最近 91 筆" },
-  { label: "1Y", value: "365", ariaLabel: "1Y，最近 365 筆" },
-  { label: "ALL", value: "Infinity", ariaLabel: "ALL，全部" },
-];
+function getChartRange(value: string): ChartRange {
+  const range = CHART_RANGES.find((option) => option.value === value);
+  if (!range) throw new Error(`Unknown chart range: ${value}`);
+  return range;
+}
 
 function RetryButton({
   isRetrying,
@@ -67,15 +73,15 @@ function RetryButton({
 }
 
 function ChartStatus({
-  mode,
+  isHistorical,
   status,
   onRetry,
 }: {
-  mode: ChartMode;
+  isHistorical: boolean;
   status: MarketIndexQueryStatus;
   onRetry: () => void;
 }) {
-  const trend = mode === "historical" ? "歷史走勢" : "盤中走勢";
+  const trend = isHistorical ? "歷史走勢" : "盤中走勢";
   const isRetrying = status === "retrying";
   const isLoading = status === "loading" || status === "idle" || isRetrying;
   return (
@@ -100,19 +106,17 @@ function ChartStatus({
 }
 
 function MarketChart({
-  mode,
+  historyLimit,
   market,
   quote,
   sharedDate,
   isSharedIntradayError,
-  days,
 }: {
-  mode: ChartMode;
+  historyLimit: ChartRange["historyLimit"];
   market: MarketId;
   quote: MarketIndexQuote;
   sharedDate: string | null;
   isSharedIntradayError: boolean;
-  days: number;
 }) {
   const dispatch = useAppDispatch();
   const closingPrices = useAppSelector(
@@ -124,14 +128,18 @@ function MarketChart({
   const intradayStatus = useAppSelector(
     (state) => state.stockInfo.marketIndexRealtimeStatus,
   );
-  const { dates, values } = useMemo(
-    () => makeMarketIndexHistory(closingPrices, quote, days),
-    [closingPrices, quote, days],
+  const history = useMemo(
+    () =>
+      historyLimit === null
+        ? null
+        : makeMarketIndexHistory(closingPrices, quote, historyLimit),
+    [closingPrices, quote, historyLimit],
   );
-  const isHistorical = mode === "historical";
+  const isHistorical = history !== null;
   const status = isHistorical ? historicalStatus : intradayStatus;
   const hasChart = isHistorical
-    ? dates.length > 0 && (historicalStatus === "ready" || closingPrices !== undefined)
+    ? history.dates.length > 0 &&
+      (historicalStatus === "ready" || closingPrices !== undefined)
     : quote.points.length > 0;
   const name = MARKET_ID_TO_INDEX_NAME[market];
   const label = `${name}${isHistorical ? "歷史" : "今日"}走勢（點）`;
@@ -165,8 +173,9 @@ function MarketChart({
         {hasChart ? (
           isHistorical ? (
             <MarketIndexHistoricalLineChart
-              dates={dates}
-              values={values}
+              dates={history.dates}
+              values={history.values}
+              previousValues={history.previousValues}
               label={label}
             />
           ) : (
@@ -178,7 +187,7 @@ function MarketChart({
           )
         ) : !isSharedIntradayError ? (
           <ChartStatus
-            mode={mode}
+            isHistorical={isHistorical}
             status={status}
             onRetry={() =>
               isHistorical
@@ -201,10 +210,7 @@ export default function MarketIndexDetails() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const [mode, setMode] = useState<ChartMode>("intraday");
-  const days = useAppSelector(
-    (state) => state.mainPage.marketIndexHistoricalDaysToShow,
-  );
+  const [range, setRange] = useState<ChartRange>(CHART_RANGES[0]);
   const prices = useAppSelector((state) => state.stockInfo.marketIndexRealtimePrices);
   const dates = useAppSelector((state) => state.stockInfo.marketIndexRealtimeDates);
   const status = useAppSelector((state) => state.stockInfo.marketIndexRealtimeStatus);
@@ -217,7 +223,7 @@ export default function MarketIndexDetails() {
   );
   const sharedDate = getSharedMarketIndexDate(quotes.tse, quotes.otc);
   const isSharedIntradayError =
-    mode === "intraday" &&
+    range.historyLimit === null &&
     (status === "failed" || status === "retrying") &&
     quotes.tse.latestPrice === null &&
     quotes.otc.latestPrice === null;
@@ -260,23 +266,12 @@ export default function MarketIndexDetails() {
       <div className={styles.surface}>
         <div className={styles.toolbar}>
           <SegmentedControl
-            label="兩個指數的走勢類型"
-            optionWidth="var(--mode-option-width)"
-            options={CHART_MODES}
-            value={mode}
-            onChange={(value) => setMode(value as ChartMode)}
+            label="兩個指數的走勢區間"
+            optionWidth="var(--range-option-width)"
+            options={CHART_RANGES}
+            value={range.value}
+            onChange={(value) => setRange(getChartRange(value))}
           />
-          {mode === "historical" && (
-            <SegmentedControl
-              label="兩個指數的歷史區間"
-              optionWidth="var(--range-option-width)"
-              options={HISTORICAL_RANGES}
-              value={String(days)}
-              onChange={(value) =>
-                dispatch(changeMarketIndexHistoricalDaysToShow(Number(value)))
-              }
-            />
-          )}
         </div>
         {isSharedIntradayError && (
           <div className={styles.shared_error}>
@@ -294,11 +289,10 @@ export default function MarketIndexDetails() {
             <MarketChart
               key={market}
               market={market}
-              mode={mode}
+              historyLimit={range.historyLimit}
               quote={quotes[market]}
               sharedDate={sharedDate}
               isSharedIntradayError={isSharedIntradayError}
-              days={days}
             />
           ))}
         </div>

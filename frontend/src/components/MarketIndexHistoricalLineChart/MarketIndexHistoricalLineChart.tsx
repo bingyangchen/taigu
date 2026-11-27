@@ -2,7 +2,10 @@ import type { EChartsOption } from "echarts";
 import { useMemo } from "react";
 
 import { COLORS } from "../../styles/tokens";
-import { formatIndexPoints } from "../../utils/marketIndex";
+import {
+  formatIndexChangeFromPrevious,
+  formatIndexPoints,
+} from "../../utils/marketIndex";
 import Util from "../../utils/util";
 import AccessibleChart from "../AccessibleChart/AccessibleChart";
 import {
@@ -17,12 +20,14 @@ import { getPeriodTrendColor, makePeriodTrendAreaGradient } from "../periodTrend
 interface Props {
   dates: string[];
   values: number[];
+  previousValues: (number | null)[];
   label: string;
 }
 
-function makeMarketIndexHistoricalChartOption(
+export function makeMarketIndexHistoricalChartOption(
   dates: string[],
   values: number[],
+  previousValues: (number | null)[],
 ): EChartsOption {
   const lineColor = getPeriodTrendColor(values);
   const areaGradient = makePeriodTrendAreaGradient(values);
@@ -103,8 +108,12 @@ function makeMarketIndexHistoricalChartOption(
       },
       formatter: (params: unknown) => {
         if (!Array.isArray(params) || params.length === 0) return "";
-        const [param] = params;
-        return `${param.name}<br/>指數 ${formatIndexPoints(param.value)}`;
+        const [{ name, value, dataIndex }] = params;
+        return [
+          name,
+          `指數 ${formatIndexPoints(value)}`,
+          `漲跌 ${formatIndexChangeFromPrevious(value, previousValues[dataIndex])}`,
+        ].join("<br/>");
       },
     },
   };
@@ -113,11 +122,12 @@ function makeMarketIndexHistoricalChartOption(
 export default function MarketIndexHistoricalLineChart({
   dates,
   values,
+  previousValues,
   label,
 }: Props) {
   const option = useMemo(
-    () => makeMarketIndexHistoricalChartOption(dates, values),
-    [dates, values],
+    () => makeMarketIndexHistoricalChartOption(dates, values, previousValues),
+    [dates, values, previousValues],
   );
   return <AccessibleChart label={label} option={option} />;
 }

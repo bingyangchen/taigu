@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 import { COLORS } from "../../styles/tokens";
 import {
-  formatIndexChange,
+  formatIndexChangeFromPrevious,
   formatIndexPoints,
   formatMarketMinute,
   MARKET_CLOSE_MINUTE,
@@ -36,12 +36,11 @@ function makePointDescription(
   price: number,
   prevClosePrice: number | null,
 ): string[] {
-  const time = formatMarketMinute(minute);
-  const priceText = `指數 ${formatIndexPoints(price)}`;
-  if (prevClosePrice === null) return [time, priceText, "較昨收 -- (--)"];
-  const change = price - prevClosePrice;
-  const percent = prevClosePrice === 0 ? null : (change / prevClosePrice) * 100;
-  return [time, priceText, `較昨收 ${formatIndexChange(change, percent)}`];
+  return [
+    formatMarketMinute(minute),
+    `指數 ${formatIndexPoints(price)}`,
+    `較昨收 ${formatIndexChangeFromPrevious(price, prevClosePrice)}`,
+  ];
 }
 
 export function makeMarketIndexIntradayChartOption(
