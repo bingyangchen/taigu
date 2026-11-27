@@ -266,7 +266,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 3. 開啟 `https://local.taigu.tw/market`。
 4. 點選「關注」。
 
-預期：2330 那一列顯示台積電、2330、1,010、「▲ 10.00 1.00%」（漲跌 10.00、漲跌幅 1.00%）與「成交量 3,500 張」。
+預期：2330 那一列顯示台積電、2330、1,010、「▲10.00 (1.00%)」（漲跌 10.00、漲跌幅 1.00%）與「成交量 3,500 張」。
 
 ## FAV-R10.2 還沒有價格的自選股
 

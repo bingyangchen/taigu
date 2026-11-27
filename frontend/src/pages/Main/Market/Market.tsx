@@ -7,6 +7,10 @@ import {
   Skeleton,
   SpeedDial,
 } from "../../../components";
+import {
+  formatStockChange,
+  formatStockChangePercent,
+} from "../../../components/stockPriceFormat";
 import * as Icons from "../../../icons";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -19,6 +23,7 @@ import { fetchStockInfo } from "../../../redux/slices/StockInfoSlice";
 import type { MarketSortKey, MarketTab, StockInfo } from "../../../types";
 import Env from "../../../utils/env";
 import {
+  getAbsoluteFluctPercent,
   getAllMarketSids,
   getStockName,
   getStockXirr,
@@ -129,7 +134,7 @@ function Market() {
     const stockName = stockInfo?.name ?? getFallbackStockName(sid);
     const fluctPrice = stockInfo?.fluct_price ?? 0;
     const close = stockInfo?.close ?? 0;
-    const changePercent = getChangePercent(stockInfo);
+    const previousClose = close - fluctPrice;
     const tone = fluctPrice > 0 ? "up" : fluctPrice < 0 ? "down" : "neutral";
     const accessibleLabel =
       activeTab === "holding"
@@ -144,7 +149,7 @@ function Market() {
         stockName,
         close,
         fluctPrice,
-        changePercent,
+        previousClose,
         tone,
         accessibleLabel,
       );
@@ -166,7 +171,7 @@ function Market() {
           </div>
           <div className={styles.price_block}>
             <strong>{close > 0 ? close.toLocaleString() : "--"}</strong>
-            <span>{formatChange(fluctPrice, changePercent)}</span>
+            <span>{formatStockChange(fluctPrice, previousClose)}</span>
           </div>
         </div>
         {activeTab === "holding" && renderHoldingChips(sid, stockInfo)}
@@ -182,14 +187,12 @@ function Market() {
     stockName: string,
     close: number,
     fluctPrice: number,
-    changePercent: number,
+    previousClose: number,
     tone: "up" | "down" | "neutral",
     accessibleLabel: string,
   ): React.ReactNode => {
     const planText = getNearestPlanText(sid, stockInfo);
-    const symbol = fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "";
-    const changeText =
-      fluctPrice === 0 ? "-" : `${symbol} ${(changePercent * 100).toFixed(2)}%`;
+    const changeText = formatStockChangePercent(fluctPrice, previousClose);
 
     let inventory = 0;
     let xirr = 0;
@@ -458,13 +461,6 @@ function Market() {
     return `距${planType} ${(nearestPlan.distance * 100).toFixed(1)}%`;
   };
 
-  const getChangePercent = (stockInfo: StockInfo | undefined): number => {
-    if (!stockInfo || stockInfo.fluct_price === 0) return 0;
-    const previousClose = stockInfo.close - stockInfo.fluct_price;
-    if (previousClose === 0) return 0;
-    return Math.abs(stockInfo.fluct_price / previousClose);
-  };
-
   const getSubtitle = (activeTab: MarketTab): string => {
     return activeTab === "holding"
       ? "追蹤你的持股現況、報酬率與最新價格。"
@@ -475,16 +471,10 @@ function Market() {
     return activeTab === "holding" ? "持股追蹤" : "關注";
   };
 
-  const formatChange = (fluctPrice: number, percent: number): string => {
-    if (fluctPrice === 0) return "-";
-    const symbol = fluctPrice > 0 ? "▲" : "▼";
-    return `${symbol} ${Math.abs(fluctPrice).toFixed(2)}  ${(percent * 100).toFixed(2)}%`;
-  };
-
   const getAccessibleChangeText = (stockInfo: StockInfo | undefined): string => {
     if (!stockInfo || stockInfo.fluct_price === 0) return "今日持平";
     const direction = stockInfo.fluct_price > 0 ? "上漲" : "下跌";
-    const percent = getChangePercent(stockInfo);
+    const percent = getAbsoluteFluctPercent(stockInfo);
     return `${direction} ${Math.abs(stockInfo.fluct_price).toFixed(2)}，${(
       percent * 100
     ).toFixed(2)}%`;

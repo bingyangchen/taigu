@@ -17,6 +17,7 @@ import Util from "../../utils/util";
 import DollarSign from "../DollarSign/DollarSign";
 import RoundButton from "../RoundButton/RoundButton";
 import SearchKeywordInput from "../SearchKeywordInput/SearchKeywordInput";
+import { formatStockChange } from "../stockPriceFormat";
 import styles from "./StockSearchContent.module.scss";
 
 class StockSearchLRUCache {
@@ -205,23 +206,10 @@ export default function StockSearchContent({ variant, onClose, onSelectStock }: 
                 {stockInfo.close}
               </div>
               <div className={styles.price_fluct}>
-                {`${
-                  stockInfo.fluct_price > 0
-                    ? "▲"
-                    : stockInfo.fluct_price < 0
-                      ? "▼"
-                      : "-"
-                }
-                ${stockInfo.fluct_price !== 0 ? Math.abs(stockInfo.fluct_price) : ""}
-                ${
-                  stockInfo.fluct_price !== 0
-                    ? "(" +
-                      (Math.abs(stockInfo.fluct_price / stockInfo.close) * 100).toFixed(
-                        1,
-                      ) +
-                      "%)"
-                    : ""
-                }`}
+                {formatStockChange(
+                  stockInfo.fluct_price,
+                  stockInfo.close - stockInfo.fluct_price,
+                )}
               </div>
             </div>
           </div>
