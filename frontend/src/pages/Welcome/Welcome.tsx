@@ -297,13 +297,13 @@ export default function Welcome(): React.ReactElement {
           <div className={styles.devices_stage}>
             <LaptopFrame
               src={stockDetailsWide}
-              alt="電腦上的台積電頁面：近 60 日收盤價走勢、投資摘要與庫存分佈並排"
+              alt="電腦上的台積電頁面：最近一年的收盤價走勢、投資摘要與庫存分佈並排"
               className={styles.devices_laptop}
             />
             <PhoneFrame className={styles.devices_phone}>
               <PhoneScreenshot
                 screen={SCREENS.stockDetails}
-                alt="手機上的台積電頁面：價格與近 60 日收盤價走勢"
+                alt="手機上的台積電頁面：價格與最近一年的收盤價走勢"
               />
             </PhoneFrame>
           </div>
