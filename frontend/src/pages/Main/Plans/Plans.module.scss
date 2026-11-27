@@ -44,26 +44,30 @@
     }
   }
   & > .record_list {
-    // The scroll container spans the whole page and only its card keeps the gutter,
-    // so the mouse wheel scrolls the list over the gutter too.
-    padding: var(--space-025) var(--list-gutter) var(--space-150);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin-inline: var(--list-gutter);
     font-size: var(--font-size-sm);
-    overflow: auto;
+    border-radius: var(--radius-2xl);
+    background-color: var(--color-bg-frosted);
+    box-shadow: var(--shadow-sm);
     @include ds.down(md) {
-      padding: 0 0 calc(var(--space-1000) + var(--layout-footer-height));
+      margin-inline: 0;
+      border-radius: 0;
+      background-color: transparent;
+      box-shadow: none;
     }
-    .list_card {
-      display: flex;
-      flex-direction: column;
-      padding-bottom: var(--space-600);
-      border-radius: var(--radius-2xl);
-      background-color: var(--color-bg-frosted);
-      box-shadow: var(--shadow-sm);
+    .list_scroller {
+      @include ds.up(md) {
+        padding-bottom: var(--space-600);
+        @include ds.card-scroller(var(--list-gutter), var(--radius-2xl));
+      }
       @include ds.down(md) {
-        padding-bottom: 0;
-        border-radius: 0;
-        background-color: transparent;
-        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: calc(var(--space-1000) + var(--layout-footer-height));
+        overflow: auto;
       }
     }
     .plan_row {
