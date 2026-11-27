@@ -1,0 +1,7 @@
+// Gives text the base letter spacing and keeps it centered between the inline
+// paddings. Browsers add the letter spacing after the last character of a line too,
+// so the end padding gives that space back.
+@mixin centered-letter-spacing($padding-inline) {
+  padding-inline: $padding-inline calc(#{$padding-inline} - var(--letter-spacing-base));
+  letter-spacing: var(--letter-spacing-base);
+}
