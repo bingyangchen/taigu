@@ -165,8 +165,8 @@ function Records() {
       {filteredRecords.length === 0 ? (
         <div className={styles.empty_section}>目前沒有紀錄</div>
       ) : (
-        <div className={styles.record_list} data-page-scroll>
-          <div className={styles.list_card}>
+        <div className={styles.record_list}>
+          <div className={styles.list_scroller} data-page-scroll>
             {filteredRecords
               .slice(0, numberToShow)
               .map((record: TradeRecord | CashDividendRecord) => {

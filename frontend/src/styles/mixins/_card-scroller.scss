@@ -1,0 +1,33 @@
+// Wider than any classic scrollbar; Windows draws the widest, at 17px.
+$-scrollbar-max-width: 20px;
+
+// A scroll container that sits in a card and reaches $gutter past the card on both
+// sides, so the mouse wheel scrolls it over the gutters too. The card spans the
+// nearest inline-size container less $gutter on each side, and the rows take that
+// width, so a scrollbar that takes up width narrows the gutter instead of the rows.
+// A mask, unlike overflow or clip-path, rounds the rows to the card's corners without
+// taking the gutters out of hit testing. It shows a gutter only where the scrollbar
+// is, so where the gutters are wider than that, the shadows rows cast past the card
+// stay hidden.
+@mixin card-scroller($gutter, $radius) {
+  $opaque: var(--color-mask-opaque);
+  // Fades over half a pixel, so the corners' edges are anti-aliased.
+  $corner: radial-gradient(closest-side, $opaque calc(100% - 0.5px), transparent);
+  $corner-size: calc(2 * $radius) calc(2 * $radius);
+  display: grid;
+  grid-template-columns: calc(100cqi - 2 * $gutter);
+  margin-inline: calc(-1 * $gutter);
+  padding-inline-start: $gutter;
+  overflow: hidden auto;
+  mask:
+    linear-gradient($opaque 0 0) right / min($gutter, $-scrollbar-max-width) 100%
+      no-repeat,
+    linear-gradient($opaque 0 0) center / calc(100% - 2 * $gutter)
+      calc(100% - 2 * $radius) no-repeat,
+    linear-gradient($opaque 0 0) center / calc(100% - 2 * $gutter - 2 * $radius) 100%
+      no-repeat,
+    $corner left $gutter top 0 / $corner-size no-repeat,
+    $corner right $gutter top 0 / $corner-size no-repeat,
+    $corner left $gutter bottom 0 / $corner-size no-repeat,
+    $corner right $gutter bottom 0 / $corner-size no-repeat;
+}

@@ -71,6 +71,8 @@ $color: (
   chart-muted: palette.$slate-400,
   chart-incomplete-area: rgba(palette.$slate-800, 0.05),
   chart-inactive: palette.$slate-300,
+  // The shown part of a CSS mask, which reads only the alpha channel.
+  mask-opaque: palette.$black,
 );
 
 @function -hex-byte($value) {
