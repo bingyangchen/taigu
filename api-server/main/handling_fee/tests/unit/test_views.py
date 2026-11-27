@@ -634,6 +634,30 @@ class TestUpdateDiscountView:
         assert data["amount"] == 100  # Unchanged
         assert data["memo"] == "New memo text"
 
+    @pytest.mark.scenario("FEE-R9.2")
+    def test_update_discount_clears_memo(
+        self,
+        request_factory: RequestFactory,
+        user: User,
+        discount: HandlingFeeDiscountRecord,
+    ) -> None:
+        """An empty memo is a value to store, not a field left out."""
+        payload = {"date": "2023-12-01", "amount": 100, "memo": ""}
+
+        request = request_factory.put(
+            f"/api/handling-fee/discount/{discount.pk}/",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        request.user = user
+
+        response = _update_discount(request, str(discount.pk))
+
+        assert isinstance(response, JsonResponse)
+        assert response.status_code == 200
+        discount.refresh_from_db()
+        assert discount.memo == ""
+
     def test_update_discount_empty_payload(
         self,
         request_factory: RequestFactory,

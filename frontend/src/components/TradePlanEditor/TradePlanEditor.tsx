@@ -268,7 +268,7 @@ export default function TradePlanEditor({
     setInitialForm(nextForm);
     setIsShowingErrors(false);
     setSaved(null);
-    steps.restart("title");
+    steps.restart("title", getFilledSteps(nextForm, ""));
   };
 
   const missing = [

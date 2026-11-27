@@ -133,21 +133,25 @@ export interface EditorDateFieldHandle {
 }
 
 interface EditorDateFieldProps {
-  subject: "交易" | "入帳";
+  subject: "交易" | "入帳" | "折讓";
   value: string;
   today: string;
   error: string | null;
+  warnsOnWeekend?: boolean;
   onChange: (_date: string) => void;
 }
 
 export const EditorDateField = forwardRef<EditorDateFieldHandle, EditorDateFieldProps>(
-  function EditorDateField({ subject, value, today, error, onChange }, ref) {
+  function EditorDateField(
+    { subject, value, today, error, warnsOnWeekend = true, onChange },
+    ref,
+  ) {
     const label = `${subject}日期`;
     const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }));
     const notice: Notice | null = error
       ? { tone: "error", text: error }
-      : isWeekend(value)
+      : warnsOnWeekend && isWeekend(value)
         ? {
             tone: "warning",
             text: `${formatEditorDate(value, today)}是週${getWeekdayName(
@@ -287,6 +291,22 @@ export const EditorNumberField = forwardRef<HTMLInputElement, EditorNumberFieldP
     );
   },
 );
+
+export function EditorTextField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (_text: string) => void;
+}): React.ReactElement {
+  return (
+    <div className={styles.field}>
+      <LabeledInput title={label} value={value} onChange={onChange} />
+    </div>
+  );
+}
 
 export function SideControl({
   value,

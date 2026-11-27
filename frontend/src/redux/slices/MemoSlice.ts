@@ -1,8 +1,13 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import type { CompanyInfo, UpdateOrCreateMemoRequestBody } from "../../types";
+import type {
+  CompanyInfo,
+  UpdateOrCreateMemoRequestBody,
+  UpdateOrCreateMemoResponse,
+} from "../../types";
 import Api from "../../utils/api";
+import type { RootState } from "../store";
 
 interface MemoState {
   sidCompanyInfoMap: { [sid: string]: CompanyInfo };
@@ -29,12 +34,20 @@ export const fetchCompanyInfo = createAsyncThunk(
 
 export const updateOrCreateMemo = createAsyncThunk(
   "memo/updateOrCreateMemo",
-  async (requestBody: UpdateOrCreateMemoRequestBody): Promise<CompanyInfo> => {
+  async (
+    requestBody: UpdateOrCreateMemoRequestBody,
+    { dispatch, getState },
+  ): Promise<UpdateOrCreateMemoResponse> => {
     const response = await Api.sendRequest(
       `stock-memo/${requestBody.sid}`,
       "post",
       JSON.stringify(requestBody),
     );
+    // The response has no material facts to make a whole company info from, so
+    // company info that has not loaded is loaded again, with the saved note.
+    if (!(getState() as RootState).memo.sidCompanyInfoMap[requestBody.sid]) {
+      void dispatch(fetchCompanyInfo(requestBody.sid));
+    }
     // if (navigator.vibrate) navigator.vibrate(20);
     return response;
   },
@@ -102,7 +115,10 @@ export const memoSlice = createSlice({
         state.isWaiting = true;
       })
       .addCase(updateOrCreateMemo.fulfilled, (state, action) => {
-        state.sidCompanyInfoMap[action.payload.sid] = action.payload;
+        const companyInfo = state.sidCompanyInfoMap[action.payload.sid];
+        // The response leaves out the material facts, so it updates the loaded
+        // company info instead of replacing it.
+        if (companyInfo) Object.assign(companyInfo, action.payload);
         state.isWaiting = false;
       })
       .addCase(updateOrCreateMemo.rejected, (state) => {

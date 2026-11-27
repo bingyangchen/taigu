@@ -9,11 +9,13 @@ import Api from "../../utils/api";
 
 interface HandlingFeeDiscountState {
   handlingFeeDiscountRecords: HandlingFeeDiscount[];
+  hasLoaded: boolean;
   isWaiting: boolean;
 }
 
 const initialState: HandlingFeeDiscountState = {
   handlingFeeDiscountRecords: [],
+  hasLoaded: false,
   isWaiting: false,
 };
 
@@ -71,6 +73,7 @@ export const handlingFeeDiscountSlice = createSlice({
       })
       .addCase(fetchAllDiscounts.fulfilled, (state, action) => {
         state.handlingFeeDiscountRecords = action.payload;
+        state.hasLoaded = true;
         state.isWaiting = false;
       })
       .addCase(fetchAllDiscounts.rejected, (state) => {

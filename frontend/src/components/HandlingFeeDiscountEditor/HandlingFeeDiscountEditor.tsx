@@ -1,164 +1,344 @@
-import { memo, MouseEvent, MouseEventHandler, useRef, useState } from "react";
+import React, { MouseEventHandler, useId, useRef, useState } from "react";
 
-import {
-  CheckDeleteModal,
-  DeletePreview,
-  DestructiveActionSection,
-  DollarSign,
-  FormPageShell,
-  LabeledInput,
-  Modal,
-} from "../../components";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   createDiscount,
   deleteDiscount,
   updateDiscount,
 } from "../../redux/slices/HandlingFeeDiscountSlice";
+import { selectNetHandlingFee } from "../../redux/slices/TradeRecordSlice";
 import type { HandlingFeeDiscount } from "../../types";
-import Util from "../../utils/util";
-import type { Props as ButtonProps } from "../Button/Button";
-import styles from "./HandlingFeeDiscountEditor.module.scss";
+import { getTodayDateString } from "../../utils/date";
+import { getDiscountTitle } from "../../utils/handlingFeeDiscount";
+import { NARROW_LAYOUT_QUERY, useMediaQuery } from "../../utils/mediaQuery";
+import {
+  formatEditorDate,
+  formatNumber,
+  formatRelativeEditorDate,
+  parseNumberText,
+} from "../../utils/recordEditor";
+import CheckDeleteModal from "../CheckDeleteModal/CheckDeleteModal";
+import DeletePreview from "../DeletePreview/DeletePreview";
+import DollarSign from "../DollarSign/DollarSign";
+import {
+  EditorBody,
+  EditorDateField,
+  type EditorDateFieldHandle,
+  EditorDeleteSection,
+  EditorNumberField,
+  EditorStep,
+  EditorTextField,
+  getFinishButtonId,
+  getSubmitButtonId,
+  HoldingChange,
+  RecordEditorFrame,
+  RecordSavedView,
+  RecordSummary,
+  type SummaryLine,
+} from "../RecordEditor/RecordEditor";
+import { useEditorSteps } from "../RecordEditor/useEditorSteps";
+import { useKeyboardViewport } from "../RecordEditor/useKeyboardViewport";
 
 interface Props {
   record?: HandlingFeeDiscount;
   hideModal: MouseEventHandler;
-  onSave?: () => void;
   presentation?: "modal" | "page";
 }
 
-interface FormState {
-  date: string;
-  amount: number;
-  memo: string;
+type StepKey = "date" | "amount";
+
+const STEP_KEYS: StepKey[] = ["date", "amount"];
+
+type DiscountForm = { date: string; amountText: string; memo: string };
+
+type SavedDiscount = { title: string; date: string; rows: SummaryLine[] };
+
+function makeInitialForm(record: HandlingFeeDiscount | undefined): DiscountForm {
+  if (record) {
+    return {
+      date: record.date,
+      amountText: formatNumber(record.amount),
+      memo: record.memo,
+    };
+  }
+  return { date: getTodayDateString(), amountText: "", memo: "" };
 }
 
-function HandlingFeeDiscountEditor({ record, hideModal, onSave, presentation }: Props) {
-  const isWaiting = useAppSelector((state) => state.handlingFeeDiscount.isWaiting);
-  const dispatch = useAppDispatch();
-  const [initialFormState] = useState<FormState>(() => ({
-    date: record?.date ?? new Date().toLocaleDateString("af"),
-    amount: record ? record.amount : NaN,
-    memo: record?.memo ?? "",
-  }));
-  const [recordId] = useState(record?.id ?? null);
-  const [date, setDate] = useState(initialFormState.date);
-  const [amount, setAmount] = useState(initialFormState.amount);
-  const [memo, setMemo] = useState(initialFormState.memo);
-  const [isCheckingDelete, setIsCheckingDelete] = useState(false);
-  const shouldCloseAfterDeleteRef = useRef(false);
+function isSameForm(first: DiscountForm, second: DiscountForm): boolean {
+  return (
+    first.date === second.date &&
+    parseNumberText(first.amountText) === parseNumberText(second.amountText) &&
+    first.memo.trim() === second.memo.trim()
+  );
+}
 
-  const canSubmit = Boolean(date && !Object.is(amount, NaN) && !isWaiting);
-  const isDirty =
-    date !== initialFormState.date ||
-    !Object.is(amount, initialFormState.amount) ||
-    memo !== initialFormState.memo;
-
-  const handleAmountChange = (value: string): void => {
-    setAmount(value === "" ? NaN : parseInt(value) < 0 ? 0 : parseInt(value));
+function getFilledSteps(form: DiscountForm, today: string): Record<StepKey, boolean> {
+  return {
+    date: form.date <= today,
+    amount: parseNumberText(form.amountText) !== null,
   };
-  const hideDeleteModal = (e: MouseEvent): void => {
-    if (shouldCloseAfterDeleteRef.current) {
-      shouldCloseAfterDeleteRef.current = false;
-      hideModal(e);
+}
+
+export default function HandlingFeeDiscountEditor({
+  record,
+  hideModal,
+  presentation = "modal",
+}: Props): React.ReactElement {
+  const dispatch = useAppDispatch();
+  const isWaiting = useAppSelector((state) => state.handlingFeeDiscount.isWaiting);
+  const netHandlingFee = useAppSelector(selectNetHandlingFee);
+  const hasLoadedNetHandlingFee = useAppSelector(
+    (state) => state.tradeRecord.hasLoaded && state.handlingFeeDiscount.hasLoaded,
+  );
+
+  const isNarrow = useMediaQuery(NARROW_LAYOUT_QUERY);
+  const isCollapsible = presentation === "page" && isNarrow;
+  const keyboardViewport = useKeyboardViewport(isCollapsible);
+  const today = getTodayDateString();
+
+  const [form, setForm] = useState<DiscountForm>(() => makeInitialForm(record));
+  const [initialForm, setInitialForm] = useState<DiscountForm>(form);
+  const [isShowingErrors, setIsShowingErrors] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingDelete, setIsCheckingDelete] = useState(false);
+  const [saved, setSaved] = useState<SavedDiscount | null>(null);
+
+  const isSubmittingRef = useRef(false);
+  const hasDeletedRef = useRef(false);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const dateFieldRef = useRef<EditorDateFieldHandle>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
+
+  const formId = useId();
+  const steps = useEditorSteps<StepKey, "title" | "finish">({
+    stepKeys: STEP_KEYS,
+    isCollapsible,
+    isNew: !record,
+    initialFilled: getFilledSteps(form, today),
+    focusTargets: {
+      date: () => dateFieldRef.current?.focus(),
+      amount: () => amountInputRef.current?.focus(),
+      submit: () => document.getElementById(getSubmitButtonId(formId))?.focus(),
+      title: () => titleRef.current?.focus(),
+      finish: () => document.getElementById(getFinishButtonId(formId))?.focus(),
+    },
+  });
+
+  const amount = parseNumberText(form.amountText);
+  const filled = getFilledSteps(form, today);
+  const dateProblem = form.date > today ? "折讓日期不能晚於今天" : null;
+  const amountProblem = amount === null ? "請填寫折讓金額" : null;
+  const netHandlingFeeAfter =
+    amount === null ? null : netHandlingFee + (record?.amount ?? 0) - amount;
+
+  const updateForm = (changes: Partial<DiscountForm>): void => {
+    setForm((current) => ({ ...current, ...changes }));
+  };
+
+  const close = (): void => hideModal({} as React.MouseEvent);
+
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
+    event.preventDefault();
+    if (isSubmittingRef.current) return;
+    setIsShowingErrors(true);
+    const problems: [StepKey, string | null][] = [
+      ["date", dateProblem],
+      ["amount", amountProblem],
+    ];
+    const firstProblem = problems.find(([, problem]) => problem !== null);
+    if (firstProblem) {
+      steps.showProblem(firstProblem[0], firstProblem[0]);
       return;
     }
-    setIsCheckingDelete(false);
-  };
-  const handleConfirmDelete = async (): Promise<void> => {
-    if (!record) return;
-    await dispatch(deleteDiscount(record.id)).unwrap();
-    shouldCloseAfterDeleteRef.current = true;
-  };
-  const handleClickSubmit = async (e: MouseEvent): Promise<void> => {
-    if (!canSubmit) throw Error("Cannot submit!");
-    try {
-      if (recordId) {
-        await dispatch(
-          updateDiscount({ id: recordId, date, amount, memo: memo || undefined }),
-        ).unwrap();
-      } else {
-        await dispatch(
-          createDiscount({ date, amount, memo: memo || undefined }),
-        ).unwrap();
-      }
-      hideModal(e);
-      onSave?.();
-    } catch {
-      hideModal(e);
+    if (amount === null) return;
+
+    const memo = form.memo.trim();
+    const rows: SummaryLine[] = [
+      { label: "折讓金額", value: `${formatNumber(amount)} 元` },
+    ];
+    if (hasLoadedNetHandlingFee && netHandlingFeeAfter !== null) {
+      rows.push({
+        label: "累積手續費",
+        value: `${formatNumber(netHandlingFee)} → ${formatNumber(netHandlingFeeAfter)} 元`,
+      });
     }
+    const requestBody = { date: form.date, amount, memo };
+
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+    try {
+      if (record) {
+        await dispatch(updateDiscount({ id: record.id, ...requestBody })).unwrap();
+      } else {
+        await dispatch(createDiscount(requestBody)).unwrap();
+      }
+    } catch {
+      // The API layer reports a failed request with a toast.
+      return;
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    }
+    if (record) {
+      close();
+      return;
+    }
+    setSaved({ title: getDiscountTitle(memo), date: form.date, rows });
+    steps.focus("finish");
   };
 
-  const title = `${record ? "編輯" : "新增"}折讓紀錄`;
-  const discardButtonProps: ButtonProps = {
-    children: "捨棄",
-    variant: "transparent",
-    onClick: hideModal,
+  const handleAddAnother = (): void => {
+    const nextForm: DiscountForm = { ...makeInitialForm(undefined), date: form.date };
+    setForm(nextForm);
+    setInitialForm(nextForm);
+    setIsShowingErrors(false);
+    setSaved(null);
+    steps.restart("title", getFilledSteps(nextForm, today));
   };
-  const submitButtonProps: ButtonProps = {
-    children: "送出",
-    variant: "primary_fill",
-    disabled: !canSubmit,
-    waiting: isWaiting,
-    onClick: handleClickSubmit,
-    canTriggerByEnter: true,
-  };
-  const body = (
-    <div className={styles.modal_inner}>
-      <LabeledInput title="日期" type="date" value={date} onChange={setDate} />
-      <LabeledInput
-        title="折讓金額"
-        type="number"
-        inputMode="numeric"
-        value={amount || amount === 0 ? amount.toString() : ""}
-        onChange={handleAmountChange}
-        autoFocus={!Util.isMobile && !record && Boolean(date)}
-      />
-      <LabeledInput title="備註" type="text" value={memo} onChange={setMemo} />
+
+  const amountNotice =
+    isShowingErrors && amountProblem
+      ? { tone: "error" as const, text: amountProblem }
+      : null;
+
+  const stepList = (
+    <>
+      <EditorStep
+        index={1}
+        title="折讓日期"
+        state={steps.getStepState("date", filled)}
+        isCollapsible={isCollapsible}
+        summary={formatRelativeEditorDate(form.date, today)}
+        flag={dateProblem ? { tone: "error", text: dateProblem } : null}
+        onOpen={() => steps.openStepAndFocus("date")}
+      >
+        <EditorDateField
+          ref={dateFieldRef}
+          subject="折讓"
+          value={form.date}
+          today={today}
+          error={dateProblem}
+          warnsOnWeekend={false}
+          onChange={(date) => updateForm({ date })}
+        />
+      </EditorStep>
+      <EditorStep
+        index={2}
+        title="金額與備註"
+        state={steps.getStepState("amount", filled)}
+        isCollapsible={isCollapsible}
+        summary={
+          amount === null
+            ? "還沒填"
+            : `${form.amountText} 元${form.memo.trim() ? `・${form.memo.trim()}` : ""}`
+        }
+        flag={amountNotice}
+        onOpen={() => steps.openStepAndFocus("amount")}
+      >
+        <EditorNumberField
+          ref={amountInputRef}
+          label="折讓金額"
+          unit="元"
+          value={form.amountText}
+          maxDecimals={0}
+          inputMode="numeric"
+          notice={amountNotice}
+          onChange={(amountText) => updateForm({ amountText })}
+        />
+        <EditorTextField
+          label="備註（選填）"
+          value={form.memo}
+          onChange={(memo) => updateForm({ memo })}
+        />
+      </EditorStep>
       {record && (
-        <DestructiveActionSection
+        <EditorDeleteSection
           buttonLabel="刪除折讓紀錄"
           description="刪除後無法復原，手續費分析會同步更新。"
           onClick={() => setIsCheckingDelete(true)}
         />
       )}
-    </div>
+    </>
   );
+
+  const summary = (
+    <RecordSummary
+      heading={`${formatEditorDate(form.date, today)}・${getDiscountTitle(form.memo)}`}
+      lines={[]}
+      totalLabel="折讓金額"
+      total={amount === null ? null : formatNumber(amount)}
+      totalPlaceholder="填好折讓金額後顯示"
+      holding={
+        hasLoadedNetHandlingFee ? (
+          <HoldingChange
+            label="累積手續費"
+            before={formatNumber(netHandlingFee)}
+            after={
+              netHandlingFeeAfter === null ? null : formatNumber(netHandlingFeeAfter)
+            }
+            unit="元"
+          />
+        ) : null
+      }
+      warning={null}
+      missing={amountProblem ? ["折讓金額"] : []}
+      submitLabel={record ? "儲存變更" : "新增折讓紀錄"}
+      isSubmitting={isSubmitting}
+      isKeyboardOpen={keyboardViewport !== null}
+      formId={formId}
+    />
+  );
+
   return (
     <>
-      {presentation === "page" ? (
-        <FormPageShell
-          title={title}
-          discardButtonProps={discardButtonProps}
-          isDirty={isDirty}
-          submitButtonProps={submitButtonProps}
-        >
-          {body}
-        </FormPageShell>
-      ) : (
-        <Modal
-          title={title}
-          discardButtonProps={discardButtonProps}
-          submitButtonProps={submitButtonProps}
-          layout={Util.isMobile ? "fullScreen" : "compact"}
-          noX
-          silentBackground
-        >
-          {body}
-        </Modal>
-      )}
+      <RecordEditorFrame
+        presentation={presentation}
+        title={`${record ? "編輯" : "新增"}折讓紀錄`}
+        titleRef={titleRef}
+        isDirty={!saved && !isSameForm(form, initialForm)}
+        isCollapsible={isCollapsible}
+        keyboardViewport={saved ? null : keyboardViewport}
+        onClose={close}
+      >
+        {saved ? (
+          <RecordSavedView
+            formId={formId}
+            title="已新增折讓紀錄"
+            subtitle={`${saved.title}・${formatEditorDate(saved.date, today)}`}
+            rows={saved.rows}
+            note={`再記一筆會沿用折讓日期 ${formatEditorDate(saved.date, today)}。`}
+            onAddAnother={handleAddAnother}
+            onFinish={close}
+          />
+        ) : (
+          <EditorBody
+            formId={formId}
+            onSubmit={handleSubmit}
+            steps={stepList}
+            summary={summary}
+          />
+        )}
+      </RecordEditorFrame>
       {isCheckingDelete && record && (
         <CheckDeleteModal
-          hideModal={hideDeleteModal}
+          hideModal={() => {
+            if (hasDeletedRef.current) close();
+            else setIsCheckingDelete(false);
+          }}
           title="刪除手續費折讓？"
           description="刪除後，這筆折讓不會再計入手續費分析。"
           submitLabel="刪除折讓紀錄"
           isWaiting={isWaiting}
           nested
-          onDelete={handleConfirmDelete}
+          onDelete={async () => {
+            await dispatch(deleteDiscount(record.id)).unwrap();
+            hasDeletedRef.current = true;
+          }}
         >
           <DeletePreview
-            title={record.memo || "手續費折讓"}
+            title={getDiscountTitle(record.memo)}
             meta={record.date}
             details={[
               {
@@ -177,5 +357,3 @@ function HandlingFeeDiscountEditor({ record, hideModal, onSave, presentation }: 
     </>
   );
 }
-
-export default memo(HandlingFeeDiscountEditor);
