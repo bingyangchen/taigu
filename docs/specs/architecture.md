@@ -40,6 +40,14 @@ Dev 環境的每個服務都是本機的 container，前端與後端都在 `loca
 
 scheduler 沒有自己的 cron job 程式：它的 image 以同一個 tag 的 `api-server` image 為基礎，每個 cron job 都執行後端的一個 management command（放在 `api-server/main/<app>/management/commands/`）。所以要知道一個能力的資料由哪些 cron job 處理，要先從 `scheduler/main.py` 找到 command 名稱，再到 `api-server/main/<app>/management/commands/` 讀那個 command。
 
+### 回補股票收盤價
+
+股票收盤價平常只靠 15:00 的 cron job 每天替每一檔股票寫入當天的一筆（MKT-R8），所以保留期間（MKT-R9）延長時，新納入保留期間的那些較早的日期沒有收盤價。`backfill_all_stocks_history` 這個 management command 補上保留期間內缺少的收盤價，要由開發者在 prod 手動執行。
+
+- 資料來源是證交所與櫃買中心依日期查詢全部個股收盤行情的 API，一個 request 取得一個市場一天的收盤價。2026-11 實測，休市日證交所的回應沒有 `tables` 欄位，櫃買中心的回應有 `tables`，但每個表格的 `data` 都是空的；沒有成交的股票，收盤價那一欄（證交所是 `收盤價`，櫃買中心是 `收盤`）的值是 `--` 或 `---`。
+- 某個市場在某一天已經有任何一檔股票的收盤價時，command 跳過那個市場的那一天，所以 command 失敗後，開發者可以直接重新執行。
+- Command 以 2 秒的間隔送出 request，在 dev 環境實測，回補一年約需 40 分鐘。
+
 ## 部署
 
 ```mermaid

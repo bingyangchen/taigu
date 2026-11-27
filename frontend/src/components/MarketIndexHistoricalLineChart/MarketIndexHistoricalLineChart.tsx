@@ -6,6 +6,7 @@ import { formatIndexPoints } from "../../utils/marketIndex";
 import Util from "../../utils/util";
 import AccessibleChart from "../AccessibleChart/AccessibleChart";
 import { makeTooltipTitle } from "../chartTooltip";
+import { makeDateAxisLabel } from "../dateAxisLabel";
 import {
   getMarketIndexAxisPadding,
   makeIndexChangeTooltipLine,
@@ -30,7 +31,6 @@ export function makeMarketIndexHistoricalChartOption(
 ): EChartsOption {
   const lineColor = getPeriodTrendColor(values);
   const areaGradient = makePeriodTrendAreaGradient(values);
-  const spansYears = dates[0].slice(0, 4) !== dates.at(-1)?.slice(0, 4);
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
   const padding = getMarketIndexAxisPadding(minValue, maxValue);
@@ -46,11 +46,7 @@ export function makeMarketIndexHistoricalChartOption(
         showMinLabel: true,
         showMaxLabel: true,
         alignMinLabel: "left",
-
-        // About five date labels across the axis.
-        interval: Math.max(0, Math.round((dates.length - 1) / 4) - 1),
-        formatter: (date: string) =>
-          (spansYears ? date.slice(2, 7) : date.slice(5)).replace("-", "/"),
+        ...makeDateAxisLabel(dates),
         hideOverlap: true,
       },
       axisLine: { show: false },
@@ -112,6 +108,7 @@ export function makeMarketIndexHistoricalChartOption(
           makeTooltipTitle(name.replaceAll("-", "/")),
           `指數 ${formatIndexPoints(value)}`,
           makeIndexChangeTooltipLine("漲跌", value, previousValues[dataIndex]),
+          makeIndexChangeTooltipLine("區間漲跌", value, values[0]),
         ].join("<br/>");
       },
     },

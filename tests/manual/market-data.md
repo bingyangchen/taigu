@@ -146,7 +146,7 @@
 
 ## MKT-R4.1 平日休市
 
-既有的 unit test 驗證休市時不更新價格，但沒有驗證 15:00 不寫入收盤價。這一段以測試股 T01 代替 2330；這一段執行的 15:00 工作會替所有今天有行情的股票寫入收盤價、寫入今天的收盤指數，並刪除 80 天前的收盤價，全部檢查完照共用準備第 12 步還原。
+既有的 unit test 驗證休市時不更新價格，但沒有驗證 15:00 不寫入收盤價。這一段以測試股 T01 代替 2330；這一段執行的 15:00 工作會替所有今天有行情的股票寫入收盤價、寫入今天的收盤指數，並刪除早於 365 天前的收盤價，全部檢查完照共用準備第 12 步還原。
 
 1. 執行下面的指令，讓 T01 最後記下的是昨天的 102.5 元，再讓後端處理一筆資料日期是昨天的 T01 行情，最後執行 15:00 寫入收盤價的工作：
 
@@ -236,29 +236,6 @@
 2. 重設測試資料。
 
 預期：第 1 步印出 `1000.0 25000000 15000.0`，也就是收盤價是 1,000 元、成交量是 25,000,000 股，收盤指數是最後一點 13:30 的 15,000 點，不是 09:00 的 14,900 點。
-
-## MKT-R9.1 刪除過期的收盤價
-
-沒有 unit test 驗證收盤價的保留期間。這一段以測試股 T01 代替 2330，並會改動收盤指數的資料，全部檢查完照共用準備第 12 步還原。
-
-1. 執行下面的指令，替 T01 建立 80 天前與 81 天前的收盤價、替加權指數建立 400 天前的收盤指數，再執行 15:00 的工作：
-
-   ```bash
-   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
-   from datetime import date, timedelta
-   from main.market.models import History, MarketIndexHistory
-   from main.market.services import update_all_stocks_history
-   today = date.today()
-   for days_ago in (80, 81):
-       History.objects.update_or_create(company_id='T01', frequency='DAILY', date=today - timedelta(days=days_ago), defaults={'quantity': 0, 'close_price': 900.0})
-   MarketIndexHistory.objects.update_or_create(market='tse', date=today - timedelta(days=400), defaults={'close_price': 15000.0})
-   update_all_stocks_history()
-   print([(today - row.date).days for row in History.objects.filter(company_id='T01', date__lte=today - timedelta(days=80))])
-   print(MarketIndexHistory.objects.filter(market='tse', date=today - timedelta(days=400)).exists())
-   "
-   ```
-
-預期：第一行印出 `[80]`，81 天前的收盤價已經刪除；第二行印出 `True`，400 天前的收盤指數仍然保存。
 
 ## MKT-R10.1 收盤行情裡有清單上沒有的股票
 

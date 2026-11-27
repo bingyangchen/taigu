@@ -45,12 +45,45 @@ function getTooltips(closingPrices: Record<string, number>, limit: number) {
 test("[MKT-R15.3] compares the first point of a range with the close before the range", () => {
   const tooltips = getTooltips(makeClosingPrices(31), 30);
   expect(tooltips).toHaveLength(30);
-  expect(tooltips[0]).toEqual(["2026/10/02", "指數 22,855", "漲跌 ▲5 (0.02%)"]);
-  expect(tooltips[1]).toEqual(["2026/10/03", "指數 22,860", "漲跌 ▲5 (0.02%)"]);
+  expect(tooltips[0]).toEqual([
+    "2026/10/02",
+    "指數 22,855",
+    "漲跌 ▲5 (0.02%)",
+    "區間漲跌 0 (0.00%)",
+  ]);
+  expect(tooltips[1]).toEqual([
+    "2026/10/03",
+    "指數 22,860",
+    "漲跌 ▲5 (0.02%)",
+    "區間漲跌 ▲5 (0.02%)",
+  ]);
 });
 
 test("[MKT-R15.4] shows no change for the earliest close", () => {
   const tooltips = getTooltips(makeClosingPrices(10), Infinity);
   expect(tooltips).toHaveLength(10);
-  expect(tooltips[0]).toEqual(["2026/10/01", "指數 22,850", "漲跌 -- (--)"]);
+  expect(tooltips[0]).toEqual([
+    "2026/10/01",
+    "指數 22,850",
+    "漲跌 -- (--)",
+    "區間漲跌 0 (0.00%)",
+  ]);
+});
+
+test("[MKT-R15.5] compares each point with the first point of the range", () => {
+  const tooltips = getTooltips(
+    {
+      "2026-10-01": 22800,
+      "2026-10-02": 22850,
+      "2026-10-05": 22855,
+      "2026-10-06": 23000,
+    },
+    30,
+  );
+  expect(tooltips[3]).toEqual([
+    "2026/10/06",
+    "指數 23,000",
+    "漲跌 ▲145 (0.63%)",
+    "區間漲跌 ▲200 (0.88%)",
+  ]);
 });

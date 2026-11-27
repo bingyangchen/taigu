@@ -16,4 +16,7 @@ $layout: (
   speed-dial-clearance: $-speed-dial-size + 2 * map.get(spacing.$space, "200"),
   // Room on the right of a list row for the edit and delete buttons that show on hover.
   row-action-bar-space: 104px,
+  // The widest a record list grows on a wide screen, so a row stays easy to read
+  // across.
+  list-max-width: 780px,
 );

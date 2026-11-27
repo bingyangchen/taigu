@@ -28,7 +28,10 @@ class ThirdPartyApi:
         TradeType.TSE: "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
         TradeType.OTC: "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes",
     }
-    multiple_days = "https://query1.finance.yahoo.com/v7/finance/download/"
+    daily_quotes_by_date = {  # Every stock's close on a past date
+        TradeType.TSE: "https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX",
+        TradeType.OTC: "https://www.tpex.org.tw/www/zh-tw/afterTrading/dailyQuotes",
+    }
     material_fact = {
         TradeType.TSE: "https://openapi.twse.com.tw/v1/opendata/t187ap04_L",
         TradeType.OTC: "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap04_O",

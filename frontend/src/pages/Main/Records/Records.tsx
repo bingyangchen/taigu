@@ -155,7 +155,7 @@ function Records() {
 
   return (
     <div className={styles.main}>
-      <ScrollAwareFloatingControls>
+      <ScrollAwareFloatingControls className={styles.search_controls}>
         <SearchKeywordInput
           placeholder="輸入證券代號或名稱"
           keyword={searchKeyword ?? ""}
@@ -166,64 +166,66 @@ function Records() {
         <div className={styles.empty_section}>目前沒有紀錄</div>
       ) : (
         <div className={styles.record_list} data-page-scroll>
-          {filteredRecords
-            .slice(0, numberToShow)
-            .map((record: TradeRecord | CashDividendRecord) => {
-              return (
-                <ListRow
-                  key={`${
-                    Util.isTradeRecord(record) ? "trade" : "cash-dividend"
-                  }-${record.id}`}
-                  target={record}
-                  editModal={makeEditModal(record)}
-                  deleteModal={makeDeleteModal(record)}
-                  editPath={getEditPath(record)}
-                >
-                  <div className={styles.record_row}>
-                    <span className={styles.identity}>
-                      <span className={styles.company}>
-                        <span className={styles.sid}>{record.sid}</span>
-                        <span className={styles.company_name}>
-                          {record.company_name}
+          <div className={styles.list_card}>
+            {filteredRecords
+              .slice(0, numberToShow)
+              .map((record: TradeRecord | CashDividendRecord) => {
+                return (
+                  <ListRow
+                    key={`${
+                      Util.isTradeRecord(record) ? "trade" : "cash-dividend"
+                    }-${record.id}`}
+                    target={record}
+                    editModal={makeEditModal(record)}
+                    deleteModal={makeDeleteModal(record)}
+                    editPath={getEditPath(record)}
+                  >
+                    <div className={styles.record_row}>
+                      <span className={styles.identity}>
+                        <span className={styles.company}>
+                          <span className={styles.sid}>{record.sid}</span>
+                          <span className={styles.company_name}>
+                            {record.company_name}
+                          </span>
+                        </span>
+                        <span className={styles.date}>{record.deal_time}</span>
+                      </span>
+                      <span className={styles.record_metrics}>
+                        <span
+                          className={`${styles.record_type} ${
+                            Util.isTradeRecord(record)
+                              ? styles[getTradeSide(record)]
+                              : styles.dividend
+                          }`}
+                        >
+                          {getRecordTypeLabel(record)}
+                        </span>
+                        {Util.isTradeRecord(record) && (
+                          <span className={styles.quantity}>
+                            {Math.abs(record.deal_quantity).toLocaleString()} 股
+                          </span>
+                        )}
+                        <span className={styles.price_group}>
+                          <span className={styles.price_label}>
+                            {Util.isTradeRecord(record) ? "成交價" : "入帳金額"}
+                          </span>
+                          <span className={styles.price}>
+                            <DollarSign />
+                            {Util.isTradeRecord(record)
+                              ? record.deal_price.toLocaleString()
+                              : record.cash_dividend.toLocaleString()}
+                          </span>
                         </span>
                       </span>
-                      <span className={styles.date}>{record.deal_time}</span>
-                    </span>
-                    <span className={styles.record_metrics}>
-                      <span
-                        className={`${styles.record_type} ${
-                          Util.isTradeRecord(record)
-                            ? styles[getTradeSide(record)]
-                            : styles.dividend
-                        }`}
-                      >
-                        {getRecordTypeLabel(record)}
-                      </span>
-                      {Util.isTradeRecord(record) && (
-                        <span className={styles.quantity}>
-                          {Math.abs(record.deal_quantity).toLocaleString()} 股
-                        </span>
-                      )}
-                      <span className={styles.price_group}>
-                        <span className={styles.price_label}>
-                          {Util.isTradeRecord(record) ? "成交價" : "入帳金額"}
-                        </span>
-                        <span className={styles.price}>
-                          <DollarSign />
-                          {Util.isTradeRecord(record)
-                            ? record.deal_price.toLocaleString()
-                            : record.cash_dividend.toLocaleString()}
-                        </span>
-                      </span>
-                    </span>
-                  </div>
-                </ListRow>
-              );
-            })}
-          <InfiniteScrollSentinel
-            hasMore={filteredRecords.length > numberToShow}
-            onLoadMore={handleLoadMore}
-          />
+                    </div>
+                  </ListRow>
+                );
+              })}
+            <InfiniteScrollSentinel
+              hasMore={filteredRecords.length > numberToShow}
+              onLoadMore={handleLoadMore}
+            />
+          </div>
         </div>
       )}
       {Util.isMobile && <SpeedDial />}

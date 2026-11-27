@@ -8,7 +8,7 @@ export interface IntradayTrendSegment {
 }
 
 export const PREVIOUS_CLOSE_LINE_STYLE = {
-  color: COLORS.textSecondary,
+  color: COLORS.chartMuted,
   width: 1,
   type: "dashed" as const,
 };

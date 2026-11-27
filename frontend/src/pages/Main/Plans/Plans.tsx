@@ -121,7 +121,7 @@ function Plans() {
 
   return (
     <div className={styles.main}>
-      <ScrollAwareFloatingControls>
+      <ScrollAwareFloatingControls className={styles.search_controls}>
         <SearchKeywordInput
           placeholder="輸入證券代號或名稱"
           keyword={searchKeyword ?? ""}
@@ -132,50 +132,52 @@ function Plans() {
         <div className={styles.empty_section}>目前沒有買賣計畫</div>
       ) : (
         <div className={styles.record_list} data-page-scroll>
-          {filteredAndSortedPlans.slice(0, numberToShow).map((plan: TradePlan) => {
-            return (
-              <ListRow
-                key={plan.id}
-                target={plan}
-                editModal={makeEditModal(plan)}
-                deleteModal={makeDeleteModal(plan)}
-                editPath={`${Env.frontendRootPath}plans/${plan.id}/edit`}
-              >
-                <div className={styles.plan_row}>
-                  <span className={styles.identity}>
-                    <span className={styles.company}>
-                      <span className={styles.sid}>{plan.sid}</span>
-                      <span className={styles.company_name}>{plan.company_name}</span>
+          <div className={styles.list_card}>
+            {filteredAndSortedPlans.slice(0, numberToShow).map((plan: TradePlan) => {
+              return (
+                <ListRow
+                  key={plan.id}
+                  target={plan}
+                  editModal={makeEditModal(plan)}
+                  deleteModal={makeDeleteModal(plan)}
+                  editPath={`${Env.frontendRootPath}plans/${plan.id}/edit`}
+                >
+                  <div className={styles.plan_row}>
+                    <span className={styles.identity}>
+                      <span className={styles.company}>
+                        <span className={styles.sid}>{plan.sid}</span>
+                        <span className={styles.company_name}>{plan.company_name}</span>
+                      </span>
+                      <span className={styles.plan_hint}>買賣計畫</span>
                     </span>
-                    <span className={styles.plan_hint}>買賣計畫</span>
-                  </span>
-                  <span className={styles.plan_metrics}>
-                    <span
-                      className={`${styles.plan_type} ${
-                        plan.plan_type === "buy" ? styles.buy : styles.sell
-                      }`}
-                    >
-                      {tradeSideToLabel[plan.plan_type]}
-                    </span>
-                    <span className={styles.quantity}>
-                      {plan.target_quantity.toLocaleString()} 股
-                    </span>
-                    <span className={styles.price_group}>
-                      <span className={styles.price_label}>目標價</span>
-                      <span className={styles.price}>
-                        <DollarSign />
-                        {plan.target_price.toLocaleString()}
+                    <span className={styles.plan_metrics}>
+                      <span
+                        className={`${styles.plan_type} ${
+                          plan.plan_type === "buy" ? styles.buy : styles.sell
+                        }`}
+                      >
+                        {tradeSideToLabel[plan.plan_type]}
+                      </span>
+                      <span className={styles.quantity}>
+                        {plan.target_quantity.toLocaleString()} 股
+                      </span>
+                      <span className={styles.price_group}>
+                        <span className={styles.price_label}>目標價</span>
+                        <span className={styles.price}>
+                          <DollarSign />
+                          {plan.target_price.toLocaleString()}
+                        </span>
                       </span>
                     </span>
-                  </span>
-                </div>
-              </ListRow>
-            );
-          })}
-          <InfiniteScrollSentinel
-            hasMore={filteredAndSortedPlans.length > numberToShow}
-            onLoadMore={() => setNumberToShow((count) => count * 2)}
-          />
+                  </div>
+                </ListRow>
+              );
+            })}
+            <InfiniteScrollSentinel
+              hasMore={filteredAndSortedPlans.length > numberToShow}
+              onLoadMore={() => setNumberToShow((count) => count * 2)}
+            />
+          </div>
         </div>
       )}
       {Util.isMobile && <SpeedDial />}

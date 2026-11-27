@@ -2,7 +2,7 @@
 
 import { expect, test } from "vitest";
 
-import { formatStockChange } from "./stockPriceFormat";
+import { formatStockChange, formatStockPriceAxisLabel } from "./stockPriceFormat";
 
 test.each([
   { change: 6, previousClose: 594, expected: "▲6.00 (1.01%)" },
@@ -16,3 +16,11 @@ test.each([
     expect(formatStockChange(change, previousClose)).toBe(expected);
   },
 );
+
+test("leaves the trailing zeros out of an axis price", () => {
+  expect([2450, 23.5, 23.45].map(formatStockPriceAxisLabel)).toEqual([
+    "2,450",
+    "23.5",
+    "23.45",
+  ]);
+});

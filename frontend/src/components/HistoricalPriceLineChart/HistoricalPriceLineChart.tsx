@@ -5,15 +5,21 @@ import { memo, useState } from "react";
 import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import Util from "../../utils/util";
 import { makeTooltipTitle } from "../chartTooltip";
+import { makeDateAxisLabel } from "../dateAxisLabel";
 import { getPeriodTrendColor, makePeriodTrendAreaGradient } from "../periodTrend";
 import {
+  formatStockPriceAxisLabel,
   makeStockChangeTooltipLine,
   makeStockPriceTooltipLine,
 } from "../stockPriceFormat";
 
 interface Props {
+  // In YYYY-MM-DD.
   dates: string[];
   values: number[];
+
+  // The close before each point, which may be left out of the chart.
+  previousValues: (number | null)[];
   isWaiting: boolean;
 }
 
@@ -55,7 +61,7 @@ export function makeHistoricalPriceChartOption(
     grid: {
       left: 0,
       top: 12,
-      right: 38,
+      right: 48,
       bottom: 24,
       containLabel: false,
       outerBoundsMode: "none",
@@ -69,7 +75,7 @@ export function makeHistoricalPriceChartOption(
         showMinLabel: false,
         color: COLORS.textSecondary,
         fontSize: FONT_SIZES.chartTick,
-        interval: (index: number) => index % 10 === 0,
+        ...(props.isWaiting ? {} : makeDateAxisLabel(dates)),
         hideOverlap: true,
       },
       axisLine: { show: false },
@@ -96,11 +102,7 @@ export function makeHistoricalPriceChartOption(
             margin: 0,
             showMinLabel: false,
             showMaxLabel: false,
-            formatter: (value: number) => {
-              if (value >= 1_000_000) return (value / 1_000_000).toFixed(1) + "M";
-              if (value >= 1_000) return (value / 1_000).toFixed(1) + "K";
-              return value.toString();
-            },
+            formatter: formatStockPriceAxisLabel,
           },
           axisLine: { show: false },
           axisTick: { show: false },
@@ -121,7 +123,7 @@ export function makeHistoricalPriceChartOption(
           itemStyle: { color: lineColor },
           symbol: "circle",
           symbolSize: Util.isMobile ? 5 : 8,
-          showSymbol: false,
+          showSymbol: values.length === 1,
           emphasis: { itemStyle: { color: lineColor, borderColor: lineColor } },
           areaStyle: {
             color: {
@@ -151,14 +153,11 @@ export function makeHistoricalPriceChartOption(
           return "";
         }
         const [{ name, value, dataIndex }] = params;
-
-        // The chart plots every retained close (STOCK-R5), so the point before this
-        // one on the chart is also the close before it in the data.
-        const previousValue = dataIndex > 0 ? values[dataIndex - 1] : null;
         return [
-          makeTooltipTitle(name),
+          makeTooltipTitle(name.replaceAll("-", "/")),
           makeStockPriceTooltipLine(value),
-          makeStockChangeTooltipLine("漲跌", value, previousValue),
+          makeStockChangeTooltipLine("漲跌", value, props.previousValues[dataIndex]),
+          makeStockChangeTooltipLine("區間漲跌", value, values[0]),
         ].join("<br/>");
       },
     },
