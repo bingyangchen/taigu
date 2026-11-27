@@ -10,6 +10,7 @@ import {
 import AccessibleChart from "../AccessibleChart/AccessibleChart";
 import { makeTooltipTitle } from "../chartTooltip";
 import { makeIntradayTooltipSeries } from "../intradayTooltip";
+import { PREVIOUS_CLOSE_LINE_STYLE } from "../intradayTrend";
 import {
   getChartPreviousClose,
   getMarketIndexAxisPadding,
@@ -18,7 +19,6 @@ import {
   makeIndexChangeTooltipLine,
   MARKET_INDEX_AXIS_LABEL_STYLE,
   MARKET_INDEX_GRID,
-  MARKET_INDEX_GUIDE_LINE_COLOR,
   MARKET_INDEX_SPLIT_LINE_STYLE,
   MARKET_INDEX_TOOLTIP_STYLE,
   splitMarketIndexDataIntoColoredSegments,
@@ -113,11 +113,7 @@ export function makeMarketIndexIntradayChartOption(
               markLine: {
                 silent: true,
                 symbol: "none",
-                lineStyle: {
-                  color: MARKET_INDEX_GUIDE_LINE_COLOR,
-                  width: 1,
-                  type: "dashed" as const,
-                },
+                lineStyle: PREVIOUS_CLOSE_LINE_STYLE,
                 data: [{ yAxis: prevClosePrice }],
                 label: { show: false },
               },

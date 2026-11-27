@@ -6,6 +6,10 @@ import { formatMarketMinute } from "../../utils/marketIndex";
 import { makeTooltipTitle } from "../chartTooltip";
 import { makeIntradayTooltipSeries } from "../intradayTooltip";
 import {
+  PREVIOUS_CLOSE_LINE_STYLE,
+  splitIntradayDataAtPreviousClose,
+} from "../intradayTrend";
+import {
   formatStockPrice,
   makeStockChangeTooltipLine,
   makeStockPriceTooltipLine,
@@ -13,7 +17,6 @@ import {
 import {
   getStockIntradayMaxPrice,
   getStockIntradayMinPrice,
-  splitStockIntradayDataIntoColoredSegments,
 } from "./stockIntradayChartData";
 
 interface Props {
@@ -43,7 +46,7 @@ export function makeStockIntradayChartOption(
 ): EChartsOption | null {
   if (!data.some(([, price]) => price !== null)) return null;
 
-  const segments = splitStockIntradayDataIntoColoredSegments(data, prevClosePrice);
+  const segments = splitIntradayDataAtPreviousClose(data, prevClosePrice);
   const minPrice = getStockIntradayMinPrice(data, prevClosePrice);
   const maxPrice = getStockIntradayMaxPrice(data, prevClosePrice);
 
@@ -110,7 +113,7 @@ export function makeStockIntradayChartOption(
         markLine: {
           silent: true,
           symbol: "none",
-          lineStyle: { color: COLORS.borderDefault, width: 1, type: "solid" },
+          lineStyle: PREVIOUS_CLOSE_LINE_STYLE,
           data: [{ yAxis: prevClosePrice }],
           label: { show: false },
         },

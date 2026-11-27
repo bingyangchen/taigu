@@ -1,13 +1,16 @@
 import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import { formatIndexChange, getChangePercent } from "../../utils/marketIndex";
 import { makeChangeTooltipLine, NO_CHANGE_TEXT } from "../chartTooltip";
+import {
+  type IntradayTrendSegment,
+  splitIntradayDataAtPreviousClose,
+} from "../intradayTrend";
 
 export const MARKET_INDEX_AXIS_LABEL_STYLE = {
   color: COLORS.textSecondary,
   fontSize: FONT_SIZES.chartTick,
 };
 export const MARKET_INDEX_SPLIT_LINE_STYLE = { color: COLORS.borderDefault };
-export const MARKET_INDEX_GUIDE_LINE_COLOR = COLORS.textSecondary;
 export const MARKET_INDEX_TOOLTIP_STYLE = {
   confine: true,
   backgroundColor: COLORS.bgSurface,
@@ -74,68 +77,7 @@ export function getMarketIndexMaxPrice(
 export function splitMarketIndexDataIntoColoredSegments(
   data: [number, number | null][],
   prevClosePrice: number | null,
-): Array<{ data: [number, number | null][]; color: string }> {
-  if (data.length === 0) return [];
+): IntradayTrendSegment[] {
   if (prevClosePrice === null) return [{ data, color: COLORS.chartAccent }];
-
-  const segments: Array<{ data: [number, number | null][]; color: string }> = [];
-  let currentSegment: [number, number | null][] = [];
-  let currentColor: string | null = null;
-
-  for (let i = 0; i < data.length; i++) {
-    const point = data[i];
-    const value = point[1];
-    const pointColor: string =
-      value === null
-        ? (currentColor ?? COLORS.chartDown)
-        : value > prevClosePrice
-          ? COLORS.chartUp
-          : COLORS.chartDown;
-
-    if (
-      currentColor !== null &&
-      currentColor !== pointColor &&
-      currentSegment.length > 0
-    ) {
-      const prevPoint = data[i - 1];
-      const prevValue = prevPoint[1];
-
-      if (prevValue !== null && value !== null) {
-        const x1 = prevPoint[0];
-        const y1 = prevValue;
-        const x2 = point[0];
-        const y2 = value;
-
-        const t = (prevClosePrice - y1) / (y2 - y1);
-        if (t > 0 && t < 1) {
-          const intersectionX = x1 + t * (x2 - x1);
-          const intersectionPoint: [number, number] = [intersectionX, prevClosePrice];
-
-          currentSegment.push(intersectionPoint);
-          segments.push({ data: [...currentSegment], color: currentColor });
-          currentSegment = [intersectionPoint, point];
-        } else {
-          currentSegment.push(point);
-          segments.push({ data: [...currentSegment], color: currentColor });
-          currentSegment = [point];
-        }
-      } else {
-        currentSegment.push(point);
-        segments.push({ data: [...currentSegment], color: currentColor });
-        currentSegment = [point];
-      }
-      currentColor = pointColor;
-    } else {
-      if (currentColor === null) {
-        currentColor = pointColor;
-      }
-      currentSegment.push(point);
-    }
-  }
-
-  if (currentSegment.length > 0 && currentColor !== null) {
-    segments.push({ data: currentSegment, color: currentColor });
-  }
-
-  return segments;
+  return splitIntradayDataAtPreviousClose(data, prevClosePrice);
 }
