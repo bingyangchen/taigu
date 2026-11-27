@@ -28,16 +28,6 @@ export function formatStockChange(change: number, previousClose: number): string
   return change === 0 ? "-" : formatChangeWithPercent(change, previousClose);
 }
 
-/** The percent change from the previous close, as "▲0.12%", or "-" when flat. */
-export function formatStockChangePercent(
-  change: number,
-  previousClose: number,
-): string {
-  return change === 0
-    ? "-"
-    : `${getDirection(change)}${formatChangePercent(change, previousClose)}`;
-}
-
 export function makeStockPriceTooltipLine(price: number): string {
   return `價格 $${formatStockPrice(price)}`;
 }

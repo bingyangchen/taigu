@@ -7,10 +7,7 @@ import {
   Skeleton,
   SpeedDial,
 } from "../../../components";
-import {
-  formatStockChange,
-  formatStockChangePercent,
-} from "../../../components/stockPriceFormat";
+import { formatStockChange } from "../../../components/stockPriceFormat";
 import * as Icons from "../../../icons";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -134,7 +131,8 @@ function Market() {
     const stockName = stockInfo?.name ?? getFallbackStockName(sid);
     const fluctPrice = stockInfo?.fluct_price ?? 0;
     const close = stockInfo?.close ?? 0;
-    const previousClose = close - fluctPrice;
+    const changeText =
+      close > 0 ? formatStockChange(fluctPrice, close - fluctPrice) : "--";
     const tone = fluctPrice > 0 ? "up" : fluctPrice < 0 ? "down" : "neutral";
     const accessibleLabel =
       activeTab === "holding"
@@ -148,8 +146,7 @@ function Market() {
         stockInfo,
         stockName,
         close,
-        fluctPrice,
-        previousClose,
+        changeText,
         tone,
         accessibleLabel,
       );
@@ -171,7 +168,7 @@ function Market() {
           </div>
           <div className={styles.price_block}>
             <strong>{close > 0 ? close.toLocaleString() : "--"}</strong>
-            <span>{formatStockChange(fluctPrice, previousClose)}</span>
+            <span>{changeText}</span>
           </div>
         </div>
         {activeTab === "holding" && renderHoldingChips(sid, stockInfo)}
@@ -186,13 +183,11 @@ function Market() {
     stockInfo: StockInfo | undefined,
     stockName: string,
     close: number,
-    fluctPrice: number,
-    previousClose: number,
+    changeText: string,
     tone: "up" | "down" | "neutral",
     accessibleLabel: string,
   ): React.ReactNode => {
     const planText = getNearestPlanText(sid, stockInfo);
-    const changeText = formatStockChangePercent(fluctPrice, previousClose);
 
     let inventory = 0;
     let xirr = 0;
@@ -221,12 +216,12 @@ function Market() {
             <strong className={styles.mobile_stock_name}>{stockName}</strong>
             <span className={styles.mobile_stock_sid}>{sid}</span>
           </div>
-          <strong className={`${styles.mobile_close_price} ${styles["text_" + tone]}`}>
+          <strong className={styles.mobile_close_price}>
             {close > 0 ? close.toLocaleString() : "--"}
           </strong>
         </div>
 
-        {/* Line 2: Portfolio Summary OR Market Signals ─── Change Percent */}
+        {/* Line 2: Portfolio Summary OR Market Signals ─── Change */}
         <div className={styles.mobile_row_line2}>
           {activeTab === "holding" ? (
             <div className={styles.mobile_holding_summary}>
@@ -249,7 +244,7 @@ function Market() {
             </div>
           )}
 
-          <span className={`${styles.mobile_change_percent} ${styles["text_" + tone]}`}>
+          <span className={`${styles.mobile_change} ${styles["text_" + tone]}`}>
             {changeText}
           </span>
         </div>
@@ -352,6 +347,23 @@ function Market() {
   };
 
   const renderSkeletonCards = (activeTab: MarketTab): React.ReactNode => {
+    if (Util.isMobile) {
+      return Array.from({ length: 6 }).map((_, index) => (
+        <div
+          key={index}
+          className={`${styles.mobile_stock_row} ${styles.skeleton_row}`}
+        >
+          <div className={styles.mobile_row_line1}>
+            <Skeleton width="40%" height={16} />
+            <Skeleton width="22%" height={16} />
+          </div>
+          <div className={styles.mobile_row_line2}>
+            <Skeleton width="48%" height={14} />
+            <Skeleton width="30%" height={14} />
+          </div>
+        </div>
+      ));
+    }
     return Array.from({ length: 6 }).map((_, index) => (
       <div
         key={index}
@@ -472,7 +484,8 @@ function Market() {
   };
 
   const getAccessibleChangeText = (stockInfo: StockInfo | undefined): string => {
-    if (!stockInfo || stockInfo.fluct_price === 0) return "今日持平";
+    if (!stockInfo || stockInfo.close <= 0) return "還沒有價格";
+    if (stockInfo.fluct_price === 0) return "今日持平";
     const direction = stockInfo.fluct_price > 0 ? "上漲" : "下跌";
     const percent = getAbsoluteFluctPercent(stockInfo);
     return `${direction} ${Math.abs(stockInfo.fluct_price).toFixed(2)}，${(
@@ -630,12 +643,7 @@ function Market() {
         </div>
       </section>
 
-      <section
-        className={`${styles.stock_list} ${
-          !isLoading && visibleSids.length > 0 ? styles.grouped_list : ""
-        }`}
-        aria-live="polite"
-      >
+      <section className={styles.stock_list} aria-live="polite">
         {isLoading
           ? renderSkeletonCards(activeTab)
           : renderStockList(activeTab, allSids, visibleSids)}

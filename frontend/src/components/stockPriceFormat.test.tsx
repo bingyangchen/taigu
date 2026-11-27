@@ -2,7 +2,7 @@
 
 import { expect, test } from "vitest";
 
-import { formatStockChange, formatStockChangePercent } from "./stockPriceFormat";
+import { formatStockChange } from "./stockPriceFormat";
 
 test.each([
   { change: 6, previousClose: 594, expected: "▲6.00 (1.01%)" },
@@ -14,16 +14,5 @@ test.each([
   "writes a $change change from $previousClose as $expected",
   ({ change, previousClose, expected }) => {
     expect(formatStockChange(change, previousClose)).toBe(expected);
-  },
-);
-
-test.each([
-  { change: 6, previousClose: 594, expected: "▲1.01%" },
-  { change: -0.45, previousClose: 23.9, expected: "▼1.88%" },
-  { change: 0, previousClose: 600, expected: "-" },
-])(
-  "writes the percent of a $change change as $expected",
-  ({ change, previousClose, expected }) => {
-    expect(formatStockChangePercent(change, previousClose)).toBe(expected);
   },
 );

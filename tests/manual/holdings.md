@@ -231,7 +231,7 @@ CashDividendRecord.objects.filter(pk=ID).delete()
 2. 執行「設定價格」，`PRICES` 設成 `{'2330': (0, 0, 0)}`。
 3. 開啟 `https://local.taigu.tw/market`。
 
-預期：2330 的價格顯示「--」。
+預期：2330 的價格與漲跌都顯示「--」。
 
 ## HOLD-R6.3 點選持股
 
@@ -242,6 +242,16 @@ CashDividendRecord.objects.filter(pk=ID).delete()
 3. 點選 2330 的卡片。
 
 預期：畫面換到 2330 的個股詳情頁，網址是 `https://local.taigu.tw/market/holding/2330`。
+
+## HOLD-R6.4 手機上的持股
+
+手機版的列表要用手機的 user agent 才會出現，前端沒有自動化 test。
+
+1. 執行「設定交易紀錄」，`RECORDS` 設成 `[('2024-01-02', '2330', 120, 300, 0), ('2024-02-01', '2330', 120, 200, 0)]`。
+2. 執行「設定價格」，`PRICES` 設成 `{'2330': (600, 6, 25000000)}`。
+3. 在 iOS 模擬器或手機開啟 `https://local.taigu.tw/market`。
+
+預期：2330 那一列顯示「台積電」「2330」、價格「600」、漲跌與漲跌幅「▲6.00 (1.01%)」、「庫存 500 股」與 2330 的年化報酬率。
 
 ## HOLD-R7.1 有漲有跌也有平盤
 
