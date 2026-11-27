@@ -677,7 +677,10 @@ $three-signal-min-width: 360px;
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: var(--space-150) 0;
+
+  // The same optical inset as `.summary_copy`, so the row text lines up with the
+  // page title while the dividers keep the edges of the controls above.
+  padding: var(--space-150) var(--space-100);
   border: 0;
   border-bottom: 1px solid var(--color-border-subtle);
   background: transparent;
