@@ -24,13 +24,12 @@ flowchart TD
   backend_profiling("後端效能分析工具<br/>未規劃"):::unplanned
   worktree_pre_push("在 git worktree 跑 pre-push 測試<br/>未規劃"):::unplanned
   design_system("重整前端的 Design System<br/>已完成"):::done
-  tablet_navigation("平板寬度的導覽<br/>未規劃"):::unplanned
   security_classification("證券分類與證交稅判定<br/>未規劃"):::unplanned
   trade_fee_fixes("手續費與證交稅修正<br/>未規劃"):::unplanned
   pull_to_refresh("下拉更新資料<br/>未規劃"):::unplanned
   record_editor_redesign("記帳編輯器重新設計<br/>已完成"):::done
   market_index_overview("大盤指數總覽<br/>已完成"):::done
-  frontend_layout_fixes("前台版面修正<br/>已完成"):::done
+  frontend_layout_fixes("前台版面修正<br/>已核准"):::approved
   usage_recording("記錄使用情況<br/>已完成"):::done
   admin_console("後台<br/>已完成"):::done
   issue_report_notification("問題回報通知<br/>未規劃"):::unplanned
@@ -139,14 +138,6 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - `scripts/dev/git-hooks/pre-push` 用 `.git` 是不是目錄來確認自己在 repo 的根目錄執行，不過 git worktree 的 `.git` 是一個檔案，所以在 worktree 裡 push 時，hook 會印出「Wrong directory」並擋下 push。目標是 hook 在 repo 的根目錄與 worktree 的根目錄都會執行 `scripts/dev/test.sh`。
 - `scripts/dev/test.sh` 從 `.env` 讀取 `ENV` 與 `DOCKER_USERNAME`，而 `.env` 不在版本控制裡，所以新建的 worktree 沒有這個檔案，`check_env dev` 會擋下測試。目標是開發者不必先手動複製 `.env`，在 worktree 裡也能跑測試。
 - `compose.dev.yaml` 沒有設定 project name，所以 Docker Compose 用目錄名稱當 project name，在 worktree 裡跑 `scripts/dev/test.sh` 時會另外啟動一組 db 與 redis。這兩個 service 會綁定主機的 5433 與 6380 port，所以主 checkout 的開發環境執行中時，port 已經被占用，worktree 裡的測試可能起不來，這一點還沒實測。目標是主 checkout 的開發環境執行中時，worktree 裡也能跑測試，而且好幾個 worktree 可以同時跑測試。
-
-### 平板寬度的導覽
-
-讓平板這類中等寬度的畫面用收合的側欄導覽，跟 Material Design 3 與 Apple HIG 的建議一致。
-
-- 前端現在依 User-Agent（`Util.isMobile`）決定顯示底部導覽列還是側欄，只有大盤指數頁依 960px 切換；不是行動裝置時，側欄在 780px 以下改成抽屜，記帳編輯器則在 960px 切換窄版。所以在 780 到 959px（例如 User-Agent 不算行動裝置的 iPad）會同時出現寬版的側欄與窄版的編輯器，而 User-Agent 算行動裝置的瀏覽器在 960px 以上，除了大盤指數頁之外，仍然顯示底部導覽列。目標是導覽分成三段，小於 600px 用底部導覽列，600 到 959px 用收合的側欄，960px 起用展開的側欄，各頁判斷窄版時也用同一組切換點。這會改到 `ui-guidelines.md` 的「版面」與 `desktop-sidebar.md` 的規則。
-
-- `desktop-sidebar.md` 的 NAV-R1 只規定可用寬度小於 960px 時不顯示收合按鈕，沒有寫 780 到 959px 時側欄怎麼呈現，而 `main` 在這個範圍顯示沒有收合按鈕的側欄。目標是改導覽時，NAV-R1 一併寫出中等寬度的側欄規則。這會讓 600 到 959px 也顯示側欄，所以那個 plan 要一併重新定義 `ui-guidelines.md` 裡寬版與窄版的分界，以及字級表裡導覽文字的兩格「無」。
 
 ### 投資數字的計算修正
 
@@ -283,7 +274,7 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 - 歡迎頁在瀏覽器提供安裝選項時，會把頁首的「登入」換成「安裝」，所以回訪的使用者在頁首找不到登入的入口，只能從方案卡片上寫給新使用者的按鈕進入登入頁。目標是同時保留登入與安裝。
 - 頭像與名字頁的「儲存」、Gravatar 頭像預覽的「套用」、編輯既有個股筆記時的「送出」，以及問題回報的「送出」，都會改變內容卻沒寫出對象，不符合 ui-guidelines.md 的「文案」。目標是這些按鈕寫出動作與對象。
 - 有還沒存的內容時，下面這些操作會直接丟掉內容或結束編輯。目標是有還沒存的內容時一律先確認。
-  - 在桌面瀏覽器上的問題回報視窗按「取消」或 Esc，在編輯頁按瀏覽器的上一頁，或在行動裝置上用系統的返回手勢時，還沒存的內容會直接丟掉，只有按編輯頁自己的返回按鈕，以及關閉交易紀錄、現金股利紀錄、買賣計畫、手續費折讓的編輯器視窗時，畫面會先顯示「捨棄變更？」確認視窗。
+  - 在編輯頁按瀏覽器的上一頁，或用系統的返回手勢時，還沒存的內容會直接丟掉，只有按編輯頁自己的返回按鈕，以及關閉交易紀錄、現金股利紀錄、買賣計畫、手續費折讓的編輯器視窗時，畫面會先顯示「捨棄變更？」確認視窗。寬版的問題回報視窗由 [plan 0012](0012-width-based-layout.md) 修正。
   - 個股筆記的編輯器與頭像與名字頁按「捨棄」時完全不問。
 - 交易紀錄、現金股利紀錄、買賣計畫、手續費折讓與問題回報的編輯頁有很多相似但不完全相同的行為，例如什麼時候出現「捨棄變更？」確認視窗、找不到要編輯的資料時顯示什麼、離開後回到哪一頁，以及儲存失敗時是否保留輸入的內容，spec 在每個能力各寫一次。寫這個階段的 plan 時，決定要不要把這些行為整理成一條共用的規則，例如寫進 ui-guidelines.md，各能力的 spec 只寫自己的編輯頁不同的地方。
 - 編輯交易紀錄、現金股利紀錄、買賣計畫或手續費折讓儲存成功，以及刪除紀錄、買賣計畫或手續費折讓成功之後，都不顯示成功的 toast，不符合 ui-guidelines.md 成功後顯示 toast 的預設。目標是決定這些操作要不要顯示 toast，不顯示的話在 spec 記下理由。
@@ -318,9 +309,7 @@ Taigu 的綠界特店以個人申請，所以商業會計法的會計憑證保�
 
 ### 前台版面修正
 
-讓前台的頁面照 ui-guidelines.md 的「版面」，依可用寬度切換版面。
+讓前台的頁面照 ui-guidelines.md 的「版面」，依可用空間切換版面。
 
 - 桌面前台側邊欄已依 [plan 0007](archive/0007-frontend-sidebar-collapse.md) 完成收合、固定捲動與瀏覽器內狀態保存。
-
-- 前端用 `Util.isMobile` 從 User-Agent 判斷是不是行動裝置，再依結果選擇版面，行動裝置用頁首與底部導覽列，其他裝置用側邊欄；編輯器、圖表與大部分頁面也依同一個判斷調整畫面。所以在桌面瀏覽器把視窗縮到小於 960px 時，畫面仍是側邊欄的版面；前端從 iPad 的 User-Agent 判斷不出是行動裝置，所以直立時可用寬度小於 960px 的 iPad 也顯示側邊欄的版面。目標是可用寬度小於 960px 時用窄版的導覽與字級，960px 起用寬版的側邊欄與字級。
-- REC-R10 依是不是行動裝置決定有沒有加號選單，大盤指數頁則依 MKT-R14.11 在窄版提供加號選單，所以在桌面瀏覽器把視窗縮到小於 960px 時，大盤指數頁有加號選單，其他頁面沒有。大盤指數頁已經在 `frontend/src/pages/Main/Main.tsx` 依可用寬度切換側邊欄與底部導覽列，可以當作其他頁面的參考。目標是 REC-R10 也改成依窄版判斷，讓每個頁面的加號選單一致。
+- [plan 0012](0012-width-based-layout.md) 讓前端依窄版與寬版切換導覽與每一頁的版面，不再依 User-Agent 判斷是不是行動裝置；寬版、可用寬度小於 960px 時，側邊欄收合成圖示列。清單的一列在每個寬度都能點開編輯器，法律頁面依是不是 PWA 決定開啟方式。
