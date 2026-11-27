@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 from unittest.mock import Mock, patch
 from zoneinfo import ZoneInfo
@@ -9,6 +9,7 @@ from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
 from main.market import Frequency, TradeType
 from main.market.models import (
     Company,
+    History,
     MarketIndexHistory,
     MarketIndexPerMinute,
     StockInfo,
@@ -16,10 +17,10 @@ from main.market.models import (
 )
 from main.market.services import (
     _bulk_store_stock_price_per_minute,
-    _fetch_and_store_historical_info_from_yahoo,
     _get_intraday_five_minute_slot,
     _get_minutes_after_opening,
     _store_market_index_per_minute,
+    backfill_all_stocks_history,
     fetch_and_store_realtime_stock_info,
     roc_date_string_to_date,
     update_all_stocks_history,
@@ -787,69 +788,6 @@ class TestUpdateCompanyList:
 
 
 @pytest.mark.django_db
-class TestFetchAndStoreHistoricalInfoFromYahoo:
-    @pytest.fixture
-    def company(self) -> Company:
-        return Company.objects.create(
-            stock_id="1234",
-            name="Test Company",
-            trade_type=TradeType.TSE,
-            business="Test business",
-        )
-
-    @patch("main.market.services.requests.get")
-    @patch("main.market.services.History.objects.filter")
-    @patch("main.market.services.History.objects.bulk_create")
-    def test_fetch_and_store_historical_info_from_yahoo_daily(
-        self,
-        mock_bulk_create: Mock,
-        mock_filter: Mock,
-        mock_get: Mock,
-        company: Company,
-    ) -> None:
-        # Mock CSV response
-        csv_data = "Date,Open,High,Low,Close,Adj Close,Volume\n2023-11-01,100.0,105.0,95.0,102.0,102.0,1000000\n2023-11-02,102.0,107.0,100.0,105.0,105.0,1200000"
-        mock_response = Mock()
-        mock_response.text = csv_data
-        mock_get.return_value = mock_response
-
-        mock_filter.return_value.delete.return_value = None
-
-        _fetch_and_store_historical_info_from_yahoo(company, Frequency.DAILY)
-
-        # Verify the request was made
-        mock_get.assert_called_once()
-        # Verify bulk_create was called
-        mock_bulk_create.assert_called_once()
-
-    @patch("main.market.services.requests.get")
-    @patch("main.market.services.History.objects.filter")
-    @patch("main.market.services.History.objects.bulk_create")
-    def test_fetch_and_store_historical_info_otc_company(
-        self, mock_bulk_create: Mock, mock_filter: Mock, mock_get: Mock
-    ) -> None:
-        otc_company = Company.objects.create(
-            stock_id="5678",
-            name="OTC Company",
-            trade_type=TradeType.OTC,
-            business="OTC business",
-        )
-
-        csv_data = "Date,Open,High,Low,Close,Adj Close,Volume\n2023-11-01,100.0,105.0,95.0,102.0,102.0,1000000"
-        mock_response = Mock()
-        mock_response.text = csv_data
-        mock_get.return_value = mock_response
-
-        mock_filter.return_value.delete.return_value = None
-
-        _fetch_and_store_historical_info_from_yahoo(otc_company, Frequency.DAILY)
-
-        # Verify the request URL contains TWO suffix for OTC
-        call_args = mock_get.call_args[0][0]
-        assert "5678.TWO" in call_args
-
-
-@pytest.mark.django_db
 class TestUpdateAllStocksHistory:
     @pytest.fixture
     def stock_info(self) -> StockInfo:
@@ -909,6 +847,164 @@ class TestUpdateAllStocksHistory:
         mock_bulk_create.assert_called_once()
         mock_history_filter.assert_called_once()
         mock_update_market_indices_history.assert_called_once()
+
+    @pytest.mark.scenario("MKT-R9.1")
+    @patch("main.market.services.timezone.localdate", return_value=date(2026, 10, 21))
+    def test_deletes_closes_older_than_365_days(self, _mock_localdate: Mock) -> None:
+        company = Company.objects.create(stock_id="2330", trade_type=TradeType.TSE)
+        for day in (date(2025, 10, 20), date(2025, 10, 21)):
+            History.objects.create(
+                company=company,
+                frequency=Frequency.DAILY,
+                date=day,
+                quantity=0,
+                close_price=900.0,
+            )
+        MarketIndexHistory.objects.create(
+            market=TradeType.TSE, date=date(2025, 9, 16), close_price=15000.0
+        )
+
+        update_all_stocks_history()
+
+        assert list(
+            History.objects.filter(company=company).values_list("date", flat=True)
+        ) == [date(2025, 10, 21)]
+        assert MarketIndexHistory.objects.filter(
+            market=TradeType.TSE, date=date(2025, 9, 16)
+        ).exists()
+
+
+def _make_daily_quotes_response(payload: dict) -> Mock:
+    response = Mock()
+    response.json.return_value = payload
+    return response
+
+
+def _make_otc_quotes_response(rows: list[list[str]]) -> Mock:
+    return _make_daily_quotes_response(
+        {
+            "stat": "ok",
+            "tables": [{"fields": ["代號", "名稱", "收盤", "成交股數"], "data": rows}],
+        }
+    )
+
+
+_TWSE_CLOSED_RESPONSE = {"stat": "很抱歉，沒有符合條件的資料!"}
+
+
+@pytest.mark.django_db
+@patch("main.market.services.sleep")
+@patch("main.market.services.timezone.localdate", return_value=date(2026, 10, 21))
+@patch("main.market.services._HISTORY_RETENTION", timedelta(days=2))
+class TestBackfillAllStocksHistory:
+    @pytest.fixture(autouse=True)
+    def companies(self) -> None:
+        Company.objects.create(stock_id="2330", trade_type=TradeType.TSE)
+        Company.objects.create(stock_id="2317", trade_type=TradeType.TSE)
+        Company.objects.create(stock_id="6488", trade_type=TradeType.OTC)
+
+    @patch("main.market.services.requests.get")
+    def test_fills_in_missing_closes(
+        self, mock_get: Mock, _mock_localdate: Mock, mock_sleep: Mock
+    ) -> None:
+        """Only the missing closes are fetched, so a rerun is cheap and never
+        replaces a close the daily cron job stored."""
+        History.objects.create(
+            company_id="2330",
+            frequency=Frequency.DAILY,
+            date=date(2026, 10, 19),
+            quantity=1,
+            close_price=1.0,
+        )
+        date_to_response = {
+            "20261020": _make_daily_quotes_response(
+                {
+                    "stat": "OK",
+                    "tables": [
+                        {"fields": ["指數", "收盤指數"], "data": [["加權", "23,000"]]},
+                        {
+                            "fields": ["證券代號", "證券名稱", "成交股數", "收盤價"],
+                            "data": [
+                                ["2330", "台積電", "26,130,506", "1,440.00"],
+                                ["2317", "鴻海", "0", "--"],
+                                ["0050", "元大台灣50", "68,386", "62.35"],
+                            ],
+                        },
+                    ],
+                }
+            ),
+            "2026/10/19": _make_otc_quotes_response([]),
+            "2026/10/20": _make_otc_quotes_response(
+                [["6488 ", "環球晶", "376.00", "1,761,566"]]
+            ),
+        }
+        mock_get.side_effect = lambda _url, params, timeout: date_to_response[
+            params["date"]
+        ]
+
+        assert backfill_all_stocks_history() == []
+
+        assert sorted(
+            History.objects.values_list("company_id", "date", "quantity", "close_price")
+        ) == [
+            ("2330", date(2026, 10, 19), 1, 1.0),
+            ("2330", date(2026, 10, 20), 26130506, 1440.0),
+            ("6488", date(2026, 10, 20), 1761566, 376.0),
+        ]
+        assert mock_get.call_count == 3
+        assert mock_sleep.call_count == 3
+
+    @patch("main.market.services.requests.get")
+    def test_treats_a_date_twse_has_no_data_for_as_closed(
+        self, mock_get: Mock, _mock_localdate: Mock, _mock_sleep: Mock
+    ) -> None:
+        mock_get.side_effect = [
+            _make_daily_quotes_response(_TWSE_CLOSED_RESPONSE),
+            _make_otc_quotes_response([]),
+        ] * 2
+
+        assert backfill_all_stocks_history() == []
+
+        assert not History.objects.exists()
+
+    @patch("main.market.services.requests.get")
+    def test_reports_failed_requests_and_keeps_going(
+        self, mock_get: Mock, _mock_localdate: Mock, _mock_sleep: Mock
+    ) -> None:
+        """A rerun fills in what failed, so one failed request must not stop the
+        rest of the year from being fetched."""
+        not_json = Mock()
+        not_json.json.side_effect = JSONDecodeError("Expecting value", "", 0)
+        otc_quotes = _make_otc_quotes_response([["6488", "環球晶", "376.00", "1,000"]])
+        mock_get.side_effect = [ReadTimeout(), otc_quotes, not_json, otc_quotes]
+
+        assert backfill_all_stocks_history() == [
+            (TradeType.TSE, date(2026, 10, 19)),
+            (TradeType.TSE, date(2026, 10, 20)),
+        ]
+
+        assert sorted(History.objects.values_list("company_id", "date")) == [
+            ("6488", date(2026, 10, 19)),
+            ("6488", date(2026, 10, 20)),
+        ]
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"stat": "OK", "tables": [{"fields": ["指數"], "data": [["加權"]]}]},
+            {"stat": "查詢日期大於今日，請重新查詢!"},
+        ],
+    )
+    @patch("main.market.services.requests.get")
+    def test_stops_at_a_response_in_an_unknown_format(
+        self, mock_get: Mock, _mock_localdate: Mock, _mock_sleep: Mock, payload: dict
+    ) -> None:
+        """A rerun cannot fix a changed format, so the backfill stops instead of
+        logging the same failure for every date."""
+        mock_get.return_value = _make_daily_quotes_response(payload)
+
+        with pytest.raises(ValueError, match="Unexpected response|No table"):
+            backfill_all_stocks_history()
 
 
 @pytest.mark.django_db

@@ -134,7 +134,7 @@ $quote-grid-max-width: 1160px;
   &::before {
     content: "";
     inline-size: 13px;
-    border-block-start: 1px dashed var(--color-text-secondary);
+    border-block-start: 1px dashed var(--color-chart-muted);
   }
 }
 

@@ -316,26 +316,27 @@ $stock-switch-button-size: 44px;
   color: var(--color-text-secondary);
 }
 
+.quote_date {
+  margin-top: var(--space-050);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+
+  @include ds.down(md) {
+    text-align: center;
+  }
+}
+
 .chart_controls {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   width: 100%;
   margin-top: var(--space-200);
   margin-bottom: var(--space-100);
 
   @include ds.down(md) {
+    justify-content: center;
     padding: 0 var(--space-250);
   }
-}
-
-.chart_status_label {
-  flex: 1;
-  min-width: 0;
-  padding-right: var(--space-150);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-snug);
 }
 
 .historical_price_chart_container {

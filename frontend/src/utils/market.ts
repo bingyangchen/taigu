@@ -6,6 +6,7 @@ import type {
   StockWarehouse,
   TradeRecord,
 } from "../types";
+import { dateStringToDate, dateToDateString } from "./date";
 import Util from "./util";
 
 export const calculateMarketValue = (
@@ -160,4 +161,30 @@ export function getVisibleMarketSids(context: MarketSidsContext): string[] {
   return visibleSids.sort((leftSid, rightSid) =>
     compareMarketSids(leftSid, rightSid, context),
   );
+}
+
+/**
+ * The closes of the `days` days up to `today` (both included), each with the close
+ * before it. The close before is taken from all of `dateToClose`, so the first
+ * point of a range still has a change when an earlier close exists (STOCK-R5).
+ */
+export function makeStockPriceHistory(
+  dateToClose: Record<string, number> | undefined,
+  days: number,
+  today: string,
+): { dates: string[]; values: number[]; previousValues: (number | null)[] } {
+  const closes = dateToClose ?? {};
+  const allDates = Object.keys(closes).sort();
+  const firstDay = dateStringToDate(today);
+  firstDay.setDate(firstDay.getDate() - days + 1);
+  const firstDate = dateToDateString(firstDay);
+  const start = allDates.findIndex((date) => date >= firstDate);
+  const dates = start === -1 ? [] : allDates.slice(start);
+  return {
+    dates,
+    values: dates.map((date) => closes[date]),
+    previousValues: dates.map((_, index) =>
+      start + index > 0 ? closes[allDates[start + index - 1]] : null,
+    ),
+  };
 }

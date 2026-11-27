@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 import type { MarketSortKey, MarketTab } from "../../types";
 
-export type StockDetailChartMode = "intraday" | "historical";
+export type StockDetailChartMode = "intraday" | "1M" | "1Q" | "1Y";
 
 interface MainPageState {
   headerTitle: string | null;

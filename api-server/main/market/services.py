@@ -1,20 +1,18 @@
-import csv
 import logging
 import math
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from datetime import timezone as stdlib_timezone
-from io import StringIO
 from threading import BoundedSemaphore, Condition
 from time import monotonic, sleep
-from typing import Literal
+from typing import Literal, NamedTuple
 
 import requests
 import urllib3
-from dateutil.relativedelta import relativedelta
 from django.db import close_old_connections, connections, transaction
 from django.utils import timezone
-from requests import ConnectTimeout, JSONDecodeError, ReadTimeout
+from requests import ConnectTimeout, JSONDecodeError, ReadTimeout, RequestException
 
 from main.market import Frequency, ThirdPartyApi, TradeType
 from main.market.cache import (
@@ -36,6 +34,13 @@ logger = logging.getLogger(__name__)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 MARKET_INDICES = ("t00", "o00")
+_HISTORY_RETENTION = timedelta(days=365)
+
+_TWSE_NO_DATA_MESSAGE = "沒有符合條件的資料"
+
+# TWSE blocks clients that send requests too fast. Its realtime API allows 3
+# requests in 5 seconds; the backfill stays below that.
+_BACKFILL_REQUEST_INTERVAL_SECONDS = 2
 
 
 class OutBoundRequestRateLimiter:
@@ -368,65 +373,8 @@ def update_company_list() -> None:
     logger.info("Company list updated!")
 
 
-def _fetch_and_store_historical_info_from_yahoo(
-    company: Company, frequency: str
-) -> None:
-    end = datetime.now()
-    start = end - relativedelta(days=80)
-    interval = "1d"
-    if frequency == Frequency.WEEKLY:
-        start = end - relativedelta(weeks=55)
-        interval = "1wk"
-    elif frequency == Frequency.MONTHLY:
-        start = end - relativedelta(months=55)
-        interval = "1mo"
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"  # noqa: E501
-    }
-    response = requests.get(
-        f"{ThirdPartyApi.multiple_days}{company.pk}.{'TW' if company.trade_type == TradeType.TSE else 'TWO'}?period1={int(start.timestamp())}&period2={int(end.timestamp())}&interval={interval}&events=history&includeAdjustedClose=true",  # noqa: E501
-        headers=headers,
-        verify=False,  # noqa: S501
-        timeout=10,
-    )
-    data = StringIO(response.text)
-    csv_reader = csv.reader(data)
-    History.objects.filter(company=company, frequency=frequency).delete()
-    previous_quantity = None
-    previous_close_price = None
-    to_create_batch = []
-    for row in csv_reader:
-        # ['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']
-        if "Date" not in row:  # skip the header row
-            try:
-                quantity = int(row[-1])
-            except Exception:
-                quantity = previous_quantity
-            try:
-                close_price = round(float(row[4]), 2)
-            except Exception:
-                close_price = previous_close_price
-            if quantity is not None and close_price is not None:
-                to_create_batch.append(
-                    History(
-                        company_id=company.pk,
-                        frequency=frequency,
-                        date=datetime.strptime(row[0], "%Y-%m-%d").date(),
-                        quantity=quantity,
-                        close_price=close_price,
-                    )
-                )
-    History.objects.bulk_create(
-        to_create_batch,
-        update_conflicts=True,
-        update_fields=["quantity", "close_price"],
-        unique_fields=["company_id", "frequency", "date"],
-    )
-
-
 def update_market_indices_history() -> None:
-    today = date.today()
+    today = timezone.localdate()
     to_create_batch = []
     for market_id in (TradeType.TSE, TradeType.OTC):
         row = (
@@ -450,6 +398,7 @@ def update_market_indices_history() -> None:
 
 
 def update_all_stocks_history() -> None:
+    today = timezone.localdate()
     to_create_batch = [
         History(
             company_id=stock_info.company.pk,
@@ -458,9 +407,7 @@ def update_all_stocks_history() -> None:
             quantity=stock_info.quantity,
             close_price=stock_info.close_price,
         )
-        for stock_info in StockInfo.objects.filter(date=date.today()).select_related(
-            "company"
-        )
+        for stock_info in StockInfo.objects.filter(date=today).select_related("company")
     ]
     History.objects.bulk_create(
         to_create_batch,
@@ -468,8 +415,139 @@ def update_all_stocks_history() -> None:
         update_fields=["quantity", "close_price"],
         unique_fields=["company_id", "frequency", "date"],
     )
-    History.objects.filter(date__lt=date.today() - timedelta(days=80)).delete()
+    History.objects.filter(date__lt=today - _HISTORY_RETENTION).delete()
     update_market_indices_history()
+
+
+def backfill_all_stocks_history() -> list[tuple[str, date]]:
+    """Fill in the daily closes missing from the retention period.
+
+    Leaves every stored close as it is, and skips a market's dates that already
+    have closes. Returns the market and date of each request that failed, so a
+    rerun can fill them in. A response in an unknown format stops the backfill,
+    because a rerun cannot fix it.
+    """
+    today = timezone.localdate()
+    market_to_sids = {
+        market: set(
+            Company.objects.filter(trade_type=market).values_list("pk", flat=True)
+        )
+        for market in TradeType.ALL
+    }
+    failures: list[tuple[str, date]] = []
+    day = today - _HISTORY_RETENTION
+    while day < today:
+        for market in TradeType.ALL:
+            if History.objects.filter(
+                company__trade_type=market, frequency=Frequency.DAILY, date=day
+            ).exists():
+                continue
+            try:
+                sid_to_quote = _fetch_daily_quotes(market, day)
+            except RequestException as e:
+                logger.error(f"<{type(e).__name__}> {market} {day}: {e}")
+                failures.append((market, day))
+                continue
+            finally:
+                sleep(_BACKFILL_REQUEST_INTERVAL_SECONDS)
+            History.objects.bulk_create(
+                [
+                    History(
+                        company_id=sid,
+                        frequency=Frequency.DAILY,
+                        date=day,
+                        quantity=quote.quantity,
+                        close_price=quote.close_price,
+                    )
+                    for sid, quote in sid_to_quote.items()
+                    if sid in market_to_sids[market]
+                ],
+                ignore_conflicts=True,
+            )
+        day += timedelta(days=1)
+    return failures
+
+
+@dataclass(frozen=True)
+class _DailyQuoteSource:
+    date_format: str
+    query_type: str
+    sid_field: str
+    close_price_field: str
+    quantity_field: str
+
+
+class _DailyQuote(NamedTuple):
+    quantity: int
+    close_price: float
+
+
+_MARKET_TO_DAILY_QUOTE_SOURCE = {
+    TradeType.TSE: _DailyQuoteSource(
+        date_format="%Y%m%d",
+        query_type="ALLBUT0999",
+        sid_field="證券代號",
+        close_price_field="收盤價",
+        quantity_field="成交股數",
+    ),
+    TradeType.OTC: _DailyQuoteSource(
+        date_format="%Y/%m/%d",
+        query_type="EW",
+        sid_field="代號",
+        close_price_field="收盤",
+        quantity_field="成交股數",
+    ),
+}
+
+
+def _fetch_daily_quotes(market: str, day: date) -> dict[str, _DailyQuote]:
+    """Return each stock's traded quantity and close on a past date.
+
+    A date the market was closed has no quotes. A stock that did not trade that
+    date is left out.
+    """
+    source = _MARKET_TO_DAILY_QUOTE_SOURCE[market]
+    response = requests.get(
+        ThirdPartyApi.daily_quotes_by_date[market],
+        params={
+            "date": day.strftime(source.date_format),
+            "type": source.query_type,
+            "response": "json",
+        },
+        timeout=20,
+    )
+    response.raise_for_status()
+    payload: dict = response.json()
+
+    # TWSE sends no tables for a closed date; TPEx sends the tables empty.
+    if "tables" not in payload:
+        if _TWSE_NO_DATA_MESSAGE in payload.get("stat", ""):
+            return {}
+        raise ValueError(f"Unexpected response: {payload}")
+    quote_tables = [
+        table
+        for table in payload["tables"]
+        if source.sid_field in (table.get("fields") or [])
+    ]
+    if not quote_tables:
+        raise ValueError(f"No table of daily quotes in the response: {payload}")
+
+    sid_to_quote: dict[str, _DailyQuote] = {}
+    for table in quote_tables:
+        fields: list[str] = table["fields"]
+        sid_index = fields.index(source.sid_field)
+        close_price_index = fields.index(source.close_price_field)
+        quantity_index = fields.index(source.quantity_field)
+        for row in table["data"]:
+            try:
+                close_price = float(row[close_price_index].replace(",", ""))
+            except ValueError:  # "--" or "---" when the stock did not trade
+                continue
+            sid_to_quote[row[sid_index].strip()] = _DailyQuote(
+                quantity=int(row[quantity_index].replace(",", "")),
+                close_price=close_price,
+            )
+    return sid_to_quote
 
 
 def update_material_facts() -> None:

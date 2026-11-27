@@ -72,12 +72,13 @@
 1. 執行：
 
    ```bash
-   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.market.models import StockInfo; StockInfo.objects.filter(company_id='2330').update(close_price=23.45, fluct_price=0.45, quantity=1235000)"
+   docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from django.utils import timezone; from main.market.models import StockInfo; StockInfo.objects.filter(company_id='2330').update(close_price=23.45, fluct_price=0.45, quantity=1235000, date=timezone.localdate())"
    ```
 
 2. 開啟 `https://local.taigu.tw/market/2330`。
+3. 分別點選走勢圖的「今日」與「1M」。
 
-預期：頁面開頭顯示「台積電」「2330」、價格「$23.45」、「▲0.45 (1.96%)」與「成交 1,235 張」。
+預期：頁面開頭顯示「台積電」「2330」、價格「$23.45」、「▲0.45 (1.96%)」、「成交 1,235 張」與「行情日期 <今天的日期與星期，格式像 2026/10/21 (三)>」；步驟 3 選兩個區間時，都顯示這個行情日期。
 
 ## STOCK-R2.2 價格低於昨收價
 
@@ -193,7 +194,7 @@
    "
    ```
 
-預期：步驟 4 之後畫面顯示昨天的日期與星期，格式像「2026/10/23 (五)」，走勢圖畫出昨天 09:05 到 13:30 的盤中走勢。
+預期：步驟 4 之後走勢圖畫出昨天 09:05 到 13:30 的盤中走勢。
 
 ## STOCK-R4.2 交易日開盤前
 
@@ -203,7 +204,7 @@
 2. 確認走勢圖的內容。
 3. 照 STOCK-R4.1 的步驟 5 刪除準備的盤中走勢。
 
-預期：步驟 2 的畫面顯示昨天的日期與星期，走勢圖畫出昨天 09:05 到 13:30 的盤中走勢。
+預期：步驟 2 的走勢圖畫出昨天 09:05 到 13:30 的盤中走勢。
 
 ## STOCK-R4.3 沒有盤中走勢
 
@@ -219,22 +220,24 @@
 
 前端沒有自動化 test。
 
-1. 在交易日 09:00 之後，執行以下指令，印出 2330 保留下來的最早一天的日期與收盤價，以及 2330 現在的價格：
+1. 在交易日 09:00 之後，執行以下指令，印出 2330 在最近 91 天（含今天）內最早一天的日期與收盤價，以及 2330 現在的價格：
 
    ```bash
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "
+   from datetime import timedelta
+   from django.utils import timezone
    from main.market import Frequency
    from main.market.models import History, StockInfo
-   print(History.objects.filter(company_id='2330', frequency=Frequency.DAILY).order_by('date').values_list('date', 'close_price').first(), StockInfo.objects.filter(company_id='2330').values_list('close_price', flat=True).first())
+   print(History.objects.filter(company_id='2330', frequency=Frequency.DAILY, date__gte=timezone.localdate() - timedelta(days=90)).order_by('date').values_list('date', 'close_price').first(), StockInfo.objects.filter(company_id='2330').values_list('close_price', flat=True).first())
    "
    ```
 
 2. 開啟 `https://local.taigu.tw/market/2330`。
-3. 點選「歷史」。
-4. 把游標移到歷史走勢圖的最左邊。
-5. 把游標移到歷史走勢圖的最右邊。
+3. 點選「1Q」。
+4. 把游標移到走勢圖的最左邊。
+5. 把游標移到走勢圖的最右邊。
 
-預期：最左邊那一點的日期與收盤價是步驟 1 印出的最早一天；最右邊那一點的日期是今天的「月/日」，收盤價是步驟 1 印出的現在價格。
+預期：最左邊那一點的日期與收盤價是步驟 1 印出的最早一天；最右邊那一點的日期是今天，收盤價是步驟 1 印出的現在價格。
 
 ## STOCK-R6.1 持股
 

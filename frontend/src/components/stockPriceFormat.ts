@@ -9,6 +9,15 @@ export function formatStockPrice(value: number): string {
   return stockPriceFormat.format(value);
 }
 
+const stockPriceAxisLabelFormat = new Intl.NumberFormat("zh-TW", {
+  maximumFractionDigits: 2,
+});
+
+/** A price on a chart axis, without trailing zeros (ui-guidelines.md). */
+export function formatStockPriceAxisLabel(value: number): string {
+  return stockPriceAxisLabelFormat.format(value);
+}
+
 function getDirection(change: number): string {
   return change > 0 ? "▲" : change < 0 ? "▼" : "";
 }

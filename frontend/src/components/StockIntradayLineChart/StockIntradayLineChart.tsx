@@ -10,7 +10,7 @@ import {
   splitIntradayDataAtPreviousClose,
 } from "../intradayTrend";
 import {
-  formatStockPrice,
+  formatStockPriceAxisLabel,
   makeStockChangeTooltipLine,
   makeStockPriceTooltipLine,
 } from "../stockPriceFormat";
@@ -87,7 +87,7 @@ export function makeStockIntradayChartOption(
         margin: 0,
         showMinLabel: false,
         showMaxLabel: false,
-        formatter: formatStockPrice,
+        formatter: formatStockPriceAxisLabel,
       },
       axisLine: { show: false },
       axisTick: { show: false },

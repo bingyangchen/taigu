@@ -1,5 +1,5 @@
 import { createSelector } from "@reduxjs/toolkit";
-import React, { memo, useLayoutEffect, useRef } from "react";
+import React, { memo, useLayoutEffect, useMemo, useRef } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -18,6 +18,7 @@ import {
   StockIntradayLineChart,
   StockMemoEditor,
 } from "../../../components";
+import type { SegmentedControlOption } from "../../../components/SegmentedControl/SegmentedControl";
 import {
   buildStockIntradayChartData,
   hasStockIntradayPlottedData,
@@ -47,14 +48,31 @@ import type { RootState } from "../../../redux/store";
 import { store } from "../../../redux/store";
 import { COLORS } from "../../../styles/tokens";
 import type { MarketTab, MaterialFact } from "../../../types";
-import { formatDateWithWeekday } from "../../../utils/date";
+import { formatDateWithWeekday, getTodayDateString } from "../../../utils/date";
 import Env from "../../../utils/env";
-import { calculateMarketValue, getVisibleMarketSids } from "../../../utils/market";
+import {
+  calculateMarketValue,
+  getVisibleMarketSids,
+  makeStockPriceHistory,
+} from "../../../utils/market";
 import { navigateBack } from "../../../utils/router";
 import { useLatestRef } from "../../../utils/useLatestRef";
 import { useMergedState } from "../../../utils/useMergedState";
 import Util from "../../../utils/util";
 import styles from "./Details.module.scss";
+
+const CHART_MODE_TO_DAYS: Record<Exclude<StockDetailChartMode, "intraday">, number> = {
+  "1M": 30,
+  "1Q": 91,
+  "1Y": 365,
+};
+
+const CHART_MODE_OPTIONS: SegmentedControlOption[] = [
+  { label: "今日", value: "intraday" },
+  { label: "1M", value: "1M", ariaLabel: "1M，最近 30 天" },
+  { label: "1Q", value: "1Q", ariaLabel: "1Q，最近 91 天" },
+  { label: "1Y", value: "1Y", ariaLabel: "1Y，最近 365 天" },
+];
 
 const selectNavigableSids = createSelector(
   [
@@ -208,6 +226,17 @@ function Details() {
   const stockDetailChartMode = useAppSelector(
     (rootState) => rootState.mainPage.stockDetailChartMode,
   );
+  const stockPriceHistory = useMemo(
+    () =>
+      stockDetailChartMode === "intraday"
+        ? null
+        : makeStockPriceHistory(
+            historicalPrices?.daily,
+            CHART_MODE_TO_DAYS[stockDetailChartMode],
+            getTodayDateString(),
+          ),
+    [historicalPrices, stockDetailChartMode],
+  );
   const dispatch = useAppDispatch();
   const [state, setState, runAfterCommitCallbacks] =
     useMergedState<DetailsState>(INITIAL_STATE);
@@ -267,8 +296,9 @@ function Details() {
   const updateHistoricalPriceLineChart = (): void => {
     setState(() => {
       const latest = latestRenderRef.current;
-      const { dates, values } = getHistoricalPriceChartData(latest.historicalPrices);
+      if (latest.stockPriceHistory === null) return null;
 
+      const { dates, values, previousValues } = latest.stockPriceHistory;
       if (!latest.isWaitingHistoricalPrices && dates.length === 0) {
         return { historicalPriceLineChart: null };
       }
@@ -278,6 +308,7 @@ function Details() {
           <HistoricalPriceLineChart
             dates={dates}
             values={values}
+            previousValues={previousValues}
             isWaiting={latest.isWaitingHistoricalPrices}
           />
         ),
@@ -421,6 +452,7 @@ function Details() {
     historicalPrices,
     isWaitingHistoricalPrices,
     stockDetailChartMode,
+    stockPriceHistory,
     subscription,
     previousStockSid,
     nextStockSid,
@@ -622,8 +654,7 @@ function Details() {
   const recentMaterialFacts: MaterialFact[] = [...(companyInfo?.material_facts || [])]
     .sort((a, b) => Date.parse(b.date_time) - Date.parse(a.date_time))
     .slice(0, 3);
-  const historicalChartDateCount =
-    getHistoricalPriceChartData(historicalPrices).dates.length;
+  const historicalChartDateCount = stockPriceHistory?.dates.length ?? 0;
   const showHistoricalPriceEmptyState =
     !isWaitingHistoricalPrices &&
     historicalPrices !== undefined &&
@@ -636,15 +667,23 @@ function Details() {
       ? isWaitingIntradayPrices &&
         (intradayPrices === undefined || !hasStockIntradayPlottedData(intradayPrices))
       : isWaitingHistoricalPrices && historicalChartDateCount === 0;
-  const chartStatusLabel =
-    stockDetailChartMode === "historical"
-      ? "近 60 日收盤價走勢"
-      : formatDateWithWeekday(intradayPrices?.date ?? null);
+  const quoteDate = stockInfo?.date ? formatDateWithWeekday(stockInfo.date) : null;
   const isFavorite = favorites.includes(sid);
 
   const handleChartModeChange = (value: string): void => {
     dispatch(changeStockDetailChartMode(value as StockDetailChartMode));
   };
+  const chartControls = (
+    <div className={styles.chart_controls}>
+      <SegmentedControl
+        label="走勢區間"
+        variant="subtle"
+        options={CHART_MODE_OPTIONS}
+        value={stockDetailChartMode}
+        onChange={handleChartModeChange}
+      />
+    </div>
+  );
   const returnToList = (): void => {
     navigateBack({ location, navigate }, `${Env.frontendRootPath}market`);
   };
@@ -918,6 +957,11 @@ function Details() {
               <span className={fluctPriceClass}>{fluctPriceString}</span>
               <span className={styles.trade_quantity}>成交 {tradeVolumeText} 張</span>
             </div>
+            {quoteDate && (
+              <div className={styles.quote_date}>
+                行情日期 <time dateTime={stockInfo?.date}>{quoteDate}</time>
+              </div>
+            )}
             {Util.isMobile && (
               <div className={styles.mobile_text_actions}>
                 <button
@@ -939,24 +983,13 @@ function Details() {
               </div>
             )}
           </div>
-          <div className={styles.chart_controls}>
-            <div className={styles.chart_status_label}>{chartStatusLabel}</div>
-            <SegmentedControl
-              label="個股圖表類型"
-              variant="subtle"
-              optionWidth={Util.isMobile ? "58px" : "63px"}
-              options={[
-                { label: "今日", value: "intraday" },
-                { label: "歷史", value: "historical" },
-              ]}
-              value={stockDetailChartMode}
-              onChange={handleChartModeChange}
-            />
-          </div>
+          {!Util.isMobile && chartControls}
           <div
             className={styles.historical_price_chart_container}
             aria-label={
-              stockDetailChartMode === "intraday" ? "今日走勢" : "近 60 日收盤價走勢"
+              stockDetailChartMode === "intraday"
+                ? "今日走勢"
+                : `最近 ${CHART_MODE_TO_DAYS[stockDetailChartMode]} 天收盤價走勢`
             }
           >
             {showChartLoadingState && (
@@ -982,6 +1015,7 @@ function Details() {
               )}
             </div>
           </div>
+          {Util.isMobile && chartControls}
         </section>
         <section className={`${styles.block} ${styles.summary_block}`}>
           <div className={styles.section_title}>投資摘要</div>
@@ -1123,26 +1157,6 @@ function Details() {
 }
 
 export default memo(Details);
-
-function getHistoricalPriceChartData(
-  historicalPrices:
-    | RootState["stockInfo"]["sidHistoricalPricesMap"][string]
-    | undefined,
-): { dates: string[]; values: number[] } {
-  const dates: string[] = [];
-  const values: number[] = [];
-  const data = historicalPrices?.daily;
-  if (data) {
-    const entries = Object.entries(data);
-    entries.sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]));
-    for (const [date, price] of entries) {
-      const formattedDate = date.split("-").slice(1).join("/");
-      dates.push(formattedDate);
-      values.push(price);
-    }
-  }
-  return { dates, values };
-}
 
 async function calculateInventoryHistogramChartData(sid: string): Promise<number[]> {
   const worker = new Worker(
