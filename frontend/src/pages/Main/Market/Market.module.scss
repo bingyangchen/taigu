@@ -760,7 +760,10 @@ $three-signal-min-width: 360px;
   min-width: 0;
   overflow: hidden;
   color: var(--color-text-secondary);
-  font-size: var(--font-size-caption);
+
+  // 12px rather than the 11px narrow caption size, which is hard to read for a line
+  // users scan on every row; still a step below the 14px change beside it.
+  font-size: var(--font-size-xs);
   line-height: var(--line-height-snug);
   text-overflow: ellipsis;
   white-space: nowrap;
