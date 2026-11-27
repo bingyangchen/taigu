@@ -7,6 +7,18 @@
   flex-grow: 1;
   height: 100dvh;
   padding: 0 var(--space-200) var(--space-150);
+
+  // On a wide screen the search field, the empty state and the list's card are
+  // capped and centered, while the list's scroll container stays as wide as the
+  // page, so the mouse wheel scrolls the list anywhere on the page.
+  & > :not(.record_list) {
+    width: 100%;
+    max-width: var(--layout-list-max-width);
+    margin-inline: auto;
+    @include ds.down(md) {
+      max-width: none;
+    }
+  }
   @include ds.down(md) {
     height: fit-content;
     padding: 0;
@@ -30,19 +42,33 @@
     }
   }
   & > .record_list {
-    display: flex;
-    flex-direction: column;
+    // Reaches over the page's side padding, so the card's shadow is not clipped
+    // and the scroll bar sits at the page's edge.
+    margin-inline: calc(-1 * var(--space-200));
+    padding: var(--space-025) var(--space-200) var(--space-150);
     font-size: var(--font-size-sm);
-    background-color: var(--color-bg-frosted);
-    border-radius: var(--radius-2xl);
-    box-shadow: var(--shadow-sm);
-    padding-bottom: var(--space-600);
     overflow: auto;
     @include ds.down(md) {
-      border-radius: 0;
-      background-color: transparent;
-      padding-bottom: calc(var(--space-1000) + var(--layout-footer-height));
-      box-shadow: none;
+      margin-inline: 0;
+      padding: 0 0 calc(var(--space-1000) + var(--layout-footer-height));
+    }
+    .list_card {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: var(--layout-list-max-width);
+      margin-inline: auto;
+      padding-bottom: var(--space-600);
+      border-radius: var(--radius-2xl);
+      background-color: var(--color-bg-frosted);
+      box-shadow: var(--shadow-sm);
+      @include ds.down(md) {
+        max-width: none;
+        padding-bottom: 0;
+        border-radius: 0;
+        background-color: transparent;
+        box-shadow: none;
+      }
     }
     .record_row {
       display: grid;
