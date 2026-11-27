@@ -3,18 +3,6 @@
 
 // Matches the border of MainSideBar, so the console reads as part of Taigu.
 
-@mixin visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  border: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 .access_failure {
   max-width: admin.$narrow-content-max-width;
   margin: 0 auto;
@@ -175,7 +163,7 @@
       padding: 0;
     }
     & .nav_label {
-      @include visually-hidden;
+      @include ds.visually-hidden;
     }
     & .badge {
       position: absolute;
@@ -229,7 +217,7 @@
       display: block;
     }
     & .nav_label {
-      @include visually-hidden;
+      @include ds.visually-hidden;
     }
   }
   .content {

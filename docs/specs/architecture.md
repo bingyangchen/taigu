@@ -62,7 +62,7 @@ flowchart LR
 
 ### Service Worker 的更新
 
-`vite-plugin-pwa` 把 `frontend/src/service-worker.ts` 另外 build 成 `/service-worker.js`，並把 `frontend/build/` 裡的 `index.html` 與 `assets/` 底下的檔案寫進 service worker 的 precache 清單。瀏覽器只會用註冊時的網址與 scope 更新已經安裝的 service worker，所以 service worker 的網址要維持 `/service-worker.js`，scope 要維持 `/`。
+`vite-plugin-pwa` 把 `frontend/src/service-worker.ts` 另外 build 成 `/service-worker.js`，並把 `frontend/build/` 裡的 `index.html` 與 `assets/` 底下的檔案寫進 service worker 的 precache 清單，不過影片（`.mp4`）不進 precache，service worker 也不 cache 影片，一律向網路取得，因為 Safari 播放影片時用 Range request 分段取得檔案，而 Workbox 預設從 cache 回應整個檔案；影片不需要離線播放，所以不另外加上處理 Range request 的 `workbox-range-requests`。瀏覽器只會用註冊時的網址與 scope 更新已經安裝的 service worker，所以 service worker 的網址要維持 `/service-worker.js`，scope 要維持 `/`。
 
 2026-11 在 macOS 的 Chrome 158 實測時，先讓本機的 reverse proxy 提供用 Create React App build 的舊版，等瀏覽器裝上舊的 service worker，再換成用 Vite build 的版本，結果如下：
 
@@ -86,7 +86,7 @@ Cloudflare Pages 用 `npm run build` build 前端（這是 Cloudflare Pages 上�
 
 前端用 `createRoot` render，JavaScript 載入之後重新 render 整頁，取代 prerender 產生的 DOM。
 
-> 設計理由：不用 `hydrateRoot` 沿用 prerender 的 DOM，因為 hydrate 時，prerender 產生的 HTML 與前端在瀏覽器裡第一次 render 的結果要完全相同，而頁面裡有會隨時間改變的內容，例如頁尾用 `new Date().getFullYear()` 算出的年份，跨年之後，build 時算出的年份就與前端算出的不同。代價是前端重新 render 時，歡迎頁的 demo 影片會從頭播放，已經播過的進場動畫也會再播一次。完整討論見 [0010](../plans/archive/0010-frontend-vite-migration.md)。
+> 設計理由：不用 `hydrateRoot` 沿用 prerender 的 DOM，因為 hydrate 時，prerender 產生的 HTML 與前端在瀏覽器裡第一次 render 的結果要完全相同，而頁面裡有會隨時間改變的內容，例如頁尾用 `new Date().getFullYear()` 算出的年份，跨年之後，build 時算出的年份就與前端算出的不同。代價是前端重新 render 時，歡迎頁已經播過的進場動畫會再播一次。完整討論見 [0010](../plans/archive/0010-frontend-vite-migration.md)。
 
 ## 登入
 
@@ -388,7 +388,7 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 `tokens.module.scss` 用 `:export` 把同一份 map 交給 TypeScript，ECharts 的選項與 SVG 圖示的顏色都從 `styles/tokens.ts` 讀取。`styles/tokens.ts` 匯出的不透明顏色是 6 位數的 hex，字級是 px 的數字。
 
-每個 SCSS 檔用 `@use "styles" as ds;` 載入 `styles/`，`ds` 只提供 CSS custom properties 做不到的部分：斷點的 `ds.down()`、`ds.up()`、`ds.breakpoint()` 與 focus ring 的 mixin。TypeScript 的 media query 由 `utils/mediaQuery.ts` 從同一組斷點產生，所以跟 SCSS 在同一個像素切換。
+每個 SCSS 檔用 `@use "styles" as ds;` 載入 `styles/`，`ds` 只提供 CSS custom properties 做不到的部分：斷點的 `ds.down()`、`ds.up()`、`ds.breakpoint()`，以及 `styles/mixins/` 裡的 mixin，例如 focus ring 與只讓 screen reader 讀到內容的 `ds.visually-hidden`。TypeScript 的 media query 由 `utils/mediaQuery.ts` 從同一組斷點產生，所以跟 SCSS 在同一個像素切換。
 
 > 設計理由：Token 以 Sass map 定義，從同一份 map 輸出 CSS custom properties 與給 TypeScript 的值，透明色在 Sass 裡算成固定的值。不直接手寫 CSS custom properties、用 `color-mix()` 組出透明色，因為 TypeScript 用 `getComputedStyle` 讀到的是還沒算出結果的 `color-mix(...)` 字串，ECharts 無法使用，而且公開頁面的 prerender 在 Node 裡執行，沒有 `getComputedStyle`。不用 Style Dictionary 從 DTCG 格式的 JSON 產生 token，因為那要多一個 build 步驟與 dependency，而 `main` 上只有網頁一個平台。斷點只留在 Sass，因為 media query 裡不能用 `var()`。完整討論見 [0011](../plans/archive/0011-design-system.md)。
 

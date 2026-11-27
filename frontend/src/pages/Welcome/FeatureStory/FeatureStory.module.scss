@@ -1,0 +1,151 @@
+@use "styles" as ds;
+@use "../layout" as welcome;
+
+// How long the sticky phone takes to swap screens, and the step titles to change
+// color, when the active step changes.
+$swap-duration: 500ms;
+
+.main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+
+  @include ds.up(lg) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-800);
+  }
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  gap: var(--space-300);
+  padding-block: var(--space-800);
+
+  & + & {
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: welcome.$step-title-size;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: welcome.$display-tracking;
+    line-height: var(--line-height-snug);
+    text-wrap: balance;
+
+    // Breaks CJK titles only at punctuation, so a line never splits a word such as
+    // 收益; a title that still does not fit breaks anywhere.
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    margin: 0;
+    max-width: 26em;
+    color: var(--color-text-secondary);
+    font-size: welcome.$lead-size;
+    line-height: var(--line-height-relaxed);
+  }
+
+  @include ds.up(lg) {
+    min-height: 88vh;
+    align-content: center;
+    padding-block: 0;
+
+    & + & {
+      border-top: none;
+    }
+
+    h3 {
+      transition: color $swap-duration var(--ease-out);
+    }
+
+    // The step that is not current steps its title down to the secondary color.
+    // Text never fades through opacity (ui-guidelines.md).
+    &:not(.active) h3 {
+      color: var(--color-text-secondary);
+    }
+  }
+}
+
+.step_figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-200);
+  margin: var(--space-200) 0 0;
+
+  > :first-child {
+    width: min(72vw, 290px);
+  }
+
+  @include ds.up(lg) {
+    display: none;
+  }
+}
+
+.stage {
+  display: none;
+
+  @include ds.up(lg) {
+    position: sticky;
+
+    // Centers the phone in the viewport below the navigation bar.
+    top: calc(
+      welcome.$nav-height + (100vh - welcome.$nav-height) / 2 - min(36vh, 360px)
+    );
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-200);
+    align-self: start;
+    margin-top: 6vh;
+  }
+}
+
+.stage_phone {
+  // Tall enough to read the screen, short enough to fit the viewport with its button.
+  width: min(calc((100vh - welcome.$nav-height - 120px) / 2.25), 330px);
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+
+  video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  opacity: 0;
+  transition: opacity $swap-duration var(--ease-out);
+
+  &.active {
+    opacity: 1;
+  }
+}
+
+.video_toggle {
+  min-height: 44px;
+  padding-inline: var(--space-250);
+
+  // visibility, not display, so the button keeps its space and leaves the tab order
+  // and the accessibility tree.
+  &.hidden {
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layer,
+  .step h3 {
+    transition: none;
+  }
+}

@@ -1,0 +1,51 @@
+@use "styles" as ds;
+
+// The frame image (assets/welcome/frame-laptop.webp) is 2000×1318 px and its screen
+// is transparent. The screen box covers the image's screen opening, extended a few
+// pixels under the bezel.
+$frame-width: 2000;
+$frame-height: 1318;
+
+.main {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: #{$frame-width} / #{$frame-height};
+
+  // A <picture> only picks the source; its image is laid out as if it were bare.
+  picture {
+    display: contents;
+  }
+}
+
+.wide_only {
+  @include ds.down(lg) {
+    display: none;
+  }
+}
+
+.screen {
+  position: absolute;
+  left: calc(200 / $frame-width * 100%);
+  top: calc(141 / $frame-height * 100%);
+  width: calc(1600 / $frame-width * 100%);
+  height: calc(1035 / $frame-height * 100%);
+  overflow: hidden;
+  background-color: var(--color-bg-page);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}

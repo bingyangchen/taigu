@@ -1,0 +1,114 @@
+@use "styles" as ds;
+
+// The frame image (assets/welcome/frame-phone.webp) is 885×1777 px and its screen is
+// transparent. The screen box covers the image's screen opening, extended a few
+// pixels under the bezel so no gap shows at the rounded corners.
+$frame-width: 885;
+$frame-height: 1777;
+
+// The screen's corner radius, in % of the phone's width (cqw), matching the frame.
+$screen-radius: 12.5cqw;
+
+.main {
+  position: relative;
+  container-type: inline-size;
+  isolation: isolate;
+  aspect-ratio: #{$frame-width} / #{$frame-height};
+  filter: var(--drop-shadow-image);
+}
+
+.screen {
+  position: absolute;
+  left: calc(55 / $frame-width * 100%);
+  top: calc(51 / $frame-height * 100%);
+  width: calc(775 / $frame-width * 100%);
+  height: calc(1673 / $frame-height * 100%);
+  overflow: hidden;
+  border-radius: $screen-radius;
+  background-color: var(--color-bg-surface);
+
+  // Recordings and screenshots fill the screen; the frame's 390×844 screen leaves
+  // them no letterbox.
+  > video,
+  > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.screenshot {
+  // Defaults for the custom properties PhoneScreenshot sets from the screenshot.
+  --screen-top: var(--color-bg-page);
+  --screen-bottom: var(--color-bg-surface);
+  --wide-screen-top: var(--screen-top);
+  --wide-screen-bottom: var(--screen-bottom);
+
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--screen-bottom);
+}
+
+// The frame image draws the time and the status icons over this band, which is the
+// height of iOS's status bar on a 390×844 screen.
+.status_bar {
+  flex: none;
+  aspect-ratio: 390 / 47;
+  background-color: var(--screen-top);
+}
+
+.viewport {
+  position: relative;
+  flex: none;
+  aspect-ratio: 390 / 763;
+
+  img,
+  picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.home_bar {
+  flex: 1 0 auto;
+  background-color: var(--screen-bottom);
+}
+
+.home_indicator {
+  position: absolute;
+  left: 50%;
+  bottom: 2.4cqw;
+  width: 34cqw;
+  height: 1.3cqw;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-text-primary);
+  translate: -50% 0;
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+@include ds.up(lg) {
+  .has_wide_screen {
+    .status_bar {
+      background-color: var(--wide-screen-top);
+    }
+
+    &,
+    .home_bar {
+      background-color: var(--wide-screen-bottom);
+    }
+  }
+}

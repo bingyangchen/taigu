@@ -21,7 +21,7 @@ import {
 
 declare const self: ServiceWorkerGlobalScope;
 
-const VERSION = "2026.10.26.01";
+const VERSION = "2026.11.27.01";
 console.log(`Service worker version: ${VERSION}`);
 
 clientsClaim();
@@ -49,16 +49,19 @@ registerRoute(
   createHandlerBoundToURL("/index.html"),
 );
 
+// Videos are not cached (see the service worker section of docs/specs/architecture.md):
+// Safari fetches a video in byte ranges, which Workbox's cached responses do not
+// answer by default.
+const IMAGE_CACHE_NAME = "images";
 registerRoute(
   ({ url }) =>
     url.origin === self.location.origin &&
     (url.pathname.endsWith(".png") ||
       url.pathname.endsWith(".jpg") ||
       url.pathname.endsWith(".svg") ||
-      url.pathname.endsWith(".webp") ||
-      url.pathname.endsWith(".mp4")),
+      url.pathname.endsWith(".webp")),
   new StaleWhileRevalidate({
-    cacheName: "images",
+    cacheName: IMAGE_CACHE_NAME,
     plugins: [
       // Ensure that once this runtime cache reaches a maximum size the LRU images are removed.
       new ExpirationPlugin({ maxEntries: 50 }),
@@ -155,6 +158,21 @@ self.addEventListener("install", () => {
 // Old workers can finish requests after activation, so new code never reads these caches.
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    Promise.all(LEGACY_API_CACHE_NAMES.map((name) => caches.delete(name))),
+    Promise.all([
+      ...LEGACY_API_CACHE_NAMES.map((name) => caches.delete(name)),
+      deleteCachedVideos(),
+    ]),
   );
 });
+
+// Workers before 2026.11.27.01 also cached videos with the images, which nothing
+// reads any more.
+async function deleteCachedVideos(): Promise<void> {
+  const cache = await caches.open(IMAGE_CACHE_NAME);
+  const requests = await cache.keys();
+  await Promise.all(
+    requests
+      .filter((request) => new URL(request.url).pathname.endsWith(".mp4"))
+      .map((request) => cache.delete(request)),
+  );
+}

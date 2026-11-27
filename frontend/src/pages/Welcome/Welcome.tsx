@@ -1,71 +1,115 @@
-import React, { useEffect, useState } from "react";
+import React, { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import crossPlatform from "../../assets/cross_platform.webp";
-import demoManyStocks from "../../assets/demo.mp4";
-import demo01 from "../../assets/demo01.webp";
-import demo02 from "../../assets/demo02.webp";
-import demo03 from "../../assets/demo03.webp";
-import demo04 from "../../assets/demo04.webp";
-import demo05 from "../../assets/demo05.webp";
-import demo06 from "../../assets/demo06.webp";
-import realtimeInfo from "../../assets/realtime_info.webp";
+import dashboardWide from "../../assets/welcome/dashboard-wide.webp";
+import stockDetailsWide from "../../assets/welcome/stock-details-wide.webp";
 // Not through ../../components, which loads the store: src/prerender.tsx renders
 // this page in Node.
+import Button from "../../components/Button/Button";
 import FullLogo from "../../components/FullLogo/FullLogo";
 import PageMeta from "../../components/PageMeta/PageMeta";
+import Tooltip from "../../components/Tooltip/Tooltip";
 import * as Icons from "../../icons";
 import Env from "../../utils/env";
 import Util from "../../utils/util";
+import DetailsCarousel from "./DetailsCarousel/DetailsCarousel";
+import FeatureStory from "./FeatureStory/FeatureStory";
+import LaptopFrame from "./LaptopFrame/LaptopFrame";
+import PhoneFrame, { PhoneScreenshot } from "./PhoneFrame/PhoneFrame";
+import { SCREENS } from "./screens";
+import SpreadsheetMock from "./SpreadsheetMock/SpreadsheetMock";
 import styles from "./Welcome.module.scss";
 
 type InstallPromptEvent = Event & { prompt: () => Promise<void> };
 
-const featureHighlights = [
+const LOGIN_PATH = `${Env.frontendRootPath}login`;
+
+// How far the page scrolls before the navigation bar shows its bottom border.
+const NAV_BORDER_SCROLL_OFFSET = 8;
+
+const STANDARD_BENEFITS: ReactNode[] = [
+  "交易紀錄與現金股利不限筆數",
+  "買賣計畫不限筆數",
+  "持股與關注不限檔數",
+  <>
+    股價約每 <strong>30 秒</strong>更新
+  </>,
+];
+
+const FREE_MONTHLY_LIMITS: ReactNode[] = [
+  <>
+    交易紀錄 + 現金股利：<strong>20 筆</strong>
+  </>,
+  <>
+    買賣計畫：<strong>10 筆</strong>
+  </>,
+];
+
+const FREE_TRACKING_LIMITS: ReactNode[] = [
+  <>
+    持股：<strong>10 檔</strong>
+  </>,
+  <>
+    關注：<strong>10 檔</strong>
+  </>,
+  <>
+    股價約每 <strong>10 分鐘</strong>更新
+  </>,
+];
+
+const TRUST_POINTS = [
+  { title: "用 Google 帳號登入", description: "不必再多記一組密碼。" },
+  { title: "不連結券商", description: "不會要你的券商帳號或密碼，也不能幫你下單。" },
   {
-    title: "交易與股利一次記好",
-    description:
-      "買進、賣出、現金股利與手續費都回到同一份紀錄，不必再維護分散的試算表。",
-    icon: <Icons.IconDatabaseManagement sideLength="22" />,
+    title: "不給投資建議",
+    description: "不推薦股票，也不報明牌，數字怎麼解讀由你決定。",
+  },
+  { title: "紀錄隨時帶走", description: "交易紀錄與現金股利紀錄都能匯出成檔案。" },
+];
+
+const DEVICE_FACTS = [
+  { title: "行動版", description: "單手就能記帳、查行情" },
+  { title: "桌面版", description: "寬螢幕並排更多資訊" },
+  { title: "資料同步", description: "換台裝置也看得到" },
+  { title: "安裝成 App", description: "加到手機主畫面或電腦" },
+];
+
+const SPREADSHEET_FIXES = [
+  { title: "行情自動更新", description: "持股市值不必再手動貼股價。" },
+  { title: "手續費自動試算", description: "賣出時連證交稅一起算。" },
+  { title: "年化報酬率自動計算", description: "不用自己寫公式。" },
+];
+
+const SOCIAL_LINKS = [
+  {
+    href: "https://www.instagram.com/taigu.tw/",
+    label: "Taigu 的 Instagram",
+    icon: <Icons.IconInstagram sideLength="20" />,
   },
   {
-    title: "績效圖表直接回答問題",
-    description: "快速看懂投入成本、市值、已實現損益、年化報酬與股利貢獻。",
-    icon: <Icons.IconChartHistogram sideLength="22" />,
-  },
-  {
-    title: "市場資訊貼近台股習慣",
-    description: "支援上市、上櫃、興櫃與 ETF，追蹤持股、關注清單與即時行情。",
-    icon: <Icons.IconClockHistory sideLength="22" />,
+    href: "https://www.facebook.com/profile.php?id=61596233455195",
+    label: "Taigu 的 Facebook 粉絲專頁",
+    icon: <Icons.IconFacebook sideLength="20" />,
   },
 ];
 
-const workflowItems = [
-  { label: "新增交易紀錄", value: "30 秒" },
-  { label: "追蹤持股與關注", value: "2000+ 檔" },
-  { label: "分析現金股利", value: "自動彙整" },
-];
-
-const demoImages = [demo01, demo02, demo03, demo04, demo05, demo06];
-
-const standardBenefits = [
-  { label: "交易紀錄與現金股利不限筆數" },
-  { label: "買賣計畫不限筆數" },
-  { label: "持股與關注清單不限檔數" },
-  { label: "股價約每", emphasis: "30 秒", suffix: "更新" },
-  { label: "適合長期追蹤完整績效" },
-];
-
-const freeLimits = [
-  { label: "交易紀錄 + 現金股利：", emphasis: "20 筆" },
-  { label: "買賣計畫：", emphasis: "10 筆" },
-  { label: "持股：", emphasis: "10 檔" },
-  { label: "關注：", emphasis: "10 檔" },
-  { label: "股價約每", emphasis: "10 分鐘", suffix: "更新" },
-];
+function CheckList({ items }: { items: ReactNode[] }) {
+  return (
+    <ul className={styles.check_list}>
+      {items.map((item, index) => (
+        <li key={index}>
+          <Icons.IconCheck sideLength="12" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default function Welcome(): React.ReactElement {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (event: Event) => {
@@ -78,306 +122,373 @@ export default function Welcome(): React.ReactElement {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
   }, []);
 
-  const canInstallPWA = installPrompt !== null && !Util.isPWA;
-  const primaryActionLabel = canInstallPWA ? "安裝 Taigu" : "開始免費使用";
+  // The page scrolls inside <main>, because <body> does not scroll in this app.
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const handleScroll = (): void =>
+      setIsScrolled(main.scrollTop > NAV_BORDER_SCROLL_OFFSET);
+    handleScroll();
+    main.addEventListener("scroll", handleScroll, { passive: true });
+    return () => main.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  const handlePrimaryAction = async (): Promise<void> => {
+  const canInstallPWA = installPrompt !== null && !Util.isPWA;
+  const legalLinkTarget = Util.isMobile ? "_self" : "_blank";
+
+  const handleInstall = async (): Promise<void> => {
     if (!installPrompt) return;
     await installPrompt.prompt();
     setInstallPrompt(null);
   };
 
+  // The navigation bar and the calls to action install Taigu when the browser offers
+  // to, and otherwise lead to the login page, where the first sign-in creates the
+  // account.
+  const renderInstallOrLogin = (loginLabel: string, installLabel: string) =>
+    canInstallPWA ? (
+      <Button
+        variant="primary_fill"
+        size="l"
+        round
+        className={styles.cta}
+        onClick={handleInstall}
+      >
+        {installLabel}
+      </Button>
+    ) : (
+      <Button variant="primary_fill" size="l" round className={styles.cta} asChild>
+        <Link to={LOGIN_PATH}>{loginLabel}</Link>
+      </Button>
+    );
+
   return (
-    <main className={styles.main}>
+    <main ref={mainRef} className={styles.main}>
       <PageMeta
         title="Taigu | 台股記帳 | 專業投資組合管理，精準損益計算與績效追蹤"
         description="Taigu 是專業的台股投資記帳工具，提供直覺操作、清晰圖表與完整績效分析。支援網頁版與 App，跨平台同步，讓你在手機、平板、電腦隨時掌握投資狀況，輕鬆管理台股投資組合！"
         canonicalPath="/welcome"
       />
-      <header className={styles.header}>
-        <Link to={`${Env.frontendRootPath}welcome`} className={styles.logoLink}>
-          <FullLogo size="m" />
-        </Link>
-        <nav className={styles.nav} aria-label="Welcome page navigation">
-          <a href="#workflow">功能</a>
-          <a href="#market">台股資料</a>
-          <a href="#pricing">方案</a>
-          <a href="#trust">安全性</a>
-        </nav>
-        {canInstallPWA ? (
-          <button className={styles.headerAction} onClick={handlePrimaryAction}>
-            安裝
-          </button>
-        ) : (
-          <Link to={`${Env.frontendRootPath}login`} className={styles.headerAction}>
-            登入
-          </Link>
-        )}
+
+      <header className={`${styles.nav} ${isScrolled ? styles.scrolled : ""}`}>
+        <div className={styles.nav_inner}>
+          <a href="#top" className={styles.logo_link} aria-label="回到頁首">
+            <FullLogo size="m" />
+          </a>
+          <nav aria-label="歡迎頁">
+            <ul className={styles.nav_links}>
+              <li>
+                <a href="#features">功能</a>
+              </li>
+              <li>
+                <a href="#pricing">方案</a>
+              </li>
+            </ul>
+          </nav>
+          {renderInstallOrLogin("登入", "安裝")}
+        </div>
       </header>
 
-      <section className={styles.hero} aria-labelledby="welcome-title">
-        <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>專為台股投資記帳打造</p>
+      {/* The logo scrolls back here. The target is the hero, not the sticky header,
+          which already sits at the top of the scroll area once the page scrolls. */}
+      <section id="top" className={styles.hero} aria-labelledby="welcome-title">
+        <div className={styles.hero_copy}>
           <h1 id="welcome-title">
-            <span>把交易、股利與績效，</span>
-            <span>整理成每天看得懂的</span>
-            <span>投資工作台。</span>
+            你的投資，
+            <br />
+            不靠感覺。
           </h1>
-          <p className={styles.heroDescription}>
-            Taigu 讓台股投資者告別
-            Excel：快速記錄交易與現金股利，追蹤持股與關注股票，並用清楚圖表掌握自己的投資表現。
+          <p className={styles.lead}>
+            Taigu
+            是專為台股設計的投資記帳工具。記下買賣與現金股利，持股、損益和年化報酬率就自動算好，不必再維護
+            Excel。
           </p>
-          <div className={styles.heroActions}>
-            {canInstallPWA ? (
-              <button className={styles.primaryAction} onClick={handlePrimaryAction}>
-                {primaryActionLabel}
-              </button>
-            ) : (
-              <Link
-                to={`${Env.frontendRootPath}login`}
-                className={styles.primaryAction}
-              >
-                {primaryActionLabel}
-              </Link>
-            )}
-            <a href="#workflow" className={styles.secondaryAction}>
-              看看怎麼管理
+          <div className={styles.hero_actions}>
+            {renderInstallOrLogin("開始免費使用", "安裝 Taigu")}
+            <a className={styles.text_link} href="#pricing">
+              查看方案
+              <Icons.IconChevronRight sideLength="11" />
             </a>
           </div>
-          <dl className={styles.heroStats}>
-            {workflowItems.map((item) => (
-              <div key={item.label}>
-                <dt>{item.value}</dt>
-                <dd>{item.label}</dd>
-              </div>
+          <p className={styles.hero_note}>
+            新帳號可以免費試用{" "}
+            <span className={styles.nowrap}>Standard 方案一個月</span>。
+          </p>
+        </div>
+
+        <div className={styles.hero_stage}>
+          <LaptopFrame
+            src={dashboardWide}
+            alt="Taigu 在電腦上的畫面：投入金額的走勢圖、持股配置的圓餅圖與年化報酬率"
+            isWideOnlyPriority
+            className={styles.hero_laptop}
+          />
+          <PhoneFrame priority className={styles.hero_phone}>
+            <PhoneScreenshot
+              screen={SCREENS.dashboard}
+              wideScreen={SCREENS.holdings}
+              alt="Taigu 在手機上的畫面：持股與投入金額的走勢"
+              priority
+            />
+          </PhoneFrame>
+        </div>
+        <p className={styles.hero_caption}>畫面為示意，帳戶與交易資料皆為虛構。</p>
+      </section>
+
+      <section
+        className={`${styles.section} ${styles.tinted}`}
+        aria-labelledby="spreadsheet-title"
+      >
+        <div className={styles.spreadsheet}>
+          <div className={styles.section_intro}>
+            <h2 id="spreadsheet-title">還在用 Excel 記股票？</h2>
+            <p className={styles.lead}>
+              每筆交易手動輸入、手續費自己算、股價天天複製貼上，XIRR 公式一改就跳出
+              #NUM!。這些事，交給 Taigu。
+            </p>
+          </div>
+          <div className={styles.spreadsheet_stage}>
+            <SpreadsheetMock className={styles.spreadsheet_mock} />
+            <PhoneFrame className={styles.spreadsheet_phone}>
+              <PhoneScreenshot
+                screen={SCREENS.records}
+                alt="Taigu 的紀錄列表：買進與股利依日期排好，每筆都有成交價或入帳金額"
+              />
+            </PhoneFrame>
+          </div>
+          <ul className={styles.spreadsheet_fixes}>
+            {SPREADSHEET_FIXES.map((fix) => (
+              <li key={fix.title}>
+                <Icons.IconCheck sideLength="14" />
+                <span>
+                  <strong>{fix.title}</strong>，{fix.description}
+                </span>
+              </li>
             ))}
-          </dl>
+          </ul>
         </div>
+      </section>
 
-        <div className={styles.productStage} aria-label="Taigu app preview">
-          <div className={styles.screenCluster}>
-            <img className={styles.primaryScreen} src={demo01} alt="Taigu 儀表板畫面" />
-            <img
-              className={styles.secondaryScreen}
-              src={demo05}
-              alt="Taigu 績效分析畫面"
-            />
+      <section
+        id="features"
+        className={styles.section}
+        aria-labelledby="features-title"
+      >
+        <h2 id="features-title" className={styles.visually_hidden}>
+          功能
+        </h2>
+        <div className={styles.wrap}>
+          <FeatureStory />
+        </div>
+      </section>
+
+      <section
+        className={`${styles.section} ${styles.dark}`}
+        aria-labelledby="devices-title"
+      >
+        <div className={styles.wrap}>
+          <div className={styles.section_intro}>
+            <h2 id="devices-title">到哪裡都能記。</h2>
+            <p className={styles.lead}>
+              Taigu
+              有為手機設計的行動版，也有為大螢幕設計的桌面版。在手機上新增的紀錄，打開電腦就看得到。
+            </p>
           </div>
-        </div>
-      </section>
-
-      <section id="workflow" className={styles.workflowSection}>
-        <div className={styles.sectionIntro}>
-          <p className={styles.eyebrow}>從記錄到判斷</p>
-          <h2>核心工作流不多，但每一步都要快。</h2>
-          <p>
-            Taigu
-            專注於整理你的投資軌跡。我們不提供投資建議，也不是券商交易平台，而是你最安靜、最可靠的資產記錄與績效分析助手。
-          </p>
-        </div>
-        <div className={styles.featureGrid}>
-          {featureHighlights.map((feature) => (
-            <article className={styles.feature} key={feature.title}>
-              <div className={styles.featureIcon}>{feature.icon}</div>
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.showcaseSection}>
-        <div className={styles.showcaseCopy}>
-          <p className={styles.eyebrow}>一眼看懂績效</p>
-          <h2>用資料視角管理投資，而不是整理表格。</h2>
-          <p>
-            儀表板、損益分析、庫存分布與交易明細保持在同一套語言裡。當你新增一筆紀錄，後面的圖表與摘要就能跟著更新。
-          </p>
-        </div>
-        <div className={styles.demoRail} aria-label="Taigu feature screenshots">
-          {demoImages.map((image, index) => (
-            <img
-              key={image}
-              src={image}
-              alt={`Taigu 功能畫面 ${index + 1}`}
-              className={index % 2 === 0 ? styles.raisedDemo : undefined}
+          <div className={styles.devices_stage}>
+            <LaptopFrame
+              src={stockDetailsWide}
+              alt="電腦上的台積電頁面：近 60 日收盤價走勢、投資摘要與庫存分佈並排"
+              className={styles.devices_laptop}
             />
-          ))}
-        </div>
-      </section>
-
-      <section id="market" className={styles.marketSection}>
-        <div className={styles.marketVisual}>
-          <img src={realtimeInfo} alt="Taigu 即時市場資訊畫面" />
-        </div>
-        <div className={styles.marketCopy}>
-          <p className={styles.eyebrow}>台股資料脈絡</p>
-          <h2>股票、ETF、持股與關注清單，放在同一個市場視圖。</h2>
-          <p>
-            找證券代號、看即時資訊、追蹤重大訊息與個人筆記，都用投資者熟悉的台股語彙呈現，少一層轉換成本。
-          </p>
-          <div className={styles.inlinePreview}>
-            <video src={demoManyStocks} autoPlay muted loop playsInline />
-            <span>快速搜尋與追蹤上千檔台股標的</span>
+            <PhoneFrame className={styles.devices_phone}>
+              <PhoneScreenshot
+                screen={SCREENS.stockDetails}
+                alt="手機上的台積電頁面：價格與近 60 日收盤價走勢"
+              />
+            </PhoneFrame>
           </div>
+          <ul className={styles.device_facts}>
+            {DEVICE_FACTS.map((fact) => (
+              <li key={fact.title}>
+                <strong>{fact.title}</strong>
+                {fact.description}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      <section id="pricing" className={styles.pricingSection}>
-        <div className={styles.pricingInner}>
-          <div className={styles.pricingIntro}>
-            <p className={styles.eyebrow}>方案</p>
-            <h2>先免費開始，準備好再完整記錄。</h2>
-            <p>
-              新註冊帳戶可試用 Standard 一個月。Free 適合輕量追蹤，Standard
-              適合長期整理交易、股利、持股與關注清單。
+      <section className={styles.section} aria-labelledby="details-title">
+        <div className={styles.wrap}>
+          <h2 id="details-title">
+            小地方，
+            <br />
+            也替你想好了。
+          </h2>
+        </div>
+        <DetailsCarousel labelledBy="details-title" />
+      </section>
+
+      <section
+        className={`${styles.section} ${styles.tinted}`}
+        aria-labelledby="trust-title"
+      >
+        <div className={styles.wrap}>
+          <div className={styles.section_intro}>
+            <h2 id="trust-title">
+              只記帳，
+              <br />
+              不碰你的錢。
+            </h2>
+            <p className={styles.lead}>Taigu 只幫你記錄和計算，不經手任何一筆交易。</p>
+          </div>
+          <ul className={styles.trust_points}>
+            {TRUST_POINTS.map((point) => (
+              <li key={point.title}>
+                <h3>{point.title}</h3>
+                <p>{point.description}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section id="pricing" className={styles.section} aria-labelledby="pricing-title">
+        <div className={styles.wrap}>
+          <div className={styles.section_intro}>
+            <h2 id="pricing-title">
+              免費開始，
+              <br />
+              隨時升級。
+            </h2>
+            <p className={styles.lead}>
+              新帳號可以免費試用{" "}
+              <span className={styles.nowrap}>Standard 方案一個月</span>
+              。試用結束後改用 Free 方案，已經記下的紀錄都會保留。
             </p>
           </div>
 
-          <div className={styles.pricingCards}>
-            <article className={`${styles.pricingCard} ${styles.standardCard}`}>
-              <div className={styles.planHeader}>
-                <div>
-                  <h3>Standard</h3>
-                  <p>完整記錄你的台股投資歷程。</p>
-                </div>
-                <span className={styles.recommendedBadge}>推薦長期記錄</span>
-              </div>
-
-              <div className={styles.priceBlock}>
-                <div className={styles.mainPrice}>
+          <div className={styles.plans}>
+            <article
+              className={`${styles.plan} ${styles.plan_featured}`}
+              aria-labelledby="plan-standard"
+            >
+              <h3 id="plan-standard">Standard</h3>
+              <p className={styles.plan_summary}>完整記錄你的台股投資。</p>
+              <div className={styles.price}>
+                <p className={styles.price_main}>
                   <span>NT$65</span>
                   <small>/月</small>
-                </div>
-                <p className={styles.yearlyPrice}>
-                  或 NT$700 / 年<span className={styles.savingBadge}>省 NT$80</span>
+                </p>
+                <p className={styles.price_alternative}>
+                  或 NT$700 / 年，<strong>省 NT$80</strong>
                 </p>
               </div>
-
-              <div className={styles.planActionGroup}>
-                <Link
-                  to={`${Env.frontendRootPath}login`}
-                  className={`${styles.primaryAction} ${styles.planAction}`}
-                >
-                  開始一個月試用
-                </Link>
-                <p>試用期間可使用 Standard 所有功能。</p>
-              </div>
-
-              <div className={styles.planListGroup}>
-                <h4>包含：</h4>
-                <ul className={styles.standardList}>
-                  {standardBenefits.map((benefit) => (
-                    <li key={`${benefit.label}${benefit.emphasis ?? ""}`}>
-                      <span>{benefit.label}</span>
-                      {benefit.emphasis ? " " : ""}
-                      {benefit.emphasis ? <strong>{benefit.emphasis}</strong> : null}
-                      {benefit.suffix ? benefit.suffix : ""}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className={styles.planFit}>
-                適合持續記錄交易、股利與績效的使用者。
+              <Button
+                variant="primary_fill"
+                size="l"
+                round
+                className={`${styles.cta} ${styles.plan_action}`}
+                asChild
+              >
+                <Link to={LOGIN_PATH}>開始免費試用</Link>
+              </Button>
+              <div className={styles.plan_groups}>
+                <CheckList items={STANDARD_BENEFITS} />
               </div>
             </article>
 
-            <article className={`${styles.pricingCard} ${styles.freeCard}`}>
-              <div className={styles.planHeader}>
-                <div>
-                  <h3>Free</h3>
-                  <p>適合先整理少量紀錄與熟悉工作流。</p>
-                </div>
-              </div>
-
-              <div className={styles.priceBlock}>
-                <div className={`${styles.mainPrice} ${styles.freePrice}`}>
+            <article className={styles.plan} aria-labelledby="plan-free">
+              <h3 id="plan-free">Free</h3>
+              <p className={styles.plan_summary}>先記少量紀錄，熟悉 Taigu。</p>
+              <div className={styles.price}>
+                <p className={styles.price_main}>
                   <span>NT$0</span>
-                  <small>永久免費</small>
+                </p>
+                <p className={styles.price_alternative}>不用綁定付款方式</p>
+              </div>
+              <Button
+                variant="light"
+                size="l"
+                round
+                className={`${styles.cta} ${styles.plan_action}`}
+                asChild
+              >
+                <Link to={LOGIN_PATH}>免費開始</Link>
+              </Button>
+              <div className={styles.plan_groups}>
+                <div>
+                  <h4>每月新增</h4>
+                  <CheckList items={FREE_MONTHLY_LIMITS} />
                 </div>
-              </div>
-
-              <div className={styles.planActionGroup}>
-                <Link
-                  to={`${Env.frontendRootPath}login`}
-                  className={`${styles.secondaryAction} ${styles.planAction} ${styles.freeAction}`}
-                >
-                  先建立免費帳戶
-                </Link>
-                <p>新帳戶仍會先套用 Standard 試用。</p>
-              </div>
-
-              <div className={styles.planListGroup}>
-                <h4>每月可使用：</h4>
-                <ul className={styles.freeList}>
-                  {freeLimits.map((limit) => (
-                    <li key={`${limit.label}${limit.emphasis}`}>
-                      <span>{limit.label}</span>
-                      {limit.suffix ? " " : ""}
-                      <strong>{limit.emphasis}</strong>
-                      {limit.suffix ? limit.suffix : ""}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className={styles.planFit}>
-                適合偶爾記錄、先熟悉 Taigu 的使用者。
+                <div>
+                  <h4>同時追蹤</h4>
+                  <CheckList items={FREE_TRACKING_LIMITS} />
+                </div>
               </div>
             </article>
           </div>
-
-          <div className={styles.pricingAssurance}>
-            <p>既有資料不會因方案變更被刪除；超過 Free 額度時，只會限制新增。</p>
-          </div>
-
-          <p className={styles.pricingHint}>
-            新帳戶會先試用 Standard 一個月，試用結束後可繼續使用 Free 或升級訂閱。
+          <p className={styles.plans_note}>
+            改用 Free 方案時，超過額度的部分只是不能再新增，既有的紀錄不會被刪除。
           </p>
         </div>
       </section>
 
-      <section id="trust" className={styles.trustSection}>
-        <div className={styles.trustCopy}>
-          <Icons.IconShieldCheck sideLength="34" />
-          <h2>你的投資紀錄應該清楚，也應該被妥善保護。</h2>
-          <p>
-            Taigu 採用 Google
-            安全登入並建立嚴格的帳戶資料隔離。你的交易紀錄、股利與個人設定不僅能安全地跨裝置同步，更確保資產隱私完全屬於你。
-          </p>
+      <section
+        className={`${styles.section} ${styles.closing}`}
+        aria-labelledby="closing-title"
+      >
+        <div className={styles.closing_copy}>
+          <h2 id="closing-title">今天，就記下第一筆。</h2>
+          <p className={styles.lead}>手機和電腦都能用，用 Google 帳號登入就能開始。</p>
+          {renderInstallOrLogin("開始免費使用", "安裝 Taigu")}
         </div>
-        <div className={styles.devicePanel}>
-          <img src={crossPlatform} alt="Taigu 跨裝置使用示意" />
+        <div className={styles.closing_peek} aria-hidden="true">
+          <PhoneFrame className={styles.closing_phone}>
+            <PhoneScreenshot screen={SCREENS.dashboard} alt="" />
+          </PhoneFrame>
         </div>
-      </section>
-
-      <section className={styles.finalCta}>
-        <Icons.IconAppAdd sideLength="34" />
-        <h2>今天開始，用一個安靜但完整的地方管理台股紀錄。</h2>
-        <p>先記下一筆交易，讓 Taigu 幫你把績效、股利和持股脈絡整理起來。</p>
-        {canInstallPWA ? (
-          <button className={styles.primaryAction} onClick={handlePrimaryAction}>
-            安裝 Taigu
-          </button>
-        ) : (
-          <Link to={`${Env.frontendRootPath}login`} className={styles.primaryAction}>
-            開始免費使用
-          </Link>
-        )}
       </section>
 
       <footer className={styles.footer}>
-        <FullLogo size="m" />
-        <div className={styles.footerLinks}>
-          <Link to="/privacy-policy" target={Util.isMobile ? "_self" : "_blank"}>
-            隱私權政策
-          </Link>
-          <Link to="/terms-of-service" target={Util.isMobile ? "_self" : "_blank"}>
-            服務條款
-          </Link>
+        <div className={styles.footer_top}>
+          <FullLogo size="s" />
+          <ul className={styles.footer_links}>
+            <li>
+              <Link to="/privacy-policy" target={legalLinkTarget}>
+                隱私權政策
+              </Link>
+            </li>
+            <li>
+              <Link to="/terms-of-service" target={legalLinkTarget}>
+                服務條款
+              </Link>
+            </li>
+            <li>
+              <a href="mailto:taigu.tw@gmail.com">taigu.tw@gmail.com</a>
+            </li>
+          </ul>
+          <ul className={styles.social_links}>
+            {SOCIAL_LINKS.map((link) => (
+              <li key={link.label}>
+                <Tooltip content={link.label} side="top">
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={link.label}
+                  >
+                    {link.icon}
+                  </a>
+                </Tooltip>
+              </li>
+            ))}
+          </ul>
         </div>
-        <p className={styles.footerContact}>聯絡信箱：taigu.tw@gmail.com</p>
+        <p>
+          本頁畫面為示意，畫面中的帳戶與交易資料皆為虛構。Taigu
+          提供的行情與計算結果僅供記錄參考，不構成投資建議。
+        </p>
         <p>Copyright © Taigu 2021-{new Date().getFullYear()} All rights reserved</p>
       </footer>
     </main>
