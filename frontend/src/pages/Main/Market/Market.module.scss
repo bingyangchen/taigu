@@ -680,7 +680,7 @@ $three-signal-min-width: 360px;
 
   // The same optical inset as `.summary_copy`, so the row text lines up with the
   // page title while the dividers keep the edges of the controls above.
-  padding: var(--space-150) var(--space-100);
+  padding: var(--space-200) var(--space-100);
   border: 0;
   border-bottom: 1px solid var(--color-border-subtle);
   background: transparent;
@@ -689,7 +689,7 @@ $three-signal-min-width: 360px;
   letter-spacing: 0;
   text-align: left;
   transition: background var(--duration-fast) var(--ease-standard);
-  gap: var(--space-050);
+  gap: var(--space-075);
 
   &:last-child {
     border-bottom: 0;
@@ -760,7 +760,7 @@ $three-signal-min-width: 360px;
   min-width: 0;
   overflow: hidden;
   color: var(--color-text-secondary);
-  font-size: var(--font-size-data);
+  font-size: var(--font-size-caption);
   line-height: var(--line-height-snug);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -773,7 +773,7 @@ $three-signal-min-width: 360px;
 }
 
 .mobile_return_value {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
