@@ -62,12 +62,13 @@ export function useEditorSteps<StepKey extends string, FocusTarget extends strin
       if (isCollapsible) setOpenStep(nextStep ?? null);
       focus(nextStep ?? "submit");
     },
-    restart: (titleTarget: Target): void => {
+    restart: (titleTarget: Target, filled: Record<StepKey, boolean>): void => {
+      const firstUnfilledStep = getFirstUnfilledStep(filled) ?? stepKeys[0];
       if (isCollapsible) {
-        setOpenStep(stepKeys[0]);
+        setOpenStep(firstUnfilledStep);
         focus(titleTarget);
       } else {
-        focus(stepKeys[0]);
+        focus(firstUnfilledStep);
       }
     },
   };

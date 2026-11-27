@@ -13,8 +13,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useLatestRef } from "../../utils/useLatestRef";
 import styles from "./BottomSheet.module.scss";
 
+/** Closes the sheet; `afterClose` runs once the sheet's history entry is gone. */
+export type CloseBottomSheet = (afterClose?: () => void) => void;
+
 interface Props {
-  children?: React.ReactNode;
+  /**
+   * A function child gets `close`. Use it for a button in the sheet that goes on to
+   * change the URL or open a modal, which must wait for the sheet's history entry to
+   * be popped first.
+   */
+  children?: React.ReactNode | ((close: CloseBottomSheet) => React.ReactNode);
   onClickBackground: MouseEventHandler;
   canMaximize?: boolean;
 }
@@ -46,41 +54,114 @@ export default function BottomSheet({
   const [initialMainHeight, setInitialMainHeight] = useState(0);
   const mainRef = useRef<HTMLDivElement>(null);
   const isClosingRef = useRef(false);
-  const previousHashRef = useRef(location.hash);
+  const timerIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // The sheet pushes a "#!" entry when it opens and pops it when it closes, so that
+  // Back closes the sheet instead of leaving the page.
+  const keyBeforePushRef = useRef<string | null>(null);
+  const isPushingHistoryEntryRef = useRef(false);
+  const historyEntryKeyRef = useRef<string | null>(null);
+  const isPoppingHistoryEntryRef = useRef(false);
+  const finishAfterPopRef = useRef<(() => void) | null>(null);
   const latestRenderRef = useLatestRef({ location, navigate, onClickBackground });
 
-  const handleClickBackground = useCallback(
-    (e: MouseEvent): void => {
-      if (isClosingRef.current) return;
-      isClosingRef.current = true;
-      if (latestRenderRef.current.location.hash === "#!") {
-        latestRenderRef.current.navigate(-1);
-      }
-      setTimeout(() => latestRenderRef.current.onClickBackground(e));
+  const setTimer = useCallback((callback: () => void, delay?: number): void => {
+    timerIdsRef.current.push(setTimeout(callback, delay));
+  }, []);
+
+  const popHistoryEntry = useCallback(
+    (finish: () => void): void => {
+      finishAfterPopRef.current = finish;
+      isPoppingHistoryEntryRef.current = true;
+      latestRenderRef.current.navigate(-1);
     },
     [latestRenderRef],
   );
 
+  const close = useCallback<CloseBottomSheet>(
+    (afterClose) => {
+      if (isClosingRef.current) return;
+      isClosingRef.current = true;
+      const finish = (): void => {
+        latestRenderRef.current.onClickBackground({} as MouseEvent);
+        afterClose?.();
+      };
+      if (isPushingHistoryEntryRef.current) {
+        // The pop waits until the pushed entry lands.
+        finishAfterPopRef.current = finish;
+      } else if (
+        historyEntryKeyRef.current !== null &&
+        latestRenderRef.current.location.key === historyEntryKeyRef.current
+      ) {
+        popHistoryEntry(finish);
+      } else {
+        finish();
+      }
+    },
+    [latestRenderRef, popHistoryEntry],
+  );
+
+  /** Pops the sheet's entry when a caller unmounts the sheet without `close`. */
+  const leaveOnUnmount = useCallback((): void => {
+    isClosingRef.current = true;
+    timerIdsRef.current.forEach((timerId) => clearTimeout(timerId));
+    const { location: latestLocation, navigate: latestNavigate } =
+      latestRenderRef.current;
+    const isOnHistoryEntry =
+      isPushingHistoryEntryRef.current ||
+      (historyEntryKeyRef.current !== null &&
+        latestLocation.key === historyEntryKeyRef.current);
+    if (isOnHistoryEntry && !isPoppingHistoryEntryRef.current) latestNavigate(-1);
+  }, [latestRenderRef]);
+
   useLayoutEffect(() => {
-    setTimeout(() => {
+    // A remount, as under StrictMode, starts over after `leaveOnUnmount`.
+    isClosingRef.current = false;
+    timerIdsRef.current = [];
+    setTimer(() => {
       const { location: latestLocation, navigate: latestNavigate } =
         latestRenderRef.current;
-      latestNavigate({ search: latestLocation.search, hash: "#!" });
+      keyBeforePushRef.current = latestLocation.key;
+      isPushingHistoryEntryRef.current = true;
+      // Main goes back again when two adjacent entries share a URL and state, which
+      // would pop this entry as soon as it lands on a URL that already ends in "#!".
+      latestNavigate(
+        { search: latestLocation.search, hash: "#!" },
+        { state: { bottomSheetHistoryEntry: true } },
+      );
       document.body.style.overscrollBehaviorY = "contain";
     });
     setInitialMainHeight(mainRef.current?.clientHeight ?? 0);
     return () => {
       document.body.style.overscrollBehaviorY = "initial";
+      leaveOnUnmount();
     };
-  }, [latestRenderRef]);
+  }, [latestRenderRef, leaveOnUnmount, setTimer]);
 
   useLayoutEffect(() => {
-    const previousHash = previousHashRef.current;
-    previousHashRef.current = location.hash;
-    if (previousHash === "#!" && location.hash === "") {
-      handleClickBackground({} as MouseEvent);
+    if (isPushingHistoryEntryRef.current) {
+      if (location.hash !== "#!" || location.key === keyBeforePushRef.current) return;
+      isPushingHistoryEntryRef.current = false;
+      historyEntryKeyRef.current = location.key;
+      const finishAfterPop = finishAfterPopRef.current;
+      if (finishAfterPop) popHistoryEntry(finishAfterPop);
+      return;
     }
-  }, [location.hash, handleClickBackground]);
+    if (
+      historyEntryKeyRef.current === null ||
+      location.key === historyEntryKeyRef.current
+    ) {
+      return;
+    }
+
+    // The entry is gone: popped by `close`, or by Back, which closes the sheet.
+    historyEntryKeyRef.current = null;
+    isPoppingHistoryEntryRef.current = false;
+    const finishAfterPop = finishAfterPopRef.current;
+    finishAfterPopRef.current = null;
+    if (finishAfterPop) finishAfterPop();
+    else close();
+  }, [location.hash, location.key, close, popHistoryEntry]);
 
   const isTouchingAndMoving =
     touchState.touchDiffY !== null && touchState.touchEndY !== null;
@@ -110,17 +191,17 @@ export default function BottomSheet({
         isMaximized = true;
       } else if (touchDiffY > initialMainHeight * 0.382) {
         touchEndY = viewportHeight;
-        setTimeout(() => handleClickBackground({} as MouseEvent), TRANSITION_DURATION);
+        setTimer(() => close(), TRANSITION_DURATION);
       } else {
         touchEndY = viewportHeight - initialMainHeight;
-        setTimeout(
+        setTimer(
           () => setTouchState((previous) => ({ ...previous, touchEndY: null })),
           TRANSITION_DURATION,
         );
       }
     } else if (touchDiffY > MINIMIZE_THRESHOLD) {
       touchEndY = viewportHeight - initialMainHeight;
-      setTimeout(
+      setTimer(
         () =>
           setTouchState((previous) => ({
             ...previous,
@@ -144,7 +225,7 @@ export default function BottomSheet({
     <Dialog.Root
       open
       onOpenChange={(open: boolean) => {
-        if (!open) handleClickBackground({} as MouseEvent);
+        if (!open) close();
       }}
     >
       <Dialog.Portal container={document.getElementById("modal-root") ?? undefined}>
@@ -152,6 +233,8 @@ export default function BottomSheet({
         <Dialog.Content
           ref={mainRef}
           className={styles.main}
+          // Radix warns about a dialog without a description unless this is given.
+          aria-describedby={undefined}
           style={{
             top:
               isTouchingAndMoving || isTransitioning
@@ -175,7 +258,9 @@ export default function BottomSheet({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           />
-          <div className={styles.body}>{children}</div>
+          <div className={styles.body}>
+            {typeof children === "function" ? children(close) : children}
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

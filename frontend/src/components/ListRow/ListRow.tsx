@@ -1,5 +1,5 @@
 import { MouseEventHandler, ReactNode, TouchEvent, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { BottomSheet, ListRowActionBar } from "../../components";
 import {
@@ -26,7 +26,6 @@ interface Ripple {
 }
 
 export default function ListRow({ children, editModal, deleteModal, editPath }: Props) {
-  const location = useLocation();
   const navigate = useNavigate();
   const [activatedForMobile, setActivatedForMobile] = useState(false);
   const [ripple, setRipple] = useState<Ripple | null>(null);
@@ -45,17 +44,6 @@ export default function ListRow({ children, editModal, deleteModal, editPath }: 
   };
   const handleClickDelete = (): void => setActiveModalName("checkDelete");
   const handleClickBottomSheetBackground = (): void => setActivatedForMobile(false);
-  const handleClickButtonInBottomSheet = (callback: () => void): MouseEventHandler => {
-    return (): void => {
-      if (location.hash === "#!") {
-        navigate(-1);
-      }
-      setTimeout(() => {
-        handleClickBottomSheetBackground();
-        callback();
-      });
-    };
-  };
 
   const handleTouchStart = (e: TouchEvent): void => {
     timerRef.current = setTimeout(() => setActivatedForMobile(true), 500);
@@ -120,11 +108,13 @@ export default function ListRow({ children, editModal, deleteModal, editPath }: 
         {Util.isMobile ? (
           activatedForMobile && (
             <BottomSheet onClickBackground={handleClickBottomSheetBackground}>
-              <ListRowActionBar
-                forMobile
-                onClickEdit={handleClickButtonInBottomSheet(handleClickEdit)}
-                onClickDelete={handleClickButtonInBottomSheet(handleClickDelete)}
-              />
+              {(closeBottomSheet) => (
+                <ListRowActionBar
+                  forMobile
+                  onClickEdit={() => closeBottomSheet(handleClickEdit)}
+                  onClickDelete={() => closeBottomSheet(handleClickDelete)}
+                />
+              )}
             </BottomSheet>
           )
         ) : (

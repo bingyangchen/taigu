@@ -14,6 +14,9 @@ export type CompanyInfo = {
   material_facts: MaterialFact[];
 };
 
+/** The company info without its material facts. */
+export type UpdateOrCreateMemoResponse = Omit<CompanyInfo, "material_facts">;
+
 export type StockInfo = {
   sid: string;
   name: string;

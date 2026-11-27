@@ -439,7 +439,7 @@ export default function TradeRecordEditor({
     setInitialForm(nextForm);
     setIsShowingErrors(false);
     setSaved(null);
-    steps.restart("title");
+    steps.restart("title", getFilledSteps(nextForm, "", today));
   };
 
   const quantityFlag: Notice | null =

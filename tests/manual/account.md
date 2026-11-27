@@ -634,7 +634,7 @@ window.mockTaiguCsrf = (code, limit = Infinity) => {
 8. 確認網址已移除 Google 帶回的參數。
 9. 核對自訂資料與 refresh token 的 cookie 沒有改變。
 
-預期：以黃色 toast 顯示「目前已綁定這個 Google 帳號，無需更換。」，文字與關閉圖示使用深色，名字與頭像不被 Google 資料覆蓋，原本的 refresh token 與登入期限不變，網址不再帶有 Google 帶回的參數。
+預期：以淺黃色底、左側是資訊圖示（圓圈裡的 i）的提醒 toast 顯示「目前已綁定這個 Google 帳號，無需更換。」，名字與頭像不被 Google 資料覆蓋，原本的 refresh token 與登入期限不變，網址不再帶有 Google 帶回的參數。
 
 ## ACCT-R11.6 更換綁定的 Google 帳號不影響其他瀏覽器
 

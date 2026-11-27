@@ -254,7 +254,7 @@ export default function CashDividendRecordEditor({
     setInitialForm(nextForm);
     setIsShowingErrors(false);
     setSaved(null);
-    steps.restart("title");
+    steps.restart("title", getFilledSteps(nextForm, "", today));
   };
 
   const missing = [!form.stock && "股票", amountProblem && "入帳金額"].filter(

@@ -30,6 +30,7 @@ import { selectNetHandlingFee } from "../../../redux/slices/TradeRecordSlice";
 import { COLORS, FONT_SIZES } from "../../../styles/tokens";
 import type { HandlingFeeDiscount, TradeRecord } from "../../../types";
 import Env from "../../../utils/env";
+import { getDiscountTitle } from "../../../utils/handlingFeeDiscount";
 import { navigateBack } from "../../../utils/router";
 import Util from "../../../utils/util";
 import { useListViewSaving, useSavedListView } from "../useListViewHistory";
@@ -128,7 +129,7 @@ function HandlingFee() {
           }}
         >
           <DeletePreview
-            title={discount.memo || "手續費折讓"}
+            title={getDiscountTitle(discount.memo)}
             meta={discount.date}
             details={[
               {
@@ -239,7 +240,7 @@ function HandlingFee() {
                       editPath={`${Env.frontendRootPath}handling-fee/discounts/${discount.id}/edit`}
                     >
                       <span className={styles.company}>
-                        {discount.memo || "手續費折讓"}
+                        {getDiscountTitle(discount.memo)}
                       </span>
                       <span className={styles.price}>
                         <DollarSign />

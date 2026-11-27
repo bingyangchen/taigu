@@ -1,101 +1,145 @@
 @use "styles" as ds;
 
-$toast-lifetime: 5s;
-$countdown-duration: 4.8s;
-
 .main {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  height: max-content;
-  max-width: 100%;
+  inset-inline-end: var(--space-400);
+  inset-block-end: var(--space-400);
+  inline-size: 360px;
+  max-inline-size: calc(100vw - 2 * var(--space-400));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-150);
   z-index: var(--z-toast);
-  user-select: none;
 
   // An open dialog turns off pointer events on the body; toasts stay closable.
   pointer-events: auto;
-  & > .toast_outer {
-    padding: var(--space-200);
-    animation: leftflyinout $toast-lifetime var(--ease-standard) forwards;
-    width: 420px;
-    & > .toast {
-      position: relative;
-      border-radius: var(--radius-md);
-      padding: var(--space-200) var(--space-300) var(--space-200) var(--space-200);
-      font-weight: var(--font-weight-bold);
-      letter-spacing: calc(0.5 * var(--letter-spacing-base));
-      color: var(--color-text-inverse);
-      font-size: var(--font-size-sm);
-      &.success {
-        background-color: var(--color-bg-success);
-      }
-      &.error {
-        background-color: var(--color-bg-danger);
-      }
-      &.warning {
-        background-color: var(--color-bg-warning);
-        color: var(--color-text-primary);
-        & > .close_button {
-          color: var(--color-text-primary);
-          &:focus-visible {
-            @include ds.focus-ring;
-          }
-        }
-        &::after {
-          background-color: var(--color-bg-hover);
-        }
-      }
-      &::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 3px;
-        width: 100%;
-        background-color: var(--color-bg-frosted);
-        animation: countdown $countdown-duration linear forwards;
-        transform-origin: left;
-      }
-      & > .close_button {
-        color: var(--color-text-inverse);
-        // The ring would vanish on the toast's blue, red, or green background.
-        &:focus-visible {
-          @include ds.focus-ring($color: var(--color-focus-ring-inverse));
-        }
-        position: absolute;
-        right: 4px;
-        top: 4px;
-        @include ds.down(sm) {
-          transform: scale(1.5);
-          transform-origin: top right;
-        }
-      }
-    }
-    &:not(:last-child) {
-      padding-bottom: 0;
-    }
-    @include ds.down(sm) {
-      width: 100vw;
-    }
-  }
-  @include ds.down(sm) {
-    width: 100vw;
-    top: 0;
+
+  // Toasts sit at the top in the narrow layout, newest first, clear of the bottom
+  // navigation bar.
+  @include ds.down(lg) {
+    inset-inline: var(--space-200);
+    inset-block: max(var(--space-200), env(safe-area-inset-top)) auto;
+    inline-size: auto;
+    max-inline-size: none;
+    flex-direction: column-reverse;
   }
 }
 
-@keyframes leftflyinout {
-  0% {
-    transform: translateX(-110%);
+.toast {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--space-150);
+  padding: var(--space-150) var(--space-100) var(--space-150) var(--space-200);
+  border: 1px solid;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: enter var(--duration-base) var(--ease-out);
+  @include ds.down(lg) {
+    animation-name: enter-from-top;
   }
-  6% {
-    transform: translateX(0);
+
+  &.success {
+    background:
+      linear-gradient(var(--color-bg-success-subtle), var(--color-bg-success-subtle)),
+      var(--color-bg-surface);
+    border-color: var(--color-border-success-subtle);
+    color: var(--color-text-success);
+    & > .timer {
+      background-color: var(--color-border-success-subtle);
+    }
   }
-  94% {
-    transform: translateX(0);
+  &.error {
+    background:
+      linear-gradient(var(--color-bg-danger-subtle), var(--color-bg-danger-subtle)),
+      var(--color-bg-surface);
+    border-color: var(--color-border-danger-subtle);
+    color: var(--color-text-danger);
+    & > .timer {
+      background-color: var(--color-border-danger-subtle);
+    }
   }
-  100% {
-    transform: translateX(-110%);
+  &.warning {
+    background: var(--color-bg-warning-subtle);
+    border-color: var(--color-border-warning);
+    color: var(--color-text-warning);
+    & > .timer {
+      background-color: var(--color-border-warning);
+    }
+  }
+
+  &.leaving {
+    animation: leave var(--duration-fast) var(--ease-standard) forwards;
+  }
+}
+
+.mark {
+  inline-size: 28px;
+  block-size: 28px;
+  display: grid;
+  place-items: center;
+
+  // Centers the mark on the first line of the message.
+  margin-block-start: calc(-1 * var(--space-025));
+}
+
+.text {
+  margin: 0;
+  padding-block: var(--space-025);
+  font-size: var(--font-size-data);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-relaxed);
+  overflow-wrap: anywhere;
+}
+
+.close_button {
+  margin-block: calc(-1 * var(--space-100));
+
+  // Touch screens need a 44px target; it reaches past the button without making the
+  // toast taller.
+  @media (any-pointer: coarse) {
+    &::after {
+      content: "";
+      position: absolute;
+      inset: calc(-1 * var(--space-050));
+    }
+  }
+}
+
+.timer {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 2px;
+  transform-origin: left;
+  animation-name: countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  &.paused {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-100)) scale(0.98);
+  }
+}
+
+@keyframes enter-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--space-100))) scale(0.98);
+  }
+}
+
+@keyframes leave {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
   }
 }
 
@@ -105,5 +149,29 @@ $countdown-duration: 4.8s;
   }
   to {
     transform: scaleX(0);
+  }
+}
+
+// The leave animation still runs, as a fade, because its end removes the toast. It
+// needs a keyframes name of its own: changing only the direction of a finished
+// animation does not run it again, so no animationend would follow.
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation-name: fade-in;
+  }
+  .toast.leaving {
+    animation-name: fade-out;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
   }
 }
