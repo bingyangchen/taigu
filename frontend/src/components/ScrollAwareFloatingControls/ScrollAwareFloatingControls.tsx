@@ -6,6 +6,7 @@ import styles from "./ScrollAwareFloatingControls.module.scss";
 
 interface Props {
   children: React.ReactNode;
+  className?: string;
 }
 
 interface ControlsState {
@@ -21,7 +22,7 @@ interface ScrollTracking {
   downwardDistance: number;
 }
 
-function ScrollAwareFloatingControls({ children }: Props) {
+function ScrollAwareFloatingControls({ children, className = "" }: Props) {
   const scrollTop = useAppSelector((state) => state.mainPage.scrollTop);
   const [state, setState] = useState<ControlsState>({
     isActivated: false,
@@ -89,7 +90,7 @@ function ScrollAwareFloatingControls({ children }: Props) {
   return (
     <div
       ref={controlsRef}
-      className={`${styles.main} ${isActivated ? styles.active : ""} ${
+      className={`${styles.main} ${className} ${isActivated ? styles.active : ""} ${
         isActivated && !state.isVisible ? styles.hidden : ""
       } ${isActivated && !state.shouldAnimate ? styles.no_transition : ""}`}
     >

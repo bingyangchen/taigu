@@ -155,7 +155,7 @@ function Records() {
 
   return (
     <div className={styles.main}>
-      <ScrollAwareFloatingControls>
+      <ScrollAwareFloatingControls className={styles.search_controls}>
         <SearchKeywordInput
           placeholder="輸入證券代號或名稱"
           keyword={searchKeyword ?? ""}
