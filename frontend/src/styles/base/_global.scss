@@ -69,14 +69,8 @@ a {
   width: 100%;
 }
 
-@include breakpoints.down(md) {
-  html,
-  body.main-page-document-scroll,
-  body.settings-page-document-scroll {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
+// Main and Settings let the document scroll in the narrow layout, as on a phone.
+@include breakpoints.narrow-layout {
   body.main-page-document-scroll {
     min-height: 100dvh;
     height: auto;
@@ -106,6 +100,15 @@ a {
   body.settings-page-document-scroll #root {
     min-height: 100dvh;
     height: auto;
+  }
+}
+
+@include breakpoints.down(md) {
+  html,
+  body.main-page-document-scroll,
+  body.settings-page-document-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   ::-webkit-scrollbar {

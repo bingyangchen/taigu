@@ -2,14 +2,14 @@
 
 步驟寫「換成新帳號」時，照下面的做法取得一個沒有任何資料、還在試用期的新帳號。第 1 步會刪除這個帳號在本機資料庫的所有資料：
 
-1. 執行 `docker compose -f compose.dev.yaml exec 後端 python manage.py shell -c "from main.account.models import User; User.objects.filter(email='<email>').delete()"`。
+1. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.account.models import User; User.objects.filter(email='<email>').delete()"`。
 2. 重新整理頁面。
 3. 如果畫面沒有回到歡迎頁或登入頁，開啟 `https://local.taigu.tw/login`。
 4. 用同一個 Google 帳號登入。
 
-步驟寫「切換到行動裝置」時，在 Chrome DevTools 開啟裝置模擬（Toggle device toolbar），選 iPhone SE，再重新整理頁面。沒有寫的段落都在桌面瀏覽器上操作。
+步驟寫「切換到窄版」時，在 Chrome DevTools 開啟 device toolbar（Toggle device toolbar），在 Dimensions 選「Responsive」並輸入 390 × 844，或選 iPhone 14 Pro 這類手機。前端依可用畫面的大小切換版面，不看 user agent，所以切換之後版面立刻跟著換，不用重新整理頁面。沒有寫「切換到窄版」的段落都以寬版操作，也就是在桌面瀏覽器上不開 device toolbar，可用畫面是 1280 × 800，可以在 Console 執行 `[innerWidth, innerHeight]` 確認大小。
 
-步驟寫「新增一筆交易紀錄」時，在桌面瀏覽器上點側邊欄的「新增」（不要點旁邊的 ▾），在出現的「新增交易紀錄」視窗的「股票」選 2330，在「交易日期」填入步驟指定的日期，成交股數點「股」後在「成交股數」填 1，「成交單價」填 100，把「手續費用」改成步驟指定的金額，再點「新增買進紀錄」，然後在完成畫面點「完成」。
+步驟寫「新增一筆交易紀錄」時，以寬版確認側邊欄是展開的（收合時點側邊欄頂端的展開按鈕，因為收合的側邊欄點「新增」會開啟選單），點側邊欄的「新增」（不要點旁邊的 ▾），在出現的「新增交易紀錄」視窗的「股票」選 2330，在「交易日期」填入步驟指定的日期，成交股數點「股」後在「成交股數」填 1，「成交單價」填 100，把「手續費用」改成步驟指定的金額，再點「新增買進紀錄」，然後在完成畫面點「完成」。
 
 步驟寫「新增一筆手續費折讓」時，在手續費頁點「新增折讓紀錄」，填入步驟指定的日期、折讓金額與備註，沒有指定的欄位維持原樣，再點編輯器的「新增折讓紀錄」，然後在完成畫面點「完成」。
 
@@ -90,9 +90,9 @@
 
 預期：列表由上到下依序是「C」「B」「A」。
 
-## FEE-R7.1 在桌面瀏覽器上新增
+## FEE-R7.1 在寬版新增
 
-`test_create_discount_valid` 只驗證後端儲存的內容，畫面的變化要人工確認。
+`test_create_discount_valid` 驗證後端儲存的內容，前端的 unit test 在 jsdom 裡驗證寬版開啟視窗與送出的內容；真實瀏覽器裡的列表與「累積手續費」要人工確認。
 
 1. 換成新帳號。
 2. 新增一筆交易紀錄，交易日期是今天，手續費用 1000。
@@ -105,12 +105,12 @@
 
 預期：視窗關閉，列表出現一筆備註是「9 月退佣」、200 元、日期是今天的手續費折讓，「累積手續費」變成 800 元。
 
-## FEE-R7.2 在行動裝置上新增，不填備註
+## FEE-R7.2 在窄版新增，不填備註
 
-`test_create_discount_without_memo` 只驗證後端儲存的備註是空白，畫面要人工確認。
+`test_create_discount_without_memo` 驗證後端儲存的備註是空白，前端的 unit test 在 jsdom 裡驗證窄版開啟編輯頁與送出的內容；真實瀏覽器裡回到的頁面與列表要人工確認。
 
 1. 換成新帳號。
-2. 切換到行動裝置。
+2. 切換到窄版。
 3. 開啟手續費頁。
 4. 點「新增折讓紀錄」。
 5. 在折讓金額輸入 300。
@@ -119,15 +119,15 @@
 
 預期：步驟 4 之後網址變成 `https://local.taigu.tw/handling-fee/discounts/new`；步驟 7 之後畫面回到手續費頁，列表出現一筆 300 元、日期是今天的手續費折讓。
 
-## FEE-R9.1 在行動裝置上修改折讓金額
+## FEE-R9.1 在窄版修改折讓金額
 
-`test_update_discount_all_fields` 只驗證後端儲存修改後的日期、金額與備註，畫面要人工確認。
+`test_update_discount_all_fields` 驗證後端儲存修改後的日期、金額與備註，前端的 unit test 在 jsdom 裡驗證點一筆手續費折讓換到編輯頁與送出的內容；真實瀏覽器裡的編輯頁、列表與「累積手續費」要人工確認。
 
 1. 換成新帳號。
 2. 新增一筆交易紀錄，交易日期是今天，手續費用 1000。
 3. 開啟手續費頁。
 4. 新增一筆手續費折讓，日期是 2026-09-15，折讓金額 200，備註「9 月退佣」。
-5. 切換到行動裝置。
+5. 切換到窄版。
 6. 開啟手續費頁。
 7. 點「9 月退佣」這一筆。
 8. 點「金額與備註」這一段，把折讓金額改成 300。
@@ -156,7 +156,7 @@
 1. 換成新帳號。
 2. 開啟手續費頁。
 3. 新增一筆手續費折讓，折讓金額 200，備註「9 月退佣」。
-4. 切換到行動裝置。
+4. 切換到窄版。
 5. 開啟手續費頁。
 6. 點「9 月退佣」這一筆。
 7. 點編輯頁下方「其他操作」區塊的「刪除折讓紀錄」。
@@ -168,7 +168,7 @@
 
 前端沒有自動化 test。
 
-1. 切換到行動裝置。
+1. 切換到窄版。
 2. 開啟手續費頁。
 3. 點「新增折讓紀錄」。
 4. 點左上角的返回按鈕。
@@ -180,7 +180,7 @@
 前端沒有自動化 test。
 
 1. 換成新帳號。
-2. 切換到行動裝置。
+2. 切換到窄版。
 3. 開啟手續費頁。
 4. 點「新增折讓紀錄」。
 5. 在折讓金額輸入 200。
@@ -193,7 +193,7 @@
 
 前端沒有自動化 test。
 
-1. 切換到行動裝置。
+1. 切換到窄版。
 2. 開啟手續費頁。
 3. 點「新增折讓紀錄」。
 4. 在折讓金額輸入 200。
@@ -206,7 +206,7 @@
 
 前端沒有自動化 test。
 
-1. 切換到行動裝置。
+1. 切換到窄版。
 2. 在網址列開啟 `https://local.taigu.tw/handling-fee/discounts/999999/edit`。
 3. 等頁面載入完成。
 4. 點左上角的返回按鈕。
@@ -218,7 +218,7 @@
 沒有 test 驗證 Free 方案用完額度時仍能新增手續費折讓，前端也沒有自動化 test。
 
 1. 換成新帳號。
-2. 執行 `docker compose -f compose.dev.yaml exec 後端 python manage.py shell -c "from datetime import date; from main.account.models import User; from main.billing.models import BillingProfile, Plan, SubscriptionStatus; from main.market.models import Company; from main.trade_record.models import TradeRecord; u = User.objects.get(email='<email>'); BillingProfile.objects.filter(user=u).update(plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED); c = Company.objects.get(pk='2330'); TradeRecord.objects.bulk_create([TradeRecord(owner=u, company=c, deal_time=date.today(), deal_price=100, deal_quantity=1, handling_fee=1) for _ in range(20)])"`，把帳號改成 Free 方案，並新增這個月的 20 筆交易紀錄。
+2. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from datetime import date; from main.account.models import User; from main.billing.models import BillingProfile, Plan, SubscriptionStatus; from main.market.models import Company; from main.trade_record.models import TradeRecord; u = User.objects.get(email='<email>'); BillingProfile.objects.filter(user=u).update(plan=Plan.FREE, subscription_status=SubscriptionStatus.CANCELED); c = Company.objects.get(pk='2330'); TradeRecord.objects.bulk_create([TradeRecord(owner=u, company=c, deal_time=date.today(), deal_price=100, deal_quantity=1, handling_fee=1) for _ in range(20)])"`，把帳號改成 Free 方案，並新增這個月的 20 筆交易紀錄。
 3. 重新整理頁面。
 4. 開啟手續費頁。
 5. 新增一筆手續費折讓，折讓金額 200。

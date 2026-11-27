@@ -12,14 +12,14 @@
     width: min(100%, 720px);
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     min-height: 100dvh;
     height: auto;
     overflow: visible;
   }
 
   &.mobile_editor_shell {
-    @include ds.down(md) {
+    @include ds.narrow-layout {
       height: 100dvh;
       min-height: 100dvh;
       overflow: hidden;

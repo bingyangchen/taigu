@@ -66,3 +66,9 @@ export const BREAKPOINTS = {
 };
 
 export type Breakpoint = keyof typeof BREAKPOINTS;
+
+// A viewport narrower or shorter than these, in px, gets the narrow layout.
+export const NARROW_LAYOUT_SIZE = {
+  width: parseFloat(getToken("narrow-layout-width")),
+  height: parseFloat(getToken("narrow-layout-height")),
+};

@@ -18,6 +18,7 @@ import { selectNetHandlingFee } from "../../../redux/slices/TradeRecordSlice";
 import { dateStringToDate } from "../../../utils/date";
 import Env from "../../../utils/env";
 import { getSidMarketValueMap, getTotalMarketValue } from "../../../utils/market";
+import { useIsNarrowLayout } from "../../../utils/mediaQuery";
 import Util from "../../../utils/util";
 import styles from "./Dashboard.module.scss";
 
@@ -44,6 +45,7 @@ function Dashboard() {
   const netHandlingFee = useAppSelector(selectNetHandlingFee);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const isNarrowLayout = useIsNarrowLayout();
   const [activeModalName, setActiveModalName] = useState<"createTradeRecord" | null>(
     null,
   );
@@ -115,7 +117,7 @@ function Dashboard() {
   );
 
   const handleCreateTradeRecordClick = (): void => {
-    if (Util.isMobile) {
+    if (isNarrowLayout) {
       navigate(`${Env.frontendRootPath}records/trade/new`);
       return;
     }
@@ -124,7 +126,7 @@ function Dashboard() {
 
   return (
     <div className={styles.main}>
-      {Util.isMobile && <SpeedDial />}
+      <SpeedDial />
       <div className={styles.left}>
         <MarketIndexSummary />
         <div className={styles.lower}>

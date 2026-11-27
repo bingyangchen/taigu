@@ -18,7 +18,7 @@
     margin-right: auto;
     z-index: 3;
     transition: top var(--duration-slow) var(--ease-standard);
-    @include ds.down(md) {
+    @include ds.narrow-layout {
       left: 0;
     }
     &.scrolled {
@@ -34,7 +34,7 @@
     padding: var(--space-075) var(--space-200) var(--space-250);
     z-index: 2;
     background-color: transparent;
-    @include ds.down(sm) {
+    @include ds.narrow-layout {
       padding-top: var(--space-075);
     }
   }
@@ -46,7 +46,7 @@
     justify-content: flex-start;
     padding: var(--space-250);
     overflow: hidden auto;
-    @include ds.down(md) {
+    @include ds.narrow-layout {
       padding: var(--space-150);
     }
     & > .empty_section {
@@ -58,7 +58,7 @@
       color: var(--color-text-secondary);
       line-height: var(--line-height-relaxed);
       font-size: var(--font-size-sm);
-      @include ds.down(md) {
+      @include ds.narrow-layout {
         padding: var(--space-500) var(--space-250);
       }
     }

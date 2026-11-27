@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { AutoResizeTextarea, FormPageShell, Modal } from "../../../components";
 import type { Props as ButtonProps } from "../../../components/Button/Button";
+import DiscardChangesModal from "../../../components/DiscardChangesModal/DiscardChangesModal";
 import { useAppDispatch } from "../../../redux/hooks";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import Api from "../../../utils/api";
@@ -25,6 +26,7 @@ export function IssueReportEditor({
   const dispatch = useAppDispatch();
   const [body, setBody] = useState("");
   const [isWaiting, setIsWaiting] = useState(false);
+  const [isConfirmingDiscard, setIsConfirmingDiscard] = useState(false);
 
   const trimmedBody = body.trim();
   const isDirty = trimmedBody.length > 0;
@@ -83,17 +85,31 @@ export function IssueReportEditor({
     );
   }
 
+  // The cancel button, Escape and Back all run the discard button (ISSUE-R6).
+  const requestClose = (event: React.MouseEvent): void => {
+    if (isDirty) setIsConfirmingDiscard(true);
+    else hideModal(event);
+  };
   return (
-    <Modal
-      title="問題回報"
-      discardButtonProps={discardButtonProps}
-      submitButtonProps={submitButtonProps}
-      layout={Util.isMobile ? "fullScreen" : "compact"}
-      noX
-      silentBackground
-    >
-      {form}
-    </Modal>
+    <>
+      <Modal
+        title="問題回報"
+        discardButtonProps={{ ...discardButtonProps, onClick: requestClose }}
+        submitButtonProps={submitButtonProps}
+        layout="compact"
+        noX
+        silentBackground
+        onCloseByApp={() => hideModal({} as React.MouseEvent)}
+      >
+        {form}
+      </Modal>
+      {isConfirmingDiscard && (
+        <DiscardChangesModal
+          onKeepEditing={() => setIsConfirmingDiscard(false)}
+          onDiscard={hideModal}
+        />
+      )}
+    </>
   );
 }
 

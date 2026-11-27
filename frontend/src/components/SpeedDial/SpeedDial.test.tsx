@@ -7,20 +7,19 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
+import { mockViewport, PHONE_PORTRAIT } from "../../testing/viewport";
 import SpeedDial from "./SpeedDial";
 
 const user = userEvent.setup();
 
 // The components barrel loads the store, which this test does not need.
 vi.mock("../../components", () => ({
-  CashDividendRecordEditor: () => null,
-  StockSearchModal: () => null,
-  TradePlanEditor: () => null,
-  TradeRecordEditor: () => null,
   Tooltip: ({ children }: { children: React.ReactNode }) => children,
 }));
+
+beforeEach(() => mockViewport(PHONE_PORTRAIT));
 
 let navigate: NavigateFunction = () => {};
 let currentHash = "";

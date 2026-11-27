@@ -40,9 +40,6 @@ export default function ListRowActionBar({
     </>
   ) : (
     <span className={styles.main}>
-      <RoundButton size="l" hint_text="編輯" onClick={handleClickEdit}>
-        <Icons.IconPencilSquare sideLength="16" />
-      </RoundButton>
       <RoundButton size="l" hint_text="刪除" onClick={handleClickDelete}>
         <Icons.IconTrash sideLength="16" />
       </RoundButton>

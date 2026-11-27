@@ -39,7 +39,10 @@
    "
    ```
 
-8. 段落寫「在行動裝置上」的步驟，用 Chrome DevTools 的裝置模擬（例如 iPhone 14 Pro）開啟頁面後重新整理；其他步驟用桌面瀏覽器（Chrome）。
+8. 前端依可用畫面的大小切換版面，不看 user agent，可用畫面改變時版面立刻跟著換；前端依瀏覽器回報的輸入能力，判斷能不能用觸控或滑鼠移入操作。步驟寫了下面這些說法時照下面的方式操作，沒有寫的步驟用不開 device toolbar 的桌面瀏覽器（Chrome）：
+   - 「以寬版」或「桌面瀏覽器」：不開 Chrome DevTools 的 device toolbar，可用畫面是 1280 × 800，用滑鼠操作。可以在 Console 執行 `[innerWidth, innerHeight]` 確認大小。
+   - 「以窄版在觸控裝置上」或「在行動裝置上」：在 DevTools 開啟 device toolbar（Toggle device toolbar），選 iPhone 14 Pro。選了手機或平板，Chrome 才會模擬觸控，這時用滑鼠按住拖曳就是在頁面上滑動。
+   - 「以寬版在觸控裝置上」：在 device toolbar 選 iPad Mini（768 × 1024）。
 9. 全部檢查完後，執行以下指令還原行情與 2330 的主要經營業務：
 
    ```bash
@@ -499,7 +502,7 @@
    "
    ```
 
-2. 執行 `docker compose -f compose.dev.yaml exec 後端 python manage.py update_material_facts`。
+2. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py update_material_facts`。
 3. 開啟 `https://local.taigu.tw/market/6488`。
 4. 點選「完整資料」。
 5. 確認公司資訊的內容。
@@ -587,7 +590,7 @@
 
 ## STOCK-R16.1 換到下一檔
 
-前端沒有自動化 test。
+滑動要在模擬觸控的真實瀏覽器裡操作，前端沒有自動化 test。
 
 1. 在 `https://local.taigu.tw/records` 替 1101、1102、1216 各新增一筆交易紀錄：買進、成交價 100、1,000 股。
 2. 執行以下指令，讓這三檔股票的市值依序是 9,000,000、8,000,000 與 7,000,000 元，排在「持股」分頁的前面：
@@ -600,7 +603,7 @@
    "
    ```
 
-3. 在行動裝置上開啟 `https://local.taigu.tw/market`。
+3. 以窄版在觸控裝置上開啟 `https://local.taigu.tw/market`。
 4. 點選「持股」分頁。
 5. 確認列表依市值排序，台泥（1101）的下一檔是亞泥（1102）。
 6. 點選台泥。
@@ -612,9 +615,9 @@
 
 ## STOCK-R16.2 已經是最後一檔
 
-前端沒有自動化 test。
+滑動要在模擬觸控的真實瀏覽器裡操作，前端沒有自動化 test。
 
-1. 照 STOCK-R16.1 的步驟 1 到步驟 4，準備持股並在行動裝置上開啟「持股」分頁。
+1. 照 STOCK-R16.1 的步驟 1 到步驟 4，準備持股並以窄版在觸控裝置上開啟「持股」分頁。
 2. 點選列表的最後一檔股票。
 3. 在頁面上向左滑動 100px 後放開。
 4. 確認畫面的內容與網址。
@@ -632,3 +635,33 @@
 4. 在 `https://local.taigu.tw/records` 刪除步驟 1 新增的三筆交易紀錄。
 
 預期：步驟 3 的畫面是市場頁的「持股」分頁。
+
+## STOCK-R16.4 在寬版的觸控裝置上切換
+
+滑動與箭頭要在模擬觸控的真實瀏覽器裡操作，前端沒有自動化 test。
+
+1. 照 STOCK-R16.1 的步驟 1 與步驟 2 準備持股。
+2. 以寬版在觸控裝置上開啟 `https://local.taigu.tw/market`。
+3. 點選「持股」分頁，再點選台泥。
+4. 在頁面上向左滑動 100px 後放開。
+5. 確認畫面的網址。
+6. 點選頁面左側的箭頭。
+7. 確認畫面的網址。
+8. 在 `https://local.taigu.tw/records` 刪除步驟 1 新增的三筆交易紀錄。
+
+預期：步驟 4 之前頁面的左右兩側都有箭頭；步驟 5 的畫面是網址為 `/market/holding/1102` 的亞泥個股詳情頁；步驟 7 的畫面是網址為 `/market/holding/1101` 的台泥個股詳情頁。
+
+## STOCK-R16.5 在窄版用滑鼠切換
+
+窄版的頁面在能用滑鼠移入的裝置上顯示的箭頭，要在真實瀏覽器裡確認，前端沒有自動化 test。
+
+1. 照 STOCK-R16.1 的步驟 1 與步驟 2 準備持股。
+2. 不開 device toolbar，把桌面瀏覽器的視窗調整到可用畫面是 1280 × 450。可以把 DevTools 停靠在視窗下方來降低高度。
+3. 在 Console 執行 `[innerWidth, innerHeight, matchMedia('(hover: hover)').matches]`，確認印出 `[1280, 450, true]`。
+4. 開啟 `https://local.taigu.tw/market`，確認畫面有底部導覽列，沒有側邊欄。
+5. 點選「持股」分頁，再點選台泥。
+6. 用滑鼠點選頁面右側的箭頭。
+7. 確認畫面的網址。
+8. 在 `https://local.taigu.tw/records` 刪除步驟 1 新增的三筆交易紀錄。
+
+預期：步驟 6 之前頁面的右側有箭頭；步驟 7 的畫面是網址為 `/market/holding/1102` 的亞泥個股詳情頁。

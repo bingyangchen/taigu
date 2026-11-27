@@ -1,3 +1,5 @@
+@use "styles" as ds;
+
 $ripple-duration: 500ms;
 
 .main {
@@ -13,7 +15,8 @@ $ripple-duration: 500ms;
   &:not(:first-child) {
     border-top: 1px solid var(--color-border-subtle);
   }
-  & > *:nth-last-child(2) {
+  // Room for the delete button that shows on hover.
+  & > .content > :last-child {
     margin-right: var(--space-800);
   }
   &.active {
@@ -23,18 +26,29 @@ $ripple-duration: 500ms;
     &:hover {
       box-shadow: var(--shadow-sm);
       & > .action_bar_outer {
-        display: flex;
+        opacity: 1;
+        pointer-events: auto;
       }
     }
   }
+  // Hidden by opacity rather than display, so keyboard users can tab to the button.
+  &:has(:focus-visible) > .action_bar_outer {
+    opacity: 1;
+    pointer-events: auto;
+  }
   & > span {
     display: flex;
+  }
+  // The row's own children stay its flex items.
+  & > .content {
+    display: contents;
   }
   & > .action_bar_outer {
     position: absolute;
     top: 50%;
     right: 0;
-    display: none;
+    opacity: 0;
+    pointer-events: none;
     margin-right: var(--space-150);
     transform: translateY(-50%);
     z-index: 1;
@@ -46,6 +60,16 @@ $ripple-duration: 500ms;
     width: 100%;
     height: 100%;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    -webkit-touch-callout: none;
+    user-select: none;
+    &:focus-visible {
+      @include ds.focus-ring-inset;
+    }
     & > .ripple {
       position: absolute;
       border-radius: var(--radius-circle);

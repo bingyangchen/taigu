@@ -69,10 +69,7 @@ export default function FormPageShell({
             )}
           </div>
         </header>
-        <div
-          className={`${styles.body} ${bodyClassName ?? ""}`}
-          data-page-scroll="always"
-        >
+        <div className={`${styles.body} ${bodyClassName ?? ""}`} data-page-scroll>
           {children}
         </div>
       </section>

@@ -10,7 +10,7 @@
    docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "import json; from main.market.models import StockInfo; json.dump(list(StockInfo.objects.filter(company_id__in=['2330', '2317', '1301', '0050', '2412', '3008']).values('company_id', 'close_price', 'fluct_price', 'quantity')), open('/tmp/favorites_backup.json', 'w'))"
    ```
 
-4. 在桌面瀏覽器（Chrome）上用 Google 帳號登入 `https://local.taigu.tw`，視窗的寬度維持 780px 以上。
+4. 在電腦上的 Chrome 用 Google 帳號登入 `https://local.taigu.tw`。沒有特別寫的段落都以寬版操作，也就是不開 DevTools 的 device toolbar，可用畫面是 1280 × 800，可以在 Console 執行 `[innerWidth, innerHeight]` 確認大小。段落寫「以窄版」時，在 Chrome DevTools 開啟 device toolbar（Toggle device toolbar），在 Dimensions 選「Responsive」並輸入 390 × 844，或選 iPhone 14 Pro 這類手機。前端依可用畫面的大小切換版面，不看 user agent，所以切換之後版面立刻跟著換，不用重新整理頁面。
 5. 執行下面的「改回 Standard 試用期」指令，讓帳號處在 Standard 試用期。
 6. 全部檢查完後，執行下面的指令還原備份的行情：
 
@@ -257,13 +257,13 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：列表只列出 2412；上方的「最愛檔數」是 5，「今日上漲」是 2，「今日下跌」是 1。
 
-## FAV-R10.1 在桌面瀏覽器上的一列
+## FAV-R10.1 在寬版的一列
 
 前端沒有自動化 test。
 
 1. 執行「設定自選股」指令，股票代號用 2330。
 2. 執行「設定價格」指令，把 2330 設成 `close_price=1010, fluct_price=10, quantity=3500000`。
-3. 開啟 `https://local.taigu.tw/market`。
+3. 以寬版開啟 `https://local.taigu.tw/market`。
 4. 點選「關注」。
 
 預期：2330 那一列顯示台積電、2330、1,010、「▲10.00 (1.00%)」（漲跌 10.00、漲跌幅 1.00%）與「成交量 3,500 張」。
@@ -290,13 +290,13 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：畫面顯示 2330 的個股詳情頁，網址是 `https://local.taigu.tw/market/favorites/2330`。
 
-## FAV-R10.4 在手機上的一列
+## FAV-R10.4 在窄版的一列
 
-手機版的列表要用手機的 user agent 才會出現，前端沒有自動化 test。
+窄版的列表要在真實瀏覽器的可用畫面下確認，前端沒有自動化 test。
 
 1. 執行「設定自選股」指令，股票代號用 2330。
 2. 執行「設定價格」指令，把 2330 設成 `close_price=1010, fluct_price=10, quantity=3500000`。
-3. 在 iOS 模擬器或手機開啟 `https://local.taigu.tw/market`。
+3. 以窄版開啟 `https://local.taigu.tw/market`。
 4. 點選「關注」。
 
 預期：2330 那一列顯示台積電、2330、1,010、「▲10.00 (1.00%)」與「成交量 3,500 張」。

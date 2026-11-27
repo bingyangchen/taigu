@@ -46,7 +46,7 @@
    "
    ```
 
-10. 段落裡寫「行動裝置」時，在 Chrome DevTools 開啟裝置模擬（例如 iPhone 14 Pro）並重新整理頁面，因為前端依 user agent 判斷是不是行動裝置；寫「桌面瀏覽器」時用一般的 Chrome 視窗。
+10. 段落裡寫「以窄版」「行動裝置」或「行動裝置模擬」時，在 Chrome DevTools 開啟 device toolbar（Toggle device toolbar），在 Dimensions 選「Responsive」並輸入 390 × 844，或選 iPhone 14 Pro 這類手機；寫出 1280 × 800 以外的可用畫面大小時，在 Responsive 輸入那個大小。寫「以寬版」或「桌面瀏覽器」時，用不開 device toolbar 的 Chrome 視窗，可用畫面是 1280 × 800，可以在 Console 執行 `[innerWidth, innerHeight]` 確認大小。前端依可用畫面的大小切換版面，不看 user agent，所以切換之後版面立刻跟著換，不用重新整理頁面。
 11. 沒有特別寫方案的段落，都在 Standard 方案下檢查。
 12. 全部檢查完之後，執行下面兩個指令，刪除檢查期間的大盤指數與收盤價資料，再從第 4 步的備份還原：
 
@@ -502,8 +502,7 @@ for market in ('tse', 'otc'):
 2. 以預設文字大小，把可用畫面設成 1280 × 800 CSS px，開啟 [大盤指數](https://local.taigu.tw/market-index)。
 3. 捲到頁面最上方，查看「今日」。
 4. 捲到頁面最上方，依序點選「1M」、「1Q」、「1Y」與「ALL」。
-5. 把桌面瀏覽器的可用畫面縮到 390 × 700 CSS px，重複第 3 步與第 4 步。
-6. 改用相同尺寸的行動裝置模擬並重新整理，重複第 3 步與第 4 步。
+5. 在 device toolbar 的 Dimensions 選「Responsive」，把可用畫面設成 390 × 700 CSS px，重複第 3 步與第 4 步。
 
 預期：1280 × 800 CSS px 時兩個指數左右並排，390 × 700 CSS px 時上下排列。不論選取哪一個項目，都不用捲動就看得到兩組數值、右側點數刻度、時間或日期刻度，以及「今日」、「1M」、「1Q」、「1Y」、「ALL」五個選項。
 
@@ -668,7 +667,7 @@ for market in ('tse', 'otc'):
 
 前端沒有自動化 test。
 
-1. 在行動裝置開啟 `https://local.taigu.tw/`。
+1. 以窄版開啟 `https://local.taigu.tw/`。
 2. 點選右下角的「+」。
 3. 點選「搜尋」。
 4. 輸入「2330」。

@@ -12,7 +12,7 @@ $chevron-float-duration: 2s;
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-2xl);
   transition: all var(--duration-fast) var(--ease-standard);
-  @include ds.down(sm) {
+  @include ds.narrow-layout {
     margin: 0 var(--space-250);
   }
   & > .title {

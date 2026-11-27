@@ -1,4 +1,6 @@
-執行 `make start`，用 Chrome 開啟 `https://local.taigu.tw`，再用 Google 帳號登入。步驟寫「在行動裝置上」時，先開啟 Chrome DevTools 的裝置模擬（Toggle device toolbar），選一款手機機型（例如 iPhone 14 Pro），再重新整理頁面；步驟寫「在桌面瀏覽器上」時，先關閉裝置模擬，再重新整理頁面。
+執行 `make start`，用 Chrome 開啟 `https://local.taigu.tw`，再用 Google 帳號登入。
+
+前端依可用畫面的大小切換版面，不看 user agent，可用畫面改變時版面立刻跟著換，不用重新整理頁面。步驟寫「以窄版」或「在行動裝置上」時，開啟 Chrome DevTools 的 device toolbar（Toggle device toolbar），在 Dimensions 選「Responsive」並輸入 390 × 844，或選 iPhone 14 Pro 這類手機；步驟寫「以寬版」或「在桌面瀏覽器上」時，關閉 device toolbar，把視窗調整到可用畫面是 1280 × 800，可以在 Console 執行 `[innerWidth, innerHeight]` 確認大小。
 
 要查看後端儲存的問題回報時，在 repo 的根目錄執行下面的指令。指令會在 `count:` 那一行印出問題回報的總數，在 `latest:` 那一行印出最新一則問題回報的字數、內容的前 100 個字、送出的使用者的 email、送出的時間、平台與 User-Agent：
 
@@ -8,12 +10,12 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## ISSUE-R1.1 從設定頁開啟問題回報
 
-前端沒有自動化 test。
+以窄版與寬版開啟問題回報時出現的畫面，要在真實瀏覽器裡確認，前端沒有自動化 test。
 
-1. 在行動裝置上開啟 `https://local.taigu.tw/settings`。
+1. 以窄版開啟 `https://local.taigu.tw/settings`。
 2. 點選「關於」區塊的「問題回報」。
 3. 確認網址變成 `/settings/issue-report`，問題回報頁有一個空白的文字框。
-4. 在桌面瀏覽器上開啟 `https://local.taigu.tw/settings`。
+4. 以寬版開啟 `https://local.taigu.tw/settings`。
 5. 點選「關於」區塊的「問題回報」。
 
 預期：步驟 3 的確認成立；步驟 5 之後，網址列顯示 `/settings##`（路徑仍是 `/settings`，`##` 是視窗開啟時加上的 hash），畫面出現問題回報的視窗，裡面有一個空白的文字框。
@@ -147,7 +149,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 前端沒有自動化 test。
 
-1. 在行動裝置上開啟 `https://local.taigu.tw/settings`。
+1. 以窄版開啟 `https://local.taigu.tw/settings`。
 2. 點選「問題回報」。
 3. 在文字框輸入 2 個空白。
 4. 按 1 次 Enter。
@@ -159,7 +161,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 前端沒有自動化 test。
 
-1. 在行動裝置上開啟 `https://local.taigu.tw/settings`。
+1. 以窄版開啟 `https://local.taigu.tw/settings`。
 2. 點選「問題回報」。
 3. 在文字框輸入「畫面一直轉圈」。
 4. 點選頁首的返回按鈕。
@@ -170,7 +172,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 前端沒有自動化 test。
 
-1. 在行動裝置上開啟 `https://local.taigu.tw/settings`。
+1. 以窄版開啟 `https://local.taigu.tw/settings`。
 2. 點選「問題回報」。
 3. 在文字框輸入「畫面一直轉圈」。
 4. 點選頁首的返回按鈕。
@@ -183,7 +185,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 前端沒有自動化 test。
 
 1. 執行查看問題回報的指令，記下 `count:` 的數字。
-2. 在行動裝置上開啟 `https://local.taigu.tw/settings`。
+2. 以窄版開啟 `https://local.taigu.tw/settings`。
 3. 點選「問題回報」。
 4. 在文字框輸入「畫面一直轉圈」。
 5. 點選頁首的返回按鈕。
@@ -197,7 +199,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 前端沒有自動化 test。
 
 1. 執行查看問題回報的指令，記下 `count:` 的數字。
-2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/settings`。
+2. 以寬版開啟 `https://local.taigu.tw/settings`。
 3. 點選「問題回報」。
 4. 在文字框輸入 2 個空白。
 5. 按 1 次 Enter。
@@ -210,3 +212,27 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 12. 執行查看問題回報的指令。
 
 預期：步驟 7 的確認成立；步驟 11 之後視窗關閉，畫面留在設定頁 `/settings`；步驟 12 的 `count:` 與步驟 1 的數字相同。
+
+## ISSUE-R6.2 文字框有內容時按 Esc
+
+按 Esc 先顯示確認視窗由 unit test 驗證；真實瀏覽器裡的 Esc、取消按鈕與瀏覽器的上一頁要人工確認，因為瀏覽器的上一頁會改變實際的瀏覽紀錄，而 jsdom 沒有實際的瀏覽紀錄。
+
+1. 執行查看問題回報的指令，記下 `count:` 的數字。
+2. 以寬版開啟 `https://local.taigu.tw/settings`。
+3. 點選「問題回報」。
+4. 在文字框輸入「畫面一直轉圈」。
+5. 按 Esc。
+6. 點選確認視窗的「繼續編輯」。
+7. 點選視窗裡的取消按鈕。
+8. 點選確認視窗的「繼續編輯」。
+9. 按瀏覽器的上一頁。
+10. 點選確認視窗的「繼續編輯」。
+11. 按 Esc。
+12. 點選確認視窗的「捨棄變更」。
+13. 執行查看問題回報的指令。
+
+預期：
+
+- 步驟 5、步驟 7、步驟 9 與步驟 11 之後都出現標題是「捨棄變更？」的確認視窗。
+- 步驟 6、步驟 8 與步驟 10 之後，確認視窗關閉，問題回報的視窗仍然開著，文字框的內容仍是「畫面一直轉圈」。
+- 步驟 12 之後問題回報的視窗關閉，畫面留在設定頁 `/settings`；步驟 13 的 `count:` 與步驟 1 的數字相同。

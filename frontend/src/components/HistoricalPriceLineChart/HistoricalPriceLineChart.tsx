@@ -3,7 +3,7 @@ import ReactECharts from "echarts-for-react";
 import { memo, useState } from "react";
 
 import { COLORS, FONT_SIZES } from "../../styles/tokens";
-import Util from "../../utils/util";
+import { useIsNarrowLayout } from "../../utils/mediaQuery";
 import { makeTooltipTitle } from "../chartTooltip";
 import { makeDateAxisLabel } from "../dateAxisLabel";
 import { getPeriodTrendColor, makePeriodTrendAreaGradient } from "../periodTrend";
@@ -30,9 +30,10 @@ interface ChartData {
 
 function HistoricalPriceLineChart(props: Props) {
   const [fakeData] = useState(makeFakeChartData);
+  const isNarrowLayout = useIsNarrowLayout();
   return (
     <ReactECharts
-      option={makeHistoricalPriceChartOption(props, fakeData)}
+      option={makeHistoricalPriceChartOption(props, fakeData, isNarrowLayout)}
       style={{ height: "100%", width: "100%" }}
       notMerge={true}
     />
@@ -44,6 +45,7 @@ export default memo(HistoricalPriceLineChart);
 export function makeHistoricalPriceChartOption(
   props: Props,
   fakeData: ChartData,
+  isNarrowLayout: boolean,
 ): EChartsOption {
   const dates = props.isWaiting ? fakeData.dates : props.dates;
   const values = props.isWaiting ? fakeData.values : props.values;
@@ -122,7 +124,7 @@ export function makeHistoricalPriceChartOption(
           lineStyle: { width: 2, color: lineColor, join: "round" },
           itemStyle: { color: lineColor },
           symbol: "circle",
-          symbolSize: Util.isMobile ? 5 : 8,
+          symbolSize: isNarrowLayout ? 5 : 8,
           showSymbol: values.length === 1,
           emphasis: { itemStyle: { color: lineColor, borderColor: lineColor } },
           areaStyle: {

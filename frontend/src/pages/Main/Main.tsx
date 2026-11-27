@@ -11,6 +11,9 @@ import {
   PlanUpsellModal,
   ToastList,
 } from "../../components";
+import AddOrSearchModal, {
+  type AddOrSearchModalName,
+} from "../../components/AddOrSearchModal/AddOrSearchModal";
 import * as Icons from "../../icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
@@ -27,7 +30,11 @@ import { fetchAllTradeRecords } from "../../redux/slices/TradeRecordSlice";
 import type { StockWarehouse, Subpage } from "../../types";
 import Env from "../../utils/env";
 import { isSameUrlHistoryTraversal } from "../../utils/mainNavigation";
-import { makeWidthAtLeastQuery, makeWidthBelowQuery } from "../../utils/mediaQuery";
+import {
+  makeWidthAtLeastQuery,
+  NARROW_LAYOUT_QUERY,
+  useIsNarrowLayout,
+} from "../../utils/mediaQuery";
 import Nav from "../../utils/nav";
 import { useLatestRef } from "../../utils/useLatestRef";
 import Util from "../../utils/util";
@@ -79,34 +86,34 @@ function Main() {
   const pendingPositionRef = useRef<ViewPosition | null>(null);
   const retryRestoringPositionRef = useRef<(() => void) | null>(null);
   const stopRestoringPositionRef = useRef<(() => void) | null>(null);
+  // In Main rather than the sidebar, so an editor opened from the sidebar stays open
+  // when the sidebar goes away in the narrow layout.
+  const [activeSideBarModalName, setActiveSideBarModalName] =
+    useState<AddOrSearchModalName | null>(null);
 
-  const isMobileEditorRoute = isMobileEditorPath(location.pathname);
-  const shouldUseDocumentScroll = Util.isMobile && !isMobileEditorRoute;
-  const isMarketIndexPage = Nav.isAtMarketIndexDetailsPage;
-  const isMobileDetailPage = Nav.isAtDetailsPage || isMarketIndexPage;
+  const isNarrowLayout = useIsNarrowLayout();
+  const isEditorPage = isEditorPagePath(location.pathname);
+  const shouldUseDocumentScroll = isNarrowLayout && !isEditorPage;
+  const isDetailPage = Nav.isAtDetailsPage || Nav.isAtMarketIndexDetailsPage;
 
   // Also sets the body color, which the iOS home-screen app shows behind the status
   // bar, so every page whose background is the page color has to be listed.
   const shouldUseWhiteMobileShell =
-    isMobileEditorRoute ||
+    isEditorPage ||
     location.pathname === `${Env.frontendRootPath}market` ||
     location.pathname === `${Env.frontendRootPath}records` ||
     location.pathname === `${Env.frontendRootPath}plans` ||
-    isMobileDetailPage;
-  const shouldShowHeader =
-    Util.isMobile &&
-    !isMobileEditorRoute &&
-    !Nav.isAtDetailsPage &&
-    !Nav.isAtMarketIndexDetailsPage;
+    isDetailPage;
+  const shouldShowHeader = isNarrowLayout && !isEditorPage && !isDetailPage;
 
+  // Follows Main.module.scss.
   const getScrollContainer = (): Window | HTMLElement | null => {
-    if (window.matchMedia(makeWidthAtLeastQuery("lg")).matches)
-      return contentRef.current;
+    if (document.body.classList.contains("main-page-document-scroll")) return window;
     if (
-      document.body.classList.contains("main-page-document-scroll") &&
-      window.matchMedia(makeWidthBelowQuery("md")).matches
+      !window.matchMedia(NARROW_LAYOUT_QUERY).matches &&
+      window.matchMedia(makeWidthAtLeastQuery("lg")).matches
     ) {
-      return window;
+      return contentRef.current;
     }
     return mainRef.current;
   };
@@ -259,7 +266,7 @@ function Main() {
     retry();
   };
 
-  const syncMobileScrollMode = (): void => {
+  const syncDocumentScrollMode = (): void => {
     const latest = latestRenderRef.current;
     document.body.classList.toggle(
       "main-page-document-scroll",
@@ -300,7 +307,7 @@ function Main() {
     capturePosition,
     getSavedPosition,
     restorePosition,
-    syncMobileScrollMode,
+    syncDocumentScrollMode,
     fetchHoldingStockInfo,
   });
 
@@ -334,7 +341,7 @@ function Main() {
     };
 
     oncontextmenu = (e) => e.preventDefault();
-    latest.syncMobileScrollMode();
+    latest.syncDocumentScrollMode();
     mainElement?.addEventListener("scroll", handleScroll);
     contentElement?.addEventListener("scroll", handleScroll);
     window.addEventListener("scroll", handleScroll);
@@ -417,12 +424,13 @@ function Main() {
 
   useLayoutEffect(() => {
     const previousLocation = committed.location;
+    // Also when the layout switches between narrow and wide.
+    syncDocumentScrollMode();
     if (navigationSnapshot) {
       viewHistory.save(previousLocation, { position: navigationSnapshot.position });
     }
 
     if (previousLocation.pathname !== location.pathname) {
-      syncMobileScrollMode();
       restorePosition(
         getSavedPosition() ?? { top: 0 },
         navigationSnapshot?.hadContentFocus,
@@ -501,9 +509,9 @@ function Main() {
     <main
       className={`${styles.main} ${
         shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
-      } ${isMobileEditorRoute ? styles.mobile_editor_shell : ""} ${
-        isMobileDetailPage ? styles.mobile_detail_shell : ""
-      } ${isMarketIndexPage ? styles.market_index_shell : ""}`}
+      } ${isEditorPage ? styles.mobile_editor_shell : ""} ${
+        isDetailPage ? styles.mobile_detail_shell : ""
+      }`}
       ref={mainRef}
     >
       <PageMeta title="Taigu | 台股記帳" noindex />
@@ -512,23 +520,24 @@ function Main() {
       {isLoading && <LoadingScreen />}
       {shouldShowHeader && <HeaderForMain />}
       <div className={styles.body}>
-        {(!Util.isMobile || isMarketIndexPage) && (
-          <div className={styles.sidebar}>
-            <MainSideBar
-              avatarUrl={avatarUrl ? avatarUrl : imgPersonFill}
-              username={username}
-              subpages={subpages.slice(0, 4)}
-            />
-          </div>
+        {!isNarrowLayout && (
+          <MainSideBar
+            avatarUrl={avatarUrl ? avatarUrl : imgPersonFill}
+            username={username}
+            subpages={subpages.slice(0, 4)}
+            onOpenModal={setActiveSideBarModalName}
+          />
         )}
         <div className={styles.content} ref={contentRef} tabIndex={-1}>
           <Outlet />
         </div>
       </div>
-      {(Util.isMobile || isMarketIndexPage) && !isMobileEditorRoute && (
-        <div className={styles.footer}>
-          <Footer subpages={subpages} />
-        </div>
+      {isNarrowLayout && !isEditorPage && <Footer subpages={subpages} />}
+      {activeSideBarModalName && (
+        <AddOrSearchModal
+          modalName={activeSideBarModalName}
+          hideModal={() => setActiveSideBarModalName(null)}
+        />
       )}
     </main>
   );
@@ -536,7 +545,9 @@ function Main() {
 
 export default memo(Main);
 
-function isMobileEditorPath(pathname: string): boolean {
+// The editor and search pages fill the screen in the narrow layout, without the
+// header and the bottom navigation bar.
+function isEditorPagePath(pathname: string): boolean {
   return [
     /^\/records\/(trade|cash-dividend)\/(new|\d+\/edit)$/u,
     /^\/plans\/(new|[^/]+\/edit)$/u,
@@ -550,9 +561,9 @@ function getPageViewKey(content: HTMLElement | null): string | undefined {
     .scrollViewKey;
 }
 
+// A page marks the element that can scroll on its own; its stylesheet decides when
+// it does, and leaves its overflow visible when the page grows with it instead.
 function getPageScrollContainer(content: HTMLElement): HTMLElement | null {
-  const selector = window.matchMedia(makeWidthAtLeastQuery("md")).matches
-    ? "[data-page-scroll]"
-    : '[data-page-scroll="always"]';
-  return content.querySelector<HTMLElement>(selector);
+  const page = content.querySelector<HTMLElement>("[data-page-scroll]");
+  return page && window.getComputedStyle(page).overflowY !== "visible" ? page : null;
 }

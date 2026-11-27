@@ -24,7 +24,7 @@
     }
   }
 
-  @include ds.down(sm) {
+  @include ds.narrow-layout {
     margin-inline: var(--space-200);
     padding: var(--space-200);
   }

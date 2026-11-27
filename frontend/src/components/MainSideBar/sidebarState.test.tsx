@@ -24,12 +24,6 @@ describe("main sidebar state", () => {
     expect(isMainNavCollapsedInStorage()).toBe(true);
   });
 
-  test("[NAV-R1.7] does not change the stored state when width changes", () => {
-    saveMainNavCollapsed(true);
-
-    expect(isMainNavCollapsedInStorage()).toBe(true);
-  });
-
   test("[NAV-R1.8] tolerates unavailable storage", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("storage unavailable");

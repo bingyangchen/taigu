@@ -228,7 +228,7 @@ function Records() {
           </div>
         </div>
       )}
-      {Util.isMobile && <SpeedDial />}
+      <SpeedDial />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { changeAccountBinding } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import { COLORS } from "../../../styles/tokens";
+import { useIsNarrowLayout } from "../../../utils/mediaQuery";
 import Nav from "../../../utils/nav";
 import { settingsPagePath } from "../../../utils/router";
 import {
@@ -25,7 +26,6 @@ import {
   useGoogleAuthorization,
 } from "../../../utils/useGoogleAuthorization";
 import { useLatestRef } from "../../../utils/useLatestRef";
-import Util from "../../../utils/util";
 import styles from "./AccountBinding.module.scss";
 
 const BINDING_FAILED_MESSAGE = "更換綁定的帳號失敗，請再試一次。";
@@ -37,6 +37,7 @@ function AccountBinding() {
   const isAccountWaiting = useAppSelector((state) => state.account.isWaiting);
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
+  const isNarrowLayout = useIsNarrowLayout();
   const [activeModalName, setActiveModalName] = useState<"changeBinding" | null>(null);
   const { isRequestingAuthorizationUrl, startGoogleAuthorization } =
     useGoogleAuthorization(ACCOUNT_BINDING_PATH);
@@ -82,7 +83,7 @@ function AccountBinding() {
   return (
     <>
       {activeModalName === "changeBinding" &&
-        (Util.isMobile ? (
+        (isNarrowLayout ? (
           <BottomSheet onClickBackground={() => setActiveModalName(null)}>
             <div className={styles.bottom_sheet_row} onClick={handleClickGoogleLogin}>
               <img className={styles.google_logo} src={googleLogo} alt="" />

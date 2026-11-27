@@ -28,3 +28,20 @@ $breakpoints: (
     @content;
   }
 }
+
+// The narrow and wide layouts of ui-guidelines.md's 「版面」. A viewport narrower or
+// shorter than these gets the narrow layout.
+$narrow-layout-width: 600px;
+$narrow-layout-height: 480px;
+
+@mixin narrow-layout {
+  @media (width < #{$narrow-layout-width}), (height < #{$narrow-layout-height}) {
+    @content;
+  }
+}
+
+@mixin wide-layout {
+  @media (width >= #{$narrow-layout-width}) and (height >= #{$narrow-layout-height}) {
+    @content;
+  }
+}

@@ -4,7 +4,7 @@ import { AutoResizeTextarea, BottomSheet, Button, Modal } from "../../components
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateOrCreateMemo } from "../../redux/slices/MemoSlice";
 import { pushToast } from "../../redux/slices/ToastSlice";
-import Util from "../../utils/util";
+import { useIsNarrowLayout } from "../../utils/mediaQuery";
 import styles from "./StockMemoEditor.module.scss";
 
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
 function StockMemoEditor({ sid, defaultValue, hideModal }: Props) {
   const isWaiting = useAppSelector((state) => state.memo.isWaiting);
   const dispatch = useAppDispatch();
+  const isNarrowLayout = useIsNarrowLayout();
   const [initialSid] = useState(sid);
   const [value, setValue] = useState(defaultValue);
   const canSubmit = !isWaiting;
@@ -38,7 +39,7 @@ function StockMemoEditor({ sid, defaultValue, hideModal }: Props) {
     />
   );
 
-  if (Util.isMobile) {
+  if (isNarrowLayout) {
     return (
       <BottomSheet onClickBackground={hideModal} canMaximize>
         <div className={styles.sheet_content}>

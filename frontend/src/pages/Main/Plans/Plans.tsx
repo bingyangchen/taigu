@@ -18,7 +18,6 @@ import { deletePlan } from "../../../redux/slices/TradePlanSlice";
 import type { TradePlan } from "../../../types";
 import Env from "../../../utils/env";
 import { tradeSideToLabel } from "../../../utils/recordEditor";
-import Util from "../../../utils/util";
 import { useListViewSaving, useSavedListView } from "../useListViewHistory";
 import styles from "./Plans.module.scss";
 
@@ -180,7 +179,7 @@ function Plans() {
           </div>
         </div>
       )}
-      {Util.isMobile && <SpeedDial />}
+      <SpeedDial />
     </div>
   );
 }

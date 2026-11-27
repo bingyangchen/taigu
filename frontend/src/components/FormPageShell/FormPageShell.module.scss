@@ -10,7 +10,7 @@
   background-color: var(--color-bg-surface);
   user-select: none;
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     background-color: transparent;
   }
 }

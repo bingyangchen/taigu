@@ -1,6 +1,6 @@
 注意：這份檔案的指令會刪除或修改開發環境資料庫裡的資料，包括登入帳號的紀錄，所以要用只拿來測試的 Google 帳號登入，不要用存有真實資料的帳號。
 
-這份檔案的檢查都在桌面瀏覽器上用 Chrome 執行。開始之前先完成下面的準備：
+這份檔案的檢查都用 Chrome 執行，沒有特別寫的段落都以寬版操作，也就是在桌面瀏覽器上不開 DevTools 的 device toolbar，可用畫面是 1280 × 800，可以在 Console 執行 `[innerWidth, innerHeight]` 確認大小。段落寫「以窄版」時，在 Chrome DevTools 開啟 device toolbar（Toggle device toolbar），在 Dimensions 選「Responsive」並輸入 390 × 844，或選 iPhone 14 Pro 這類手機。前端依可用畫面的大小切換版面，不看 user agent，所以切換之後版面立刻跟著換，不用重新整理頁面。開始之前先完成下面的準備：
 
 1. 執行 `make start`。
 2. 執行 `docker compose -f compose.dev.yaml stop scheduler`，讓 scheduler 在檢查期間不會改掉用指令設定的價格。
@@ -213,13 +213,13 @@ CashDividendRecord.objects.filter(pk=ID).delete()
 
 預期：送出之後，Network 面板馬上出現網址包含 `current-stock-info?sids=2002` 的 request，「持股」分頁的 2002 顯示價格「19.08」，不是「--」。
 
-## HOLD-R6.1 桌面瀏覽器上的持股
+## HOLD-R6.1 寬版的持股
 
 前端沒有自動化 test。
 
 1. 執行「設定交易紀錄」，`RECORDS` 設成 `[('2024-01-02', '2330', 120, 300, 0), ('2024-02-01', '2330', 120, 200, 0)]`。用兩筆交易紀錄，是因為交易紀錄少於 2 筆時年化報酬率固定是 0%（roadmap.md 記錄的已知問題）。
 2. 執行「設定價格」，`PRICES` 設成 `{'2330': (600, 6, 25000000)}`。
-3. 開啟 `https://local.taigu.tw/market`。
+3. 以寬版開啟 `https://local.taigu.tw/market`。
 
 預期：2330 的卡片顯示「台積電」「2330」、價格「600」、漲跌與漲跌幅「▲6.00 (1.01%)」、「庫存」「500 股」、「平均成本」「$120.00」、2330 的年化報酬率（卡片上目前標示為「報酬率」）與「成交量 2.5 萬張」。
 
@@ -243,13 +243,13 @@ CashDividendRecord.objects.filter(pk=ID).delete()
 
 預期：畫面換到 2330 的個股詳情頁，網址是 `https://local.taigu.tw/market/holding/2330`。
 
-## HOLD-R6.4 手機上的持股
+## HOLD-R6.4 窄版的持股
 
-手機版的列表要用手機的 user agent 才會出現，前端沒有自動化 test。
+窄版的列表要在真實瀏覽器的可用畫面下確認，前端沒有自動化 test。
 
 1. 執行「設定交易紀錄」，`RECORDS` 設成 `[('2024-01-02', '2330', 120, 300, 0), ('2024-02-01', '2330', 120, 200, 0)]`。
 2. 執行「設定價格」，`PRICES` 設成 `{'2330': (600, 6, 25000000)}`。
-3. 在 iOS 模擬器或手機開啟 `https://local.taigu.tw/market`。
+3. 以窄版開啟 `https://local.taigu.tw/market`。
 
 預期：2330 那一列顯示「台積電」「2330」、價格「600」、漲跌與漲跌幅「▲6.00 (1.01%)」、「庫存 500 股」與 2330 的年化報酬率。
 

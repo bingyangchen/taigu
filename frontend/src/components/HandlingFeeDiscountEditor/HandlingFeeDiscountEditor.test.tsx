@@ -6,8 +6,8 @@ import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { DESKTOP, mockViewport, PHONE_PORTRAIT } from "../../testing/viewport";
 import type { HandlingFeeDiscount } from "../../types";
-import { NARROW_LAYOUT_QUERY } from "../../utils/mediaQuery";
 import HandlingFeeDiscountEditor from "./HandlingFeeDiscountEditor";
 
 // No delay between actions, so fake timers do not stall user-event.
@@ -57,12 +57,7 @@ function renderDiscountEditor({
   discounts?: HandlingFeeDiscount[];
   hasLoadedTrades?: boolean;
 } = {}) {
-  window.matchMedia = ((query: string) => ({
-    matches: isNarrow && query === NARROW_LAYOUT_QUERY,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
+  mockViewport(isNarrow ? PHONE_PORTRAIT : DESKTOP);
   const slice = (name: string, initialState: object) =>
     createSlice({ name, initialState, reducers: {} }).reducer;
   const store = configureStore({

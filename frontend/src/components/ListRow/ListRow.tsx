@@ -1,4 +1,11 @@
-import { MouseEventHandler, ReactNode, TouchEvent, useRef, useState } from "react";
+import {
+  MouseEventHandler,
+  ReactNode,
+  TouchEvent,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 
 import { BottomSheet, ListRowActionBar } from "../../components";
@@ -8,7 +15,7 @@ import {
   TradePlan,
   TradeRecord,
 } from "../../types";
-import Util from "../../utils/util";
+import { useIsNarrowLayout } from "../../utils/mediaQuery";
 import styles from "./ListRow.module.scss";
 
 interface Props {
@@ -16,7 +23,7 @@ interface Props {
   children: ReactNode;
   editModal: ((_hideModal: MouseEventHandler) => ReactNode) | null;
   deleteModal: ((_hideModal: MouseEventHandler) => ReactNode) | null;
-  editPath?: string;
+  editPath: string;
 }
 
 interface Ripple {
@@ -25,28 +32,37 @@ interface Ripple {
   top: number;
 }
 
+const LONG_PRESS_MS = 500;
+
+/** A list row that opens its editor when clicked (REC-R11) and offers deleting (REC-R9). */
 export default function ListRow({ children, editModal, deleteModal, editPath }: Props) {
   const navigate = useNavigate();
-  const [activatedForMobile, setActivatedForMobile] = useState(false);
+  const isNarrowLayout = useIsNarrowLayout();
+  const contentId = useId();
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [ripple, setRipple] = useState<Ripple | null>(null);
   const [activeModalName, setActiveModalName] = useState<"edit" | "checkDelete" | null>(
     null,
   );
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const hasLongPressedRef = useRef(false);
 
   const hideModal = (): void => setActiveModalName(null);
-  const handleClickEdit = (): void => {
-    if (Util.isMobile && editPath) {
+  const openEditor = (): void => {
+    if (isNarrowLayout) {
       navigate(editPath);
       return;
     }
     setActiveModalName("edit");
   };
   const handleClickDelete = (): void => setActiveModalName("checkDelete");
-  const handleClickBottomSheetBackground = (): void => setActivatedForMobile(false);
 
   const handleTouchStart = (e: TouchEvent): void => {
-    timerRef.current = setTimeout(() => setActivatedForMobile(true), 500);
+    hasLongPressedRef.current = false;
+    timerRef.current = setTimeout(() => {
+      hasLongPressedRef.current = true;
+      if (isNarrowLayout) setIsBottomSheetOpen(true);
+    }, LONG_PRESS_MS);
     if (ripple) {
       setRipple(null);
       return;
@@ -61,9 +77,17 @@ export default function ListRow({ children, editModal, deleteModal, editPath }: 
       top: touch.clientY - maskRect.top - diameter / 2,
     });
   };
-  const handleTouchEnd = (): void => {
+  const handleTouchEnd = (e: TouchEvent): void => {
     setRipple(null);
     clearTimeout(timerRef.current);
+    if (!hasLongPressedRef.current) return;
+
+    // A long press opens the bottom sheet in the narrow layout and acts as a tap in
+    // the wide one. Whether the browser still sends a click after a long press
+    // differs between browsers, so the row handles the press itself and cancels that
+    // click.
+    e.preventDefault();
+    if (!isNarrowLayout) openEditor();
   };
   const handleTouchMove = (): void => {
     clearTimeout(timerRef.current);
@@ -81,13 +105,13 @@ export default function ListRow({ children, editModal, deleteModal, editPath }: 
       {activeModal}
       <div
         data-scroll-anchor={editPath}
-        className={`${styles.main} ${activatedForMobile ? styles.active : ""}`}
+        className={`${styles.main} ${isBottomSheetOpen ? styles.active : ""}`}
       >
-        <span
+        <button
+          type="button"
           className={styles.mask}
-          onClick={() => {
-            if (Util.isMobile) handleClickEdit();
-          }}
+          aria-labelledby={contentId}
+          onClick={openEditor}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onTouchMove={handleTouchMove}
@@ -103,27 +127,23 @@ export default function ListRow({ children, editModal, deleteModal, editPath }: 
               }}
             />
           )}
+        </button>
+        <span id={contentId} className={styles.content}>
+          {children}
         </span>
-        {children}
-        {Util.isMobile ? (
-          activatedForMobile && (
-            <BottomSheet onClickBackground={handleClickBottomSheetBackground}>
-              {(closeBottomSheet) => (
-                <ListRowActionBar
-                  forMobile
-                  onClickEdit={() => closeBottomSheet(handleClickEdit)}
-                  onClickDelete={() => closeBottomSheet(handleClickDelete)}
-                />
-              )}
-            </BottomSheet>
-          )
-        ) : (
-          <span className={styles.action_bar_outer}>
-            <ListRowActionBar
-              onClickEdit={handleClickEdit}
-              onClickDelete={handleClickDelete}
-            />
-          </span>
+        <span className={styles.action_bar_outer}>
+          <ListRowActionBar onClickDelete={handleClickDelete} />
+        </span>
+        {isBottomSheetOpen && (
+          <BottomSheet onClickBackground={() => setIsBottomSheetOpen(false)}>
+            {(closeBottomSheet) => (
+              <ListRowActionBar
+                forMobile
+                onClickEdit={() => closeBottomSheet(openEditor)}
+                onClickDelete={() => closeBottomSheet(handleClickDelete)}
+              />
+            )}
+          </BottomSheet>
         )}
       </div>
     </>

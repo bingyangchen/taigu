@@ -1,7 +1,7 @@
 ---
 id: "0012"
 title: width-based-layout
-status: approved
+status: done
 specs:
   - desktop-sidebar.md
   - records.md

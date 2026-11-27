@@ -2,7 +2,18 @@
 
 每一節開始前，先執行 `make start`，再用 Google 帳號登入 `https://local.taigu.tw`。開發環境的股票清單裡要有 2330 台積電與 2317 鴻海。除了 REC-R7 的各節之外，登入的帳號要是 Standard 方案或在試用期內，可以在 `https://local.taigu.tw/settings/current-plan` 確認。
 
-步驟寫「在桌面瀏覽器上」時，用電腦的瀏覽器操作；寫「在行動裝置上」時，用手機開啟，或在 Chrome DevTools 開啟 device toolbar、選一款手機之後重新整理頁面，因為前端依 user agent 判斷版面。在行動裝置的編輯頁上，步驟要填的欄位所在的段落收合著時，先點那一段把它展開。步驟寫「沒有連上網路」時，在 Chrome DevTools 的 Network 分頁把 throttling 設成「Offline」，做完那一節再改回「No throttling」。
+前端依可用畫面的大小切換版面，不看 user agent，可用畫面改變時版面立刻跟著換，不用重新整理。各種寫法的操作方式如下：
+
+- 「以寬版」或「在桌面瀏覽器上」：用電腦上的 Chrome，不開 device toolbar，把視窗調整到可用畫面是 1280 × 800，可以在 Console 執行 `[innerWidth, innerHeight]` 確認。
+- 「以窄版」或「在行動裝置上」：在 Chrome DevTools 開啟 device toolbar（Toggle device toolbar），在 Dimensions 選「Responsive」並輸入 390 × 844，或選 iPhone 14 Pro 這類手機。
+- 寫出 1280 × 800 以外的可用畫面大小時，例如 768 × 1024：在 device toolbar 的 Dimensions 選「Responsive」並輸入那個大小。
+- 「在觸控裝置上」：在 device toolbar 選一款手機或平板，因為選了手機或平板，Chrome 才會模擬觸控。窄版的觸控裝置選 iPhone 14 Pro，寬版的觸控裝置選 iPad Mini（768 × 1024）。
+
+以寬版操作側邊欄的「新增」之前，先確認側邊欄是展開的，收合時點側邊欄頂端的展開按鈕，因為在收合的側邊欄點「新增」會開啟選單，而不是新增交易紀錄的編輯器。
+
+在窄版的編輯頁上，步驟要填的欄位所在的段落收合著時，先點那一段把它展開。
+
+步驟寫「沒有連上網路」時，在 Chrome DevTools 的 Network 分頁把 throttling 設成「Offline」，做完那一節再改回「No throttling」。
 
 下面的指令都在 repo 的根目錄執行，執行前把指令裡的 `<你的 email>` 換成登入用的 Google 帳號 email，執行完再重新整理瀏覽器裡的 Taigu。這些指令會一併刪除這個帳號的修改紀錄（`DataChangeLog`），所以另一個登入同一個帳號的瀏覽器可能留著舊的 cache，看到已經刪掉的紀錄；遇到時在那個瀏覽器的 Chrome DevTools 的 Application 分頁按「Clear site data」，再重新登入。
 
@@ -101,12 +112,12 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：第 4 步印出 `{message: 'Deal price must be positive'}`，第 5 步印出 `{message: 'Handling fee must be positive'}`，重新整理後歷史紀錄頁仍顯示「目前沒有紀錄」。
 
-## REC-R7.1 在桌面瀏覽器上新增超過額度的紀錄
+## REC-R7.1 在寬版新增超過額度的紀錄
 
 後端回應額度不足時，畫面才會出現被額度擋下的提示，unit test 沒有涵蓋這種情況，所以要人工確認。
 
 1. 執行「改成 Free 並用完額度」的指令。
-2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
+2. 以寬版開啟 `https://local.taigu.tw/records`。
 3. 點側邊欄的「新增」，確認「買賣別」是「買進」，在「股票」輸入 2330 並點選搜尋結果裡的台積電，在「交易日期」欄位選 2024-03-01，確認成交股數的單位是「張」（不是的話點「張」），「成交股數」輸入 1，「成交單價」輸入 600。
 4. 點「新增買進紀錄」。
 5. 點 `PlanUpsellModal` 的「稍後再說」。
@@ -116,12 +127,12 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：第 4 步之後畫面出現標題是「這個月的新增額度已用完」的 `PlanUpsellModal`；第 5 步之後編輯器的視窗仍然開著，2330 台積電、2024-03-01、1 張與 600 都還在；第 7 步的歷史紀錄頁顯示「目前沒有紀錄」。
 
-## REC-R7.2 在行動裝置上新增超過額度的紀錄
+## REC-R7.2 在窄版新增超過額度的紀錄
 
 後端回應額度不足時，畫面才會出現被額度擋下的提示，unit test 沒有涵蓋這種情況，所以要人工確認。
 
 1. 執行「改成 Free 並用完額度」的指令。
-2. 在行動裝置上開啟 `https://local.taigu.tw/records`。
+2. 以窄版開啟 `https://local.taigu.tw/records`。
 3. 點加號按鈕，再點「新增交易紀錄」。
 4. 確認「買賣別」是「買進」，在「股票」輸入 2330 並點選搜尋結果裡的台積電，在「交易日期」欄位選 2024-03-01，確認成交股數的單位是「張」（不是的話點「張」），「成交股數」輸入 1，「成交單價」輸入 600。
 5. 點「新增買進紀錄」。
@@ -163,7 +174,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 1. 執行「建立範例紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
-3. 把滑鼠移到 2024-05-02 那筆交易紀錄上，點鉛筆圖示的編輯按鈕。
+3. 點 2024-05-02 那筆交易紀錄。
 4. 確認編輯器的標題是「編輯交易紀錄」，「買賣別」是「賣出」，「成交股數」是 200，單位是「股」。
 5. 把「成交股數」改成 100。
 6. 點「儲存變更」。
@@ -176,7 +187,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 1. 執行「建立範例紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
-3. 把滑鼠移到 2024-07-15 那筆現金股利紀錄上，點鉛筆圖示的編輯按鈕。
+3. 點 2024-07-15 那筆現金股利紀錄。
 4. 把「入帳金額」改成 1800。
 5. 點「儲存變更」。
 
@@ -194,18 +205,18 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：確認視窗關閉，2024-03-01 那筆交易紀錄從列表消失。
 
-## REC-R9.2 在行動裝置上刪除現金股利紀錄
+## REC-R9.2 在窄版用長按刪除現金股利紀錄
 
-後端刪除紀錄的部分由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
+只有窄版的觸控裝置能長按由 unit test 驗證；長按在真實瀏覽器裡的觸控事件與刪除後的畫面要人工確認，因為 jsdom 沒有實際的觸控與版面。
 
 1. 執行「建立範例紀錄」的指令。
-2. 在行動裝置上開啟 `https://local.taigu.tw/records`。
+2. 以窄版在觸控裝置上開啟 `https://local.taigu.tw/records`。
 3. 按住 2024-07-15 那筆現金股利紀錄 1 秒後放開。
 4. 點選畫面下方出現的「刪除」。
 5. 檢查確認視窗的標題是「刪除現金股利？」，內容寫出「入帳金額」1,500。
 6. 點選「刪除現金股利」。
 
-預期：確認視窗關閉，2024-07-15 那筆現金股利紀錄從列表消失。
+預期：第 3 步之後畫面下方出現「編輯」與「刪除」，沒有開啟編輯頁；第 5 步的確認視窗標題是「刪除現金股利？」，內容寫出「入帳金額」1,500；第 6 步之後確認視窗關閉，2024-07-15 那筆現金股利紀錄從列表消失。
 
 ## REC-R9.3 在編輯器裡刪除
 
@@ -213,7 +224,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 1. 執行「建立範例紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
-3. 把滑鼠移到 2024-03-01 那筆交易紀錄上，點鉛筆圖示的編輯按鈕。
+3. 點 2024-03-01 那筆交易紀錄。
 4. 點選編輯器下方的「刪除交易紀錄」。
 5. 在確認視窗點選「刪除交易紀錄」。
 
@@ -232,42 +243,85 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：第 5 步之後畫面出現錯誤提示，確認視窗沒有關閉，2024-03-01 那筆交易紀錄仍然在列表上。
 
-## REC-R10.1 在桌面瀏覽器上從側邊欄新增現金股利紀錄
+## REC-R10.1 以寬版從側邊欄新增現金股利紀錄
 
-前端沒有自動化 test。
+選單開啟的編輯器要在真實瀏覽器的版面裡確認，前端沒有自動化 test。
 
-1. 在桌面瀏覽器上開啟 `https://local.taigu.tw/`。
-2. 點側邊欄「新增」右側的三角形，打開選單。
-3. 點選「新增現金股利」。
+1. 以 1280 × 800 的可用畫面開啟 `https://local.taigu.tw/`。
+2. 側邊欄是收合的時，點側邊欄頂端的展開按鈕。
+3. 點側邊欄「新增」右側的三角形，打開選單。
+4. 點選「新增現金股利」。
 
 預期：儀表板上方出現標題是「新增現金股利」的編輯器視窗。
 
-## REC-R10.2 在行動裝置上從個股詳情頁新增現金股利紀錄
+## REC-R10.2 以窄版從個股詳情頁新增現金股利紀錄
 
 前端沒有自動化 test。
 
-1. 在行動裝置上開啟 `https://local.taigu.tw/market/2330`。
+1. 以窄版開啟 `https://local.taigu.tw/market/2330`。
 2. 點加號按鈕。
 3. 點選「新增現金股利」。
 
 預期：網址變成 `https://local.taigu.tw/records/cash-dividend/new?sid=2330`，編輯頁的「股票」已經顯示「台積電」與「2330」。
 
-## REC-R11.1 在行動裝置上點歷史紀錄頁的一列
+## REC-R10.3 從圖示列新增現金股利紀錄
 
-前端沒有自動化 test。
+點「新增」開啟選單由 unit test 驗證；選單在 64px 寬的圖示列旁的位置與開啟的編輯器視窗要在真實瀏覽器的版面裡確認，因為 jsdom 沒有版面。
+
+1. 用 device toolbar 把可用畫面設成 768 × 1024，開啟 `https://local.taigu.tw/`。
+2. 確認側邊欄是只有圖示的一列。
+3. 點側邊欄的「新增」圖示。
+4. 點選「新增現金股利」。
+
+預期：第 3 步之後「新增」下方出現「新增交易紀錄」「新增現金股利」「新增買賣計畫」三個選項的選單，選單沒有被側邊欄切掉，畫面沒有出現編輯器；第 4 步之後儀表板上方出現標題是「新增現金股利」的編輯器視窗。
+
+## REC-R10.4 從使用者收合的側邊欄新增買賣計畫
+
+點「新增」開啟選單由 unit test 驗證；選單的位置與開啟的編輯器視窗要在真實瀏覽器的版面裡確認，因為 jsdom 沒有版面。
+
+1. 以 1280 × 800 的可用畫面開啟 `https://local.taigu.tw/`。
+2. 側邊欄是展開的時，點側邊欄頂端的收合按鈕。
+3. 點側邊欄的「新增」圖示。
+4. 點選「新增買賣計畫」。
+
+預期：第 3 步之後「新增」下方出現「新增交易紀錄」「新增現金股利」「新增買賣計畫」三個選項的選單，畫面沒有出現編輯器；第 4 步之後儀表板上方出現新增買賣計畫的編輯器視窗。
+
+## REC-R11.1 在窄版點歷史紀錄頁的一列
+
+點一列換到編輯頁由 unit test 驗證；編輯頁在真實瀏覽器裡帶入的內容與段落要人工確認。
 
 1. 執行「建立範例紀錄」的指令。
-2. 在行動裝置上開啟 `https://local.taigu.tw/records`。
+2. 以窄版開啟 `https://local.taigu.tw/records`。
 3. 點 2024-03-01 那筆交易紀錄。
 
 預期：網址變成 `https://local.taigu.tw/records/trade/<這筆紀錄的 id>/edit`，畫面是標題為「編輯交易紀錄」的編輯頁，四段都收合，摘要分別是「買進・2330 台積電」「2024/3/1（五）」「1 張 × 600 元」與「855 元」。
+
+## REC-R11.2 在寬版點歷史紀錄頁的一列
+
+點一列開啟編輯器視窗由 unit test 驗證；寬版的觸控裝置上點一列與長按一列的結果要在模擬觸控的瀏覽器裡確認，因為 jsdom 沒有實際的觸控。
+
+1. 執行「建立範例紀錄」的指令。
+2. 以寬版開啟 `https://local.taigu.tw/records`。
+3. 點 2024-03-01 那筆交易紀錄。
+4. 按 Esc 關閉編輯器視窗。
+5. 把滑鼠移到 2024-03-01 那筆交易紀錄上。
+6. 以寬版在觸控裝置上開啟 `https://local.taigu.tw/records`。
+7. 點 2024-03-01 那筆交易紀錄。
+8. 按 Esc 關閉編輯器視窗。
+9. 按住 2024-03-01 那筆交易紀錄 1 秒後放開。
+
+預期：
+
+- 第 3 步與第 7 步之後，歷史紀錄頁上方出現標題是「編輯交易紀錄」的編輯器視窗，「買賣別」是「買進」，「股票」是 2330 台積電，「成交單價」是 600，網址的路徑仍是 `/records`。
+- 第 5 步時那一列的右側只出現垃圾桶圖示的刪除按鈕，沒有鉛筆圖示的編輯按鈕。
+- 第 9 步之後畫面出現同一個編輯器視窗，畫面下方沒有出現「編輯」與「刪除」。
 
 ## REC-R12.1 送出後回到前一頁
 
 離開編輯頁之後換到哪一頁，要在瀏覽器裡實際操作才能確認，unit test 沒有涵蓋這種情況。
 
 1. 執行「清空紀錄」的指令。
-2. 在行動裝置上開啟 `https://local.taigu.tw/`。
+2. 以窄版開啟 `https://local.taigu.tw/`。
 3. 點加號按鈕，再點「新增交易紀錄」。
 4. 確認「買賣別」是「買進」，在「股票」輸入 2330 並點選搜尋結果裡的台積電，在「交易日期」欄位選 2024-03-01，確認成交股數的單位是「張」（不是的話點「張」），「成交股數」輸入 1，「成交單價」輸入 600。
 5. 點「新增買進紀錄」。
@@ -293,7 +347,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 離開編輯頁之後換到哪一頁，要在瀏覽器裡實際操作才能確認，unit test 沒有涵蓋這種情況。
 
 1. 執行「建立範例紀錄」的指令。
-2. 在行動裝置上開啟 `https://local.taigu.tw/records`。
+2. 以窄版開啟 `https://local.taigu.tw/records`。
 3. 點 2024-03-01 那筆交易紀錄。
 4. 點「股數與單價」，把「成交單價」改成 610。
 5. 點「儲存變更」。
@@ -305,7 +359,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 離開編輯頁之後換到哪一頁，要在瀏覽器裡實際操作才能確認，unit test 沒有涵蓋這種情況。
 
 1. 執行「清空紀錄」的指令。
-2. 在行動裝置上開啟 `https://local.taigu.tw/`。
+2. 以窄版開啟 `https://local.taigu.tw/`。
 3. 點加號按鈕，再點「新增交易紀錄」。
 4. 確認「買賣別」是「買進」，在「股票」輸入 2330 並點選搜尋結果裡的台積電，在「交易日期」欄位選 2024-03-01，確認成交股數的單位是「張」（不是的話點「張」），「成交股數」輸入 1，「成交單價」輸入 600。
 5. 點「新增買進紀錄」。
@@ -354,7 +408,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 從個股詳情頁開啟編輯頁、再回到個股詳情頁，要在實際的 routing 裡確認，unit test 沒有涵蓋。
 
-1. 在行動裝置上開啟 `https://local.taigu.tw/market/2330`。
+1. 以窄版開啟 `https://local.taigu.tw/market/2330`。
 2. 點加號按鈕，再點「新增交易紀錄」。
 3. 確認「買賣與股票」的摘要是「買進・2330 台積電」。
 4. 不修改任何欄位，點左上角的返回箭頭。
@@ -365,7 +419,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 按瀏覽器的上一頁會改變瀏覽器實際的瀏覽紀錄，unit test 沒有涵蓋，所以要人工確認。
 
-1. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
+1. 以寬版開啟 `https://local.taigu.tw/records`。
 2. 點側邊欄的「新增」，在「成交單價」輸入 600。
 3. 按瀏覽器的上一頁。
 4. 在「捨棄變更？」確認視窗點「繼續編輯」。
@@ -404,16 +458,39 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## REC-R16.1 紀錄超過 15 筆
 
-前端沒有自動化 test。
+分批載入要在真實瀏覽器裡捲動才會觸發，前端沒有自動化 test。下面三節的步驟要數列表的列數時，都在 Chrome DevTools 的 Console 執行 `document.querySelectorAll('[class*="record_row"]').length`。
 
 1. 執行「建立 40 筆紀錄」的指令。
-2. 在桌面瀏覽器上把視窗的高度調到約 400px。
-3. 開啟 `https://local.taigu.tw/records`，不捲動。
-4. 在 Chrome DevTools 的 Console 執行 `document.querySelectorAll('[class*="record_row"]').length`。
-5. 一直往下捲動列表，直到不再出現新的列。
-6. 在 Console 再執行一次第 4 步的程式碼。
+2. 以 1280 × 800 的可用畫面開啟 `https://local.taigu.tw/records`，不捲動。
+3. 在 Console 數列表的列數。
+4. 一直往下捲動列表，直到不再出現新的列。
+5. 在 Console 再數一次列表的列數。
 
-預期：第 4 步印出 15；第 6 步印出 40，列表的最後一列是 2024-01-01，沒有日期重複的列。
+預期：第 3 步印出 15；第 5 步印出 40，列表的最後一列是 2024-01-01，沒有日期重複的列。
+
+## REC-R16.2 在平板直立的寬度捲到底
+
+可用畫面是 768 × 1024 時，捲動的容器跟 1280 × 800 時不同，分批載入要在真實瀏覽器裡捲動才會觸發，前端沒有自動化 test。
+
+1. 執行「建立 40 筆紀錄」的指令。
+2. 用 device toolbar 把可用畫面設成 768 × 1024，開啟 `https://local.taigu.tw/records`，不捲動。
+3. 在 Console 數列表的列數。
+4. 一直往下捲動，直到不再出現新的列。
+5. 在 Console 再數一次列表的列數。
+
+預期：第 3 步印出 15；第 5 步印出 40，列表的最後一列是 2024-01-01，沒有日期重複的列。
+
+## REC-R16.3 手機橫放時捲到底
+
+可用寬度至少 780px，但可用高度小於 480px 而算窄版時，捲動的容器跟其他情況不同，分批載入要在真實瀏覽器裡捲動才會觸發，前端沒有自動化 test。
+
+1. 執行「建立 40 筆紀錄」的指令。
+2. 用 device toolbar 把可用畫面設成 844 × 390，開啟 `https://local.taigu.tw/records`，不捲動。
+3. 在 Console 數列表的列數。
+4. 一直往下捲動，直到不再出現新的列。
+5. 在 Console 再數一次列表的列數。
+
+預期：第 3 步印出 15；第 5 步印出 40，列表的最後一列是 2024-01-01，沒有日期重複的列。
 
 ## REC-R17.1 用股票代號搜尋
 

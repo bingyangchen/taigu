@@ -1,4 +1,10 @@
-執行 `make start`，等所有 container 都啟動。步驟寫「用未登入的桌面瀏覽器」時，開啟一個 Firefox 的隱私視窗，因為 Firefox 不提供安裝 Taigu 的選項；步驟寫「用已登入的桌面瀏覽器」時，用 Chrome 開啟 `https://local.taigu.tw/login`，再用 Google 帳號登入；步驟寫「用行動裝置」時，開啟一個 Chrome 的無痕式視窗，開啟 DevTools 的裝置模擬（Toggle device toolbar），選一款手機機型（例如 iPhone 14 Pro），再重新整理頁面。
+執行 `make start`，等所有 container 都啟動。步驟寫「用未登入的桌面瀏覽器」時，開啟一個 Firefox 的隱私視窗，因為 Firefox 不提供安裝 Taigu 的選項；步驟寫「用已登入的桌面瀏覽器」時，用 Chrome 開啟 `https://local.taigu.tw/login`，再用 Google 帳號登入；步驟寫「用行動裝置」時，開啟一個 Chrome 的無痕式視窗，開啟 DevTools 的 device toolbar（Toggle device toolbar），選 iPhone 14 Pro 這類手機；前端依可用畫面的大小切換版面，不看 user agent，所以不用重新整理頁面。
+
+步驟寫「用安裝好的 PWA」時，照下面的做法開啟 Taigu。前端依 Taigu 是不是以 PWA 開啟，決定法律頁面在新分頁還是同一個畫面開啟，所以這些步驟不能用 device toolbar 代替：
+
+1. 如果還沒把 Taigu 安裝成 app，用 Chrome 開啟 `https://local.taigu.tw`，點網址列右側的安裝圖示，再點「安裝」。
+2. 從 macOS 的 Dock 或「應用程式」資料夾開啟安裝成 app 的 Taigu。
+3. 要查看 PWA 目前的網址時，在 PWA 的視窗按 Cmd+Option+I 開啟 DevTools，在 Console 執行 `location.pathname`。
 
 要查看頁面的標題、`robots` meta tag、canonical 網址與頁面說明時，在 DevTools 的 Console 執行下面的指令，指令會依序印出這四個值，頁面沒有某個值時印出 `undefined`：
 
@@ -25,9 +31,9 @@
 
 預期：Standard 方案卡片寫著「NT$65」「/月」與「或 NT$700 / 年」，並列出「股價約每 30 秒更新」；Free 方案卡片寫著「NT$0」，並列出「交易紀錄 + 現金股利：20 筆」「買賣計畫：10 筆」「持股：10 檔」「關注：10 檔」「股價約每 10 分鐘更新」。
 
-## PUB-R3.1 在桌面瀏覽器上點「隱私權政策」
+## PUB-R3.1 在瀏覽器裡點「隱私權政策」
 
-前端沒有自動化 test。
+法律頁面在新分頁還是同一個畫面開啟，取決於 Taigu 是不是以 PWA 開啟，前端沒有自動化 test。
 
 1. 用未登入的桌面瀏覽器開啟 `https://local.taigu.tw/welcome`。
 2. 捲到頁尾。
@@ -35,15 +41,33 @@
 
 預期：瀏覽器開啟一個新的瀏覽器分頁顯示 `/privacy-policy`，原本的瀏覽器分頁仍停在歡迎頁。
 
-## PUB-R3.2 在行動裝置上點「服務條款」
+## PUB-R3.2 在 PWA 裡點「服務條款」
 
-前端沒有自動化 test。
+法律頁面在新分頁還是同一個畫面開啟，取決於 Taigu 是不是以 PWA 開啟，jsdom 沒辦法模擬 PWA，前端沒有自動化 test。
 
-1. 用行動裝置開啟 `https://local.taigu.tw/welcome`。
-2. 捲到頁尾。
-3. 點選頁尾的「服務條款」。
+1. 用安裝好的 PWA 開啟 Taigu。
+2. 如果畫面不是歡迎頁，點側邊欄或底部導覽列的頭像進入設定頁，點「登出」，再點確認視窗裡的「登出」。
+3. 如果第 2 步登出了，關閉 PWA 的視窗，再重新開啟 PWA。
+4. 確認 PWA 的網址是 `/welcome`。
+5. 捲到頁尾。
+6. 點選頁尾的「服務條款」。
+7. 確認 PWA 的網址。
+8. 點選服務條款左上角的返回按鈕（滑鼠移入時顯示「上一頁」）。
 
-預期：同一個瀏覽器分頁的網址換成 `/terms-of-service`，畫面顯示服務條款，沒有開啟新的瀏覽器分頁。
+預期：步驟 6 之後同一個 PWA 視窗顯示服務條款，Chrome 沒有開啟新的分頁或視窗；步驟 7 的網址是 `/terms-of-service`；步驟 8 之後 PWA 回到歡迎頁。
+
+## PUB-R3.3 在 PWA 裡從設定頁開啟隱私權政策
+
+法律頁面在新分頁還是同一個畫面開啟，取決於 Taigu 是不是以 PWA 開啟，jsdom 沒辦法模擬 PWA，前端沒有自動化 test。
+
+1. 用安裝好的 PWA 開啟 Taigu。
+2. 如果畫面是歡迎頁，點頁首的「登入」，再用 Google 帳號登入。
+3. 點側邊欄或底部導覽列的頭像進入設定頁，確認 PWA 的網址是 `/settings`。
+4. 點選「關於」區塊的「隱私權政策」。
+5. 確認 PWA 的網址。
+6. 點選隱私權政策左上角的返回按鈕（滑鼠移入時顯示「上一頁」）。
+
+預期：步驟 4 之後同一個 PWA 視窗顯示隱私權政策，Chrome 沒有開啟新的分頁或視窗；步驟 5 的網址是 `/privacy-policy`；步驟 6 之後 PWA 回到設定頁。
 
 ## PUB-R11.1 點頁尾的 Instagram 連結
 

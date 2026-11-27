@@ -1,5 +1,10 @@
 @use "styles" as ds;
 
+// Narrower than this, a row has no room for a long stock name, such as 「00940
+// 元大台灣價值高息」, beside its figures, so the figures move to a line of their own.
+// The page's width, which the list is 32px narrower than.
+$one-line-row-min-width: 650px;
+
 .main {
   // On a wide screen the page keeps this gutter on each side, so the list is at most
   // the list width and centered.
@@ -14,13 +19,13 @@
   height: 100dvh;
   padding: 0 0 var(--space-150);
   container-type: inline-size;
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     height: fit-content;
     padding: 0;
     background-color: transparent;
   }
   & > .search_controls {
-    @include ds.up(md) {
+    @include ds.wide-layout {
       margin-inline-start: var(--list-gutter);
     }
   }
@@ -36,7 +41,7 @@
     padding: var(--space-800) var(--space-250);
     color: var(--color-text-secondary);
     text-align: center;
-    @include ds.down(md) {
+    @include ds.narrow-layout {
       margin-inline: 0;
       border-radius: 0;
       background-color: transparent;
@@ -52,22 +57,21 @@
     border-radius: var(--radius-2xl);
     background-color: var(--color-bg-frosted);
     box-shadow: var(--shadow-sm);
-    @include ds.down(md) {
+    @include ds.narrow-layout {
       margin-inline: 0;
       border-radius: 0;
       background-color: transparent;
       box-shadow: none;
     }
     .list_scroller {
-      @include ds.up(md) {
+      @include ds.wide-layout {
         padding-bottom: var(--space-600);
         @include ds.card-scroller(var(--list-gutter), var(--radius-2xl));
       }
-      @include ds.down(md) {
+      @include ds.narrow-layout {
         display: flex;
         flex-direction: column;
         padding-bottom: calc(var(--space-1000) + var(--layout-footer-height));
-        overflow: auto;
       }
     }
     .plan_row {
@@ -80,11 +84,15 @@
       box-sizing: border-box;
       padding-right: var(--layout-row-action-bar-space);
 
-      @include ds.down(md) {
+      @container (width < #{$one-line-row-min-width}) {
         display: flex;
         flex-direction: column;
         align-items: stretch;
         gap: var(--space-150);
+      }
+
+      // The delete button shows only on hover, so a touch screen keeps no room for it.
+      @media (hover: none) {
         margin-right: 0;
         padding-right: 0;
       }
@@ -129,7 +137,7 @@
       justify-content: end;
       gap: var(--space-200);
 
-      @include ds.down(md) {
+      @container (width < #{$one-line-row-min-width}) {
         grid-template-columns: auto 1fr auto;
         justify-content: stretch;
         gap: var(--space-150);
@@ -162,7 +170,7 @@
       text-align: right;
       white-space: nowrap;
 
-      @include ds.down(md) {
+      @container (width < #{$one-line-row-min-width}) {
         text-align: left;
       }
     }

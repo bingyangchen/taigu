@@ -152,6 +152,7 @@
         & > .context_menu_item {
           display: flex;
           align-items: center;
+          min-height: 44px;
           padding: var(--space-150) var(--space-200);
           border-radius: var(--radius-md);
           cursor: pointer;
@@ -196,68 +197,52 @@
   }
 }
 
-@include ds.up(lg) {
-  .collapsed {
-    width: var(--layout-sidebar-collapsed-width);
-    min-width: var(--layout-sidebar-collapsed-width);
-    & .profile_row {
-      flex-direction: column;
-      gap: var(--space-050);
-      padding: var(--space-100) 0 var(--space-050);
-    }
-    & .user_info {
-      justify-content: center;
-      padding: 0;
-    }
-    & .profile_link {
-      flex: none;
-      width: 40px;
-      height: 40px;
-    }
-    & .user_info > .middle {
-      display: none;
-    }
-    & .subpage_list {
-      align-items: center;
-      padding: 0 var(--space-100);
-    }
-    & > .subpage_list > .action_button {
-      width: 48px;
-      height: 48px;
-      justify-content: center;
-      padding: 0;
-      gap: 0;
-    }
-    & .action_button > .icon_outer {
-      flex: none;
-    }
-    & .action_label {
-      display: none;
-    }
-    & .subpage_list > .action_button > .triangle,
-    & .subpage_list > .action_button > .context_menu {
-      display: none;
-    }
-    & .lower {
-      display: none;
-    }
+.collapsed {
+  width: var(--layout-sidebar-collapsed-width);
+  min-width: var(--layout-sidebar-collapsed-width);
+  & .profile_row {
+    flex-direction: column;
+    gap: var(--space-050);
+    padding: var(--space-100) 0 var(--space-050);
   }
-}
-
-@include ds.down(lg) {
-  .collapse_button {
+  & .user_info {
+    justify-content: center;
+    padding: 0;
+  }
+  & .profile_link {
+    flex: none;
+    width: 40px;
+    height: 40px;
+  }
+  & .user_info > .middle {
     display: none;
   }
-}
-
-@include ds.down(md) {
-  .main {
+  & .subpage_list {
+    align-items: center;
+    padding: 0 var(--space-100);
+  }
+  & > .subpage_list > .action_button {
+    width: 48px;
+    height: 48px;
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+  }
+  & .action_button > .icon_outer {
+    flex: none;
+  }
+  & .action_label {
+    display: none;
+  }
+  & .subpage_list > .action_button > .triangle {
+    display: none;
+  }
+  & .subpage_list > .action_button > .rail_menu {
     position: fixed;
-    top: 0;
-    left: 0;
-    z-index: var(--z-sidebar-drawer);
-    width: 250px;
-    transform: translateX(-100%);
-    transition-duration: var(--duration-slow);
+    right: auto;
+    margin-top: 0;
+  }
+  & .lower {
+    display: none;
   }
 }

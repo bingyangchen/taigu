@@ -34,7 +34,7 @@
   @include -properties(z, z-index.$z-index);
   @include -properties(layout, layout.$layout);
 
-  @include breakpoints.down(lg) {
+  @include breakpoints.narrow-layout {
     @include -properties(font-size, typography.$font-size-usage-narrow);
   }
 }
