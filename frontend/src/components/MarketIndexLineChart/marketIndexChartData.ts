@@ -1,4 +1,6 @@
 import { COLORS, FONT_SIZES } from "../../styles/tokens";
+import { formatIndexChange, getChangePercent } from "../../utils/marketIndex";
+import { makeChangeTooltipLine, NO_CHANGE_TEXT } from "../chartTooltip";
 
 export const MARKET_INDEX_AXIS_LABEL_STYLE = {
   color: COLORS.textSecondary,
@@ -13,6 +15,20 @@ export const MARKET_INDEX_TOOLTIP_STYLE = {
   borderWidth: 1,
   textStyle: { color: COLORS.textPrimary, fontSize: FONT_SIZES.xs },
 };
+
+export function makeIndexChangeTooltipLine(
+  label: string,
+  value: number,
+  previousValue: number | null,
+): string {
+  if (previousValue === null) return makeChangeTooltipLine(label, null, NO_CHANGE_TEXT);
+  const change = value - previousValue;
+  return makeChangeTooltipLine(
+    label,
+    change,
+    formatIndexChange(change, getChangePercent(change, previousValue)),
+  );
+}
 
 // The first time or date label starts at the plot's left edge (alignMinLabel), so the
 // plot runs almost to the edge like the stock charts; the right inset fits point

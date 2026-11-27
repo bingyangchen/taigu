@@ -3,12 +3,12 @@ import ReactECharts from "echarts-for-react";
 
 import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import { formatMarketMinute } from "../../utils/marketIndex";
+import { makeTooltipTitle } from "../chartTooltip";
 import { makeIntradayTooltipSeries } from "../intradayTooltip";
 import {
   formatStockPrice,
   makeStockChangeTooltipLine,
   makeStockPriceTooltipLine,
-  makeStockTooltipTitle,
 } from "../stockPriceFormat";
 import {
   getStockIntradayMaxPrice,
@@ -136,7 +136,7 @@ export function makeStockIntradayChartOption(
         const minuteAfterOpen = param.value[0] as number;
         const price = param.value[1] as number;
         return [
-          makeStockTooltipTitle(formatMarketMinute(minuteAfterOpen)),
+          makeTooltipTitle(formatMarketMinute(minuteAfterOpen)),
           makeStockPriceTooltipLine(price),
           makeStockChangeTooltipLine("較昨收", price, prevClosePrice),
         ].join("<br/>");

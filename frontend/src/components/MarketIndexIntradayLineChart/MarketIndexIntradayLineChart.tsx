@@ -3,18 +3,19 @@ import { useMemo } from "react";
 
 import { COLORS } from "../../styles/tokens";
 import {
-  formatIndexChangeFromPrevious,
   formatIndexPoints,
   formatMarketMinute,
   MARKET_CLOSE_MINUTE,
 } from "../../utils/marketIndex";
 import AccessibleChart from "../AccessibleChart/AccessibleChart";
+import { makeTooltipTitle } from "../chartTooltip";
 import { makeIntradayTooltipSeries } from "../intradayTooltip";
 import {
   getChartPreviousClose,
   getMarketIndexAxisPadding,
   getMarketIndexMaxPrice,
   getMarketIndexMinPrice,
+  makeIndexChangeTooltipLine,
   MARKET_INDEX_AXIS_LABEL_STYLE,
   MARKET_INDEX_GRID,
   MARKET_INDEX_GUIDE_LINE_COLOR,
@@ -37,9 +38,9 @@ function makePointDescription(
   prevClosePrice: number | null,
 ): string[] {
   return [
-    formatMarketMinute(minute),
+    makeTooltipTitle(formatMarketMinute(minute)),
     `指數 ${formatIndexPoints(price)}`,
-    `較昨收 ${formatIndexChangeFromPrevious(price, prevClosePrice)}`,
+    makeIndexChangeTooltipLine("較昨收", price, prevClosePrice),
   ];
 }
 

@@ -71,6 +71,7 @@ def current_stock_info(request: HttpRequest) -> JsonResponse:
             "quantity": info.quantity,
             "close": info.close_price,
             "fluct_price": info.fluct_price,
+            "date": info.date,
         }
     return JsonResponse(result)
 

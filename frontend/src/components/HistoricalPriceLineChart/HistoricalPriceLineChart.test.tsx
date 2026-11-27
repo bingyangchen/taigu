@@ -39,6 +39,14 @@ test("shows no percent when the close before is zero", () => {
   ]);
 });
 
+test("groups the thousands of a price and its change", () => {
+  expect(getTooltips(["10/20", "10/21"], [1000, 2470])[1]).toEqual([
+    "10/21",
+    "價格 $2,470.00",
+    "漲跌 ▲1,470.00 (147.00%)",
+  ]);
+});
+
 test("shows a fall with the arrow alone, like the other change figures", () => {
   expect(getTooltips(["10/20", "10/21"], [20.5, 20])[1]).toEqual([
     "10/21",

@@ -38,19 +38,19 @@ function getTooltips(closingPrices: Record<string, number>, limit: number) {
       () => {},
     );
     if (typeof content !== "string") throw new Error("Expected tooltip text");
-    return content.split("<br/>");
+    return content.split("<br/>").map((line) => line.replace(/<[^>]*>/g, ""));
   });
 }
 
 test("[MKT-R15.3] compares the first point of a range with the close before the range", () => {
   const tooltips = getTooltips(makeClosingPrices(31), 30);
   expect(tooltips).toHaveLength(30);
-  expect(tooltips[0]).toEqual(["2026-10-02", "指數 22,855", "漲跌 ▲5 (0.02%)"]);
-  expect(tooltips[1]).toEqual(["2026-10-03", "指數 22,860", "漲跌 ▲5 (0.02%)"]);
+  expect(tooltips[0]).toEqual(["2026/10/02", "指數 22,855", "漲跌 ▲5 (0.02%)"]);
+  expect(tooltips[1]).toEqual(["2026/10/03", "指數 22,860", "漲跌 ▲5 (0.02%)"]);
 });
 
 test("[MKT-R15.4] shows no change for the earliest close", () => {
   const tooltips = getTooltips(makeClosingPrices(10), Infinity);
   expect(tooltips).toHaveLength(10);
-  expect(tooltips[0]).toEqual(["2026-10-01", "指數 22,850", "漲跌 -- (--)"]);
+  expect(tooltips[0]).toEqual(["2026/10/01", "指數 22,850", "漲跌 -- (--)"]);
 });

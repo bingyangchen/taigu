@@ -4,11 +4,11 @@ import { memo, useState } from "react";
 
 import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import Util from "../../utils/util";
+import { makeTooltipTitle } from "../chartTooltip";
 import { getPeriodTrendColor, makePeriodTrendAreaGradient } from "../periodTrend";
 import {
   makeStockChangeTooltipLine,
   makeStockPriceTooltipLine,
-  makeStockTooltipTitle,
 } from "../stockPriceFormat";
 
 interface Props {
@@ -156,7 +156,7 @@ export function makeHistoricalPriceChartOption(
         // one on the chart is also the close before it in the data.
         const previousValue = dataIndex > 0 ? values[dataIndex - 1] : null;
         return [
-          makeStockTooltipTitle(name),
+          makeTooltipTitle(name),
           makeStockPriceTooltipLine(value),
           makeStockChangeTooltipLine("漲跌", value, previousValue),
         ].join("<br/>");

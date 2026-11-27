@@ -1,11 +1,12 @@
-import { COLORS } from "../styles/tokens";
+import { makeChangeTooltipLine, NO_CHANGE_TEXT } from "./chartTooltip";
+
+const stockPriceFormat = new Intl.NumberFormat("zh-TW", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 export function formatStockPrice(value: number): string {
-  return value.toFixed(2);
-}
-
-export function makeStockTooltipTitle(text: string): string {
-  return `<span style="font-weight:600;color:${COLORS.textPrimary};">${text}</span>`;
+  return stockPriceFormat.format(value);
 }
 
 export function makeStockPriceTooltipLine(price: number): string {
@@ -17,14 +18,16 @@ export function makeStockChangeTooltipLine(
   price: number,
   previousPrice: number | null,
 ): string {
-  if (previousPrice === null) return `${label} -- (--)`;
+  if (previousPrice === null) return makeChangeTooltipLine(label, null, NO_CHANGE_TEXT);
   const change = Math.round((price - previousPrice) * 100) / 100;
   const percent =
     previousPrice === 0
       ? "--"
       : `${Math.abs((change / previousPrice) * 100).toFixed(2)}%`;
-  const color =
-    change > 0 ? COLORS.priceUp : change < 0 ? COLORS.priceDown : COLORS.priceFlat;
   const sign = change > 0 ? "▲" : change < 0 ? "▼" : "";
-  return `<span style="color:${color};">${label} ${sign}${formatStockPrice(Math.abs(change))} (${percent})</span>`;
+  return makeChangeTooltipLine(
+    label,
+    change,
+    `${sign}${formatStockPrice(Math.abs(change))} (${percent})`,
+  );
 }

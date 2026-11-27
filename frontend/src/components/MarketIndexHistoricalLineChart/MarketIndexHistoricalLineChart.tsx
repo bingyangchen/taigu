@@ -2,14 +2,13 @@ import type { EChartsOption } from "echarts";
 import { useMemo } from "react";
 
 import { COLORS } from "../../styles/tokens";
-import {
-  formatIndexChangeFromPrevious,
-  formatIndexPoints,
-} from "../../utils/marketIndex";
+import { formatIndexPoints } from "../../utils/marketIndex";
 import Util from "../../utils/util";
 import AccessibleChart from "../AccessibleChart/AccessibleChart";
+import { makeTooltipTitle } from "../chartTooltip";
 import {
   getMarketIndexAxisPadding,
+  makeIndexChangeTooltipLine,
   MARKET_INDEX_AXIS_LABEL_STYLE,
   MARKET_INDEX_GRID,
   MARKET_INDEX_SPLIT_LINE_STYLE,
@@ -110,9 +109,9 @@ export function makeMarketIndexHistoricalChartOption(
         if (!Array.isArray(params) || params.length === 0) return "";
         const [{ name, value, dataIndex }] = params;
         return [
-          name,
+          makeTooltipTitle(name.replaceAll("-", "/")),
           `指數 ${formatIndexPoints(value)}`,
-          `漲跌 ${formatIndexChangeFromPrevious(value, previousValues[dataIndex])}`,
+          makeIndexChangeTooltipLine("漲跌", value, previousValues[dataIndex]),
         ].join("<br/>");
       },
     },

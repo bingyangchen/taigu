@@ -51,7 +51,7 @@ export function makeMarketIndexQuote(
 
 export type MarketIndexQuote = ReturnType<typeof makeMarketIndexQuote>;
 
-function getChangePercent(change: number, base: number): number | null {
+export function getChangePercent(change: number, base: number): number | null {
   return base === 0 ? null : (change / base) * 100;
 }
 
@@ -96,13 +96,4 @@ export function makeMarketIndexHistory(
       start + index > 0 ? daily[allDates[start + index - 1]] : null,
     ),
   };
-}
-
-export function formatIndexChangeFromPrevious(
-  value: number,
-  previousValue: number | null,
-) {
-  if (previousValue === null) return "-- (--)";
-  const change = value - previousValue;
-  return formatIndexChange(change, getChangePercent(change, previousValue));
 }
