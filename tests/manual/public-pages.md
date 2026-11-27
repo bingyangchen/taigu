@@ -45,6 +45,16 @@
 
 預期：同一個瀏覽器分頁的網址換成 `/terms-of-service`，畫面顯示服務條款，沒有開啟新的瀏覽器分頁。
 
+## PUB-R11.1 點頁尾的 Instagram 連結
+
+前端沒有自動化 test。
+
+1. 用行動裝置開啟 `https://local.taigu.tw/welcome`。
+2. 捲到頁尾。
+3. 點選頁尾的 Instagram 圖示。
+
+預期：瀏覽器開啟一個新的瀏覽器分頁顯示 `https://www.instagram.com/taigu.tw/`，原本的瀏覽器分頁仍停在歡迎頁。
+
 ## PUB-R4.1 未登入時開啟隱私權政策
 
 前端沒有自動化 test。

@@ -1,0 +1,57 @@
+// Sizes only the welcome page uses. It is a marketing page, so its titles are larger
+// than the app's --font-size-display-title and its sections have more room than any
+// --space-* step; the values scale with the viewport between the narrow and wide
+// layouts.
+$display-size: clamp(2.6rem, 1.25rem + 5.6vw, 5.25rem);
+$headline-size: clamp(2rem, 1.15rem + 3.4vw, 3.5rem);
+$step-title-size: clamp(1.625rem, 1.2rem + 1.6vw, 2.5rem);
+$lead-size: clamp(1.0625rem, 0.95rem + 0.45vw, 1.3125rem);
+$section-padding: clamp(var(--space-1000), 4rem + 6vw, calc(var(--space-1000) * 2));
+
+// The room above the hero title and above a section's devices, growing with the
+// viewport between two --space-* steps.
+$hero-top-padding: clamp(var(--space-300), 0.5rem + 2.5vw, var(--space-600));
+$hero-stage-gap: clamp(var(--space-400), 1rem + 2vw, var(--space-600));
+$devices-stage-gap: clamp(var(--space-600), 2rem + 3vw, var(--space-1000));
+$nav-height: 80px;
+$content-width: 1080px;
+
+// The side padding that centers $content-width, but never less than the gutter.
+$gutter: max(var(--space-250), calc((100% - $content-width) / 2));
+
+// Two-line titles need more leading than --line-height-tight, because CJK glyphs
+// fill their em box and the lines otherwise touch.
+$headline-line-height: 1.25;
+
+// Display text keeps its strokes apart without the app's 1px base letter spacing,
+// which reads loose at these sizes.
+$display-tracking: 0.01em;
+
+@mixin headline {
+  margin: 0;
+  font-size: $headline-size;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: $display-tracking;
+  line-height: $headline-line-height;
+  text-wrap: balance;
+
+  // Breaks CJK titles only at punctuation; a title that still does not fit breaks
+  // anywhere.
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+@mixin lead {
+  margin: 0;
+  max-width: 34em;
+  color: var(--color-text-secondary);
+  font-size: $lead-size;
+  line-height: var(--line-height-relaxed);
+  text-wrap: pretty;
+}
+
+@mixin wrap {
+  box-sizing: border-box;
+  width: 100%;
+  padding-inline: $gutter;
+}

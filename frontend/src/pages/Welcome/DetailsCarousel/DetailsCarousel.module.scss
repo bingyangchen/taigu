@@ -1,0 +1,169 @@
+@use "styles" as ds;
+@use "../layout" as welcome;
+
+// A tile shows the top of a phone rising from its bottom edge; this is how much of
+// the phone it shows.
+$tile-shot-height: 340px;
+$marker-size: 8px;
+$active-marker-width: 22px;
+
+.main {
+  position: relative;
+  margin-top: var(--space-600);
+}
+
+.track {
+  display: flex;
+  gap: var(--space-250);
+  overflow-x: auto;
+  padding-inline: welcome.$gutter;
+  padding-bottom: var(--space-300);
+  scroll-padding-inline: welcome.$gutter;
+  scroll-snap-type: x mandatory;
+
+  // Only the scrolling axis, so the page still scrolls vertically over the track.
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  touch-action: manipulation;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &:focus-visible {
+    @include ds.focus-ring-inset;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    scroll-behavior: smooth;
+  }
+}
+
+.tile {
+  flex: 0 0 min(78vw, 320px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-bg-page);
+  scroll-snap-align: start;
+}
+
+.tile_copy {
+  display: grid;
+  gap: var(--space-100);
+  padding: var(--space-400) var(--space-400) var(--space-300);
+
+  h3 {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+  }
+}
+
+.tile_shot {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: $tile-shot-height;
+  margin-top: auto;
+  overflow: hidden;
+
+  &.shows_bottom {
+    align-items: flex-end;
+  }
+}
+
+// Nested, so it outranks PhoneFrame's own rule whichever stylesheet loads first.
+.tile_shot .tile_phone {
+  flex: none;
+  width: 74%;
+
+  // The tile clips the phone, which would cut its shadow into a hard edge.
+  filter: none;
+}
+
+.visually_hidden {
+  @include ds.visually-hidden;
+}
+
+.controls {
+  @include welcome.wrap;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-150);
+  margin-top: var(--space-200);
+}
+
+.markers {
+  display: flex;
+  margin-right: auto;
+
+  button {
+    display: grid;
+    place-items: center;
+
+    // The dot is small, but its hit area is 32px for a mouse and 44px for touch
+    // (ui-guidelines.md).
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: none;
+    cursor: pointer;
+
+    @media (pointer: coarse) {
+      width: 44px;
+      height: 44px;
+    }
+
+    &::before {
+      content: "";
+      width: $marker-size;
+      height: $marker-size;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-border-medium);
+      transition: width var(--duration-slow) var(--ease-out);
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+    }
+
+    // The current marker is wider as well as darker, so it does not rely on color.
+    &[aria-current="true"]::before {
+      width: $active-marker-width;
+      background-color: var(--color-text-primary);
+    }
+
+    &:focus-visible {
+      @include ds.focus-ring;
+    }
+  }
+}
+
+.arrow {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+
+  // Touch screens swipe the track and tap the markers; without the arrows, six
+  // 44px markers fit a 375px-wide screen.
+  @media (pointer: coarse) {
+    display: none;
+  }
+
+  &:disabled {
+    color: var(--color-text-tertiary);
+    cursor: default;
+  }
+}

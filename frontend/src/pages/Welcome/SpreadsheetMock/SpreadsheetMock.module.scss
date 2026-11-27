@@ -1,0 +1,105 @@
+@use "styles" as ds;
+
+// A spreadsheet row and its row-number column, at the density of a spreadsheet app.
+$row-height: 30px;
+$row-height-wide: 36px;
+$row-number-width: 32px;
+
+.main {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg-surface);
+  box-shadow: var(--shadow-md);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th,
+  td {
+    height: $row-height;
+    padding: 0 var(--space-100);
+    border-right: 1px solid var(--color-border-subtle);
+    border-bottom: 1px solid var(--color-border-subtle);
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  th {
+    background-color: var(--color-bg-subtle);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-regular);
+    text-align: center;
+  }
+
+  thead th:first-child,
+  tbody th {
+    width: $row-number-width;
+  }
+
+  @include ds.up(lg) {
+    font-size: var(--font-size-sm);
+
+    th,
+    td {
+      height: $row-height-wide;
+    }
+  }
+}
+
+.formula_bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-150);
+  padding: var(--space-100) var(--space-150);
+  border-bottom: 1px solid var(--color-border-default);
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+
+  i {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.main .header_row td {
+  color: var(--color-text-secondary);
+  text-align: left;
+}
+
+// Nested under .main, so they outrank its `td` rule.
+.main {
+  .text {
+    text-align: left;
+  }
+
+  .error {
+    color: var(--color-text-danger);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .selected {
+    outline: 2px solid var(--color-border-accent);
+    outline-offset: -2px;
+  }
+
+  .stale {
+    background-color: var(--color-bg-warning-subtle);
+    color: var(--color-text-warning);
+    text-align: left;
+  }
+
+  .wide_only {
+    @include ds.down(md) {
+      display: none;
+    }
+  }
+}

@@ -41,6 +41,15 @@ prefix: PUB
 
 > 設計理由：頁尾不放 GitHub repo 與 issue tracker 的連結，因為 Taigu 的程式碼已經不公開，repo 改成 private，訪客點過去也無法使用。
 
+### PUB-R11 歡迎頁頁尾的社群連結
+
+歡迎頁的頁尾有 Taigu 的 Instagram（`https://www.instagram.com/taigu.tw/`）與 Facebook 粉絲專頁（`https://www.facebook.com/profile.php?id=61596233455195`）的連結，不論在桌面瀏覽器還是行動裝置上，都開啟新的瀏覽器分頁。
+
+- PUB-R11.1 點頁尾的 Instagram 連結
+  - 前提：訪客在行動裝置上開啟歡迎頁。
+  - 動作：點頁尾的 Instagram 圖示。
+  - 結果：瀏覽器開啟一個新的瀏覽器分頁顯示 `https://www.instagram.com/taigu.tw/`，原本的瀏覽器分頁仍停在歡迎頁。
+
 ### PUB-R4 法律頁面
 
 隱私權政策與服務條款不需要登入（見 ACCT-R3），頁面顯示標題與全部的條文。

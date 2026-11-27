@@ -12,6 +12,7 @@ export default defineConfig({
     VitePWA({
       strategies: "injectManifest",
       srcDir: "src",
+
       // Installed PWAs keep the worker at this URL and scope; a new URL would leave
       // them on the old worker.
       filename: "service-worker.ts",
@@ -21,6 +22,10 @@ export default defineConfig({
         // The page registers the worker as a classic script.
         rollupFormat: "iife",
         globPatterns: ["index.html", "assets/**/*"],
+
+        // Videos stay on the network; see the comment on the image route in
+        // src/service-worker.ts.
+        globIgnores: ["**/*.mp4"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
     }),
@@ -31,6 +36,7 @@ export default defineConfig({
       scss: { loadPaths: [fileURLToPath(new URL("./src", import.meta.url))] },
     },
   },
+
   // Module workers, the same as the dev server runs them.
   worker: { format: "es" },
   build: { outDir: "build", sourcemap: false },
@@ -38,8 +44,10 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 3000,
     strictPort: true,
+
     // The reverse proxy forwards requests with its upstream name as the Host header.
     allowedHosts: ["frontend"],
+
     // The browser reaches the dev server through the HTTPS reverse proxy.
     hmr: { clientPort: 443 },
   },
@@ -52,8 +60,10 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["src/setupTests.ts"],
+
     // tokens.ts reads the design tokens from this module's :export block.
     css: { include: [/src\/styles\/tokens\.module\.scss$/] },
+
     // The files scripts/sdd/frontend_scenarios.cjs counts as tests, so every scenario
     // a test claims also runs.
     include: [
