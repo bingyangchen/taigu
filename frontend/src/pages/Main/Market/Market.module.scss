@@ -318,14 +318,6 @@ $three-signal-min-width: 360px;
       var(--space-1000) + var(--space-800) + var(--layout-footer-height) +
         env(safe-area-inset-bottom)
     );
-
-    &.grouped_list {
-      background: var(--color-bg-surface);
-      border-radius: var(--radius-2xl);
-      padding: var(--space-050) var(--space-200);
-      box-shadow: var(--shadow-md);
-      border: 1px solid var(--color-border-subtle);
-    }
   }
 }
 
@@ -528,7 +520,6 @@ $three-signal-min-width: 360px;
 .up {
   color: var(--color-price-up);
 
-  .price_block strong,
   .price_block span {
     color: var(--color-price-up);
   }
@@ -537,7 +528,6 @@ $three-signal-min-width: 360px;
 .down {
   color: var(--color-price-down);
 
-  .price_block strong,
   .price_block span {
     color: var(--color-price-down);
   }
@@ -687,7 +677,10 @@ $three-signal-min-width: 360px;
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: var(--space-250) 0;
+
+  // The same optical inset as `.summary_copy`, so the row text lines up with the
+  // page title while the dividers keep the edges of the controls above.
+  padding: var(--space-200) var(--space-100);
   border: 0;
   border-bottom: 1px solid var(--color-border-subtle);
   background: transparent;
@@ -696,7 +689,7 @@ $three-signal-min-width: 360px;
   letter-spacing: 0;
   text-align: left;
   transition: background var(--duration-fast) var(--ease-standard);
-  gap: var(--space-100);
+  gap: var(--space-075);
 
   &:last-child {
     border-bottom: 0;
@@ -716,7 +709,20 @@ $three-signal-min-width: 360px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-100);
   width: 100%;
+}
+
+// Each line is as tall as the text it stands in for, so the list does not move when
+// the rows arrive.
+.skeleton_row {
+  .mobile_row_line1 {
+    min-height: calc(var(--font-size-md) * var(--line-height-snug));
+  }
+
+  .mobile_row_line2 {
+    min-height: calc(var(--font-size-data) * var(--line-height-snug));
+  }
 }
 
 .mobile_company_info {
@@ -743,6 +749,7 @@ $three-signal-min-width: 360px;
 }
 
 .mobile_close_price {
+  color: var(--color-text-primary);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-snug);
@@ -750,21 +757,26 @@ $three-signal-min-width: 360px;
 }
 
 .mobile_holding_summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-050);
+  min-width: 0;
+  overflow: hidden;
   color: var(--color-text-secondary);
+
+  // 12px rather than the 11px narrow caption size, which is hard to read for a line
+  // users scan on every row; still a step below the 14px change beside it.
   font-size: var(--font-size-xs);
   line-height: var(--line-height-snug);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mobile_dot {
+  margin-inline: var(--space-050);
   color: var(--color-text-tertiary);
   font-weight: var(--font-weight-bold);
 }
 
 .mobile_return_value {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
@@ -773,53 +785,10 @@ $three-signal-min-width: 360px;
   font-weight: var(--font-weight-medium);
 }
 
-.mobile_change_percent {
-  font-size: var(--font-size-xs);
+.mobile_change {
+  flex: none;
+  font-size: var(--font-size-data);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-snug);
-  font-variant-numeric: tabular-nums;
-}
-
-.mobile_signals_group {
-  display: flex;
-  align-items: center;
-  gap: var(--space-100);
-  min-width: 0;
-}
-
-.mobile_volume {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  line-height: var(--line-height-snug);
-  white-space: nowrap;
-}
-
-.mobile_plan_badge {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--space-025) var(--space-075);
-  border-radius: var(--radius-xs);
-  background: var(--color-bg-accent-subtle);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-medium);
-  line-height: var(--line-height-tight);
-  white-space: nowrap;
-}
-
-.mobile_return_group {
-  display: flex;
-  align-items: center;
-  gap: var(--space-075);
-  font-size: var(--font-size-xs);
-  line-height: var(--line-height-snug);
-}
-
-.mobile_return_label {
-  color: var(--color-text-secondary);
-}
-
-.mobile_return_value {
-  font-weight: var(--font-weight-bold);
   font-variant-numeric: tabular-nums;
 }

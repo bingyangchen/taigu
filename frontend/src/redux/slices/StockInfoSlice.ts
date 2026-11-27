@@ -265,7 +265,7 @@ export const stockInfoSlice = createSlice({
 
       .addCase(fetchSingleStockInfo.pending, () => {})
       .addCase(fetchSingleStockInfo.fulfilled, (state, action) => {
-        const { sid, close } = action.payload;
+        const { sid, close, date } = action.payload;
         state.sidStockInfoMap[sid] = action.payload;
         if (!(sid in state.sidHistoricalPricesMap)) {
           state.sidHistoricalPricesMap[sid] = {};
@@ -274,7 +274,9 @@ export const stockInfoSlice = createSlice({
         if (!historicalPrices.daily) {
           historicalPrices.daily = {};
         }
-        historicalPrices.daily[new Date().toLocaleDateString("af")] = close;
+        // On the quote's trading date, so a day without trading replaces the last
+        // trading day's close with the same price instead of adding a point.
+        historicalPrices.daily[date ?? new Date().toLocaleDateString("af")] = close;
       })
       .addCase(fetchSingleStockInfo.rejected, () => {})
 

@@ -266,7 +266,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 3. 開啟 `https://local.taigu.tw/market`。
 4. 點選「關注」。
 
-預期：2330 那一列顯示台積電、2330、1,010、「▲ 10.00 1.00%」（漲跌 10.00、漲跌幅 1.00%）與「成交量 3,500 張」。
+預期：2330 那一列顯示台積電、2330、1,010、「▲10.00 (1.00%)」（漲跌 10.00、漲跌幅 1.00%）與「成交量 3,500 張」。
 
 ## FAV-R10.2 還沒有價格的自選股
 
@@ -277,7 +277,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 3. 開啟 `https://local.taigu.tw/market`。
 4. 點選「關注」。
 
-預期：3008 那一列的價格顯示「--」。
+預期：3008 那一列的價格與漲跌都顯示「--」。
 
 ## FAV-R10.3 點選一檔自選股
 
@@ -289,6 +289,17 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 4. 點選 2330 那一列。
 
 預期：畫面顯示 2330 的個股詳情頁，網址是 `https://local.taigu.tw/market/favorites/2330`。
+
+## FAV-R10.4 在手機上的一列
+
+手機版的列表要用手機的 user agent 才會出現，前端沒有自動化 test。
+
+1. 執行「設定自選股」指令，股票代號用 2330。
+2. 執行「設定價格」指令，把 2330 設成 `close_price=1010, fluct_price=10, quantity=3500000`。
+3. 在 iOS 模擬器或手機開啟 `https://local.taigu.tw/market`。
+4. 點選「關注」。
+
+預期：2330 那一列顯示台積電、2330、1,010、「▲10.00 (1.00%)」與「成交量 3,500 張」。
 
 ## FAV-R11.1 切換到「關注」分頁時取得新價格
 

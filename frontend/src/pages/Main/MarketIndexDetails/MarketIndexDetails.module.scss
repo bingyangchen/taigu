@@ -50,8 +50,8 @@ $quote-grid-max-width: 1160px;
 }
 
 .toolbar {
-  --mode-option-width: max(63px, 2.5rem);
-  --range-option-width: max(65px, 2.125rem);
+  --range-option-width: max(65px, 2.5rem);
+  container-type: inline-size;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -230,8 +230,13 @@ $quote-grid-max-width: 1160px;
   }
 
   .toolbar {
-    --mode-option-width: max(58px, 2.5rem);
-    --range-option-width: max(54px, 2.125rem);
+    // Narrower options on a narrow screen or with large text, so the five options
+    // still fit in one row without scrolling the page sideways. The subtraction is
+    // the control track's padding.
+    --range-option-width: min(
+      max(58px, 2.5rem),
+      calc((100cqi - 2 * var(--space-050)) / 5)
+    );
     gap: var(--space-050) var(--space-100);
     padding: 0 0 var(--space-150);
     border-block-end: 0;

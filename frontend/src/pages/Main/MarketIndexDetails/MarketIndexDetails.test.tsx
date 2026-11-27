@@ -140,8 +140,8 @@ async function showPage({
   return testStore;
 }
 
-async function selectHistory() {
-  await user.click(screen.getByRole("tab", { name: "歷史" }));
+async function selectOneMonth() {
+  await user.click(screen.getByRole("tab", { name: /^1M/ }));
 }
 
 function getHistoryPoints(market: "加權指數" | "櫃買指數"): [string, number][] {
@@ -307,7 +307,7 @@ test("[MKT-R14.5] a slow OTC query does not hold back the TSE chart", async () =
     getHistory: (market) =>
       market === "otc" ? pending : { data: [{ date: yesterday, price: 23000 }] },
   });
-  await selectHistory();
+  await selectOneMonth();
   expect(await screen.findByLabelText("加權指數歷史走勢（點）")).toBeVisible();
   expect(screen.getByText("正在載入歷史走勢")).toBeVisible();
   expect(screen.queryByLabelText("櫃買指數歷史走勢（點）")).not.toBeInTheDocument();
@@ -317,7 +317,7 @@ test("[MKT-R14.5] a slow OTC query does not hold back the TSE chart", async () =
 
 test("[MKT-R14.6] preserves the quote when the historical chart has no dated points", async () => {
   await showPage({ intraday: { ...quotes, dates: { tse: today, otc: null } } });
-  await selectHistory();
+  await selectOneMonth();
   const otc = within(screen.getByRole("region", { name: "櫃買指數" }));
   expect(await otc.findByText("目前沒有歷史走勢")).toBeVisible();
   expect(otc.getByText("252.5")).toBeVisible();
@@ -333,7 +333,7 @@ test("[MKT-R14.7] retries only the failed market without replacing the other cha
       return { data: [{ date: yesterday, price: market === "tse" ? 23000 : 250 }] };
     },
   });
-  await selectHistory();
+  await selectOneMonth();
   const retry = await screen.findByRole("button", { name: "重試" });
   const tseChart = await screen.findByLabelText("加權指數歷史走勢（點）");
   fireEvent.click(retry);
@@ -355,7 +355,7 @@ test("[MKT-R14.8] keeps cached historical points when the update fails", async (
       return { data: [] };
     },
   });
-  await selectHistory();
+  await selectOneMonth();
   expect(await screen.findByText("更新失敗，顯示上次取得的走勢")).toBeVisible();
   expect(getHistoryPoints("櫃買指數")).toEqual([
     [yesterday, 251],
@@ -414,7 +414,7 @@ test("renders the network history when IndexedDB cannot read or write", async ()
         data: [{ date: yesterday, price: market === "tse" ? 23000 : 251 }],
       }),
     });
-    await selectHistory();
+    await selectOneMonth();
     expect(getHistoryPoints("加權指數")).toContainEqual([yesterday, 23000]);
     expect(getHistoryPoints("櫃買指數")).toContainEqual([yesterday, 251]);
   } finally {
@@ -433,7 +433,7 @@ test("preserves newer history when a later cache read succeeds", async () => {
     const store = await showPage({
       getHistory: () => ({ data: [{ date: yesterday, price: 23000 }] }),
     });
-    await selectHistory();
+    await selectOneMonth();
     expect(getHistoryPoints("加權指數")).toContainEqual([yesterday, 23000]);
 
     sendRequest.mockRejectedValueOnce(new Error("offline"));
@@ -460,7 +460,7 @@ test("[MKT-R14.9] presents different dates and places the OTC quote on its own d
   await act(async () => {
     fireEvent.click(screen.getByRole("link", { name: /大盤指數/ }));
   });
-  await selectHistory();
+  await selectOneMonth();
   expect(screen.getByText("行情日期 2026/11/24")).toBeVisible();
   expect(screen.getByText("行情日期 2026/11/23")).toBeVisible();
   await screen.findByLabelText("櫃買指數歷史走勢（點）");
@@ -519,7 +519,7 @@ test("[MKT-R14.12] ignores the legacy shared date for both quotes", async () => 
   await act(async () => {
     fireEvent.click(screen.getByRole("link", { name: /大盤指數/ }));
   });
-  await selectHistory();
+  await selectOneMonth();
   await screen.findByLabelText("櫃買指數歷史走勢（點）");
   expect(screen.getAllByText("行情日期不明")).toHaveLength(2);
   expect(screen.getByText("23,100.5")).toBeVisible();
@@ -528,7 +528,7 @@ test("[MKT-R14.12] ignores the legacy shared date for both quotes", async () => 
   expect(getHistoryPoints("櫃買指數")).toEqual([[yesterday, 100]]);
 });
 
-test("[MKT-R15.1] uses one history range and replaces a same-date close", async () => {
+test("[MKT-R15.1] applies each range to both charts and replaces a same-date close", async () => {
   const rows = Array.from({ length: 49 }, (_, index) => ({
     date: new Date(Date.UTC(2026, 10, 23 - index)).toISOString().slice(0, 10),
     price: 200 - index,
@@ -542,7 +542,7 @@ test("[MKT-R15.1] uses one history range and replaces a same-date close", async 
           : [{ date: today, price: 250 }, ...rows],
     }),
   });
-  await selectHistory();
+  await selectOneMonth();
   await screen.findByLabelText("櫃買指數歷史走勢（點）");
   expect(screen.getByRole("tab", { name: /^1M/ })).toHaveAttribute(
     "aria-selected",
@@ -556,12 +556,6 @@ test("[MKT-R15.1] uses one history range and replaces a same-date close", async 
   expect(getHistoryPoints("加權指數")).toHaveLength(37);
   expect(getHistoryPoints("加權指數")[0]).toEqual([firstDate, 15000]);
   expect(getHistoryPoints("櫃買指數")).toHaveLength(50);
-  await user.click(screen.getByRole("tab", { name: "今日" }));
-  await selectHistory();
-  expect(screen.getByRole("tab", { name: /^ALL/ })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
   expect(sendRequest).toHaveBeenCalledTimes(3);
   expect(writeHistoryCache).toHaveBeenCalledWith(
     "tse",
@@ -571,7 +565,7 @@ test("[MKT-R15.1] uses one history range and replaces a same-date close", async 
 
 test("[MKT-R15.2] plots a lone dated intraday point after history loads", async () => {
   await showPage();
-  await selectHistory();
+  await selectOneMonth();
   await screen.findByLabelText("加權指數歷史走勢（點）");
   expect(getHistoryPoints("加權指數")).toEqual([[today, 23100.5]]);
 });

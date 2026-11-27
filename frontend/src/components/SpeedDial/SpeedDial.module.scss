@@ -110,10 +110,10 @@ $short-viewport-max-height: 450px;
         transform: translate(-110%, -50%);
         opacity: 0;
         width: max-content;
-        padding: var(--space-050) var(--space-150);
+        padding-block: var(--space-050);
+        @include ds.centered-letter-spacing(var(--space-150));
         background-color: var(--color-bg-inverse);
         color: var(--color-text-inverse);
-        letter-spacing: 1px;
         font-size: var(--font-size-xs);
         border-radius: var(--radius-sm);
       }

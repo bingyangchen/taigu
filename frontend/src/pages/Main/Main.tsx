@@ -82,12 +82,17 @@ function Main() {
 
   const isMobileEditorRoute = isMobileEditorPath(location.pathname);
   const shouldUseDocumentScroll = Util.isMobile && !isMobileEditorRoute;
+  const isMarketIndexPage = Nav.isAtMarketIndexDetailsPage;
+  const isMobileDetailPage = Nav.isAtDetailsPage || isMarketIndexPage;
+
+  // Also sets the body color, which the iOS home-screen app shows behind the status
+  // bar, so every page whose background is the page color has to be listed.
   const shouldUseWhiteMobileShell =
     isMobileEditorRoute ||
     location.pathname === `${Env.frontendRootPath}market` ||
     location.pathname === `${Env.frontendRootPath}records` ||
     location.pathname === `${Env.frontendRootPath}plans` ||
-    Nav.isAtDetailsPage;
+    isMobileDetailPage;
   const shouldShowHeader =
     Util.isMobile &&
     !isMobileEditorRoute &&
@@ -492,13 +497,12 @@ function Main() {
     [avatarUrl],
   );
 
-  const isMarketIndexPage = Nav.isAtMarketIndexDetailsPage;
   return (
     <main
       className={`${styles.main} ${
         shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
       } ${isMobileEditorRoute ? styles.mobile_editor_shell : ""} ${
-        Nav.isAtDetailsPage || isMarketIndexPage ? styles.mobile_detail_shell : ""
+        isMobileDetailPage ? styles.mobile_detail_shell : ""
       } ${isMarketIndexPage ? styles.market_index_shell : ""}`}
       ref={mainRef}
     >

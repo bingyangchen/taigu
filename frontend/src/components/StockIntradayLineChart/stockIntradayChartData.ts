@@ -1,4 +1,3 @@
-import { COLORS } from "../../styles/tokens";
 import type { StockIntradayPrices } from "../../types";
 
 const METADATA_KEYS = new Set(["date", "yesterday_price", "last_fluct_price"]);
@@ -44,71 +43,4 @@ export function getStockIntradayMaxPrice(
   prevClosePrice: number,
 ): number {
   return Math.max(...data.map((point) => point[1] ?? prevClosePrice));
-}
-
-export function splitStockIntradayDataIntoColoredSegments(
-  data: [number, number | null][],
-  prevClosePrice: number,
-): Array<{ data: [number, number | null][]; color: string }> {
-  if (data.length === 0) return [];
-
-  const segments: Array<{ data: [number, number | null][]; color: string }> = [];
-  let currentSegment: [number, number | null][] = [];
-  let currentColor: string | null = null;
-
-  for (let i = 0; i < data.length; i += 1) {
-    const point = data[i];
-    const value = point[1];
-    const pointColor: string =
-      value === null
-        ? (currentColor ?? COLORS.chartDown)
-        : value > prevClosePrice
-          ? COLORS.chartUp
-          : COLORS.chartDown;
-
-    if (
-      currentColor !== null &&
-      currentColor !== pointColor &&
-      currentSegment.length > 0
-    ) {
-      const previousPoint = data[i - 1];
-      const previousValue = previousPoint[1];
-
-      if (previousValue !== null && value !== null) {
-        const startX = previousPoint[0];
-        const startY = previousValue;
-        const endX = point[0];
-        const endY = value;
-        const ratio = (prevClosePrice - startY) / (endY - startY);
-
-        if (ratio > 0 && ratio < 1) {
-          const intersectionPoint: [number, number] = [
-            startX + ratio * (endX - startX),
-            prevClosePrice,
-          ];
-          currentSegment.push(intersectionPoint);
-          segments.push({ data: [...currentSegment], color: currentColor });
-          currentSegment = [intersectionPoint, point];
-        } else {
-          currentSegment.push(point);
-          segments.push({ data: [...currentSegment], color: currentColor });
-          currentSegment = [point];
-        }
-      } else {
-        currentSegment.push(point);
-        segments.push({ data: [...currentSegment], color: currentColor });
-        currentSegment = [point];
-      }
-      currentColor = pointColor;
-    } else {
-      if (currentColor === null) currentColor = pointColor;
-      currentSegment.push(point);
-    }
-  }
-
-  if (currentSegment.length > 0 && currentColor !== null) {
-    segments.push({ data: currentSegment, color: currentColor });
-  }
-
-  return segments;
 }

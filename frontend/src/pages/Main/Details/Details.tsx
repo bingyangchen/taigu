@@ -22,6 +22,7 @@ import {
   buildStockIntradayChartData,
   hasStockIntradayPlottedData,
 } from "../../../components/StockIntradayLineChart/stockIntradayChartData";
+import { formatStockChange } from "../../../components/stockPriceFormat";
 import Tooltip from "../../../components/Tooltip/Tooltip";
 import * as Icons from "../../../icons";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -552,13 +553,10 @@ function Details() {
   const fluctPriceClass = `${styles.price_fluctuation} ${
     fluctPrice > 0 ? styles.red : fluctPrice < 0 ? styles.green : styles.gray
   }`;
-  const fluctPriceString = `${fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "-"}${
-    fluctPrice !== 0 ? Math.abs(fluctPrice) : ""
-  }${
-    fluctPrice !== 0
-      ? ` (${(Math.abs(fluctPrice / ((stockInfo?.close ?? 0) - fluctPrice)) * 100).toFixed(2)}%)`
-      : ""
-  }`;
+  const fluctPriceString = formatStockChange(
+    fluctPrice,
+    (stockInfo?.close ?? 0) - fluctPrice,
+  );
   const tradeVolumeText = Math.round(
     (stockInfo?.quantity || 0) / 1000,
   ).toLocaleString();

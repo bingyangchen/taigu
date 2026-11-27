@@ -3,11 +3,20 @@ import ReactECharts from "echarts-for-react";
 
 import { COLORS, FONT_SIZES } from "../../styles/tokens";
 import { formatMarketMinute } from "../../utils/marketIndex";
+import { makeTooltipTitle } from "../chartTooltip";
 import { makeIntradayTooltipSeries } from "../intradayTooltip";
+import {
+  PREVIOUS_CLOSE_LINE_STYLE,
+  splitIntradayDataAtPreviousClose,
+} from "../intradayTrend";
+import {
+  formatStockPrice,
+  makeStockChangeTooltipLine,
+  makeStockPriceTooltipLine,
+} from "../stockPriceFormat";
 import {
   getStockIntradayMaxPrice,
   getStockIntradayMinPrice,
-  splitStockIntradayDataIntoColoredSegments,
 } from "./stockIntradayChartData";
 
 interface Props {
@@ -16,10 +25,6 @@ interface Props {
 }
 
 const MAJOR_MINUTES = [60, 120, 180, 240, 270];
-
-function formatStockPrice(value: number): string {
-  return value.toFixed(2);
-}
 
 export default function StockIntradayLineChart({ data, prevClosePrice }: Props) {
   const option = makeStockIntradayChartOption(data, prevClosePrice);
@@ -41,7 +46,7 @@ export function makeStockIntradayChartOption(
 ): EChartsOption | null {
   if (!data.some(([, price]) => price !== null)) return null;
 
-  const segments = splitStockIntradayDataIntoColoredSegments(data, prevClosePrice);
+  const segments = splitIntradayDataAtPreviousClose(data, prevClosePrice);
   const minPrice = getStockIntradayMinPrice(data, prevClosePrice);
   const maxPrice = getStockIntradayMaxPrice(data, prevClosePrice);
 
@@ -108,7 +113,7 @@ export function makeStockIntradayChartOption(
         markLine: {
           silent: true,
           symbol: "none",
-          lineStyle: { color: COLORS.borderDefault, width: 1, type: "solid" },
+          lineStyle: PREVIOUS_CLOSE_LINE_STYLE,
           data: [{ yAxis: prevClosePrice }],
           label: { show: false },
         },
@@ -133,22 +138,10 @@ export function makeStockIntradayChartOption(
         }
         const minuteAfterOpen = param.value[0] as number;
         const price = param.value[1] as number;
-        const fluctPrice = Math.round((price - prevClosePrice) * 100) / 100;
-        const fluctPercent =
-          prevClosePrice !== 0
-            ? ((fluctPrice / prevClosePrice) * 100).toFixed(2)
-            : "0.00";
-        const fluctColor =
-          fluctPrice > 0
-            ? COLORS.priceUp
-            : fluctPrice < 0
-              ? COLORS.priceDown
-              : COLORS.priceFlat;
-        const fluctSign = fluctPrice > 0 ? "▲" : fluctPrice < 0 ? "▼" : "";
         return [
-          `<span style="font-weight:600;color:${COLORS.textPrimary};">${formatMarketMinute(minuteAfterOpen)}</span>`,
-          `價格 $${price.toFixed(2)}`,
-          `<span style="color:${fluctColor};">較昨收 ${fluctSign}${Math.abs(fluctPrice).toFixed(2)} (${fluctPercent}%)</span>`,
+          makeTooltipTitle(formatMarketMinute(minuteAfterOpen)),
+          makeStockPriceTooltipLine(price),
+          makeStockChangeTooltipLine("較昨收", price, prevClosePrice),
         ].join("<br/>");
       },
     },

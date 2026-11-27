@@ -83,7 +83,7 @@ export function getStockXirr(
   );
 }
 
-function getAbsoluteFluctPercent(stockInfo: StockInfo | undefined): number {
+export function getAbsoluteFluctPercent(stockInfo: StockInfo | undefined): number {
   if (!stockInfo || stockInfo.fluct_price === 0) return 0;
   const previousClose = stockInfo.close - stockInfo.fluct_price;
   if (previousClose === 0) return 0;

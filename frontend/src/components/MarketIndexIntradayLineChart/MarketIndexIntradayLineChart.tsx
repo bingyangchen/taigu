@@ -3,21 +3,22 @@ import { useMemo } from "react";
 
 import { COLORS } from "../../styles/tokens";
 import {
-  formatIndexChange,
   formatIndexPoints,
   formatMarketMinute,
   MARKET_CLOSE_MINUTE,
 } from "../../utils/marketIndex";
 import AccessibleChart from "../AccessibleChart/AccessibleChart";
+import { makeTooltipTitle } from "../chartTooltip";
 import { makeIntradayTooltipSeries } from "../intradayTooltip";
+import { PREVIOUS_CLOSE_LINE_STYLE } from "../intradayTrend";
 import {
   getChartPreviousClose,
   getMarketIndexAxisPadding,
   getMarketIndexMaxPrice,
   getMarketIndexMinPrice,
+  makeIndexChangeTooltipLine,
   MARKET_INDEX_AXIS_LABEL_STYLE,
   MARKET_INDEX_GRID,
-  MARKET_INDEX_GUIDE_LINE_COLOR,
   MARKET_INDEX_SPLIT_LINE_STYLE,
   MARKET_INDEX_TOOLTIP_STYLE,
   splitMarketIndexDataIntoColoredSegments,
@@ -36,12 +37,11 @@ function makePointDescription(
   price: number,
   prevClosePrice: number | null,
 ): string[] {
-  const time = formatMarketMinute(minute);
-  const priceText = `指數 ${formatIndexPoints(price)}`;
-  if (prevClosePrice === null) return [time, priceText, "較昨收 -- (--)"];
-  const change = price - prevClosePrice;
-  const percent = prevClosePrice === 0 ? null : (change / prevClosePrice) * 100;
-  return [time, priceText, `較昨收 ${formatIndexChange(change, percent)}`];
+  return [
+    makeTooltipTitle(formatMarketMinute(minute)),
+    `指數 ${formatIndexPoints(price)}`,
+    makeIndexChangeTooltipLine("較昨收", price, prevClosePrice),
+  ];
 }
 
 export function makeMarketIndexIntradayChartOption(
@@ -113,11 +113,7 @@ export function makeMarketIndexIntradayChartOption(
               markLine: {
                 silent: true,
                 symbol: "none",
-                lineStyle: {
-                  color: MARKET_INDEX_GUIDE_LINE_COLOR,
-                  width: 1,
-                  type: "dashed" as const,
-                },
+                lineStyle: PREVIOUS_CLOSE_LINE_STYLE,
                 data: [{ yAxis: prevClosePrice }],
                 label: { show: false },
               },

@@ -238,7 +238,7 @@ class TestCurrentStockInfoView:
         return [
             StockInfo.objects.create(
                 company=companies[0],
-                date=date.today(),
+                date=date(2026, 10, 23),
                 quantity=1000000,
                 close_price=100.5,
                 fluct_price=2.3,
@@ -272,6 +272,7 @@ class TestCurrentStockInfoView:
         assert data["1234"]["quantity"] == 1000000
         assert data["1234"]["close"] == 100.5
         assert data["1234"]["fluct_price"] == 2.3
+        assert data["1234"]["date"] == "2026-10-23"
 
     def test_current_stock_info_with_empty_sids(
         self, request_factory: RequestFactory, user: User

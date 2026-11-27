@@ -1,7 +1,10 @@
+@use "styles" as ds;
+
 .content {
   max-width: min(260px, calc(100vw - 32px));
   border-radius: var(--radius-sm);
-  padding: var(--space-050) var(--space-100) var(--space-075);
+  padding-block: var(--space-075);
+  @include ds.centered-letter-spacing(var(--space-100));
   background-color: var(--color-bg-inverse);
   color: var(--color-text-inverse);
   font-size: var(--font-size-xs);

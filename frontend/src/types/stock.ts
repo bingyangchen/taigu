@@ -20,6 +20,10 @@ export type StockInfo = {
   quantity: number;
   close: number;
   fluct_price: number;
+
+  // The trading date of the quote. Only `market/current-stock-info` returns it,
+  // and the backend in production leaves it out until it is deployed with it.
+  date?: string;
 };
 
 export type StockIntradayPrices = {

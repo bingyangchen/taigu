@@ -36,9 +36,9 @@ export function makeMarketIndexQuote(
   const previousClose = prices.yesterday_price ?? null;
   const change = latestPrice === null ? null : (prices.last_fluct_price ?? null);
   const percent =
-    change !== null && previousClose !== null && previousClose !== 0
-      ? (change / previousClose) * 100
-      : null;
+    change === null || previousClose === null
+      ? null
+      : getChangePercent(change, previousClose);
   return {
     points,
     latestPrice,
@@ -50,6 +50,10 @@ export function makeMarketIndexQuote(
 }
 
 export type MarketIndexQuote = ReturnType<typeof makeMarketIndexQuote>;
+
+export function getChangePercent(change: number, base: number): number | null {
+  return base === 0 ? null : (change / base) * 100;
+}
 
 export function formatIndexChange(change: number | null, percent: number | null) {
   if (change === null) return "--";
@@ -77,9 +81,19 @@ export function makeMarketIndexHistory(
 ) {
   const daily = { ...closingPrices };
   if (date !== null && latestPrice !== null) daily[date] = latestPrice;
-  const dates = Object.keys(daily)
+  const allDates = Object.keys(daily)
     .filter((day) => Number.isFinite(daily[day]))
-    .sort()
-    .slice(-limit);
-  return { dates, values: dates.map((day) => daily[day]) };
+    .sort();
+  const start = Math.max(allDates.length - limit, 0);
+  const dates = allDates.slice(start);
+  return {
+    dates,
+    values: dates.map((day) => daily[day]),
+
+    // Taken from all the dates, so the first plotted point still has the close
+    // before it when the range leaves that close out.
+    previousValues: dates.map((_, index) =>
+      start + index > 0 ? daily[allDates[start + index - 1]] : null,
+    ),
+  };
 }
