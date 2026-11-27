@@ -9,40 +9,24 @@ interface ToastState {
 
 const initialState: ToastState = { toasts: [] };
 
-const setAutoRemoveToastTimer = createAsyncThunk(
-  "toasts/setAutoRemoveToastTimer",
-  (): Promise<void> => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(), 5000);
-    });
-  },
-);
-
+/** Each toast closes itself after a while; see `ToastList`. */
 export const pushToast = createAsyncThunk(
   "toasts/pushToast",
-  (toast: ToastMessage, thunkAPI): ToastMessage => {
-    thunkAPI.dispatch(setAutoRemoveToastTimer());
-    // if (navigator.vibrate) navigator.vibrate(20);
-    return toast;
-  },
+  (toast: ToastMessage): ToastMessage => toast,
 );
 
 export const toastSlice = createSlice({
   name: "toasts",
   initialState,
   reducers: {
-    removeToast: (state, action: PayloadAction<number>) => {
-      state.toasts.splice(action.payload, 1);
+    removeToast: (state, action: PayloadAction<string>) => {
+      state.toasts = state.toasts.filter((toast) => toast.id !== action.payload);
     },
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(pushToast.fulfilled, (state, action) => {
-        state.toasts.push({ ...action.payload, id: action.meta.requestId });
-      })
-      .addCase(setAutoRemoveToastTimer.fulfilled, (state) => {
-        state.toasts.splice(0, 1);
-      });
+    builder.addCase(pushToast.fulfilled, (state, action) => {
+      state.toasts.push({ ...action.payload, id: action.meta.requestId });
+    });
   },
 });
 

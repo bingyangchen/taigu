@@ -1,6 +1,6 @@
 import MD5 from "crypto-js/md5";
 import { memo, useEffect, useLayoutEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import imgPersonFill from "../../../assets/person-fill.svg";
 import {
@@ -26,7 +26,6 @@ function UserInfo() {
   const email = useAppSelector((state) => state.account.email);
   const isWaiting = useAppSelector((state) => state.account.isWaiting);
   const dispatch = useAppDispatch();
-  const location = useLocation();
   const navigate = useNavigate();
   const [showDefaultAvatar, setShowDefaultAvatar] = useState(false);
   const [validGravatarUrl, setValidGravatarUrl] = useState<string | null>(null);
@@ -67,9 +66,6 @@ function UserInfo() {
       setShowDefaultAvatar(false);
       setShouldBlinkAvatarInput(true);
       setTimeout(() => setShouldBlinkAvatarInput(false), 500);
-    }
-    if (location.hash === "#!") {
-      navigate(-1); // remove the hash for the bottom sheet
     }
   };
 

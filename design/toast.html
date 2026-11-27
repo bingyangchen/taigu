@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Toast｜Taigu 設計稿</title>
+  <link rel="stylesheet" href="shared/components.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-block-size: 100dvh;
+      color: var(--color-text-primary);
+      background: linear-gradient(180deg, var(--color-bg-shell-top), var(--color-bg-shell-bottom));
+      background-attachment: fixed;
+    }
+    h1, h2, p { margin: 0; }
+
+    /* ---------- App frame (context only) ---------- */
+    .frame { display: grid; grid-template-columns: 230px 1fr; min-block-size: 100dvh; }
+    .sidebar {
+      padding: var(--space-300) var(--space-200);
+      display: grid;
+      align-content: start;
+      gap: var(--space-100);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-data);
+    }
+    .sidebar .nav_item { padding: var(--space-100) var(--space-150); border-radius: var(--radius-md); }
+    .sidebar .nav_item.active { background: var(--color-bg-frosted); color: var(--color-text-accent); }
+    .content {
+      padding: var(--space-300);
+      display: grid;
+      align-content: start;
+      gap: var(--space-200);
+      max-inline-size: 760px;
+    }
+    .card {
+      background: var(--color-bg-frosted);
+      border-radius: var(--radius-xl);
+      padding: var(--space-250);
+      display: grid;
+      gap: var(--space-150);
+    }
+    .card h2 { font-size: var(--font-size-body); font-weight: var(--font-weight-semibold); }
+    .card p { color: var(--color-text-secondary); font-size: var(--font-size-data); line-height: 1.6; }
+    .controls { display: flex; flex-wrap: wrap; gap: var(--space-100); }
+    .bottom_nav { display: none; }
+
+    /* ---------- Toast: shared structure ---------- */
+    .toast_list {
+      position: fixed;
+      inset-inline-end: var(--space-400);
+      inset-block-end: var(--space-400);
+      inline-size: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-150);
+      z-index: var(--z-toast);
+    }
+
+    /* Proposal A (recommended): a white card with a tinted status mark. */
+    .toast {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: start;
+      gap: var(--space-150);
+      padding: var(--space-150) var(--space-100) var(--space-150) var(--space-200);
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: toast_in var(--duration-base) var(--ease-out);
+    }
+    .toast.leaving { animation: toast_out var(--duration-fast) var(--ease-standard) forwards; }
+    .toast_mark {
+      inline-size: 28px;
+      block-size: 28px;
+      border-radius: var(--radius-pill);
+      display: grid;
+      place-items: center;
+      margin-block-start: -2px;
+    }
+    .toast_text {
+      font-size: var(--font-size-data);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.6;
+      padding-block: 2px;
+      overflow-wrap: anywhere;
+    }
+    .toast .RoundButton_main { margin-block: -4px; }
+    .toast_timer {
+      position: absolute;
+      inset-inline: 0;
+      inset-block-end: 0;
+      block-size: 2px;
+      transform-origin: left;
+      animation: countdown 5s linear forwards;
+    }
+    .toast:hover .toast_timer, .toast:focus-within .toast_timer { animation-play-state: paused; }
+
+    .toast.success .toast_mark { background: var(--color-bg-success-subtle); color: var(--color-text-success); }
+    .toast.error .toast_mark { background: var(--color-bg-danger-subtle); color: var(--color-text-danger); }
+    .toast.warning .toast_mark { background: var(--color-bg-warning-subtle); color: var(--color-text-warning); }
+    .toast.success .toast_timer { background: var(--color-border-success-subtle); }
+    .toast.error .toast_timer { background: var(--color-border-danger-subtle); }
+    .toast.warning .toast_timer { background: var(--color-border-warning); }
+
+    /* Proposal B (chosen): the whole card and its text take the status color. The
+       text meets the 4:1 minimum of 主要 text on the tint (green 4.04, red 4.47). */
+    body[data-variant="tinted"] .toast { box-shadow: var(--shadow-md); }
+    body[data-variant="tinted"] .toast.success {
+      background: linear-gradient(var(--color-bg-success-subtle), var(--color-bg-success-subtle)), var(--color-bg-surface);
+      border-color: var(--color-border-success-subtle);
+      color: var(--color-text-success);
+    }
+    body[data-variant="tinted"] .toast.error {
+      background: linear-gradient(var(--color-bg-danger-subtle), var(--color-bg-danger-subtle)), var(--color-bg-surface);
+      border-color: var(--color-border-danger-subtle);
+      color: var(--color-text-danger);
+    }
+    body[data-variant="tinted"] .toast.warning {
+      background: var(--color-bg-warning-subtle);
+      border-color: var(--color-border-warning);
+      color: var(--color-text-warning);
+    }
+    body[data-variant="tinted"] .toast_mark { background: transparent; }
+
+    /* The current look, for comparison. */
+    body[data-variant="current"] .toast_list { inset-inline: 0 auto; inset-block-end: 0; inline-size: 420px; gap: 0; }
+    body[data-variant="current"] .toast {
+      display: block;
+      margin: var(--space-200);
+      margin-block-end: 0;
+      padding: var(--space-200) var(--space-300) var(--space-200) var(--space-200);
+      border: none;
+      border-radius: var(--radius-md);
+      box-shadow: none;
+      color: var(--color-text-inverse);
+      font-weight: var(--font-weight-bold);
+      animation: current_in var(--duration-slow) var(--ease-standard);
+    }
+    body[data-variant="current"] .toast:last-child { margin-block-end: var(--space-200); }
+    body[data-variant="current"] .toast.success { background: var(--color-bg-success); }
+    body[data-variant="current"] .toast.error { background: var(--color-bg-danger); }
+    body[data-variant="current"] .toast.warning { background: var(--color-bg-warning); color: var(--color-text-primary); }
+    body[data-variant="current"] .toast_mark { display: none; }
+    body[data-variant="current"] .toast_text { font-weight: inherit; font-size: var(--font-size-sm); }
+    body[data-variant="current"] .toast .RoundButton_main { position: absolute; inset-block-start: 4px; inset-inline-end: 4px; color: inherit; margin: 0; }
+    body[data-variant="current"] .toast_timer { background: var(--color-bg-frosted); block-size: 3px; }
+
+    @keyframes toast_in {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    }
+    @keyframes toast_out {
+      to { opacity: 0; transform: scale(0.98); }
+    }
+    @keyframes current_in {
+      from { transform: translateX(-110%); }
+    }
+    @keyframes countdown {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .toast { animation-name: fade_in; }
+      .toast.leaving { animation-name: fade_out; }
+      @keyframes fade_in { from { opacity: 0; } }
+      @keyframes fade_out { to { opacity: 0; } }
+    }
+
+    /* ---------- Narrow layout (below 960px) ---------- */
+    @media (width < 960px) {
+      .frame { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .content { padding: var(--space-200); padding-block-end: 96px; }
+      .bottom_nav {
+        display: flex;
+        justify-content: space-around;
+        position: fixed;
+        inset-inline: 0;
+        inset-block-end: 0;
+        padding: var(--space-150) var(--space-200) max(var(--space-150), env(safe-area-inset-bottom));
+        background: var(--color-bg-frosted);
+        backdrop-filter: blur(16px);
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-caption);
+      }
+      .bottom_nav .active { color: var(--color-text-accent); }
+      .toast_list {
+        inset-inline: var(--space-200);
+        inset-block: max(var(--space-200), env(safe-area-inset-top)) auto;
+        inline-size: auto;
+        flex-direction: column-reverse;
+      }
+      .toast { animation-name: toast_in_from_top; }
+      @keyframes toast_in_from_top {
+        from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+      }
+      body[data-variant="current"] .toast_list { inset-inline: 0; inset-block: 0 auto; inline-size: 100vw; }
+      body[data-variant="current"] .toast { margin-inline: 0; border-radius: 0; }
+    }
+  </style>
+</head>
+<body data-variant="tinted">
+  <div class="frame">
+    <nav class="sidebar" aria-label="主要導覽（示意）">
+      <span class="nav_item">儀表板</span>
+      <span class="nav_item">市場</span>
+      <span class="nav_item active">歷史紀錄</span>
+      <span class="nav_item">買賣計畫</span>
+    </nav>
+    <main class="content">
+      <section class="card">
+        <h2>Toast 外觀</h2>
+        <p>點下面的按鈕跳出 toast。滑鼠移到 toast 上或用 Tab 把焦點移到關閉按鈕時，底下的倒數條會停住，離開後才繼續倒數。</p>
+        <div class="SegmentedControl_main SegmentedControl_subtle">
+          <div class="SegmentedControl_list" role="tablist" aria-label="外觀版本" style="--active-index: 1; --option-count: 3; --option-width: 104px;">
+            <div class="SegmentedControl_sliding_background"></div>
+            <button class="SegmentedControl_trigger" role="tab" data-state="inactive" data-variant="card">白卡</button>
+            <button class="SegmentedControl_trigger" role="tab" data-state="active" data-variant="tinted">淺色底（採用）</button>
+            <button class="SegmentedControl_trigger" role="tab" data-state="inactive" data-variant="current">目前</button>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="Button_main Button_light Button_s" data-toast="success">成功</button>
+          <button class="Button_main Button_light Button_s" data-toast="error">錯誤</button>
+          <button class="Button_main Button_light Button_s" data-toast="warning">提醒</button>
+          <button class="Button_main Button_light Button_s" data-toast="long">長文字的錯誤</button>
+          <button class="Button_main Button_light Button_s" data-toast="stack">連續三則</button>
+        </div>
+      </section>
+      <section class="card">
+        <h2>2330 台積電</h2>
+        <p>買進 1 張 × 1,040 元・11/24（二）</p>
+      </section>
+      <section class="card">
+        <h2>0050 元大台灣50</h2>
+        <p>現金股利 1,500 元・7/15（二）</p>
+      </section>
+    </main>
+  </div>
+  <nav class="bottom_nav" aria-label="底部導覽（示意）">
+    <span>儀表板</span><span>市場</span><span class="active">歷史紀錄</span><span>買賣計畫</span><span>帳號</span>
+  </nav>
+
+  <div class="toast_list" role="region" aria-label="通知"></div>
+
+  <template id="toast_template">
+    <div class="toast" role="status">
+      <span class="toast_mark" aria-hidden="true"></span>
+      <p class="toast_text"></p>
+      <button class="RoundButton_main" aria-label="關閉通知">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M23.707.293h0a1,1,0,0,0-1.414,0L12,10.586,1.707.293a1,1,0,0,0-1.414,0h0a1,1,0,0,0,0,1.414L10.586,12,.293,22.293a1,1,0,0,0,0,1.414h0a1,1,0,0,0,1.414,0L12,13.414,22.293,23.707a1,1,0,0,0,1.414,0h0a1,1,0,0,0,0-1.414L13.414,12,23.707,1.707A1,1,0,0,0,23.707.293Z"/></svg>
+      </button>
+      <span class="toast_timer" aria-hidden="true"></span>
+    </div>
+  </template>
+
+  <script>
+    const ICONS = {
+      success: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>',
+      error: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M24,24H12C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12v12ZM12,2C6.486,2,2,6.486,2,12s4.486,10,10,10h10V12c0-5.514-4.486-10-10-10Zm1,3h-2V15h2V5Zm0,12h-2v2h2v-2Z"/></svg>',
+    };
+    ICONS.warning = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/><path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z"/><circle cx="12" cy="6.5" r="1.5"/></svg>';
+    const MESSAGES = {
+      success: ["success", "備註已更新"],
+      error: ["error", "沒有連上網路，這筆紀錄還沒存下，請連上網路後再送出。"],
+      warning: ["warning", "行情暫時無法更新，畫面上是 10 分鐘前的價格。"],
+      long: ["error", "這個月新增交易紀錄與現金股利紀錄的額度已經用完，升級 Standard 方案後就能繼續新增，或等下個月 1 日額度重新計算。"],
+    };
+    const list = document.querySelector(".toast_list");
+    const template = document.getElementById("toast_template");
+
+    function removeToast(toast) {
+      if (toast.classList.contains("leaving")) return;
+      toast.classList.add("leaving");
+      toast.addEventListener("animationend", () => toast.remove(), { once: true });
+    }
+
+    function pushToast([type, text]) {
+      const toast = template.content.firstElementChild.cloneNode(true);
+      toast.classList.add(type);
+      if (type === "error") toast.setAttribute("role", "alert");
+      toast.querySelector(".toast_mark").innerHTML = ICONS[type];
+      toast.querySelector(".toast_text").textContent = text;
+      toast.querySelector("button").addEventListener("click", () => removeToast(toast));
+      toast.querySelector(".toast_timer").addEventListener("animationend", () => removeToast(toast));
+      list.append(toast);
+    }
+
+    document.querySelectorAll("[data-toast]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const kind = button.dataset.toast;
+        if (kind === "stack") {
+          pushToast(MESSAGES.success);
+          setTimeout(() => pushToast(MESSAGES.warning), 400);
+          setTimeout(() => pushToast(MESSAGES.error), 800);
+          return;
+        }
+        pushToast(MESSAGES[kind]);
+      });
+    });
+
+    const tabList = document.querySelector('[role="tablist"]');
+    tabList.querySelectorAll('[role="tab"]').forEach((tab, index) => {
+      tab.addEventListener("click", () => {
+        tabList.querySelectorAll('[role="tab"]').forEach((other) => other.setAttribute("data-state", "inactive"));
+        tab.setAttribute("data-state", "active");
+        tabList.style.setProperty("--active-index", index);
+        document.body.dataset.variant = tab.dataset.variant;
+      });
+    });
+
+    const params = new URLSearchParams(location.search);
+    if (params.get("variant")) document.querySelector(`[data-variant="${params.get("variant")}"]`)?.click();
+    if (params.has("demo")) {
+      pushToast(MESSAGES.success);
+      pushToast(MESSAGES.warning);
+      pushToast(MESSAGES.long);
+      document.querySelectorAll(".toast_timer").forEach((timer) => (timer.style.animationPlayState = "paused"));
+    }
+  </script>
+</body>
+</html>
