@@ -7,6 +7,8 @@ $stock-switch-button-size: 44px;
 
 .main {
   --detail-max-width: 760px;
+  // The stock switch controls are placed from this padding, like the content.
+  --detail-padding-inline: var(--space-300);
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -22,7 +24,8 @@ $stock-switch-button-size: 44px;
   width: 100%;
   max-width: var(--detail-max-width);
   min-height: 100%;
-  padding: var(--space-400) var(--space-300) var(--layout-speed-dial-clearance);
+  padding: var(--space-400) var(--detail-padding-inline)
+    var(--layout-speed-dial-clearance);
   margin: 0 auto;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
@@ -55,17 +58,21 @@ $stock-switch-button-size: 44px;
   @include ds.wide-layout {
     @include ds.down(lg) {
       &:has(> .stock_switch_control) {
-        padding-inline: calc(#{$stock-switch-button-size} + 2 * var(--space-050));
+        --detail-padding-inline: calc(
+          #{$stock-switch-button-size} + 2 * var(--space-050)
+        );
+        padding-inline: var(--detail-padding-inline);
       }
     }
   }
 
   @include ds.narrow-layout {
+    --detail-padding-inline: 0px;
     display: flex;
     flex-direction: column;
     gap: 5dvh;
     max-width: none;
-    padding: 0 0
+    padding: 0 var(--detail-padding-inline)
       calc(
         var(--layout-footer-height) + env(safe-area-inset-bottom) +
           var(--layout-speed-dial-clearance)
@@ -831,11 +838,14 @@ $stock-switch-button-size: 44px;
 }
 
 .stock_switch_control {
-  position: fixed;
-  top: 50dvh;
+  // Each control is a full-height strip pinned to one side of the page, and its
+  // button sticks to the middle of the screen. Safari ignores `justify-self` when it
+  // places a fixed box by its static position, which stacked both buttons on the left.
+  position: absolute;
+  inset-block: 0;
   margin-inline: calc(var(--space-050) - var(--space-300));
   z-index: 2;
-  transform: translateY(-50%);
+  pointer-events: none;
 
   @include ds.wide-layout {
     @include ds.down(lg) {
@@ -844,8 +854,11 @@ $stock-switch-button-size: 44px;
   }
 
   & > button {
+    position: sticky;
+    top: calc(50dvh - #{$stock-switch-button-size} / 2);
     display: grid;
     place-items: center;
+    pointer-events: auto;
     width: $stock-switch-button-size;
     height: $stock-switch-button-size;
     padding: 0;
@@ -877,11 +890,11 @@ $stock-switch-button-size: 44px;
   }
 
   &.left {
-    justify-self: start;
+    left: var(--detail-padding-inline);
   }
 
   &.right {
-    justify-self: end;
+    right: var(--detail-padding-inline);
   }
 
   @container main-content (width > 0) {
@@ -897,14 +910,6 @@ $stock-switch-button-size: 44px;
 
   @include ds.narrow-layout {
     margin-inline: var(--space-050);
-
-    &.left {
-      align-self: flex-start;
-    }
-
-    &.right {
-      align-self: flex-end;
-    }
   }
 }
 
@@ -915,6 +920,8 @@ $stock-switch-button-size: 44px;
   width: 44px;
   height: 88px;
   opacity: 0;
+  // The hint only shows a swipe; it must not catch clicks meant for the arrows below.
+  pointer-events: none;
   transform: translateY(-50%);
   transition:
     opacity var(--duration-base) var(--ease-standard),
