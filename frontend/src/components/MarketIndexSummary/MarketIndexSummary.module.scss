@@ -1,5 +1,21 @@
 @use "styles" as ds;
 
+// Each market has about 183px of name, figures and gaps beside its chart. Narrower
+// than this, two markets side by side would leave each chart narrower than about
+// 160px, under the 4:1 a phone shows, so the markets stack instead. Rem, so it grows
+// with the user's font size like the names and figures do.
+$side-by-side-min-width: 45rem;
+
+// Narrower than this, a market has no room for its chart between its name and
+// figures, so the chart takes a row of its own.
+$chart-own-row-max-width: 16rem;
+
+// The padding each of two side-by-side markets keeps toward the other. It is wider
+// than the gaps inside a market, so the markets read as separate groups, and narrows
+// with the card, so a narrow card leaves its width to the charts. 2cqi is 14.4px on
+// the narrowest card that sets markets side by side, and reaches the cap at 1000px.
+$market-separation: min(2cqi, var(--space-250));
+
 .card {
   container: market-index-summary / inline-size;
   display: block;
@@ -61,37 +77,21 @@
 
 .markets {
   display: grid;
-  grid-template-columns: repeat(2, max-content minmax(0, 1fr) max-content);
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
   column-gap: var(--space-100);
-
-  @include ds.down(lg) {
-    grid-template-columns: max-content minmax(0, 1fr) max-content;
-  }
 }
 
 .market {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-columns: subgrid;
+  grid-column: 1 / -1;
   align-items: center;
   column-gap: var(--space-100);
-  padding-block-start: var(--space-150);
+}
 
-  @include ds.up(lg) {
-    grid-column: span 3;
-
-    // Wider than the gaps inside a market, so the two side-by-side markets read as
-    // separate groups.
-    &:first-child {
-      padding-inline-end: var(--space-250);
-    }
-    & + & {
-      padding-inline-start: var(--space-250);
-    }
-  }
-
-  @include ds.down(lg) {
-    grid-column: 1 / -1;
+@container market-index-summary (width < #{$side-by-side-min-width}) {
+  .market {
     padding-block-start: var(--space-100);
 
     &:not(:last-child) {
@@ -108,18 +108,36 @@
   }
 }
 
+@container market-index-summary (width >= #{$side-by-side-min-width}) {
+  .markets {
+    grid-template-columns: repeat(2, max-content minmax(0, 1fr) max-content);
+  }
+
+  .market {
+    grid-column: span 3;
+    padding-block-start: var(--space-150);
+
+    &:first-child {
+      padding-inline-end: $market-separation;
+    }
+    & + & {
+      padding-inline-start: $market-separation;
+    }
+  }
+}
+
 .chart {
   display: flex;
   align-items: center;
-
-  // About as tall as the index value and its change, so where they sit side by side
-  // the chart fills the row without making it taller.
-  block-size: 40px;
   inline-size: 100%;
 
-  @include ds.up(lg) {
-    block-size: 56px;
-  }
+  // The height follows the chart's own width, about 7:1 as on a 1920px dashboard,
+  // so neither a wide stacked chart nor a narrow side-by-side one looks squashed.
+  // At 40px it is about as tall as the index value and its change, so a narrow
+  // chart fills the row without making it taller.
+  aspect-ratio: 7;
+  min-block-size: 40px;
+  max-block-size: 56px;
 }
 
 .loading_chart {
@@ -127,21 +145,21 @@
   inline-size: 100%;
 }
 
-@container market-index-summary (width < 16rem) {
-  @include ds.down(lg) {
-    .markets {
-      grid-template-columns: minmax(0, 1fr) max-content;
-    }
+@container market-index-summary (width < #{$chart-own-row-max-width}) {
+  .markets {
+    grid-template-columns: minmax(0, 1fr) max-content;
+  }
 
-    .market {
-      row-gap: var(--space-050);
-    }
+  .market {
+    row-gap: var(--space-050);
+  }
 
-    .chart {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      block-size: 30px;
-    }
+  // On a row of its own, a short chart keeps the card from growing taller.
+  .chart {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    block-size: 30px;
+    min-block-size: 0;
   }
 }
 
