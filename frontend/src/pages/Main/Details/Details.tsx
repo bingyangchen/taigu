@@ -248,6 +248,12 @@ function Details() {
   const [state, setState, runAfterCommitCallbacks] =
     useMergedState<DetailsState>(INITIAL_STATE);
   const mainRef = useRef<HTMLDivElement>(null);
+  const priceChartRef = useRef<HTMLDivElement>(null);
+  const inventoryHistogramRef = useRef<HTMLDivElement>(null);
+  // A swipe that starts on a rendered ECharts chart, including the placeholder drawn
+  // while closes load, never switches stocks, so the user can move the tooltip.
+  // Empty states and the loading skeleton render no chart and still switch.
+  const isTouchFromChartRef = useRef(false);
   const fetchStockInfoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isUnmountedRef = useRef(false);
 
@@ -380,11 +386,21 @@ function Details() {
   };
 
   const handleTouchStart = (e: TouchEvent): void => {
+    // A second finger keeps the first finger's classification.
+    if (e.touches.length === 1) {
+      const chart =
+        e.target instanceof Element ? e.target.closest(".echarts-for-react") : null;
+      isTouchFromChartRef.current = [priceChartRef, inventoryHistogramRef].some(
+        (chartRef) => chartRef.current?.contains(chart) ?? false,
+      );
+    }
+    if (isTouchFromChartRef.current) return;
     const touch = e.touches[0];
     setState({ touchStartX: touch.clientX, touchStartY: touch.clientY });
   };
 
   const handleTouchMove = (e: TouchEvent): void => {
+    if (isTouchFromChartRef.current) return;
     const touch = e.changedTouches[0];
     const latestState = latestRenderRef.current.state;
     if (!latestState.isScrollingVertically && !latestState.isScrollingHorizontally) {
@@ -427,6 +443,7 @@ function Details() {
   };
 
   const handleTouchEnd = (): void => {
+    if (isTouchFromChartRef.current) return;
     const latest = latestRenderRef.current;
     if (latest.state.switchDirection === "next") switchToStock(latest.nextStockSid);
     else if (latest.state.switchDirection === "prev") {
@@ -476,6 +493,9 @@ function Details() {
   });
 
   useLayoutEffect(() => {
+    // Fast Refresh and StrictMode run the cleanup below and then this effect again on
+    // the same component, so the flag has to be cleared here as well.
+    isUnmountedRef.current = false;
     const latest = latestRenderRef.current;
     const touchTarget = latest.stockListTab ? mainRef.current : null;
     const handleTouchStartEvent = (e: TouchEvent): void =>
@@ -993,6 +1013,7 @@ function Details() {
           {!isNarrowLayout && chartControls}
           <div
             className={styles.historical_price_chart_container}
+            ref={priceChartRef}
             aria-label={
               stockDetailChartMode === "intraday"
                 ? "今日走勢"
@@ -1042,7 +1063,10 @@ function Details() {
             <div className={styles.section_header}>
               <div className={styles.section_title}>庫存分佈</div>
             </div>
-            <div className={styles.inventory_histogram_container}>
+            <div
+              className={styles.inventory_histogram_container}
+              ref={inventoryHistogramRef}
+            >
               {state.inventoryHistogram}
             </div>
           </section>
