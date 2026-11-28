@@ -113,6 +113,37 @@ Request 因連線失敗結束時：
 
 > 設計理由：自動開始的嘗試在 10 秒內遇到連線失敗時再試，因為解鎖手機或剛恢復網路時，瀏覽器常常比網路真的通了更早回報有網路，第一個 request 失敗就顯示「無法連上 Taigu」的話，使用者會常常得自己點「重試」；代價是後端真的停機時，使用者要看 10 秒轉圈的讀取畫面才看到原因。完整討論見 [0013](../plans/archive/0013-offline-screen.md)。
 
+頁面畫出來之前，畫面會照下圖改變，每一種轉換的規則寫在下面：
+
+```mermaid
+stateDiagram-v2
+  state "讀取畫面（轉圈）" as loading
+  state "停在原本的頁面" as stay
+  state "沒有網路連線" as offline
+  state "無法連上 Taigu" as unreachable
+  state "畫出頁面" as page
+  state "歡迎頁（ACCT-R3、ACCT-R5）" as welcome
+  [*] --> loading: 有網路時開啟或重新整理頁面
+  [*] --> stay: 有網路時從不需要登入的頁面換過來
+  [*] --> offline: 沒有網路
+  loading --> page: 讀到帳號資料
+  stay --> page: 讀到帳號資料
+  loading --> unreachable: 後端回錯誤，或滿 10 秒
+  stay --> unreachable: 後端回錯誤，或滿 10 秒
+  loading --> offline: 沒有網路
+  stay --> offline: 沒有網路
+  unreachable --> offline: 沒有網路
+  offline --> loading: 恢復網路
+  unreachable --> page: 讀到帳號資料
+  unreachable --> unreachable: 點「重試」後連線失敗、後端回錯誤，或滿 10 秒
+  offline --> page: 讀到帳號資料
+  offline --> offline: 點「重試」後沒有讀到帳號資料
+  loading --> welcome: 確認未登入或登入已失效
+  stay --> welcome: 確認未登入或登入已失效
+```
+
+圖上的「讀到帳號資料」包括點「重試」之後讀到，以及滿 10 秒之後、還在進行的 request 才讀到。圖上沒有畫出點「重試」之後到結果出來之前的畫面，因為這段期間畫面不變，只是「重試」不能點。任何一個狀態下確認未登入或登入已失效時，都依 ACCT-R3 與 ACCT-R5，圖上只畫出最常見的兩條。
+
 畫面依以下規則決定：
 
 - 任何一次嘗試讀到帳號資料：前端畫出頁面。滿 10 秒時前端不中止還在進行的 request，所以畫面已經換成「無法連上 Taigu」之後，那個 request 才讀到帳號資料的話，前端也直接畫出頁面，使用者不用點「重試」。
