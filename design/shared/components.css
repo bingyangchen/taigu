@@ -71,6 +71,7 @@
     --color-chart-muted: #9aa5b4;
     --color-chart-incomplete-area: rgba(39, 49, 61, 0.05);
     --color-chart-inactive: #c3ccd8;
+    --color-mask-opaque: #000;
     --font-size-2xs: 0.6875rem;
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
@@ -92,6 +93,7 @@
     --font-size-page-title: clamp(1.1rem, 1rem + 0.3vw, 1.3rem);
     --font-size-display-number: clamp(1.9rem, 1.8rem + 0.7vw, 2.3rem);
     --font-size-display-number-lg: clamp(2.5rem, 2.3rem + 0.9vw, 3rem);
+    --font-size-display-number-hero: clamp(1.9rem, max(1.8rem + 0.7vw, 1.4rem + 1.8vw), 3rem);
     --font-size-section-title: clamp(2rem, 1.8rem + 0.9vw, 2.5rem);
     --font-size-display-title: clamp(2rem, 1.1rem + 3.8vw, 4.1rem);
     --font-weight-regular: 400;
@@ -142,7 +144,6 @@
     --z-header: 4;
     --z-header-raised: 5;
     --z-backdrop: 6;
-    --z-sidebar-drawer: 6;
     --z-toast: 6;
     --z-dialog: 7;
     --z-speed-dial: 7;
@@ -155,9 +156,12 @@
     --layout-sidebar-width: 230px;
     --layout-sidebar-collapsed-width: 64px;
     --layout-speed-dial-clearance: 92px;
-    --layout-row-action-bar-space: 104px;
+    --layout-row-action-bar-space: 64px;
+    --layout-list-max-width: 780px;
+    --layout-search-box-width: 280px;
+    --layout-search-box-focused-width: 400px;
   }
-  @media (width < 960px) {
+  @media (width < 600px), (height < 480px) {
     :root {
       --font-size-button: 0.875rem;
       --font-size-caption: 0.6875rem;
@@ -213,13 +217,7 @@
     height: 100%;
     width: 100%;
   }
-  @media (width < 780px) {
-    html,
-    body.main-page-document-scroll,
-    body.settings-page-document-scroll {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+  @media (width < 600px), (height < 480px) {
     body.main-page-document-scroll {
       min-height: 100dvh;
       height: auto;
@@ -244,6 +242,14 @@
     body.settings-page-document-scroll #root {
       min-height: 100dvh;
       height: auto;
+    }
+  }
+  @media (width < 780px) {
+    html,
+    body.main-page-document-scroll,
+    body.settings-page-document-scroll {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
     ::-webkit-scrollbar {
       display: none;
@@ -1027,7 +1033,7 @@ body {
   background-color: var(--color-bg-surface);
   user-select: none;
 }
-@media (width < 780px) {
+@media (width < 600px), (height < 480px) {
   .FormPageShell_main {
     background-color: transparent;
   }
