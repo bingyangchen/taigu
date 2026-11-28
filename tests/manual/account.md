@@ -1066,7 +1066,7 @@ window.fetch = (input, options) => {
 
 1. 用帳號 A 登入。
 2. 準備交易紀錄、現金股利、買賣計畫、關注、筆記與手續費折讓。
-3. 逐一開啟頁面，讓資料寫入離線 cache。
+3. 逐一開啟頁面，讓資料寫入 IndexedDB 與 API cache。
 4. 從搜尋結果點選一檔股票。
 5. 在第二個分頁開啟同一帳號。
 6. 在第二個分頁啟動資料讀取，保留延遲中的 request。
@@ -1074,8 +1074,8 @@ window.fetch = (input, options) => {
 8. 確認 IndexedDB 的 `tradeRecords` 與 `metadata`、API cache、最近點選過的股票與舊返回網址都已清除，其他分頁也停止使用舊資料。
 9. 確認 Local Storage 已移除 `accountSessionCleanupPending`。
 10. 從登入頁登入帳號 B。
-11. 切成離線。
-12. 確認看不到 A 的資料，延遲中的 A 回應也沒有寫回帳號 B 讀取的 cache key。
+11. 在 DevTools 的 Application 面板打開 IndexedDB 與 Cache Storage。
+12. 確認裡面沒有帳號 A 的資料，延遲中的 A 回應也沒有寫回帳號 B 讀取的 cache key，搜尋的「最近點選」也沒有步驟 4 點選的股票。
 13. 重新準備上述資料與兩個分頁，以檢查清除尚未完成時的協調。
 14. 在 DevTools 的 Sources 開啟 `api.ts`。
 15. 在 `clearLocalAccountData` 中設定 breakpoint。
@@ -1089,19 +1089,53 @@ window.fetch = (input, options) => {
 23. 確認前端要求重新整理，在新 worker 確認資料隔離與清除完成之前不能繼續讀寫。
 24. 確認新版 service worker 使用 `api-cache-v2`，沒有讀取舊 service worker 延遲寫入 `api-cache` 的資料。
 
-預期：前端在登入帳號 B 前已清除帳號 A 的上述資料；使用者登入帳號 B 後看不到帳號 A 的離線資料與最近點選過的股票，前端也不使用帳號 A 的舊返回網址。
+預期：前端在登入帳號 B 前已清除帳號 A 的上述資料；使用者登入帳號 B 後，瀏覽器的 IndexedDB 與 service worker cache 裡沒有帳號 A 的資料，畫面上也看不到帳號 A 最近點選過的股票，前端也不使用帳號 A 的舊返回網址。
 
 ## ACCT-R17.2 登入失效後換另一個帳號登入
 
 前端沒有自動化 test，需要確認瀏覽器、頁面與儲存資料的實際結果。
 
-1. 依 ACCT-R17.1 準備帳號 A 的離線資料、最近點選過的股票與兩個開著的分頁。
+1. 依 ACCT-R17.1 準備帳號 A 存在 IndexedDB 與 API cache 的資料、最近點選過的股票與兩個開著的分頁。
 2. 依 ACCT-R5.2 的指令讓登入到期。
 3. 刪除 access token 的 cookie。
 4. 開啟 `https://local.taigu.tw/records?sid=2330`。
 5. 確認舊資料清除，原分頁只留下這次 `/records?sid=2330` 的返回紀錄。
 6. 在原分頁於 30 分鐘內登入帳號 B。
-7. 切成離線。
-8. 確認看不到帳號 A 的資料，延遲回應也沒有把資料寫回。
+7. 在 DevTools 的 Application 面板打開 IndexedDB 與 Cache Storage。
+8. 確認裡面沒有帳號 A 的資料，延遲回應也沒有把資料寫回，搜尋的「最近點選」也沒有帳號 A 點選過的股票。
 
-預期：前端在登入帳號 B 前已清除帳號 A 的上述資料；使用者登入帳號 B 後看不到帳號 A 的離線資料與最近點選過的股票，畫面依 ACCT-R3 返回這次開啟的 `/records?sid=2330`。
+預期：前端在登入帳號 B 前已清除帳號 A 的上述資料；使用者登入帳號 B 後，瀏覽器的 IndexedDB 與 service worker cache 裡沒有帳號 A 的資料，畫面上也看不到帳號 A 最近點選過的股票，畫面依 ACCT-R3 返回這次開啟的 `/records?sid=2330`。
+
+## ACCT-R18.18 切回時已經恢復網路
+
+`[ACCT-R18.18]` 的 test 用模擬的 `visibilitychange` 與 `navigator.onLine` 檢查，但安裝成 PWA 的 Taigu 在背景時瀏覽器怎麼回報網路狀態，要在實際的 PWA 確認。本機的開發環境沒辦法從手機開啟，iOS 模擬器在網路恢復後一分鐘內也都沒有送出 `online`（見 architecture.md），所以用桌面 Chrome 安裝的 PWA 檢查，把 PWA 的視窗縮到最小再切回來。
+
+1. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.account.models import User; from main.billing.models import BillingProfile; u = User.objects.get(email='<Email>'); BillingProfile.objects.update_or_create(user=u, defaults={'plan': 'free', 'subscription_status': 'canceled'})"`，把帳號改成 Free 方案。
+2. 確認帳號持有 2330。
+3. 用 PWA 開啟 Taigu。
+4. 點側邊欄的「市場」。
+5. 確認畫面在「持股」分頁。
+6. 記下 2330 那一列的價格。
+7. 關閉 Mac 的 Wi-Fi，等畫面出現「沒有網路連線」的提示。
+8. 在 PWA 的視窗按 Cmd+M，把視窗縮到最小。
+9. 打開 Mac 的 Wi-Fi，等網路連上。
+10. 執行 `docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.market.models import StockInfo; StockInfo.objects.filter(company_id='2330').update(close_price=1010, fluct_price=10)"`。
+11. 點 Dock 上 Taigu 的圖示，讓 PWA 的視窗回到畫面上。
+
+預期：步驟 11 之後「沒有網路連線」的提示已經消失；切回約 2 秒後，2330 那一列顯示 1,010。
+
+## ACCT-R18.19 使用中途沒有網路時送出
+
+`[ACCT-R18.19]` 的 test 檢查編輯頁維持開啟、填好的內容都還在，但錯誤提示與「沒有網路連線」的提示有沒有互相蓋住，要在實際的版面上確認。
+
+1. 以窄版開啟 `https://local.taigu.tw/records/trade/new`。
+2. 「股票」選 2330 台積電，「成交股數」填 1，「成交單價」填 600。
+3. 在 DevTools 的 Network 面板把 throttling 設成「Offline」。
+4. 等 3 秒以上，確認畫面出現「沒有網路連線」的提示。
+5. 點「新增買進紀錄」。
+6. 把 throttling 改回「No throttling」。
+7. 按返回，在「捨棄變更？」確認視窗點「捨棄變更」。
+8. 開啟 `https://local.taigu.tw/records`。
+9. 以寬版重做步驟 1 到 8。
+
+預期：步驟 5 之後畫面出現錯誤提示，「沒有網路連線」的提示也仍然看得到，兩者不互相蓋住，「沒有網路連線」的提示也沒有蓋住「新增買進紀錄」按鈕；編輯頁維持開啟，填好的內容都還在；步驟 8 的歷史紀錄頁沒有多出這筆紀錄。

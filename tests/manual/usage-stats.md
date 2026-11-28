@@ -24,6 +24,8 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 - 「查看 open-session request」：在 DevTools 的 Network 面板的篩選欄輸入 `open-session`，點最新的一筆，在 Payload 看 `platform` 的值，在 Headers 看 status code。
 - 「刪除 access token 的 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。
 
+步驟寫「封鎖 API」時，在 [Chrome DevTools 的 Request conditions 面板](https://developer.chrome.com/docs/devtools/request-conditions) 加入並啟用 `*/api/*` 的封鎖規則，讓前端送到後端的 request 因連線失敗結束；寫「解除 API 封鎖」時，關閉這條規則。不要用 Network 面板 throttling 的 Offline，因為 Offline 會讓瀏覽器回報沒有網路，那是 ACCT-R18 的「沒有網路」，不是「連不上後端」。
+
 ## USAGE-R1.1 在網頁上開啟 Taigu
 
 前端沒有自動化 test。記下的日期與平台由 unit test 驗證，這裡檢查前端開啟儀表板時會記下使用紀錄。
@@ -119,19 +121,18 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## USAGE-R1.11 連不上後端時切回分頁
 
-前端沒有自動化 test。錯誤提示出現 5 秒後就會自動消失，所以步驟 7 與步驟 8 要連續、盡快做完。
+前端沒有自動化 test。錯誤提示出現 5 秒後就會自動消失，所以步驟 6 與步驟 7 要連續、盡快做完。
 
 1. 在 Chrome 開啟 `https://local.taigu.tw/`。
 2. 確認畫面顯示儀表板。
-3. 開啟 DevTools 的 Network 面板。
-4. 在 Network 面板把 throttling 設成「Offline」。
-5. 在 Chrome 開一個新分頁。
-6. 等 2 秒。
-7. 點顯示儀表板的分頁。
-8. 確認畫面。
-9. 把 throttling 改回「No throttling」。
+3. 封鎖 API。
+4. 在 Chrome 開一個新分頁。
+5. 等 2 秒。
+6. 點顯示儀表板的分頁。
+7. 確認畫面。
+8. 解除 API 封鎖。
 
-預期：步驟 8 的畫面沒有出現錯誤提示，儀表板照常顯示。
+預期：步驟 7 的畫面沒有出現錯誤提示，儀表板照常顯示。
 
 ## USAGE-R1.12 隔天從其他 app 切回 PWA
 

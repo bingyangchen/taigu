@@ -1,6 +1,7 @@
 import React from "react";
 
 import { Button } from "../../components";
+import { useOfflineNoticeObstacle } from "../OfflineNotice/obstacles";
 import styles from "./Form.module.scss";
 
 interface Props {
@@ -14,10 +15,11 @@ export default function Form({
   primaryFooterButton,
   secondaryFooterButton,
 }: Props) {
+  const offlineNoticeObstacleRef = useOfflineNoticeObstacle();
   return (
     <div className={styles.main}>
       <div className={styles.body}>{children}</div>
-      <div className={styles.footer}>
+      <div className={styles.footer} ref={offlineNoticeObstacleRef}>
         {secondaryFooterButton}
         {primaryFooterButton}
       </div>

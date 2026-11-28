@@ -1,9 +1,13 @@
 const SERVICE_WORKER_REPLY_TIMEOUT_MS = 2000;
 const UPDATE_REQUIRED_MESSAGE = "無法完成操作，請重新整理後再試一次。";
 
+// A string, not the class's own name, which the production build minifies.
+export const ACCOUNT_CACHE_ERROR_NAME = "AccountCacheError";
+
 export class AccountCacheError extends Error {
   public constructor() {
     super(UPDATE_REQUIRED_MESSAGE);
+    this.name = ACCOUNT_CACHE_ERROR_NAME;
   }
 }
 

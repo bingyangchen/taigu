@@ -213,7 +213,7 @@ test("[MKT-R13.5] keeps both summaries when an update fails", async () => {
   expect(screen.getAllByTestId("sparkline")).toHaveLength(2);
 });
 
-test("[MKT-R13.7] shows cached quotes as a failed update when opened offline", async () => {
+test("[MKT-R13.7] shows cached quotes as a failed update when the first read fails", async () => {
   mockQuotes();
   sendRequest.mockImplementationOnce(async (_endpoint, _method, _body, options) => {
     options?.onCacheFallback?.();

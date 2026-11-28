@@ -20,6 +20,7 @@ export type ButtonSize = "xs" | "s" | "l" | "action";
 
 export interface Props
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
+  ref?: React.Ref<HTMLButtonElement>;
   children: React.ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;

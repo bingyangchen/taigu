@@ -55,6 +55,34 @@ export class ApiError extends Error {
   }
 }
 
+// A string, not the class's own name, which the production build minifies.
+export const CONNECTION_ERROR_NAME = "ConnectionError";
+
+/**
+ * A request that ended without a response, such as when the backend's domain does not
+ * resolve or the connection is refused (ACCT-R18's 「連不上後端」). It extends
+ * `TypeError`, which is what `fetch` rejects with, so callers that check for that
+ * still match.
+ */
+export class ConnectionError extends TypeError {
+  public constructor(cause: TypeError) {
+    super(cause.message, { cause });
+    this.name = CONNECTION_ERROR_NAME;
+  }
+}
+
+async function fetchOrThrowConnectionError(
+  input: string,
+  init: RequestInit,
+): Promise<Response> {
+  try {
+    return await fetch(input, init);
+  } catch (error) {
+    if (error instanceof TypeError) throw new ConnectionError(error);
+    throw error;
+  }
+}
+
 export default class Api {
   // The store imports the slices, which import this module, so the store's dispatch
   // is handed over at startup instead of imported.
@@ -268,7 +296,7 @@ export default class Api {
     ) {
       url.searchParams.set("_account_session", sessionVersion);
     }
-    const response = await fetch(url.href, {
+    const response = await fetchOrThrowConnectionError(url.href, {
       method,
       headers,
       body: requestBody,
@@ -334,10 +362,10 @@ export default class Api {
     const version = getDocumentSessionVersion();
 
     // A previous 401 can predate another tab's refresh or binding cookie update.
-    const current = await fetch(`${Env.backendUrl}account/me?check_session=1`, {
-      credentials: "include",
-      cache: "no-store",
-    });
+    const current = await fetchOrThrowConnectionError(
+      `${Env.backendUrl}account/me?check_session=1`,
+      { credentials: "include", cache: "no-store" },
+    );
     if (current.ok) return true;
     if (current.status !== 401) {
       throw new ApiError({ message: CSRF_FAILED_MESSAGE }, current.status);

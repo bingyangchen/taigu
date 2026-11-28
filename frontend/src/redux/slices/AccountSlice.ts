@@ -24,10 +24,11 @@ export const fetchAccountInfo = createAsyncThunk(
   "account/fetchAccountInfo",
   // `void` lets callers omit the options, which `createAsyncThunk` requires.
   async (
-    options: { redirectOnUnauthorized?: boolean } | void,
+    options: { redirectOnUnauthorized?: boolean; silentOnFailure?: boolean } | void,
   ): Promise<Account | undefined> => {
     return await Api.sendRequest("account/me", "get", undefined, {
       redirectOnUnauthorized: options?.redirectOnUnauthorized,
+      silentOnFailure: options?.silentOnFailure,
     });
   },
 );

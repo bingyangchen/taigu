@@ -1,7 +1,12 @@
 import { memo, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 
-import { HeaderForSettings, PageMeta, ToastList } from "../../components";
+import {
+  HeaderForSettings,
+  OfflineNotice,
+  PageMeta,
+  ToastList,
+} from "../../components";
 import { useAppDispatch } from "../../redux/hooks";
 import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
 import Env from "../../utils/env";
@@ -134,6 +139,7 @@ function Settings() {
     >
       <PageMeta title="帳戶設定 | Taigu" noindex />
       <ToastList />
+      <OfflineNotice narrowPlacement="bottom" />
       <div className={styles.body}>
         {!isSettingsEditorRoute && <HeaderForSettings />}
         <Outlet />

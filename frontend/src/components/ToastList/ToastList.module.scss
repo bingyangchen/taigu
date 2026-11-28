@@ -3,8 +3,12 @@
 .main {
   position: fixed;
   inset-inline-end: var(--space-400);
-  inset-block-end: var(--space-400);
-  inline-size: 360px;
+  // Above ACCT-R18's notice while it shows; OfflineNotice sets the property.
+  inset-block-end: max(
+    var(--space-400),
+    calc(var(--offline-notice-clearance, 0px) + var(--space-150))
+  );
+  inline-size: var(--layout-toast-width);
   max-inline-size: calc(100vw - 2 * var(--space-400));
   display: flex;
   flex-direction: column;

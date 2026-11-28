@@ -17,15 +17,16 @@ import {
   quantityUnitToLabel,
   tradeSideToLabel,
 } from "../../utils/recordEditor";
+import type { KeyboardViewport } from "../../utils/useKeyboardViewport";
 import Button from "../Button/Button";
 import DestructiveActionSection from "../DestructiveActionSection/DestructiveActionSection";
 import DiscardChangesModal from "../DiscardChangesModal/DiscardChangesModal";
 import FormPageShell from "../FormPageShell/FormPageShell";
 import LabeledInput from "../LabeledInput/LabeledInput";
 import Modal from "../Modal/Modal";
+import { useOfflineNoticeObstacle } from "../OfflineNotice/obstacles";
 import SegmentedControl from "../SegmentedControl/SegmentedControl";
 import styles from "./RecordEditor.module.scss";
-import type { KeyboardViewport } from "./useKeyboardViewport";
 
 export type StepState = "open" | "done" | "todo";
 
@@ -403,6 +404,7 @@ export function RecordSummary({
   isKeyboardOpen,
   formId,
 }: RecordSummaryProps): React.ReactElement {
+  const offlineNoticeObstacleRef = useOfflineNoticeObstacle();
   return (
     <aside
       className={`${styles.summary} ${isKeyboardOpen ? styles.keyboard_open : ""}`}
@@ -448,6 +450,7 @@ export function RecordSummary({
         <p className={styles.summary_missing}>還沒填：{missing.join("、")}</p>
       )}
       <Button
+        ref={offlineNoticeObstacleRef}
         id={getSubmitButtonId(formId)}
         type="submit"
         form={formId}
@@ -515,6 +518,7 @@ export function RecordSavedView({
   onFinish,
 }: RecordSavedViewProps): React.ReactElement {
   const titleId = useId();
+  const offlineNoticeObstacleRef = useOfflineNoticeObstacle();
   return (
     <div className={styles.saved}>
       <div className={styles.saved_mark} aria-hidden="true">
@@ -530,7 +534,7 @@ export function RecordSavedView({
           </div>
         ))}
       </dl>
-      <div className={styles.saved_actions}>
+      <div className={styles.saved_actions} ref={offlineNoticeObstacleRef}>
         <Button type="button" variant="light" size="action" onClick={onAddAnother}>
           再記一筆
         </Button>

@@ -13,6 +13,7 @@ import {
 import {
   FullLogo,
   LoadingScreen,
+  OfflineNotice,
   PageMeta,
   ToastList,
   Tooltip,
@@ -125,16 +126,17 @@ export default function Admin(): React.ReactElement {
 
   const denyAccess = useCallback((): void => setAccess("denied"), []);
 
-  if (access === "checking") return <LoadingScreen />;
+  if (access === "checking") return withOfflineNotice(<LoadingScreen />);
+  // ACCT-R18 leaves the 404 page out.
   if (access === "denied") return <NotFound />;
   if (access === "failed") {
-    return (
+    return withOfflineNotice(
       <main className={styles.access_failure}>
         <LoadFailure onRetry={checkAccess} />
-      </main>
+      </main>,
     );
   }
-  return (
+  return withOfflineNotice(
     <LostAccessContext.Provider value={denyAccess}>
       <Routes>
         <Route element={<AdminShell unhandledCount={unhandledCount} />}>
@@ -148,7 +150,16 @@ export default function Admin(): React.ReactElement {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </LostAccessContext.Provider>
+    </LostAccessContext.Provider>,
+  );
+}
+
+function withOfflineNotice(page: React.ReactElement): React.ReactElement {
+  return (
+    <>
+      <OfflineNotice narrowPlacement="corner" />
+      {page}
+    </>
   );
 }
 

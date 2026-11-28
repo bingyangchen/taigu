@@ -14,11 +14,22 @@ $layout: (
   // Room under a page's last item for the speed dial button, which floats 16px above
   // the bottom navigation bar, plus 16px.
   speed-dial-clearance: $-speed-dial-size + 2 * map.get(spacing.$space, "200"),
+  // The speed dial's size and its distance from the right edge. A viewport narrower
+  // than the `sm` breakpoint uses $layout-below-sm.
+  speed-dial-size: $-speed-dial-size,
+  speed-dial-inset-inline-end: 24px,
   // Room on the right of a list row for the delete button that shows on hover.
   row-action-bar-space: 64px,
   // The widest a record list grows on a wide screen, so a row stays easy to read
   // across.
   list-max-width: 780px,
   search-box-width: 280px,
+  // The toast list and ACCT-R18's notice, which share a corner in the wide layout.
+  toast-width: 360px,
   search-box-focused-width: 400px,
+);
+
+$layout-below-sm: (
+  speed-dial-size: 54px,
+  speed-dial-inset-inline-end: 18px,
 );

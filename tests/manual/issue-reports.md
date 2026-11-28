@@ -8,6 +8,8 @@
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.issue_report.models import IssueReport; r = IssueReport.objects.order_by('-id').first(); print('count:', IssueReport.objects.count()); r and print('latest:', len(r.body), repr(r.body[:100]), r.user.email, r.created_at, r.platform, repr(r.user_agent))"
 ```
 
+步驟寫「封鎖 API」時，在 [Chrome DevTools 的 Request conditions 面板](https://developer.chrome.com/docs/devtools/request-conditions) 加入並啟用 `*/api/*` 的封鎖規則，讓前端送到後端的 request 因連線失敗結束；寫「解除 API 封鎖」時，關閉這條規則。不要用 Network 面板 throttling 的 Offline，因為 Offline 會讓瀏覽器回報沒有網路，那是 ACCT-R18 的「沒有網路」，不是「連不上後端」。
+
 ## ISSUE-R1.1 從設定頁開啟問題回報
 
 以窄版與寬版開啟問題回報時出現的畫面，要在真實瀏覽器裡確認，前端沒有自動化 test。
@@ -130,20 +132,19 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 前端沒有自動化 test。
 
-錯誤提示出現 5 秒後就會自動消失，所以步驟 7 與步驟 8 要連續、盡快做完。
+錯誤提示出現 5 秒後就會自動消失，所以步驟 6 與步驟 7 要連續、盡快做完。
 
 1. 執行查看問題回報的指令，記下 `count:` 的數字。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/settings`。
 3. 點選「問題回報」。
 4. 在文字框輸入「測試網路中斷」。
-5. 開啟 Chrome DevTools 的 Network 分頁。
-6. 把 throttling 設成「Offline」。
-7. 點選送出按鈕。
-8. 在步驟 7 之後 5 秒內，確認畫面左下角的錯誤提示、視窗與文字框的狀態。
-9. 把 throttling 改回「No throttling」。
-10. 執行查看問題回報的指令。
+5. 封鎖 API。
+6. 點選送出按鈕。
+7. 在步驟 6 之後 5 秒內，確認畫面左下角的錯誤提示、視窗與文字框的狀態。
+8. 解除 API 封鎖。
+9. 執行查看問題回報的指令。
 
-預期：步驟 8 的畫面出現錯誤提示，視窗沒有關閉，文字框的內容仍是「測試網路中斷」，送出按鈕可以再點選；步驟 10 的 `count:` 與步驟 1 的數字相同。
+預期：步驟 7 的畫面出現錯誤提示，視窗沒有關閉，文字框的內容仍是「測試網路中斷」，送出按鈕可以再點選；步驟 9 的 `count:` 與步驟 1 的數字相同。
 
 ## ISSUE-R5.1 文字框只有空白與換行時返回
 

@@ -60,6 +60,7 @@ import {
   useIsNarrowLayout,
   useMediaQuery,
 } from "../../../utils/mediaQuery";
+import { useMarketRefreshAfterRestore } from "../../../utils/network";
 import { navigateBack } from "../../../utils/router";
 import { useLatestRef } from "../../../utils/useLatestRef";
 import { useMergedState } from "../../../utils/useMergedState";
@@ -334,20 +335,33 @@ function Details() {
       clearInterval(fetchStockInfoTimerRef.current);
       fetchStockInfoTimerRef.current = null;
     }
-    fetchStockInfoTimerRef.current = setInterval(() => {
-      dispatch(fetchSingleStockInfo(timerSid))
-        .unwrap()
-        .then(() => {
-          if (timerSid === latestRenderRef.current.sid)
-            setState({ didStockInfoFail: false });
-        })
-        .catch(() => {
-          if (timerSid === latestRenderRef.current.sid)
-            setState({ didStockInfoFail: true });
-        });
-      dispatch(fetchSingleStockIntradayPrices(timerSid));
-    }, latestRenderRef.current.subscription.market_refresh_interval_seconds * 1000);
+    fetchStockInfoTimerRef.current = setInterval(
+      () => refreshStockInfo(timerSid),
+      latestRenderRef.current.subscription.market_refresh_interval_seconds * 1000,
+    );
   };
+
+  const refreshStockInfo = (refreshedSid: string): void => {
+    dispatch(fetchSingleStockInfo(refreshedSid))
+      .unwrap()
+      .then(() => {
+        if (refreshedSid === latestRenderRef.current.sid)
+          setState({ didStockInfoFail: false });
+      })
+      .catch(() => {
+        if (refreshedSid === latestRenderRef.current.sid)
+          setState({ didStockInfoFail: true });
+      });
+    dispatch(fetchSingleStockIntradayPrices(refreshedSid));
+  };
+
+  useMarketRefreshAfterRestore(() => {
+    // Before the timer starts, the page is still loading the stock for the first time.
+    if (!fetchStockInfoTimerRef.current) return;
+    const { sid: currentSid } = latestRenderRef.current;
+    refreshStockInfo(currentSid);
+    startFetchStockInfoTimer(currentSid);
+  });
 
   const loadStockDetail = async (loadedSid: string): Promise<void> => {
     const inventoryHistogramPrices =

@@ -15,6 +15,8 @@
 
 長條的金額用游標移到長條上時出現的提示確認。
 
+步驟寫「封鎖 API」時，在 [Chrome DevTools 的 Request conditions 面板](https://developer.chrome.com/docs/devtools/request-conditions) 加入並啟用 `*/api/*` 的封鎖規則，讓前端送到後端的 request 因連線失敗結束；寫「解除 API 封鎖」時，關閉這條規則。不要用 Network 面板 throttling 的 Offline，因為 Offline 會讓瀏覽器回報沒有網路，那是 ACCT-R18 的「沒有網路」，不是「連不上後端」。
+
 ## FEE-R1.1 有交易紀錄也有手續費折讓
 
 前端沒有自動化 test。
@@ -232,9 +234,9 @@
 1. 換成新帳號。
 2. 開啟手續費頁。
 3. 點「新增折讓紀錄」，在折讓金額輸入 200，在備註輸入「9 月退佣」。
-4. 在 Chrome DevTools 的 Network 分頁把 throttling 設成「Offline」。
+4. 封鎖 API。
 5. 點視窗裡的「新增折讓紀錄」。
-6. 把 throttling 改回「No throttling」。
+6. 解除 API 封鎖。
 7. 按 Esc，在「捨棄變更？」確認視窗點「捨棄變更」。
 
 預期：步驟 5 之後畫面出現錯誤提示，視窗沒有關閉，折讓金額仍是 200、備註仍是「9 月退佣」；步驟 7 之後列表顯示「目前沒有手續費折讓紀錄」。

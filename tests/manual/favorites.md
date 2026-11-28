@@ -56,6 +56,8 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from main.account.models import User; from main.favorite.models import Favorite; from main.market.models import Company; u = User.objects.get(email='<email>'); Favorite.objects.filter(owner=u).delete(); [Favorite.objects.create(owner=u, company=c) for c in Company.objects.exclude(pk__in=['2330', '2317']).order_by('pk')[:10]]"
 ```
 
+步驟寫「封鎖 API」時，在 [Chrome DevTools 的 Request conditions 面板](https://developer.chrome.com/docs/devtools/request-conditions) 加入並啟用 `*/api/*` 的封鎖規則，讓前端送到後端的 request 因連線失敗結束；寫「解除 API 封鎖」時，關閉這條規則。不要用 Network 面板 throttling 的 Offline，因為 Offline 會讓瀏覽器回報沒有網路，那是 ACCT-R18 的「沒有網路」，不是「連不上後端」。
+
 ## FAV-R1.1 加入一檔股票
 
 後端的 test 只驗證自選股有存下來，愛心與列表的變化要在前端確認，而前端沒有自動化 test。
@@ -101,13 +103,12 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 1. 執行「設定自選股」指令，股票代號用 2317。
 2. 開啟 `https://local.taigu.tw/market/2330`。
-3. 開啟 Chrome DevTools 的 Network 分頁。
-4. 選 throttling 選單的 Offline。
-5. 點選空心愛心。
-6. 選 throttling 選單的 No throttling。
-7. 重新整理頁面。
+3. 封鎖 API。
+4. 點選空心愛心。
+5. 解除 API 封鎖。
+6. 重新整理頁面。
 
-預期：第 5 步之後愛心最後顯示空心；第 7 步重新整理後，愛心仍是空心。
+預期：第 4 步之後愛心最後顯示空心；第 6 步重新整理後，愛心仍是空心。
 
 ## FAV-R2.3 連不上後端時移除
 
@@ -115,13 +116,12 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 1. 執行「設定自選股」指令，股票代號用 2330。
 2. 開啟 `https://local.taigu.tw/market/2330`。
-3. 開啟 Chrome DevTools 的 Network 分頁。
-4. 選 throttling 選單的 Offline。
-5. 點選實心愛心。
-6. 選 throttling 選單的 No throttling。
-7. 重新整理頁面。
+3. 封鎖 API。
+4. 點選實心愛心。
+5. 解除 API 封鎖。
+6. 重新整理頁面。
 
-預期：第 5 步之後愛心最後顯示實心；第 7 步重新整理後，愛心仍是實心。
+預期：第 4 步之後愛心最後顯示實心；第 6 步重新整理後，愛心仍是實心。
 
 ## FAV-R3.1 額度用完時在還沒更新的畫面再加入一次
 
@@ -325,12 +325,11 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 3. 開啟 `https://local.taigu.tw/market`。
 4. 點選「關注」。
 5. 確認 2330 那一列顯示 1,000。
-6. 開啟 Chrome DevTools 的 Network 分頁。
-7. 選 throttling 選單的 Offline。
-8. 點選「持股」。
-9. 點選「關注」。
+6. 封鎖 API。
+7. 點選「持股」。
+8. 點選「關注」。
 
-預期：第 9 步之後，控制列顯示 ↻，2330 那一列仍顯示 1,000。
+預期：第 8 步之後，控制列顯示 ↻，2330 那一列仍顯示 1,000。
 
 ## FAV-R12.2 點選重新整理按鈕
 
@@ -338,7 +337,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 1. 完成 FAV-R12.1 的所有步驟。
 2. 執行「設定價格」指令，把 2330 設成 `close_price=1010, fluct_price=10`。
-3. 選 throttling 選單的 No throttling。
+3. 解除 API 封鎖。
 4. 點選 ↻。
 
 預期：↻ 消失，2330 那一列顯示 1,010。
@@ -353,10 +352,10 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 2. 執行「設定價格」指令，把 2330 設成 `close_price=1000, fluct_price=0`；`quantity` 維持指令裡的值。
 3. 開啟 `https://local.taigu.tw/`，等儀表板載入完成。
 4. 點選側邊欄的「市場」，再點選「關注」。
-5. 開啟 Chrome DevTools 的 Network 分頁，選 throttling 選單的 Offline。
+5. 封鎖 API。
 6. 點選「持股」，再點選「關注」，確認控制列出現 ↻。
 7. 執行「設定價格」指令，把 2330 設成 `close_price=1010, fluct_price=10`。
-8. 選 throttling 選單的 No throttling。
+8. 解除 API 封鎖。
 9. 不點選 ↻，停在「關注」分頁等 30 秒。
 
 預期：第 9 步的 30 秒內 ↻ 消失，2330 那一列顯示 1,010。

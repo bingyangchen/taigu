@@ -46,6 +46,8 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 - 「在桌面瀏覽器上」：關閉 DevTools 的裝置模擬（Toggle device toolbar），Chrome 的視窗寬度至少 1024px。
 - 「在手機上」：開啟 DevTools 的裝置模擬，選一款手機機型（例如 iPhone 14 Pro），再重新整理頁面。
 
+步驟寫「封鎖 API」時，在 [Chrome DevTools 的 Request conditions 面板](https://developer.chrome.com/docs/devtools/request-conditions) 加入並啟用 `*/api/*` 的封鎖規則，讓前端送到後端的 request 因連線失敗結束；寫「解除 API 封鎖」時，關閉這條規則。不要用 Network 面板 throttling 的 Offline，因為 Offline 會讓瀏覽器回報沒有網路，那是 ACCT-R18 的「沒有網路」，不是「連不上後端」。
+
 ## ADMIN-R1.1 Superuser 開啟後台
 
 前端的權限判斷與換頁沒有自動化 test。
@@ -540,13 +542,13 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## ADMIN-R13.4 連不上後端時標記
 
-網路中斷時的處理沒有自動化 test。
+連不上後端時的處理沒有自動化 test。
 
 1. 把登入的帳號設成 superuser，建立測試用的問題回報。
 2. 開啟 `https://local.taigu.tw/admin/issue-reports`，記下導覽的「問題回報」旁邊的數字。
-3. 在 DevTools 的 Network 面板把 throttling 改成「Offline」。
+3. 封鎖 API。
 4. 點 `u6@taigu-check.test` 那則問題回報的勾選按鈕。
-5. 把 throttling 改回「No throttling」。
+5. 解除 API 封鎖。
 
 預期：步驟 4 之後畫面出現錯誤提示「無法更新這則問題回報，請稍後再試。」，`u6` 那則問題回報仍在列表裡，勾選按鈕仍是空心的圓圈，導覽的數字跟步驟 2 相同。
 
@@ -595,11 +597,13 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## ADMIN-R14.1 連不上後端時開啟使用情況頁
 
-網路中斷時的處理沒有自動化 test。
+連不上後端時的處理沒有自動化 test。
 
 1. 把登入的帳號設成 superuser。
-2. 開啟 `https://local.taigu.tw/admin/subscriptions`。
-3. 在 DevTools 的 Network 面板把 throttling 改成「Offline」，點導覽的「使用情況」。
-4. 把 throttling 改回「No throttling」，點「重新載入」。
+2. 開啟 `https://local.taigu.tw/admin/issue-reports`。
+3. 封鎖 API。
+4. 點導覽的「使用情況」。
+5. 解除 API 封鎖。
+6. 點「重新載入」。
 
-預期：步驟 3 之後畫面顯示「無法載入資料。」與「重新載入」；步驟 4 之後畫面顯示使用情況頁的數字、兩張圖與留存表。
+預期：步驟 4 之後畫面顯示「無法載入資料。」與「重新載入」；步驟 6 之後畫面顯示使用情況頁的數字、兩張圖與留存表。

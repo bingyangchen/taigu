@@ -14,10 +14,12 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vitest";
 
 import stockInfo from "../../redux/slices/StockInfoSlice";
+import { mockNetworkStatus } from "../../testing/network";
 import { DESKTOP, mockViewport, PHONE_PORTRAIT } from "../../testing/viewport";
 import type { CashDividendRecord, StockInfo, TradeRecord } from "../../types";
 import Api from "../../utils/api";
 import CashDividendRecordEditor from "../CashDividendRecordEditor/CashDividendRecordEditor";
+import OfflineNotice from "../OfflineNotice/OfflineNotice";
 import TradeRecordEditor from "../TradeRecordEditor/TradeRecordEditor";
 
 // No delay between actions, so fake timers do not stall user-event.
@@ -234,6 +236,9 @@ async function searchAndSelect(sid: string): Promise<void> {
 function step(title: string): HTMLElement {
   return screen.getByRole("region", { name: title });
 }
+
+const stepSummary = (title: string): string =>
+  within(step(title)).getByRole("button", { expanded: false }).textContent ?? "";
 
 async function setUnit(unit: "張" | "股"): Promise<void> {
   const button = within(screen.getByRole("tablist", { name: "股數單位" })).getByRole(
@@ -1268,7 +1273,18 @@ describe("price limit", () => {
   });
 
   test("[REC-R25.7] skips a stock whose price is not loaded", async () => {
-    await typePrice("10400", {});
+    renderTradeEditor({
+      trades: [trade("2330", "2026-10-01", 1000), trade("2330", "2026-11-02", -1000)],
+      isNarrow: true,
+    });
+    sendRequest.mockImplementation(async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    await user.click(stockInput());
+    await user.click(screen.getByRole("option", { name: /2330/ }));
+    await user.type(field("成交單價"), "10400");
+
+    expect(stepSummary("買賣與股票")).toContain("2330 台積電");
     expect(screen.queryByText(/今天的成交價應在/)).not.toBeInTheDocument();
   });
 
@@ -1503,5 +1519,98 @@ describe("cash dividend editor", () => {
       /\d/,
     );
     expect(totalText()).toBe("2330累計現金股利9,000元");
+  });
+});
+
+describe("no network while editing", () => {
+  let network: ReturnType<typeof mockNetworkStatus>;
+
+  function renderWithOfflineNotice(): void {
+    renderEditor(
+      <>
+        <TradeRecordEditor hideModal={vi.fn()} presentation="page" />
+        <OfflineNotice narrowPlacement="bottom" />
+      </>,
+      { isNarrow: true },
+    );
+  }
+
+  beforeEach(() => {
+    network = mockNetworkStatus();
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe(): void {}
+        disconnect(): void {}
+      },
+    );
+    network.setOnline(true);
+  });
+
+  afterEach(() => {
+    network.setOnline(true);
+    vi.unstubAllGlobals();
+  });
+
+  test("[ACCT-R18.14] keeps the form usable while there is no network", async () => {
+    renderWithOfflineNotice();
+    await searchAndSelect("2330");
+    await user.type(field("成交股數"), "1000");
+
+    network.setOnline(false);
+    advance(2999);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    advance(1);
+    expect(screen.getByRole("status")).toHaveTextContent("沒有網路連線");
+
+    advance(2000);
+    await user.clear(field("成交股數"));
+    await user.type(field("成交股數"), "2000");
+    network.setOnline(true);
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(stepSummary("買賣與股票")).toContain("2330 台積電");
+    expect(field("成交股數")).toHaveValue("2,000");
+  });
+
+  test("[ACCT-R18.20] waits for the on-screen keyboard to close", async () => {
+    const keyboard = Object.assign(new EventTarget(), {
+      height: window.innerHeight - 300,
+      offsetTop: 0,
+      scale: 1,
+    });
+    vi.stubGlobal("visualViewport", keyboard);
+    renderWithOfflineNotice();
+    await searchAndSelect("2330");
+    await user.type(field("成交股數"), "1");
+
+    network.setOnline(false);
+    advance(5000);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    act(() => {
+      keyboard.height = window.innerHeight;
+      keyboard.dispatchEvent(new Event("resize"));
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("沒有網路連線");
+  });
+
+  test("[ACCT-R18.19] keeps the form open when sending fails without a network", async () => {
+    quotes = { "2330": { sid: "2330", name: "台積電", quantity: 0, close: 600 } };
+    renderWithOfflineNotice();
+    await searchAndSelect("2330");
+    await user.type(field("成交股數"), "1");
+    await user.type(field("成交單價"), "600");
+    network.setOnline(false);
+    advance(3000);
+    mockSaveTradeRecord.mockRejectedValue(new TypeError("Failed to fetch"));
+
+    await submit("新增買進紀錄");
+
+    expect(screen.getByRole("status")).toHaveTextContent("沒有網路連線");
+    expect(screen.queryByText("已新增買進紀錄")).not.toBeInTheDocument();
+    expect(stepSummary("買賣與股票")).toContain("2330 台積電");
+    expect(field("成交股數")).toHaveValue("1");
+    expect(field("成交單價")).toHaveValue("600");
   });
 });

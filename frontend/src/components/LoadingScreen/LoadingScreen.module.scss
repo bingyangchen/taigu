@@ -12,6 +12,8 @@ $logo-breathe-duration: 2s;
   justify-content: center;
   align-items: center;
   gap: 2dvh;
+  padding: 0 var(--space-300);
+  box-sizing: border-box;
   z-index: var(--z-loading-screen);
 
   & > .logo_wrapper {
@@ -26,6 +28,35 @@ $logo-breathe-duration: 2s;
     animation: spinner-fade-in var(--duration-slow) var(--ease-standard) forwards;
     animation-delay: calc($logo-breathe-duration - var(--loading-screen-elapsed, 0ms));
   }
+}
+
+.problem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-200);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.problem_text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-050);
+}
+
+.problem_title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.problem_detail {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-data);
+  line-height: var(--line-height-relaxed);
 }
 
 @keyframes logo-breathe-in {
