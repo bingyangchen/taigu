@@ -6,7 +6,7 @@ import { useAppDispatch } from "../../redux/hooks";
 import { fetchAccountInfo, openSession } from "../../redux/slices/AccountSlice";
 import Env from "../../utils/env";
 import { getMainTabPath, isSameUrlHistoryTraversal } from "../../utils/mainNavigation";
-import { makeWidthBelowQuery } from "../../utils/mediaQuery";
+import { useIsNarrowLayout } from "../../utils/mediaQuery";
 import { settingsPagePath } from "../../utils/router";
 import { useLatestRef } from "../../utils/useLatestRef";
 import Util from "../../utils/util";
@@ -20,11 +20,13 @@ function Settings() {
   const navigate = useNavigate();
   const mainRef = useRef<HTMLElement>(null);
   const [viewHistory] = useState(getViewHistory);
+  const isNarrowLayout = useIsNarrowLayout();
   const latestRenderRef = useLatestRef({ location, navigationType });
 
+  // Follows Settings.module.scss.
   const getOverviewScrollContainer = useCallback(
     (): Window | HTMLElement | null =>
-      Util.isMobile && window.matchMedia(makeWidthBelowQuery("md")).matches
+      document.body.classList.contains("settings-page-document-scroll")
         ? window
         : mainRef.current,
     [],
@@ -63,8 +65,12 @@ function Settings() {
       ? captureOverviewPosition()
       : null;
 
+  // Before the effect below restores the overview's position in the container it sets.
   useLayoutEffect(() => {
-    document.body.classList.toggle("settings-page-document-scroll", Util.isMobile);
+    document.body.classList.toggle("settings-page-document-scroll", isNarrowLayout);
+  }, [isNarrowLayout]);
+
+  useLayoutEffect(() => {
     restoreOverviewPosition();
     dispatch(fetchAccountInfo());
     dispatch(openSession());
@@ -123,7 +129,7 @@ function Settings() {
     <main
       ref={mainRef}
       className={`${styles.main} ${
-        Util.isMobile && isSettingsEditorRoute ? styles.mobile_editor_shell : ""
+        isSettingsEditorRoute ? styles.mobile_editor_shell : ""
       }`}
     >
       <PageMeta title="帳戶設定 | Taigu" noindex />

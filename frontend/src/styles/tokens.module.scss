@@ -21,4 +21,6 @@
   @each $name, $width in breakpoints.$breakpoints {
     breakpoint-#{$name}: $width;
   }
+  narrow-layout-width: breakpoints.$narrow-layout-width;
+  narrow-layout-height: breakpoints.$narrow-layout-height;
 }

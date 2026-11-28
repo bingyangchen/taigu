@@ -55,6 +55,11 @@ import {
   getVisibleMarketSids,
   makeStockPriceHistory,
 } from "../../../utils/market";
+import {
+  CAN_HOVER_QUERY,
+  useIsNarrowLayout,
+  useMediaQuery,
+} from "../../../utils/mediaQuery";
 import { navigateBack } from "../../../utils/router";
 import { useLatestRef } from "../../../utils/useLatestRef";
 import { useMergedState } from "../../../utils/useMergedState";
@@ -171,6 +176,8 @@ function Details() {
   const params = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const isNarrowLayout = useIsNarrowLayout();
+  const canHover = useMediaQuery(CAN_HOVER_QUERY);
   const sid = params.sid ?? "";
   const [, , routeTab, routeSid] = location.pathname.split("/");
   const stockListTab: MarketTab | null =
@@ -732,7 +739,7 @@ function Details() {
         </RoundButton>
         <div
           className={`${styles.material_fact_outer} ${
-            Util.isMobile ? styles.mobile : ""
+            isNarrowLayout ? styles.mobile : ""
           }`}
         >
           <div className={styles.title}>{state.activeMaterialFact.title}</div>
@@ -750,7 +757,7 @@ function Details() {
       </>
     ) : (
       <div
-        className={`${styles.company_info_outer} ${Util.isMobile ? styles.mobile : ""}`}
+        className={`${styles.company_info_outer} ${isNarrowLayout ? styles.mobile : ""}`}
       >
         <div className={styles.title}>證券代號</div>
         <div className={styles.content}>{sid}</div>
@@ -799,7 +806,7 @@ function Details() {
         />
       );
     } else if (state.activeModalName === "companyInfo") {
-      return Util.isMobile ? (
+      return isNarrowLayout ? (
         <BottomSheet
           onClickBackground={() =>
             setState({ activeModalName: null, activeMaterialFact: null })
@@ -831,7 +838,7 @@ function Details() {
     <>
       {activeModal}
       <div className={styles.main} ref={mainRef}>
-        {Util.isMobile && (
+        {isNarrowLayout && (
           <ScrollThresholdContainer>
             {(isScrolled) => (
               <div className={styles.mobile_back_button_container}>
@@ -848,7 +855,7 @@ function Details() {
             )}
           </ScrollThresholdContainer>
         )}
-        {Util.isMobile && (
+        {isNarrowLayout && (
           <ScrollThresholdContainer>
             {(isScrolled) => (
               <button
@@ -868,7 +875,7 @@ function Details() {
             )}
           </ScrollThresholdContainer>
         )}
-        {Util.isMobile && stockInfo && (
+        {isNarrowLayout && stockInfo && (
           <ScrollThresholdContainer
             className={styles.stock_brief_info_container}
             scrolledClassName={styles.show}
@@ -890,7 +897,7 @@ function Details() {
         )}
         <section className={`${styles.block} ${styles.hero_block}`}>
           <div className={styles.hero_toolbar}>
-            {!Util.isMobile && (
+            {!isNarrowLayout && (
               <RoundButton
                 onClick={returnToList}
                 className={styles.toolbar_button}
@@ -901,7 +908,7 @@ function Details() {
               </RoundButton>
             )}
             <div className={styles.toolbar_spacer} />
-            {!Util.isMobile && (
+            {!isNarrowLayout && (
               <button
                 type="button"
                 className={`${styles.icon_button} ${isFavorite ? styles.active : ""}`}
@@ -915,7 +922,7 @@ function Details() {
                 )}
               </button>
             )}
-            {!Util.isMobile && (
+            {!isNarrowLayout && (
               <>
                 <button
                   type="button"
@@ -962,7 +969,7 @@ function Details() {
                 行情日期 <time dateTime={stockInfo?.date}>{quoteDate}</time>
               </div>
             )}
-            {Util.isMobile && (
+            {isNarrowLayout && (
               <div className={styles.mobile_text_actions}>
                 <button
                   type="button"
@@ -983,7 +990,7 @@ function Details() {
               </div>
             )}
           </div>
-          {!Util.isMobile && chartControls}
+          {!isNarrowLayout && chartControls}
           <div
             className={styles.historical_price_chart_container}
             aria-label={
@@ -1015,7 +1022,7 @@ function Details() {
               )}
             </div>
           </div>
-          {Util.isMobile && chartControls}
+          {isNarrowLayout && chartControls}
         </section>
         <section className={`${styles.block} ${styles.summary_block}`}>
           <div className={styles.section_title}>投資摘要</div>
@@ -1103,21 +1110,18 @@ function Details() {
             )}
           </div>
         </section>
-        {Util.isMobile ? (
-          <>
-            <SpeedDial defaultSid={sid} />
-            <div
-              className={`${styles.switch_hint_icon_for_mobile} ${styles.left} ${
-                state.switchDirection === "prev" ? styles.active : ""
-              }`}
-            />
-            <div
-              className={`${styles.switch_hint_icon_for_mobile} ${styles.right} ${
-                state.switchDirection === "next" ? styles.active : ""
-              }`}
-            />
-          </>
-        ) : stockListTab ? (
+        <SpeedDial defaultSid={sid} />
+        <div
+          className={`${styles.switch_hint_icon_for_mobile} ${styles.left} ${
+            state.switchDirection === "prev" ? styles.active : ""
+          }`}
+        />
+        <div
+          className={`${styles.switch_hint_icon_for_mobile} ${styles.right} ${
+            state.switchDirection === "next" ? styles.active : ""
+          }`}
+        />
+        {stockListTab && (!isNarrowLayout || canHover) ? (
           <>
             <div className={`${styles.stock_switch_control} ${styles.left}`}>
               <Tooltip content="上一檔">

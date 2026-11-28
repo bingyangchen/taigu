@@ -55,4 +55,3 @@ export { default as ToastList } from "./ToastList/ToastList";
 export { default as Tooltip } from "./Tooltip/Tooltip";
 export { default as TradePlanEditor } from "./TradePlanEditor/TradePlanEditor";
 export { default as TradeRecordEditor } from "./TradeRecordEditor/TradeRecordEditor";
-export { default as TradeVolumeBarChart } from "./TradeVolumeBarChart/TradeVolumeBarChart";

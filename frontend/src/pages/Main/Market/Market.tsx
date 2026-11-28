@@ -26,8 +26,8 @@ import {
   getStockXirr,
   getVisibleMarketSids,
 } from "../../../utils/market";
+import { useIsNarrowLayout } from "../../../utils/mediaQuery";
 import { useLatestRef } from "../../../utils/useLatestRef";
-import Util from "../../../utils/util";
 import styles from "./Market.module.scss";
 
 const sortLabels: Record<MarketSortKey, string> = {
@@ -69,6 +69,7 @@ function Market() {
   const subscription = useAppSelector((state) => state.account.subscription);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const isNarrowLayout = useIsNarrowLayout();
   const [favoriteUpdateFailed, setFavoriteUpdateFailed] = useState(false);
   const [isRefreshingFavorites, setIsRefreshingFavorites] = useState(false);
 
@@ -139,7 +140,7 @@ function Market() {
         ? getHoldingAccessibleLabel(sid, stockInfo)
         : getFavoriteAccessibleLabel(sid, stockInfo);
 
-    if (Util.isMobile) {
+    if (isNarrowLayout) {
       return renderMobileStockRow(
         activeTab,
         sid,
@@ -347,7 +348,7 @@ function Market() {
   };
 
   const renderSkeletonCards = (activeTab: MarketTab): React.ReactNode => {
-    if (Util.isMobile) {
+    if (isNarrowLayout) {
       return Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}
@@ -648,7 +649,7 @@ function Market() {
           ? renderSkeletonCards(activeTab)
           : renderStockList(activeTab, allSids, visibleSids)}
       </section>
-      {Util.isMobile && <SpeedDial />}
+      <SpeedDial />
     </div>
   );
 }

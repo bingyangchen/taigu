@@ -260,9 +260,7 @@ export default function MarketIndexDetails() {
           )}
         </div>
       </header>
-      <div className={styles.speed_dial}>
-        <SpeedDial />
-      </div>
+      <SpeedDial />
       <div className={styles.surface}>
         <div className={styles.toolbar}>
           <SegmentedControl

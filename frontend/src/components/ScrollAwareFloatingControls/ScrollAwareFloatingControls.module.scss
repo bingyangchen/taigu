@@ -11,7 +11,7 @@
     width: 100%;
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     position: relative;
     top: 0;
     justify-content: center;
@@ -49,7 +49,7 @@
   // A quiet field on the list's left edge. A keyword gives it the translucent
   // background, which shows the list is filtered; only focus adds the border, so
   // focus stays visible on a field that already holds a keyword.
-  @include ds.up(md) {
+  @include ds.wide-layout {
     position: sticky;
     top: var(--space-150);
     align-self: flex-start;

@@ -17,7 +17,7 @@ $one-column-max-width: 1200px;
     gap: var(--space-400);
     height: fit-content;
   }
-  @include ds.down(sm) {
+  @include ds.narrow-layout {
     padding: 0 0 calc(var(--layout-footer-height) + var(--layout-speed-dial-clearance));
     gap: 10dvh;
   }
@@ -31,7 +31,7 @@ $one-column-max-width: 1200px;
       flex-direction: column;
       gap: var(--space-400);
     }
-    @include ds.down(sm) {
+    @include ds.narrow-layout {
       gap: var(--space-800);
     }
     & > .lower {
@@ -46,7 +46,7 @@ $one-column-max-width: 1200px;
       @include ds.down(2xl) {
         height: fit-content;
       }
-      @include ds.down(sm) {
+      @include ds.narrow-layout {
         padding: 0;
         border-radius: 0;
         background-color: transparent;
@@ -56,7 +56,7 @@ $one-column-max-width: 1200px;
         display: flex;
         flex-direction: column;
         gap: var(--space-075);
-        @include ds.down(sm) {
+        @include ds.narrow-layout {
           padding: 0 var(--space-250);
         }
         & > .title {
@@ -85,7 +85,7 @@ $one-column-max-width: 1200px;
           text-align: center;
           color: var(--color-text-secondary);
           line-height: var(--line-height-relaxed);
-          @include ds.down(sm) {
+          @include ds.narrow-layout {
             padding: var(--space-500) var(--space-250);
           }
           & > .button {
@@ -136,7 +136,7 @@ $one-column-max-width: 1200px;
     & > .upper {
       padding: var(--space-250) var(--space-250) var(--space-300) var(--space-250);
       margin-bottom: var(--space-400);
-      @include ds.down(sm) {
+      @include ds.narrow-layout {
         padding: 0;
       }
       & > .title {
@@ -145,7 +145,7 @@ $one-column-max-width: 1200px;
         font-weight: var(--font-weight-regular);
         font-size: var(--font-size-md);
         margin: 0 var(--space-075) var(--space-150);
-        @include ds.down(sm) {
+        @include ds.narrow-layout {
           margin-bottom: var(--space-250);
         }
       }

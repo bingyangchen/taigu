@@ -354,7 +354,18 @@ Google 與瀏覽器在這個流程裡的行為如下：
 - Service worker 先向後端查詢大盤指數的盤中行情或歷史收盤指數。網路請求失敗且有可用的 API cache 時，service worker 會在回應加上 `X-Taigu-Cache-Fallback`，前端據此把這次查詢當作失敗（見 MKT-R13、MKT-R14）。畫面已有盤中行情時，前端分別比較各指數的行情日期與最後一筆的時間，只採用比畫面上更新的 cache 資料。
 - 前端新增、修改或刪除資料時都要連上後端，離線時只能讀取 IndexedDB 與 service worker cache 裡的資料，所以不會出現離線時的修改與後端上的資料衝突的情況。
 - 頭像與名字頁向 gravatar.com 查詢頭像時帶 `d=404`，所以使用者的 email 沒有 Gravatar 頭像時，gravatar.com 回 404（使用者看到的結果見 ACCT-R10）。
-- 手機上的 `Main` 用整頁捲動時（編輯頁以外的頁面），依 `shouldUseWhiteMobileShell` 替 `body` 加上 `main-page-white-shell-scroll` 或 `main-page-gradient-scroll`，窄版時把 `body` 的背景設成 `--color-bg-page` 或儀表板漸層頂端的顏色。2026-11 在 iOS 26.2 模擬器加到主畫面的網頁 App 實測，狀態列顯示的是 `body` 的背景色，不是 `theme-color`，也不是頁面外框元素的背景色，所以背景是 `--color-bg-page` 的頁面都要讓 `shouldUseWhiteMobileShell` 成立，狀態列才會和頁面同色。
+- 窄版的 `Main`（編輯頁以外的頁面）與 `Settings` 用整頁捲動：前端在窄版替 `body` 加上 `main-page-document-scroll` 或 `settings-page-document-scroll`，可用畫面跨過窄版與寬版的分界時，前端也跟著加上或拿掉這兩個 class。寬版的捲動容器是 `Main` 的 `<main>`，不過可用寬度至少 960px 時，捲動容器改成側邊欄旁的內容區；`Main.module.scss` 設定 `overflow`，以及 `Main.tsx` 存下與還原捲動位置時，都依這幾個條件選捲動容器。頁面自己的捲動容器（標了 `data-page-scroll` 的元素，例如歷史紀錄頁的列表）什麼時候捲動由各頁的樣式決定，不捲動時樣式讓它的 `overflow-y` 維持 `visible`，`Main.tsx` 依這個值判斷要不要把它當成捲動容器。
+- 側邊欄的「新增」與「搜尋」開啟的視窗由 `Main` 管理。2026-11 在 macOS 的 Chrome 實測，以 768 × 1024 的可用畫面從圖示列開啟新增現金股利的編輯器視窗，填了入帳金額之後把可用畫面縮成 390 × 844，編輯器視窗與填好的金額都還在。
+
+  > 設計理由：可用畫面跨到窄版時側邊欄會消失，所以這些視窗如果放在 `MainSideBar` 裡，就會跟著關掉，使用者填好的內容也一起丟掉。
+
+- 2026-11 在 iOS 26.2 模擬器的 iPad mini（A17 Pro）實測的結果如下：
+  - iPad 直立時，Safari 的版面是寬版、顯示圖示列；橫放時顯示展開的側邊欄。
+  - iPad 橫放時，螢幕鍵盤蓋住一半以上的畫面，版面仍是寬版，因為鍵盤彈出時 layout viewport 的高度不變。
+  - Safari 不理會 `index.html` 的 `user-scalable=0`，仍可以雙指縮放，放大期間版面不在窄版與寬版之間切換；加到主畫面的網頁 App 則不能雙指縮放。
+  - 在 Safari 長按清單的一列約 1 秒，畫面只出現這一列紀錄的編輯器視窗，沒有出現 bottom sheet、文字選取或系統選單。前端在長按後的 `touchend` 呼叫 `preventDefault()`，所以不論瀏覽器之後送不送 click，前端都只開啟一次編輯器視窗。
+  - 在網頁 App 裡點設定頁的「隱私權政策」，畫面在同一個 App 裡換到隱私權政策頁，按返回按鈕之後畫面回到設定頁。
+- 窄版的 `Main` 依 `shouldUseWhiteMobileShell` 替 `body` 加上 `main-page-white-shell-scroll` 或 `main-page-gradient-scroll`，把 `body` 的背景設成 `--color-bg-page` 或儀表板漸層頂端的顏色。2026-11 在 iOS 26.2 模擬器加到主畫面的網頁 App 實測，狀態列顯示的是 `body` 的背景色，不是 `theme-color`，也不是頁面外框元素的背景色，所以背景是 `--color-bg-page` 的頁面都要讓 `shouldUseWhiteMobileShell` 成立，狀態列才會和頁面同色。
 - 2026-11 在 iOS 26.2 模擬器加到主畫面的網頁 App 實測，搜尋框的螢幕鍵盤開著時拖動頁面，鍵盤不會自己收起，頁面在鍵盤上方捲動，固定在底部的導覽列與加號選單會被帶到鍵盤上方。所以 `SearchKeywordInput` 在使用者拖動頁面時讓搜尋框失去焦點，收起鍵盤。
 
   > 設計理由：選擇拖動時收起鍵盤，跟原生 App 的清單一樣。不採用鍵盤開著時隱藏導覽列與加號選單，因為頁面仍會在鍵盤上方捲動，畫面上的位置還是跟著鍵盤跑。iOS 不支援 viewport 的 `interactive-widget` 與 VirtualKeyboard API，所以也不能用這兩者讓版面避開鍵盤。
@@ -396,7 +407,11 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 `tokens.module.scss` 用 `:export` 把同一份 map 交給 TypeScript，ECharts 的選項與 SVG 圖示的顏色都從 `styles/tokens.ts` 讀取。`styles/tokens.ts` 匯出的不透明顏色是 6 位數的 hex，字級是 px 的數字。
 
-每個 SCSS 檔用 `@use "styles" as ds;` 載入 `styles/`，`ds` 只提供 CSS custom properties 做不到的部分：斷點的 `ds.down()`、`ds.up()`、`ds.breakpoint()`，以及 `styles/mixins/` 裡的 mixin，例如 focus ring 與只讓 screen reader 讀到內容的 `ds.visually-hidden`。TypeScript 的 media query 由 `utils/mediaQuery.ts` 從同一組斷點產生，所以跟 SCSS 在同一個像素切換。
+每個 SCSS 檔用 `@use "styles" as ds;` 載入 `styles/`，`ds` 只提供 CSS custom properties 做不到的部分：斷點的 `ds.down()`、`ds.up()`、`ds.breakpoint()`，窄版與寬版（見 ui-guidelines.md 的「版面」）的 `ds.narrow-layout` 與 `ds.wide-layout`，以及 `styles/mixins/` 裡的 mixin，例如 focus ring 與只讓 screen reader 讀到內容的 `ds.visually-hidden`。TypeScript 的 media query 由 `utils/mediaQuery.ts` 從同一組值產生，所以跟 SCSS 在同一個像素切換；元件用 `useIsNarrowLayout()` 判斷窄版。
+
+窄版的分界跟斷點表分開定義，寫在 `tokens/_breakpoints.scss` 的 `$narrow-layout-width` 與 `$narrow-layout-height`，斷點表只用在頁面依寬度調整內容的排列。
+
+> 設計理由：窄版的判斷同時比較可用寬度與可用高度，而斷點表的 `ds.down()` 與 `ds.up()` 只比較寬度，所以窄版的分界不放進斷點表。
 
 > 設計理由：Token 以 Sass map 定義，從同一份 map 輸出 CSS custom properties 與給 TypeScript 的值，透明色在 Sass 裡算成固定的值。不直接手寫 CSS custom properties、用 `color-mix()` 組出透明色，因為 TypeScript 用 `getComputedStyle` 讀到的是還沒算出結果的 `color-mix(...)` 字串，ECharts 無法使用，而且公開頁面的 prerender 在 Node 裡執行，沒有 `getComputedStyle`。不用 Style Dictionary 從 DTCG 格式的 JSON 產生 token，因為那要多一個 build 步驟與 dependency，而 `main` 上只有網頁一個平台。斷點只留在 Sass，因為 media query 裡不能用 `var()`。完整討論見 [0011](../plans/archive/0011-design-system.md)。
 
@@ -404,7 +419,7 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 Vitest 預設不處理 CSS，`tokens.module.scss` 匯出的值會是空的，所以 `vite.config.ts` 讓 Vitest 處理這一個檔案，test 讀到的 token 跟畫面上的值相同。
 
-後台沒有窄版的字級，所以 `Admin` 開啟時替 `body` 加上 `admin-page` class，`base/_global.scss` 在這個 class 底下把隨寬度切換的用途字級固定成寬版的值；class 加在 `body` 上，是因為 toast 用 portal render 在後台的元素樹之外。
+後台沒有窄版的字級，所以 `Admin` 開啟時替 `body` 加上 `admin-page` class，`base/_global.scss` 在這個 class 底下把隨版面切換的用途字級固定成寬版的值；class 加在 `body` 上，是因為 toast 用 portal render 在後台的元素樹之外。
 
 #### CSS 的分層
 
@@ -571,11 +586,11 @@ sequenceDiagram
 | 持股 | `/`、`/market`、`/market/holding/:sid` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx`，計算在 `frontend/src/workers/tradeRecordWorker.ts` 與 `frontend/src/utils/market.ts` | 無，由前端依交易紀錄計算；Free 方案的持股檔數由 `api-server/main/billing/services/entitlements.py` 計算 | [holdings.md](holdings.md) |
 | 投資績效 | `/`、`/earning-analysis`、`/market`、`/market/:sid` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/EarningAnalysis/EarningAnalysis.tsx`、`frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx`，計算在 `frontend/src/workers/tradeRecordWorker.ts` 與 `frontend/src/utils/util.ts` | 無，在前端計算 | [performance.md](performance.md) |
 | 手續費 | `/`、`/handling-fee`、`/handling-fee/discounts/new`、`/handling-fee/discounts/:discountId/edit` | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/HandlingFee/HandlingFee.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx`，編輯器在 `frontend/src/components/HandlingFeeDiscountEditor/` 與共用的 `frontend/src/components/RecordEditor/` | `api-server/main/handling_fee/` | [handling-fees.md](handling-fees.md) |
-| 市場行情 | `/`、`/market-index`、`/search`、`/market`、`/market/:sid`，以及各編輯器的「股票」欄位 | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/MarketIndexDetails/MarketIndexDetails.tsx`、`frontend/src/pages/Main/Search/Search.tsx`、`frontend/src/components/StockSearchContent/StockSearchContent.tsx`（搜尋頁與桌面瀏覽器的搜尋視窗 `frontend/src/components/StockSearchModal/StockSearchModal.tsx` 共用）、`frontend/src/components/StockPicker/StockPicker.tsx`，重新抓行情的間隔在 `frontend/src/pages/Main/Main.tsx`、`Market.tsx` 與 `Details.tsx` | `api-server/main/market/` | [market-data.md](market-data.md) |
+| 市場行情 | `/`、`/market-index`、`/search`、`/market`、`/market/:sid`，以及各編輯器的「股票」欄位 | `frontend/src/pages/Main/Dashboard/Dashboard.tsx`、`frontend/src/pages/Main/MarketIndexDetails/MarketIndexDetails.tsx`、`frontend/src/pages/Main/Search/Search.tsx`、`frontend/src/components/StockSearchContent/StockSearchContent.tsx`（搜尋頁與寬版的搜尋視窗 `frontend/src/components/StockSearchModal/StockSearchModal.tsx` 共用）、`frontend/src/components/StockPicker/StockPicker.tsx`，重新抓行情的間隔在 `frontend/src/pages/Main/Main.tsx`、`Market.tsx` 與 `Details.tsx` | `api-server/main/market/` | [market-data.md](market-data.md) |
 | 個股詳情 | `/market/:sid`、`/market/holding/:sid`、`/market/favorites/:sid` | `frontend/src/pages/Main/Details/Details.tsx` | `api-server/main/market/`、`api-server/main/stock_memo/` | [stock-details.md](stock-details.md) |
 | 自選股 | `/market`、`/market/favorites/:sid` | `frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx` | `api-server/main/favorite/` | [favorites.md](favorites.md) |
 | 買賣計畫 | `/plans`、`/plans/new`、`/plans/:planId/edit`、`/market` | `frontend/src/pages/Main/Plans/Plans.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx`、`frontend/src/components/TradePlanEditor/TradePlanEditor.tsx`、`frontend/src/pages/Main/Market/Market.tsx` | `api-server/main/trade_plan/` | [trade-plans.md](trade-plans.md) |
-| 桌面前台側邊欄 | 前台寬版頁面 | `frontend/src/pages/Main/Main.tsx`、`frontend/src/components/MainSideBar/MainSideBar.tsx`，收合狀態存在瀏覽器的 `localStorage` | 無 | [desktop-sidebar.md](desktop-sidebar.md) |
+| 前台導覽 | NAV-R2 列出的頁面 | `frontend/src/pages/Main/Main.tsx` 依版面選導覽，側邊欄在 `frontend/src/components/MainSideBar/MainSideBar.tsx`，收合狀態存在瀏覽器的 `localStorage`，底部導覽列在 `frontend/src/components/Footer/Footer.tsx`，窄版的加號選單在 `frontend/src/components/SpeedDial/SpeedDial.tsx` | 無 | [navigation.md](navigation.md) |
 | 帳號 | `/login`、`/settings`、`/settings/user-info`、`/settings/account-binding` | `frontend/src/pages/Login/Login.tsx`、`frontend/src/utils/loginCheck.ts`、`frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/UserInfo/UserInfo.tsx`、`frontend/src/pages/Settings/AccountBinding/AccountBinding.tsx` | `api-server/main/account/` | [account.md](account.md) |
 | 方案與付款 | `/settings/current-plan` | `frontend/src/pages/Settings/CurrentPlan/CurrentPlan.tsx`、`frontend/src/components/PlanUpsellModal/PlanUpsellModal.tsx` | `api-server/main/billing/` | [billing.md](billing.md) |
 | 問題回報 | `/settings`、`/settings/issue-report` | `frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/IssueReport/IssueReport.tsx` | `api-server/main/issue_report/` | [issue-reports.md](issue-reports.md) |

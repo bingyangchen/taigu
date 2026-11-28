@@ -15,6 +15,7 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { logout } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import Env from "../../../utils/env";
+import { useIsNarrowLayout, useIsPWA } from "../../../utils/mediaQuery";
 import Nav from "../../../utils/nav";
 import { adminPagePath, settingsPagePath } from "../../../utils/router";
 import Util from "../../../utils/util";
@@ -32,6 +33,10 @@ function Overview() {
   const subscription = useAppSelector((state) => state.account.subscription);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const isNarrowLayout = useIsNarrowLayout();
+
+  // A new tab in the PWA would leave Taigu for the browser (PUB-R3).
+  const legalLinkTarget = useIsPWA() ? "_self" : "_blank";
   const [activeModalName, setActiveModalName] = useState<ModalName | null>(null);
   const [showDefaultAvatar, setShowDefaultAvatar] = useState(false);
 
@@ -41,7 +46,7 @@ function Overview() {
 
   const hideModal = (): void => setActiveModalName(null);
   const handleClickIssueReport = (): void => {
-    if (Util.isMobile) {
+    if (isNarrowLayout) {
       navigate(`${Env.frontendRootPath}${settingsPagePath}/issue-report`);
       return;
     }
@@ -145,10 +150,7 @@ function Overview() {
         <BeautifulBlock id="about" title="關於">
           <BeautifulRow
             onClick={() =>
-              window.open(
-                `${Env.frontendRootPath}privacy-policy`,
-                Util.isMobile ? "_self" : "_blank",
-              )
+              window.open(`${Env.frontendRootPath}privacy-policy`, legalLinkTarget)
             }
           >
             <div className={`${styles.row_inner} ${styles.privacy_policy}`}>
@@ -158,10 +160,7 @@ function Overview() {
           </BeautifulRow>
           <BeautifulRow
             onClick={() =>
-              window.open(
-                `${Env.frontendRootPath}terms-of-service`,
-                Util.isMobile ? "_self" : "_blank",
-              )
+              window.open(`${Env.frontendRootPath}terms-of-service`, legalLinkTarget)
             }
           >
             <div className={`${styles.row_inner} ${styles.terms_of_service}`}>

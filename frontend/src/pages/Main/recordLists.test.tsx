@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import { beforeAll, beforeEach, expect, type Mock, test, vi } from "vitest";
 
+import { DESKTOP, mockViewport } from "../../testing/viewport";
 import type { CashDividendRecord, TradePlan, TradeRecord } from "../../types";
 import Api from "../../utils/api";
 import Plans from "./Plans/Plans";
@@ -73,14 +74,7 @@ beforeAll(() => {
     public disconnect(): void {}
   };
   Object.assign(window, { IntersectionObserver: observer, ResizeObserver: observer });
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    addListener: () => {},
-    removeListener: () => {},
-  })) as unknown as typeof window.matchMedia;
+  mockViewport(DESKTOP);
 });
 
 beforeEach(() => {

@@ -1,8 +1,10 @@
 import React, {
+  type CSSProperties,
   KeyboardEvent,
   memo,
   MouseEvent,
   useLayoutEffect,
+  useRef,
   useState,
 } from "react";
 import { NavLink } from "react-router-dom";
@@ -12,12 +14,10 @@ import * as Icons from "../../icons";
 import { Subpage } from "../../types";
 import Env from "../../utils/env";
 import { mainTabNavigationState } from "../../utils/mainNavigation";
-import { makeWidthAtLeastQuery } from "../../utils/mediaQuery";
+import { makeWidthAtLeastQuery, useMediaQuery } from "../../utils/mediaQuery";
 import { settingsPagePath } from "../../utils/router";
 import { useLatestRef } from "../../utils/useLatestRef";
-import AddOrSearchModal, {
-  type AddOrSearchModalName,
-} from "../AddOrSearchModal/AddOrSearchModal";
+import type { AddOrSearchModalName } from "../AddOrSearchModal/AddOrSearchModal";
 import styles from "./MainSideBar.module.scss";
 import {
   isMainNavCollapsedInStorage,
@@ -29,9 +29,11 @@ interface Props {
   avatarUrl: string;
   username: string;
   subpages: Subpage[];
+  onOpenModal: (_modalName: AddOrSearchModalName) => void;
 }
 
-const WIDE_MEDIA_QUERY = makeWidthAtLeastQuery("lg");
+// Below this width the sidebar is the icon rail of NAV-R2, which cannot be expanded.
+const EXPANDABLE_WIDTH_QUERY = makeWidthAtLeastQuery("lg");
 
 const CONTEXT_MENU_ITEMS: { modalName: AddOrSearchModalName; label: string }[] = [
   { modalName: "createTradeRecord", label: "新增交易紀錄" },
@@ -43,14 +45,15 @@ function isActivationKey(e: KeyboardEvent): boolean {
   return e.key === "Enter" || e.key === " ";
 }
 
-function MainSideBar({ avatarUrl, username, subpages }: Props) {
-  const [wideMediaQueryList] = useState(() => window.matchMedia(WIDE_MEDIA_QUERY));
+function MainSideBar({ avatarUrl, username, subpages, onOpenModal }: Props) {
   const [isCollapsed, setIsCollapsed] = useState(isMainNavCollapsedInStorage);
-  const [isWide, setIsWide] = useState(wideMediaQueryList.matches);
-  const [activeModalName, setActiveModalName] = useState<AddOrSearchModalName | null>(
-    null,
-  );
+  const isExpandable = useMediaQuery(EXPANDABLE_WIDTH_QUERY);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+
+  // The icon rail scrolls its overflow, which would clip a menu wider than the rail, so
+  // the menu is fixed to the viewport at the add button.
+  const [railMenuStyle, setRailMenuStyle] = useState<CSSProperties | undefined>();
+  const addButtonRef = useRef<HTMLDivElement>(null);
   const isContextMenuOpenRef = useLatestRef(isContextMenuOpen);
 
   useLayoutEffect(() => {
@@ -63,20 +66,43 @@ function MainSideBar({ avatarUrl, username, subpages }: Props) {
         setIsContextMenuOpen(false);
       }
     };
-    const handleWideMediaChange = (event: MediaQueryListEvent): void => {
-      setIsWide(event.matches);
+    const handleDocumentKeyDown = (e: globalThis.KeyboardEvent): void => {
+      if (e.key !== "Escape" || !isContextMenuOpenRef.current) return;
+      setIsContextMenuOpen(false);
+      addButtonRef.current?.focus();
     };
     document.addEventListener("click", handleDocumentClick);
-    wideMediaQueryList.addEventListener("change", handleWideMediaChange);
+    document.addEventListener("keydown", handleDocumentKeyDown);
     return () => {
       document.removeEventListener("click", handleDocumentClick);
-      wideMediaQueryList.removeEventListener("change", handleWideMediaChange);
+      document.removeEventListener("keydown", handleDocumentKeyDown);
     };
-  }, [isContextMenuOpenRef, wideMediaQueryList]);
+  }, [isContextMenuOpenRef]);
+
+  const showsIconOnly = isCollapsed || !isExpandable;
+  const [menuShowsIconOnly, setMenuShowsIconOnly] = useState(showsIconOnly);
+  if (menuShowsIconOnly !== showsIconOnly) {
+    // The open menu is placed for the sidebar it opened in.
+    setMenuShowsIconOnly(showsIconOnly);
+    setIsContextMenuOpen(false);
+  }
 
   const openModal = (modalName: AddOrSearchModalName): void => {
-    setActiveModalName(modalName);
+    onOpenModal(modalName);
     setIsContextMenuOpen(false);
+  };
+  const toggleContextMenu = (): void => {
+    const addButtonRect = addButtonRef.current?.getBoundingClientRect();
+    setRailMenuStyle(
+      showsIconOnly && addButtonRect
+        ? {
+            // Below the add button, clear of its tooltip on the right.
+            top: `calc(${addButtonRect.bottom}px + var(--space-050))`,
+            left: addButtonRect.left,
+          }
+        : undefined,
+    );
+    setIsContextMenuOpen((isOpen) => !isOpen);
   };
   const handleAddButtonClick = (e: MouseEvent | KeyboardEvent): void => {
     const target = e.target as HTMLElement;
@@ -88,19 +114,24 @@ function MainSideBar({ avatarUrl, username, subpages }: Props) {
     ) {
       return;
     }
-    openModal("createTradeRecord");
+
+    // The icon rail has no room for the menu button beside 「新增」 (REC-R10).
+    if (showsIconOnly) toggleContextMenu();
+    else openModal("createTradeRecord");
   };
-  const toggleContextMenu = (): void => setIsContextMenuOpen((isOpen) => !isOpen);
   const toggleCollapsed = (): void => {
     const nextIsCollapsed = toggleMainNavCollapsed(isCollapsed);
     setIsCollapsed(nextIsCollapsed);
     saveMainNavCollapsed(nextIsCollapsed);
   };
 
-  const showsIconOnly = isCollapsed && isWide;
   const collapseLabel = isCollapsed ? "展開側邊欄" : "收合側邊欄";
   return (
-    <div className={`${styles.main} ${showsIconOnly ? styles.collapsed : ""}`}>
+    <div
+      className={`${styles.main} ${showsIconOnly ? styles.collapsed : ""}`}
+      // The rail menu stays where the add button was when it opened.
+      onScroll={railMenuStyle ? () => setIsContextMenuOpen(false) : undefined}
+    >
       <div className={styles.profile_row}>
         <WithTooltip content="查看帳號與設定" enabled={showsIconOnly}>
           <NavLink
@@ -118,7 +149,7 @@ function MainSideBar({ avatarUrl, username, subpages }: Props) {
             </div>
           </NavLink>
         </WithTooltip>
-        {isWide && (
+        {isExpandable && (
           <Tooltip content={collapseLabel} side="right">
             <button
               type="button"
@@ -148,6 +179,7 @@ function MainSideBar({ avatarUrl, username, subpages }: Props) {
         })}
         <WithTooltip content="新增" enabled={showsIconOnly}>
           <div
+            ref={addButtonRef}
             className={styles.action_button}
             onClick={handleAddButtonClick}
             onKeyDown={(e) => {
@@ -159,6 +191,7 @@ function MainSideBar({ avatarUrl, username, subpages }: Props) {
             role="button"
             tabIndex={0}
             aria-label={showsIconOnly ? "新增" : undefined}
+            aria-expanded={showsIconOnly ? isContextMenuOpen : undefined}
           >
             <div className={styles.icon_outer}>
               <Icons.IconPlus sideLength="100%" />
@@ -181,7 +214,12 @@ function MainSideBar({ avatarUrl, username, subpages }: Props) {
               tabIndex={0}
             ></div>
             {isContextMenuOpen && (
-              <div className={styles.context_menu}>
+              <div
+                className={`${styles.context_menu} ${
+                  railMenuStyle ? styles.rail_menu : ""
+                }`}
+                style={railMenuStyle}
+              >
                 {CONTEXT_MENU_ITEMS.map(({ modalName, label }) => (
                   <div
                     key={modalName}
@@ -228,12 +266,6 @@ function MainSideBar({ avatarUrl, username, subpages }: Props) {
           </div>
         </WithTooltip>
       </div>
-      {activeModalName && (
-        <AddOrSearchModal
-          modalName={activeModalName}
-          hideModal={() => setActiveModalName(null)}
-        />
-      )}
       <div className={styles.lower}>
         <div className={styles.logo_outer}>
           <FullLogo size="s" />

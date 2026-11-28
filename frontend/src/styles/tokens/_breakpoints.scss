@@ -28,3 +28,26 @@ $breakpoints: (
     @content;
   }
 }
+
+// The narrow and wide layouts of ui-guidelines.md's 「版面」. A viewport narrower or
+// shorter than these gets the narrow layout.
+$narrow-layout-width: 600px;
+$narrow-layout-height: 480px;
+
+// Narrower than this, a record or plan list row has no room for a long stock name,
+// such as 「00940 元大台灣價值高息」, beside its figures, so the figures move to a line
+// of their own. The width of the page around the list, which the list is 32px
+// narrower than.
+$list-row-one-line-min-width: 650px;
+
+@mixin narrow-layout {
+  @media (width < #{$narrow-layout-width}), (height < #{$narrow-layout-height}) {
+    @content;
+  }
+}
+
+@mixin wide-layout {
+  @media (width >= #{$narrow-layout-width}) and (height >= #{$narrow-layout-height}) {
+    @content;
+  }
+}

@@ -200,17 +200,53 @@ $quote-grid-max-width: 1160px;
   padding-inline: var(--space-100);
 }
 
-.speed_dial {
-  display: none;
-}
-
 @media (#{ds.breakpoint(lg)} <= width <= #{$quote-grid-max-width}) {
   .quote {
     display: grid;
   }
 }
 
+// Two markets stacked, sized so both fit without scrolling (MKT-R14).
 @include ds.down(lg) {
+  .toolbar {
+    // Narrower options on a narrow screen or with large text, so the five options
+    // still fit in one row without scrolling the page sideways. The subtraction is
+    // the control track's padding.
+    --range-option-width: min(
+      max(58px, 2.5rem),
+      calc((100cqi - 2 * var(--space-050)) / 5)
+    );
+    gap: var(--space-050) var(--space-100);
+  }
+
+  .markets {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .market {
+    padding-block: var(--space-100) var(--space-150);
+
+    & + & {
+      border-inline-start: 0;
+      border-block-start: 1px solid var(--color-border-default);
+      padding-block-start: var(--space-200);
+    }
+  }
+
+  .quote {
+    margin-block: var(--space-025);
+  }
+
+  .plot {
+    block-size: clamp(
+      110px,
+      calc((100dvh - 465px - env(safe-area-inset-bottom)) / 2),
+      210px
+    );
+  }
+}
+
+@include ds.narrow-layout {
   .main {
     padding: 0 var(--space-200)
       calc(
@@ -229,49 +265,19 @@ $quote-grid-max-width: 1160px;
     background: transparent;
   }
 
+  // Without the card, the markets line up with the page padding.
+  .market {
+    padding-inline: 0;
+  }
+
   .toolbar {
-    // Narrower options on a narrow screen or with large text, so the five options
-    // still fit in one row without scrolling the page sideways. The subtraction is
-    // the control track's padding.
-    --range-option-width: min(
-      max(58px, 2.5rem),
-      calc((100cqi - 2 * var(--space-050)) / 5)
-    );
-    gap: var(--space-050) var(--space-100);
     padding: 0 0 var(--space-150);
     border-block-end: 0;
-  }
-
-  .markets {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .market {
-    padding: var(--space-100) 0 var(--space-150);
-
-    & + & {
-      border-inline-start: 0;
-      border-block-start: 1px solid var(--color-border-default);
-      padding-block-start: var(--space-200);
-    }
-  }
-
-  .quote {
-    margin-block: var(--space-025);
   }
 
   // Runs to the screen edges like the stock page's chart, past the page padding.
   .plot {
     margin-inline: calc(-1 * var(--space-200));
     background: transparent;
-    block-size: clamp(
-      110px,
-      calc((100dvh - 465px - env(safe-area-inset-bottom)) / 2),
-      210px
-    );
-  }
-
-  .speed_dial {
-    display: contents;
   }
 }

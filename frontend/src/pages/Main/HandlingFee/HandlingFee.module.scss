@@ -1,5 +1,10 @@
 @use "styles" as ds;
 
+// Narrower than this, the discount list beside the chart has no room for a discount
+// on one line, so the list moves under the chart. The page's own width rather than
+// the viewport's, because the sidebar beside it is either expanded or an icon rail.
+$two-column-min-width: 840px;
+
 .main {
   position: relative;
   display: flex;
@@ -7,14 +12,12 @@
   align-items: center;
   gap: var(--space-250);
   width: 100%;
-  height: 100dvh;
+  min-height: 100dvh;
   padding: var(--space-400);
-  @include ds.down(md) {
-    padding: 0;
-    height: fit-content;
-  }
-  @include ds.down(sm) {
+  container: handling-fee-page / inline-size;
+  @include ds.narrow-layout {
     gap: 6dvh;
+    padding: 0;
   }
   & > .mobile_back_button_container {
     position: fixed;
@@ -38,12 +41,15 @@
   & > .container {
     position: relative;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    // At least 0, so the chart shrinks with its column instead of keeping the width
+    // it was drawn at.
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-250);
     width: 100%;
     max-width: 1400px;
-    height: 100%;
-    @include ds.down(md) {
+    // Side by side, both blocks fill the viewport and the list scrolls on its own.
+    height: calc(100dvh - 2 * var(--space-400));
+    @container handling-fee-page (width < #{$two-column-min-width}) {
       display: flex;
       flex-direction: column;
       gap: var(--space-250);
@@ -56,9 +62,6 @@
       left: var(--space-150);
       padding-left: var(--space-150);
       z-index: 1;
-      @include ds.down(md) {
-        display: none;
-      }
     }
     & > .left_block {
       position: relative;
@@ -71,12 +74,14 @@
       background-color: var(--color-bg-frosted);
       box-shadow: var(--shadow-sm);
       height: 100%;
-      @include ds.down(md) {
+      @container handling-fee-page (width < #{$two-column-min-width}) {
+        height: auto;
+      }
+      @include ds.narrow-layout {
         padding: 0;
         border-radius: 0;
         background-color: transparent;
         box-shadow: none;
-        height: auto;
       }
       & > .handling_fee_section {
         display: flex;
@@ -127,7 +132,7 @@
         margin: var(--space-250);
         color: var(--color-text-secondary);
         text-align: center;
-        @include ds.down(md) {
+        @include ds.narrow-layout {
           border-radius: 0;
           box-shadow: none;
           margin: var(--space-250) 0;
@@ -140,9 +145,11 @@
       flex-direction: column;
       height: 100%;
       overflow: hidden;
-      @include ds.down(md) {
-        padding: var(--space-250) 0;
+      @container handling-fee-page (width < #{$two-column-min-width}) {
         height: auto;
+      }
+      @include ds.narrow-layout {
+        padding: var(--space-250) 0;
       }
       & > .section_header {
         display: flex;
@@ -150,7 +157,7 @@
         align-items: center;
         margin-bottom: var(--space-250);
         padding: 0 var(--space-150);
-        @include ds.down(md) {
+        @include ds.narrow-layout {
           padding: 0 var(--space-250);
         }
         & > .title {
@@ -169,7 +176,7 @@
         padding: var(--space-800) var(--space-250);
         color: var(--color-text-secondary);
         text-align: center;
-        @include ds.down(md) {
+        @include ds.narrow-layout {
           border-radius: 0;
           box-shadow: none;
         }
@@ -183,11 +190,15 @@
         box-shadow: var(--shadow-sm);
         padding-bottom: var(--space-600);
         overflow: auto;
-        @include ds.down(md) {
+        // Stacked under the chart, the list grows with the page instead of scrolling.
+        @container handling-fee-page (width < #{$two-column-min-width}) {
+          max-height: none;
+          overflow: visible;
+        }
+        @include ds.narrow-layout {
           border-radius: 0;
           padding-bottom: calc(var(--space-1000) + var(--layout-footer-height));
           box-shadow: none;
-          max-height: none;
         }
         .company {
           display: block;

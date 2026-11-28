@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 import { COLORS } from "../../styles/tokens";
 import { formatIndexPoints } from "../../utils/marketIndex";
-import Util from "../../utils/util";
+import { useIsNarrowLayout } from "../../utils/mediaQuery";
 import AccessibleChart from "../AccessibleChart/AccessibleChart";
 import { makeTooltipTitle } from "../chartTooltip";
 import { makeDateAxisLabel } from "../dateAxisLabel";
@@ -28,6 +28,7 @@ export function makeMarketIndexHistoricalChartOption(
   dates: string[],
   values: number[],
   previousValues: (number | null)[],
+  isNarrowLayout: boolean,
 ): EChartsOption {
   const lineColor = getPeriodTrendColor(values);
   const areaGradient = makePeriodTrendAreaGradient(values);
@@ -77,7 +78,7 @@ export function makeMarketIndexHistoricalChartOption(
       lineStyle: { width: 2, color: lineColor, join: "round" },
       itemStyle: { color: lineColor },
       symbol: "circle",
-      symbolSize: Util.isMobile ? 5 : 8,
+      symbolSize: isNarrowLayout ? 5 : 8,
       showSymbol: values.length === 1,
       emphasis: { itemStyle: { color: lineColor, borderColor: lineColor } },
       areaStyle: {
@@ -121,9 +122,16 @@ export default function MarketIndexHistoricalLineChart({
   previousValues,
   label,
 }: Props) {
+  const isNarrowLayout = useIsNarrowLayout();
   const option = useMemo(
-    () => makeMarketIndexHistoricalChartOption(dates, values, previousValues),
-    [dates, values, previousValues],
+    () =>
+      makeMarketIndexHistoricalChartOption(
+        dates,
+        values,
+        previousValues,
+        isNarrowLayout,
+      ),
+    [dates, values, previousValues, isNarrowLayout],
   );
   return <AccessibleChart label={label} option={option} />;
 }

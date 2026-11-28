@@ -5,7 +5,7 @@ import { memo, useLayoutEffect, useRef } from "react";
 
 import { useAppSelector } from "../../redux/hooks";
 import { COLORS, FONT_SIZES, TRANSPARENT_ALPHA } from "../../styles/tokens";
-import Util from "../../utils/util";
+import { useIsNarrowLayout } from "../../utils/mediaQuery";
 
 interface Props {
   dates: Date[];
@@ -19,6 +19,7 @@ interface ResizeTracking {
 
 function SimpleCashInvestedLineChart({ dates, values }: Props) {
   const tradeRecords = useAppSelector((state) => state.tradeRecord.tradeRecords);
+  const isNarrowLayout = useIsNarrowLayout();
   const resizeTrackingRef = useRef<ResizeTracking>({
     observer: null,
     animationFrameId: null,
@@ -62,7 +63,7 @@ function SimpleCashInvestedLineChart({ dates, values }: Props) {
   if (!hasChartData) return null;
   return (
     <ReactECharts
-      option={makeCashInvestedChartOption(dates, values)}
+      option={makeCashInvestedChartOption(dates, values, isNarrowLayout)}
       style={{ height: "100%", width: "100%" }}
       onChartReady={handleChartReady}
     />
@@ -80,7 +81,11 @@ function clearResizeTracking(resizeTracking: ResizeTracking): void {
   }
 }
 
-function makeCashInvestedChartOption(dates: Date[], values: number[]): EChartsOption {
+function makeCashInvestedChartOption(
+  dates: Date[],
+  values: number[],
+  isNarrowLayout: boolean,
+): EChartsOption {
   if (values.length === 0 || dates.length !== values.length) {
     return {};
   }
@@ -140,7 +145,7 @@ function makeCashInvestedChartOption(dates: Date[], values: number[]): EChartsOp
         type: "line",
         data: values,
         smooth: false,
-        symbolSize: Util.isMobile ? 5 : 8,
+        symbolSize: isNarrowLayout ? 5 : 8,
         showSymbol: false,
         sampling: "lttb",
         lineStyle: { color: COLORS.chartAccent, width: 3, join: "round" },

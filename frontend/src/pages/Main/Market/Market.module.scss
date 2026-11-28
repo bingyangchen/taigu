@@ -3,6 +3,10 @@
 // Narrower than this, three market signals no longer fit in one row.
 $three-signal-min-width: 360px;
 
+// Narrower than this, the tabs, search box and sort menu no longer fit in one row,
+// nor the page title beside the counts.
+$one-row-controls-min-width: 620px;
+
 .main {
   position: relative;
   display: flex;
@@ -14,8 +18,9 @@ $three-signal-min-width: 360px;
   padding: var(--space-400) var(--space-400) calc(var(--space-1000) + var(--space-600));
   color: var(--color-text-primary);
   letter-spacing: 0;
+  container: market-page / inline-size;
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     width: 100%;
     padding: var(--space-200) var(--space-200)
       calc(
@@ -33,10 +38,7 @@ $three-signal-min-width: 360px;
   gap: var(--space-300);
   padding: var(--space-100) 0 var(--space-050);
 
-  @include ds.down(md) {
-    align-items: stretch;
-    flex-direction: column;
-    gap: var(--space-250);
+  @include ds.narrow-layout {
     padding: 0;
   }
 }
@@ -76,10 +78,6 @@ $three-signal-min-width: 360px;
   padding: var(--space-150) 0;
   border-radius: var(--radius-xl);
   background-color: var(--color-bg-muted);
-
-  @include ds.down(md) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 .metric {
@@ -116,21 +114,14 @@ $three-signal-min-width: 360px;
   min-height: 56px;
   margin-top: var(--space-250);
 
-  @include ds.down(md) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-150);
+  @include ds.narrow-layout {
     min-height: auto;
   }
 }
 
 .segmented_wrapper {
+  display: flex;
   flex: 0 0 auto;
-
-  @include ds.down(md) {
-    display: flex;
-    justify-content: flex-start;
-  }
 }
 
 .search_sort_row {
@@ -139,11 +130,6 @@ $three-signal-min-width: 360px;
   justify-content: flex-end;
   gap: var(--space-150);
   min-width: 0;
-
-  @include ds.down(md) {
-    justify-content: stretch;
-    width: 100%;
-  }
 }
 
 .search_box {
@@ -152,7 +138,7 @@ $three-signal-min-width: 360px;
   min-width: 0;
   border-radius: var(--radius-pill);
 
-  @include ds.up(md) {
+  @include ds.wide-layout {
     flex: 0 0 280px;
     height: 52px;
     @include ds.quiet-field;
@@ -162,7 +148,7 @@ $three-signal-min-width: 360px;
     }
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     flex: 1 1 auto;
     height: 44px;
     border: 1px solid var(--color-border-subtle);
@@ -217,7 +203,7 @@ $three-signal-min-width: 360px;
     outline: 0;
   }
 
-  @include ds.up(md) {
+  @include ds.wide-layout {
     height: 52px;
 
     select {
@@ -238,7 +224,7 @@ $three-signal-min-width: 360px;
     transform: translateY(-65%) rotate(45deg);
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     flex: 0 0 92px;
     height: 44px;
 
@@ -257,7 +243,7 @@ $three-signal-min-width: 360px;
 .sort_label {
   display: none;
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     position: absolute;
     top: 50%;
     left: 16px;
@@ -290,7 +276,7 @@ $three-signal-min-width: 360px;
     white-space: nowrap;
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     span {
       display: none;
     }
@@ -304,13 +290,13 @@ $three-signal-min-width: 360px;
   gap: var(--space-200);
   margin-top: var(--space-200);
 
-  @include ds.up(md) {
+  @include ds.wide-layout {
     > * {
       max-width: 420px;
     }
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -355,7 +341,7 @@ $three-signal-min-width: 360px;
     }
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     min-height: 136px;
     padding: var(--space-200);
     border-radius: var(--radius-xl);
@@ -457,7 +443,7 @@ $three-signal-min-width: 360px;
     white-space: nowrap;
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     div {
       background: var(--color-bg-hover);
     }
@@ -791,4 +777,31 @@ $three-signal-min-width: 360px;
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-snug);
   font-variant-numeric: tabular-nums;
+}
+
+@container market-page (width < #{$one-row-controls-min-width}) {
+  .summary_panel {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--space-250);
+  }
+
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .control_bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-150);
+  }
+
+  .search_sort_row {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .search_box {
+    flex: 1 1 auto;
+  }
 }

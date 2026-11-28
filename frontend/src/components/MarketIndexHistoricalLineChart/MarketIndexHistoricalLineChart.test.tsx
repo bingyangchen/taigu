@@ -26,6 +26,7 @@ function getTooltips(closingPrices: Record<string, number>, limit: number) {
     dates,
     values,
     previousValues,
+    false,
   );
   if (!tooltip || Array.isArray(tooltip) || typeof tooltip.formatter !== "function") {
     throw new Error("Expected a tooltip formatter");

@@ -6,8 +6,8 @@ ACCT-R11.1、ACCT-R12.2、ACCT-R12.5、ACCT-R12.6、ACCT-R13.2 與 ACCT-R14.2 �
 
 步驟裡的下面這些說法代表固定的操作：
 
-- 「在桌面瀏覽器上」：直接用 Chrome。
-- 「在行動裝置上」：開啟 DevTools 的裝置模擬（Toggle device toolbar）並選一款手機，再重新整理頁面，因為前端依 user agent 判斷是不是行動裝置。
+- 「以寬版」或「在桌面瀏覽器上」：用不開 DevTools device toolbar 的 Chrome，可用畫面是 1280 × 800，可以在 Console 執行 `[innerWidth, innerHeight]` 確認大小。
+- 「以窄版」或「在行動裝置上」：在 DevTools 開啟 device toolbar（Toggle device toolbar），在 Dimensions 選「Responsive」並輸入 390 × 844，或選 iPhone 14 Pro 這類手機。前端依可用畫面的大小切換版面，不看 user agent，所以切換之後版面立刻跟著換，不用重新整理頁面。
 - 「登出」：開啟 `https://local.taigu.tw/settings`，點「登出」，再點確認視窗裡的「登出」。
 - 「用 Google 帳號登入」：開啟 `https://local.taigu.tw/login`，點 Google 登入按鈕，在 Google 的畫面選擇帳號並同意授權。
 - 「刪除 access token 的 cookie」：在 DevTools 的 Application > Cookies > `https://local.taigu.tw` 刪除 `__Host-access_token`。這個 cookie 原本在 15 分鐘後過期，所以刪除它等於閒置超過 15 分鐘。
@@ -440,7 +440,7 @@ window.mockTaiguCsrf = (code, limit = Infinity) => {
 
 ## ACCT-R9.3 清空頭像位置
 
-後端的 test 驗證了頭像網址已清除，畫面的部分在前端，前端沒有自動化 test。
+後端的 test 驗證了頭像網址已清除，前端的 unit test 在 jsdom 裡驗證導覽顯示預設的人像圖示；真實瀏覽器裡的設定頁、側邊欄與底部導覽列要人工確認。
 
 1. 用 Google 帳號登入。
 2. 開啟 `https://local.taigu.tw/settings/user-info`。
@@ -448,11 +448,11 @@ window.mockTaiguCsrf = (code, limit = Infinity) => {
 4. 清空「頭像位置」。
 5. 點儲存按鈕。
 6. 確認畫面換到設定頁，頭像顯示預設的人像圖示。
-7. 在桌面瀏覽器上開啟 `https://local.taigu.tw/`。
+7. 以寬版開啟 `https://local.taigu.tw/`。
 8. 確認側邊欄最上方的頭像是預設的人像圖示。
-9. 在行動裝置上開啟 `https://local.taigu.tw/`。
+9. 以窄版開啟 `https://local.taigu.tw/`。
 
-預期：設定頁、桌面瀏覽器的側邊欄與行動裝置的底部導覽列都顯示預設的人像圖示。
+預期：設定頁、寬版的側邊欄與窄版的底部導覽列都顯示預設的人像圖示。
 
 ## ACCT-R9.4 頭像位置不是 http 或 https 網址
 

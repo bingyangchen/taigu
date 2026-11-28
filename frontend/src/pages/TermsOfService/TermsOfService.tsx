@@ -7,11 +7,14 @@ import PageMeta from "../../components/PageMeta/PageMeta";
 import RoundButton from "../../components/RoundButton/RoundButton";
 import * as Icons from "../../icons";
 import Env from "../../utils/env";
-import Util from "../../utils/util";
+import { useIsPWA } from "../../utils/mediaQuery";
 import styles from "./TermsOfService.module.scss";
 
 export default function TermsOfService() {
   const navigate = useNavigate();
+
+  // In the PWA the page opens on the same screen (PUB-R3), which has no other way back.
+  const isPWA = useIsPWA();
   return (
     <div className={styles.main}>
       <PageMeta
@@ -20,7 +23,7 @@ export default function TermsOfService() {
         canonicalPath="/terms-of-service"
       />
       <div className={styles.header}>
-        {Util.isMobile && (
+        {isPWA && (
           <RoundButton size="l" hint_text="上一頁" onClick={() => navigate(-1)}>
             <Icons.IconChevronLeft sideLength="16" />
           </RoundButton>

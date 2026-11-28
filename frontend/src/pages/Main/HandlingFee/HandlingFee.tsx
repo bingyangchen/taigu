@@ -31,8 +31,8 @@ import { COLORS, FONT_SIZES } from "../../../styles/tokens";
 import type { HandlingFeeDiscount, TradeRecord } from "../../../types";
 import Env from "../../../utils/env";
 import { getDiscountTitle } from "../../../utils/handlingFeeDiscount";
+import { useIsNarrowLayout } from "../../../utils/mediaQuery";
 import { navigateBack } from "../../../utils/router";
-import Util from "../../../utils/util";
 import { useListViewSaving, useSavedListView } from "../useListViewHistory";
 import styles from "./HandlingFee.module.scss";
 
@@ -50,6 +50,7 @@ function HandlingFee() {
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
+  const isNarrowLayout = useIsNarrowLayout();
   const savedListView = useSavedListView();
   const [daysToShow, setDaysToShow] = useState(
     savedListView?.daysToShow ?? TIME_SPAN_OPTIONS_IN_DAYS[0],
@@ -96,7 +97,7 @@ function HandlingFee() {
     navigateBack({ location, navigate }, Env.frontendRootPath);
   };
   const handleCreateDiscount = (): void => {
-    if (Util.isMobile) {
+    if (isNarrowLayout) {
       navigate(`${Env.frontendRootPath}handling-fee/discounts/new`);
       return;
     }
@@ -156,8 +157,8 @@ function HandlingFee() {
         <HandlingFeeDiscountEditor hideModal={() => setActiveModalName(null)} />
       )}
       <div className={styles.main}>
-        {Util.isMobile && <SpeedDial />}
-        {Util.isMobile && (
+        <SpeedDial />
+        {isNarrowLayout && (
           <ScrollThresholdContainer>
             {(isScrolled) => (
               <div
@@ -178,7 +179,7 @@ function HandlingFee() {
           </ScrollThresholdContainer>
         )}
         <div className={styles.container}>
-          {!Util.isMobile && (
+          {!isNarrowLayout && (
             <div className={styles.desktop_back_button_container}>
               <RoundButton onClick={returnToDashboard} size="l" hint_text="回儀表板">
                 <Icons.IconChevronLeft sideLength="16" />

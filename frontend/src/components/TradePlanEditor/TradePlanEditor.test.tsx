@@ -13,9 +13,9 @@ import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, type Mock, test, vi } from "vitest";
 
+import { DESKTOP, mockViewport, PHONE_PORTRAIT } from "../../testing/viewport";
 import type { TradePlan } from "../../types";
 import Api from "../../utils/api";
-import { NARROW_LAYOUT_QUERY } from "../../utils/mediaQuery";
 import TradePlanEditor from "./TradePlanEditor";
 
 // No delay between actions, so fake timers do not stall user-event.
@@ -62,12 +62,7 @@ function renderPlanEditor({
   isNarrow = false,
   hideModal = vi.fn(),
 }: { plan?: TradePlan; isNarrow?: boolean; hideModal?: Mock } = {}) {
-  window.matchMedia = ((query: string) => ({
-    matches: isNarrow && query === NARROW_LAYOUT_QUERY,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
+  mockViewport(isNarrow ? PHONE_PORTRAIT : DESKTOP);
   const slice = (name: string, initialState: object) =>
     createSlice({ name, initialState, reducers: {} }).reducer;
   const store = configureStore({

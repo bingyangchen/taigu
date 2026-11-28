@@ -1,7 +1,7 @@
 import React, { memo, useLayoutEffect, useRef, useState } from "react";
 
 import { useAppSelector } from "../../redux/hooks";
-import Util from "../../utils/util";
+import { useIsNarrowLayout } from "../../utils/mediaQuery";
 import styles from "./ScrollAwareFloatingControls.module.scss";
 
 interface Props {
@@ -24,6 +24,7 @@ interface ScrollTracking {
 
 function ScrollAwareFloatingControls({ children, className = "" }: Props) {
   const scrollTop = useAppSelector((state) => state.mainPage.scrollTop);
+  const isNarrowLayout = useIsNarrowLayout();
   const [state, setState] = useState<ControlsState>({
     isActivated: false,
     isVisible: true,
@@ -46,7 +47,7 @@ function ScrollAwareFloatingControls({ children, className = "" }: Props) {
       };
       return;
     }
-    if (!Util.isMobile || tracking.lastScrollTop === scrollTop) return;
+    if (!isNarrowLayout || tracking.lastScrollTop === scrollTop) return;
 
     const delta = scrollTop - tracking.lastScrollTop;
     tracking.lastScrollTop = scrollTop;
@@ -84,9 +85,9 @@ function ScrollAwareFloatingControls({ children, className = "" }: Props) {
         setState((previous) => ({ ...previous, isVisible: true, shouldAnimate: true }));
       }
     }
-  }, [scrollTop, state.isActivated, state.isVisible]);
+  }, [isNarrowLayout, scrollTop, state.isActivated, state.isVisible]);
 
-  const isActivated = Util.isMobile && state.isActivated;
+  const isActivated = isNarrowLayout && state.isActivated;
   return (
     <div
       ref={controlsRef}

@@ -50,7 +50,17 @@ $stock-switch-button-size: 44px;
     padding-top: var(--space-400);
   }
 
-  @include ds.down(md) {
+  // Below lg the content area has no room beside the column for the stock switch
+  // buttons, so the page keeps that room inside its own padding.
+  @include ds.wide-layout {
+    @include ds.down(lg) {
+      &:has(> .stock_switch_control) {
+        padding-inline: calc(#{$stock-switch-button-size} + 2 * var(--space-050));
+      }
+    }
+  }
+
+  @include ds.narrow-layout {
     display: flex;
     flex-direction: column;
     gap: 5dvh;
@@ -73,7 +83,7 @@ $stock-switch-button-size: 44px;
   box-shadow: var(--shadow-md);
   animation: section-enter var(--duration-base) var(--ease-out) both;
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     width: 100%;
     border: none;
     border-radius: 0;
@@ -100,7 +110,7 @@ $stock-switch-button-size: 44px;
   min-height: 490px;
   padding: var(--space-300) var(--space-400) var(--space-300);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     min-height: min(
       77dvh,
       calc(100dvh - var(--layout-footer-height) - env(safe-area-inset-bottom) - 40px)
@@ -115,7 +125,7 @@ $stock-switch-button-size: 44px;
   // Starts just before the sections below, which wait var(--duration-fast).
   animation-delay: calc(var(--duration-fast) / 2);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     padding: 0 var(--space-200);
   }
 }
@@ -126,7 +136,7 @@ $stock-switch-button-size: 44px;
   padding: var(--space-300) var(--space-300) var(--space-300);
   animation-delay: var(--duration-fast);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     height: auto;
     padding: 0 var(--space-200);
   }
@@ -138,7 +148,7 @@ $stock-switch-button-size: 44px;
   padding: var(--space-300);
   animation-delay: var(--duration-fast);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     padding: 0 var(--space-200);
   }
 }
@@ -148,7 +158,7 @@ $stock-switch-button-size: 44px;
   padding: var(--space-300) var(--space-300);
   animation-delay: var(--duration-fast);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     padding: 0 var(--space-200);
   }
 }
@@ -224,7 +234,7 @@ $stock-switch-button-size: 44px;
   gap: var(--space-150);
   margin-top: var(--space-100);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     align-items: center;
     text-align: center;
     margin-top: 0;
@@ -252,7 +262,7 @@ $stock-switch-button-size: 44px;
   font-size: var(--font-size-sm);
   letter-spacing: 0;
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     width: auto;
   }
 }
@@ -270,7 +280,7 @@ $stock-switch-button-size: 44px;
   font-weight: var(--font-weight-bold);
   letter-spacing: 0;
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     justify-content: center;
   }
 }
@@ -289,7 +299,7 @@ $stock-switch-button-size: 44px;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     justify-content: center;
     flex-wrap: wrap;
     margin-top: var(--space-025);
@@ -321,7 +331,7 @@ $stock-switch-button-size: 44px;
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     text-align: center;
   }
 }
@@ -333,7 +343,7 @@ $stock-switch-button-size: 44px;
   margin-top: var(--space-200);
   margin-bottom: var(--space-100);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     justify-content: center;
     padding: 0 var(--space-250);
   }
@@ -345,7 +355,7 @@ $stock-switch-button-size: 44px;
   margin-top: 0;
   overflow: hidden;
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     width: 100%;
     height: clamp(238px, 31dvh, 280px);
     margin-top: 0;
@@ -429,7 +439,7 @@ $stock-switch-button-size: 44px;
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0;
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     padding: 0 var(--space-025);
   }
 }
@@ -451,7 +461,7 @@ $stock-switch-button-size: 44px;
     border-bottom: none;
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -494,7 +504,7 @@ $stock-switch-button-size: 44px;
     color: var(--color-text-secondary);
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     justify-content: flex-start;
   }
 }
@@ -504,7 +514,7 @@ $stock-switch-button-size: 44px;
   margin-bottom: var(--space-200);
 }
 
-@include ds.down(md) {
+@include ds.narrow-layout {
   .summary_block .investment_info {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -515,7 +525,7 @@ $stock-switch-button-size: 44px;
 .inventory_histogram_container {
   height: 270px;
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     height: 260px;
   }
 }
@@ -525,7 +535,7 @@ $stock-switch-button-size: 44px;
   flex-direction: column;
   gap: var(--space-150);
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -564,7 +574,7 @@ $stock-switch-button-size: 44px;
     @include ds.focus-ring;
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     display: flex;
     justify-content: center;
     min-height: 52px;
@@ -656,7 +666,7 @@ $stock-switch-button-size: 44px;
     white-space: nowrap;
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     grid-template-columns: minmax(0, 1fr) 18px;
     grid-template-rows: auto auto;
     min-height: 62px;
@@ -715,7 +725,7 @@ $stock-switch-button-size: 44px;
     cursor: pointer;
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     margin: var(--space-800) var(--space-200) 0;
   }
 }
@@ -827,6 +837,12 @@ $stock-switch-button-size: 44px;
   z-index: 2;
   transform: translateY(-50%);
 
+  @include ds.wide-layout {
+    @include ds.down(lg) {
+      margin-inline: calc(-1 * (#{$stock-switch-button-size} + var(--space-050)));
+    }
+  }
+
   & > button {
     display: grid;
     place-items: center;
@@ -879,7 +895,7 @@ $stock-switch-button-size: 44px;
     );
   }
 
-  @include ds.down(md) {
+  @include ds.narrow-layout {
     margin-inline: var(--space-050);
 
     &.left {

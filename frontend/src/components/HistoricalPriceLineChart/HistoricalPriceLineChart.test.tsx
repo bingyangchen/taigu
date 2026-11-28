@@ -12,6 +12,7 @@ function getTooltips(
   const { tooltip } = makeHistoricalPriceChartOption(
     { dates, values, previousValues, isWaiting: false },
     { dates: [], values: [] },
+    false,
   );
   if (!tooltip || Array.isArray(tooltip) || typeof tooltip.formatter !== "function") {
     throw new Error("Expected a tooltip formatter");

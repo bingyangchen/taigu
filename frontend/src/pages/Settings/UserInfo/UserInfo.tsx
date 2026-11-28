@@ -16,6 +16,7 @@ import { updateAccountInfo } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import Env from "../../../utils/env";
+import { useIsNarrowLayout } from "../../../utils/mediaQuery";
 import { settingsPagePath } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./UserInfo.module.scss";
@@ -27,6 +28,7 @@ function UserInfo() {
   const isWaiting = useAppSelector((state) => state.account.isWaiting);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const isNarrowLayout = useIsNarrowLayout();
   const [showDefaultAvatar, setShowDefaultAvatar] = useState(false);
   const [validGravatarUrl, setValidGravatarUrl] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState(savedAvatarUrl ?? "");
@@ -99,7 +101,7 @@ function UserInfo() {
   return (
     <>
       {activeModalName === "gravatar" &&
-        (Util.isMobile ? (
+        (isNarrowLayout ? (
           <BottomSheet onClickBackground={() => setActiveModalName(null)}>
             <div className={styles.gravatar_modal_content}>
               <img

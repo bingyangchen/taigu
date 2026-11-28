@@ -14,8 +14,8 @@ import { useAppSelector } from "../../../redux/hooks";
 import { COLORS, FONT_SIZES } from "../../../styles/tokens";
 import Api from "../../../utils/api";
 import Env from "../../../utils/env";
+import { useIsNarrowLayout } from "../../../utils/mediaQuery";
 import { navigateBack } from "../../../utils/router";
-import Util from "../../../utils/util";
 import styles from "./EarningAnalysis.module.scss";
 
 type ChartType = "gain" | "cashDividend";
@@ -33,6 +33,7 @@ function EarningAnalysis() {
   );
   const location = useLocation();
   const navigate = useNavigate();
+  const isNarrowLayout = useIsNarrowLayout();
   const [activeChartType, setActiveChartType] = useState<ChartType>("gain");
   const [companyNamesMap, setCompanyNamesMap] = useState<{
     [sid: string]: string | null;
@@ -73,7 +74,7 @@ function EarningAnalysis() {
 
   return (
     <div className={styles.main}>
-      {Util.isMobile && <SpeedDial />}
+      <SpeedDial />
       <ScrollThresholdContainer>
         {(isScrolled) => (
           <div
@@ -120,7 +121,7 @@ function EarningAnalysis() {
           />
         )}
       </div>
-      {Util.isMobile && <div className={styles.mobile_padding} />}
+      {isNarrowLayout && <div className={styles.mobile_padding} />}
     </div>
   );
 }

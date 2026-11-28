@@ -14,18 +14,17 @@ export type AddOrSearchModalName =
 interface Props {
   modalName: AddOrSearchModalName;
   hideModal: () => void;
-  defaultSid?: string;
 }
 
-/** The editor or search window that the add and search entries of the navigation open. */
-export default function AddOrSearchModal({ modalName, hideModal, defaultSid }: Props) {
+/** The editor or search window that the sidebar's add and search entries open. */
+export default function AddOrSearchModal({ modalName, hideModal }: Props) {
   switch (modalName) {
     case "createTradeRecord":
-      return <TradeRecordEditor defaultSid={defaultSid} hideModal={hideModal} />;
+      return <TradeRecordEditor hideModal={hideModal} />;
     case "createCashDividendRecord":
-      return <CashDividendRecordEditor defaultSid={defaultSid} hideModal={hideModal} />;
+      return <CashDividendRecordEditor hideModal={hideModal} />;
     case "createTradePlan":
-      return <TradePlanEditor defaultSid={defaultSid} hideModal={hideModal} />;
+      return <TradePlanEditor hideModal={hideModal} />;
     case "search":
       return <StockSearchModal hideModal={hideModal} />;
   }
