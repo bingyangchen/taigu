@@ -538,7 +538,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：步驟 2 `handled` 那則問題回報的勾選按鈕是打勾的實心圓圈；步驟 3 之後畫面出現提示「已改回未處理。」，勾選按鈕變回空心的圓圈，導覽的「問題回報」旁邊的數字比步驟 2 多 1。
 
-## ADMIN-R13.4 網路中斷時標記
+## ADMIN-R13.4 連不上後端時標記
 
 網路中斷時的處理沒有自動化 test。
 
@@ -593,7 +593,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：步驟 4 之後畫面出現提示「已標記為已處理。」，列表的位置顯示「沒有未處理的問題回報。」，導覽的「問題回報」旁邊不再顯示則數。
 
-## ADMIN-R14.1 網路中斷時開啟使用情況頁
+## ADMIN-R14.1 連不上後端時開啟使用情況頁
 
 網路中斷時的處理沒有自動化 test。
 

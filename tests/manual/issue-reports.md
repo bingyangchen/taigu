@@ -126,7 +126,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：步驟 6 之後出現提示「問題回報已送出，感謝你的回饋。」；步驟 8 的 `latest:` 那一行的內容是 `'匯出的檔案打不開。'`，平台是 `pwa`，User-Agent 跟步驟 7 印出的相同。
 
-## ISSUE-R4.1 網路中斷時送出
+## ISSUE-R4.1 連不上後端時送出
 
 前端沒有自動化 test。
 

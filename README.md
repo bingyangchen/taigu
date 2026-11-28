@@ -94,31 +94,25 @@ Run `make test` to check spelling, formatting, lint, backend tests, frontend Vit
 Every change to spec'd behavior or architecture starts from a plan, and code follows. The full workflow is in `.agents/skills/sdd/SKILL.md`.
 
 - `docs/specs/` describes what the code on `main` implements: the product, the architecture, the UI guidelines, and one spec per capability.
-- `docs/plans/` holds approved changes, and `docs/plans/roadmap.md` shows what comes next.
+- `docs/plans/roadmap.md` shows what comes next, and `docs/plans/archive/` keeps every finished plan. A plan in progress lives only on its PR's branch.
 - `tests/manual/` holds the steps for the scenarios that need a manual check.
-- A change that alters behavior goes through a `plan/NNNN-xxx` branch, then an `impl/NNNN-xxx` branch. A behavior-preserving change, such as a bug fix that restores spec'd behavior or a refactor, uses a `change/xxx` branch, writing the spec of an existing capability uses a `backfill/xxx` branch, and abandoning an approved plan uses an `abandon/NNNN-xxx` branch. A trivial change on the skill's whitelist, such as a typo fix, takes any branch name.
-- `make check-scenarios` checks that every scenario in `docs/specs/` has a backend test, a frontend Vitest test, or a manual check; `make test` and CI run it too. Frontend tests name their scenarios in literal titles such as `test("[MKT-R22.2] selects the earlier quote", ...)`. See the SDD skill for the full marker rules.
+- A change that alters behavior goes through one `plan/NNNN-xxx` branch and one PR: the plan stage writes the plan and edits the specs, the user approves it, and a new session then adds the implementation to the same branch. A behavior-preserving change, such as a bug fix that restores spec'd behavior or a refactor, uses a `change/xxx` branch, and writing the spec of an existing capability uses a `backfill/xxx` branch. A trivial change on the skill's whitelist, such as a typo fix, takes any branch name.
+- `make check-scenarios` checks that every scenario in `docs/specs/` has a backend test, a frontend Vitest test, or a manual check; `make test` and CI run it too. Locally it accepts the scenarios of a plan that is not done yet, so a plan's branch can be pushed before its implementation; CI does not, so a plan's PR cannot merge before its implementation is done. Frontend tests name their scenarios in literal titles such as `test("[MKT-R22.2] selects the earlier quote", ...)`. See the SDD skill for the full marker rules.
 
-A behavior change reaches `main` in two merges, the plan first and then its implementation:
+A behavior change reaches `main` in one merge, after the plan is approved and implemented on the same branch:
 
 ```mermaid
-%%{init: { 'theme': 'base', 'gitGraph': {'showCommitLabel': false}} }%%
+%%{init: { 'theme': 'base', 'gitGraph': {'showCommitLabel': true}} }%%
 gitGraph
    commit
    commit
    branch plan/0001-xxx
    switch plan/0001-xxx
-   commit
-   commit
+   commit id: "plan"
+   commit id: "approve"
+   commit id: "implement"
    switch main
    merge plan/0001-xxx
-   commit
-   branch impl/0001-xxx
-   switch impl/0001-xxx
-   commit
-   commit
-   switch main
-   merge impl/0001-xxx
    commit
 ```
 

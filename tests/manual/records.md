@@ -76,7 +76,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：第 7 步之後編輯器顯示「已新增現金股利」的完成畫面；第 8 步之後編輯器關閉，歷史紀錄頁出現一列，顯示 2330、台積電、2024-07-15、「股利」與「入帳金額」1,500。
 
-## REC-R4.1 沒有連上網路時送出
+## REC-R4.1 連不上後端時送出
 
 前端沒有自動化 test。
 

@@ -459,7 +459,7 @@ for market in ('tse', 'otc'):
 
 預期：卡片顯示「行情讀取失敗」，點選後開啟 `/market-index`。
 
-## MKT-R13.7 離線開啟時使用 Cache
+## MKT-R13.7 第一次讀取失敗時使用 Cache
 
 自動化 test 用模擬的 service worker 回應檢查，所以要用實際的 service worker cache 再確認一次。
 
@@ -736,7 +736,7 @@ for market in ('tse', 'otc'):
 
 預期：「股票」欄位仍然沒有股票，欄位下方顯示「請從搜尋結果選擇一檔股票」。
 
-## MKT-R21.1 沒有連上網路
+## MKT-R21.1 連不上後端
 
 前端沒有自動化 test。
 

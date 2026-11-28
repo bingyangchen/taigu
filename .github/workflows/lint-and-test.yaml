@@ -3,7 +3,7 @@ name: Lint and test
 on:
   workflow_dispatch:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, ready_for_review, converted_to_draft]
 
 permissions:
   contents: read
@@ -67,8 +67,10 @@ jobs:
         run: docker run --rm -v "$PWD:/workspace:ro" taigu-frontend-tests node /workspace/scripts/sdd/frontend_scenarios.cjs /app > /tmp/frontend-scenarios.json
       - name: Test the scenario check
         run: pytest -p no:cacheprovider scripts/sdd
+      # A draft PR is a plan whose implementation has not landed yet (see the sdd skill),
+      # so it may hold scenarios without tests; the PR turns strict once it is ready.
       - name: Run the scenario check
-        run: python scripts/sdd/check_scenarios.py --frontend-report /tmp/frontend-scenarios.json
+        run: python scripts/sdd/check_scenarios.py --frontend-report /tmp/frontend-scenarios.json ${{ github.event.pull_request.draft && '--allow-unfinished-plans' || '' }}
 
   lint-backend:
     name: Lint Python with Ruff

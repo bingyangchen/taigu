@@ -1,6 +1,10 @@
-實作 [plan NNNN](https://github.com/bingyangchen/taigu/blob/<commit>/docs/plans/NNNN-slug.md)。
+<plan 的「目標」那一段>
+
+核准的 plan：[plan NNNN](https://github.com/bingyangchen/taigu/blob/<approval commit>/docs/plans/NNNN-slug.md)
 
 ## 與 Plan 不同的地方
+
+<跟核准的 plan 與當時的 spec 比較。>
 
 ### 行為改變
 

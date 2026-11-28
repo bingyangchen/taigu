@@ -95,7 +95,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：第 4 步之後畫面顯示 `PlanUpsellModal` 視窗（標題是「關注清單已達 Free 上限」），愛心變回空心；第 7 步的列表沒有 2317，上方的「最愛檔數」是 10。
 
-## FAV-R2.2 離線時加入
+## FAV-R2.2 連不上後端時加入
 
 前端沒有自動化 test。
 
@@ -109,7 +109,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：第 5 步之後愛心最後顯示空心；第 7 步重新整理後，愛心仍是空心。
 
-## FAV-R2.3 離線時移除
+## FAV-R2.3 連不上後端時移除
 
 前端沒有自動化 test。
 

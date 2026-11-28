@@ -10,7 +10,7 @@ This file defines project-level guidance for coding agents working in this repos
 
 ## Spec-Driven Development
 
-This repo uses spec-driven development: every change to spec'd behavior or architecture starts from a plan, and code follows. Before making any change to this repo (code, docs, or config), load the `sdd` skill and follow it. When the user asks for a change that alters spec'd behavior or architecture, the first deliverable is a plan PR, or a backfill PR when the capability has no spec yet, not code.
+This repo uses spec-driven development: every change to spec'd behavior or architecture starts from a plan, and code follows. Before making any change to this repo (code, docs, or config), load the `sdd` skill and follow it. When the user asks for a change that alters spec'd behavior or architecture, the first deliverable is a plan, with its spec changes, in a draft PR that its implementation later joins, or a backfill PR when the capability has no spec yet, not code.
 
 Before making product, UI, architecture, API, or database decisions, read the documents in `docs/specs/`:
 
@@ -22,7 +22,7 @@ Before making product, UI, architecture, API, or database decisions, read the do
 When reading docs for any purpose:
 
 - `docs/specs/` describes what the code on the `main` branch implements now. The exceptions are the positioning, target users, scope, and non-goals in `product.md`, and the whole of `ui-guidelines.md`, which describe the intended product, including what is not built yet.
-- `docs/plans/` and `docs/plans/roadmap.md` describe approved and future changes, not current behavior.
+- `docs/plans/roadmap.md` describes future changes, not current behavior. A plan in progress, and the spec changes it makes, live only on its PR's branch.
 - `docs/plans/archive/` is history. Never treat it as current guidance.
 
 Never push to `main` and never merge a PR. The user merges.

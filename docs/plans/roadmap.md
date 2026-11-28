@@ -27,7 +27,6 @@ flowchart TD
   security_classification("證券分類與證交稅判定<br/>未規劃"):::unplanned
   trade_fee_fixes("手續費與證交稅修正<br/>未規劃"):::unplanned
   pull_to_refresh("下拉更新資料<br/>未規劃"):::unplanned
-  offline_screen("沒有網路時的畫面<br/>已核准"):::approved
   record_editor_redesign("記帳編輯器重新設計<br/>已完成"):::done
   market_index_overview("大盤指數總覽<br/>已完成"):::done
   frontend_layout_fixes("前台版面修正<br/>已完成"):::done
@@ -45,15 +44,10 @@ flowchart TD
   billing_fixes --> billing_edge_case_fixes
   security_classification --> trade_fee_fixes
   classDef done fill:#4f726280,stroke:#4f726280
-  classDef approved fill:#e0a33a,stroke:#e0a33a,color:#1f1a12,font-weight:bold
   classDef unplanned fill:none,stroke:#9a978f,stroke-dasharray:3 3
 ```
 
 ## 功能願景
-
-### 沒有網路時的畫面
-
-讓使用者在沒有網路或連不上後端時，清楚知道 Taigu 現在不能使用，而不是看到沒有資料的頁面或一直轉圈。開啟時連不上就停在讀取畫面說明原因；使用中途沒有網路時，頁面照常可以使用，畫面上多一個不改變版面的提示，恢復網路後立刻更新行情。見 [plan 0013](0013-offline-screen.md)。
 
 ### 下拉更新資料
 

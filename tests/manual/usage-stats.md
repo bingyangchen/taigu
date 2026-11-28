@@ -117,7 +117,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：步驟 5 的 `usage:` 那一行沒有今天的日期。
 
-## USAGE-R1.11 離線時切回分頁
+## USAGE-R1.11 連不上後端時切回分頁
 
 前端沒有自動化 test。錯誤提示出現 5 秒後就會自動消失，所以步驟 7 與步驟 8 要連續、盡快做完。
 
