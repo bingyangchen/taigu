@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import LocalDatabase from "../../storage/localDatabase";
 import type { Account, UpdateAccountInfoRequestBody } from "../../types";
 import Api, { ApiError } from "../../utils/api";
 import { SessionChangedError } from "../../utils/session";
@@ -90,15 +89,6 @@ export const changeAccountBinding = createAsyncThunk(
   },
 );
 
-export const deleteAccount = createAsyncThunk(
-  "account/deleteAccount",
-  async (requestBody: { password: string }): Promise<void> => {
-    await Api.sendRequest("account/delete", "delete", JSON.stringify(requestBody));
-    await Api.clearCache();
-    await LocalDatabase.clearAll();
-  },
-);
-
 export const login = createAsyncThunk(
   "account/login",
   async (requestBody: URLSearchParams): Promise<void> => {
@@ -177,16 +167,6 @@ export const accountSlice = createSlice({
         state.isWaiting = false;
       })
       .addCase(changeAccountBinding.rejected, (state) => {
-        state.isWaiting = false;
-      })
-
-      .addCase(deleteAccount.pending, (state) => {
-        state.isWaiting = true;
-      })
-      .addCase(deleteAccount.fulfilled, (state) => {
-        state.isWaiting = false;
-      })
-      .addCase(deleteAccount.rejected, (state) => {
         state.isWaiting = false;
       })
 
