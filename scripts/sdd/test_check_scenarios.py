@@ -313,3 +313,31 @@ def test_reports_misplaced_or_misnamed_manual_sections(
     ]
     for problem, (_, _, text) in zip(report.problems, expected_messages, strict=True):
         assert text in problem.message
+
+
+_PLAN_PATH = "docs/plans/0001-demo.md"
+
+
+def test_reports_untested_scenarios_as_warnings_when_they_are_allowed() -> None:
+    report = check_scenarios(
+        specs=[_SPEC],
+        tests=[_make_test_file(['scenario("DEMO-R1.1")'])],
+        manuals=[],
+        plan_paths=[_PLAN_PATH],
+        allow_untested_scenarios=True,
+    )
+
+    assert report.problems == []
+    assert _make_locations(report.warnings) == [(_SPEC_PATH, 10)]
+
+
+def test_reports_unfinished_plans_and_untested_scenarios_by_default() -> None:
+    report = check_scenarios(
+        specs=[_SPEC],
+        tests=[_make_test_file(['scenario("DEMO-R1.1")'])],
+        manuals=[],
+        plan_paths=[_PLAN_PATH],
+    )
+
+    assert _make_locations(report.problems) == [(_PLAN_PATH, 1), (_SPEC_PATH, 10)]
+    assert report.warnings == []

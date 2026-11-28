@@ -64,6 +64,8 @@ for sid, (close, fluct, quantity) in PRICES.items():
 "
 ```
 
+步驟寫「封鎖 API」時，在 [Chrome DevTools 的 Request conditions 面板](https://developer.chrome.com/docs/devtools/request-conditions) 加入並啟用 `*/api/*` 的封鎖規則，讓前端送到後端的 request 因連線失敗結束；寫「解除 API 封鎖」時，關閉這條規則。不要用 Network 面板 throttling 的 Offline，因為 Offline 會讓瀏覽器回報沒有網路，那是 ACCT-R18 的「沒有網路」，不是「連不上後端」。
+
 ## HOLD-R1.1 賣出部分股數
 
 前端沒有自動化 test。
@@ -188,12 +190,12 @@ CashDividendRecord.objects.filter(pk=ID).delete()
 2. 執行「設定價格」，`PRICES` 設成 `{'2330': (600, 6, 25000000)}`。
 3. 開啟 `https://local.taigu.tw/market`。
 4. 確認 2330 的價格是「600」。
-5. 開啟 Chrome DevTools 的 Network 面板。
-6. 在 Network 面板把網路設成「Offline」。
-7. 執行「設定價格」，`PRICES` 設成 `{'2330': (610, 16, 25000000)}`。
-8. 停在這一頁，不要重新整理網頁，等待 40 秒。
+5. 封鎖 API。
+6. 執行「設定價格」，`PRICES` 設成 `{'2330': (610, 16, 25000000)}`。
+7. 停在這一頁，不要重新整理網頁，等待 40 秒。
+8. 解除 API 封鎖。
 
-預期：2330 的價格仍然是「600」。檢查完把 Network 面板的網路設回「No throttling」。
+預期：步驟 7 之後，2330 的價格仍然是「600」。
 
 ## HOLD-R5.3 儲存交易紀錄之後
 

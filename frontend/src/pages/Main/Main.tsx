@@ -7,6 +7,7 @@ import {
   HeaderForMain,
   LoadingScreen,
   MainSideBar,
+  OfflineNotice,
   PageMeta,
   PlanUpsellModal,
   ToastList,
@@ -36,6 +37,7 @@ import {
   useIsNarrowLayout,
 } from "../../utils/mediaQuery";
 import Nav from "../../utils/nav";
+import { useMarketRefreshAfterRestore } from "../../utils/network";
 import { useLatestRef } from "../../utils/useLatestRef";
 import Util from "../../utils/util";
 import styles from "./Main.module.scss";
@@ -78,6 +80,9 @@ function Main() {
   const navigationType = useNavigationType();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+
+  // Set once the page has loaded its data, so the market refresh can restart it.
+  const restartMarketRefreshRef = useRef<(() => void) | null>(null);
   const [viewHistory] = useState(getViewHistory);
   const mainRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -331,7 +336,18 @@ function Main() {
     const mainElement = mainRef.current;
     const contentElement = contentRef.current;
     let isUnmounted = false;
-    let fetchStockInfoTimer: ReturnType<typeof setInterval> | null = null;
+    let fetchStockInfoTimer: ReturnType<typeof setInterval> | undefined;
+    const refreshMarketData = (): void => {
+      void latestRenderRef.current.fetchHoldingStockInfo();
+      dispatch(fetchRealtimeMarketIndex());
+    };
+    const startMarketRefresh = (): void => {
+      clearInterval(fetchStockInfoTimer);
+      fetchStockInfoTimer = setInterval(
+        refreshMarketData,
+        latestRenderRef.current.subscription.market_refresh_interval_seconds * 1000,
+      );
+    };
     const handleScroll = (): void => {
       if (scrollAnimationFrameIdRef.current !== null) return;
 
@@ -390,10 +406,11 @@ function Main() {
       }
 
       if (isUnmounted) return;
-      fetchStockInfoTimer = setInterval(() => {
-        latestRenderRef.current.fetchHoldingStockInfo();
-        dispatch(fetchRealtimeMarketIndex());
-      }, latestRenderRef.current.subscription.market_refresh_interval_seconds * 1000);
+      startMarketRefresh();
+      restartMarketRefreshRef.current = () => {
+        refreshMarketData();
+        startMarketRefresh();
+      };
     };
     void loadAccountData();
 
@@ -419,9 +436,12 @@ function Main() {
         cancelAnimationFrame(scrollAnimationFrameIdRef.current);
         scrollAnimationFrameIdRef.current = null;
       }
-      if (fetchStockInfoTimer) clearInterval(fetchStockInfoTimer);
+      clearInterval(fetchStockInfoTimer);
+      restartMarketRefreshRef.current = null;
     };
   }, [dispatch, latestRenderRef, viewHistory]);
+
+  useMarketRefreshAfterRestore(() => restartMarketRefreshRef.current?.());
 
   useLayoutEffect(() => {
     const previousLocation = committed.location;
@@ -518,6 +538,9 @@ function Main() {
     >
       <PageMeta title="Taigu | 台股記帳" noindex />
       <ToastList />
+      <OfflineNotice
+        narrowPlacement={isFullScreenPage ? "bottom" : "aboveNavigationBar"}
+      />
       <PlanUpsellModal />
       {isLoading && <LoadingScreen />}
       {shouldShowHeader && <HeaderForMain />}

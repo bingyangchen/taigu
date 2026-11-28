@@ -49,6 +49,7 @@ import {
   SELL_HANDLING_FEE_RATE,
   tradeSideToLabel,
 } from "../../utils/recordEditor";
+import { useKeyboardViewport } from "../../utils/useKeyboardViewport";
 import CheckDeleteModal from "../CheckDeleteModal/CheckDeleteModal";
 import DeletePreview from "../DeletePreview/DeletePreview";
 import DollarSign from "../DollarSign/DollarSign";
@@ -71,7 +72,6 @@ import {
   type SummaryLine,
 } from "../RecordEditor/RecordEditor";
 import { useEditorSteps } from "../RecordEditor/useEditorSteps";
-import { useKeyboardViewport } from "../RecordEditor/useKeyboardViewport";
 import StockPicker, {
   PENDING_KEYWORD_MESSAGE,
   type StockPickerHandle,

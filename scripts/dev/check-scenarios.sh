@@ -15,4 +15,4 @@ docker compose -f compose.dev.yaml --progress quiet run --rm --no-deps -v "$(pwd
   frontend node /workspace/scripts/sdd/frontend_scenarios.cjs /app > "$frontend_report"
 docker compose -f compose.dev.yaml --progress quiet run --rm --no-deps -v "$(pwd):/app:ro" \
   -v "$frontend_report:/frontend-scenarios.json:ro" -e PYTHONDONTWRITEBYTECODE=1 \
-  api-server sh -c 'pytest -p no:django -p no:cacheprovider -q scripts/sdd && python scripts/sdd/check_scenarios.py --frontend-report /frontend-scenarios.json'
+  api-server sh -c 'pytest -p no:django -p no:cacheprovider -q scripts/sdd && python scripts/sdd/check_scenarios.py --frontend-report /frontend-scenarios.json --allow-untested-scenarios'

@@ -13,8 +13,6 @@
 
 在窄版的編輯頁上，步驟要填的欄位所在的段落收合著時，先點那一段把它展開。
 
-步驟寫「沒有連上網路」時，在 Chrome DevTools 的 Network 分頁把 throttling 設成「Offline」，做完那一節再改回「No throttling」。
-
 下面的指令都在 repo 的根目錄執行，執行前把指令裡的 `<你的 email>` 換成登入用的 Google 帳號 email，執行完再重新整理瀏覽器裡的 Taigu。這些指令會一併刪除這個帳號的修改紀錄（`DataChangeLog`），所以另一個登入同一個帳號的瀏覽器可能留著舊的 cache，看到已經刪掉的紀錄；遇到時在那個瀏覽器的 Chrome DevTools 的 Application 分頁按「Clear site data」，再重新登入。
 
 「清空紀錄」的指令會刪除這個帳號所有的交易紀錄與現金股利紀錄：
@@ -47,6 +45,8 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "im
 docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "from datetime import timedelta; from django.utils import timezone; from main.account.models import User; from main.billing.models import BillingProfile; u = User.objects.get(email='<你的 email>'); BillingProfile.objects.filter(user=u).update(plan='standard', subscription_status='trialing', trial_started_at=timezone.now(), trial_ends_at=timezone.now() + timedelta(days=31))"
 ```
 
+步驟寫「封鎖 API」時，在 [Chrome DevTools 的 Request conditions 面板](https://developer.chrome.com/docs/devtools/request-conditions) 加入並啟用 `*/api/*` 的封鎖規則，讓前端送到後端的 request 因連線失敗結束；寫「解除 API 封鎖」時，關閉這條規則。不要用 Network 面板 throttling 的 Offline，因為 Offline 會讓瀏覽器回報沒有網路，那是 ACCT-R18 的「沒有網路」，不是「連不上後端」。
+
 ## REC-R1.1 新增一筆買進的交易紀錄
 
 編輯器送出的內容與完成畫面由 unit test 驗證；歷史紀錄頁上的那一列要人工確認，因為 unit test 沒有涵蓋歷史紀錄頁讀到新紀錄之後的畫面。
@@ -76,15 +76,15 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：第 7 步之後編輯器顯示「已新增現金股利」的完成畫面；第 8 步之後編輯器關閉，歷史紀錄頁出現一列，顯示 2330、台積電、2024-07-15、「股利」與「入帳金額」1,500。
 
-## REC-R4.1 沒有連上網路時送出
+## REC-R4.1 連不上後端時送出
 
 前端沒有自動化 test。
 
 1. 執行「清空紀錄」的指令。
 2. 在桌面瀏覽器上點側邊欄的「新增」，確認「買賣別」是「買進」，在「股票」輸入 2330 並點選搜尋結果裡的台積電，在「交易日期」欄位選 2024-03-01，確認成交股數的單位是「張」（不是的話點「張」），「成交股數」輸入 1，「成交單價」輸入 600。
-3. 把 Network throttling 設成「Offline」。
+3. 封鎖 API。
 4. 點「新增買進紀錄」。
-5. 把 Network throttling 改回「No throttling」。
+5. 解除 API 封鎖。
 6. 按 Esc，在「捨棄變更？」確認視窗點「捨棄變更」，重新整理頁面，再開啟 `https://local.taigu.tw/records`。
 
 預期：第 4 步之後畫面出現錯誤提示，編輯器沒有關閉，填好的內容都還在；第 6 步的歷史紀錄頁顯示「目前沒有紀錄」。
@@ -236,10 +236,10 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 1. 執行「建立範例紀錄」的指令。
 2. 在桌面瀏覽器上開啟 `https://local.taigu.tw/records`。
-3. 把 Network throttling 設成「Offline」。
+3. 封鎖 API。
 4. 把滑鼠移到 2024-03-01 那筆交易紀錄上，點垃圾桶圖示的刪除按鈕。
 5. 在確認視窗點選「刪除交易紀錄」。
-6. 把 Network throttling 改回「No throttling」。
+6. 解除 API 封鎖。
 
 預期：第 5 步之後畫面出現錯誤提示，確認視窗沒有關閉，2024-03-01 那筆交易紀錄仍然在列表上。
 

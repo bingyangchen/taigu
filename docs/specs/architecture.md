@@ -75,7 +75,7 @@ flowchart LR
 2026-11 在 macOS 的 Chrome 158 實測時，先讓本機的 reverse proxy 提供用 Create React App build 的舊版，等瀏覽器裝上舊的 service worker，再換成用 Vite build 的版本，結果如下：
 
 - 再開啟 `/market` 時，瀏覽器裝好新的 service worker，舊版的前端接著把畫面換到首頁並重新載入，之後瀏覽器載入的是 Vite build 的 JavaScript，precache 裡只剩新版的檔案。
-- 新的 service worker 接手之後，停掉 reverse proxy（沒有用 DevTools 的 Offline）讓每個 request 都失敗，再開啟 Taigu，前端從 precache 載入並顯示儀表板。
+- 新的 service worker 接手之後，停掉 reverse proxy（沒有用 DevTools 的 Offline）讓每個 request 都失敗，再開啟 Taigu，前端從 precache 載入並顯示儀表板。這是做 ACCT-R18 之前的結果，做了 ACCT-R18 之後的畫面見 ACCT-R18。
 - 再換回 Create React App build 的版本時，瀏覽器用同樣的流程換回舊的 service worker，所以在 Cloudflare Pages 把部署退回上一版時，已經更新的 Chrome 預期也會換回去。
 
 ### 公開頁面的 Prerender
@@ -171,16 +171,31 @@ flowchart TD
 
 ACCT-R3 裡要登入才能使用的頁面，都放在同一個 layout route 底下，前端用這個 route 的 loader（`frontend/src/utils/loginCheck.ts` 的 `requireLogin`）讀取帳號資料，確認登入狀態，等 loader 結束之後才畫出底下的頁面。等待期間的畫面依以下規則決定：
 
-- 整頁載入時，例如開啟 Taigu 或重新整理頁面，畫面顯示 `LoadingScreen`。之後換成頁面自己顯示的 `LoadingScreen` 時，例如儀表板讀取交易紀錄時，前端讓 `LoadingScreen` 的動畫從原本的進度接著播放。
-- 從登入頁、歡迎頁這類不需要登入的頁面換過來時，畫面停在原本的頁面。
+- 整頁載入時，例如開啟 Taigu 或重新整理頁面，畫面顯示 `LoadingScreen`，沒有網路或連不上後端時依 ACCT-R18 顯示。之後換成頁面自己顯示的 `LoadingScreen` 時，例如儀表板讀取交易紀錄時，前端讓 `LoadingScreen` 的動畫從原本的進度接著播放。
+- 從登入頁、歡迎頁這類不需要登入的頁面換過來時，畫面也顯示 `LoadingScreen`，沒有網路或連不上後端時依 ACCT-R18 顯示。
+
+  > 設計理由：從不需要登入的頁面換過來時也顯示 `LoadingScreen`，不照 React Router 的預設停在原本的頁面，因為從歡迎頁換到前台時，`LoadingScreen` 會從確認登入一路接到 `Main` 讀取開頁資料，畫面不會先停在歡迎頁再跳出 `LoadingScreen`；連不上後端時，使用者也不會在原本的頁面等 10 秒都沒有任何回應。完整討論見 [0013](../plans/archive/0013-offline-screen.md)。
 
 前端依讀取帳號資料的結果處理：
 
 - 讀到帳號資料時，畫出頁面。
 - 後端回 401 時，前端依 ACCT-R5 把畫面換到歡迎頁，並且取代瀏覽紀錄裡原本開啟的網址，所以使用者按上一頁時不會再開啟那個頁面。
-- 其他失敗時，前端照常畫出頁面，並在頁面掛載時再讀取一次帳號資料（見 ACCT-R5）。
+- 其他失敗時，畫面依 ACCT-R18 顯示，不畫出頁面。前端無法開始讀取帳號資料時，例如 service worker 沒有確認支援帳號資料隔離（見「Service Worker 的帳號資料隔離」），畫面跟讀取失敗時一樣依 ACCT-R18 顯示，只是使用者點「重試」時，前端重新載入整頁，因為 service worker 仍然沒有確認支援帳號資料隔離，前端再讀一次帳號資料也無法開始。
 
 > 設計理由：以前前端在每個頁面畫出來之後，才在各個頁面裡讀取帳號資料，所以未登入的使用者在換到歡迎頁之前，會先短暫看到沒有內容的頁面；改成由 layout route 的 loader 統一確認之後，新增的頁面只要放在這個 route 底下，就不會再出現這種情況。
+
+整頁載入時，`LoginCheckScreen`（依 ACCT-R18 的狀態顯示 `LoadingScreen` 的元件）是這個 layout route 的 `HydrateFallback`；從不需要登入的頁面換過來時，React Router 不會畫出 `HydrateFallback`，所以 loader 還在確認登入時，root route 的 element（`LoginCheckLayout`）會把 `LoginCheckScreen` 疊在原本的頁面上。
+
+前端依 `Api` 在 `fetch` 本身失敗時丟出的 `ConnectionError` 判斷 ACCT-R18 的「連不上後端」，後端回了表示錯誤的 status code 時不算。
+
+ACCT-R18 的畫面要靠 service worker 與 precache 才會出現：瀏覽器清掉 service worker 與 precache 時（例如 Safari 清除網站資料），使用者沒有網路時開啟 Taigu，會看到瀏覽器自己的離線頁面。
+
+2026-11 關掉 Mac 的 Wi-Fi 再打開，實測瀏覽器回報的網路狀態（ACCT-R18 的「瀏覽器的回報」）如下：
+
+- macOS 的 Chrome：Wi-Fi 關掉後約 0.1 秒送出 `offline`；打開後約 1.5 秒送出 `online`，比實際連得上外部網站早 0.3 到 0.6 秒，所以實測時，前端在恢復網路 2 秒後重新抓行情，網路已經通了。分頁在背景時也照常送出這兩個事件。沒有網路時重新整理頁面，`navigator.onLine` 一開始就是 `false`，畫面顯示「沒有網路連線」，收到 `online` 之後前端讀到帳號資料並畫出頁面。
+- iOS 26.2 模擬器（iPad mini）的 Safari 與加到主畫面的網頁 App：Wi-Fi 關掉後約 2 秒送出 `offline`，但打開之後一分鐘內都沒有送出 `online`，切到主畫面再切回、鎖定再解鎖時，`navigator.onLine` 也仍是 `false`，重新載入頁面才變回 `true`。
+
+2026-11 在 macOS 的 Chrome 實測開發環境：前端經由跟前端同一個網域的 `https://local.taigu.tw/api/` 連到後端，只停掉 `api-server` 時，reverse proxy 約 3 秒後回 502，前端讀得到這個 response，所以畫面依 ACCT-R18.5 在約 3 秒後就顯示「無法連上 Taigu」，不會等 10 秒。
 
 #### 換頁時不再確認登入狀態
 
@@ -279,7 +294,7 @@ sequenceDiagram
 
 - 2 個與 4 個分頁同時需要更新 access token 時，各分頁都成功讀取資料，沒有因正常更新觸發 replay detection。
 - 登出時，其他分頁重新開啟登入頁；清除暫停期間，其他分頁等待同一輪清除，登入版本只改變一次。執行清除的分頁關閉後，其他分頁能沿用同一個登入版本完成清除。
-- 帳號 A 的 API 回應延遲 5 秒才完成時，登入版本改變後不會把資料寫回帳號 B 使用的 API cache。IndexedDB、舊 API cache、最近點選股票與舊返回網址都會清除；帳號 B 離線時沒有讀到帳號 A 的資料。這項檢查以固定的成功登入回應與測試帳號 cookie 代替 Google 授權。
+- 帳號 A 的 API 回應延遲 5 秒才完成時，登入版本改變後不會把資料寫回帳號 B 使用的 API cache。IndexedDB、舊 API cache、最近點選股票與舊返回網址都會清除；帳號 B 離線時沒有讀到帳號 A 的資料。這項檢查以固定的成功登入回應與測試帳號 cookie 代替 Google 授權。這是做 ACCT-R18 之前的結果，做了 ACCT-R18 之後，沒有網路時開啟不會畫出頁面。
 - 以不回覆帳號資料隔離訊息、使用舊 cache 名稱的 worker 模擬舊版時，前端停止寫入並提示重新整理；換回新版 worker 後，操作成功。這項檢查沒有涵蓋所有舊版前端與 worker 的組合。
 
 實際 Google 授權、更換綁定的 Google 帳號與更新 access token 同時發生，以及安裝後的 PWA，仍需要依手動檢查確認。
@@ -352,7 +367,9 @@ Google 與瀏覽器在這個流程裡的行為如下：
 
 - 盤中行情回應的 `dates` 欄位提供各指數的行情日期，`date` 欄位保留給舊版前端。新版前端依 MKT-R14 與 MKT-R15 使用這些日期。
 - Service worker 先向後端查詢大盤指數的盤中行情或歷史收盤指數。網路請求失敗且有可用的 API cache 時，service worker 會在回應加上 `X-Taigu-Cache-Fallback`，前端據此把這次查詢當作失敗（見 MKT-R13、MKT-R14）。畫面已有盤中行情時，前端分別比較各指數的行情日期與最後一筆的時間，只採用比畫面上更新的 cache 資料。
-- 前端新增、修改或刪除資料時都要連上後端，離線時只能讀取 IndexedDB 與 service worker cache 裡的資料，所以不會出現離線時的修改與後端上的資料衝突的情況。
+- 前端新增、修改或刪除資料時都要連上後端。IndexedDB 讓前端只向後端讀取有變動的交易紀錄與歷史收盤指數（見這一節的第一項）；service worker 的 API cache 對 `frontend/src/utils/cache.ts` 的 `API_CACHE_PATHS` 列出的 API 先向後端讀取，request 因連線失敗結束，或後端（大盤指數以外的 API）超過 3 秒才回應時，改用上次的回應，例如 REC-R19 的現金股利紀錄與 MKT-R13 的大盤指數。兩者都不是為了讓 Taigu 離線可用：沒有網路時畫面依 ACCT-R18 顯示，所以使用者不會在沒有網路時修改資料，也就不會跟後端上的資料衝突。
+
+  > 設計理由：做了 ACCT-R18 之後仍保留 service worker 的 API cache，因為前端讀到帳號資料之後，後端仍可能回應太慢，前端也可能連不上後端，這時 API cache 讓前端先顯示上次存下的現金股利紀錄（REC-R19），大盤指數也依 MKT-R13 顯示上次的行情。完整討論見 [0013](../plans/archive/0013-offline-screen.md)。
 - 頭像與名字頁向 gravatar.com 查詢頭像時帶 `d=404`，所以使用者的 email 沒有 Gravatar 頭像時，gravatar.com 回 404（使用者看到的結果見 ACCT-R10）。
 - 窄版的 `Main`（編輯頁以外的頁面）與 `Settings` 用整頁捲動：前端在窄版替 `body` 加上 `main-page-document-scroll` 或 `settings-page-document-scroll`，可用畫面跨過窄版與寬版的分界時，前端也跟著加上或拿掉這兩個 class。寬版的捲動容器是 `Main` 的 `<main>`，不過可用寬度至少 960px 時，捲動容器改成側邊欄旁的內容區；`Main.module.scss` 設定 `overflow`，以及 `Main.tsx` 存下與還原捲動位置時，都依這幾個條件選捲動容器。頁面自己的捲動容器（標了 `data-page-scroll` 的元素，例如歷史紀錄頁的列表）什麼時候捲動由各頁的樣式決定，不捲動時樣式讓它的 `overflow-y` 維持 `visible`，`Main.tsx` 依這個值判斷要不要把它當成捲動容器。
 - 側邊欄的「新增」與「搜尋」開啟的視窗由 `Main` 管理。2026-11 在 macOS 的 Chrome 實測，以 768 × 1024 的可用畫面從圖示列開啟新增現金股利的編輯器視窗，填了入帳金額之後把可用畫面縮成 390 × 844，編輯器視窗與填好的金額都還在。
@@ -366,7 +383,7 @@ Google 與瀏覽器在這個流程裡的行為如下：
   - 在 Safari 長按清單的一列約 1 秒，畫面只出現這一列紀錄的編輯器視窗，沒有出現 bottom sheet、文字選取或系統選單。前端在長按後的 `touchend` 呼叫 `preventDefault()`，所以不論瀏覽器之後送不送 click，前端都只開啟一次編輯器視窗。
   - 在網頁 App 裡點設定頁的「隱私權政策」，畫面在同一個 App 裡換到隱私權政策頁，按返回按鈕之後畫面回到設定頁。
 - 窄版的 `Main` 依 `shouldUseWhiteMobileShell` 替 `body` 加上 `main-page-white-shell-scroll` 或 `main-page-gradient-scroll`，把 `body` 的背景設成 `--color-bg-page` 或儀表板漸層頂端的顏色。2026-11 在 iOS 26.2 模擬器加到主畫面的網頁 App 實測，狀態列顯示的是 `body` 的背景色，不是 `theme-color`，也不是頁面外框元素的背景色，所以背景是 `--color-bg-page` 的頁面都要讓 `shouldUseWhiteMobileShell` 成立，狀態列才會和頁面同色。
-- 2026-11 在 iOS 26.2 模擬器加到主畫面的網頁 App 實測，搜尋框的螢幕鍵盤開著時拖動頁面，鍵盤不會自己收起，頁面在鍵盤上方捲動，固定在底部的導覽列與加號選單會被帶到鍵盤上方。所以 `SearchKeywordInput` 在使用者拖動頁面時讓搜尋框失去焦點，收起鍵盤。
+- 2026-11 在 iOS 26.2 模擬器加到主畫面的網頁 App 實測，搜尋框的螢幕鍵盤開著時拖動頁面，鍵盤不會自己收起，頁面在鍵盤上方捲動，固定在底部的導覽列與加號選單會被帶到鍵盤上方。所以 `SearchKeywordInput` 在使用者拖動頁面時讓搜尋框失去焦點，收起鍵盤。前端依 ACCT-R18 在螢幕鍵盤開著時收起提示，也是這個原因。
 
   > 設計理由：選擇拖動時收起鍵盤，跟原生 App 的清單一樣。不採用鍵盤開著時隱藏導覽列與加號選單，因為頁面仍會在鍵盤上方捲動，畫面上的位置還是跟著鍵盤跑。iOS 不支援 viewport 的 `interactive-widget` 與 VirtualKeyboard API，所以也不能用這兩者讓版面避開鍵盤。
 
@@ -591,7 +608,7 @@ sequenceDiagram
 | 自選股 | `/market`、`/market/favorites/:sid` | `frontend/src/pages/Main/Market/Market.tsx`、`frontend/src/pages/Main/Details/Details.tsx` | `api-server/main/favorite/` | [favorites.md](favorites.md) |
 | 買賣計畫 | `/plans`、`/plans/new`、`/plans/:planId/edit`、`/market` | `frontend/src/pages/Main/Plans/Plans.tsx`、`frontend/src/pages/Main/EditorRoutes/EditorRoutes.tsx`、`frontend/src/components/TradePlanEditor/TradePlanEditor.tsx`、`frontend/src/pages/Main/Market/Market.tsx` | `api-server/main/trade_plan/` | [trade-plans.md](trade-plans.md) |
 | 前台導覽 | NAV-R2 列出的頁面 | `frontend/src/pages/Main/Main.tsx` 依版面選導覽，側邊欄在 `frontend/src/components/MainSideBar/MainSideBar.tsx`，收合狀態存在瀏覽器的 `localStorage`，底部導覽列在 `frontend/src/components/Footer/Footer.tsx`，窄版的加號選單在 `frontend/src/components/SpeedDial/SpeedDial.tsx` | 無 | [navigation.md](navigation.md) |
-| 帳號 | `/login`、`/settings`、`/settings/user-info`、`/settings/account-binding` | `frontend/src/pages/Login/Login.tsx`、`frontend/src/utils/loginCheck.ts`、`frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/UserInfo/UserInfo.tsx`、`frontend/src/pages/Settings/AccountBinding/AccountBinding.tsx` | `api-server/main/account/` | [account.md](account.md) |
+| 帳號 | `/login`、`/settings`、`/settings/user-info`、`/settings/account-binding`，以及 ACCT-R18 適用的頁面 | `frontend/src/pages/Login/Login.tsx`、`frontend/src/utils/loginCheck.ts`、`frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/UserInfo/UserInfo.tsx`、`frontend/src/pages/Settings/AccountBinding/AccountBinding.tsx`；ACCT-R18 適用的頁面畫出來之前的畫面在 `frontend/src/utils/loginCheck.ts` 與 `frontend/src/components/LoadingScreen/LoginCheckScreen.tsx`，讀取瀏覽器回報的程式碼在 `frontend/src/utils/network.ts`，使用中途的提示在 `frontend/src/components/OfflineNotice/`，恢復網路後重新抓行情的程式碼在 `frontend/src/pages/Main/Main.tsx`、`frontend/src/pages/Main/Market/Market.tsx` 與 `frontend/src/pages/Main/Details/Details.tsx` | `api-server/main/account/` | [account.md](account.md) |
 | 方案與付款 | `/settings/current-plan` | `frontend/src/pages/Settings/CurrentPlan/CurrentPlan.tsx`、`frontend/src/components/PlanUpsellModal/PlanUpsellModal.tsx` | `api-server/main/billing/` | [billing.md](billing.md) |
 | 問題回報 | `/settings`、`/settings/issue-report` | `frontend/src/pages/Settings/Overview/Overview.tsx`、`frontend/src/pages/Settings/IssueReport/IssueReport.tsx` | `api-server/main/issue_report/` | [issue-reports.md](issue-reports.md) |
 | 使用統計 | 要登入才能使用的頁面（見 ACCT-R3），後台 `/admin` 底下的頁面除外 | `frontend/src/pages/Main/Main.tsx`、`frontend/src/pages/Settings/Settings.tsx`，判斷平台的是 `frontend/src/utils/util.ts` 的 `Util.isPWA` | `api-server/main/usage/`，記下使用紀錄的 `open-session` endpoint 在 `api-server/main/account/` | [usage-stats.md](usage-stats.md) |

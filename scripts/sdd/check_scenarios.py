@@ -1,5 +1,11 @@
 """Checks that every scenario in docs/specs/ has a test or a section in tests/manual/.
 
+A plan's branch changes the specs before the code, so with --allow-untested-scenarios,
+as in the pre-push hook and on a draft PR, a scenario with neither is only a warning.
+Without the option, as on a PR that is ready for review, it is a problem, and so is every
+plan still in docs/plans/, so a PR cannot merge before its implementation archives the
+plan.
+
 The rules are in "Spec Conventions" of .agents/skills/sdd/SKILL.md.
 """
 
@@ -8,13 +14,14 @@ import ast
 import json
 import re
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 _SPECS_DIRECTORY = Path("docs/specs")
 _API_SERVER_DIRECTORY = Path("api-server")
 _MANUAL_DIRECTORY = Path("tests/manual")
+_PLANS_DIRECTORY = Path("docs/plans")
 
 _MARKDOWN_FILE = re.compile(r"\.md$")
 _TEST_FILE = re.compile(r"^test_.*\.py$")
@@ -26,6 +33,7 @@ _SCENARIO_FIRST_DETAIL = re.compile(r"^\s+- 前提[:：]")
 _SCENARIO_ID_LIKE = re.compile(r"^- [A-Z]+-R\d+\.\d")
 _SCENARIO_ID = re.compile(r"^([A-Z]+-R\d+)\.[1-9]\d*$")
 _MANUAL_HEADING = re.compile(r"^## (\S+) (.+)$")
+_PLAN_FILE = re.compile(r"^\d{4}-.*\.md$")
 
 
 @dataclass(frozen=True)
@@ -49,6 +57,7 @@ class ScenarioReport:
     scenario_count: int
     tested_count: int
     manual_count: int
+    warnings: list[Problem] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -80,8 +89,21 @@ def check_scenarios(
     tests: list[SourceFile],
     manuals: list[SourceFile],
     frontend_report: FrontendTestReport | None = None,
+    plan_paths: list[str] | None = None,
+    allow_untested_scenarios: bool = False,
 ) -> ScenarioReport:
     problems = list(frontend_report.problems) if frontend_report else []
+    warnings: list[Problem] = []
+
+    if not allow_untested_scenarios:
+        problems.extend(
+            Problem(
+                plan_path,
+                1,
+                "The plan is not done; its implementation archives it before the PR merges",
+            )
+            for plan_path in plan_paths or []
+        )
 
     id_to_scenario: dict[str, _ScenarioMention] = {}
     for spec in specs:
@@ -152,14 +174,14 @@ def check_scenarios(
                 )
 
     for scenario in id_to_scenario.values():
-        if scenario.id not in tested_ids and scenario.id not in manual_ids:
-            problems.append(
-                Problem(
-                    scenario.path,
-                    scenario.line,
-                    f"{scenario.id} has no test that names it and no section in {_MANUAL_DIRECTORY}/",
-                )
-            )
+        if scenario.id in tested_ids or scenario.id in manual_ids:
+            continue
+        untested = Problem(
+            scenario.path,
+            scenario.line,
+            f"{scenario.id} has no test that names it and no section in {_MANUAL_DIRECTORY}/",
+        )
+        (warnings if allow_untested_scenarios else problems).append(untested)
 
     problems.sort(key=lambda p: (p.path, p.line))
     return ScenarioReport(
@@ -167,6 +189,7 @@ def check_scenarios(
         scenario_count=len(id_to_scenario),
         tested_count=len(tested_ids),
         manual_count=len(manual_ids),
+        warnings=sorted(warnings, key=lambda w: (w.path, w.line)),
     )
 
 
@@ -374,9 +397,23 @@ def _read_files(directory: Path, name_pattern: re.Pattern[str]) -> list[SourceFi
     ]
 
 
+def _list_unfinished_plans() -> list[str]:
+    """Lists the plans directly in docs/plans/; archived plans are done."""
+    return [
+        str(path.relative_to(_REPOSITORY_ROOT))
+        for path in sorted((_REPOSITORY_ROOT / _PLANS_DIRECTORY).iterdir())
+        if path.is_file() and _PLAN_FILE.search(path.name)
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--frontend-report", type=Path, required=True)
+    parser.add_argument(
+        "--allow-untested-scenarios",
+        action="store_true",
+        help="Report scenarios without a test or a manual section as warnings, and accept plans still in docs/plans/, so a plan's branch can be pushed before its implementation",
+    )
     args = parser.parse_args()
     frontend_data = json.loads(args.frontend_report.read_text(encoding="utf-8"))
     report = check_scenarios(
@@ -393,6 +430,8 @@ def main() -> int:
         manuals=_read_files(_MANUAL_DIRECTORY, _MARKDOWN_FILE)
         if (_REPOSITORY_ROOT / _MANUAL_DIRECTORY).is_dir()
         else [],
+        plan_paths=_list_unfinished_plans(),
+        allow_untested_scenarios=args.allow_untested_scenarios,
     )
     for problem in report.problems:
         sys.stderr.write(f"{problem.path}:{problem.line}: {problem.message}\n")
@@ -401,8 +440,11 @@ def main() -> int:
             f'{len(report.problems)} problem(s). The rules are in "Spec Conventions" of .agents/skills/sdd/SKILL.md.\n'
         )
         return 1
+    for warning in report.warnings:
+        sys.stderr.write(f"{warning.path}:{warning.line}: warning: {warning.message}\n")
+    untested = f", {len(report.warnings)} without either yet" if report.warnings else ""
     sys.stdout.write(
-        f"Checked {report.scenario_count} scenarios: {report.tested_count} with tests, {report.manual_count} with a section in {_MANUAL_DIRECTORY}/.\n"
+        f"Checked {report.scenario_count} scenarios: {report.tested_count} with tests, {report.manual_count} with a section in {_MANUAL_DIRECTORY}/{untested}.\n"
     )
     return 0
 

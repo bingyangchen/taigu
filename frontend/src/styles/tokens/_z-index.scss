@@ -4,12 +4,16 @@ $z-index: (
   footer: 2,
   header: 4,
   header-raised: 5,
+  // ACCT-R18's notice stays under dialogs and bottom sheets. While a page's own
+  // loading screen covers the page, which no dialog opens over, it rises above it.
+  offline-notice: 5,
   backdrop: 6,
   toast: 6,
   dialog: 7,
   speed-dial: 7,
   loading-screen: 8,
   nested-backdrop: 8,
+  offline-notice-raised: 9,
   nested-dialog: 9,
   popover: 10,
 );

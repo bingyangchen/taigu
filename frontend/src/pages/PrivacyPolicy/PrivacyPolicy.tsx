@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
         <h1>隱私權政策</h1>
       </div>
       <div className={styles.body}>
-        <div className={styles.effective_date}>最後更新日期：2026/10/28</div>
+        <div className={styles.effective_date}>最後更新日期：2026/11/28</div>
         <h2>適用範圍</h2>
         <p>
           本隱私權政策適用於您在 Taigu
@@ -76,7 +76,7 @@ export default function PrivacyPolicy() {
           本網站保存您使用本網站的日期與方式的紀錄，以及您送出的問題回報，直到您的帳號刪除為止。
         </p>
         <p>
-          本網站會在您的瀏覽器保存部分帳號資料，以供離線讀取。登出或確認登入失效時，會清除這些本機資料。
+          本網站會在您的瀏覽器保存部分帳號資料，以減少每次開啟本網站時需要下載的資料。登出或確認登入失效時，會清除這些本機資料。
         </p>
         <h2>個人資料之分享</h2>
         <p>

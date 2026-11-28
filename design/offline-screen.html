@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
+    <title>沒有網路時的畫面 | Taigu 設計草稿</title>
+    <link rel="stylesheet" href="shared/components.css" />
+    <style>
+      body {
+        margin: 0;
+        background-color: var(--color-bg-surface);
+        color: var(--color-text-primary);
+      }
+
+      /* Draft-only switcher for the states; not part of the design. */
+      .draft_switcher {
+        position: fixed;
+        top: var(--space-100);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: calc(var(--z-popover) + 1);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--space-050);
+        padding: var(--space-050);
+        border-radius: var(--radius-pill);
+        background-color: var(--color-bg-subtle);
+        font-size: var(--font-size-caption);
+      }
+
+      .draft_switcher button {
+        border: none;
+        border-radius: var(--radius-pill);
+        padding: var(--space-050) var(--space-150);
+        background: transparent;
+        color: var(--color-text-primary);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .draft_switcher button[aria-pressed="true"] {
+        background-color: var(--color-bg-surface);
+        color: var(--color-text-primary);
+      }
+
+      /* Same frame as LoadingScreen: the spinner's place shows the status. */
+      .screen {
+        position: fixed;
+        inset: 0;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2dvh;
+        padding: 0 var(--space-300);
+        box-sizing: border-box;
+        background-color: var(--color-bg-surface);
+        z-index: var(--z-loading-screen);
+      }
+
+      .logo {
+        height: 45px;
+      }
+
+      .logo img {
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .spinner {
+        width: 20px;
+        aspect-ratio: 1;
+        opacity: 0.6;
+      }
+
+      .status {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-200);
+        max-width: 20rem;
+        text-align: center;
+        text-wrap: balance;
+      }
+
+      .status_text {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-050);
+      }
+
+      .status_title {
+        margin: 0;
+        font-size: var(--font-size-body);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
+      }
+
+      .status_detail {
+        margin: 0;
+        font-size: var(--font-size-data);
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+      }
+
+      .retry {
+        min-width: 7.5rem;
+      }
+
+      /* Mid-session: the page stays usable; a status notice floats over it (wide: where toasts sit). */
+      .page {
+        min-height: 100dvh;
+        display: grid;
+        grid-template-columns: 230px 1fr;
+        background-color: var(--color-bg-page);
+      }
+
+      .page_sidebar {
+        background-color: var(--color-bg-surface);
+        border-inline-end: 1px solid var(--color-border-default);
+        padding: var(--space-300) var(--space-200);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-150);
+        font-size: var(--font-size-nav-sidebar);
+        color: var(--color-text-secondary);
+      }
+
+      .page_sidebar img {
+        height: 32px;
+        align-self: flex-start;
+        margin-bottom: var(--space-200);
+      }
+
+      .page_main {
+        padding: var(--space-400);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-200);
+      }
+
+      .page_title {
+        margin: 0;
+        font-size: var(--font-size-page-title);
+        font-weight: var(--font-weight-medium);
+      }
+
+      .card {
+        background-color: var(--color-bg-surface);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: var(--space-100) var(--space-200);
+        max-width: 40rem;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        padding: var(--space-150) 0;
+        border-bottom: 1px solid var(--color-border-subtle);
+        font-size: var(--font-size-data);
+      }
+
+      .row:last-child {
+        border-bottom: none;
+      }
+
+      .row_price {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .page_nav {
+        display: none;
+      }
+
+      .speed_dial {
+        display: none;
+        position: fixed;
+        right: 24px;
+        bottom: calc(64px + 16px);
+        inline-size: 56px;
+        block-size: 56px;
+        place-items: center;
+        border-radius: var(--radius-circle);
+        background-color: var(--color-bg-accent);
+        color: var(--color-text-inverse);
+        font-size: var(--font-size-2xl);
+        box-shadow: var(--shadow-md);
+      }
+
+      .editor {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-200);
+        max-width: 32rem;
+      }
+
+      .editor_actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-150);
+      }
+
+      .editor_actions > button {
+        inline-size: 100%;
+      }
+
+      body[data-state="editor"] .page_nav,
+      body[data-state="editor"] .speed_dial,
+      body[data-state="settings"] .page_nav,
+      body[data-state="settings"] .speed_dial,
+      body:not([data-state="midsession"]):not([data-state="toast"]):not([data-state="dialog"]) [data-only="list"],
+      body:not([data-state="editor"]) [data-only="editor"],
+      body:not([data-state="settings"]) [data-only="settings"] {
+        display: none;
+      }
+
+      @media (max-width: 599.98px), (max-height: 479.98px) {
+        body[data-state="editor"] .editor_actions {
+          position: fixed;
+          inset: auto var(--space-200) var(--space-200);
+        }
+      }
+
+      /* Same column as the toast list, so they stack instead of overlapping.
+         It sits under dialogs, bottom sheets and their backdrop, so it never covers them. */
+      .float_stack {
+        position: fixed;
+        inset-inline-end: var(--space-400);
+        inset-block-end: var(--space-400);
+        inline-size: 360px;
+        max-inline-size: calc(100vw - 2 * var(--space-400));
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-150);
+        z-index: calc(var(--z-backdrop) - 1);
+      }
+
+      .notice,
+      .error_toast {
+        box-sizing: border-box;
+        padding: var(--space-150) var(--space-200);
+        background-color: var(--color-bg-surface);
+        border: 1px solid var(--color-border-default);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+      }
+
+      .error_toast {
+        border-color: var(--color-text-danger);
+        position: relative;
+        z-index: var(--z-toast);
+      }
+
+      .error_toast,
+      .backdrop,
+      .dialog {
+        display: none;
+      }
+
+      body[data-state="toast"] .error_toast {
+        display: block;
+      }
+
+      body[data-state="dialog"] .backdrop,
+      body[data-state="dialog"] .dialog {
+        display: block;
+      }
+
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        background-color: var(--color-bg-backdrop);
+        z-index: var(--z-backdrop);
+      }
+
+      .dialog {
+        position: fixed;
+        inset-block-start: 50%;
+        inset-inline-start: 50%;
+        transform: translate(-50%, -50%);
+        inline-size: min(28rem, calc(100vw - 2 * var(--space-300)));
+        padding: var(--space-300);
+        box-sizing: border-box;
+        background-color: var(--color-bg-surface);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        z-index: var(--z-dialog);
+      }
+
+      .dialog > * + * {
+        margin-top: var(--space-200);
+      }
+
+      .notice_title {
+        margin: 0;
+        font-size: var(--font-size-data);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
+      }
+
+      .notice_detail {
+        margin: var(--space-025) 0 0;
+        font-size: var(--font-size-caption);
+        color: var(--color-text-secondary);
+      }
+
+      /* Narrow layout: bottom navigation bar; the notice floats just above it. */
+      @media (max-width: 599.98px), (max-height: 479.98px) {
+        .page {
+          grid-template-columns: 1fr;
+        }
+
+        .page_sidebar {
+          display: none;
+        }
+
+        .page_main {
+          padding: var(--space-300) var(--space-200) calc(64px + var(--space-300));
+        }
+
+        .page_nav {
+          position: fixed;
+          inset: auto 0 0;
+          height: 64px;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          align-items: center;
+          text-align: center;
+          background-color: var(--color-bg-surface);
+          border-top: 1px solid var(--color-border-default);
+          font-size: var(--font-size-nav-bar);
+          color: var(--color-text-secondary);
+        }
+
+        /* Beside the speed dial (56px, 24px from the right), level with it. */
+        .float_stack {
+          inset-inline: var(--space-200) calc(24px + 56px + var(--space-200));
+          inset-block-end: calc(64px + 16px);
+          inline-size: auto;
+          max-inline-size: none;
+        }
+
+        /* Narrow toasts sit at the top, apart from the notice. */
+        body[data-state="toast"] .error_toast {
+          position: fixed;
+          inset: max(var(--space-200), env(safe-area-inset-top)) var(--space-200) auto;
+        }
+
+        /* No navigation bar or speed dial: the notice sits at the bottom. */
+        body[data-state="settings"] .float_stack {
+          inset-inline: var(--space-200);
+          inset-block-end: var(--space-200);
+        }
+
+        .speed_dial {
+          display: grid;
+        }
+
+        /* Editor page: no navigation bar or speed dial; the notice sits above the buttons. */
+        body[data-state="editor"] .float_stack {
+          inset-inline: var(--space-200);
+          inset-block-end: calc(var(--space-200) + 48px + var(--space-200));
+        }
+      }
+
+      .notice_over_loading {
+        position: fixed;
+        inset-inline-end: var(--space-400);
+        inset-block-end: var(--space-400);
+        inline-size: 360px;
+        max-inline-size: calc(100vw - 2 * var(--space-400));
+        z-index: calc(var(--z-loading-screen) + 1);
+      }
+
+      @media (max-width: 599.98px), (max-height: 479.98px) {
+        .notice_over_loading {
+          inset-inline: var(--space-200);
+          inset-block-end: var(--space-200);
+          inline-size: auto;
+          max-inline-size: none;
+        }
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body data-state="offline">
+    <nav class="draft_switcher" aria-label="切換草稿狀態">
+      <button type="button" data-target="loading">讀取中</button>
+      <button type="button" data-target="offline">沒有網路</button>
+      <button type="button" data-target="unreachable">連不上後端</button>
+      <button type="button" data-target="retrying">重試中</button>
+      <button type="button" data-target="midsession">使用中途沒有網路</button>
+      <button type="button" data-target="editor">編輯頁沒有網路</button>
+      <button type="button" data-target="settings">設定頁沒有網路</button>
+      <button type="button" data-target="toast">提示加錯誤 toast</button>
+      <button type="button" data-target="dialog">寬版編輯器視窗</button>
+      <button type="button" data-target="pageloading">頁面讀取中沒有網路</button>
+    </nav>
+
+    <div class="page" data-show="midsession editor settings toast dialog">
+      <aside class="page_sidebar" aria-label="側邊欄">
+        <img src="/src/assets/logo-no-bg.png" alt="Taigu" />
+        <span>儀表板</span><span>歷史紀錄</span><span>市場</span><span>買賣計畫</span>
+      </aside>
+      <main class="page_main">
+        <h1 class="page_title" data-only="list">市場</h1>
+        <h1 class="page_title" data-only="editor">新增交易紀錄</h1>
+        <div class="editor" data-only="editor">
+          <fieldset class="LabeledInput_main">
+            <legend>股票</legend>
+            <input aria-label="股票" value="2330 台積電" />
+          </fieldset>
+          <fieldset class="LabeledInput_main">
+            <legend>成交股數</legend>
+            <input aria-label="成交股數" value="1000" inputmode="numeric" />
+          </fieldset>
+          <div class="editor_actions">
+            <button type="button" class="Button_main Button_light Button_action">
+              <span class="Button_content">取消</span>
+            </button>
+            <button type="button" class="Button_main Button_primary_fill Button_action">
+              <span class="Button_content">新增交易紀錄</span>
+            </button>
+          </div>
+        </div>
+        <h1 class="page_title" data-only="settings">頭像與名字</h1>
+        <div class="editor" data-only="settings">
+          <fieldset class="LabeledInput_main">
+            <legend>名字</legend>
+            <input aria-label="名字" value="示範帳號" />
+          </fieldset>
+        </div>
+        <div class="card" data-only="list">
+          <div class="row"><span>2330 台積電</span><span class="row_price">1,005.00</span></div>
+          <div class="row"><span>0050 元大台灣50</span><span class="row_price">182.35</span></div>
+          <div class="row"><span>2454 聯發科</span><span class="row_price">1,280.00</span></div>
+        </div>
+      </main>
+      <nav class="page_nav" aria-label="底部導覽列">
+        <span>儀表板</span><span>歷史紀錄</span><span>市場</span><span>設定</span>
+      </nav>
+      <span class="speed_dial" aria-hidden="true">+</span>
+      <div class="backdrop" aria-hidden="true"></div>
+      <div class="dialog" role="dialog" aria-label="新增交易紀錄">
+        <p class="page_title">新增交易紀錄</p>
+        <fieldset class="LabeledInput_main">
+          <legend>股票</legend>
+          <input aria-label="股票" value="2330 台積電" />
+        </fieldset>
+        <div class="editor_actions">
+          <button type="button" class="Button_main Button_light Button_action">
+            <span class="Button_content">取消</span>
+          </button>
+          <button type="button" class="Button_main Button_primary_fill Button_action">
+            <span class="Button_content">新增交易紀錄</span>
+          </button>
+        </div>
+      </div>
+      <!-- Shown after 3 seconds offline; it takes no focus and blocks nothing. -->
+      <div class="float_stack">
+        <div class="error_toast" role="alert">
+          <p class="notice_title">無法新增交易紀錄</p>
+          <p class="notice_detail">請確認網路連線後再試一次。</p>
+        </div>
+        <div class="notice" role="status">
+          <p class="notice_title">沒有網路連線</p>
+          <p class="notice_detail">連上網路前，畫面上的資料不會更新。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- The page's own loading screen (e.g. the dashboard reading trade records) stays;
+         the notice is lifted above it so it can be seen. -->
+    <div class="notice notice_over_loading" role="status" data-show="pageloading">
+      <p class="notice_title">沒有網路連線</p>
+      <p class="notice_detail">連上網路前，畫面上的資料不會更新。</p>
+    </div>
+
+    <div class="screen" data-show="loading offline offline-retrying unreachable retrying pageloading">
+      <div class="logo"><img src="/src/assets/logo-no-bg.png" alt="Taigu" /></div>
+
+      <img class="spinner" data-show="loading pageloading" src="/src/assets/loading.svg" alt="" />
+
+      <!-- Full-page screen before the page is drawn, when the browser reports no network. -->
+      <div class="status" data-show="offline offline-retrying" role="status">
+        <div class="status_text">
+          <p class="status_title">沒有網路連線</p>
+          <p class="status_detail">連上網路後會自動繼續。</p>
+        </div>
+      </div>
+
+      <!-- Full-page screen before the page is drawn, when the account check fails or times out. -->
+      <div class="status" data-show="unreachable retrying" role="alert">
+        <div class="status_text">
+          <p class="status_title">無法連上 Taigu</p>
+          <p class="status_detail">可能是網路不穩，或 Taigu 暫時無法使用。</p>
+        </div>
+      </div>
+
+      <!-- Both states offer a retry: the browser can misreport being offline. -->
+      <button
+        type="button"
+        class="Button_main Button_primary_fill Button_l retry"
+        data-show="offline offline-retrying unreachable retrying"
+        id="retry"
+      >
+        <span class="Button_content">重試</span>
+      </button>
+    </div>
+
+    <script>
+      const retry = document.getElementById("retry");
+
+      function show(state) {
+        document.body.dataset.state = state;
+        document.querySelectorAll("[data-show]").forEach((el) => {
+          el.hidden = !el.dataset.show.split(" ").includes(state);
+        });
+        document.querySelectorAll("[data-target]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.target === state));
+        });
+        const waiting = state.endsWith("retrying");
+        retry.toggleAttribute("data-waiting", waiting);
+        if (waiting) retry.setAttribute("aria-busy", "true");
+        else retry.removeAttribute("aria-busy");
+      }
+
+      document.querySelectorAll("[data-target]").forEach((button) => {
+        button.addEventListener("click", () => show(button.dataset.target));
+      });
+      retry.addEventListener("click", () => {
+        const from = document.body.dataset.state;
+        if (from.endsWith("retrying")) return;
+        show(from === "offline" ? "offline-retrying" : "retrying");
+        setTimeout(() => show(from), 1500);
+      });
+
+      const initial = new URLSearchParams(location.search).get("state");
+      show(initial ?? "offline");
+    </script>
+  </body>
+</html>

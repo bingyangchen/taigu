@@ -37,4 +37,8 @@
   @include breakpoints.narrow-layout {
     @include -properties(font-size, typography.$font-size-usage-narrow);
   }
+
+  @include breakpoints.down(sm) {
+    @include -properties(layout, layout.$layout-below-sm);
+  }
 }

@@ -1,0 +1,71 @@
+@use "styles" as ds;
+
+// Shares the toast list's corner in the wide layout; the toast list stacks above it.
+.main {
+  position: fixed;
+  inset-inline-end: var(--space-400);
+  inset-block-end: max(
+    var(--space-400),
+    calc(var(--obstacle-clearance, 0px) + var(--space-200))
+  );
+  box-sizing: border-box;
+  inline-size: var(--layout-toast-width);
+  max-inline-size: calc(100vw - 2 * var(--space-400));
+  padding: var(--space-150) var(--space-200);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg-surface);
+  box-shadow: var(--shadow-md);
+  z-index: var(--z-offline-notice);
+  pointer-events: none;
+
+  &.over_loading_screen {
+    z-index: var(--z-offline-notice-raised);
+  }
+
+  &.hidden {
+    visibility: hidden;
+  }
+
+  @include ds.narrow-layout {
+    // Toasts sit at the top in the narrow layout, where they would cover the
+    // header's buttons, so the notice stays at the bottom.
+    &.bottom,
+    &.above_navigation_bar {
+      inset-inline: var(--space-200);
+      inline-size: auto;
+      max-inline-size: none;
+    }
+
+    &.bottom {
+      inset-block-end: max(
+        calc(var(--space-200) + env(safe-area-inset-bottom)),
+        calc(var(--obstacle-clearance, 0px) + var(--space-200))
+      );
+    }
+
+    // Level with the speed dial, on its left.
+    &.above_navigation_bar {
+      inset-inline-end: calc(
+        var(--layout-speed-dial-inset-inline-end) + var(--layout-speed-dial-size) +
+          var(--space-200)
+      );
+      inset-block-end: calc(
+        var(--layout-footer-height) + env(safe-area-inset-bottom) + var(--space-200)
+      );
+    }
+  }
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-data);
+  font-weight: var(--font-weight-medium);
+}
+
+.detail {
+  margin: var(--space-025) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}

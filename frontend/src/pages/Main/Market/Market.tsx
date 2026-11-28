@@ -1,4 +1,4 @@
-import React, { memo, useLayoutEffect, useState } from "react";
+import React, { memo, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -27,6 +27,7 @@ import {
   getVisibleMarketSids,
 } from "../../../utils/market";
 import { useIsNarrowLayout } from "../../../utils/mediaQuery";
+import { useMarketRefreshAfterRestore } from "../../../utils/network";
 import { useLatestRef } from "../../../utils/useLatestRef";
 import styles from "./Market.module.scss";
 
@@ -561,6 +562,7 @@ function Market() {
     fetchFavoriteStockInfo,
     refreshIntervalMs: subscription.market_refresh_interval_seconds * 1000,
   });
+  const restartRefreshRef = useRef<(() => void) | null>(null);
   useLayoutEffect(() => {
     dispatch(updateHeaderTitle(null));
     const { marketPageSubpageName: initialTab, refreshIntervalMs } =
@@ -568,13 +570,23 @@ function Market() {
     if (initialTab === "favorites") {
       void latestRenderRef.current.fetchFavoriteStockInfo();
     }
-    const timer = setInterval(() => {
+    const refreshFavorites = (): void => {
       if (latestRenderRef.current.marketPageSubpageName === "favorites") {
         void latestRenderRef.current.fetchFavoriteStockInfo();
       }
-    }, refreshIntervalMs);
-    return () => clearInterval(timer);
+    };
+    let timer = setInterval(refreshFavorites, refreshIntervalMs);
+    restartRefreshRef.current = () => {
+      clearInterval(timer);
+      refreshFavorites();
+      timer = setInterval(refreshFavorites, refreshIntervalMs);
+    };
+    return () => {
+      clearInterval(timer);
+      restartRefreshRef.current = null;
+    };
   }, [dispatch, latestRenderRef]);
+  useMarketRefreshAfterRestore(() => restartRefreshRef.current?.());
 
   const activeTab = marketPageSubpageName;
   const allSids = getAllMarketSids(activeTab, stockWarehouse, favorites);

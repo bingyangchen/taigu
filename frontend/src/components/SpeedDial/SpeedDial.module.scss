@@ -23,11 +23,11 @@ $short-viewport-max-height: 450px;
   $side-length: 60px;
   position: fixed;
   bottom: calc(var(--layout-footer-height) + env(safe-area-inset-bottom) + 16px);
-  right: 24px;
+  right: var(--layout-speed-dial-inset-inline-end);
   border: 0.1px solid var(--color-border-default);
   border-radius: var(--radius-pill);
-  height: $side-length;
-  width: $side-length;
+  height: var(--layout-speed-dial-size);
+  width: var(--layout-speed-dial-size);
   background-color: var(--color-bg-surface);
   box-shadow: var(--shadow-sm);
   z-index: var(--z-speed-dial);
@@ -35,12 +35,6 @@ $short-viewport-max-height: 450px;
   display: flex;
   justify-content: center;
   align-items: center;
-  @include ds.down(sm) {
-    $side-length: 54px;
-    right: 18px;
-    height: $side-length;
-    width: $side-length;
-  }
   &.active {
     & > .button_container {
       gap: var(--space-200);

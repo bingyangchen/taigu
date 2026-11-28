@@ -7,6 +7,9 @@ import {
 } from "react-router-dom";
 
 import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
+import LoginCheckScreen, {
+  LoginCheckLayout,
+} from "./components/LoadingScreen/LoginCheckScreen";
 import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Main/Dashboard/Dashboard";
 import Details from "./pages/Main/Details/Details";
@@ -66,7 +69,7 @@ function SearchScopedRoute({ page: Page }: { page: React.ComponentType }) {
 
 const myRouter = createBrowserRouter(
   createRoutesFromElements(
-    <Route path={Env.frontendRootPath}>
+    <Route path={Env.frontendRootPath} element={<LoginCheckLayout />}>
       <Route path="welcome" element={<Welcome />} />
       <Route path="login" element={<Login />} />
       <Route
@@ -74,7 +77,7 @@ const myRouter = createBrowserRouter(
         // Pages inside keep the account fresh themselves, so moving between them
         // does not wait for another check.
         shouldRevalidate={() => false}
-        HydrateFallback={LoadingScreen}
+        HydrateFallback={LoginCheckScreen}
       >
         <Route path={settingsPagePath} element={<Settings />}>
           <Route path="" element={<Overview />}></Route>

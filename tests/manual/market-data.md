@@ -79,6 +79,8 @@
 
 14. 執行 `docker compose -f compose.dev.yaml start scheduler`。
 
+步驟寫「封鎖 API」時，在 [Chrome DevTools 的 Request conditions 面板](https://developer.chrome.com/docs/devtools/request-conditions) 加入並啟用 `*/api/*` 的封鎖規則，讓前端送到後端的 request 因連線失敗結束；寫「解除 API 封鎖」時，關閉這條規則。不要用 Network 面板 throttling 的 Offline，因為 Offline 會讓瀏覽器回報沒有網路，那是 ACCT-R18 的「沒有網路」，不是「連不上後端」。
+
 ## MKT-R1.1 收盤前後的抓取
 
 這個情境依賴 scheduler 的執行時間，沒有自動化 test。
@@ -459,15 +461,16 @@ for market in ('tse', 'otc'):
 
 預期：卡片顯示「行情讀取失敗」，點選後開啟 `/market-index`。
 
-## MKT-R13.7 離線開啟時使用 Cache
+## MKT-R13.7 第一次讀取失敗時使用 Cache
 
 自動化 test 用模擬的 service worker 回應檢查，所以要用實際的 service worker cache 再確認一次。
 
 1. 確認 Service Workers 面板沒有勾選 Bypass for network。
 2. 執行「大盤指數測試資料」的指令。
 3. 開啟 [儀表板](https://local.taigu.tw/)，等兩個摘要出現。
-4. 在 DevTools 的 Network 面板切換為 Offline。
+4. 在 Request conditions 面板啟用盤中行情的封鎖規則。
 5. 重新整理儀表板。
+6. 關閉盤中行情的封鎖規則。
 
 預期：卡片顯示兩個指數的摘要與走勢，並標示「更新失敗，顯示上次行情」。
 
@@ -736,15 +739,15 @@ for market in ('tse', 'otc'):
 
 預期：「股票」欄位仍然沒有股票，欄位下方顯示「請從搜尋結果選擇一檔股票」。
 
-## MKT-R21.1 沒有連上網路
+## MKT-R21.1 連不上後端
 
 前端沒有自動化 test。
 
 1. 在桌面瀏覽器開啟 `https://local.taigu.tw/`。
 2. 點選左側選單的「新增」，開啟新增交易紀錄的編輯器。
-3. 在 DevTools 的 Network 面板把 throttling 設成 Offline。
+3. 封鎖 API。
 4. 在「股票」欄位輸入「2330」。
-5. 把 throttling 設回 No throttling。
+5. 解除 API 封鎖。
 
 預期：第 4 步後欄位下方顯示「目前無法搜尋股票，請稍後再試一次。」。
 
