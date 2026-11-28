@@ -493,6 +493,9 @@ function Details() {
   });
 
   useLayoutEffect(() => {
+    // Fast Refresh and StrictMode run the cleanup below and then this effect again on
+    // the same component, so the flag has to be cleared here as well.
+    isUnmountedRef.current = false;
     const latest = latestRenderRef.current;
     const touchTarget = latest.stockListTab ? mainRef.current : null;
     const handleTouchStartEvent = (e: TouchEvent): void =>
