@@ -1,7 +1,7 @@
 ---
 id: "0013"
 title: offline-screen
-status: draft
+status: approved
 specs:
   - account.md
   - architecture.md
