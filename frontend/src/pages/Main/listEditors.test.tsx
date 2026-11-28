@@ -273,6 +273,50 @@ test("[REC-R9.2] deletes a cash dividend by long pressing its row on a phone", a
   expect(sendRequest).toHaveBeenCalledWith("cash-dividends/4", "delete");
 });
 
+test("[REC-R11.3] opens the editor once for a long press on a tablet", () => {
+  renderPages(
+    "/records",
+    { width: 768, height: 1024, canHover: false },
+    makeStore({ tradeRecords: [tradeRecord2330] }),
+  );
+  const row = listRow(/2330台積電2024-03-01/u);
+
+  fireEvent.touchStart(row, { touches: [{ clientX: 10, clientY: 10 }] });
+  act(() => {
+    vi.advanceTimersByTime(1000);
+  });
+  const touchEnd = fireEvent.touchEnd(row);
+
+  // A canceled touchend keeps the browser from also sending a click.
+  expect(touchEnd).toBe(false);
+  const dialogs = screen.getAllByRole("dialog");
+  expect(dialogs).toHaveLength(1);
+  expect(
+    within(dialogs[0]).getByRole("heading", { name: "編輯交易紀錄" }),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("編輯", { exact: true })).not.toBeInTheDocument();
+  expect(screen.queryByText("刪除", { exact: true })).not.toBeInTheDocument();
+});
+
+test("a long press that turns into a scroll opens nothing on a tablet", () => {
+  // Without this, lifting the finger after scrolling the list would open an editor.
+  renderPages(
+    "/records",
+    { width: 768, height: 1024, canHover: false },
+    makeStore({ tradeRecords: [tradeRecord2330] }),
+  );
+  const row = listRow(/2330台積電2024-03-01/u);
+
+  fireEvent.touchStart(row, { touches: [{ clientX: 10, clientY: 10 }] });
+  act(() => {
+    vi.advanceTimersByTime(500);
+  });
+  fireEvent.touchMove(row, { touches: [{ clientX: 10, clientY: 80 }] });
+  fireEvent.touchEnd(row);
+
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
 test("[PLAN-R5.1] adds a plan from the editor window in the wide layout", async () => {
   const sellPlan: TradePlan = {
     ...buyPlan2330,

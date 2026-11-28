@@ -15,9 +15,11 @@ $ripple-duration: 500ms;
   &:not(:first-child) {
     border-top: 1px solid var(--color-border-subtle);
   }
-  // Room for the delete button that shows on hover.
-  & > .content > :last-child {
-    margin-right: var(--space-800);
+  // Room for the delete button, which shows only on hover.
+  @media (hover: hover) {
+    & > .content > :last-child {
+      margin-right: var(--space-800);
+    }
   }
   &.active {
     background-color: var(--color-bg-accent-subtle);

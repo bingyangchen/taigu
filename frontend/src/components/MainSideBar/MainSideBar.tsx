@@ -35,10 +35,6 @@ interface Props {
 // Below this width the sidebar is the icon rail of NAV-R2, which cannot be expanded.
 const EXPANDABLE_WIDTH_QUERY = makeWidthAtLeastQuery("lg");
 
-// The gap between the add button on the icon rail and the menu that opens below it,
-// clear of the button's tooltip on its right.
-const RAIL_MENU_OFFSET_PX = 4;
-
 const CONTEXT_MENU_ITEMS: { modalName: AddOrSearchModalName; label: string }[] = [
   { modalName: "createTradeRecord", label: "新增交易紀錄" },
   { modalName: "createCashDividendRecord", label: "新增現金股利" },
@@ -53,6 +49,7 @@ function MainSideBar({ avatarUrl, username, subpages, onOpenModal }: Props) {
   const [isCollapsed, setIsCollapsed] = useState(isMainNavCollapsedInStorage);
   const isExpandable = useMediaQuery(EXPANDABLE_WIDTH_QUERY);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+
   // The icon rail scrolls its overflow, which would clip a menu wider than the rail, so
   // the menu is fixed to the viewport at the add button.
   const [railMenuStyle, setRailMenuStyle] = useState<CSSProperties | undefined>();
@@ -98,7 +95,11 @@ function MainSideBar({ avatarUrl, username, subpages, onOpenModal }: Props) {
     const addButtonRect = addButtonRef.current?.getBoundingClientRect();
     setRailMenuStyle(
       showsIconOnly && addButtonRect
-        ? { top: addButtonRect.bottom + RAIL_MENU_OFFSET_PX, left: addButtonRect.left }
+        ? {
+            // Below the add button, clear of its tooltip on the right.
+            top: `calc(${addButtonRect.bottom}px + var(--space-050))`,
+            left: addButtonRect.left,
+          }
         : undefined,
     );
     setIsContextMenuOpen((isOpen) => !isOpen);
@@ -113,6 +114,7 @@ function MainSideBar({ avatarUrl, username, subpages, onOpenModal }: Props) {
     ) {
       return;
     }
+
     // The icon rail has no room for the menu button beside 「新增」 (REC-R10).
     if (showsIconOnly) toggleContextMenu();
     else openModal("createTradeRecord");
@@ -125,7 +127,11 @@ function MainSideBar({ avatarUrl, username, subpages, onOpenModal }: Props) {
 
   const collapseLabel = isCollapsed ? "展開側邊欄" : "收合側邊欄";
   return (
-    <div className={`${styles.main} ${showsIconOnly ? styles.collapsed : ""}`}>
+    <div
+      className={`${styles.main} ${showsIconOnly ? styles.collapsed : ""}`}
+      // The rail menu stays where the add button was when it opened.
+      onScroll={railMenuStyle ? () => setIsContextMenuOpen(false) : undefined}
+    >
       <div className={styles.profile_row}>
         <WithTooltip content="查看帳號與設定" enabled={showsIconOnly}>
           <NavLink

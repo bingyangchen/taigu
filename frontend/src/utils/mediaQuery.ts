@@ -38,3 +38,7 @@ export function useMediaQuery(query: string): boolean {
 export function useIsNarrowLayout(): boolean {
   return useMediaQuery(NARROW_LAYOUT_QUERY);
 }
+
+export function useIsPWA(): boolean {
+  return useMediaQuery(PWA_QUERY);
+}

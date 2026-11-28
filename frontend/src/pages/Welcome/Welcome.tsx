@@ -11,7 +11,7 @@ import PageMeta from "../../components/PageMeta/PageMeta";
 import Tooltip from "../../components/Tooltip/Tooltip";
 import * as Icons from "../../icons";
 import Env from "../../utils/env";
-import { PWA_QUERY, useMediaQuery } from "../../utils/mediaQuery";
+import { useIsPWA } from "../../utils/mediaQuery";
 import DetailsCarousel from "./DetailsCarousel/DetailsCarousel";
 import FeatureStory from "./FeatureStory/FeatureStory";
 import LaptopFrame from "./LaptopFrame/LaptopFrame";
@@ -133,8 +133,9 @@ export default function Welcome(): React.ReactElement {
     return () => main.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isPWA = useMediaQuery(PWA_QUERY);
+  const isPWA = useIsPWA();
   const canInstallPWA = installPrompt !== null && !isPWA;
+
   // A new tab in the PWA would leave Taigu for the browser (PUB-R3).
   const legalLinkTarget = isPWA ? "_self" : "_blank";
 

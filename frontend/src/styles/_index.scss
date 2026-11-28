@@ -1,4 +1,5 @@
-@forward "tokens/breakpoints" show down, up, breakpoint, narrow-layout, wide-layout;
+@forward "tokens/breakpoints" show down, up, breakpoint, narrow-layout, wide-layout,
+  $list-row-one-line-min-width;
 @forward "mixins/focus-ring";
 @forward "mixins/card-scroller";
 @forward "mixins/letter-spacing";

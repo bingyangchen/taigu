@@ -86,25 +86,26 @@ function Main() {
   const pendingPositionRef = useRef<ViewPosition | null>(null);
   const retryRestoringPositionRef = useRef<(() => void) | null>(null);
   const stopRestoringPositionRef = useRef<(() => void) | null>(null);
+
   // In Main rather than the sidebar, so an editor opened from the sidebar stays open
   // when the sidebar goes away in the narrow layout.
   const [activeSideBarModalName, setActiveSideBarModalName] =
     useState<AddOrSearchModalName | null>(null);
 
   const isNarrowLayout = useIsNarrowLayout();
-  const isEditorPage = isEditorPagePath(location.pathname);
-  const shouldUseDocumentScroll = isNarrowLayout && !isEditorPage;
+  const isFullScreenPage = isFullScreenPagePath(location.pathname);
+  const shouldUseDocumentScroll = isNarrowLayout && !isFullScreenPage;
   const isDetailPage = Nav.isAtDetailsPage || Nav.isAtMarketIndexDetailsPage;
 
   // Also sets the body color, which the iOS home-screen app shows behind the status
   // bar, so every page whose background is the page color has to be listed.
   const shouldUseWhiteMobileShell =
-    isEditorPage ||
+    isFullScreenPage ||
     location.pathname === `${Env.frontendRootPath}market` ||
     location.pathname === `${Env.frontendRootPath}records` ||
     location.pathname === `${Env.frontendRootPath}plans` ||
     isDetailPage;
-  const shouldShowHeader = isNarrowLayout && !isEditorPage && !isDetailPage;
+  const shouldShowHeader = isNarrowLayout && !isFullScreenPage && !isDetailPage;
 
   // Follows Main.module.scss.
   const getScrollContainer = (): Window | HTMLElement | null => {
@@ -424,6 +425,7 @@ function Main() {
 
   useLayoutEffect(() => {
     const previousLocation = committed.location;
+
     // Also when the layout switches between narrow and wide.
     syncDocumentScrollMode();
     if (navigationSnapshot) {
@@ -509,7 +511,7 @@ function Main() {
     <main
       className={`${styles.main} ${
         shouldUseWhiteMobileShell ? styles.white_mobile_shell : ""
-      } ${isEditorPage ? styles.mobile_editor_shell : ""} ${
+      } ${isFullScreenPage ? styles.mobile_editor_shell : ""} ${
         isDetailPage ? styles.mobile_detail_shell : ""
       }`}
       ref={mainRef}
@@ -532,7 +534,7 @@ function Main() {
           <Outlet />
         </div>
       </div>
-      {isNarrowLayout && !isEditorPage && <Footer subpages={subpages} />}
+      {isNarrowLayout && !isFullScreenPage && <Footer subpages={subpages} />}
       {activeSideBarModalName && (
         <AddOrSearchModal
           modalName={activeSideBarModalName}
@@ -547,7 +549,7 @@ export default memo(Main);
 
 // The editor and search pages fill the screen in the narrow layout, without the
 // header and the bottom navigation bar.
-function isEditorPagePath(pathname: string): boolean {
+function isFullScreenPagePath(pathname: string): boolean {
   return [
     /^\/records\/(trade|cash-dividend)\/(new|\d+\/edit)$/u,
     /^\/plans\/(new|[^/]+\/edit)$/u,

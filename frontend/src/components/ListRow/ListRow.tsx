@@ -89,8 +89,11 @@ export default function ListRow({ children, editModal, deleteModal, editPath }: 
     e.preventDefault();
     if (!isNarrowLayout) openEditor();
   };
+
+  // A touch that moves is a scroll, even after the long press time has passed.
   const handleTouchMove = (): void => {
     clearTimeout(timerRef.current);
+    hasLongPressedRef.current = false;
   };
 
   let activeModal: ReactNode = null;

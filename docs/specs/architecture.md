@@ -354,9 +354,17 @@ Google 與瀏覽器在這個流程裡的行為如下：
 - Service worker 先向後端查詢大盤指數的盤中行情或歷史收盤指數。網路請求失敗且有可用的 API cache 時，service worker 會在回應加上 `X-Taigu-Cache-Fallback`，前端據此把這次查詢當作失敗（見 MKT-R13、MKT-R14）。畫面已有盤中行情時，前端分別比較各指數的行情日期與最後一筆的時間，只採用比畫面上更新的 cache 資料。
 - 前端新增、修改或刪除資料時都要連上後端，離線時只能讀取 IndexedDB 與 service worker cache 裡的資料，所以不會出現離線時的修改與後端上的資料衝突的情況。
 - 頭像與名字頁向 gravatar.com 查詢頭像時帶 `d=404`，所以使用者的 email 沒有 Gravatar 頭像時，gravatar.com 回 404（使用者看到的結果見 ACCT-R10）。
-- 窄版的 `Main`（編輯頁以外的頁面）與 `Settings` 用整頁捲動：前端在窄版替 `body` 加上 `main-page-document-scroll` 或 `settings-page-document-scroll`，視窗跨過窄版與寬版的分界時也跟著加上或拿掉。寬版的捲動容器是 `Main` 的 `<main>`，可用寬度至少 960px 時改成側邊欄旁的內容區，`Main.module.scss` 照同樣的條件設定 `overflow`，`Main.tsx` 存下與還原捲動位置時也照這些條件選容器。頁面自己的捲動容器（標了 `data-page-scroll` 的元素，例如歷史紀錄頁的列表）什麼時候捲動由各頁的樣式決定，不捲動時樣式讓它的 `overflow-y` 維持 `visible`，`Main.tsx` 依這個值判斷要不要把它當成捲動容器。
-- 側邊欄的「新增」與「搜尋」開啟的視窗由 `Main` 管理，不放在 `MainSideBar` 裡，因為視窗跨到窄版時側邊欄會消失，視窗放在側邊欄裡就會跟著關掉，丟掉使用者填好的內容。2026-11 在 macOS 的 Chrome 實測，以 768 × 1024 的可用畫面從圖示列開啟新增現金股利的編輯器視窗、填了入帳金額之後縮成 390 × 844，編輯器視窗與填好的金額都還在。
-- 2026-11 在 iOS 26.2 模擬器的 iPad mini（A17 Pro）實測：Safari 直立時是寬版、顯示圖示列，橫放時顯示展開的側邊欄。橫放時螢幕鍵盤蓋住一半以上的畫面，版面仍是寬版，因為鍵盤彈出時 layout viewport 的高度不變。Safari 不理會 `index.html` 的 `user-scalable=0`，仍可以雙指縮放，放大期間版面不在窄版與寬版之間切換；加到主畫面的網頁 App 則不能雙指縮放。在 Safari 長按清單的一列約 1 秒，畫面只開啟這一筆的編輯器視窗，沒有出現 bottom sheet、文字選取或系統選單；前端在長按後的 `touchend` 呼叫 `preventDefault()`，所以不論瀏覽器之後送不送 click，都只開啟一次。在網頁 App 裡點設定頁的「隱私權政策」，畫面在同一個 App 裡換到隱私權政策，按返回按鈕回到設定頁。
+- 窄版的 `Main`（編輯頁以外的頁面）與 `Settings` 用整頁捲動：前端在窄版替 `body` 加上 `main-page-document-scroll` 或 `settings-page-document-scroll`，可用畫面跨過窄版與寬版的分界時，前端也跟著加上或拿掉這兩個 class。寬版的捲動容器是 `Main` 的 `<main>`，不過可用寬度至少 960px 時，捲動容器改成側邊欄旁的內容區；`Main.module.scss` 設定 `overflow`，以及 `Main.tsx` 存下與還原捲動位置時，都依這幾個條件選捲動容器。頁面自己的捲動容器（標了 `data-page-scroll` 的元素，例如歷史紀錄頁的列表）什麼時候捲動由各頁的樣式決定，不捲動時樣式讓它的 `overflow-y` 維持 `visible`，`Main.tsx` 依這個值判斷要不要把它當成捲動容器。
+- 側邊欄的「新增」與「搜尋」開啟的視窗由 `Main` 管理。2026-11 在 macOS 的 Chrome 實測，以 768 × 1024 的可用畫面從圖示列開啟新增現金股利的編輯器視窗，填了入帳金額之後把可用畫面縮成 390 × 844，編輯器視窗與填好的金額都還在。
+
+  > 設計理由：可用畫面跨到窄版時側邊欄會消失，所以這些視窗如果放在 `MainSideBar` 裡，就會跟著關掉，使用者填好的內容也一起丟掉。
+
+- 2026-11 在 iOS 26.2 模擬器的 iPad mini（A17 Pro）實測的結果如下：
+  - iPad 直立時，Safari 的版面是寬版、顯示圖示列；橫放時顯示展開的側邊欄。
+  - iPad 橫放時，螢幕鍵盤蓋住一半以上的畫面，版面仍是寬版，因為鍵盤彈出時 layout viewport 的高度不變。
+  - Safari 不理會 `index.html` 的 `user-scalable=0`，仍可以雙指縮放，放大期間版面不在窄版與寬版之間切換；加到主畫面的網頁 App 則不能雙指縮放。
+  - 在 Safari 長按清單的一列約 1 秒，畫面只出現這一列紀錄的編輯器視窗，沒有出現 bottom sheet、文字選取或系統選單。前端在長按後的 `touchend` 呼叫 `preventDefault()`，所以不論瀏覽器之後送不送 click，前端都只開啟一次編輯器視窗。
+  - 在網頁 App 裡點設定頁的「隱私權政策」，畫面在同一個 App 裡換到隱私權政策頁，按返回按鈕之後畫面回到設定頁。
 - 窄版的 `Main` 依 `shouldUseWhiteMobileShell` 替 `body` 加上 `main-page-white-shell-scroll` 或 `main-page-gradient-scroll`，把 `body` 的背景設成 `--color-bg-page` 或儀表板漸層頂端的顏色。2026-11 在 iOS 26.2 模擬器加到主畫面的網頁 App 實測，狀態列顯示的是 `body` 的背景色，不是 `theme-color`，也不是頁面外框元素的背景色，所以背景是 `--color-bg-page` 的頁面都要讓 `shouldUseWhiteMobileShell` 成立，狀態列才會和頁面同色。
 - 2026-11 在 iOS 26.2 模擬器加到主畫面的網頁 App 實測，搜尋框的螢幕鍵盤開著時拖動頁面，鍵盤不會自己收起，頁面在鍵盤上方捲動，固定在底部的導覽列與加號選單會被帶到鍵盤上方。所以 `SearchKeywordInput` 在使用者拖動頁面時讓搜尋框失去焦點，收起鍵盤。
 
@@ -401,7 +409,9 @@ Redux 只存交易紀錄的手續費總和，前端每次讀取淨手續費（�
 
 每個 SCSS 檔用 `@use "styles" as ds;` 載入 `styles/`，`ds` 只提供 CSS custom properties 做不到的部分：斷點的 `ds.down()`、`ds.up()`、`ds.breakpoint()`，窄版與寬版（見 ui-guidelines.md 的「版面」）的 `ds.narrow-layout` 與 `ds.wide-layout`，以及 `styles/mixins/` 裡的 mixin，例如 focus ring 與只讓 screen reader 讀到內容的 `ds.visually-hidden`。TypeScript 的 media query 由 `utils/mediaQuery.ts` 從同一組值產生，所以跟 SCSS 在同一個像素切換；元件用 `useIsNarrowLayout()` 判斷窄版。
 
-窄版的分界跟斷點表分開定義（`tokens/_breakpoints.scss` 的 `$narrow-layout-width` 與 `$narrow-layout-height`），因為窄版同時看可用寬度與可用高度，斷點表的 `ds.down()` 與 `ds.up()` 只比較寬度；斷點表留給頁面排列內容的寬度。
+窄版的分界跟斷點表分開定義，寫在 `tokens/_breakpoints.scss` 的 `$narrow-layout-width` 與 `$narrow-layout-height`，斷點表只用在頁面依寬度調整內容的排列。
+
+> 設計理由：窄版的判斷同時比較可用寬度與可用高度，而斷點表的 `ds.down()` 與 `ds.up()` 只比較寬度，所以窄版的分界不放進斷點表。
 
 > 設計理由：Token 以 Sass map 定義，從同一份 map 輸出 CSS custom properties 與給 TypeScript 的值，透明色在 Sass 裡算成固定的值。不直接手寫 CSS custom properties、用 `color-mix()` 組出透明色，因為 TypeScript 用 `getComputedStyle` 讀到的是還沒算出結果的 `color-mix(...)` 字串，ECharts 無法使用，而且公開頁面的 prerender 在 Node 裡執行，沒有 `getComputedStyle`。不用 Style Dictionary 從 DTCG 格式的 JSON 產生 token，因為那要多一個 build 步驟與 dependency，而 `main` 上只有網頁一個平台。斷點只留在 Sass，因為 media query 裡不能用 `var()`。完整討論見 [0011](../plans/archive/0011-design-system.md)。
 

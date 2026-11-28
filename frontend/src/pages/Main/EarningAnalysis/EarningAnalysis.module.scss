@@ -45,7 +45,9 @@
     align-items: center;
     justify-content: flex-start;
     padding: var(--space-250);
-    overflow: hidden auto;
+    // Clips the chart sideways without becoming a scroll container, so Main keeps
+    // the page's own scroll position.
+    overflow-x: clip;
     @include ds.narrow-layout {
       padding: var(--space-150);
     }

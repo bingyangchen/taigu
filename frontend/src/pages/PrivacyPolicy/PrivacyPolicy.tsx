@@ -7,13 +7,14 @@ import PageMeta from "../../components/PageMeta/PageMeta";
 import RoundButton from "../../components/RoundButton/RoundButton";
 import * as Icons from "../../icons";
 import Env from "../../utils/env";
-import { PWA_QUERY, useMediaQuery } from "../../utils/mediaQuery";
+import { useIsPWA } from "../../utils/mediaQuery";
 import styles from "./PrivacyPolicy.module.scss";
 
 export default function PrivacyPolicy() {
   const navigate = useNavigate();
+
   // In the PWA the page opens on the same screen (PUB-R3), which has no other way back.
-  const isPWA = useMediaQuery(PWA_QUERY);
+  const isPWA = useIsPWA();
   return (
     <div className={styles.main}>
       <PageMeta

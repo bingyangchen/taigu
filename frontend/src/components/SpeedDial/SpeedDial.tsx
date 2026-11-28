@@ -111,6 +111,7 @@ function NarrowSpeedDial({ defaultSid }: Props) {
       { state: { ...location.state, speedDialOpen: true } },
     );
   };
+
   // Replaces the open menu's history entry, so Back from the page skips the menu.
   const makeNavigationHandler =
     (path: string) =>

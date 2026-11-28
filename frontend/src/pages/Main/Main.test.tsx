@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeAll, beforeEach, expect, test, vi } from "vitest";
 
 import imgPersonFill from "../../assets/person-fill.svg";
+import { updateAccountInfo } from "../../redux/slices/AccountSlice";
 import { store } from "../../redux/store";
 import {
   DESKTOP,
@@ -165,18 +166,33 @@ test("[REC-R10.4] opens the add menu from the sidebar the user collapsed", async
   ).toBeInTheDocument();
 });
 
-test("[ACCT-R9.3] shows the default avatar when the account has none", () => {
+test("[ACCT-R9.3] shows the default avatar once the avatar is cleared", () => {
+  // The settings page's part of the result is a manual check.
+  const saveAvatar = (avatarUrl: string): void => {
+    const account = { ...store.getState().account, avatar_url: avatarUrl };
+    const request = { username: account.username, avatar_url: avatarUrl };
+    act(() => {
+      store.dispatch(updateAccountInfo.pending("save-avatar", request));
+      store.dispatch(updateAccountInfo.fulfilled(account, "save-avatar", request));
+    });
+  };
+  const avatarIn = (container: HTMLElement): HTMLElement =>
+    within(container).getByRole("presentation", { hidden: true });
+  saveAvatar("https://example.com/avatar.png");
   const { resize } = renderMain(DESKTOP);
-  const sidebarAvatar = within(
-    screen.getByRole("link", { name: /查看帳號與設定/u }),
-  ).getByRole("presentation", { hidden: true });
-  expect(sidebarAvatar).toHaveAttribute("src", imgPersonFill);
-
-  resize(PHONE_PORTRAIT);
-
-  const bottomBarAvatar = within(bottomNavigationBar() as HTMLElement).getByRole(
-    "presentation",
-    { hidden: true },
+  const profileLink = (): HTMLElement =>
+    screen.getByRole("link", { name: /查看帳號與設定/u });
+  expect(avatarIn(profileLink())).toHaveAttribute(
+    "src",
+    "https://example.com/avatar.png",
   );
-  expect(bottomBarAvatar).toHaveAttribute("src", imgPersonFill);
+
+  saveAvatar("");
+
+  expect(avatarIn(profileLink())).toHaveAttribute("src", imgPersonFill);
+  resize(PHONE_PORTRAIT);
+  expect(avatarIn(bottomNavigationBar() as HTMLElement)).toHaveAttribute(
+    "src",
+    imgPersonFill,
+  );
 });

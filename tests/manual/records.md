@@ -193,7 +193,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 預期：編輯器關閉，2024-07-15 那筆紀錄顯示「入帳金額」1,800。
 
-## REC-R9.1 在桌面瀏覽器上刪除交易紀錄
+## REC-R9.1 用滑鼠刪除交易紀錄
 
 後端刪除紀錄的部分由 unit test 驗證，畫面上的結果要人工確認，因為前端沒有自動化 test。
 
@@ -298,7 +298,7 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 
 ## REC-R11.2 在寬版點歷史紀錄頁的一列
 
-點一列開啟編輯器視窗由 unit test 驗證；寬版的觸控裝置上點一列與長按一列的結果要在模擬觸控的瀏覽器裡確認，因為 jsdom 沒有實際的觸控。
+點一列開啟編輯器視窗由 unit test 驗證；寬版的觸控裝置上點一列的結果要在模擬觸控的瀏覽器裡確認，因為 jsdom 沒有實際的觸控。
 
 1. 執行「建立範例紀錄」的指令。
 2. 以寬版開啟 `https://local.taigu.tw/records`。
@@ -307,14 +307,22 @@ docker compose -f compose.dev.yaml exec api-server python manage.py shell -c "fr
 5. 把滑鼠移到 2024-03-01 那筆交易紀錄上。
 6. 以寬版在觸控裝置上開啟 `https://local.taigu.tw/records`。
 7. 點 2024-03-01 那筆交易紀錄。
-8. 按 Esc 關閉編輯器視窗。
-9. 按住 2024-03-01 那筆交易紀錄 1 秒後放開。
 
 預期：
 
 - 第 3 步與第 7 步之後，歷史紀錄頁上方出現標題是「編輯交易紀錄」的編輯器視窗，「買賣別」是「買進」，「股票」是 2330 台積電，「成交單價」是 600，網址的路徑仍是 `/records`。
 - 第 5 步時那一列的右側只出現垃圾桶圖示的刪除按鈕，沒有鉛筆圖示的編輯按鈕。
-- 第 9 步之後畫面出現同一個編輯器視窗，畫面下方沒有出現「編輯」與「刪除」。
+
+## REC-R11.3 在寬版的觸控裝置上長按一列
+
+長按的時間判斷由 unit test 驗證；瀏覽器在長按之後會不會另外送出 click、出現文字選取或系統選單，要在觸控裝置或模擬觸控的瀏覽器上確認，因為 jsdom 沒有這些行為。
+
+1. 執行「建立範例紀錄」的指令。
+2. 準備 iPad 的 Safari，或在 Chrome DevTools 的裝置模擬選 iPad Mini（768 × 1024）。
+3. 開啟 `https://local.taigu.tw/records`。
+4. 按住 2024-03-01 那筆交易紀錄 1 秒後放開。
+
+預期：歷史紀錄頁上方只出現一個標題是「編輯交易紀錄」的編輯器視窗；畫面沒有出現「編輯」與「刪除」的選項，也沒有出現文字選取或系統選單。
 
 ## REC-R12.1 送出後回到前一頁
 

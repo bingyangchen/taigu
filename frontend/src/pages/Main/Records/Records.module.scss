@@ -1,10 +1,5 @@
 @use "styles" as ds;
 
-// Narrower than this, a row has no room for a long stock name, such as 「00940
-// 元大台灣價值高息」, beside its figures, so the figures move to a line of their own.
-// The page's width, which the list is 32px narrower than.
-$one-line-row-min-width: 650px;
-
 .main {
   // On a wide screen the page keeps this gutter on each side, so the list is at most
   // the list width and centered.
@@ -84,7 +79,7 @@ $one-line-row-min-width: 650px;
       box-sizing: border-box;
       padding-right: var(--layout-row-action-bar-space);
 
-      @container (width < #{$one-line-row-min-width}) {
+      @container (width < #{ds.$list-row-one-line-min-width}) {
         display: flex;
         flex-direction: column;
         align-items: stretch;
@@ -93,7 +88,6 @@ $one-line-row-min-width: 650px;
 
       // The delete button shows only on hover, so a touch screen keeps no room for it.
       @media (hover: none) {
-        margin-right: 0;
         padding-right: 0;
       }
     }
@@ -137,7 +131,7 @@ $one-line-row-min-width: 650px;
       justify-content: end;
       gap: var(--space-200);
 
-      @container (width < #{$one-line-row-min-width}) {
+      @container (width < #{ds.$list-row-one-line-min-width}) {
         grid-template-columns: auto 1fr auto;
         justify-content: stretch;
         gap: var(--space-150);
@@ -174,7 +168,7 @@ $one-line-row-min-width: 650px;
       text-align: right;
       white-space: nowrap;
 
-      @container (width < #{$one-line-row-min-width}) {
+      @container (width < #{ds.$list-row-one-line-min-width}) {
         text-align: left;
       }
     }
