@@ -70,7 +70,7 @@ jobs:
       # A draft PR is a plan whose implementation has not landed yet (see the sdd skill),
       # so it may hold scenarios without tests; the PR turns strict once it is ready.
       - name: Run the scenario check
-        run: python scripts/sdd/check_scenarios.py --frontend-report /tmp/frontend-scenarios.json ${{ github.event.pull_request.draft && '--allow-unfinished-plans' || '' }}
+        run: python scripts/sdd/check_scenarios.py --frontend-report /tmp/frontend-scenarios.json ${{ github.event.pull_request.draft && '--allow-untested-scenarios' || '' }}
 
   lint-backend:
     name: Lint Python with Ruff

@@ -316,115 +316,28 @@ def test_reports_misplaced_or_misnamed_manual_sections(
 
 
 _PLAN_PATH = "docs/plans/0001-demo.md"
-_PLAN = SourceFile(
-    _PLAN_PATH,
-    "\n".join(
-        [
-            "# 0001 Demo",
-            "",
-            "## 驗證方式",
-            "",
-            "| 情境 | 驗證方式 |",
-            "| --- | --- |",
-            "| DEMO-R1.2 在手機上新增 | 手動 |",
-        ]
-    ),
-)
 
 
-def test_accepts_a_planned_scenario_without_a_test_when_unfinished_plans_are_allowed() -> (
-    None
-):
+def test_reports_untested_scenarios_as_warnings_when_they_are_allowed() -> None:
     report = check_scenarios(
         specs=[_SPEC],
         tests=[_make_test_file(['scenario("DEMO-R1.1")'])],
         manuals=[],
-        plans=[_PLAN],
-        allow_unfinished_plans=True,
+        plan_paths=[_PLAN_PATH],
+        allow_untested_scenarios=True,
     )
 
     assert report.problems == []
-    assert report.planned_count == 1
+    assert _make_locations(report.warnings) == [(_SPEC_PATH, 10)]
 
 
-def test_reports_unfinished_plans_and_their_untested_scenarios_by_default() -> None:
+def test_reports_unfinished_plans_and_untested_scenarios_by_default() -> None:
     report = check_scenarios(
         specs=[_SPEC],
         tests=[_make_test_file(['scenario("DEMO-R1.1")'])],
         manuals=[],
-        plans=[_PLAN],
+        plan_paths=[_PLAN_PATH],
     )
 
     assert _make_locations(report.problems) == [(_PLAN_PATH, 1), (_SPEC_PATH, 10)]
-    assert _PLAN_PATH in report.problems[1].message
-
-
-def test_still_reports_an_unplanned_scenario_when_unfinished_plans_are_allowed() -> (
-    None
-):
-    report = check_scenarios(
-        specs=[_SPEC],
-        tests=[],
-        manuals=[_make_manual_file(["## DEMO-R1.2 在手機上新增"])],
-        plans=[_PLAN],
-        allow_unfinished_plans=True,
-    )
-
-    assert _make_locations(report.problems) == [(_SPEC_PATH, 6)]
-
-
-def test_reads_planned_scenarios_only_from_the_verification_section() -> None:
-    plan = SourceFile(
-        _PLAN_PATH,
-        "\n".join(
-            [
-                "# 0001 Demo",
-                "",
-                "## 決策",
-                "",
-                "| DEMO-R1.2 在手機上新增 | 不是驗證方式 |",
-                "",
-                "## 驗證方式",
-                "",
-                "```",
-                "| DEMO-R1.2 在手機上新增 | 手動 |",
-                "```",
-            ]
-        ),
-    )
-
-    report = check_scenarios(
-        specs=[_SPEC],
-        tests=[_make_test_file(['scenario("DEMO-R1.1")'])],
-        manuals=[],
-        plans=[plan],
-        allow_unfinished_plans=True,
-    )
-
-    assert _make_locations(report.problems) == [(_SPEC_PATH, 10)]
-
-
-def test_reports_a_planned_scenario_whose_name_or_id_does_not_match_a_spec() -> None:
-    plan = SourceFile(
-        _PLAN_PATH,
-        "\n".join(
-            [
-                "## 驗證方式",
-                "",
-                "| 情境 | 驗證方式 |",
-                "| --- | --- |",
-                "| DEMO-R1.2 舊的名稱 | 手動 |",
-                "| DEMO-R1.9 不存在的情境 | unit |",
-            ]
-        ),
-    )
-
-    report = check_scenarios(
-        specs=[_SPEC],
-        tests=[_make_test_file(['scenario("DEMO-R1.1")'])],
-        manuals=[],
-        plans=[plan],
-        allow_unfinished_plans=True,
-    )
-
-    assert _make_locations(report.problems) == [(_PLAN_PATH, 5), (_PLAN_PATH, 6)]
+    assert report.warnings == []
