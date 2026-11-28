@@ -122,10 +122,10 @@ stateDiagram-v2
   state "沒有網路連線" as offline
   state "無法連上 Taigu" as unreachable
   state "畫出頁面" as page
-  state "歡迎頁（ACCT-R3、ACCT-R5）" as welcome
-  [*] --> loading: 有網路時開啟或重新整理頁面
-  [*] --> stay: 有網路時從不需要登入的頁面換過來
-  [*] --> offline: 沒有網路
+  state "歡迎頁" as welcome
+  [*] --> loading: 有網路時開啟或重新整理要登入才能使用的頁面
+  [*] --> stay: 有網路時從不需要登入的頁面換到要登入才能使用的頁面
+  [*] --> offline: 沒有網路時開啟、重新整理或換到要登入才能使用的頁面
   loading --> page: 讀到帳號資料
   stay --> page: 讀到帳號資料
   loading --> unreachable: 後端回錯誤，或滿 10 秒
