@@ -53,10 +53,9 @@
     position: sticky;
     top: var(--space-150);
     align-self: flex-start;
-    width: 280px;
     height: 48px;
     margin: var(--space-150) 0;
-    @include ds.quiet-field;
+    @include ds.expanding-search-box;
 
     &:has(input:not(:placeholder-shown)) {
       background-color: var(--color-bg-frosted);

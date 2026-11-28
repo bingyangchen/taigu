@@ -21,6 +21,7 @@
   }
   & > .search_controls {
     @include ds.wide-layout {
+      max-width: calc(100% - 2 * var(--list-gutter));
       margin-inline-start: var(--list-gutter);
     }
   }

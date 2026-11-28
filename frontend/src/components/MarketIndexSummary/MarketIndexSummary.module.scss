@@ -92,9 +92,10 @@
 
   @include ds.down(lg) {
     grid-column: 1 / -1;
+    padding-block-start: var(--space-100);
 
     &:not(:last-child) {
-      padding-block-end: var(--space-150);
+      padding-block-end: var(--space-100);
     }
 
     .date {
@@ -110,7 +111,10 @@
 .chart {
   display: flex;
   align-items: center;
-  block-size: 30px;
+
+  // About as tall as the index value and its change, so where they sit side by side
+  // the chart fills the row without making it taller.
+  block-size: 40px;
   inline-size: 100%;
 
   @include ds.up(lg) {
@@ -136,6 +140,7 @@
     .chart {
       grid-column: 1 / -1;
       grid-row: 2;
+      block-size: 30px;
     }
   }
 }
@@ -155,13 +160,10 @@
   text-align: end;
   font-variant-numeric: tabular-nums;
   font-size: var(--font-size-xs);
+  row-gap: var(--space-050);
 
   strong {
     font-size: var(--font-size-lg);
-  }
-
-  > [aria-hidden="true"] + [aria-hidden="true"] {
-    margin-block-start: var(--space-050);
   }
 }
 

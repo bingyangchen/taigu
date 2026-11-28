@@ -49,6 +49,9 @@ $font-size-fluid: (
   page-title: clamp(1.1rem, 1rem + 0.3vw, 1.3rem),
   display-number: clamp(1.9rem, 1.8rem + 0.7vw, 2.3rem),
   display-number-lg: clamp(2.5rem, 2.3rem + 0.9vw, 3rem),
+  // Same as display-number below about 580px wide, then the steeper term takes over
+  // and reaches 3rem at about 1420px.
+  display-number-hero: clamp(1.9rem, max(1.8rem + 0.7vw, 1.4rem + 1.8vw), 3rem),
   section-title: clamp(2rem, 1.8rem + 0.9vw, 2.5rem),
   display-title: clamp(2rem, 1.1rem + 3.8vw, 4.1rem),
 );
