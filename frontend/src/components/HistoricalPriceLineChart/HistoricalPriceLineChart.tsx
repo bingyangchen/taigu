@@ -97,7 +97,10 @@ export function makeHistoricalPriceChartOption(
           type: "value",
           scale: true,
           position: "right",
+          // The line spans the plot from its lowest to its highest close, so the gap
+          // above it is the grid's fixed top margin instead of a rounded-up tick.
           min: "dataMin",
+          max: "dataMax",
           axisLabel: {
             color: COLORS.textSecondary,
             fontSize: FONT_SIZES.chartTick,

@@ -127,6 +127,7 @@ $market-separation: min(2cqi, var(--space-250));
 }
 
 .chart {
+  position: relative;
   display: flex;
   align-items: center;
   inline-size: 100%;
@@ -138,6 +139,14 @@ $market-separation: min(2cqi, var(--space-250));
   aspect-ratio: 7;
   min-block-size: 40px;
   max-block-size: 56px;
+
+  // Safari resolves the chart's 100% height against the 7:1 height before the
+  // minimum applies, which drew a 22px chart in a 40px box on a phone. A chart
+  // pinned to the box's edges takes the box's final height.
+  & > :global(.echarts-for-react) {
+    position: absolute;
+    inset: 0;
+  }
 }
 
 .loading_chart {

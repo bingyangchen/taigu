@@ -79,3 +79,17 @@ test("[STOCK-R5.5] compares each close with the first close of the range", () =>
     "區間漲跌 ▲2.00 (10.00%)",
   ]);
 });
+
+test("keeps the price axis between the lowest and the highest close", () => {
+  const { yAxis } = makeHistoricalPriceChartOption(
+    {
+      dates: ["2026-10-19", "2026-10-20"],
+      values: [5000, 5285],
+      previousValues: [null, 5000],
+      isWaiting: false,
+    },
+    { dates: [], values: [] },
+    false,
+  );
+  expect(yAxis).toMatchObject({ min: "dataMin", max: "dataMax" });
+});
