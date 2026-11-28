@@ -17,7 +17,11 @@ import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import Env from "../../../utils/env";
 import { useIsNarrowLayout, useIsPWA } from "../../../utils/mediaQuery";
 import Nav from "../../../utils/nav";
-import { adminPagePath, settingsPagePath } from "../../../utils/router";
+import {
+  adminPagePath,
+  settingsPagePath,
+  settingsSubpageNavigationState,
+} from "../../../utils/router";
 import Util from "../../../utils/util";
 import { IssueReportEditor } from "../IssueReport/IssueReport";
 import styles from "./Overview.module.scss";
@@ -44,10 +48,15 @@ function Overview() {
     dispatch(updateHeaderTitle("設定"));
   }, [dispatch]);
 
+  const openSubpage = (subpagePath: string): void => {
+    navigate(`${Env.frontendRootPath}${settingsPagePath}/${subpagePath}`, {
+      state: settingsSubpageNavigationState,
+    });
+  };
   const hideModal = (): void => setActiveModalName(null);
   const handleClickIssueReport = (): void => {
     if (isNarrowLayout) {
-      navigate(`${Env.frontendRootPath}${settingsPagePath}/issue-report`);
+      openSubpage("issue-report");
       return;
     }
     setActiveModalName("issueReport");
@@ -91,11 +100,7 @@ function Overview() {
       {activeModal}
       <div className={styles.main}>
         <BeautifulBlock id="account" title="帳號">
-          <BeautifulRow
-            onClick={() =>
-              navigate(`${Env.frontendRootPath}${settingsPagePath}/user-info`)
-            }
-          >
+          <BeautifulRow onClick={() => openSubpage("user-info")}>
             <div className={`${styles.row_inner} ${styles.user_info}`}>
               <div className={styles.avatar_container}>
                 <img
@@ -112,11 +117,7 @@ function Overview() {
               <div className={styles.username}>{username}</div>
             </div>
           </BeautifulRow>
-          <BeautifulRow
-            onClick={() =>
-              navigate(`${Env.frontendRootPath}${settingsPagePath}/account-binding`)
-            }
-          >
+          <BeautifulRow onClick={() => openSubpage("account-binding")}>
             <div className={`${styles.row_inner} ${styles.email}`}>
               <Icons.IconEnvelope sideLength="16px" />
               <div className={styles.email_container}>
@@ -126,11 +127,7 @@ function Overview() {
               <img src={googleLogo} alt="" className={styles.google_logo} />
             </div>
           </BeautifulRow>
-          <BeautifulRow
-            onClick={() =>
-              navigate(`${Env.frontendRootPath}${settingsPagePath}/data-controls`)
-            }
-          >
+          <BeautifulRow onClick={() => openSubpage("data-controls")}>
             <div className={`${styles.row_inner} ${styles.terms_of_service}`}>
               <Icons.IconDatabaseManagement sideLength="16px" />
               資料控制
@@ -138,12 +135,7 @@ function Overview() {
           </BeautifulRow>
         </BeautifulBlock>
         <BeautifulBlock id="billing-and-plans" title="付款與方案">
-          <BeautifulRow
-            label="目前方案"
-            onClick={() =>
-              navigate(`${Env.frontendRootPath}${settingsPagePath}/current-plan`)
-            }
-          >
+          <BeautifulRow label="目前方案" onClick={() => openSubpage("current-plan")}>
             {subscription.plan === "standard" ? "Standard" : "Free"}
           </BeautifulRow>
         </BeautifulBlock>

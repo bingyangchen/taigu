@@ -5,6 +5,7 @@ import { RoundButton } from "../../components";
 import * as Icons from "../../icons";
 import { useAppSelector } from "../../redux/hooks";
 import Env from "../../utils/env";
+import { returnToSettings, settingsPagePath } from "../../utils/router";
 import styles from "./HeaderForSettings.module.scss";
 
 function HeaderForSettings() {
@@ -18,6 +19,10 @@ function HeaderForSettings() {
       currentPath = currentPath.slice(0, -1);
     }
     const parentDirectory = currentPath.substring(0, currentPath.lastIndexOf("/"));
+    if (parentDirectory === `${Env.frontendRootPath}${settingsPagePath}`) {
+      returnToSettings({ location, navigate });
+      return;
+    }
     navigate(parentDirectory || Env.frontendRootPath, { replace: true });
   };
 

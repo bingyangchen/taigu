@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { AutoResizeTextarea, FormPageShell, Modal } from "../../../components";
 import type { Props as ButtonProps } from "../../../components/Button/Button";
@@ -7,12 +7,11 @@ import DiscardChangesModal from "../../../components/DiscardChangesModal/Discard
 import { useAppDispatch } from "../../../redux/hooks";
 import { pushToast } from "../../../redux/slices/ToastSlice";
 import Api from "../../../utils/api";
-import Env from "../../../utils/env";
+import { returnToSettings } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./IssueReport.module.scss";
 
 const BODY_MAX_LENGTH = 5000;
-const SETTINGS_PATH = `${Env.frontendRootPath}settings`;
 
 interface IssueReportEditorProps {
   hideModal: React.MouseEventHandler;
@@ -114,9 +113,13 @@ export function IssueReportEditor({
 }
 
 export default function IssueReport(): React.ReactElement {
+  const location = useLocation();
   const navigate = useNavigate();
 
   return (
-    <IssueReportEditor presentation="page" hideModal={() => navigate(SETTINGS_PATH)} />
+    <IssueReportEditor
+      presentation="page"
+      hideModal={() => returnToSettings({ location, navigate })}
+    />
   );
 }
