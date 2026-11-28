@@ -1,14 +1,35 @@
+$-transition: (
+  background-color var(--duration-fast) var(--ease-standard),
+  border-color var(--duration-fast) var(--ease-standard)
+);
+
 // A search field or select that sits on the segmented control's track colour and
 // takes the list's translucent background and a border only while focused.
 @mixin quiet-field {
   border: 1px solid transparent;
   background-color: var(--color-bg-muted);
-  transition:
-    background-color var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard);
+  transition: $-transition;
 
   &:focus-within {
     border-color: var(--color-border-medium);
     background-color: var(--color-bg-frosted);
+  }
+}
+
+// A wide layout's search box: a quiet field that widens while it has the focus and
+// goes back to its width when it loses it.
+@mixin expanding-search-box {
+  @include quiet-field;
+  width: var(--layout-search-box-width);
+  transition:
+    $-transition,
+    width var(--duration-base) var(--ease-out);
+
+  &:focus-within {
+    width: var(--layout-search-box-focused-width);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: $-transition;
   }
 }

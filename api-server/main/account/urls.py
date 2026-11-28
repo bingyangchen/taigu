@@ -12,5 +12,4 @@ urlpatterns = [
     re_path(r"^open-session[/]?$", views.open_session),
     re_path(r"^update[/]?$", views.update),
     re_path(r"^change-binding[/]?$", views.change_google_binding),
-    # re_path(r"^delete[/]?$", views.delete),
 ]

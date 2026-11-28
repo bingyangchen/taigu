@@ -32,11 +32,6 @@ function DataControls() {
             <div className={styles.red}>刪除所有現金股利紀錄</div>
           </BeautifulRow> */}
       </BeautifulBlock>
-      {/* <BeautifulBlock title="帳號">
-          <BeautifulRow onClick={handleClickDeleteAccount}>
-            <div className={styles.red}>刪除帳號</div>
-          </BeautifulRow>
-        </BeautifulBlock> */}
     </div>
   );
 }

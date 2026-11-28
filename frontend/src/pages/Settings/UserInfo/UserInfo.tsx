@@ -1,6 +1,6 @@
 import MD5 from "crypto-js/md5";
 import { memo, useEffect, useLayoutEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import imgPersonFill from "../../../assets/person-fill.svg";
 import {
@@ -15,9 +15,8 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateAccountInfo } from "../../../redux/slices/AccountSlice";
 import { updateHeaderTitle } from "../../../redux/slices/SettingsPageSlice";
 import { pushToast } from "../../../redux/slices/ToastSlice";
-import Env from "../../../utils/env";
 import { useIsNarrowLayout } from "../../../utils/mediaQuery";
-import { settingsPagePath } from "../../../utils/router";
+import { returnToSettings } from "../../../utils/router";
 import Util from "../../../utils/util";
 import styles from "./UserInfo.module.scss";
 
@@ -27,6 +26,7 @@ function UserInfo() {
   const email = useAppSelector((state) => state.account.email);
   const isWaiting = useAppSelector((state) => state.account.isWaiting);
   const dispatch = useAppDispatch();
+  const location = useLocation();
   const navigate = useNavigate();
   const isNarrowLayout = useIsNarrowLayout();
   const [showDefaultAvatar, setShowDefaultAvatar] = useState(false);
@@ -95,7 +95,7 @@ function UserInfo() {
         username: trimmedUsername,
       }),
     ).unwrap();
-    navigate(`${Env.frontendRootPath}${settingsPagePath}`, { replace: true });
+    returnToSettings({ location, navigate });
   };
 
   return (
@@ -169,11 +169,7 @@ function UserInfo() {
             <Button
               variant="light"
               size="action"
-              onClick={() =>
-                navigate(`${Env.frontendRootPath}${settingsPagePath}`, {
-                  replace: true,
-                })
-              }
+              onClick={() => returnToSettings({ location, navigate })}
             >
               捨棄
             </Button>

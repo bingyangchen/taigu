@@ -126,6 +126,7 @@ $one-row-controls-min-width: 620px;
 
 .search_sort_row {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-150);
@@ -139,9 +140,12 @@ $one-row-controls-min-width: 620px;
   border-radius: var(--radius-pill);
 
   @include ds.wide-layout {
-    flex: 0 0 280px;
+    // Where the row has no room for the wider field, the focused field gives up only
+    // the extra width, rather than pushing the sort menu out of the row.
+    flex: 0 1 auto;
+    min-width: var(--layout-search-box-width);
     height: 52px;
-    @include ds.quiet-field;
+    @include ds.expanding-search-box;
 
     &:has(input:not(:placeholder-shown)) {
       background-color: var(--color-bg-frosted);
@@ -803,5 +807,6 @@ $one-row-controls-min-width: 620px;
 
   .search_box {
     flex: 1 1 auto;
+    min-width: 0;
   }
 }
