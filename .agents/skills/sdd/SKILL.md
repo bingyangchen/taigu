@@ -51,7 +51,7 @@ When unsure, take the higher tier.
 
 - Never push to `main`. Never merge a PR. The user merges; a merge is the user's approval.
 - Commit and push only when the user explicitly instructs it.
-- In a PR body's manual checklist, tick an item only if the latest run of its check passed. Leave an item unticked only if you could not run the check, and state why under the item so the user can run it.
+- Run every manual check you can before opening or updating a PR. A PR body's manual checklist lists only the checks you could not run, such as ones that need a real device, the user's own account, or a real payment, each with the reason under it, so the user sees what is left to do. A check you ran and that passed is not listed.
 - Assign every PR you open to the user who directed the work: `gh pr create --assignee @me`, which resolves to the account `gh` is logged in as. If `gh` is logged in as a bot or someone other than that user, ask the user who to assign.
 - Every time you push new content to a branch that has an open PR, check whether the PR title and description still match the branch's latest state, and update them if they do not.
 - Right before every update to a PR title or description, fetch the current version from GitHub (`gh pr view <number> --json title,body`) and apply your edits on top of it, no matter how well you remember what you last wrote. Other people may be editing the same PR at the same time.
@@ -125,7 +125,7 @@ Preconditions: an open PR whose branch holds `docs/plans/NNNN-*.md` with `status
 7. Tell the user the work is ready and stop. When the user instructs a push, commit and push, rewrite the PR body from `templates/pr-plan.md`, and mark the PR ready for review (`gh pr ready`). Write the body against the approval commit, not the branch's history: describe the final state, and leave out problems that were found and fixed on the branch.
    - The body keeps the "目標" paragraph, the link to the approval commit, and any section that another rule requires, such as the list of plans that "Rules That Apply Everywhere" asks for when the PR also edits this skill. The link points at the commit, not the branch, because GitHub deletes the branch on merge, and the plan file moves to the archive.
    - "需要你注意的偏離" lists, from the deviations that the review reported (computed as step 6 describes), each one that changes spec'd behavior, each difference between a screen and its draft in "設計稿", and each departure from a risky item in "做法要點", such as the deploy order or a data migration. Leave other implementation choices out: the user does not approve them, and the diff shows them.
-   - "手動檢查" has one checklist item per `tests/manual/` section that the branch adds or changes, no more and no fewer, with the steps and expected result from that section.
+   - "需要你做的手動檢查" lists each `tests/manual/` section that the branch adds or changes and that you could not run, with the steps and expected result from that section and the reason you could not run it.
    - Do not list automated tests or their results; reviewers read the tests themselves, and CI reports results.
 
 ## Procedure: Change
@@ -134,7 +134,7 @@ Preconditions: an open PR whose branch holds `docs/plans/NNNN-*.md` with `status
 2. Implement. If the "做法" has to change, agree the new one with the user before going on. If the change turns out to alter spec'd behavior, stop: it is Tier 1. In a capability that has no spec yet, the same holds for any behavior other than what the agreed "問題" describes.
 3. Run `make test`, which also runs the scenario check, and make it pass. List every scenario in `tests/manual/` whose behavior the change could affect, plus any check the change itself needs. Run every check you can, and fix failures before moving on. If a check fails and you cannot fix it, stop and tell the user. If the change makes a section's steps outdated, such as by renaming a command, update the section on this branch.
 4. Run the code review (see "Independent Review"). Its inputs are the branch's changes and the "問題" and "做法" that the user agreed to, word for word. Fix code that does not match them, and run every manual check that the review lists and step 3 missed. If a finding shows the change alters spec'd behavior, stop: it is Tier 1. If resolving the findings changes any code, run `make test` again, and rerun every manual check you can run.
-5. Tell the user the work is ready and stop. When the user instructs a push, commit, push, and open the PR. Body: `templates/pr-change.md`, describing the final state. Its manual checklist has one item per check from steps 3 and 4; an item for a scenario in `tests/manual/` starts with the scenario ID and takes its steps and expected result from that scenario's section.
+5. Tell the user the work is ready and stop. When the user instructs a push, commit, push, and open the PR. Body: `templates/pr-change.md`, describing the final state. Its manual checklist lists each check from steps 3 and 4 that you could not run, with the reason; an item for a scenario in `tests/manual/` starts with the scenario ID and takes its steps and expected result from that scenario's section.
 
 ## Procedure: Backfill <capability>
 
